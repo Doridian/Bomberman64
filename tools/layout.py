@@ -52,13 +52,22 @@ ASSET_BANK = 0x300000
 CODE_IMAGE = "assets/code.bin"
 
 BOOT_VRAM = 0x80000400
-ZEROJUMP_VRAM = 0x00000000   # DMAd to 0x80042000, run through the TLB at 0
+# zerojump is DMAd to 0x80042000 and runs through the TLB at virtual 0.  It
+# is split at its physical address: at 0, every zero word in the data
+# would look like a pointer to it.
+ZEROJUMP_VRAM = 0x80042000
 MAIN_VRAM = 0x80225800
 OVERLAY_VRAM = 0x80043000
 
-# bss the ROM doesn't show (boot_code's comes from its entry).  main_code's
-# is from the reference decomp; the overlays' are worked out in stage 2.
+# bss the ROM doesn't show.  boot_code's comes from its entry; main_code's
+# is from the reference decomp (and covers every reference past its end);
+# an overlay's is the extent of its references past its end (bss_size()).
 MAIN_BSS = 0xE3D0
+OVERLAY_SPACE = 0x20000   # the loader invalidates this much at 0x80043000
+
+# opcodes that take rs + a signed 16-bit immediate: addiu, loads, stores
+LO_OPS = {0x09, 0x20, 0x21, 0x23, 0x24, 0x25, 0x27, 0x28, 0x29, 0x2B,
+          0x31, 0x35, 0x39, 0x3D, 0x37, 0x3F}
 
 
 def u32(d, o):
@@ -207,15 +216,82 @@ def text_split(b):
     return (last + 15) & ~15, stubs
 
 
+def writes(w):
+    """The register an instruction writes, as far as pairing cares."""
+    op = w >> 26
+    if op == 0:
+        return (w >> 11) & 31
+    if op in (0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x20, 0x21,
+              0x23, 0x24, 0x25, 0x27, 0x37):
+        return (w >> 16) & 31
+    if op == 3:
+        return 31
+    return None
+
+
+def lui_pair(b, off, end):
+    """The address a lui at b[off] makes with its pair (the next instruction
+    that adds an immediate to its register or uses it as a base, before the
+    register is written again), or None.  ori pairs are constants (IDO
+    builds addresses with addiu)."""
+    w = u32(b, off)
+    reg, hi = (w >> 16) & 31, (w & 0xFFFF) << 16
+    for o in range(off + 4, min(end, off + 4 * 64), 4):
+        x = u32(b, o)
+        op, rs = x >> 26, (x >> 21) & 31
+        if op in LO_OPS and rs == reg:
+            lo = x & 0xFFFF
+            return (hi + (lo - 0x10000 if lo & 0x8000 else lo)) & 0xFFFFFFFF
+        if x == 0x03E00008 or writes(x) == reg or (op == 0x0D and rs == reg):
+            return None
+    return None
+
+
+def refs(b, vram):
+    """Every address a module's code (lui pairs) and data (words) makes."""
+    text_end, _ = text_split(b)
+    out = set()
+    for o in range(0, text_end, 4):
+        if u32(b, o) >> 26 == 0x0F:
+            a = lui_pair(b, o, text_end)
+            if a is not None:
+                out.add(a)
+    for o in range(text_end, len(b) - 3, 4):
+        out.add(u32(b, o))
+    return out
+
+
+def bss_size(b, vram, limit):
+    """How far past its end, up to vram + limit, a module refers: its bss,
+    rounded up to 16 (a reference is to the start of an object, so one
+    more word is taken for the object it starts)."""
+    end = vram + len(b)
+    past = [a for a in refs(b, vram) if end <= a < vram + limit]
+    return ((max(past) + 4 - end + 15) & ~15) if past else 0
+
+
+def first_function_end(b):
+    """The end of a module's first function (after its jr ra and delay
+    slot), rounded up to 16: the module's entry, which the loader jumps to,
+    so it is an object of its own and a shifted build pads after it."""
+    for o in range(0, len(b), 4):
+        if u32(b, o) == 0x03E00008:
+            return (o + 8 + 15) & ~15
+    raise ValueError("no jr ra")
+
+
 def code_segment(name, start, vram, data, bss_size, first_hasm=None,
-                 note=None):
-    """The YAML lines of one code segment of the image."""
+                 note=None, persist=None):
+    """The YAML lines of one code segment of the image.  persist: the
+    offset of main_code's part that is loaded once (see fixed())."""
     text_end, stubs = text_split(data)
     subs = []
-    pos = 0
     if first_hasm:
         subs.append((0, "hasm", first_hasm[1]))
         pos = first_hasm[0]
+    else:
+        pos = first_function_end(data)
+        subs.append((0, "asm", f"{name}_entry"))
     if stubs and stubs[0] < text_end:
         # the block starts 16-aligned; whatever precedes it is code
         s0 = stubs[0] & ~15
@@ -228,7 +304,12 @@ def code_segment(name, start, vram, data, bss_size, first_hasm=None,
     elif text_end > pos:
         subs.append((pos, "asm", None))
     if text_end < len(data):
-        subs.append((text_end, "data", None))
+        # .data and .rodata as one block until the per-object split; as
+        # rodata, so that spimdisasm labels the jump tables in it
+        subs.append((text_end, "rodata", None))
+    if persist is not None:
+        assert text_end <= persist < len(data), hex(persist)
+        subs.append((persist, "rodata", f"{name}_persist"))
     out = [
         f"  - name: {name}" + (f"  # {note}" if note else ""),
         "    type: code",
@@ -293,6 +374,8 @@ def config(version, d):
             out += code_segment(name, start, BOOT_VRAM, blob, boot_bss,
                                 first_hasm=(0x50, "entry"), note=note)
         elif name == "zerojump":
+            strings = blob.index(b"ZeroJump")
+            assert strings % 16 == 0, hex(strings)
             out += [
                 f"  - name: zerojump  # {note}",
                 "    type: code",
@@ -301,15 +384,23 @@ def config(version, d):
                 "    exclusive_ram_id: zerojump",
                 "    subsegments:",
                 f"      - [0x{start:X}, hasm, zerojump]",
+                # its error strings follow the code (as text, but they
+                # don't decode as instructions)
+                f"      - [0x{start + strings:X}, rodata, zerojump_strings]",
             ]
         elif name == "main_code":
-            out += code_segment(name, start, MAIN_VRAM, blob, MAIN_BSS, note=note)
+            # the boot thread reloads main_code up to segment_sizes[2] * 2 KiB
+            # each time round, and loads the rest once (segment_sizes[3])
+            persist = d[0x30000 + (start >> 17)] << 11
+            out += code_segment(name, start, MAIN_VRAM, blob, MAIN_BSS, note=note,
+                                persist=persist)
         else:
             line = f"  - [0x{start:X}, bin, {name}]"
             out.append(f"{line:<40}# {note}" if note else line)
     pos = FIRST_BANK
     for bank, entry, data in overlays(d):
-        out += code_segment(overlay_name(bank, entry), pos, OVERLAY_VRAM, data, 0)
+        bss = bss_size(data, OVERLAY_VRAM, OVERLAY_SPACE)
+        out += code_segment(overlay_name(bank, entry), pos, OVERLAY_VRAM, data, bss)
         pos += len(data)
     out.append(f"  - [0x{pos:X}]")
     return "\n".join(out) + "\n", pos

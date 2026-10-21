@@ -17,7 +17,10 @@ endif
 endif
 endif
 
-BUILD_DIR = build/$(VERSION)
+# SHIFT=1 builds into its own directory, so a shifted and a matching build
+# sit side by side (tools/shift_check.py compares them)
+SHIFT     ?= 0
+BUILD_DIR = build/$(VERSION)$(if $(filter-out 0,$(SHIFT)),-shift)
 TOOLS_DIR = tools
 VENV      = .env
 PYTHON    = $(VENV)/bin/python3
@@ -44,8 +47,22 @@ O_FILES  := $(patsubst build/%,$(BUILD_DIR)/%,$(LD_OBJS))
 IMAGE        = $(BUILD_DIR)/code.bin
 ARCHIVE_SRCS = $(shell find assets -path 'assets/bank*/*' -type f 2>/dev/null)
 
+# SHIFT=1: every movable module gets SHIFT_PAD bytes of zeros after its entry
+# and at the start of its data (tools/ld_fix.py), which proves nothing
+# depends on where things are.  Not sha1-checked.
+SHIFT_PAD ?= 0x10
+ifneq ($(SHIFT),0)
+SHIFT_PAD_USED := $(SHIFT_PAD)
+else
+SHIFT_PAD_USED := 0
+endif
+
 # The Hudson LZSS encoder in C (tools/hudson_lzss.py falls back to Python).
 LZSS_LIB  = build/tools/libhudson_lzss.so
+# a mupen64plus video plugin that counts frames, for tools/emu_ram.py
+VICOUNT   = build/tools/m64p_vicount.so
+# and an input plugin that plays a script on controller 1
+INPUTSCRIPT = build/tools/m64p_inputscript.so
 
 ### Targets
 
@@ -70,14 +87,20 @@ stamp:
 # image assets/code.bin, which splat then splits into asm/ and bins.
 extract: check stamp $(LZSS_LIB)
 	$(PYTHON) $(TOOLS_DIR)/assets.py extract $(VERSION)
-	$(PYTHON) -m splat split $(CONFIG)
+	$(PYTHON) -m splat split $(CONFIG) | grep -v "^File split suggestions" || true
+	$(PYTHON) $(TOOLS_DIR)/postsplit.py $(VERSION)
 
 # the rebuilt code image, checked against the extracted one
 image: $(IMAGE)
 	@cmp $(IMAGE) assets/code.bin && echo "$(IMAGE): OK"
 
 verify: $(TARGET).z64
+ifeq ($(SHIFT),0)
 	@echo "$$(cat $(BASENAME).$(VERSION).sha1)  $<" | sha1sum --check
+else
+	@$(PYTHON) $(TOOLS_DIR)/n64crc.py $< --check
+	@echo "$<: shifted build (SHIFT_PAD=$(SHIFT_PAD)), not sha1-checked"
+endif
 
 clean:
 	rm -rf asm assets build include/macro.inc
@@ -88,6 +111,23 @@ clean:
 $(LZSS_LIB): $(TOOLS_DIR)/src/hudson_lzss.c
 	@mkdir -p $(dir $@)
 	$(CC) -O2 -shared -fPIC -o $@ $<
+
+$(VICOUNT): $(TOOLS_DIR)/src/m64p_vicount.c
+	@mkdir -p $(dir $@)
+	$(CC) -O2 -shared -fPIC -o $@ $<
+
+$(INPUTSCRIPT): $(TOOLS_DIR)/src/m64p_inputscript.c
+	@mkdir -p $(dir $@)
+	$(CC) -O2 -shared -fPIC -o $@ $<
+
+# The shifted build run against the original in mupen64plus ($M64P_DIR, the
+# unpacked Linux bundle) with tools/inputs/menus.txt on controller 1: the
+# same game state at every checkpoint frame.
+SHIFT_FRAMES ?= 600,1800,3600,6000,12000,24000
+shift-check: $(VICOUNT) $(INPUTSCRIPT)
+	$(MAKE) VERSION=$(VERSION) SHIFT=0
+	$(MAKE) VERSION=$(VERSION) SHIFT=1
+	$(PYTHON) $(TOOLS_DIR)/shift_check.py $(VERSION) --frames $(SHIFT_FRAMES) $(SHIFT_CHECK_FLAGS)
 
 # every compressed member decompresses and recompresses to the ROM's bytes
 lzss-check: check $(LZSS_LIB)
@@ -105,22 +145,30 @@ $(BUILD_DIR)/%.bin.o: %.bin
 	@mkdir -p $(dir $@)
 	$(LD) -r -b binary -o $@ $<
 
-# The script names build/...; this version's objects live in $(BUILD_DIR).
-$(BUILD_DIR)/$(BASENAME).ld: $(LD_SCRIPT)
+# splat's script, with the fixed ROM positions kept and (SHIFT=1) the
+# modules padded (tools/ld_fix.py); it names build/..., and this version's
+# objects live in $(BUILD_DIR).
+$(BUILD_DIR)/$(BASENAME).ld: $(LD_SCRIPT) $(TOOLS_DIR)/ld_fix.py $(BUILD_DIR)/shift.stamp
 	@mkdir -p $(dir $@)
-	sed 's|build/|$(BUILD_DIR)/|g' $< > $@
+	$(PYTHON) $(TOOLS_DIR)/ld_fix.py $(VERSION) $< $@.tmp --shift $(SHIFT_PAD_USED)
+	sed 's|build/|$(BUILD_DIR)/|g' $@.tmp > $@ && rm $@.tmp
 
-$(TARGET).elf: $(O_FILES) $(BUILD_DIR)/$(BASENAME).ld
-	$(LD) -T $(BUILD_DIR)/$(BASENAME).ld -T undefined_syms_auto.txt -T undefined_funcs_auto.txt \
-		-Map $(TARGET).map --no-check-sections -o $@
+$(BUILD_DIR)/shift.stamp: FORCE
+	@mkdir -p $(dir $@)
+	@if [ "$$(cat $@ 2>/dev/null)" != "$(SHIFT_PAD_USED)" ]; then echo "$(SHIFT_PAD_USED)" > $@; fi
+
+$(TARGET).elf: $(O_FILES) $(BUILD_DIR)/$(BASENAME).ld module_syms_auto.txt undefined_syms_auto.txt undefined_funcs_auto.txt
+	$(LD) -T $(BUILD_DIR)/$(BASENAME).ld -T module_syms_auto.txt \
+		-T undefined_syms_auto.txt -T undefined_funcs_auto.txt \
+		-Map $(TARGET).map --no-check-sections --emit-relocs -o $@
 
 $(IMAGE): $(TARGET).elf
 	$(OBJCOPY) -O binary $< $@
 
 $(TARGET).z64: $(IMAGE) $(ARCHIVE_SRCS) $(CONFIG) $(TOOLS_DIR)/rom.py $(TOOLS_DIR)/assets.py $(TOOLS_DIR)/hudson_lzss.py | $(LZSS_LIB)
-	$(PYTHON) $(TOOLS_DIR)/rom.py $(VERSION) --image $(IMAGE) --out $@
+	$(PYTHON) $(TOOLS_DIR)/rom.py $(VERSION) --image $(IMAGE) --elf $(TARGET).elf --out $@
 	$(PYTHON) $(TOOLS_DIR)/n64crc.py $@
 
 .SECONDARY:
-.PHONY: all image check clean default extract lzss-check setup stamp verify
+.PHONY: FORCE all image check shift-check clean default extract lzss-check setup stamp verify
 SHELL = /bin/bash -e -o pipefail
