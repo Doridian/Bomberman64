@@ -21,3 +21,4 @@ nonmatchings/
 tools/ido/
 .vscode/
 include/macro.inc
+.claude/worktrees/
