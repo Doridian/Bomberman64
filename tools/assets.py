@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Bomberman 64's archives ("banks") as editable files, and back.
 
-  assets.py extract <version>               ROM -> assets/bankNN/, checked
+  assets.py extract <version>               ROM -> assets/bankNN/, checked,
+                                            and the code image assets/code.bin
   assets.py build <version> --out DIR       assets/bankNN/ -> DIR/bankNN.bin
 
 Every archive (docs/LAYOUT.md) becomes a directory `assets/bankNN/`:
@@ -13,7 +14,13 @@ Every archive (docs/LAYOUT.md) becomes a directory `assets/bankNN/`:
   stored one byte for byte;
 - in an overlay bank, entry 0 is the bank's index (a count, then one
   `(u16 file id, u8 entry)` per overlay) and is written as `index.yaml`
-  when it rebuilds to the same bytes.
+  when it rebuilds to the same bytes.  bank0B's count (9) is more than
+  the 7 records it has; `count` keeps such a count.
+
+`extract` also writes the code image (tools/layout.py): what splat splits
+and the code link rebuilds.  tools/rom.py builds the ROM from the rebuilt
+image and these archives, taking the overlays from the image (`build_bank`'s
+`override`).
 
 `build` recompresses every LZSS entry (tools/hudson_lzss.py reproduces
 Hudson's encoder exactly, docs/COMPRESSION.md) and packs the bank: the
@@ -73,17 +80,17 @@ def parse_index(blob):
     rebuild exactly."""
     if not blob:
         return None
-    n = blob[0]
-    if 1 + 3 * n > len(blob):
-        return None
+    n = min(blob[0], (len(blob) - 1) // 3)
     ents = [{"file": struct.unpack_from(">H", blob, 1 + 3 * i)[0],
              "entry": blob[3 + 3 * i]} for i in range(n)]
     idx = {"overlays": ents, "size": len(blob)}
+    if blob[0] != n:
+        idx["count"] = blob[0]
     return idx if pack_index(idx) == blob else None
 
 
 def pack_index(idx):
-    out = bytearray([len(idx["overlays"])])
+    out = bytearray([idx.get("count", len(idx["overlays"]))])
     for e in idx["overlays"]:
         out += struct.pack(">HB", e["file"], e["entry"])
     return bytes(out.ljust(idx["size"], b"\0"))
@@ -140,12 +147,17 @@ def extract_bank(rom, num, base, slot_end, out_dir):
         + yaml.safe_dump(info, sort_keys=False))
 
 
-def build_bank(src_dir):
+def build_bank(src_dir, override=None):
+    """The bank's bytes.  override: {entry number: inflated bytes} used in
+    place of the files (the overlays from the rebuilt code image)."""
     info = yaml.safe_load((src_dir / "archive.yaml").read_text())
     blobs = []
-    for e in info["entries"]:
+    for i, e in enumerate(info["entries"]):
         path = src_dir / e["file"]
-        if path.suffix == ".yaml":
+        if override and i in override:
+            assert e["lzss"], (src_dir, i)
+            blobs.append(compress(override[i]))
+        elif path.suffix == ".yaml":
             blobs.append(pack_index(yaml.safe_load(path.read_text())))
         elif e["lzss"]:
             blobs.append(compress(path.read_bytes()))
@@ -170,7 +182,9 @@ def cmd_extract(version, assets):
         if build_bank(d) != rom[base:slot_end]:
             sys.exit(f"{d}: doesn't rebuild to the ROM's bytes")
         n += 1
-    print(f"{n} banks extracted to {assets}/, all rebuild exactly")
+    (assets / "code.bin").write_bytes(layout.image(rom))
+    print(f"{n} banks extracted to {assets}/, all rebuild exactly; "
+          f"code image in {assets}/code.bin")
 
 
 def cmd_build(assets, out):

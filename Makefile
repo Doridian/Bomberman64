@@ -38,9 +38,10 @@ TARGET    = $(BUILD_DIR)/$(BASENAME).$(VERSION)
 LD_OBJS  := $(shell grep -o 'build/[^ ()]*\.o' $(LD_SCRIPT) 2>/dev/null)
 O_FILES  := $(patsubst build/%,$(BUILD_DIR)/%,$(LD_OBJS))
 
-# The archives (bankNN in the config) are built from assets/bankNN/ by
-# tools/assets.py, everything else is splat's bin as extracted.
-ARCHIVE_DIR  = $(BUILD_DIR)/archives
+# The code image (tools/layout.py): the ROM below the first archive, then
+# every overlay inflated.  The link rebuilds it from asm/ and the bins;
+# tools/rom.py builds the ROM from it and the archives in assets/bankNN/.
+IMAGE        = $(BUILD_DIR)/code.bin
 ARCHIVE_SRCS = $(shell find assets -path 'assets/bank*/*' -type f 2>/dev/null)
 
 # The Hudson LZSS encoder in C (tools/hudson_lzss.py falls back to Python).
@@ -65,15 +66,15 @@ check: .baserom.$(VERSION).ok
 stamp:
 	@echo $(VERSION) > .version
 
-# splat cuts the ROM into the config's bins; the archives' bins are then
-# replaced by their entries (tools/assets.py extract checks they rebuild).
+# The archives become assets/bankNN/ (checked to rebuild) and the code
+# image assets/code.bin, which splat then splits into asm/ and bins.
 extract: check stamp $(LZSS_LIB)
-	$(PYTHON) -m splat split $(CONFIG)
 	$(PYTHON) $(TOOLS_DIR)/assets.py extract $(VERSION)
-	rm -f assets/bank[0-9A-F][0-9A-F].bin
+	$(PYTHON) -m splat split $(CONFIG)
 
-# the archives rebuilt from assets/ (see ARCHIVE_DIR above)
-archives: $(ARCHIVE_DIR)/.stamp
+# the rebuilt code image, checked against the extracted one
+image: $(IMAGE)
+	@cmp $(IMAGE) assets/code.bin && echo "$(IMAGE): OK"
 
 verify: $(TARGET).z64
 	@echo "$$(cat $(BASENAME).$(VERSION).sha1)  $<" | sha1sum --check
@@ -100,16 +101,6 @@ $(BUILD_DIR)/%.s.o: %.s
 	@mkdir -p $(dir $@)
 	$(AS) $(ASFLAGS) -o $@ $<
 
-$(ARCHIVE_DIR)/.stamp: $(ARCHIVE_SRCS) $(TOOLS_DIR)/assets.py $(TOOLS_DIR)/hudson_lzss.py $(TOOLS_DIR)/layout.py | $(LZSS_LIB)
-	$(PYTHON) $(TOOLS_DIR)/assets.py build $(VERSION) --out $(ARCHIVE_DIR)
-	@touch $@
-
-$(ARCHIVE_DIR)/%.bin: $(ARCHIVE_DIR)/.stamp ;
-
-$(BUILD_DIR)/assets/bank%.bin.o: $(ARCHIVE_DIR)/bank%.bin
-	@mkdir -p $(dir $@)
-	$(LD) -r -b binary -o $@ $<
-
 $(BUILD_DIR)/%.bin.o: %.bin
 	@mkdir -p $(dir $@)
 	$(LD) -r -b binary -o $@ $<
@@ -120,12 +111,16 @@ $(BUILD_DIR)/$(BASENAME).ld: $(LD_SCRIPT)
 	sed 's|build/|$(BUILD_DIR)/|g' $< > $@
 
 $(TARGET).elf: $(O_FILES) $(BUILD_DIR)/$(BASENAME).ld
-	$(LD) -T $(BUILD_DIR)/$(BASENAME).ld -Map $(TARGET).map --no-check-sections -o $@
+	$(LD) -T $(BUILD_DIR)/$(BASENAME).ld -T undefined_syms_auto.txt -T undefined_funcs_auto.txt \
+		-Map $(TARGET).map --no-check-sections -o $@
 
-$(TARGET).z64: $(TARGET).elf
+$(IMAGE): $(TARGET).elf
 	$(OBJCOPY) -O binary $< $@
+
+$(TARGET).z64: $(IMAGE) $(ARCHIVE_SRCS) $(CONFIG) $(TOOLS_DIR)/rom.py $(TOOLS_DIR)/assets.py $(TOOLS_DIR)/hudson_lzss.py | $(LZSS_LIB)
+	$(PYTHON) $(TOOLS_DIR)/rom.py $(VERSION) --image $(IMAGE) --out $@
 	$(PYTHON) $(TOOLS_DIR)/n64crc.py $@
 
 .SECONDARY:
-.PHONY: all archives check clean default extract lzss-check setup stamp verify
+.PHONY: all image check clean default extract lzss-check setup stamp verify
 SHELL = /bin/bash -e -o pipefail
