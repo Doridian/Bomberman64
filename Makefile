@@ -120,9 +120,9 @@ $(INPUTSCRIPT): $(TOOLS_DIR)/src/m64p_inputscript.c
 	@mkdir -p $(dir $@)
 	$(CC) -O2 -shared -fPIC -o $@ $<
 
-# The shifted build run against the original in mupen64plus ($M64P_DIR, the
-# unpacked Linux bundle) with tools/inputs/menus.txt on controller 1: the
-# same game state at every checkpoint frame.
+# The shifted build run against the original in mupen64plus (the system's, or
+# the unpacked Linux bundle in $M64P_DIR) with tools/inputs/menus.txt on
+# controller 1: the same game state at every checkpoint frame.
 SHIFT_FRAMES ?= 600,1800,3600,6000,12000,24000
 shift-check: $(VICOUNT) $(INPUTSCRIPT)
 	$(MAKE) VERSION=$(VERSION) SHIFT=0

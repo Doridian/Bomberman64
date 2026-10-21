@@ -4,8 +4,11 @@
   emu_ram.py ROM --frames N --out RAM.bin [--m64p DIR] [--input SCRIPT]
 
 DIR holds libmupen64plus.so.2 and mupen64plus-rsp-hle.so (the official
-Linux bundle, unpacked; $M64P_DIR by default).  Audio and input are the
-core's dummies and video is tools/src/m64p_vicount.c (build/tools/
+Linux bundle, unpacked; $M64P_DIR by default).  Without either, the
+system's install is used (the core from the library path, the plugin and
+data from the distribution's mupen64plus directories).  Audio and input are the
+core's dummies, saves go to a temporary directory (a blank EEPROM every
+run), and video is tools/src/m64p_vicount.c (build/tools/
 m64p_vicount.so), which draws nothing and calls back at frame N: the core's
 own frame callback only fires from a real video plugin.  No controller is
 plugged in, or with --input, tools/src/m64p_inputscript.c plays SCRIPT on
@@ -35,6 +38,8 @@ M64PLUGIN_GFX = 2
 M64PLUGIN_INPUT = 4
 TOOLS = Path(__file__).resolve().parent.parent / "build/tools"
 M64P_DBG_PTR_RDRAM = 1
+M64TYPE_BOOL = 3
+M64TYPE_STRING = 4
 RDRAM_SIZE = 0x800000
 
 DEBUG_CB = ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.c_int, ctypes.c_char_p)
@@ -52,10 +57,29 @@ def read_script(path):
     return sorted(steps)
 
 
-def run(rom, frames, m64p, script=None, quiet=os.environ.get("EMU_VERBOSE") is None):
-    m64p = Path(m64p)
-    core = ctypes.CDLL(str(m64p / "libmupen64plus.so.2"))
-    rsp = ctypes.CDLL(str(m64p / "mupen64plus-rsp-hle.so"))
+SYSTEM_PLUGIN_DIRS = ["/usr/lib/mupen64plus", "/usr/lib64/mupen64plus",
+                      "/usr/lib/x86_64-linux-gnu/mupen64plus", "/usr/local/lib/mupen64plus"]
+SYSTEM_DATA_DIRS = ["/usr/share/mupen64plus", "/usr/local/share/mupen64plus"]
+
+
+def find_m64p(m64p):
+    """(core library, RSP plugin, data directory): from a bundle directory,
+    or the system's install when m64p is None."""
+    if m64p:
+        m64p = Path(m64p)
+        return str(m64p / "libmupen64plus.so.2"), str(m64p / "mupen64plus-rsp-hle.so"), str(m64p)
+    rsp = next((Path(d) / "mupen64plus-rsp-hle.so" for d in SYSTEM_PLUGIN_DIRS
+                if (Path(d) / "mupen64plus-rsp-hle.so").exists()), None)
+    data = next((d for d in SYSTEM_DATA_DIRS if Path(d).is_dir()), None)
+    if rsp is None or data is None:
+        sys.exit("no mupen64plus install found: pass --m64p or set $M64P_DIR")
+    return "libmupen64plus.so.2", str(rsp), data
+
+
+def run(rom, frames, m64p=None, script=None, quiet=os.environ.get("EMU_VERBOSE") is None):
+    core_lib, rsp_lib, data_dir = find_m64p(m64p)
+    core = ctypes.CDLL(core_lib)
+    rsp = ctypes.CDLL(rsp_lib)
     vic = ctypes.CDLL(str(TOOLS / "m64p_vicount.so"))
     inp = ctypes.CDLL(str(TOOLS / "m64p_inputscript.so")) if script else None
 
@@ -87,9 +111,24 @@ def run(rom, frames, m64p, script=None, quiet=os.environ.get("EMU_VERBOSE") is N
             core.CoreDoCommand(M64CMD_STOP, 0, None)
 
     with tempfile.TemporaryDirectory() as cfg:
-        err = core.CoreStartup(0x020001, cfg.encode(), str(m64p).encode(), None, debug, None, state)
+        err = core.CoreStartup(0x020001, cfg.encode(), data_dir.encode(), None, debug, None, state)
         if err:
             sys.exit(f"CoreStartup failed ({err})")
+        # saves (the EEPROM) in the run's own directory, so every run starts
+        # blank: the core's default is the user's data directory, where a
+        # save written by one run would change the next
+        sec = ctypes.c_void_p()
+        if core.ConfigOpenSection(b"Core", ctypes.byref(sec)):
+            sys.exit("opening the Core config section failed")
+        for name in (b"SaveSRAMPath", b"SaveStatePath"):
+            path = ctypes.c_char_p(cfg.encode())
+            if core.ConfigSetParameter(sec, name, M64TYPE_STRING, path):
+                sys.exit(f"setting {name.decode()} failed")
+        # the core randomizes PI/SI interrupt timing by default, seeded from
+        # the host's clock: runs started in different seconds would differ
+        off = ctypes.c_int(0)
+        if core.ConfigSetParameter(sec, b"RandomizeInterrupt", M64TYPE_BOOL, ctypes.byref(off)):
+            sys.exit("setting RandomizeInterrupt failed")
         err = rsp.PluginStartup(ctypes.c_void_p(core._handle), None, debug)
         if err:
             sys.exit(f"RSP PluginStartup failed ({err})")
@@ -133,8 +172,6 @@ def main():
     ap.add_argument("--m64p", default=os.environ.get("M64P_DIR"))
     ap.add_argument("--input", help="input script for controller 1")
     a = ap.parse_args()
-    if not a.m64p:
-        ap.error("--m64p or $M64P_DIR: the unpacked mupen64plus bundle")
     Path(a.out).write_bytes(run(a.rom, a.frames, a.m64p, a.input))
 
 

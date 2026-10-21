@@ -26,7 +26,7 @@ make VERSION=us extract        # baserom sha1 check, archives, code image, splat
 make VERSION=us                # assemble, link, build the ROM, sha1-checked
 make VERSION=us lzss-check     # encoder reproduces every compressed member
 make VERSION=us SHIFT=1        # shifted build in build/us-shift/, not sha1-checked
-make VERSION=us shift-check    # both, run in mupen64plus ($M64P_DIR), state compared
+make VERSION=us shift-check    # both, run in mupen64plus (system or $M64P_DIR), state compared
 tools/find_abs.py us           # addresses left without a relocation (should be 0)
 ```
 
@@ -44,8 +44,8 @@ has the details.
 `asm/` and `assets/` hold one version at a time. The Makefile refuses to
 build a version other than the one in `.version`, so `make clean` first.
 
-`shift-check` needs the official mupen64plus Linux bundle unpacked, with
-`M64P_DIR` pointing at it. It uses two small plugins of ours
+`shift-check` uses the system's mupen64plus (core and rsp-hle), or the
+official Linux bundle unpacked, with `M64P_DIR` pointing at it. It uses two small plugins of ours
 (`tools/src/m64p_*.c`): no video, and a scripted controller
 (`tools/inputs/menus.txt`). Runs are exactly repeatable, so any
 difference fails.

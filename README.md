@@ -44,9 +44,11 @@ make VERSION=us shift-check     # a shifted build against the original, in mupen
 `VERSION` is `us` (the default) or `eu`. `asm/` and `assets/` hold one
 version at a time, so run `make clean` before you switch.
 
-`shift-check` needs the [mupen64plus](https://github.com/mupen64plus/mupen64plus-core/releases)
-Linux bundle (2.6.0) unpacked somewhere, with `M64P_DIR` set to that
-directory. It runs headless.
+`shift-check` needs mupen64plus (2.6.0): the system's install (a
+distribution package with the core and `mupen64plus-rsp-hle`), or the
+[Linux bundle](https://github.com/mupen64plus/mupen64plus-core/releases)
+unpacked somewhere, with `M64P_DIR` set to that directory. It runs
+headless.
 
 ## Layout
 

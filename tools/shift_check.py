@@ -116,7 +116,9 @@ def run(rom, frames, m64p, script):
     can only start once)."""
     with tempfile.NamedTemporaryFile() as f:
         cmd = [sys.executable, str(Path(__file__).parent / "emu_ram.py"), str(rom),
-               "--frames", str(frames), "--out", f.name, "--m64p", m64p]
+               "--frames", str(frames), "--out", f.name]
+        if m64p:
+            cmd += ["--m64p", m64p]
         if script:
             cmd += ["--input", str(script)]
         subprocess.run(cmd, check=True)
@@ -194,8 +196,6 @@ def main():
     ap.add_argument("--converge", action="store_true",
                     help="only the last two checkpoints have to match (bigger pads)")
     a = ap.parse_args()
-    if not a.m64p:
-        ap.error("--m64p or $M64P_DIR: the unpacked mupen64plus bundle")
     v = a.version
     orig_dir, shift_dir = ROOT / f"build/{v}", ROOT / f"build/{v}-shift"
     orig, shifted = symbols(orig_dir / f"bm64.{v}.elf"), symbols(shift_dir / f"bm64.{v}.elf")
