@@ -89,6 +89,12 @@ extract: check stamp $(LZSS_LIB)
 	$(PYTHON) $(TOOLS_DIR)/assets.py extract $(VERSION)
 	$(PYTHON) -m splat split $(CONFIG) | grep -v "^File split suggestions" || true
 	$(PYTHON) $(TOOLS_DIR)/postsplit.py $(VERSION)
+	$(PYTHON) $(TOOLS_DIR)/vermap.py --rename $(VERSION)
+
+# eu's address map (tools/vermap.py): regenerate after the ROMs or the tool
+# change; needs both ROMs.  `make extract` for eu renames with it.
+vermap:
+	$(PYTHON) $(TOOLS_DIR)/vermap.py
 
 # the rebuilt code image, checked against the extracted one
 image: $(IMAGE)
@@ -170,5 +176,5 @@ $(TARGET).z64: $(IMAGE) $(ARCHIVE_SRCS) $(CONFIG) $(TOOLS_DIR)/rom.py $(TOOLS_DI
 	$(PYTHON) $(TOOLS_DIR)/n64crc.py $@
 
 .SECONDARY:
-.PHONY: FORCE all image check shift-check clean default extract lzss-check setup stamp verify
+.PHONY: FORCE all image check shift-check clean default extract lzss-check setup stamp verify vermap
 SHELL = /bin/bash -e -o pipefail

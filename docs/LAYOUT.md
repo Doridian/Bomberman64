@@ -85,11 +85,56 @@ Same layout and same segment list as US. These parts differ:
 | piece | US | EU | what differs |
 | --- | --- | --- | --- |
 | header | | | name `BOMBERMAN64E`, code `NBMP`, CRCs |
-| boot_code | `1000-1CBC0` | same size | Its libultra differs. US has `osUnmapTLBAll`/`osInitialize` at `3D90`/`3DE0`, before the nop padding at `414C`. EU lacks them there, so its first text block is 0x370 shorter (padding at `3DD0`), and its later text is longer by the same amount, which suggests a newer or PAL `osInitialize` elsewhere. Two small functions at `25A0`/`2614` change size by 4. From `1BCE4` (data) on, the two are the same |
+| boot_code | `1000-1CBC0` | same size | The same functions at the same addresses, except two stretches of libultra (measured by `tools/vermap.py`, "The US to EU map", below): the boot thread's function at `800018A8` (ROM `2448`, 98 words in both, about 29 changed, one word inserted and one removed around `800019B8`) and ROM `3DE0-41B0` (`800031E0-80003550`), where a 20-word and a 112-word function become 44 and 88 words, so the code between them moves 0x60 bytes. Everything after `41B0` is the same, and the data from `1BCE4` on is the same |
 | rom header table | | | one byte (`30021`) |
-| main_code | `40000-BFB00` | `40000-BFAF0` | 0x10 shorter. Many scattered differences, mostly relocation low halves (moved data) plus real code changes |
+| main_code | `40000-BFB00` | `40000-BFAF0` | 0x10 shorter, in the data. The text is the same size, and its 1048 functions are at the same addresses: 3267 words differ, nearly all lui/lo halves of addresses that moved (0x10 or 8 bytes, in the data from `8029FC4C` on), and 5 functions really changed (about 11 words) |
 | overlay banks | | | same headers and sizes. Bank 0x0B entry 1, bank 0x10 entry 13 and bank 0x12 entry 5 differ in content (same compressed size) |
 | asset archive | | | entry 32 (`"S2"` container) is 0xFDA58 bytes, 0x978 longer, so every later entry moves by 0x978 and the archive ends at `7B7F1C`. EU has no stray halfword in the tail |
+
+## The US to EU map
+
+`tools/vermap.py` aligns eu's code to us's from the two ROMs and writes
+`vermap.eu.txt` (generated and committed, like the configs; `make vermap`
+regenerates it, `tools/vermap.py --check` checks it, `--report` and
+`--functions [module]` show what it found). The overlays pair up by bank
+and entry (both ROMs have the same 95, the same sizes). Per module, the
+functions (a start after each return that no branch or jump table crosses,
+and every jal target) are aligned on their bodies with the linker-filled
+fields masked (jal targets, lui/lo immediates); what is left pairs by
+identical body in any order, then by similarity ("changed"). Every jal and
+lui/lo pair in aligned code is a (us, eu) address pair, and the pairs most
+code agrees on anchor the ranges of `vermap.eu.txt` (`module us-start
+us-end eu-start`, one address space per overlay and one for the fixed
+modules).
+
+`make extract` for eu then runs `vermap.py --rename eu` after postsplit:
+every `func_X`/`D_X`/`jtbl_X`/`LX` splat made from an eu address becomes
+us's name for that thing (`func_<us address>`, or the name in
+`symbol_addrs.us.txt`, so names added there flow into eu), and an eu
+address with no us counterpart `..._eu`. It is done on the text of the
+finished asm, all names at once, so an eu name cannot clash with a us name
+at another address. It needs only `vermap.eu.txt`, not the us ROM.
+Nothing is assembled differently (`make VERSION=eu` still matches, and
+`find_abs.py eu` is 0).
+
+What the alignment finds (functions, ZeroJump stub blocks not counted):
+
+| module | functions | identical | changed | us only | eu only |
+| --- | --- | --- | --- | --- | --- |
+| boot_code | 266 | 263 | 3 (`800018A8`, `80003190`, `80003470`) | 0 | 0 |
+| main_code | 1048 | 1043 | 5 (`8023D8A0`, `8023E1D8`, `8023EF38`, `8027C4F4`, `8027C5E0`) | 0 | 0 |
+| 95 overlays | 5524 | 5524 | 0 | 0 | 0 |
+| total | 6838 | 6830 (99.9%) | 8 | 0 | 0 |
+
+Every function is paired, so the map has no eu-only function and no
+us-only one. The three overlays that differ (`ovl_0B_01`, `ovl_10_13`,
+`ovl_12_05`: 1, 7 and 6 words) differ only in lui/lo halves of addresses in
+main_code, which moved; their data is the same. In main_code, 53 data words
+differ in content (what the map pairs): 48 timing values from `802A0958` to
+`802A0A14` (eu's are 1.2 times us's, or so: 50 Hz), one word at `802A1528`
+and 4 words of text at `802A2D00` on. The map is 114 ranges (boot_code 5, main_code 13, one for every
+other module), covering all of the text and data and the bss as far as the
+anchors reach; what a range does not cover is named from its eu address.
 
 ## Loaders
 

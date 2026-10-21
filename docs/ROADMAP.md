@@ -116,10 +116,13 @@ did it.
   good evidence but needs checking per file. The loop is Blast Corps' (m2c,
   `fdiff.py`, the permuter), in docs/DECOMPILING.md once it exists.
 - `tools/progress.py` per segment and per overlay.
-- eu from the same C: `tools/vermap.py`'s approach (align eu's functions
-  to us's by masked bodies, map the data through them) generates eu's
-  configs from us's. Names are us's everywhere, and eu-only things get a
-  `_eu` suffix.
+- eu from the same C: `tools/vermap.py` (done, docs/LAYOUT.md, "The US to
+  EU map") aligns eu's functions to us's by masked bodies and maps the
+  data through them (`vermap.eu.txt`). `make extract` for eu renames
+  splat's names to us's through it, so eu's configs and asm use us's
+  names everywhere, and eu-only things get a `_eu` suffix (there are none
+  yet: 99.9% of the functions are identical, the other 8 changed). What is
+  left is the `#if VERSION_EU` in the C for those 8 functions and the data.
 - Hudson's game code is likely all C. Only libultra's `.s` files are real
   asm, and the port doesn't use those.
 
