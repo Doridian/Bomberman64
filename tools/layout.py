@@ -59,10 +59,10 @@ ZEROJUMP_VRAM = 0x80042000
 MAIN_VRAM = 0x80225800
 OVERLAY_VRAM = 0x80043000
 
-# bss the ROM doesn't show.  boot_code's comes from its entry; main_code's
-# is from the reference decomp (and covers every reference past its end);
-# an overlay's is the extent of its references past its end (bss_size()).
-MAIN_BSS = 0xE3D0
+# bss the ROM doesn't show.  boot_code's comes from its entry, main_code's
+# from the memset of its bss in its init (main_bss()); an overlay's is the
+# extent of its references past its end (bss_size()).
+MAIN_BSS_CLEAR = 0x4005C   # lui a0 / lui t6 / addiu a0 / addiu t6: start, end
 OVERLAY_SPACE = 0x20000   # the loader invalidates this much at 0x80043000
 
 # opcodes that take rs + a signed 16-bit immediate: addiu, loads, stores
@@ -270,6 +270,15 @@ def bss_size(b, vram, limit):
     return ((max(past) + 4 - end + 15) & ~15) if past else 0
 
 
+def main_bss(d, main_end):
+    """main_code's bss size, from its init: memset(start, 0, end - start)
+    with start = its image's end."""
+    start = lui_addiu(d, MAIN_BSS_CLEAR, 4)
+    end = lui_addiu(d, MAIN_BSS_CLEAR, 14)
+    assert start == MAIN_VRAM + main_end - 0x40000, (hex(start), hex(main_end))
+    return end - start
+
+
 def first_function_end(b):
     """The end of a module's first function (after its jr ra and delay
     slot), rounded up to 16: the module's entry, which the loader jumps to,
@@ -278,6 +287,48 @@ def first_function_end(b):
         if u32(b, o) == 0x03E00008:
             return (o + 8 + 15) & ~15
     raise ValueError("no jr ra")
+
+
+# PC-relative branches (b, beq, bne, blez, bgtz and their likely forms, and
+# the REGIMM and COP1 branches): what a file boundary can't cut through
+BRANCH_OPS = {0x04, 0x05, 0x06, 0x07, 0x14, 0x15, 0x16, 0x17}
+
+
+def branch_target(w, o):
+    """The offset a branch at o goes to, or None."""
+    op = w >> 26
+    if op in BRANCH_OPS or op == 0x01 or (op == 0x11 and (w >> 21) & 31 == 8):
+        imm = w & 0xFFFF
+        return o + 4 + ((imm - 0x10000 if imm & 0x8000 else imm) << 2)
+    return None
+
+
+def object_starts(b, start, end):
+    """Where objects start in b[start:end] (text): IDO pads each object's
+    .text to 16 bytes, so a function that ends (jr ra, delay slot) and is
+    followed by nops up to a 16-byte boundary ends an object.  A boundary
+    that a branch crosses is dropped (as BlastCorps' gen_code_yaml does)."""
+    cand = []
+    o = start
+    while o < end - 8:
+        if u32(b, o) == 0x03E00008:
+            p = o + 8
+            if p % 16 and all(u32(b, q) == 0 for q in range(p, (p + 15) & ~15, 4)):
+                q = (p + 15) & ~15
+                if q < end and u32(b, q) != 0:
+                    cand.append(q)
+        o += 4
+    if not cand:
+        return []
+    crossed = set()
+    for o in range(start, end, 4):
+        t = branch_target(u32(b, o), o)
+        if t is not None:
+            lo, hi = min(o, t), max(o, t)
+            for c in cand:
+                if lo < c <= hi:
+                    crossed.add(c)
+    return [c for c in cand if c not in crossed]
 
 
 def code_segment(name, start, vram, data, bss_size, first_hasm=None,
@@ -292,17 +343,22 @@ def code_segment(name, start, vram, data, bss_size, first_hasm=None,
     else:
         pos = first_function_end(data)
         subs.append((0, "asm", f"{name}_entry"))
+    def code(a, b):
+        """asm objects covering [a, b)"""
+        for c in [a] + object_starts(data, a, b):
+            subs.append((c, "asm", None))
+
     if stubs and stubs[0] < text_end:
         # the block starts 16-aligned; whatever precedes it is code
         s0 = stubs[0] & ~15
         if s0 > pos:
-            subs.append((pos, "asm", None))
+            code(pos, s0)
         subs.append((s0, "hasm", f"{name}_zerojmp"))
         rest = (stubs[1] + 15) & ~15
         if rest < text_end:
-            subs.append((rest, "asm", None))
+            code(rest, text_end)
     elif text_end > pos:
-        subs.append((pos, "asm", None))
+        code(pos, text_end)
     if text_end < len(data):
         # .data and .rodata as one block until the per-object split; as
         # rodata, so that spimdisasm labels the jump tables in it
@@ -392,8 +448,8 @@ def config(version, d):
             # the boot thread reloads main_code up to segment_sizes[2] * 2 KiB
             # each time round, and loads the rest once (segment_sizes[3])
             persist = d[0x30000 + (start >> 17)] << 11
-            out += code_segment(name, start, MAIN_VRAM, blob, MAIN_BSS, note=note,
-                                persist=persist)
+            out += code_segment(name, start, MAIN_VRAM, blob, main_bss(d, end),
+                                note=note, persist=persist)
         else:
             line = f"  - [0x{start:X}, bin, {name}]"
             out.append(f"{line:<40}# {note}" if note else line)

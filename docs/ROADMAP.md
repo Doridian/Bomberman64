@@ -47,32 +47,51 @@ comes with stage 2's disassembly, and the `SHIFT` build will prove it.
 Editable formats for what the entries contain (models, textures, sound)
 are phase 5.
 
-## Phase 2 — stage 2: code split and reassembly
+## Phase 2 — stage 2: code split and reassembly (done, except per-object data)
 
-- **boot_code** (ROM `0x1000`, VRAM `0x80000400`): the entry point, the
-  scheduler, the main loop, libultra, libaudio.
-- **zerojump** (ROM `0x1CBC0`, VRAM `0x80042000`): a jump table the
-  overlays call through (see bm64's `zerojmp`).
-- **main_code** (ROM `0x40000`, VRAM `0x80225800`), uncompressed.
-- **overlays**: the banks of LZSS-compressed overlays, many sharing VRAM
-  `0x80043000`. Each overlay gets its own splat segment and object
-  directory, and its own symbol namespace (`ovl<bank>_<n>_func_XXXXXXXX`),
-  because addresses repeat across overlays.
+`make extract && make` disassembles every code segment and builds the ROM
+back from the asm, sha1-checked, for us and eu. docs/LAYOUT.md, "Stage 2",
+describes the pieces:
 
-The deliverable is `make` reassembling every code segment from splat's asm
-(one `.s` per function under `asm/nonmatchings`, pulled in by
-`GLOBAL_ASM`), recompressing the overlays, and matching the sha1. The first
-rebuild after that is a `SHIFT=1` build that pads every code segment's
-`.text`/`.data`. It proves that nothing depends on an absolute address,
-so every pointer splat left as a number gets found. Blast Corps needed
-`postsplit.py`, `link_syms.py` and `find_abs.py` for this. Port the parts
-that apply rather than rewriting them; modern splat already does some of
-it (`migrate_rodata_to_functions`, `ld_bss_is_noload`, `--emit-relocs`
-style checks).
+- **One code image** (`assets/code.bin`): the ROM below 0x120000 as it is,
+  then all 95 overlays inflated. One splat config (`bm64.<v>.yaml`, from
+  `tools/layout.py`) splits it, one link rebuilds it, and `tools/rom.py`
+  packs the ROM from it and the archives, recompressing the overlays.
+- **Modules:** boot_code, zerojump (fixed page, handwritten), main_code
+  and every overlay (`ovl_BB_EE`, VRAM 0x80043000, one shared RAM id,
+  names `func_ovlBB_EE_XXXXXXXX`). Each module's ZeroJump stub block is a
+  `hasm` object (`<module>_zerojmp`). Each module's entry function is its
+  own object, and main_code's persistent tail (loaded once by the boot
+  thread) is too.
+- **Objects:** text is split where IDO's 16-byte padding shows an object
+  boundary and no branch crosses it (334 objects in us). Every boundary
+  found is also in the reference decomp's split; some real ones are
+  missing (a function that ends on a 16-byte boundary leaves no padding).
+  Phase 3 fills those in as libultra's objects are identified.
+- **Nothing absolute:** `tools/postsplit.py` makes every reference into a
+  module relative to a label (mid-object references, data words however
+  splat typed them, module ends, zerojump's ROM range). `tools/find_abs.py`
+  finds 0 addresses left without a relocation in either version.
+- **SHIFT=1** pads every movable module after its entry and before its
+  data (`tools/ld_fix.py`). The fixed ROM positions stay put, and the
+  segment size table is written from the link. `make shift-check` runs the
+  shifted and the original ROM headless in mupen64plus with a scripted
+  controller (title, menus, a stage). Both versions give identical game
+  state at six checkpoints up to frame 24000. A build with one code
+  pointer left absolute fails it.
 
-Per-object `.data`/`.rodata`/`.bss` (one C file owns its data) is part of
-this phase, not later. It is what lets a decompiled file own its data
-from its first function onwards.
+**Not yet: per-object `.data`/`.rodata`/`.bss`.** Each module's data is one
+`rodata` block (as rodata so that spimdisasm labels its jump tables) and
+one bss block. Splitting them by object needs the `.data`/`.rodata`
+boundary. A first heuristic (above every stored-to address, below every
+jump table and float constant) disagrees with the reference decomp in 26
+of 95 overlays: floats in `.data` are loaded with `lwc1` too, and tables of
+function pointers look like jump tables. The reference's own boundaries are
+partly guesses as well. The reliable source is the compiler: once a file
+is C, its object shows exactly which data is `.data` and which `.rodata`.
+So this is done object by object as files are decompiled, starting with
+the first ones in phase 4, the way Blast Corps' `data_c.py`/`bss_c.py`
+did it.
 
 ## Phase 3 — libraries
 

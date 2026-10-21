@@ -1,14 +1,12 @@
 # ROM layout
 
-The top-level map of Bomberman 64 (1997), US (`NBME`) and EU (`NBMP`).
+The map of Bomberman 64 (1997), US (`NBME`) and EU (`NBMP`).
 `tools/layout.py <version>` derives it from the ROM and writes
-`bm64.<version>.yaml`, a splat config that splits the whole ROM into bins
-(26 segments in each version, one per archive). `tools/assets.py` splits
-the archives into their entries (`assets/bankNN/`) and builds them back.
-`tools/layout.py --check <version>` checks
-that the config covers the ROM with no gaps or overlaps and still matches
-what the ROM says. Splitting with splat64 and relinking those bins gives back
-both ROMs, sha1 for sha1.
+`bm64.<version>.yaml`, the splat config of the code image ("Stage 2",
+below). `tools/assets.py` splits the archives into their entries
+(`assets/bankNN/`) and builds them back. `tools/layout.py --check
+<version>` checks that the config still matches what the ROM says, and
+`tools/layout.py --print <version>` prints the ROM's segment list.
 
 Both ROMs are 8 MiB, CIC-NUS-6102, entry point `0x80000400`.
 
@@ -18,16 +16,16 @@ Both ROMs are 8 MiB, CIC-NUS-6102, entry point `0x80000400`.
 | --- | --- | --- | --- | --- |
 | `000000-000040` | | 0x40 | header | |
 | `000040-001000` | `A4000040` | 0xFC0 | boot | IPL3 (6102) |
-| `001000-01CBC0` | `80000400` | 0x1BBC0 | code+data | **boot_code**: entry, scheduler (`sched.c`), libultra, audio library. The entry clears bss `8001BFC0-80028460` (0xC4A0) and jumps to `80001A20` |
+| `001000-01CBC0` | `80000400` | 0x1BBC0 | code+data | **boot_code**: entry, scheduler (`sched.c`), libultra, audio library. IPL3 copies the first MiB from 0x1000 to 0x80000400; the entry clears bss `8001BFC0-80028460` (0xC4A0) and jumps to `800019A0` |
 | `01CBC0-01CCF0` | `80042000` | 0x130 | code+data | **zerojump**: boot_code's entry DMAs it to `80042000`; `osMapTLB` maps it at virtual `00000000`. "ZeroJump Error : unset segment/function" strings |
 | `01CCF0-030000` | | | pad | zeros |
-| `030000-030100` | `80024820` | 0x100 | data | ROM header table: boot_code DMAs it (in its bss). Bytes 2/3 are a start/length in 2 KiB units for a piece of main_code (`0x40000 + n<<11` to `0x80225800 + n<<11`) |
+| `030000-030100` | `80024820` | 0x100 | data | **segment size table** ("Loaders", below): boot_code DMAs it into its bss |
 | `030100-030800` | | | pad | zeros |
-| `030800-031800` | `8019B0D0` | 0x1000 | data | bank table: main_code DMAs it. u16s holding bank numbers (`ROM >> 17`, 0x09-0x17) |
+| `030800-031800` | `8019B0D0` | 0x1000 | data | **file table** ("Loaders"): main_code DMAs it |
 | `031800-040000` | | | pad | zeros |
-| `040000-0BFB00` | `80225800` | 0x7FB00 | code+data | **main_code**, uncompressed. bss `802A5300` + 0xE3D0 (reference decomp) |
+| `040000-0BFB00` | `80225800` | 0x7FB00 | code+data | **main_code**, uncompressed, ROM segment 2. Its init clears its bss, `802A5300-802B36D0` (0xE3D0) |
 | `0BFB00-120000` | | | pad | zeros |
-| `120000-2EF0CE` | `80043000` | | compressed archives | overlay banks 0x09-0x17 (below). main_code DMAs 0x20000 bytes to `80043000`; the overlays run there |
+| `120000-2EF0CE` | `80043000` | | compressed archives | overlay banks 0x09-0x17 (below); an overlay is inflated to `80043000` and runs there |
 | `2EF0CE-300000` | | | pad | bank 0x17's tail |
 | `300000-7B75A4` | | | compressed archive | bank 0x18: the asset archive, 873 entries. main_code opens it by ROM address (`lui a0,0x30`) |
 | `7B75A4-800000` | | | pad | zeros, plus a stray halfword at `7B75AA` |
@@ -93,6 +91,84 @@ Same layout and same segment list as US. These parts differ:
 | overlay banks | | | same headers and sizes. Bank 0x0B entry 1, bank 0x10 entry 13 and bank 0x12 entry 5 differ in content (same compressed size) |
 | asset archive | | | entry 32 (`"S2"` container) is 0xFDA58 bytes, 0x978 longer, so every later entry moves by 0x978 and the archive ends at `7B7F1C`. EU has no stray halfword in the tail |
 
+## Loaders
+
+The ROM is cut into 128 KiB **segments**, numbered `ROM >> 17`: segment 0
+is boot_code and zerojump, segment 2 main_code, segments 9-0x17 the
+overlay banks, 0x18 the asset archive.
+
+- **The segment size table** (0x30000, 0x100 bytes): byte n is segment
+  n's size in 2 KiB units, where 0 means 0x80000. It is mostly each
+  bank's size rounded up to 2 KiB. Exceptions: bank 0x16 has 0x40 although
+  its contents fit in 0x07, the asset archive has 0, and the bytes from
+  0x19 on are filler (0x20 is 0x6F in us, 0x70 in eu, the rest 0x40).
+  `0x800007F0(seg, dst)` DMAs `seg << 17` for that size.
+- **The boot thread** (0x80001750) DMAs the table, then ROM
+  `0x40000 + table[2] * 2K` for `table[3] * 2K` bytes (0xBF800-0xC0000)
+  to 0x802A5000, once. It then loops forever: load segment `*0x80024818`
+  (initially 2) to 0x80225800 and call it. Each time round, main_code is
+  reloaded up to `table[2] * 2K` (0x7F800). Its tail from 0xBF800 on is
+  loaded once and survives the reloads (`main_code_persist` in the
+  config); main_code's bss lies in that page's zero tail and past it.
+- **The file table** (0x30800, 0x1000 bytes): two bytes per file id, the
+  segment and then an offset in 2 KiB units. The overlay loader
+  `0x8022691C(id)` opens the archive at `seg << 17 + off << 11`, reads its
+  entry 0 (the index) to 0x8019C0D0, looks `id` up there to get the entry
+  number, and inflates that entry to 0x80043000. It switches the open
+  archive back to 0x300000, calls 0x80043000, and keeps the pointer that
+  returns at 0x802A532C. Every overlay id is in its bank's index, and the
+  table points it at that bank (offset 0). Some ids in the table are in no
+  index (24, for one) and look stale. bank0B's index says 9 entries but
+  has 7 records.
+- **ZeroJump:** the 0x130-byte zerojump is DMAd to 0x80042000 and mapped
+  by the TLB at virtual 0. A call is `jr $zero` with `li $t0, id` in the
+  delay slot: the high byte picks a module's table (registered with
+  `0x80001A30(n, table)` into 0x8001BFC0[n]), the low byte the function.
+  An unset entry prints "ZeroJump Error : unset segment/function".
+  main_code and every overlay carry a full block of these stubs
+  (`00000008 2408xxxx` pairs, about 0x1640 bytes).
+- **An overlay's entry** (0x80043000) returns its main function (0x80043010).
+
+## Stage 2: the code image
+
+What splat splits and the code link rebuilds is not the ROM but the
+**code image** (`assets/code.bin`, written by `assets.py extract`): the
+ROM below 0x120000 as it is, then all 95 overlays inflated, back to back in
+bank and entry order (0x19F7D0 bytes; every overlay is a multiple of 16).
+`tools/rom.py` builds the ROM from the rebuilt image and the archives:
+the image's first 0x120000 bytes, then the banks, with each overlay entry
+taken from where the link put it and recompressed. It writes the segment
+size table from the link, and checks the file table.
+
+In the config (`tools/layout.py`):
+
+- **The code segments** are boot_code (VRAM 0x80000400, `entry` hasm, bss
+  from the entry's clear), zerojump (at its physical 0x80042000, hasm,
+  its strings as rodata), main_code (bss from its init's clear) and
+  `ovl_BB_EE` for each overlay (VRAM 0x80043000, one shared
+  `exclusive_ram_id`, names `func_ovlBB_EE_XXXXXXXX`, bss from the extent
+  of its references past its end). Every code segment has a RAM id: splat
+  makes one range of all untagged segments, which 0x80043000 would fall
+  inside.
+- **Text** ends after a module's last `jr ra` or ZeroJump stub, rounded
+  up to 16, and before any RSP code (the first j/jal into IMEM,
+  0x04001000-0x04002000: main_code's data from 0xB7A50 is RSP microcode).
+  That agrees with the reference decomp for boot_code (0x1AB80),
+  main_code (0xB7A50) and all 95 overlays. Each module's first function
+  (its entry) is an object of its own, as is the ZeroJump stub block
+  (`<module>_zerojmp`). The rest of the text is split where IDO's 16-byte
+  padding after a function shows an object boundary that no branch
+  crosses.
+- **Data** is one `rodata` block per module for now (docs/ROADMAP.md,
+  phase 2, "Not yet"), plus `main_code_persist` from main_code's
+  persistent part on.
+
+`tools/ld_fix.py` turns splat's linker script into the build's. Splat
+would place every segment after the one before. Instead, the pads link
+nothing and the ROM position jumps to the next fixed start (with an
+ASSERT), and `main_code_persist` starts 2 KiB-aligned. `SHIFT=1` adds the
+pads that move everything after each module's entry.
+
 ## Compiler and library hints
 
 - The reference decomp (Bomberhackers/bm64) builds with IDO 5.3 at `-O2`,
@@ -108,11 +184,8 @@ Same layout and same segment list as US. These parts differ:
 
 ## Uncertain
 
-- What the bytes of the `0x30000` table mean, beyond 2/3. The US value
-  (`ff 01`) would load only `BF800-C0000`, so main_code's main load is
-  elsewhere and has not been traced.
-- main_code's end is "last non-zero byte before 0x120000, rounded up to 16".
-  That agrees with the reference's bss start (`802A5300` = `80225800` +
-  0x7FB00) for US. EU's bss would start at `802A52F0`, which is unchecked.
-- The overlay VRAM `80043000` comes from the reference and from a 0x20000
-  DMA in main_code, not from a traced load of each overlay.
+- What the size table's filler bytes (0x19 on) and bank 0x16's oversized
+  entry mean, if anything. They are kept as the ROM has them.
+- The file table's stale ids (in no bank's index).
+- Text object boundaries the padding doesn't show (functions that end on a
+  16-byte boundary). Phase 3's library matching fills those in.
