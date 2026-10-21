@@ -412,7 +412,7 @@ def config(version, d):
         "  asm_path: asm",
         "  src_path: src",
         "  build_path: build",
-        f"  symbol_addrs_path: [symbol_addrs.{version}.txt]",
+        f"  symbol_addrs_path: [symbol_addrs.{version}.txt, symbol_addrs.libmalloc.{version}.txt]",
         "  undefined_funcs_auto_path: undefined_funcs_auto.txt",
         "  undefined_syms_auto_path: undefined_syms_auto.txt",
         "  find_file_boundaries: yes",

@@ -11,7 +11,7 @@ options:
   asm_path: asm
   src_path: src
   build_path: build
-  symbol_addrs_path: [symbol_addrs.us.txt]
+  symbol_addrs_path: [symbol_addrs.us.txt, symbol_addrs.libmalloc.us.txt]
   undefined_funcs_auto_path: undefined_funcs_auto.txt
   undefined_syms_auto_path: undefined_syms_auto.txt
   find_file_boundaries: yes

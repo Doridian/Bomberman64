@@ -100,8 +100,12 @@ did it.
   objects) and build ultralib for it, IDO with its own flags. Name
   libultra by matching ultralib objects (`gen_symbols.py`/`libmatch.py`
   in Blast Corps).
-- Hudson links its own allocator (`libmalloc/gmalloc`, built `-g`) and
-  probably an older libaudio. Identify those the same way.
+- Hudson links its own allocator and probably an older libaudio.
+  **The allocator is done:** GNU malloc's `gmalloc.c` (1995), IDO 5.3
+  `-g -mips1 -DPAGESIZE=0x1000`, a byte-exact match for ROM
+  `0xB3B70-0xB5E50` in us and eu, named in
+  `symbol_addrs.libmalloc.<v>.txt`. docs/LIBMALLOC.md has the details, the
+  checking tool and the licence (LGPLv2+). The libaudio is still to do.
 - `symbol_addrs.<module>.<v>.txt` is generated, and only library code gets
   real names until the game's code is understood. Don't guess names.
 
