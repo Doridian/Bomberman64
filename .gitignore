@@ -1,0 +1,23 @@
+# ROMs and build output
+*.z64
+*.n64
+*.v64
+*.bin
+*.ok
+*.ld
+*auto*.txt
+*.eep
+
+# directories
+__pycache__/
+asm/
+assets/
+build/
+expected/
+permuter/
+nonmatchings/
+.env/
+.version
+tools/ido/
+.vscode/
+include/macro.inc

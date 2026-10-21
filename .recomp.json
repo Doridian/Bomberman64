@@ -1,0 +1,8 @@
+{
+  "$schema": "https://recomp.fyi/schema/v1.json",
+  "game": "Bomberman 64",
+  "wikidata": "Q2909714",
+  "system": "N64",
+  "type": ["decomp", "port"],
+  "status": "exploring"
+}
