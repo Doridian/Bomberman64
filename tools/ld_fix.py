@@ -19,6 +19,11 @@ With --shift PAD (the SHIFT=1 build) every movable module gets PAD bytes of
 zeros after its entry object's .text and at the start of its data: the
 entries (0x80000400, 0x80225800, 0x80043000) stay where the loaders jump,
 everything after them moves.  zerojump, a fixed page, doesn't.
+
+Symbols the config's symbol files declare `absolute:True` (libultra's boot
+parameters in low RDRAM, osTvType and the like: in no segment) are defined
+at the end, at their address: splat takes them as defined elsewhere and
+doesn't list them in undefined_syms_auto.txt.
 """
 import argparse
 import re
@@ -39,6 +44,20 @@ def fixed_starts(version):
         name = s["name"] if isinstance(s, dict) else (s[2] if len(s) > 2 else None)
         if name and name.startswith("pad_"):
             out[name] = nxt["start"] if isinstance(nxt, dict) else nxt[0]
+    return out
+
+
+def absolute_symbols(version):
+    """`name = 0xADDR;` for every absolute:True symbol of the config's
+    symbol files."""
+    cfg = yaml.safe_load((ROOT / f"bm64.{version}.yaml").read_text())
+    paths = cfg["options"]["symbol_addrs_path"]
+    out = []
+    for p in [paths] if isinstance(paths, str) else paths:
+        for line in (ROOT / p).read_text().splitlines():
+            m = re.match(r"\s*(\w+)\s*=\s*(0x[0-9A-Fa-f]+);\s*//(.*)", line)
+            if m and re.search(r"\babsolute:(true|yes|on|y)\b", m.group(3), re.I):
+                out.append(f"{m.group(1)} = {m.group(2)};")
     return out
 
 
@@ -77,6 +96,7 @@ def main():
                 out.append(f"        . += 0x{a.shift:X}; /* SHIFT */")
             elif re.match(rf"\s*{section}_DATA_START = \.;", line):
                 out.append(f"        . += 0x{a.shift:X}; /* SHIFT */")
+    out += absolute_symbols(a.version)
     Path(a.output).write_text("\n".join(out) + "\n")
 
 

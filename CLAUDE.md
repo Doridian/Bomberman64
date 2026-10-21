@@ -6,9 +6,11 @@ the Blast Corps decomp in `../BlastCorps`: same goals, same rules, and its
 tools are the first place to look before writing a new one. docs/ROADMAP.md
 has the phases. Phases 0-2 are done: the ROM is built from its pieces
 (stage 1) and every code segment from splat's asm (stage 2), and a
-shifted build runs the same as the original. Phase 4's C pipeline works
+shifted build runs the same as the original. Phase 3 has libultra named
+(2.0I, docs/LIBULTRA.md) and Hudson's allocator identified (GNU
+gmalloc, docs/LIBMALLOC.md). Phase 4's C pipeline works
 (docs/DECOMPILING.md), with a few objects decompiled. Not yet: per-object
-`.data`/`.rodata`/`.bss` (phase 2, "Not yet"), libraries (phase 3).
+`.data`/`.rodata`/`.bss` (phase 2, "Not yet").
 
 ## Versions
 
@@ -30,7 +32,13 @@ make VERSION=us SHIFT=1        # shifted build in build/us-shift/, not sha1-chec
 make VERSION=us shift-check    # both, run in mupen64plus (system or $M64P_DIR), state compared
 tools/find_abs.py us           # addresses left without a relocation (should be 0)
 tools/progress.py              # how much is C (docs/DECOMPILING.md has the loop)
+tools/build_ultralib.sh        # libultra reference objects in build/ultralib
+tools/gen_symbols.py us build/ultralib/build/I/libultra_rom  # library names
 ```
+
+After `gen_symbols.py`, run `tools/layout.py <v>` (the new object
+boundaries) and `make clean` before extracting again. docs/LIBULTRA.md has
+the workflow.
 
 `extract` turns each archive (`bankNN`) into `assets/bankNN/` (inflated
 `NN.bin`, stored `NN.raw`, `index.yaml`, `archive.yaml`; checked to
@@ -78,6 +86,10 @@ difference fails.
   (`--check` verifies it), and `make VERSION=eu extract` renames eu's
   symbols with it (docs/LAYOUT.md, "The US to EU map"). Names go in
   `symbol_addrs.us.txt` and reach eu by themselves.
+- **Library names are generated.** `symbol_addrs.<module>.<v>.txt` and
+  `lib_objects.<v>.txt` come from `tools/gen_symbols.py` (below its marker
+  line); names given by hand go above the marker or in
+  `symbol_addrs.<v>.txt`.
 - **Don't guess names.** Only libraries get real names, from matching.
   Everything else keeps `func_`/`D_` address names (us's addresses in
   every version). Overlays share VRAM `0x80043000`, so their names carry
@@ -95,6 +107,7 @@ difference fails.
 
 - docs/LAYOUT.md: the ROM map, the archive format, US↔EU differences.
 - docs/COMPRESSION.md: Hudson's LZSS stream and encoder.
+- docs/LIBULTRA.md: the libultra revision, the matching, what doesn't match.
 - docs/ROADMAP.md: phases 1–8.
 - docs/DECOMPILING.md: C files, flags, m2c/fdiff/permuter, eu, data.
 - docs/NETPLAY.md: WebRTC (libdatachannel, the browser's WebRTC,

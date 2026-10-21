@@ -85,7 +85,7 @@ Same layout and same segment list as US. These parts differ:
 | piece | US | EU | what differs |
 | --- | --- | --- | --- |
 | header | | | name `BOMBERMAN64E`, code `NBMP`, CRCs |
-| boot_code | `1000-1CBC0` | same size | The same functions at the same addresses, except two stretches of libultra (measured by `tools/vermap.py`, "The US to EU map", below): the boot thread's function at `800018A8` (ROM `2448`, 98 words in both, about 29 changed, one word inserted and one removed around `800019B8`) and ROM `3DE0-41B0` (`800031E0-80003550`), where a 20-word and a 112-word function become 44 and 88 words, so the code between them moves 0x60 bytes. Everything after `41B0` is the same, and the data from `1BCE4` on is the same |
+| boot_code | `1000-1CBC0` | same size | Its libultra is the same objects, byte for byte (docs/LIBULTRA.md). Only the 0x60 bytes of zeros between two link units sit elsewhere: US has them after `osSetThreadPri` (`4150-41B0`), EU between `osUnmapTLBAll` and `osInitialize` (`3DE0-3E40`), so `osInitialize` and `osSetThreadPri` are 0x60 later in EU. Two small game functions at `25A0`/`2614` change size by 4 (`tools/vermap.py`, below, sees them as one changed function at `800018A8`, and the moved gap as two functions changing size). From `1BCE4` (data) on, the two are the same |
 | rom header table | | | one byte (`30021`) |
 | main_code | `40000-BFB00` | `40000-BFAF0` | 0x10 shorter, in the data. The text is the same size, and its 1048 functions are at the same addresses: 3267 words differ, nearly all lui/lo halves of addresses that moved (0x10 or 8 bytes, in the data from `8029FC4C` on), and 5 functions really changed (about 11 words) |
 | overlay banks | | | same headers and sizes. Bank 0x0B entry 1, bank 0x10 entry 13 and bank 0x12 entry 5 differ in content (same compressed size) |
@@ -202,8 +202,9 @@ In the config (`tools/layout.py`):
   main_code (0xB7A50) and all 95 overlays. Each module's first function
   (its entry) is an object of its own, as is the ZeroJump stub block
   (`<module>_zerojmp`). The rest of the text is split where IDO's 16-byte
-  padding after a function shows an object boundary that no branch
-  crosses.
+  padding after a function shows an object boundary, and where a matched
+  libultra object starts or ends (`lib_objects.<v>.txt`), unless a branch
+  crosses it.
 - **Data** is one `rodata` block per module for now (docs/ROADMAP.md,
   phase 2, "Not yet"), plus `main_code_persist` from main_code's
   persistent part on.
@@ -221,12 +222,15 @@ pads that move everything after each module's entry.
   `-g`; boot_code's libraries and main_code's code after the ZeroJump
   block are `-mips2`. docs/DECOMPILING.md has the evidence. The reference
   decomp (Bomberhackers/bm64) agrees, with more files at `-O3`.
-- There is no libultra version string. The scheduler's assert strings
-  (`sched.c`, `sc->curRSPTask`) are the SDK's sample scheduler. boot_code
-  has a nop-padded gap before `sprintf` (US `414C-41B0`), so two separately
-  aligned link units meet there.
-- EU's libultra is not US's (see boot_code above). Expect a PAL or newer
-  `osInitialize` and different VI handling.
+- libultra is 2.0I as ultralib builds it (`libultra_rom`, IDO 5.3, its
+  own flags), with some objects from a different revision; libaudio is
+  the same 2.0I one. docs/LIBULTRA.md has the evidence and what doesn't
+  match. There is no libultra version string. The scheduler's assert
+  strings (`sched.c`, `sc->curRSPTask`) are the SDK's sample scheduler,
+  compiled with the game. boot_code has a 0x60-byte zero gap between two
+  link units (US before `sprintf`, `4150-41B0`).
+- EU links the same libultra (see boot_code above), NTSC/PAL handling
+  included: `osInitialize` and `__osViInit` are identical.
 
 ## Uncertain
 
@@ -234,4 +238,5 @@ pads that move everything after each module's entry.
   entry mean, if anything. They are kept as the ROM has them.
 - The file table's stale ids (in no bank's index).
 - Text object boundaries the padding doesn't show (functions that end on a
-  16-byte boundary). Phase 3's library matching fills those in.
+  16-byte boundary), in the game's own code. In libultra, matching found
+  them (`lib_objects.<v>.txt`, docs/LIBULTRA.md).

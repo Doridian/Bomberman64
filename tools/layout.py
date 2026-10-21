@@ -33,7 +33,12 @@ The config this writes covers the image: the code segments (boot_code,
 zerojump, main_code, each overlay) with their text, ZeroJump stub block,
 data and bss, and everything else as bins.  A segment's text ends after
 its last `jr ra` (or ZeroJump stub), rounded up to 16, but before any RSP
-code (a j/jal into IMEM), which belongs to the data.
+code (a j/jal into IMEM), which belongs to the data.  The text is split
+into objects where IDO's padding shows a boundary and where a matched
+library object starts or ends (lib_objects.<version>.txt, from
+tools/gen_symbols.py).  The library's names come from the
+symbol_addrs.<module>.<version>.txt files gen_symbols.py writes; every one
+that exists is listed in the config.
 """
 import argparse
 import struct
@@ -303,21 +308,38 @@ def branch_target(w, o):
     return None
 
 
-def object_starts(b, start, end):
+def lib_objects(version):
+    """{module: {offset in the module}} where a matched library object starts
+    or ends (lib_objects.<version>.txt)."""
+    out = {}
+    path = ROOT / f"lib_objects.{version}.txt"
+    if not path.exists():
+        return out
+    for line in path.read_text().splitlines():
+        if line.startswith("#") or not line.strip():
+            continue
+        module, addr = line.split()[:2]
+        out.setdefault(module, set()).add(int(addr, 16))
+    return out
+
+
+def object_starts(b, start, end, known=()):
     """Where objects start in b[start:end] (text): IDO pads each object's
     .text to 16 bytes, so a function that ends (jr ra, delay slot) and is
-    followed by nops up to a 16-byte boundary ends an object.  A boundary
-    that a branch crosses is dropped (as BlastCorps' gen_code_yaml does)."""
-    cand = []
+    followed by nops up to a 16-byte boundary ends an object.  `known` adds
+    boundaries the padding doesn't show (library objects).  A boundary that
+    a branch crosses is dropped (as BlastCorps' gen_code_yaml does)."""
+    cand = sorted(c for c in known if start < c < end and c % 16 == 0 and u32(b, c) != 0)
     o = start
     while o < end - 8:
         if u32(b, o) == 0x03E00008:
             p = o + 8
             if p % 16 and all(u32(b, q) == 0 for q in range(p, (p + 15) & ~15, 4)):
                 q = (p + 15) & ~15
-                if q < end and u32(b, q) != 0:
+                if q < end and u32(b, q) != 0 and q not in cand:
                     cand.append(q)
         o += 4
+    cand.sort()
     if not cand:
         return []
     crossed = set()
@@ -341,9 +363,11 @@ def c_source(seg_dir, obj):
 
 
 def code_segment(name, start, vram, data, bss_size, first_hasm=None,
-                 note=None, persist=None):
+                 note=None, persist=None, known=()):
     """The YAML lines of one code segment of the image.  persist: the
-    offset of main_code's part that is loaded once (see fixed())."""
+    offset of main_code's part that is loaded once (see fixed()).  known:
+    object boundaries (VRAM) the padding may not show."""
+    known = {a - vram for a in known}
     text_end, stubs = text_split(data)
     subs = []
     if first_hasm:
@@ -354,7 +378,7 @@ def code_segment(name, start, vram, data, bss_size, first_hasm=None,
         subs.append((0, "asm", f"{name}_entry"))
     def code(a, b):
         """asm objects covering [a, b)"""
-        for c in [a] + object_starts(data, a, b):
+        for c in [a] + object_starts(data, a, b, known):
             subs.append((c, "asm", None))
 
     if stubs and stubs[0] < text_end:
@@ -406,9 +430,17 @@ def code_segment(name, start, vram, data, bss_size, first_hasm=None,
     return out
 
 
+def symbol_files(version):
+    """The hand-written symbol file, then the generated ones (per module, and
+    per library: symbol_addrs.libmalloc.<version>.txt)."""
+    gen = sorted(p.name for p in ROOT.glob(f"symbol_addrs.*.{version}.txt"))
+    return [f"symbol_addrs.{version}.txt"] + gen
+
+
 def config(version, d):
     """The YAML text of bm64.<version>.yaml, and the image's size."""
     segs, boot_bss = fixed(d)
+    lib = lib_objects(version)
     starts = [s for s, _, _ in segs] + [FIRST_BANK]
     out = [
         f"name: Bomberman 64 ({version.upper()}) code image",
@@ -424,7 +456,7 @@ def config(version, d):
         "  asm_path: asm",
         "  src_path: src",
         "  build_path: build",
-        f"  symbol_addrs_path: [symbol_addrs.{version}.txt, symbol_addrs.libmalloc.{version}.txt]",
+        f"  symbol_addrs_path: [{', '.join(symbol_files(version))}]",
         "  undefined_funcs_auto_path: undefined_funcs_auto.txt",
         "  undefined_syms_auto_path: undefined_syms_auto.txt",
         "  find_file_boundaries: yes",
@@ -440,7 +472,8 @@ def config(version, d):
         blob = d[start:end]
         if name == "boot_code":
             out += code_segment(name, start, BOOT_VRAM, blob, boot_bss,
-                                first_hasm=(0x50, "entry"), note=note)
+                                first_hasm=(0x50, "entry"), note=note,
+                                known=lib.get(name, ()))
         elif name == "zerojump":
             strings = blob.index(b"ZeroJump")
             assert strings % 16 == 0, hex(strings)
@@ -461,7 +494,7 @@ def config(version, d):
             # each time round, and loads the rest once (segment_sizes[3])
             persist = d[0x30000 + (start >> 17)] << 11
             out += code_segment(name, start, MAIN_VRAM, blob, main_bss(d, end),
-                                note=note, persist=persist)
+                                note=note, persist=persist, known=lib.get(name, ()))
         else:
             line = f"  - [0x{start:X}, bin, {name}]"
             out.append(f"{line:<40}# {note}" if note else line)

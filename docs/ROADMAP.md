@@ -93,21 +93,38 @@ So this is done object by object as files are decompiled, starting with
 the first ones in phase 4, the way Blast Corps' `data_c.py`/`bss_c.py`
 did it (docs/DECOMPILING.md, "Data").
 
-## Phase 3 — libraries
+## Phase 3 — libraries (done, except what no revision matches)
 
-- Identify the libultra revision (header strings, `__osViInit` tables,
-  which `osVi*` modes exist; the reference decomp's split lists the
-  objects) and build ultralib for it, IDO with its own flags. Name
-  libultra by matching ultralib objects (`gen_symbols.py`/`libmatch.py`
-  in Blast Corps).
-- Hudson links its own allocator and probably an older libaudio.
-  **The allocator is done:** GNU malloc's `gmalloc.c` (1995), IDO 5.3
+docs/LIBULTRA.md has the details.
+
+- **libultra is 2.0I** as decompals/ultralib builds it (`libultra_rom`,
+  IDO 5.3, its own flags: libc, gu and libaudio `-O3`), in both versions.
+  ultralib's D to I builds are the same code, and J/K/L don't match.
+  `tools/build_ultralib.sh` builds every revision, and `tools/libmatch.py
+  --scan` compares them.
+- `tools/libmatch.py` and `tools/gen_symbols.py` (Blast Corps') name 347
+  functions and 34 globals in boot_code and 12 functions and 1 global in
+  main_code, in us and eu alike (`symbol_addrs.<module>.<v>.txt`). EU's
+  libultra is byte for byte US's. Only a 0x60-byte gap moves.
+- Library objects whose boundaries the padding didn't show are split
+  (`lib_objects.<v>.txt`, read by `tools/layout.py`): 397 text objects in
+  us instead of 334.
+- **libaudio** is 2.0I's libaudio, not an older audio library. All of it
+  matches except `alSynStartVoiceParams` and the sound player's static
+  event handler.
+- **Not yet:** the parts no ultralib revision matches (EEPROM, the
+  controller and some controller pak functions, `osCartRomInit`,
+  `osLeoDiskInit`, `__osException`, two runs next to libc). They are
+  decompiled in phase 4 against 2.0I's sources. Overlay copies of
+  `osSpTaskYield`/`__osSpSetStatus` aren't named yet (one image, shared
+  VRAM).
+- **Hudson's allocator** is GNU malloc's `gmalloc.c` (1995), IDO 5.3
   `-g -mips1 -DPAGESIZE=0x1000`, a byte-exact match for ROM
   `0xB3B70-0xB5E50` in us and eu, named in
   `symbol_addrs.libmalloc.<v>.txt`. docs/LIBMALLOC.md has the details, the
-  checking tool and the licence (LGPLv2+). The libaudio is still to do.
-- `symbol_addrs.<module>.<v>.txt` is generated, and only library code gets
-  real names until the game's code is understood. Don't guess names.
+  checking tool and the licence (LGPLv2+).
+- Only library code gets real names until the game's code is understood.
+  Don't guess names.
 
 ## Phase 4 — decompilation (us, then eu)
 
