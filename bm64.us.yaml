@@ -240,9 +240,9 @@ segments:
     bss_size: 0xE3D0
     exclusive_ram_id: main_code
     subsegments:
-      - [0x40000, asm, main_code_entry]
+      - [0x40000, c, main_code_entry]
       - [0x40040, asm]
-      - [0x40300, asm]
+      - [0x40300, c]
       - [0x404C0, asm]
       - [0x40FB0, asm]
       - [0x412F0, asm]
@@ -263,7 +263,7 @@ segments:
       - [0x7B2D0, asm]
       - [0x7C4D0, asm]
       - [0x7D840, asm]
-      - [0x80420, asm]
+      - [0x80420, c]
       - [0x80580, asm]
       - [0x85A10, asm]
       - [0x86680, asm]
@@ -306,7 +306,7 @@ segments:
     symbol_name_format: ovl09_01_$VRAM
     dir: overlays/ovl_09_01
     subsegments:
-      - [0x120000, asm, ovl_09_01_entry]
+      - [0x120000, c, ovl_09_01_entry]
       - [0x120010, asm]
       - [0x120320, hasm, ovl_09_01_zerojmp]
       - [0x121960, rodata]

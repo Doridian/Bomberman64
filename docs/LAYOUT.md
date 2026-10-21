@@ -216,10 +216,11 @@ pads that move everything after each module's entry.
 
 ## Compiler and library hints
 
-- The reference decomp (Bomberhackers/bm64) builds with IDO 5.3 at `-O2`,
-  `-mips1`, with some files at `-O3` and one at `-g`, and matches with that.
-  Not re-verified here beyond the IDO-style code (`jr ra` with filled delay
-  slots, `lui`/`addiu` pairs, `$at` stores).
+- IDO 5.3. Hudson's game code (main_code up to its ZeroJump block, the
+  overlays) is `-mips1`, `-O2` where checked so far, main_code's entry
+  `-g`; boot_code's libraries and main_code's code after the ZeroJump
+  block are `-mips2`. docs/DECOMPILING.md has the evidence. The reference
+  decomp (Bomberhackers/bm64) agrees, with more files at `-O3`.
 - There is no libultra version string. The scheduler's assert strings
   (`sched.c`, `sc->curRSPTask`) are the SDK's sample scheduler. boot_code
   has a nop-padded gap before `sprintf` (US `414C-41B0`), so two separately

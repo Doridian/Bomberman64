@@ -331,6 +331,15 @@ def object_starts(b, start, end):
     return [c for c in cand if c not in crossed]
 
 
+def c_source(seg_dir, obj):
+    """The C file of a text object, where splat looks for it: src/, under
+    the segment's dir (overlays/ovl_BB_EE), named as the asm is (its image
+    offset, or its given name).  An object whose file exists is a `c`
+    subsegment: splat writes its functions to asm/nonmatchings/ for the
+    file's GLOBAL_ASM lines (docs/DECOMPILING.md)."""
+    return ROOT / "src" / (seg_dir or "") / f"{obj}.c"
+
+
 def code_segment(name, start, vram, data, bss_size, first_hasm=None,
                  note=None, persist=None):
     """The YAML lines of one code segment of the image.  persist: the
@@ -387,7 +396,10 @@ def code_segment(name, start, vram, data, bss_size, first_hasm=None,
             f"    dir: overlays/{name}",
         ]
     out.append("    subsegments:")
+    seg_dir = None if vram != OVERLAY_VRAM else f"overlays/{name}"
     for off, kind, sub in subs:
+        if kind == "asm" and c_source(seg_dir, sub or f"{start + off:X}").exists():
+            kind = "c"
         out.append(f"      - [0x{start + off:X}, {kind}" + (f", {sub}]" if sub else "]"))
     if bss_size:
         out.append(f"      - {{type: bss, vram: 0x{vram + len(data):08X}}}")

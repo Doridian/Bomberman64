@@ -91,7 +91,7 @@ partly guesses as well. The reliable source is the compiler: once a file
 is C, its object shows exactly which data is `.data` and which `.rodata`.
 So this is done object by object as files are decompiled, starting with
 the first ones in phase 4, the way Blast Corps' `data_c.py`/`bss_c.py`
-did it.
+did it (docs/DECOMPILING.md, "Data").
 
 ## Phase 3 — libraries
 
@@ -111,18 +111,40 @@ did it.
 
 ## Phase 4 — decompilation (us, then eu)
 
-- IDO 5.3, `-mips1` (or `-mips2`: check `MIPS_VERSION`), mostly `-O2`
-  with some files `-O3` and a few `-g`, per bm64's Makefile, which is
-  good evidence but needs checking per file. The loop is Blast Corps' (m2c,
-  `fdiff.py`, the permuter), in docs/DECOMPILING.md once it exists.
-- `tools/progress.py` per segment and per overlay.
-- eu from the same C: `tools/vermap.py` (done, docs/LAYOUT.md, "The US to
-  EU map") aligns eu's functions to us's by masked bodies and maps the
-  data through them (`vermap.eu.txt`). `make extract` for eu renames
-  splat's names to us's through it, so eu's configs and asm use us's
-  names everywhere, and eu-only things get a `_eu` suffix (there are none
-  yet: 99.9% of the functions are identical, the other 8 changed). What is
-  left is the `#if VERSION_EU` in the C for those 8 functions and the data.
+The pipeline is in place (docs/DECOMPILING.md has the loop and the
+evidence for the flags):
+
+- A text object is C when `src/` has its file; `tools/layout.py` makes it
+  a `c` subsegment, `tools/c_stub.py` starts the file with every function
+  GLOBAL_ASM, and asm-processor builds it with IDO 5.3. `include/` has the
+  ultra64 types and `common.h`.
+- Flags: Hudson's game code is `-mips1` (load delay slots filled, no
+  branch-likely) at `-O2` by default; `-O3` files are listed in the
+  Makefile (IDO's `-O3` emits a file's functions in reverse order, which
+  is the quickest test), and main_code's entry is `-g`. Libraries
+  (boot_code, main_code from its ZeroJump block on) are `-mips2`.
+- Tools: `tools/m2c.sh`, `tools/fdiff.py` (and asm-differ's
+  `diff_settings.py`), `tools/permute.sh`, `tools/progress.py` (per module,
+  overlays per bank or each).
+- Done so far, matching in us and eu: `main_code_entry` (func_80225800,
+  `-g`), `40300` (all seven functions: a bump allocator and Hudson's
+  string/memory helpers), `80420` (four of five; func_80265D10 is a run of
+  13 empty functions spimdisasm sees as one), and ovl_09_01's entry.
+- eu from the same C: `tools/vermap.py` (docs/LAYOUT.md, "The US to EU
+  map") aligns eu's functions to us's by masked bodies and maps the data
+  through them (`vermap.eu.txt`). `make extract` for eu renames splat's
+  names to us's through it, so eu's asm and the C use us's names
+  everywhere, and eu-only things get a `_eu` suffix (there are none yet:
+  99.9% of the functions are identical, the other 8 changed).
+
+**Not yet:**
+- Per-object data (phase 2's "Not yet"): a C function must produce no
+  `.data`/`.rodata`/`.bss` until its module's data block is cut per
+  object. docs/DECOMPILING.md, "Data", has how the cut will be made from
+  the C files' own sections, object by object from each module's start.
+- `#if VERSION_EU` in the C for the 8 changed functions and eu's data,
+  and `version_ifs.py` (Blast Corps) for version-specific GLOBAL_ASM
+  lines, when the first of those is decompiled.
 - Hudson's game code is likely all C. Only libultra's `.s` files are real
   asm, and the port doesn't use those.
 

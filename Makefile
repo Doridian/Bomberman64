@@ -31,6 +31,22 @@ LD        = $(CROSS)ld
 OBJCOPY   = $(CROSS)objcopy
 
 ASFLAGS   = -EB -mtune=vr4300 -march=vr4300 -mabi=32 -I include
+
+# C (src/): IDO 5.3 through asm-processor, which assembles the GLOBAL_ASM
+# functions in place.  A text object is C when src/ has its file
+# (tools/layout.py makes it a `c` subsegment).  docs/DECOMPILING.md has the
+# loop and the evidence for the flags.
+IDO       = $(TOOLS_DIR)/ido/5.3/cc
+ASM_PROC  = $(PYTHON) $(TOOLS_DIR)/asm-processor/build.py
+VERSION_DEFINE := VERSION_$(shell echo $(VERSION) | tr a-z A-Z)
+INCLUDE_CFLAGS := -I include -I include/PR -I src
+CFLAGS    = -G 0 -Xfullwarn -Xcpluscomm -nostdinc -non_shared -Wab,-r4300_mul \
+            -D_LANGUAGE_C -D_FINALROM -D$(VERSION_DEFINE) -woff 649,838,712,807 \
+            $(INCLUDE_CFLAGS)
+# Hudson's game code: -mips1 (a nop fills every load delay slot it can't
+# schedule, and no branch-likely) at -O2.  Overridden per file below.
+OPT_FLAGS = -O2
+MIPSISET  = -mips1 -32
 BASEROM   = baserom.$(VERSION).z64
 CONFIG    = $(BASENAME).$(VERSION).yaml
 LD_SCRIPT = $(BASENAME).$(VERSION).ld
@@ -146,6 +162,46 @@ lzss-check: check $(LZSS_LIB)
 $(BUILD_DIR)/%.s.o: %.s
 	@mkdir -p $(dir $@)
 	$(AS) $(ASFLAGS) -o $@ $<
+
+### Per-file compiler flags (paths under src/; the same in every version)
+
+# main_code's entry (func_80225800): -g (every value goes through the stack,
+# and the return is branched to).
+G_C_FILES  := main_code_entry.c
+O3_C_FILES :=
+$(foreach f,$(G_C_FILES),$(BUILD_DIR)/src/$(f).o): OPT_FLAGS := -g
+$(foreach f,$(O3_C_FILES),$(BUILD_DIR)/src/$(f).o): OPT_FLAGS := -O3
+
+# IDO can't write dependency files: the headers come from the host's cpp
+# (.d), the .s files the GLOBAL_ASM lines pull in from asm-processor
+# (.asmproc.d; re-extracting rewrites them).  Both give every prerequisite
+# an empty rule too (as -MP does).
+define write_deps
+	@cpp -MM -MP -MT $@ $(INCLUDE_CFLAGS) -D_LANGUAGE_C -D_FINALROM -D$(VERSION_DEFINE) $< > $(@:.o=.d) 2>/dev/null || echo "$@: $<" > $(@:.o=.d)
+endef
+
+# PERMUTER=1 (tools/permute.sh) shows the plain IDO command.
+# A file with GLOBAL_ASM left goes through asm-processor (which can't do
+# -g with -mips1: such a file has to be all C); the rest IDO compiles as
+# they are.
+ifndef PERMUTER
+$(BUILD_DIR)/%.c.o: %.c
+	@mkdir -p $(dir $@)
+	@rm -f $(@:.o=.asmproc.d)
+	@if grep -q '^ *#pragma  *GLOBAL_ASM' $<; then \
+		echo "asm-processor $<"; \
+		$(ASM_PROC) $(IDO) -- $(AS) $(ASFLAGS) -- -c $(CFLAGS) $(OPT_FLAGS) $(MIPSISET) -o $@ $<; \
+	else \
+		echo "$(IDO) -c $(CFLAGS) $(OPT_FLAGS) $(MIPSISET) -o $@ $<"; \
+		$(IDO) -c $(CFLAGS) $(OPT_FLAGS) $(MIPSISET) -o $@ $<; \
+	fi
+	$(write_deps)
+else
+$(BUILD_DIR)/%.c.o: %.c
+	$(IDO) -c $(CFLAGS) $(OPT_FLAGS) $(MIPSISET) -o $@ $<
+endif
+
+-include $(foreach o,$(filter %.c.o,$(O_FILES)),$(o:.o=.d) $(o:.o=.asmproc.d))
 
 $(BUILD_DIR)/%.bin.o: %.bin
 	@mkdir -p $(dir $@)

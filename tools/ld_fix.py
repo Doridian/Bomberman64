@@ -72,7 +72,7 @@ def main():
         out.append(line)
         movable = section and section != "zerojump" and section in modules
         if a.shift and movable:
-            if section not in text_padded and re.search(r"\.s\.o\(\.text\);", line):
+            if section not in text_padded and re.search(r"\.[sc]\.o\(\.text\);", line):
                 text_padded.add(section)
                 out.append(f"        . += 0x{a.shift:X}; /* SHIFT */")
             elif re.match(rf"\s*{section}_DATA_START = \.;", line):

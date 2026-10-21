@@ -16,9 +16,9 @@ build/
 expected/
 permuter/
 nonmatchings/
-.env/
+.env
 .version
-tools/ido/
+tools/ido
 .vscode/
 include/macro.inc
 .claude/worktrees/

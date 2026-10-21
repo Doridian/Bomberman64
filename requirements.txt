@@ -11,3 +11,6 @@ colorama
 cxxfilt
 python-Levenshtein
 watchdog
+# m2c (tools/m2c.sh) and the permuter (tools/permute.sh)
+pycparser<3
+toml

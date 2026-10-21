@@ -6,9 +6,9 @@ the Blast Corps decomp in `../BlastCorps`: same goals, same rules, and its
 tools are the first place to look before writing a new one. docs/ROADMAP.md
 has the phases. Phases 0-2 are done: the ROM is built from its pieces
 (stage 1) and every code segment from splat's asm (stage 2), and a
-shifted build runs the same as the original. Not yet: per-object
-`.data`/`.rodata`/`.bss` (phase 2, "Not yet"), libraries (phase 3), and no
-C at all.
+shifted build runs the same as the original. Phase 4's C pipeline works
+(docs/DECOMPILING.md), with a few objects decompiled. Not yet: per-object
+`.data`/`.rodata`/`.bss` (phase 2, "Not yet"), libraries (phase 3).
 
 ## Versions
 
@@ -29,6 +29,7 @@ make vermap                    # regenerate vermap.eu.txt (needs both ROMs); ext
 make VERSION=us SHIFT=1        # shifted build in build/us-shift/, not sha1-checked
 make VERSION=us shift-check    # both, run in mupen64plus (system or $M64P_DIR), state compared
 tools/find_abs.py us           # addresses left without a relocation (should be 0)
+tools/progress.py              # how much is C (docs/DECOMPILING.md has the loop)
 ```
 
 `extract` turns each archive (`bankNN`) into `assets/bankNN/` (inflated
@@ -81,6 +82,10 @@ difference fails.
   Everything else keeps `func_`/`D_` address names (us's addresses in
   every version). Overlays share VRAM `0x80043000`, so their names carry
   the bank and entry (docs/ROADMAP.md, phase 2).
+- **C must match in both versions.** A C file is built for us and eu;
+  version differences are `#if VERSION_EU`. eu's asm carries us's names
+  (`tools/vermap.py`), so the C uses us's names in both.
+  Until data is split per object, C defines no data (docs/DECOMPILING.md).
 - **Port-only changes are `#ifdef TARGET_PC`.** The port must stay
   deterministic from the start: docs/NETPLAY.md, "Requirements", lists
   what online play needs from it.
@@ -91,6 +96,7 @@ difference fails.
 - docs/LAYOUT.md: the ROM map, the archive format, US↔EU differences.
 - docs/COMPRESSION.md: Hudson's LZSS stream and encoder.
 - docs/ROADMAP.md: phases 1–8.
+- docs/DECOMPILING.md: C files, flags, m2c/fdiff/permuter, eu, data.
 - docs/NETPLAY.md: WebRTC (libdatachannel, the browser's WebRTC,
   matchbox-compatible signaling), lockstep then rollback.
 - Bomberhackers/bm64 (GitHub) is an earlier US decomp against a
