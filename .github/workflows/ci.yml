@@ -1,0 +1,37 @@
+name: CI
+
+# What can be checked without a ROM: the tools install, IDO runs, and the
+# LZSS codec round-trips with its C and Python encoders in agreement. The
+# matching builds need a baserom and run locally (README, "Build").
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  tools:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y binutils-mips-linux-gnu build-essential python3-venv
+
+      - name: make setup
+        run: make setup
+
+      - name: IDO compiles
+        run: |
+          echo 'int f(int a) { return a * 3; }' > /tmp/t.c
+          tools/ido/5.3/cc -c -O2 -mips2 -G 0 -o /tmp/t.o /tmp/t.c
+          mips-linux-gnu-objdump -d /tmp/t.o
+
+      - name: LZSS self-test
+        run: .env/bin/python3 tools/test_lzss.py
+
+      - name: Python tools parse
+        run: .env/bin/python3 -m py_compile tools/*.py

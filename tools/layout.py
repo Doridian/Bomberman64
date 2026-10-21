@@ -24,7 +24,10 @@ What it reads (docs/LAYOUT.md has the details):
   0x300000 is the asset archive, the others hold the overlays.
 - After an archive's last entry comes its tail up to the next bank (or the
   ROM's end): zeros, sometimes with one stray halfword at the 8-aligned
-  end + 2 (left over from the build tool); it is kept as a bin.
+  end + 2 (left over from the build tool).
+
+Each archive, tail included, is one segment `bankNN`; tools/assets.py
+splits it into its entries and builds it back.
 """
 import argparse
 import struct
@@ -57,6 +60,11 @@ def lui_addiu(d, rom, reg):
             break
     assert hi is not None and lo is not None, hex(rom)
     return ((hi << 16) + lo) & 0xFFFFFFFF
+
+
+def is_bank(name):
+    """Whether a segment is an archive (built by tools/assets.py)."""
+    return name.startswith("bank") and name != "bank_table"
 
 
 def archive_entries(d, base):
@@ -105,19 +113,14 @@ def layout(d):
         entries, table_end = archive_entries(d, base)
         assert set(d[table_end:base + u32(d, base)]) <= {0xFF}, hex(base)
         what = "asset archive" if base == ASSET_BANK else "overlay archive"
-        segs.append((base, f"bank{num:02X}", f"{what}: header, {len(entries)} entries"))
-        width = 3 if len(entries) > 100 else 2
         pos = base + u32(d, base)
-        for j, (start, size) in enumerate(entries):
-            assert start == pos, (hex(base), j)  # packed back to back
-            segs.append((start, f"bank{num:02X}_{j:0{width}d}", None))
+        for start, size in entries:
+            assert start == pos, hex(base)  # packed back to back
             pos = start + size
         nxt = banks[i + 1] if i + 1 < len(banks) else len(d)
         assert pos <= nxt, hex(base)
-        if pos < nxt:
-            stray = any(d[pos:nxt])
-            segs.append((pos, f"bank{num:02X}_tail",
-                         "zeros and a stray halfword" if stray else "zeros"))
+        segs.append((base, f"bank{num:02X}",
+                     f"{what}, {len(entries)} entries (assets/bank{num:02X}/)"))
     return segs, len(d)
 
 

@@ -3,7 +3,9 @@
 The top-level map of Bomberman 64 (1997), US (`NBME`) and EU (`NBMP`).
 `tools/layout.py <version>` derives it from the ROM and writes
 `bm64.<version>.yaml`, a splat config that splits the whole ROM into bins
-(1023 segments in each version). `tools/layout.py --check <version>` checks
+(26 segments in each version, one per archive). `tools/assets.py` splits
+the archives into their entries (`assets/bankNN/`) and builds them back.
+`tools/layout.py --check <version>` checks
 that the config covers the ROM with no gaps or overlaps and still matches
 what the ROM says. Splitting with splat64 and relinking those bins gives back
 both ROMs, sha1 for sha1.
@@ -42,7 +44,9 @@ is an archive:
   common);
 - a tail of zeros up to the next bank. Some tails have a stray halfword at
   the 8-aligned end + 2, left over from Hudson's build tool. It is kept as
-  bytes (`bankNN_tail`).
+  data (`tail` in `assets/bankNN/archive.yaml`). The values (`4009`,
+  `4011`, `1009`) aren't the bank number. They look like stale buffer
+  contents.
 
 The bank number is `ROM >> 17`, the same numbers 0x30800's table uses. Bank
 0x10 (at `0x200000`) is 0x2B7F6 bytes and runs over `0x220000`, so there is

@@ -4,8 +4,9 @@ A matching decompilation of Bomberman 64 (Hudson, 1997), aimed at a PC port
 (native and WebAssembly) with online multiplayer over WebRTC. The model is
 the Blast Corps decomp in `../BlastCorps`: same goals, same rules, and its
 tools are the first place to look before writing a new one. docs/ROADMAP.md
-has the phases, and only phase 0 (scaffolding) and the first half of phase 1
-are done. Nothing is decompiled yet.
+has the phases. Phases 0 (scaffolding) and 1 (stage 1: the ROM built from
+its pieces, archives from inflated files) are done. Nothing is
+disassembled or decompiled yet.
 
 ## Versions
 
@@ -24,6 +25,14 @@ make VERSION=us                # relink, sha1-checked
 make VERSION=us lzss-check     # encoder reproduces every compressed member
 ```
 
+`extract` has splat cut the fixed segments into `assets/*.bin`. Then
+`tools/assets.py extract` turns each archive (`bankNN`) into
+`assets/bankNN/` (inflated `NN.bin`, stored `NN.raw`, `index.yaml`,
+`archive.yaml`) and fails unless it rebuilds exactly. `make` rebuilds the
+archives into `build/<v>/archives/` and links the ROM from those. Banks
+are fixed at their ROM slots until stage 2 symbolizes the code's
+references to them (docs/ROADMAP.md, phase 1, "Not yet").
+
 `asm/` and `assets/` hold one version at a time. The Makefile refuses to
 build a version other than the one in `.version`, so `make clean` first.
 
@@ -35,7 +44,7 @@ build a version other than the one in `.version`, so `make clean` first.
   <v>`, which reads the archives out of the ROM. Change the generator,
   not the yaml, then run `tools/layout.py --check <v>`.
 - **Pad bytes are data.** Archive tails sometimes carry a stray halfword
-  (docs/LAYOUT.md). They are kept as bins, never assumed zero.
+  (docs/LAYOUT.md). They are kept (`tail` in `assets/bankNN/archive.yaml`), never assumed zero.
 - **The LZSS encoder must stay exact.** `make lzss-check` on both ROMs
   after any change to `tools/hudson_lzss.py` or `tools/src/hudson_lzss.c`.
   The Python and C encoders must agree (docs/COMPRESSION.md).
