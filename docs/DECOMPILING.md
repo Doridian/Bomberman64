@@ -120,7 +120,7 @@ tools/progress.py                                # per module, overlays per bank
   Seen so far: 40FB0, 412F0, 41FD0, 4DE50, 4E030 (4DE50's second half:
   its wrappers call 4DE50's compares with a `jal`, which -O3 would inline
   in one file), 4ED50, 530C0, 53D70, 86680, 995C0, 9A5F0, 9BFD0, ACA00,
-  AFBF0 and ovl_0A_01-05's objects are `-O3`; 404C0, 5E090, 87190, 87730,
+  AFBF0, ovl_0A_01-05's and ovl_17_01's objects are `-O3`; 404C0, 5E090, 87190, 87730,
   99F40, A4860 and B11F0 are `-O2` (no
   inlining between functions that call each other, no cross-call
   registers; A4860's func_8028A318 calls three small functions of its
@@ -134,11 +134,17 @@ tools/progress.py                                # per module, overlays per bank
   `pad[]` locals (an inlined helper's slots) and `if (1)`s, and the
   callback still GLOBAL_ASM in 0C_03, 0C_08, 12_02 and 12_04 keeps its
   argument in `t0`. ovl_17_01 (17_06 and 17_08 share its code) passes a
-  static's argument in saved registers. What stops the conversion is
-  bss: at `-O3` IDO lays out only the bss variables the file references,
-  so 0C_03's two unused 4-byte fillers go to common and the variables
-  after them move. Converting these files, once that is solved, should
-  remove their workarounds and finish their GLOBAL_ASM functions.
+  static's argument in saved registers, and it is C at `-O3` now. What
+  stopped the conversion was bss: at `-O3` IDO lays out only the bss
+  variables the file references, so 0C_03's two unused 4-byte fillers
+  go to common and the variables after them move. The fix is in the
+  overlays themselves: each ends in a row of `jr ra; nop` stubs, the
+  statics nothing calls, and IDO drops an unused static's body but
+  still counts what it refers to. So one of those statics refers to the
+  unused fillers (ovl_17_01's func_ovl17_01_80043FE8), and they stay in
+  `.bss` where the original has them. Converting the other files this
+  way should remove their workarounds and finish their GLOBAL_ASM
+  functions.
 - **`-O3` and `static`.** The rest of what IDO does at `-O3` follows from
   it processing the file as a whole:
   - a `static` function may get its own calling convention: arguments in
