@@ -936,11 +936,12 @@ segments:
     symbol_name_format: ovl0E_06_$VRAM
     dir: overlays/ovl_0E_06
     subsegments:
-      - [0x1C5C50, asm, ovl_0E_06_entry]
-      - [0x1C5C60, asm, 1C6D50]
+      - [0x1C5C50, c, ovl_0E_06_entry]
+      - [0x1C5C60, c, 1C6D50]
       - [0x1C68E0, hasm, ovl_0E_06_zerojmp]
-      - [0x1C7F00, rodata]
-      - {type: bss, vram: 0x80045340}
+      - [0x1C7F00, .data, 1C6D50]
+      - [0x1C7F40, .rodata, 1C6D50]
+      - {type: .bss, vram: 0x80045340, name: 1C6D50}
   - name: ovl_0E_07
     type: code
     start: 0x1C7F90
@@ -950,11 +951,12 @@ segments:
     symbol_name_format: ovl0E_07_$VRAM
     dir: overlays/ovl_0E_07
     subsegments:
-      - [0x1C7F90, asm, ovl_0E_07_entry]
-      - [0x1C7FA0, asm, 1C90B0]
+      - [0x1C7F90, c, ovl_0E_07_entry]
+      - [0x1C7FA0, c, 1C90B0]
       - [0x1C8C20, hasm, ovl_0E_07_zerojmp]
-      - [0x1CA240, rodata]
-      - {type: bss, vram: 0x80045340}
+      - [0x1CA240, .data, 1C90B0]
+      - [0x1CA280, .rodata, 1C90B0]
+      - {type: .bss, vram: 0x80045340, name: 1C90B0}
   - name: ovl_0E_08
     type: code
     start: 0x1CA2D0
@@ -964,11 +966,12 @@ segments:
     symbol_name_format: ovl0E_08_$VRAM
     dir: overlays/ovl_0E_08
     subsegments:
-      - [0x1CA2D0, asm, ovl_0E_08_entry]
-      - [0x1CA2E0, asm, 1CB410]
+      - [0x1CA2D0, c, ovl_0E_08_entry]
+      - [0x1CA2E0, c, 1CB410]
       - [0x1CAF60, hasm, ovl_0E_08_zerojmp]
-      - [0x1CC580, rodata]
-      - {type: bss, vram: 0x80045340}
+      - [0x1CC580, .data, 1CB410]
+      - [0x1CC5C0, .rodata, 1CB410]
+      - {type: .bss, vram: 0x80045340, name: 1CB410}
   - name: ovl_0E_09
     type: code
     start: 0x1CC610
@@ -1048,11 +1051,12 @@ segments:
     symbol_name_format: ovl0E_14_$VRAM
     dir: overlays/ovl_0E_14
     subsegments:
-      - [0x1DBF20, asm, ovl_0E_14_entry]
-      - [0x1DBF30, asm, 1DD120]
+      - [0x1DBF20, c, ovl_0E_14_entry]
+      - [0x1DBF30, c, 1DD120]
       - [0x1DCBB0, hasm, ovl_0E_14_zerojmp]
-      - [0x1DE1D0, rodata]
-      - {type: bss, vram: 0x80045340}
+      - [0x1DE1D0, .data, 1DD120]
+      - [0x1DE210, .rodata, 1DD120]
+      - {type: .bss, vram: 0x80045340, name: 1DD120}
   - name: ovl_0E_15
     type: code
     start: 0x1DE260

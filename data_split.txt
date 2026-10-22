@@ -64,6 +64,22 @@ boot_code @us libultra/libc/xldtob rodata=0x8001BF60
 boot_code @eu libultra/libc/xldtob rodata=0x8001BF60
 boot_code @jp libultra/libc/xldtob rodata=0x8001BF40
 
+# ovl_0E_06: all C
+ovl_0E_06 ovl_0E_06_entry 0 0 0
+ovl_0E_06 1C6D50 0x40 0x50 0x60
+
+# ovl_0E_07: all C
+ovl_0E_07 ovl_0E_07_entry 0 0 0
+ovl_0E_07 1C90B0 0x40 0x50 0x60
+
+# ovl_0E_08: all C
+ovl_0E_08 ovl_0E_08_entry 0 0 0
+ovl_0E_08 1CB410 0x40 0x50 0x60
+
+# ovl_0E_14: all C
+ovl_0E_14 ovl_0E_14_entry 0 0 0
+ovl_0E_14 1DD120 0x40 0x50 0x60
+
 # ovl_0F_06: all C
 ovl_0F_06 ovl_0F_06_entry 0 0 0
 ovl_0F_06 1FB180 0x50 0x60 0x40
