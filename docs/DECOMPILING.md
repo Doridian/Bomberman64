@@ -174,7 +174,8 @@ tools/progress.py                                # per module, overlays per bank
 eu and jp build from the same C. Each version's config comes from its own
 ROM; the C files, the flags and the names are us's. So far every C
 object matches all three unchanged (eu's and jp's differences lie
-elsewhere: docs/LAYOUT.md, "EU" and "JP").
+elsewhere: docs/LAYOUT.md, "EU" and "JP"), except `85A10`, which has
+`func_8026B9CC` (jp's differs) still GLOBAL_ASM under `#if VERSION_JP`.
 
 - **Objects.** Outside us a text object is named for the us image offset
   of the same code (`tools/layout.py` through `vermap.<v>.txt`): `5E090`
@@ -212,13 +213,26 @@ What a decompiler has to do for jp (and eu):
    function only us has goes under `#if !VERSION_JP`; one only jp has is
    written under its `_jp` name under `#if VERSION_JP`, where jp's link
    order puts it.
-4. A GLOBAL_ASM line under `#if` is still read by asm-processor, which
-   runs before the preprocessor and would open a `.s` the other version
-   never writes. When the first one is needed, port Blast Corps'
-   `tools/version_ifs.py` (it decides the VERSION_* conditionals before
-   asm-processor, keeping line numbers) into the C rule; until then a
-   version-specific function has to be C in every version it is
-   conditional in.
+4. A GLOBAL_ASM line under `#if` works. asm-processor runs before the
+   preprocessor and reads every GLOBAL_ASM line, `#if`'d or not, so a
+   `.s` the other version's extract never wrote would stop the build.
+   The Makefile's C rule therefore runs a file with GLOBAL_ASM through
+   `tools/version_ifs.py <VERSION_X> in.c -o build/.../x.c.vi.c` first
+   (ported from Blast Corps). It decides every `#if`/`#ifdef`/`#ifndef`/
+   `#elif`/`#else` whose condition names only `VERSION_*` macros, blanks
+   the directives and the branches not taken (line numbers stay), and
+   leaves every other line, other conditionals included, for the
+   compiler; asm-processor compiles the `.vi.c`. A condition mixing
+   `VERSION_*` with other macros is passed through (and then its
+   GLOBAL_ASM lines are not hidden). Files without GLOBAL_ASM skip the
+   step; `PERMUTER=1` compiles the file as is. The `.d` file still comes
+   from the original source. Example: `src/85A10.c`, an object whose one
+   jp-differing function, `func_8026B9CC`, is `#if VERSION_JP` GLOBAL_ASM
+   / `#else` GLOBAL_ASM. A changed function keeps us's name in jp (the
+   map), so both branches name the same `.s`, which each version's
+   extract fills with its own code; the point is that a branch may name a
+   `.s` the other version doesn't have (a `_jp` function, or one jp's
+   code is written as C in `#if VERSION_JP` while us stays GLOBAL_ASM).
 5. Data: `data_split.txt` takes `@jp` placement lines like `@us`/`@eu`
    (the module's data start, an object's `.data`/`.rodata`/`.bss` start);
    `tools/vermap.py`'s map gives jp's addresses (boot_code's data is 0x20

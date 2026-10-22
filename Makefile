@@ -228,16 +228,20 @@ define write_deps
 endef
 
 # PERMUTER=1 (tools/permute.sh) shows the plain IDO command.
-# A file with GLOBAL_ASM left goes through asm-processor (which can't do
+# A file with GLOBAL_ASM left goes through tools/version_ifs.py (which
+# decides the VERSION_* #ifs, so asm-processor only sees the GLOBAL_ASM
+# lines this version has a .s for) and then asm-processor (which can't do
 # -g with -mips1: such a file has to be all C); the rest IDO compiles as
-# they are.
+# they are.  PERMUTER=1 compiles the file as is (the permuter's own
+# preprocessing handles #if).
 ifndef PERMUTER
 $(BUILD_DIR)/%.c.o: %.c
 	@mkdir -p $(dir $@)
 	@rm -f $(@:.o=.asmproc.d)
 	@if grep -q '^ *#pragma  *GLOBAL_ASM' $<; then \
 		echo "asm-processor $<"; \
-		$(ASM_PROC) $(IDO) -- $(AS) $(ASFLAGS) -- -c $(CFLAGS) $(OPT_FLAGS) $(MIPSISET) -o $@ $<; \
+		$(PYTHON) $(TOOLS_DIR)/version_ifs.py $(VERSION_DEFINE) $< -o $(@:.o=.vi.c); \
+		$(ASM_PROC) $(IDO) -- $(AS) $(ASFLAGS) -- -c $(CFLAGS) $(OPT_FLAGS) $(MIPSISET) -o $@ $(@:.o=.vi.c); \
 	else \
 		echo "$(IDO) -c $(CFLAGS) $(OPT_FLAGS) $(MIPSISET) -o $@ $<"; \
 		$(IDO) -c $(CFLAGS) $(OPT_FLAGS) $(MIPSISET) -o $@ $<; \
