@@ -63,3 +63,7 @@ boot_code libultra/libc/xldtob 0 0x60 0
 boot_code @us libultra/libc/xldtob rodata=0x8001BF60
 boot_code @eu libultra/libc/xldtob rodata=0x8001BF60
 boot_code @jp libultra/libc/xldtob rodata=0x8001BF40
+
+# ovl_0F_06: all C
+ovl_0F_06 ovl_0F_06_entry 0 0 0
+ovl_0F_06 1FB180 0x50 0x60 0x40

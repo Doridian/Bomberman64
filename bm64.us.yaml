@@ -1146,11 +1146,12 @@ segments:
     symbol_name_format: ovl0F_06_$VRAM
     dir: overlays/ovl_0F_06
     subsegments:
-      - [0x1FB170, asm, ovl_0F_06_entry]
-      - [0x1FB180, asm]
+      - [0x1FB170, c, ovl_0F_06_entry]
+      - [0x1FB180, c]
       - [0x1FB3C0, hasm, ovl_0F_06_zerojmp]
-      - [0x1FCA00, rodata]
-      - {type: bss, vram: 0x80044940}
+      - [0x1FCA00, .data, 1FB180]
+      - [0x1FCA50, .rodata, 1FB180]
+      - {type: .bss, vram: 0x80044940, name: 1FB180}
   - name: ovl_0F_07
     type: code
     start: 0x1FCAB0
