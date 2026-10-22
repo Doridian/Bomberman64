@@ -116,8 +116,8 @@ describes the pieces:
   dropped for ones that hold past 17000 in all three versions, and a
   checkpoint can catch a harmless transient (us 13500-14500: a heap cursor,
   `D_8029F880`, is somewhere else for a while and then agrees again), so
-  the checkpoints avoid those. A run takes about 40 s per version
-  (3 emulator processes, 18000 frames), `make shift-check` about 2 min.
+  the checkpoints avoid those. A run takes about 15 s per version
+  (3 emulator processes, 18000 frames), `make shift-check` about 30 s.
 - **A TAS as a longer run** (docs/TAS.md): `tools/tas.py` plays
   TASVideos' any% (4908M, BizHawk 2.8, jp) headless on mupen64plus 2.6.0.
   It follows the movie through the menus, the save-and-reset trick and

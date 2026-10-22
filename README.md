@@ -57,7 +57,7 @@ per version) plays battle mode against three CPU players for 18000 frames,
 five or six matches, and compares at 13-15 checkpoints in the arenas and
 result screens; it reaches `ovl_0B_03`, `ovl_17_01` and `ovl_0B_07`, which
 the first run never loads (`make shift-check-battle` runs just that one,
-about a minute). The game's random seed comes from the CPU's
+under half a minute). The game's random seed comes from the CPU's
 cycle counter, which the shifted build's bigger DMAs change, so both ROMs
 run with it pinned (`tools/shift_check.py` explains).
 
