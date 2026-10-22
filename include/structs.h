@@ -22,7 +22,7 @@ typedef struct {
     /* 0x18 */ f32 unk18;
     /* 0x1C */ f32 unk1C;
     /* 0x20 */ f32 unk20;
-    /* 0x24 */ u8 unk24[4];
+    /* 0x24 */ f32 unk24;
     /* 0x28 */ f32 unk28;
     /* 0x2C */ f32 unk2C;
     /* 0x30 */ f32 unk30;
@@ -45,9 +45,14 @@ typedef struct {
     /* 0x38 */ f32 unk38;
     /* 0x3C */ u8 unk3C[4];
     /* 0x40 */ UnkStructA_40 *unk40;
-    /* 0x44 */ u8 unk44[0x18];
+    /* 0x44 */ u8 unk44[8];
+    /* 0x4C */ f32 unk4C;
+    /* 0x50 */ u8 unk50[4];
+    /* 0x54 */ f32 unk54;
+    /* 0x58 */ u8 unk58[4];
     /* 0x5C */ f32 unk5C;
-    /* 0x60 */ u8 unk60[0xC];
+    /* 0x60 */ u8 unk60[8];
+    /* 0x68 */ f32 unk68;
     /* 0x6C */ f32 unk6C;
     /* 0x70 */ f32 unk70;
 } UnkStructA;
@@ -58,7 +63,8 @@ typedef struct {
     /* 0x00 */ s32 unk0;
     /* 0x04 */ u8 unk4[0x28];
     /* 0x2C */ s32 unk2C;
-    /* 0x30 */ u8 unk30[8];
+    /* 0x30 */ s32 unk30;
+    /* 0x34 */ u8 unk34[4];
     /* 0x38 */ s32 unk38;
 } UnkStructB;
 

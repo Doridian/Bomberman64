@@ -721,16 +721,17 @@ segments:
     type: code
     start: 0x18C1F0
     vram: 0x80043000
-    bss_size: 0x50
+    bss_size: 0x60
     exclusive_ram_id: overlay
     symbol_name_format: ovl0C_08_$VRAM
     dir: overlays/ovl_0C_08
     subsegments:
-      - [0x18C1F0, asm, ovl_0C_08_entry]
-      - [0x18C200, asm, 18D110]
+      - [0x18C1F0, c, ovl_0C_08_entry]
+      - [0x18C200, c, 18D110]
       - [0x18D070, hasm, ovl_0C_08_zerojmp]
-      - [0x18E690, rodata]
-      - {type: bss, vram: 0x80045580}
+      - [0x18E690, .data, 18D110]
+      - [0x18E710, .rodata, 18D110]
+      - {type: .bss, vram: 0x80045580, name: 18D110}
   - name: ovl_0C_09
     type: code
     start: 0x18E770
@@ -1413,16 +1414,17 @@ segments:
     type: code
     start: 0x24D4C0
     vram: 0x80043000
-    bss_size: 0x50
+    bss_size: 0x60
     exclusive_ram_id: overlay
     symbol_name_format: ovl12_02_$VRAM
     dir: overlays/ovl_12_02
     subsegments:
-      - [0x24D4C0, asm, ovl_12_02_entry]
-      - [0x24D4D0, asm, 24EA00]
+      - [0x24D4C0, c, ovl_12_02_entry]
+      - [0x24D4D0, c, 24EA00]
       - [0x24DF30, hasm, ovl_12_02_zerojmp]
-      - [0x24F550, rodata]
-      - {type: bss, vram: 0x80045150}
+      - [0x24F550, .data, 24EA00]
+      - [0x24F5C0, .rodata, 24EA00]
+      - {type: .bss, vram: 0x80045150, name: 24EA00}
   - name: ovl_12_03
     type: code
     start: 0x24F610
@@ -1441,16 +1443,17 @@ segments:
     type: code
     start: 0x252490
     vram: 0x80043000
-    bss_size: 0x50
+    bss_size: 0x60
     exclusive_ram_id: overlay
     symbol_name_format: ovl12_04_$VRAM
     dir: overlays/ovl_12_04
     subsegments:
-      - [0x252490, asm, ovl_12_04_entry]
-      - [0x2524A0, asm, 253A10]
+      - [0x252490, c, ovl_12_04_entry]
+      - [0x2524A0, c, 253A10]
       - [0x252E10, hasm, ovl_12_04_zerojmp]
-      - [0x254430, rodata]
-      - {type: bss, vram: 0x80045050}
+      - [0x254430, .data, 253A10]
+      - [0x254490, .rodata, 253A10]
+      - {type: .bss, vram: 0x80045050, name: 253A10}
   - name: ovl_12_05
     type: code
     start: 0x2544E0
