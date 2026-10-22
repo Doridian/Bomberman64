@@ -12,8 +12,9 @@ adapted to one code image).
 ```
 tools/build_ultralib.sh                    # build/ultralib: libultra_rom 2.0D-2.0L
 tools/libmatch.py us --scan build/ultralib/build/{D,E,F,G,H,I,J,K,L}/libultra_rom
-tools/libmatch.py us build/ultralib/build/I/libultra_rom    # names with evidence
-tools/gen_symbols.py us build/ultralib/build/I/libultra_rom # writes the files below
+make libultra-ref                          # build/libultra_bm64: src/libultra on its own
+tools/libmatch.py us build/ultralib/build/I/libultra_rom build/libultra_bm64    # names with evidence
+tools/gen_symbols.py us build/ultralib/build/I/libultra_rom build/libultra_bm64 # writes the files below
 tools/layout.py us                         # the config, with the new boundaries
 make clean && make VERSION=us extract && make VERSION=us
 ```
@@ -24,6 +25,14 @@ revision with IDO 5.3 and ultralib's own flags. Its voice library fails to
 build on some hosts; the game doesn't link it, so the script carries on.
 `libmatch.py` makes its code image from `baserom.<v>.z64`, so it works
 whichever version is extracted.
+
+`make libultra-ref` compiles every file in `src/libultra` with the
+library's flags into `build/libultra_bm64/src/<dir>/<file>.o`, without
+an extract: those objects are this game's libultra revision, matched like
+ultralib's builds (they compile to the ROM's bytes, so they match
+exactly). Passing both directories to gen_symbols.py names what only this
+game's revision has, and gives its objects' bounds. (`make clean` removes
+`build/`, ultralib's builds with it; keep a copy elsewhere, or rebuild.)
 
 `gen_symbols.py` writes, for boot_code and main_code:
 
@@ -41,7 +50,11 @@ whichever version is extracted.
   `tools/layout.py` splits the text there too, as well as where IDO's
   padding shows a boundary. This adds 63 objects in each version (334 to
   397 in us): libultra objects whose last function ends on a 16-byte
-  boundary.
+  boundary. A `start` line names the object (`src/io/controller.o`);
+  where one object ends and the next starts, the start is kept. An
+  object whose source is in `src/libultra` (`io/controller.c`, or `.s`)
+  becomes a `c` (or `hasm`) subsegment of that name,
+  `libultra/io/controller`, built from it.
 
 `tools/layout.py` lists every `symbol_addrs.*.<v>.txt` in the config. Run
 `make clean` before extracting again after the names change, because
@@ -92,13 +105,15 @@ line. The Bomberhackers/bm64 split has the same order.
 
 | | us | eu |
 | --- | --- | --- |
-| boot_code functions | 347 | 347 |
-| boot_code data | 34 | 34 |
+| boot_code functions | 370 | 370 |
+| boot_code data | 54 | 54 |
 | main_code functions | 12 | 12 |
 | main_code data | 1 (`__libm_qnan_f`) | 1 |
 
-In boot_code, 248 names are `lib=exact`, 130 `lib=ref` and 3 `lib=fuzzy`
-(the counts include data).
+In boot_code, 366 names are `lib=exact`, 56 `lib=ref` and 2 `lib=fuzzy`
+(the counts include data). A function placed by a reference before its
+own body matched still gets its body match (and names what it
+references), so most of the library is `exact`.
 `alSeqp*` and `alCSP*` functions have identical bodies (one object each,
 for the two sequence players), so the body alone can't place them. Each
 family is linked as a run next to its own player (`seqplayer.o`,
@@ -108,42 +123,129 @@ the run whose nearest placed neighbour is of its own family
 (`resolve_twins`).
 
 Static functions have no symbol in the objects, so they keep their
-address names, but a whole-object match covers their code. The fuzzy
-names are `osCreateScheduler` and `osScAddClient` (0.95 and 0.93), in the
-game's copy of the SDK's sample scheduler (`sched.c`, compiled with the
-game and with asserts, at `0x800014B0`), and `osPfsReFormat` (0.99).
+address names, but a whole-object match covers their code (an object
+that starts with a static, such as `xprintf.o`, is matched whole too).
+The fuzzy names are `osCreateScheduler` and `osScAddClient` (0.95 and
+0.93), in the game's copy of the SDK's sample scheduler (`sched.c`,
+compiled with the game and with asserts, at `0x800014B0`).
 
-## What doesn't match
+## What 2.0I doesn't reproduce
 
-About 0x11A00 of boot_code's 0x17E00 bytes of non-zero text are exactly
-matched library code. The rest is the game's own code before
-`0x80001A50`, plus these library parts, which no ultralib revision
-reproduces (D to L, checked by similarity):
+No ultralib build matches these, because ultralib's D to H builds are
+2.0I's code: its sources only tell 2.0J and later apart, and its README
+supports 2.0I to 2.0L. They are an older revision's code (2.0I flags,
+older sources), one Hudson patch, and a few objects that are 2.0I's but
+couldn't be placed. All of them are now in `src/libultra` (see "Sources"),
+matching in us and eu.
 
-- `alSynStartVoiceParams` (`0x80001A50`), placed by reference. It sits
-  before `osMapTLB`, apart from the rest of libaudio. The reference decomp's
-  split guesses it is a Hudson override.
-- EEPROM (`0x80003C10-0x80004CF0`: `osEepromProbe`, `osEepromRead`,
-  `osEepromWrite`, the long read/write and code after them). The best
-  candidate is `__osEepStatus` at 0.69.
-- The controller (`0x800056A0-0x80005E38`: `osContInit` 0.71,
-  `osContStartReadData`, `osContGetReadData`, `osContReset` 0.92),
-  `__osContRamRead`/`Write` (`0x80013F00-0x80014600`), and some controller
-  pak code (`osPfsReFormat`, `__osPfsReleasePages`, `osPfsReadWriteFile`,
-  `__osPfsRequestData`, `__osPfsGetStatus`, and `0x8000FA20-0x800106A0`).
-- `osCartRomInit` (0.95), `osLeoDiskInit` (0.92), `osEPiRawWriteIo`/`ReadIo`.
-- `__osException` (`exceptasm.s`, `0x80011310`). `__osExceptionPreamble`
-  matches.
-- `alSndp*`'s static event handler (`0x8000C080-0x8000C654`). Every public
-  `alSndp*` function matches by body, but `sndplayer.o` as a whole doesn't.
-- `0x80012DE0-0x8001344C` and `0x80019310-0x80019874`, next to libc.
+**An older SI, PI and controller pak layer.** The evidence that it
+predates 2.0I:
 
-Apart from the libaudio pieces and the exception handler, these are I/O
-files that changed across releases. They point to a libultra that isn't
-exactly any ultralib build: 2.0I flags, with an older (or patched)
-SI/PI/EEPROM layer. Their names are
-placed only where a matched function's relocations give them (`lib=ref`).
-To match them, decompile them from the asm against 2.0I's sources.
+- `osPfsReSizeFile` (`0x8000FA20`, `io/pfsresizefile.c`): the SDK's
+  function reference says it "was removed from the N64 operating system
+  OS2.0I or later" ([ultra64.ca](https://ultra64.ca/files/documentation/online-manuals/functions_reference_manual_2.0i/os/osPfsReSizeFile.html)).
+  ultralib has no source for it; it is decompiled from the game in the
+  style of the pre-2.0J `osPfsAllocateFile`/`osPfsDeleteFile`.
+- EEPROM (`io/conteep*.c`, `0x80003C10-0x800046E0`): 4K only (no 16K
+  case; `osEepromProbe` returns 1 for any EEPROM), the address checked
+  before the SI is taken, the PIF RAM filled with 0xFF before each read.
+  This is the form in Blast Corps (early 1997), which links an older
+  libultra than any ultralib build.
+- Rumble Pak (`io/motor.c`, `0x800046E0-0x80004CF0`): `osMotorStop`/
+  `osMotorStart`/`osMotorInit` without ultralib's pre-2.0J
+  `__osMotorinitialized`, checking the pak's reply against fixed CRCs
+  (0, 0xEB), and no 0xFE probe in `osMotorInit`.
+- The PIF RAM is cleared word by word, all 16 words, before each command
+  is packed (`__osPackRequestData`, `__osPackReadData`,
+  `__osPackResetData`, `__osPackRamRead/WriteData`, `__osPfsRequestData`,
+  `__osEepStatus`), and `osContStartReadData` fills it with 0xFF before
+  the read, as in Blast Corps. `osContReset` sets `__osContLastCmd` last
+  and writes no end marker; `__osPfsGetStatus` asks all four channels
+  (one function, `io/pfsgetstatus.c`, where 2.0I asks one).
+- `osContInit` and `osEepromLong*` compute their waits through
+  `osClockRate` (`OS_USEC_TO_CYCLES` in `src/libultra/libultra_bm64.h`):
+  `__ll_mul` then `__ull_div` by 1000000, where 2.0I's `os_convert.h`
+  folds the clock into a constant.
+- `__osPfsReleasePages` frees the page it stops at without checking its
+  bank; `osPfsReadWriteFile` doesn't reject an empty directory entry;
+  `osPfsReFormat` returns without releasing the SI when
+  `__osPfsGetStatus` fails.
+- `osPfsInitPak` never reads the pack's ID block (it checksums the stack,
+  so `__osCheckPackId` falls back on the backup IDs). No ultralib
+  revision has this: an SDK bug fixed by 2.0I, or Hudson's change; the
+  code doesn't say which.
+- `osCartRomInit` and `osLeoDiskInit` don't set the handle's `speed`;
+  `osEPiRawReadIo`/`WriteIo` only wait for the PI (no `EPI_SYNC`).
+- `osAiSetNextBuffer` tests `(end & 0x3FFF) == 0x2000` for the hardware
+  bug, where 2.0I tests `(end & 0x1FFF) == 0`.
+- `__osException` (`os/exceptasm.s`) is 2.0I's but for one instruction:
+  the SP interrupt is acknowledged with `SP_CLR_INTR` alone, where 2.0I
+  also clears signal 3.
+
+Other objects of the same layer are 2.0I's exactly (`osContStartQuery`,
+`osContSetCh`, `osPfsChecker`, `contpfs.c`,
+`osPfsInit`), and `osContInit` already sends `CONT_CMD_REQUEST_STATUS`
+where Blast Corps' sends `CONT_CMD_RESET`. So the game links a libultra
+between Blast Corps' and 2.0I: 2.0I's build flags (libc `-O3`) and most of
+2.0I's code, with an SI/PI/controller pak layer from just before it (2.0G
+or 2.0H would fit, but no archive of those is at hand to check against).
+
+**Hudson's `alSynStartVoiceParams`** (`0x80001A50`, linked with the
+game's sound code rather than with libaudio): 2.0I's function without its
+`fxmix` fix-up, and with every voice centred (`AL_PAN_CENTER`) when bit 0
+of the game's `D_8001C4B0` is set (func_80001A04 sets it). Built `-O3`
+like libaudio.
+
+**2.0I's own, but unplaced:** `sndplayer.c`'s static functions
+(`0x8000C080-0x8000C654`, `_handleEvent` and the rest), `xprintf.c`'s
+`_Putfld` (`0x80012DE0`) and `xldtob.c`'s `_Genld` (`0x80019310`) match
+2.0I byte for byte; they are static, so no symbol named them, and
+`libmatch.py` now matches such objects whole.
+
+Still asm: `osUnmapTLBAll` (`0x80003190`, `unmaptlball.s`) is an older
+revision too (all 31 entries, `bnezl`), but EU's 0x60-byte link gap
+follows it, which a source object can't carry. `osPiGetDeviceType` and
+`alSndpGetSound` (`0x80005480`, `0x8000C8D0`) match 2.0I but are two
+instructions long, too short to place by body.
+
+## Sources
+
+`src/libultra/<dir>/<file>.c` (or `.s`) is ultralib's file of that name
+at the pinned commit, with this game's differences, each described at
+the top of the file (NOTICES.md has the attribution). They are built with
+ultralib's headers (`include/ultralib`, `BUILD_VERSION=VERSION_I`) and
+2.0I's `libultra_rom` flags: `-mips2`, `-O1`, `-O3` for `audio/`, `libc/`
+and `gu/`. `os/exceptasm.s` is assembled by IDO (`-mips3 -O1`, which
+schedules it), its symbol table rewritten by strip for GNU ld and the
+object relabelled mips2 (`tools/elf_mips2.py`).
+
+`-O1` code is sensitive to the source's line breaks: a loop body on the
+loop's line schedules differently (`contramwrite.c`), and statement order
+picks the temporary registers (`osPfsReSizeFile`'s bookkeeping after
+`__osPfsDeclearPage`).
+
+## Data
+
+boot_code's data can't be cut from the module's start (the game's code
+comes first), so library objects are placed on their own:
+`data_split.txt` gives an object's section sizes and, per version, where
+each of its sections is (`tools/data_split.py <v> --place boot_code
+libultra/<dir>/<file>` finds that from the object's `%hi`/`%lo`
+relocations and checks the bytes). `tools/layout.py` cuts them out of the
+asm blocks. Only objects that need it are placed:
+
+- those whose code depends on defining a variable in the same file: IDO
+  shares one `lui` between fields of a variable it defines but not of an
+  extern (`CartRomHandle`, `LeoDiskHandle`), and function-level statics
+  (`osAiSetNextBuffer`'s `hdwrBugFlag`);
+- those with jump tables, strings or constants in `.rodata` (`sndplayer`,
+  `xprintf`, `xldtob`, `exceptasm`).
+
+The others refer to their variables as externs, defined by the asm data
+(`__osContPifRam`, `__osEepPifRam`, `__osPfsPifRam`, the motor buffers,
+`__osContinitialized`, ...), with the names gen_symbols.py gives them.
+The addresses are the same in both versions (the 0x60 gap is in the
+text).
 
 ## libaudio
 
@@ -152,6 +254,7 @@ older or different audio library. These match whole: synthesizer,
 drvrNew, envmixer, load (ADPCM and raw16), resample, reverb, aux and main
 bus, save, events, sequence and compact-sequence parsing (`seq.c`,
 `cseq.c`), both sequence players with all their `alSeqp*`/`alCSP*`
-objects, bank file setup, heap and cents. Only `alSynStartVoiceParams`
-and the sound player's static handler differ (above). The audio microcode
+objects, bank file setup, heap and cents, and the sound player
+(`sndplayer.c`, whose static event handler only lacked a name). Only
+`alSynStartVoiceParams` differs: Hudson's patch (above). The audio microcode
 is in main_code's data (docs/LAYOUT.md, "Stage 2").

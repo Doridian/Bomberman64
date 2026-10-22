@@ -107,7 +107,7 @@ Cut so far: all of ovl_09_01 (its boundary is the compiler's,
 SHIFT=1 image with the cut is byte-identical to the one from the asm
 alone. The rest grows object by object with phase 4.
 
-## Phase 3 — libraries (done, except what no revision matches)
+## Phase 3 — libraries (done)
 
 docs/LIBULTRA.md has the details.
 
@@ -116,20 +116,29 @@ docs/LIBULTRA.md has the details.
   ultralib's D to I builds are the same code, and J/K/L don't match.
   `tools/build_ultralib.sh` builds every revision, and `tools/libmatch.py
   --scan` compares them.
-- `tools/libmatch.py` and `tools/gen_symbols.py` (Blast Corps') name 347
-  functions and 34 globals in boot_code and 12 functions and 1 global in
+- `tools/libmatch.py` and `tools/gen_symbols.py` (Blast Corps') name 370
+  functions and 54 globals in boot_code and 12 functions and 1 global in
   main_code, in us and eu alike (`symbol_addrs.<module>.<v>.txt`). EU's
   libultra is byte for byte US's. Only a 0x60-byte gap moves.
 - Library objects whose boundaries the padding didn't show are split
   (`lib_objects.<v>.txt`, read by `tools/layout.py`): 397 text objects in
   us instead of 334.
 - **libaudio** is 2.0I's libaudio, not an older audio library. All of it
-  matches except `alSynStartVoiceParams` and the sound player's static
-  event handler.
-- **Not yet:** the parts no ultralib revision matches (EEPROM, the
-  controller and some controller pak functions, `osCartRomInit`,
-  `osLeoDiskInit`, `__osException`, two runs next to libc). They are
-  decompiled in phase 4 against 2.0I's sources. Overlay copies of
+  matches but `alSynStartVoiceParams`, which is Hudson's patch (voices
+  centred when the game's mono flag is set), now C.
+- **What no ultralib build matches** is an older SI/PI/controller pak
+  layer: `osPfsReSizeFile` (which the SDK removed in 2.0I), 4K-only
+  EEPROM, the Rumble Pak without `__osMotorinitialized`, PIF RAM cleared
+  word by word, waits through `osClockRate`, and more; `__osException`
+  with 2.0I's code but an older SP acknowledge; and 2.0I's own static
+  functions (`sndplayer.c`, `_Putfld`, `_Genld`) that had no name. All of
+  it is C (or `exceptasm.s`) in `src/libultra`, ultralib's 2.0I files with
+  the differences, matching in us and eu (docs/LIBULTRA.md, "What 2.0I
+  doesn't reproduce"). `make libultra-ref` builds them as a reference
+  library, so gen_symbols.py names them and their variables.
+- **Not yet:** `osUnmapTLBAll` (older too, but EU's 0x60-byte gap follows
+  it) stays asm, and the rest of the matched libultra isn't C (it needs
+  no decompiling: ultralib's 2.0I files compile to it). Overlay copies of
   `osSpTaskYield`/`__osSpSetStatus` aren't named yet (one image, shared
   VRAM).
 - **Hudson's allocator** is GNU malloc's `gmalloc.c` (1995), IDO 5.3
@@ -171,6 +180,9 @@ evidence for the flags):
   (19 of 25).
   docs/DECOMPILING.md has how `-O3` objects are told apart and what
   Hudson's C looks like.
+- libultra's unmatched objects (phase 3): 28 objects in `src/libultra`,
+  `-mips2` with 2.0I's flags, seven of them owning their data through
+  `data_split.txt`'s placements, and `os/exceptasm.s` assembled by IDO.
 - eu from the same C: `tools/vermap.py` (docs/LAYOUT.md, "The US to EU
   map") aligns eu's functions to us's by masked bodies and maps the data
   through them (`vermap.eu.txt`). `make extract` for eu renames splat's
@@ -181,14 +193,17 @@ evidence for the flags):
 **Not yet:**
 - Per-object data beyond the cut (phase 2): an object outside the run
   `data_split.txt` lists from its module's first must still produce no
-  `.data`/`.rodata`/`.bss`. Each module's cut grows from its start as
+  `.data`/`.rodata`/`.bss`, unless data_split.txt places its sections on
+  their own (so far only library objects, whose addresses
+  `tools/data_split.py --place` finds). Each module's cut grows from its start as
   objects are decompiled with their data (docs/DECOMPILING.md, "Data");
   main_code's .data/.rodata boundary isn't shown yet.
 - `#if VERSION_EU` in the C for the 8 changed functions and eu's data,
   and `version_ifs.py` (Blast Corps) for version-specific GLOBAL_ASM
   lines, when the first of those is decompiled.
 - Hudson's game code is likely all C. Only libultra's `.s` files are real
-  asm, and the port doesn't use those.
+  asm (`src/libultra/os/exceptasm.s` so far), and the port doesn't use
+  those.
 
 ## Phase 5 — assets
 

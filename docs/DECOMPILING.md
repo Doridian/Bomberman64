@@ -283,7 +283,16 @@ and `.bss` must be empty. Their variables are `extern`, named
 
 The next candidates are the objects that extend a cut (main_code's
 `404C0`) and each overlay's first object after its entry, where nothing
-before it needs a size. Library objects have known sizes from their
-reference builds, but boot_code starts with its handwritten entry, and
-main_code's libraries come after most of its game code, so they don't
-help yet.
+before it needs a size.
+
+**Objects placed on their own.** A library object after the game's code
+can't join the cut, so data_split.txt can place its sections where the
+ROM has them instead: a size line as above, plus per version
+`<module> @<v> <object> data=<vram> rodata=<vram> bss=<vram>` for the
+sections it has. `tools/data_split.py <v> --place <module> <object>
+[--ref <object file>]` prints both lines, finding the addresses from the
+object's `%hi`/`%lo` relocations against the ROM and checking the bytes.
+`tools/layout.py` carves those subsegments out of the asm blocks (the asm
+before a placed `.data` becomes `data`, since the link puts every .data
+before every .rodata). libultra's objects use this where their code needs
+the data in the same file (docs/LIBULTRA.md, "Data").

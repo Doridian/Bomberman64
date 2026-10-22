@@ -84,5 +84,8 @@ run with it pinned (`tools/shift_check.py` explains).
   copied.
 - The structure and tooling follow the author's Blast Corps decompilation.
 - Haruhiko Okumura's LZSS.C (1989), whose encoder Hudson's matches.
+- [decompals/ultralib](https://github.com/decompals/ultralib): its headers
+  (`include/ultralib`) and the libultra sources `src/libultra` starts from.
 
-Licensed AGPL-3.0 (LICENSE).
+Licensed AGPL-3.0 (LICENSE), except the third-party material NOTICES.md
+lists.
