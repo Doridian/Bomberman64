@@ -20,6 +20,15 @@
 ovl_09_01 ovl_09_01_entry 0 0 0
 ovl_09_01 120010 0x30 0x50 0x50
 
+# ovl_09_02-04: the same template, all C; .rodata is the handler's three
+# debug strings and its jump table
+ovl_09_02 ovl_09_02_entry 0 0 0
+ovl_09_02 1219F0 0 0xB0 0x50
+ovl_09_03 ovl_09_03_entry 0 0 0
+ovl_09_03 1234C0 0x30 0xB0 0x50
+ovl_09_04 ovl_09_04_entry 0 0 0
+ovl_09_04 124F10 0x30 0xB0 0x50
+
 # main_code: RSP code (0x2320 bytes, rspboot and microcode) comes first, as
 # asm data; the objects' .data start after it.  The .data/.rodata boundary
 # isn't shown yet: 40040 and 40300 have no .rodata.
