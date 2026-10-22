@@ -370,7 +370,9 @@ What mattered:
 - IDO lays `.data` out in definition order, `.bss` in the order it first
   sees each variable (defined or used; an extern doesn't count), so the
   `.bss` definitions go before the first function. Unreferenced bytes
-  between variables are `u8 D_<address>[n]` arrays (120010.c has two).
+  between variables are `u8 D_<address>[n]` arrays (120010.c has two),
+  except where IDO aligns: it puts a 16-byte `.bss` array 8-aligned, so
+  4E030's gap between an `s32` and its pointer array is its own doing.
   A table's trailing zeros may be its own or the section's padding to 16:
   the bytes are the same, so pick the one the code suggests and say so.
 - A `switch` gets its jump table only when its cases are dense enough:

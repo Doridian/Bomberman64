@@ -48,6 +48,14 @@ main_code 412F0 0 0 0xA0
 main_code @us 412F0 bss=0x802A5330
 main_code @eu 412F0 bss=0x802A5320
 main_code @jp 412F0 bss=0x802A4560
+main_code 4DE50 0x10 0 0
+main_code @us 4DE50 data=0x8029FE30
+main_code @eu 4DE50 data=0x8029FE30
+main_code @jp 4DE50 data=0x8029F510
+main_code 4E030 0x60 0x30 0x20
+main_code @us 4E030 data=0x8029FE40 rodata=0x802A2E10 bss=0x802A5A30
+main_code @eu 4E030 data=0x8029FE40 rodata=0x802A2E10 bss=0x802A5A20
+main_code @jp 4E030 data=0x8029F520 rodata=0x802A2050 bss=0x802A4C60
 main_code 530C0 0x50 0x60 0
 main_code @us 530C0 data=0x802A0100 rodata=0x802A2E80
 main_code @eu 530C0 data=0x802A0100 rodata=0x802A2E80
