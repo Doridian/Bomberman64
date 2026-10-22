@@ -127,10 +127,13 @@ differ. What differs (from `tools/vermap.py --functions <module> jp`):
 - **boot_code**: `800018A8` (98 words, 94 in jp), the moved link gap.
 - **main_code**: changed functions in objects `52270`, `54E40` (8
   functions, three of them among the five that differ in eu), `5E3F0`,
-  `6BBE0`, `85A10`, `96540` (eu's other two), `9A5F0`. In `9A5F0` us has 7 functions jp lacks and jp
-  has 4 of its own (one in an object only jp has, `9A340_jp`, before it);
-  `AD3D0` has one function us-only and one jp-only. The ZeroJump block has
-  706 stubs (710 in us).
+  `6BBE0`, `85A10`, `96540` (eu's other two), `9A5F0`, `AD3D0`. In `9A5F0` us has 6 functions jp lacks (the
+  proportional font: `func_8028014C`, `func_80280358`, `func_80280BD0`,
+  `func_80280C08`, `func_802811F0`, and an inlined static's stub) and jp
+  one of its own (`func_802800B4_jp`, where us has `func_80280358`); jp
+  moved `func_8028124C` and `func_80280DB4` to the end of the file, which
+  starts the object 0x190 bytes before what us's start maps to
+  (text_objects.txt). The ZeroJump block has 706 stubs (710 in us).
 - **overlays**: `ovl_0A_06`, `ovl_0B_01`-`ovl_0B_07` (title, menus and the
   like: `ovl_0B_04` and `ovl_0B_06` are largely rewritten), `ovl_14_02`,
   `ovl_15_02`. The other 85 have every function identical; their data
@@ -144,7 +147,10 @@ regenerates it, `tools/vermap.py --check` checks it, `--report` and
 `--functions [module]` show what it found). The overlays pair up by bank
 and entry (both ROMs have the same 95, the same sizes). Per module, the
 functions (a start after each return that no branch or jump table crosses,
-and every jal target) are aligned on their bodies with the linker-filled
+every jal target, and every entry of a table of functions: a table in the
+data whose entries all are where a function can start, such as the
+exports a module hands func_80297D30; at `-O3` a function inlined
+everywhere is named only there) are aligned on their bodies with the linker-filled
 fields masked (jal targets, lui/lo immediates); what is left pairs by
 identical body in any order, then by similarity ("changed"). Every jal and
 lui/lo pair in aligned code is a (us, eu) address pair, and the pairs most
@@ -166,10 +172,10 @@ What the alignment finds (functions, ZeroJump stub blocks not counted):
 
 | module | functions | identical | changed | us only | eu only |
 | --- | --- | --- | --- | --- | --- |
-| boot_code | 266 | 263 | 3 (`800018A8`, `80003190`, `80003470`) | 0 | 0 |
-| main_code | 1048 | 1043 | 5 (`8023D8A0`, `8023E1D8`, `8023EF38`, `8027C4F4`, `8027C5E0`) | 0 | 0 |
-| 95 overlays | 5524 | 5524 | 0 | 0 | 0 |
-| total | 6838 | 6830 (99.9%) | 8 | 0 | 0 |
+| boot_code | 443 | 438 | 5 (`800018F8`, `80001A04`, `80001A14`, `80003190`, `80003470`) | 0 | 0 |
+| main_code | 1735 | 1730 | 5 (`8023DB0C`, `8023E1D8`, `8023FD08`, `8027C4F4`, `8027C788`) | 0 | 0 |
+| 95 overlays | 5628 | 5628 | 0 | 0 | 0 |
+| total | 7806 | 7796 (99.9%) | 10 | 0 | 0 |
 
 Every function is paired, so the map has no eu-only function and no
 us-only one. The three overlays that differ (`ovl_0B_01`, `ovl_10_13`,
@@ -206,10 +212,10 @@ What the alignment finds (functions, ZeroJump stubs not counted):
 
 | module | us | jp | identical | changed | us only | jp only |
 | --- | --- | --- | --- | --- | --- | --- |
-| boot_code | 266 | 266 | 263 | 2 (`800018A8`, `80003470`) | 1 (`80012D14`) | 1 |
-| main_code | 1048 | 1045 | 1021 | 19 | 8 | 5 |
-| 95 overlays | 5524 | 5514 | 5449 | 38 | 37 | 27 |
-| total | 6838 | 6825 | 6733 (98.5%) | 59 | 46 | 33 |
+| boot_code | 443 | 442 | 439 | 2 (`80001A04`, `80003470`) | 2 (`80001A14`, `80012D14`) | 1 |
+| main_code | 1735 | 1730 | 1709 | 20 | 6 | 1 |
+| 95 overlays | 5628 | 5618 | 5552 | 61 | 15 | 5 |
+| total | 7806 | 7790 | 7700 (98.6%) | 83 | 23 | 7 |
 
 Per overlay (the 85 others are all identical):
 
@@ -217,20 +223,27 @@ Per overlay (the 85 others are all identical):
 | --- | --- | --- | --- | --- | --- | --- |
 | ovl_0A_06 | 51 | 51 | 46 | 5 | 0 | 0 |
 | ovl_0B_01 | 38 | 38 | 34 | 4 | 0 | 0 |
-| ovl_0B_02 | 15 | 15 | 14 | 1 | 0 | 0 |
+| ovl_0B_02 | 63 | 63 | 61 | 2 | 0 | 0 |
 | ovl_0B_03 | 50 | 50 | 48 | 2 | 0 | 0 |
-| ovl_0B_04 | 107 | 105 | 79 | 12 | 16 | 14 |
+| ovl_0B_04 | 107 | 105 | 79 | 25 | 3 | 1 |
 | ovl_0B_05 | 47 | 47 | 45 | 2 | 0 | 0 |
-| ovl_0B_06 | 98 | 90 | 73 | 5 | 20 | 12 |
+| ovl_0B_06 | 98 | 90 | 73 | 14 | 11 | 3 |
 | ovl_0B_07 | 28 | 28 | 25 | 2 | 1 | 1 |
 | ovl_14_02 | 167 | 167 | 165 | 2 | 0 | 0 |
 | ovl_15_02 | 146 | 146 | 143 | 3 | 0 | 0 |
 
 boot_code's `80003470` and `80012D14` are the moved link gap (the
 function cutter counts the zeros with the function before them), not
-code. The map is 905 ranges, many of them single words in data that
+code. The map is 979 ranges, many of them single words in data that
 moved by different amounts (each of jp's strings is shorter or longer
-than us's). After a jp extract, about 500 names are `_jp`.
+than us's). After a jp extract, 226 names are `_jp`.
+
+Functions that only moved pair by their identical bodies, once a table of
+functions shows where they start: jp's 9A5F0 has `func_8028124C` and
+`func_80280DB4` (and so `func_802809A0`, `func_802809F0`, `func_80280A40`,
+which -O3 emits before their caller) at its start, and
+`func_80280274`, us's glyph loader without the remapping, pairs as
+changed.
 
 ## Loaders
 
@@ -309,6 +322,11 @@ In the config (`tools/layout.py`):
   the object has the same name and C file everywhere. main_code's `4E030`
   is one: 4DE50's seven float compares are `-O3`, and 4E030's wrappers
   call them with a `jal`, which `-O3` would have inlined within one file.
+  A line can also give a version's own start (`main_code 9A5F0
+  jp=9A340`): jp's 9A5F0 moved two functions to the end of its source, so
+  `-O3` emits them, and the callees they pull along, first, and the object
+  starts before the code us's start maps to; that address is then no
+  boundary.
 - **Data** is cut per object where the C shows it (`data_split.txt`,
   docs/DECOMPILING.md, "Data"): a `.data`, `.rodata` and `.bss`
   subsegment for each C object listed there, from the module's first

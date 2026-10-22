@@ -2,11 +2,17 @@
 # the function before them ends on a 16-byte boundary.  tools/layout.py
 # splits the text at these as well as where the padding shows one
 # (docs/LAYOUT.md, "Stage 2").  Each is us's image offset, the object's
-# name; eu and jp get it through vermap.<version>.txt.  Add one only where
-# the code shows the boundary.
+# name; eu and jp get it through vermap.<version>.txt, unless the line
+# gives that version's own start (its image offset), for an object that
+# starts with other code there: the start us's maps to is then no
+# boundary.  Add one only where the code shows the boundary.
 #
-#   <module> <us image offset>
+#   <module> <us image offset> [<version>=<its image offset> ...]
 
 # 4DE50 is the seven float compares, -O3; 4E030's wrappers call them with
 # a jal, which -O3 would have inlined within one file.
 main_code 4E030
+
+# 9A5F0 (-O3): jp moved two functions to the end of the file (func_8028124C,
+# func_80280DB4), so jp's object starts with them, at its own 0x9A340.
+main_code 9A5F0 jp=9A340

@@ -275,6 +275,14 @@ def functions(m):
     for at, tg in data_groups(m, 0):
         addr = m.vram + 4 * at
         tables[addr] = tg
+        # a table of functions (a module's exports, func_80297D30's
+        # argument), not a jump table: every entry is where a function can
+        # start (after a return, or a jal target).  Each entry starts a
+        # function, which a branch doesn't cross out of; a function only
+        # the table names (inlined at -O3 everywhere else) is found this way
+        if all(t in cand or t in starts_hard for t in tg) and len(set(tg)) > 1:
+            starts_hard.update(tg)
+            continue
         for i in luis.get(addr, []):
             span.append((min(i, min(tg)), max(tg)))
         if addr not in luis:
@@ -350,7 +358,7 @@ def align_functions(rf, tf):
         if b2 < b1:
             continue
         ra = [i for i in range(a1 + 1, a2) if i not in exact]
-        ta = [j for j in range(b1 + 1, b2) if j not in exact and j not in set(exact.values())]
+        ta = [j for j in range(b1 + 1, b2) if j not in set(exact.values())]
         if not ra or not ta:
             continue
         # greedy in order: best ratio for each us function among the later

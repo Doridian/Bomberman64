@@ -333,21 +333,26 @@ def lib_objects(version):
     return out
 
 
-def text_objects(version, module, vram, ref_start):
-    """VRAMs in `version` where text_objects.txt says an object of `module`
-    starts: boundaries the padding can't show (the function before ends on
-    a 16-byte boundary) that the C shows instead.  The file gives us's
-    image offsets (the objects' names); eu and jp get them through the map.
-    ref_start: the module's start in us's image."""
+def text_objects(version, module, vram, start, ref_start):
+    """Where text_objects.txt says objects of `module` start in `version`:
+    ({VRAM: the object's name, or None for the name its offset gives}, {VRAMs
+    that are no object start}).  These are boundaries the padding can't show
+    (the function before ends on a 16-byte boundary) that the C shows
+    instead.  The file gives us's image offsets (the objects' names); eu and
+    jp get them through the map, unless a line gives the version's own start
+    (`jp=9A340`: the object starts there in jp, where -O3 put other functions
+    first, and not where us's start maps to).  start, ref_start: the
+    module's start in this version's image and in us's."""
     path = ROOT / "text_objects.txt"
     if not path.exists() or ref_start is None:
-        return set()
-    out = set()
+        return {}, set()
+    adds, drops = {}, set()
     for n, line in enumerate(path.read_text().splitlines(), 1):
         f = line.split("#")[0].split()
         if not f or f[0] != module:
             continue
-        assert len(f) == 2, f"text_objects.txt:{n}: module offset"
+        own = dict(x.split("=") for x in f[2:])
+        assert all(k in VERSIONS for k in own), f"text_objects.txt:{n}: module offset [version=offset...]"
         a = vram + int(f[1], 16) - ref_start
         if version != "us":
             import vermap
@@ -355,9 +360,15 @@ def text_objects(version, module, vram, ref_start):
             if vm is None:
                 vm = _vermaps[version] = vermap.read_map(ROOT / f"vermap.{version}.txt")
             a = vm.to_tgt(module, a)
-            assert a is not None, f"text_objects.txt:{n}: not in {version}'s map"
-        out.add(a)
-    return out
+            assert a is not None or version in own, f"text_objects.txt:{n}: not in {version}'s map"
+        if version in own:
+            if a is not None:
+                drops.add(a)
+            a = vram + int(own[version], 16) - start
+            adds[a] = f[1].upper()
+        else:
+            adds[a] = None
+    return adds, drops
 
 
 def object_starts(b, start, end, known=()):
@@ -606,9 +617,12 @@ def code_segment(name, start, vram, data, bss_size, first_hasm=None,
     object boundaries (VRAM) the padding may not show.  split: the
     module's entry of data_split() (cut_data()).  A known boundary may name
     the library object that starts there (lib_objects()): one with a source
-    in src/libultra is a `c` (or `hasm`) subsegment of that name.  namer:
-    the name of the text object at an offset in the module
-    (object_namer())."""
+    in src/libultra is a `c` (or `hasm`) subsegment of that name; known may
+    also be a pair (boundaries, {VRAM: name}) whose names override the
+    namer's (text_objects()).  namer: the name of the text object at an
+    offset in the module (object_namer())."""
+    known, given = known if isinstance(known, tuple) else (known, {})
+    given = {a - vram: n for a, n in given.items()}
     libnames = {a - vram: n for a, n in dict(known).items()} if isinstance(known, dict) else {}
     if namer is None:
         namer = lambda off: f"{start + off:X}"
@@ -639,7 +653,7 @@ def code_segment(name, start, vram, data, bss_size, first_hasm=None,
     elif text_end > pos:
         code(pos, text_end)
     seg_dir = None if vram != OVERLAY_VRAM else f"overlays/{name}"
-    subs = [(off, kind, sub or namer(off)) for off, kind, sub in subs]
+    subs = [(off, kind, sub or given.get(off) or namer(off)) for off, kind, sub in subs]
     text_objs = [sub for _, _, sub in subs]
     assert len(set(text_objs)) == len(text_objs), f"{name}: two text objects with one name"
 
@@ -763,10 +777,12 @@ def config(version, d):
     lib = lib_objects(version)
     us_starts = ref_starts(version)
     us_objs = ref_objects(version)
-    def known(name, vram, ref_start):
-        hand = text_objects(version, name, vram, ref_start)
-        return {**dict.fromkeys(us_objs.get(name, ())), **dict.fromkeys(hand),
-                **lib.get(name, {})}
+    def known(name, vram, start, ref_start):
+        """object starts (VRAM: library object or None) and given names"""
+        hand, drops = text_objects(version, name, vram, start, ref_start)
+        ref = {a: None for a in us_objs.get(name, ()) if a not in drops}
+        names = {a: n for a, n in hand.items() if n}
+        return {**ref, **dict.fromkeys(hand), **lib.get(name, {})}, names
     split = data_split(version)
     starts = [s for s, _, _ in segs] + [FIRST_BANK]
     out = [
@@ -800,7 +816,7 @@ def config(version, d):
         if name == "boot_code":
             out += code_segment(name, start, BOOT_VRAM, blob, boot_bss,
                                 first_hasm=(0x50, "entry"), note=note,
-                                known=known(name, BOOT_VRAM, start), split=split.get(name),
+                                known=known(name, BOOT_VRAM, start, start), split=split.get(name),
                                 namer=object_namer(version, name, start, BOOT_VRAM, start))
         elif name == "zerojump":
             strings = blob.index(b"ZeroJump")
@@ -826,7 +842,7 @@ def config(version, d):
                 persist = None
             out += code_segment(name, start, MAIN_VRAM, blob, main_bss(d, end),
                                 note=note, persist=persist,
-                                known=known(name, MAIN_VRAM, start),
+                                known=known(name, MAIN_VRAM, start, start),
                                 split=split.get(name),
                                 namer=object_namer(version, name, start, MAIN_VRAM, start))
         else:
@@ -837,7 +853,7 @@ def config(version, d):
         bss = bss_size(data, OVERLAY_VRAM, OVERLAY_SPACE)
         name = overlay_name(bank, entry)
         out += code_segment(name, pos, OVERLAY_VRAM, data, bss, split=split.get(name),
-                            known=known(name, OVERLAY_VRAM,
+                            known=known(name, OVERLAY_VRAM, pos,
                                         pos if version == "us" else us_starts.get(name)),
                             namer=object_namer(version, name, pos, OVERLAY_VRAM,
                                                us_starts.get(name)))

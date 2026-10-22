@@ -102,6 +102,16 @@ tools/progress.py                                # per module, overlays per bank
     the source, except that a function's callees from the same file come
     out just before it if they haven't yet. So the source order is the
     reverse of the object's (40FB0.c is written last function first).
+    In detail (small test files): the callees come out in the reverse
+    order of their last calls; a `static` is emitted only that way, when
+    its first caller is (its stub too, if it was inlined everywhere); a
+    global at its own turn, unless a caller processed before it pulled it
+    out. A helper defined above its caller (processed after it) therefore
+    sits just before the caller, one defined below at its own place:
+    9A5F0's text-drawing helpers come out ahead of their caller in the
+    object, so they are above it in the source. A global is inlined only
+    if small (4E030's func_80233C30 isn't); a `static` of the same size
+    is.
   - moves a float argument that arrives in an integer register straight
     to a float register (`mtc1 $a2, $f16`), where `-O2` stores it to its
     home slot and reloads it (`sw $a2, 8($sp)` ... `lwc1`). A function
@@ -213,7 +223,9 @@ tools/progress.py                                # per module, overlays per bank
   "impossible" argument is trapped with `while (1) {}` (A4860).
 - **Truth values are `int`.** `return a <= b && -b <= a;` matched as an
   `int` function (4DE50); as `s32` (`long`) IDO builds it in `v1` and
-  moves it.
+  moves it. `int` and `long` differ elsewhere too: `arg3 + c * size` adds
+  its operands in the other order when `arg3` is a `long` parameter
+  (9A5F0's func_80280274 matched only with `int arg3`).
 - **Float literals keep their type.** `x * 2` multiplies by a 2.0
   constant where `x * 2.0f` becomes `add.s`; an angle wraps as
   `a >= 360.0f ? a - 360.0f : a < 0.0f ? a + 360.0f : a` (or the same as
@@ -240,8 +252,10 @@ keeps us's name, so one GLOBAL_ASM line serves every version.
 - **Objects.** Outside us a text object is named for the us image offset
   of the same code (`tools/layout.py` through `vermap.<v>.txt`): `5E090`
   is jp's `0x5DDE0`, and `src/5E090.c` is that object in all three. An
-  object only jp has is `<jp offset>_jp` (`9A340_jp`). Where jp's padding
-  doesn't show a boundary us's does, us's is used.
+  object only jp has would be `<jp offset>_jp`. Where jp's padding
+  doesn't show a boundary us's does, us's is used; where jp's object
+  starts elsewhere, text_objects.txt says so (`main_code 9A5F0 jp=9A340`,
+  docs/LAYOUT.md, "Stage 2").
 - **Names.** eu's and jp's asm carries us's names: `make extract` renames
   splat's address names through `vermap.<v>.txt` (`tools/vermap.py`,
   docs/LAYOUT.md, "The US to EU map", "The US to JP map"), so a C file's
