@@ -91,3 +91,7 @@ ovl_0F_06 1FB180 0x50 0x60 0x40
 # ovl_17_04: all C
 ovl_17_04 ovl_17_04_entry 0 0 0
 ovl_17_04 2AD480 0x80 0x50 0x40
+
+# ovl_17_05: all C
+ovl_17_05 ovl_17_05_entry 0 0 0
+ovl_17_05 2AF2B0 0x80 0x50 0x40
