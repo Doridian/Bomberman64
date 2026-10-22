@@ -29,6 +29,10 @@ ovl_09_03 1234C0 0x30 0xB0 0x50
 ovl_09_04 ovl_09_04_entry 0 0 0
 ovl_09_04 124F10 0x30 0xB0 0x50
 
+# ovl_0A_04: all C (-O3); .rodata is its floats, a double and two jump tables
+ovl_0A_04 ovl_0A_04_entry 0 0 0
+ovl_0A_04 137330 0 0xC0 0x50
+
 # main_code: RSP code (0x2320 bytes, rspboot and microcode) comes first, as
 # asm data; the objects' .data start after it.  The .data/.rodata boundary
 # isn't shown yet: 40040 and 40300 have no .rodata.
