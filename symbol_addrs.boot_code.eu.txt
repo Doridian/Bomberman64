@@ -5,26 +5,26 @@ osResetType = 0x8000030C; // absolute:True lib=ref
 osAppNMIBuffer = 0x8000031C; // absolute:True lib=ref
 osScAddClient = 0x80001518; // type:func segment:boot_code lib=fuzzy
 osCreateScheduler = 0x8000156C; // type:func segment:boot_code lib=fuzzy
-alSynStartVoiceParams = 0x80001A50; // type:func segment:boot_code lib=ref
+alSynStartVoiceParams = 0x80001A50; // type:func segment:boot_code lib=exact
 osMapTLB = 0x80001B40; // type:func segment:boot_code lib=exact
 osCreatePiManager = 0x80001C00; // type:func segment:boot_code lib=exact
-osCreateMesgQueue = 0x80001D90; // type:func segment:boot_code lib=ref
-osRecvMesg = 0x80001DC0; // type:func segment:boot_code lib=ref
+osCreateMesgQueue = 0x80001D90; // type:func segment:boot_code lib=exact
+osRecvMesg = 0x80001DC0; // type:func segment:boot_code lib=exact
 osPiStartDma = 0x80001F00; // type:func segment:boot_code lib=exact
-osYieldThread = 0x80002010; // type:func segment:boot_code lib=ref
-osWritebackDCache = 0x80002060; // type:func segment:boot_code lib=ref
+osYieldThread = 0x80002010; // type:func segment:boot_code lib=exact
+osWritebackDCache = 0x80002060; // type:func segment:boot_code lib=exact
 osInvalDCache = 0x800020E0; // type:func segment:boot_code lib=exact
-osInvalICache = 0x80002190; // type:func segment:boot_code lib=ref
+osInvalICache = 0x80002190; // type:func segment:boot_code lib=exact
 osCreateViManager = 0x80002210; // type:func segment:boot_code lib=exact
 osViSetMode = 0x80002570; // type:func segment:boot_code lib=exact
 osViBlack = 0x800025E0; // type:func segment:boot_code lib=exact
-osSetEventMesg = 0x80002650; // type:func segment:boot_code lib=ref
+osSetEventMesg = 0x80002650; // type:func segment:boot_code lib=exact
 osViSetEvent = 0x800026C0; // type:func segment:boot_code lib=exact
-osCreateThread = 0x80002730; // type:func segment:boot_code lib=ref
-osStartThread = 0x80002880; // type:func segment:boot_code lib=ref
-osSetIntMask = 0x800029D0; // type:func segment:boot_code lib=ref
+osCreateThread = 0x80002730; // type:func segment:boot_code lib=exact
+osStartThread = 0x80002880; // type:func segment:boot_code lib=exact
+osSetIntMask = 0x800029D0; // type:func segment:boot_code lib=exact
 osGetTime = 0x80002A70; // type:func segment:boot_code lib=exact
-osSendMesg = 0x80002B00; // type:func segment:boot_code lib=ref
+osSendMesg = 0x80002B00; // type:func segment:boot_code lib=exact
 osSpTaskYielded = 0x80002C50; // type:func segment:boot_code lib=exact
 osViGetCurrentFramebuffer = 0x80002CD0; // type:func segment:boot_code lib=exact
 osViGetNextFramebuffer = 0x80002D10; // type:func segment:boot_code lib=exact
@@ -35,17 +35,26 @@ osSpTaskStartGo = 0x8000307C; // type:func segment:boot_code lib=exact
 osDpSetNextBuffer = 0x800030C0; // type:func segment:boot_code lib=exact
 osSpTaskYield = 0x80003170; // type:func segment:boot_code lib=exact
 osInitialize = 0x80003240; // type:func segment:boot_code lib=exact
-osSetThreadPri = 0x800034D0; // type:func segment:boot_code lib=ref
+osSetThreadPri = 0x800034D0; // type:func segment:boot_code lib=exact
 sprintf = 0x800035D4; // type:func segment:boot_code lib=exact
-osVirtualToPhysical = 0x80003630; // type:func segment:boot_code lib=ref
-osJamMesg = 0x800036B0; // type:func segment:boot_code lib=ref
+osVirtualToPhysical = 0x80003630; // type:func segment:boot_code lib=exact
+osJamMesg = 0x800036B0; // type:func segment:boot_code lib=exact
 osStopThread = 0x80003800; // type:func segment:boot_code lib=exact
-osGetThreadPri = 0x800039C0; // type:func segment:boot_code lib=ref
+osGetThreadPri = 0x800039C0; // type:func segment:boot_code lib=exact
 osGetThreadId = 0x800039E0; // type:func segment:boot_code lib=exact
 osSetTime = 0x80003A00; // type:func segment:boot_code lib=exact
 osSetTimer = 0x80003A30; // type:func segment:boot_code lib=exact
 osStopTimer = 0x80003B10; // type:func segment:boot_code lib=exact
-osGetCount = 0x80003C00; // type:func segment:boot_code lib=ref
+osGetCount = 0x80003C00; // type:func segment:boot_code lib=exact
+osEepromProbe = 0x80003C10; // type:func segment:boot_code lib=exact
+osEepromRead = 0x80003C80; // type:func segment:boot_code lib=exact
+osEepromWrite = 0x80003F80; // type:func segment:boot_code lib=exact
+__osEepStatus = 0x8000423C; // type:func segment:boot_code lib=exact
+osEepromLongRead = 0x80004460; // type:func segment:boot_code lib=exact
+osEepromLongWrite = 0x800045A0; // type:func segment:boot_code lib=exact
+osMotorStop = 0x800046E0; // type:func segment:boot_code lib=exact
+osMotorStart = 0x80004848; // type:func segment:boot_code lib=exact
+osMotorInit = 0x80004B30; // type:func segment:boot_code lib=exact
 osGetIntMask = 0x80004D00; // type:func segment:boot_code lib=exact
 osViGetStatus = 0x80004D60; // type:func segment:boot_code lib=exact
 osViGetCurrentMode = 0x80004D70; // type:func segment:boot_code lib=exact
@@ -67,8 +76,13 @@ osPiRawReadIo = 0x800054E0; // type:func segment:boot_code lib=exact
 osPiRawStartDma = 0x80005540; // type:func segment:boot_code lib=exact
 osPiWriteIo = 0x80005620; // type:func segment:boot_code lib=exact
 osPiReadIo = 0x80005660; // type:func segment:boot_code lib=exact
-__osContGetInitData = 0x80005898; // type:func segment:boot_code lib=ref
-__osPackRequestData = 0x80005968; // type:func segment:boot_code lib=ref
+osContInit = 0x800056A0; // type:func segment:boot_code lib=exact
+__osContGetInitData = 0x80005898; // type:func segment:boot_code lib=exact
+__osPackRequestData = 0x80005968; // type:func segment:boot_code lib=exact
+osContStartReadData = 0x80005A60; // type:func segment:boot_code lib=exact
+osContGetReadData = 0x80005B24; // type:func segment:boot_code lib=exact
+osContReset = 0x80005CC0; // type:func segment:boot_code lib=exact
+__osPackResetData = 0x80005DB8; // type:func segment:boot_code lib=exact
 osContStartQuery = 0x80005E40; // type:func segment:boot_code lib=exact
 osContGetQuery = 0x80005EC4; // type:func segment:boot_code lib=exact
 osContSetCh = 0x80005EF0; // type:func segment:boot_code lib=exact
@@ -80,46 +94,46 @@ __ll_to_d = 0x800060D4; // type:func segment:boot_code lib=exact
 __ll_to_f = 0x800060EC; // type:func segment:boot_code lib=exact
 __ull_to_d = 0x80006104; // type:func segment:boot_code lib=exact
 __ull_to_f = 0x80006138; // type:func segment:boot_code lib=exact
-alUnlink = 0x80006180; // type:func segment:boot_code lib=ref
-alLink = 0x800061B0; // type:func segment:boot_code lib=ref
+alUnlink = 0x80006180; // type:func segment:boot_code lib=exact
+alLink = 0x800061B0; // type:func segment:boot_code lib=exact
 alClose = 0x800061D4; // type:func segment:boot_code lib=exact
 alInit = 0x8000620C; // type:func segment:boot_code lib=exact
-alCopy = 0x80006240; // type:func segment:boot_code lib=ref
+alCopy = 0x80006240; // type:func segment:boot_code lib=exact
 alHeapInit = 0x800062C0; // type:func segment:boot_code lib=exact
-alHeapDBAlloc = 0x80006300; // type:func segment:boot_code lib=ref
+alHeapDBAlloc = 0x80006300; // type:func segment:boot_code lib=exact
 alHeapCheck = 0x80006360; // type:func segment:boot_code lib=exact
 alBnkfNew = 0x80006474; // type:func segment:boot_code lib=exact
 alSeqFileNew = 0x80006578; // type:func segment:boot_code lib=exact
 _timeToSamples = 0x800065C8; // type:func segment:boot_code lib=exact
-_freePVoice = 0x80006620; // type:func segment:boot_code lib=ref
+_freePVoice = 0x80006620; // type:func segment:boot_code lib=exact
 _collectPVoices = 0x80006658; // type:func segment:boot_code lib=exact
-__freeParam = 0x800066B8; // type:func segment:boot_code lib=ref
+__freeParam = 0x800066B8; // type:func segment:boot_code lib=exact
 __allocParam = 0x800066D0; // type:func segment:boot_code lib=exact
 alAudioFrame = 0x80006708; // type:func segment:boot_code lib=exact
-alSynNew = 0x800069A0; // type:func segment:boot_code lib=ref
+alSynNew = 0x800069A0; // type:func segment:boot_code lib=exact
 alSynDelete = 0x80006CA0; // type:func segment:boot_code lib=ref
-alSynAddPlayer = 0x80006CB0; // type:func segment:boot_code lib=ref
-alSynRemovePlayer = 0x80006D00; // type:func segment:boot_code lib=ref
+alSynAddPlayer = 0x80006CB0; // type:func segment:boot_code lib=exact
+alSynRemovePlayer = 0x80006D00; // type:func segment:boot_code lib=exact
 _allocatePVoice = 0x80006DA0; // type:func segment:boot_code lib=exact
-alSynAllocVoice = 0x80006E88; // type:func segment:boot_code lib=ref
-alSynFreeVoice = 0x80006FD0; // type:func segment:boot_code lib=ref
+alSynAllocVoice = 0x80006E88; // type:func segment:boot_code lib=exact
+alSynFreeVoice = 0x80006FD0; // type:func segment:boot_code lib=exact
 alSynStartVoice = 0x80007080; // type:func segment:boot_code lib=exact
-alSynStopVoice = 0x80007110; // type:func segment:boot_code lib=ref
-alSynSetVol = 0x80007190; // type:func segment:boot_code lib=ref
-alSynSetPitch = 0x80007230; // type:func segment:boot_code lib=ref
-alSynSetPan = 0x800072C0; // type:func segment:boot_code lib=ref
-alSynSetFXMix = 0x80007350; // type:func segment:boot_code lib=ref
+alSynStopVoice = 0x80007110; // type:func segment:boot_code lib=exact
+alSynSetVol = 0x80007190; // type:func segment:boot_code lib=exact
+alSynSetPitch = 0x80007230; // type:func segment:boot_code lib=exact
+alSynSetPan = 0x800072C0; // type:func segment:boot_code lib=exact
+alSynSetFXMix = 0x80007350; // type:func segment:boot_code lib=exact
 alSynSetPriority = 0x800073F0; // type:func segment:boot_code lib=exact
 alSynGetPriority = 0x80007400; // type:func segment:boot_code lib=exact
 alSynAllocFX = 0x80007410; // type:func segment:boot_code lib=exact
 alSynGetFXRef = 0x800074B0; // type:func segment:boot_code lib=exact
 alSynFreeFX = 0x80007530; // type:func segment:boot_code lib=exact
 alSynSetFXParam = 0x80007540; // type:func segment:boot_code lib=exact
-alEvtqFlushType = 0x80007580; // type:func segment:boot_code lib=ref
+alEvtqFlushType = 0x80007580; // type:func segment:boot_code lib=exact
 alEvtqFlush = 0x8000762C; // type:func segment:boot_code lib=exact
-alEvtqPostEvent = 0x8000769C; // type:func segment:boot_code lib=ref
-alEvtqNextEvent = 0x800077C0; // type:func segment:boot_code lib=ref
-alEvtqNew = 0x8000784C; // type:func segment:boot_code lib=ref
+alEvtqPostEvent = 0x8000769C; // type:func segment:boot_code lib=exact
+alEvtqNextEvent = 0x800077C0; // type:func segment:boot_code lib=exact
+alEvtqNew = 0x8000784C; // type:func segment:boot_code lib=exact
 alSeqGetLoc = 0x800078C0; // type:func segment:boot_code lib=exact
 alSeqSetLoc = 0x800078DC; // type:func segment:boot_code lib=exact
 alSeqGetTicks = 0x800078F8; // type:func segment:boot_code lib=exact
@@ -138,22 +152,22 @@ alCSeqGetTicks = 0x800086BC; // type:func segment:boot_code lib=exact
 alCSeqSecToTicks = 0x800086C4; // type:func segment:boot_code lib=exact
 alCSeqTicksToSec = 0x800087C0; // type:func segment:boot_code lib=exact
 __alCSeqNextDelta = 0x8000882C; // type:func segment:boot_code lib=exact
-alCents2Ratio = 0x800089A0; // type:func segment:boot_code lib=ref
-__setInstChanState = 0x800089F0; // type:func segment:boot_code lib=ref
+alCents2Ratio = 0x800089A0; // type:func segment:boot_code lib=exact
+__setInstChanState = 0x800089F0; // type:func segment:boot_code lib=exact
 __resetPerfChanState = 0x80008A44; // type:func segment:boot_code lib=exact
-__initFromBank = 0x80008AC4; // type:func segment:boot_code lib=ref
-__vsDelta = 0x80008B80; // type:func segment:boot_code lib=ref
-__vsVol = 0x80008BA4; // type:func segment:boot_code lib=ref
-__seqpReleaseVoice = 0x80008C2C; // type:func segment:boot_code lib=ref
-__voiceNeedsNoteKill = 0x80008D58; // type:func segment:boot_code lib=ref
-__unmapVoice = 0x80008E00; // type:func segment:boot_code lib=ref
+__initFromBank = 0x80008AC4; // type:func segment:boot_code lib=exact
+__vsDelta = 0x80008B80; // type:func segment:boot_code lib=exact
+__vsVol = 0x80008BA4; // type:func segment:boot_code lib=exact
+__seqpReleaseVoice = 0x80008C2C; // type:func segment:boot_code lib=exact
+__voiceNeedsNoteKill = 0x80008D58; // type:func segment:boot_code lib=exact
+__unmapVoice = 0x80008E00; // type:func segment:boot_code lib=exact
 __postNextSeqEvent = 0x80008E70; // type:func segment:boot_code lib=exact
-__vsPan = 0x80008FC4; // type:func segment:boot_code lib=ref
-__lookupVoice = 0x8000900C; // type:func segment:boot_code lib=ref
-__mapVoice = 0x80009080; // type:func segment:boot_code lib=ref
-__lookupSoundQuick = 0x800090F0; // type:func segment:boot_code lib=ref
-__seqpStopOsc = 0x8000A030; // type:func segment:boot_code lib=ref
-__initChanState = 0x8000A134; // type:func segment:boot_code lib=ref
+__vsPan = 0x80008FC4; // type:func segment:boot_code lib=exact
+__lookupVoice = 0x8000900C; // type:func segment:boot_code lib=exact
+__mapVoice = 0x80009080; // type:func segment:boot_code lib=exact
+__lookupSoundQuick = 0x800090F0; // type:func segment:boot_code lib=exact
+__seqpStopOsc = 0x8000A030; // type:func segment:boot_code lib=exact
+__initChanState = 0x8000A134; // type:func segment:boot_code lib=exact
 alSeqpNew = 0x8000A1A4; // type:func segment:boot_code lib=exact
 alSeqpDelete = 0x8000A330; // type:func segment:boot_code lib=exact
 alSeqpSetSeq = 0x8000A360; // type:func segment:boot_code lib=exact
@@ -217,87 +231,92 @@ alSndpSetPriority = 0x8000CB10; // type:func segment:boot_code lib=exact
 alSndpSetFXMix = 0x8000CB40; // type:func segment:boot_code lib=exact
 alSndpGetState = 0x8000CBA0; // type:func segment:boot_code lib=exact
 osPfsInit = 0x8000CBC0; // type:func segment:boot_code lib=exact
-osPfsReFormat = 0x8000CC80; // type:func segment:boot_code lib=fuzzy
+osPfsReFormat = 0x8000CC80; // type:func segment:boot_code lib=exact
 osPfsChecker = 0x8000D080; // type:func segment:boot_code lib=exact
-corrupted_init = 0x8000D744; // type:func segment:boot_code lib=ref
-corrupted = 0x8000D8F8; // type:func segment:boot_code lib=ref
+corrupted_init = 0x8000D744; // type:func segment:boot_code lib=exact
+corrupted = 0x8000D8F8; // type:func segment:boot_code lib=exact
 osPfsAllocateFile = 0x8000DAE0; // type:func segment:boot_code lib=exact
-__osPfsDeclearPage = 0x8000DF64; // type:func segment:boot_code lib=ref
-osPfsFindFile = 0x8000E290; // type:func segment:boot_code lib=ref
+__osPfsDeclearPage = 0x8000DF64; // type:func segment:boot_code lib=exact
+osPfsFindFile = 0x8000E290; // type:func segment:boot_code lib=exact
 osPfsDeleteFile = 0x8000E450; // type:func segment:boot_code lib=exact
-__osPfsReleasePages = 0x8000E730; // type:func segment:boot_code lib=ref
+__osPfsReleasePages = 0x8000E730; // type:func segment:boot_code lib=exact
 __osBlockSum = 0x8000E968; // type:func segment:boot_code lib=exact
+osPfsReadWriteFile = 0x8000EB5C; // type:func segment:boot_code lib=exact
 osPfsFileState = 0x8000EF60; // type:func segment:boot_code lib=exact
 osPfsGetLabel = 0x8000F250; // type:func segment:boot_code lib=exact
 osPfsSetLabel = 0x8000F310; // type:func segment:boot_code lib=exact
 osPfsIsPlug = 0x8000F410; // type:func segment:boot_code lib=exact
-__osPfsRequestData = 0x8000F5B0; // type:func segment:boot_code lib=ref
-__osPfsGetInitData = 0x8000F6AC; // type:func segment:boot_code lib=ref
-osPfsFreeBlocks = 0x8000F780; // type:func segment:boot_code lib=ref
+__osPfsRequestData = 0x8000F5B0; // type:func segment:boot_code lib=exact
+__osPfsGetInitData = 0x8000F6AC; // type:func segment:boot_code lib=exact
+osPfsFreeBlocks = 0x8000F780; // type:func segment:boot_code lib=exact
 osPfsNumFiles = 0x8000F8D0; // type:func segment:boot_code lib=exact
+osPfsInitPak = 0x80010440; // type:func segment:boot_code lib=exact
 osPfsRepairId = 0x800106B0; // type:func segment:boot_code lib=exact
-__osPiCreateAccessQueue = 0x80010B00; // type:func segment:boot_code lib=ref
-__osPiGetAccess = 0x80010B50; // type:func segment:boot_code lib=ref
-__osPiRelAccess = 0x80010B94; // type:func segment:boot_code lib=ref
+osCartRomInit = 0x80010910; // type:func segment:boot_code lib=exact
+osLeoDiskInit = 0x80010A00; // type:func segment:boot_code lib=exact
+__osPiCreateAccessQueue = 0x80010B00; // type:func segment:boot_code lib=exact
+__osPiGetAccess = 0x80010B50; // type:func segment:boot_code lib=exact
+__osPiRelAccess = 0x80010B94; // type:func segment:boot_code lib=exact
 __osDisableInt = 0x80010BC0; // type:func segment:boot_code lib=exact
 __osRestoreInt = 0x80010BE0; // type:func segment:boot_code lib=exact
 osEPiRawStartDma = 0x80010C00; // type:func segment:boot_code lib=exact
 __osDevMgrMain = 0x80010E30; // type:func segment:boot_code lib=exact
-__osDequeueThread = 0x800112C0; // type:func segment:boot_code lib=ref
+__osDequeueThread = 0x800112C0; // type:func segment:boot_code lib=exact
 __osExceptionPreamble = 0x80011300; // type:func segment:boot_code lib=exact
 __osException = 0x80011310; // type:func segment:boot_code lib=ref
 send_mesg = 0x80011844; // type:func segment:boot_code lib=exact
 handle_CpU = 0x800118F8; // type:func segment:boot_code lib=exact
 __osEnqueueAndYield = 0x8001192C; // type:func segment:boot_code lib=exact
-__osEnqueueThread = 0x80011A2C; // type:func segment:boot_code lib=ref
-__osPopThread = 0x80011A74; // type:func segment:boot_code lib=ref
-__osDispatchThread = 0x80011A84; // type:func segment:boot_code lib=ref
-osPiGetCmdQueue = 0x80011C10; // type:func segment:boot_code lib=ref
+__osEnqueueThread = 0x80011A2C; // type:func segment:boot_code lib=exact
+__osPopThread = 0x80011A74; // type:func segment:boot_code lib=exact
+__osDispatchThread = 0x80011A84; // type:func segment:boot_code lib=exact
+__osCleanupThread = 0x80011C00; // type:func segment:boot_code lib=ref
+osPiGetCmdQueue = 0x80011C10; // type:func segment:boot_code lib=exact
 __osTimerServicesInit = 0x80011C40; // type:func segment:boot_code lib=exact
 __osTimerInterrupt = 0x80011CCC; // type:func segment:boot_code lib=exact
-__osSetTimerIntr = 0x80011E44; // type:func segment:boot_code lib=ref
-__osInsertTimer = 0x80011EB8; // type:func segment:boot_code lib=ref
+__osSetTimerIntr = 0x80011E44; // type:func segment:boot_code lib=exact
+__osInsertTimer = 0x80011EB8; // type:func segment:boot_code lib=exact
 __osViInit = 0x80012040; // type:func segment:boot_code lib=exact
 __osViGetCurrentContext = 0x80012180; // type:func segment:boot_code lib=exact
-__osViSwapContext = 0x80012190; // type:func segment:boot_code lib=ref
+__osViSwapContext = 0x80012190; // type:func segment:boot_code lib=exact
 __osSpGetStatus = 0x800124F0; // type:func segment:boot_code lib=exact
 bcopy = 0x80012500; // type:func segment:boot_code lib=exact
-__osSpSetStatus = 0x80012810; // type:func segment:boot_code lib=ref
-__osSpSetPc = 0x80012820; // type:func segment:boot_code lib=ref
-__osSpRawStartDma = 0x80012860; // type:func segment:boot_code lib=ref
-__osSpDeviceBusy = 0x800128F0; // type:func segment:boot_code lib=ref
+__osSpSetStatus = 0x80012810; // type:func segment:boot_code lib=exact
+__osSpSetPc = 0x80012820; // type:func segment:boot_code lib=exact
+__osSpRawStartDma = 0x80012860; // type:func segment:boot_code lib=exact
+__osSpDeviceBusy = 0x800128F0; // type:func segment:boot_code lib=exact
 __osDpDeviceBusy = 0x80012920; // type:func segment:boot_code lib=exact
-__osSetSR = 0x80012950; // type:func segment:boot_code lib=ref
+__osSetSR = 0x80012950; // type:func segment:boot_code lib=exact
 __osGetSR = 0x80012960; // type:func segment:boot_code lib=exact
-__osSetFpcCsr = 0x80012970; // type:func segment:boot_code lib=ref
+__osSetFpcCsr = 0x80012970; // type:func segment:boot_code lib=exact
 __osSiRawReadIo = 0x80012980; // type:func segment:boot_code lib=exact
 __osSiRawWriteIo = 0x800129D0; // type:func segment:boot_code lib=exact
-osMapTLBRdb = 0x80012A20; // type:func segment:boot_code lib=ref
+osMapTLBRdb = 0x80012A20; // type:func segment:boot_code lib=exact
 __ull_rshift = 0x80012A80; // type:func segment:boot_code lib=exact
 __ull_rem = 0x80012AAC; // type:func segment:boot_code lib=exact
 __ull_div = 0x80012AE8; // type:func segment:boot_code lib=exact
 __ll_lshift = 0x80012B24; // type:func segment:boot_code lib=exact
 __ll_rem = 0x80012B50; // type:func segment:boot_code lib=exact
-__ll_div = 0x80012B8C; // type:func segment:boot_code lib=ref
-__ll_mul = 0x80012BE8; // type:func segment:boot_code lib=ref
+__ll_div = 0x80012B8C; // type:func segment:boot_code lib=exact
+__ll_mul = 0x80012BE8; // type:func segment:boot_code lib=exact
 __ull_divremi = 0x80012C18; // type:func segment:boot_code lib=exact
 __ll_mod = 0x80012C78; // type:func segment:boot_code lib=exact
 __ll_rshift = 0x80012D14; // type:func segment:boot_code lib=exact
 bzero = 0x80012D40; // type:func segment:boot_code lib=exact
-_Printf = 0x80013450; // type:func segment:boot_code lib=ref
+_Printf = 0x80013450; // type:func segment:boot_code lib=exact
 memcpy = 0x80013AA0; // type:func segment:boot_code lib=exact
 strlen = 0x80013ACC; // type:func segment:boot_code lib=exact
 strchr = 0x80013AF4; // type:func segment:boot_code lib=exact
 __osProbeTLB = 0x80013B40; // type:func segment:boot_code lib=exact
-__osSetCompare = 0x80013C00; // type:func segment:boot_code lib=ref
+__osSetCompare = 0x80013C00; // type:func segment:boot_code lib=exact
 __osSiCreateAccessQueue = 0x80013C10; // type:func segment:boot_code lib=exact
-__osSiGetAccess = 0x80013C60; // type:func segment:boot_code lib=ref
-__osSiRelAccess = 0x80013CA4; // type:func segment:boot_code lib=ref
-__osSiRawStartDma = 0x80013CD0; // type:func segment:boot_code lib=ref
+__osSiGetAccess = 0x80013C60; // type:func segment:boot_code lib=exact
+__osSiRelAccess = 0x80013CA4; // type:func segment:boot_code lib=exact
+__osSiRawStartDma = 0x80013CD0; // type:func segment:boot_code lib=exact
 __osContAddressCrc = 0x80013D80; // type:func segment:boot_code lib=exact
 __osContDataCrc = 0x80013E30; // type:func segment:boot_code lib=exact
-__osContRamWrite = 0x80013F00; // type:func segment:boot_code lib=ref
-__osContRamRead = 0x80014280; // type:func segment:boot_code lib=ref
+__osContRamWrite = 0x80013F00; // type:func segment:boot_code lib=exact
+__osContRamRead = 0x80014280; // type:func segment:boot_code lib=exact
 __osAiDeviceBusy = 0x80014610; // type:func segment:boot_code lib=exact
 alSaveNew = 0x80014640; // type:func segment:boot_code lib=exact
 alMainBusNew = 0x80014684; // type:func segment:boot_code lib=exact
@@ -330,7 +349,7 @@ _loadOutputBuffer = 0x80017024; // type:func segment:boot_code lib=exact
 alFxParamHdl = 0x80017248; // type:func segment:boot_code lib=exact
 alFxParam = 0x800174A4; // type:func segment:boot_code lib=exact
 alFxPull = 0x800174BC; // type:func segment:boot_code lib=exact
-__osPfsGetStatus = 0x80017800; // type:func segment:boot_code lib=ref
+__osPfsGetStatus = 0x80017800; // type:func segment:boot_code lib=exact
 __osSumcalc = 0x80017910; // type:func segment:boot_code lib=exact
 __osIdCheckSum = 0x8001796C; // type:func segment:boot_code lib=exact
 __osRepairPackId = 0x800179D4; // type:func segment:boot_code lib=exact
@@ -338,27 +357,31 @@ __osCheckPackId = 0x80017DEC; // type:func segment:boot_code lib=exact
 __osGetId = 0x80017F84; // type:func segment:boot_code lib=exact
 __osCheckId = 0x800181E0; // type:func segment:boot_code lib=exact
 __osPfsRWInode = 0x800182DC; // type:func segment:boot_code lib=exact
-__osPfsSelectBank = 0x800185FC; // type:func segment:boot_code lib=ref
-__osResetGlobalIntMask = 0x80018670; // type:func segment:boot_code lib=ref
-osEPiRawWriteIo = 0x800186D0; // type:func segment:boot_code lib=ref
-osEPiRawReadIo = 0x80018720; // type:func segment:boot_code lib=ref
-__osSetGlobalIntMask = 0x80018770; // type:func segment:boot_code lib=ref
+__osPfsSelectBank = 0x800185FC; // type:func segment:boot_code lib=exact
+__osResetGlobalIntMask = 0x80018670; // type:func segment:boot_code lib=exact
+osEPiRawWriteIo = 0x800186D0; // type:func segment:boot_code lib=exact
+osEPiRawReadIo = 0x80018720; // type:func segment:boot_code lib=exact
+__osSetGlobalIntMask = 0x80018770; // type:func segment:boot_code lib=exact
 __osLeoInterrupt = 0x800187C0; // type:func segment:boot_code lib=exact
 __osSiDeviceBusy = 0x80019040; // type:func segment:boot_code lib=exact
 _Litob = 0x80019070; // type:func segment:boot_code lib=exact
 _Ldtob = 0x80019880; // type:func segment:boot_code lib=exact
-alFilterNew = 0x80019DD0; // type:func segment:boot_code lib=ref
+alFilterNew = 0x80019DD0; // type:func segment:boot_code lib=exact
 lldiv = 0x80019DF0; // type:func segment:boot_code lib=exact
 ldiv = 0x80019EF0; // type:func segment:boot_code lib=exact
 __osPiDevMgr = 0x8001A360; // segment:boot_code lib=ref
+__osPiTable = 0x8001A37C; // segment:boot_code lib=ref
 __osCurrentHandle = 0x8001A380; // segment:boot_code lib=ref
 __osViDevMgr = 0x8001A390; // segment:boot_code lib=ref
 osClockRate = 0x8001B0D0; // segment:boot_code lib=ref
 osViClock = 0x8001B0D8; // segment:boot_code lib=ref
 __OSGlobalIntMask = 0x8001B0E0; // segment:boot_code lib=ref
+__osContinitialized = 0x8001B100; // segment:boot_code lib=ref
 alGlobals = 0x8001B110; // segment:boot_code lib=ref
 __osPiAccessQueueEnabled = 0x8001B120; // segment:boot_code lib=ref
+__osThreadTail = 0x8001B130; // segment:boot_code lib=ref
 __osRunQueue = 0x8001B138; // segment:boot_code lib=ref
+__osActiveQueue = 0x8001B13C; // segment:boot_code lib=ref
 __osRunningThread = 0x8001B140; // segment:boot_code lib=ref
 __osTimerList = 0x8001B170; // segment:boot_code lib=ref
 __osViCurr = 0x8001B1E0; // segment:boot_code lib=ref
@@ -367,12 +390,23 @@ __osSiAccessQueueEnabled = 0x8001B240; // segment:boot_code lib=ref
 osViModePalLan1 = 0x8001B520; // segment:boot_code lib=ref
 osViModeMpalLan1 = 0x8001B570; // segment:boot_code lib=ref
 osViModeNtscLan1 = 0x8001B5C0; // segment:boot_code lib=ref
+__osRcpImTable = 0x8001B770; // segment:boot_code lib=ref
 __osEventStateTab = 0x80026D10; // segment:boot_code lib=ref
 __osFinalrom = 0x80026DD0; // segment:boot_code lib=ref
+__osEepPifRam = 0x80026DE0; // segment:boot_code lib=ref
+_MotorStopData = 0x80026E20; // segment:boot_code lib=ref
+_MotorStartData = 0x80026F20; // segment:boot_code lib=ref
+_motorstopbuf = 0x80027020; // segment:boot_code lib=ref
+_motorstartbuf = 0x80027040; // segment:boot_code lib=ref
 __osContPifRam = 0x80027060; // segment:boot_code lib=ref
 __osContLastCmd = 0x800270A0; // segment:boot_code lib=ref
 __osMaxControllers = 0x800270A1; // segment:boot_code lib=ref
+__osEepromTimer = 0x800270A8; // segment:boot_code lib=ref
+__osEepromTimerQ = 0x800270C8; // segment:boot_code lib=ref
+__osEepromTimerMsg = 0x800270E0; // segment:boot_code lib=ref
 __osPfsPifRam = 0x800270F0; // segment:boot_code lib=ref
+CartRomHandle = 0x80027130; // segment:boot_code lib=ref
+LeoDiskHandle = 0x800271B0; // segment:boot_code lib=ref
 __osDiskHandle = 0x80027224; // segment:boot_code lib=ref
 __osPiAccessQueue = 0x80027238; // segment:boot_code lib=ref
 __osCurrentTime = 0x80027270; // segment:boot_code lib=ref

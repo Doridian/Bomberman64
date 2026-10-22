@@ -28,3 +28,24 @@ main_code @eu data=0x8029F570
 main_code main_code_entry 0 0 0
 main_code 40040 0x30 0 0
 main_code 40300 0x10 0 0
+
+# Library objects after the game's code, placed on their own (where the ROM
+# has their data; `tools/data_split.py <v> --place MODULE OBJECT` finds it).
+# Only those whose code needs its data defined in the same file (IDO shares
+# a %hi between fields of a variable it defines) or that own jump tables,
+# strings or constants; the rest refer to the asm data (docs/LIBULTRA.md).
+boot_code libultra/audio/sndplayer 0 0x40 0
+boot_code @us libultra/audio/sndplayer rodata=0x8001BCC0
+boot_code @eu libultra/audio/sndplayer rodata=0x8001BCC0
+boot_code libultra/io/cartrominit 0 0 0x80
+boot_code @us libultra/io/cartrominit bss=0x80027130
+boot_code @eu libultra/io/cartrominit bss=0x80027130
+boot_code libultra/io/leodiskinit 0 0 0x80
+boot_code @us libultra/io/leodiskinit bss=0x800271B0
+boot_code @eu libultra/io/leodiskinit bss=0x800271B0
+boot_code libultra/libc/xprintf 0x50 0x100 0
+boot_code @us libultra/libc/xprintf data=0x8001B1F0 rodata=0x8001BD70
+boot_code @eu libultra/libc/xprintf data=0x8001B1F0 rodata=0x8001BD70
+boot_code libultra/libc/xldtob 0 0x60 0
+boot_code @us libultra/libc/xldtob rodata=0x8001BF60
+boot_code @eu libultra/libc/xldtob rodata=0x8001BF60
