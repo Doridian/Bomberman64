@@ -167,7 +167,8 @@ evidence for the flags):
   Then, data-free functions only: `404C0` (the ROM file system: 15 of
   18), `40FB0` (the overlay loader, all six, `-O3`), `5E090` (7 of 7),
   `87190` (the resource cache, 8 of 8), `87730` (9 of 10), `99F40`
-  (the tile maps, 12 of 14) and `A4860` (game flags, 12 of 13).
+  (the tile maps, 12 of 14), `A4860` (game flags, 12 of 13) and `B11F0`
+  (19 of 25).
   docs/DECOMPILING.md has how `-O3` objects are told apart and what
   Hudson's C looks like.
 - eu from the same C: `tools/vermap.py` (docs/LAYOUT.md, "The US to EU

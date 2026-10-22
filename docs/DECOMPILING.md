@@ -102,8 +102,14 @@ tools/progress.py                                # per module, overlays per bank
     the source, except that a function's callees from the same file come
     out just before it if they haven't yet. So the source order is the
     reverse of the object's (40FB0.c is written last function first).
-  Seen so far: 40FB0, 9BFD0, 995C0, 86680, 53D70, 9A5F0 and ACA00 are
-  `-O3`; 404C0, 5E090, 87190, 87730, 99F40 and A4860 are `-O2` (no
+  - moves a float argument that arrives in an integer register straight
+    to a float register (`mtc1 $a2, $f16`), where `-O2` stores it to its
+    home slot and reloads it (`sw $a2, 8($sp)` ... `lwc1`). A function
+    taking three floats shows it at once (4DE50's func_80234500, 4ED50's
+    func_802346C8).
+  Seen so far: 40FB0, 4DE50, 4ED50, 9BFD0, 995C0, 86680, 53D70, 9A5F0 and
+  ACA00 are `-O3`; 404C0, 5E090, 87190, 87730, 99F40, A4860 and B11F0 are
+  `-O2` (no
   inlining between functions that call each other, no cross-call
   registers; A4860's func_8028A318 calls three small functions of its
   own file and inlines none). asm-processor can't do `-O3`, so an `-O3`
@@ -134,6 +140,16 @@ tools/progress.py                                # per module, overlays per bank
 - **`break` loops aren't unrolled, `return` loops are.** A search loop
   that returns from inside is unrolled; one that `break`s isn't (87190's
   func_8026CBD4 vs func_8026CC34).
+- **The index after the loop.** After `for (i = 0; i < 4; i++)` over
+  `D[i]`, the code goes on with `D[i]` (the fifth entry), and IDO keeps
+  the loop's pointer for it (B11F0's func_802972D0 and func_80297ADC);
+  writing `D[4]` loads the address afresh.
+- **Ternaries.** `return a > 0.0f ? 1 : a < 0.0f ? -1 : 0;` is how the
+  sign functions are written (4DE50); as `if`s the -1 comes out on a
+  different path.
+- **Narrow parameters show.** A `u16`/`s16` parameter makes IDO store
+  `$a0` to `0($sp)` in a leaf function and start its temporaries at `$t7`
+  (4ED50's func_80236ACC).
 - **One exit for a found case.** `if (...) { ... } else { ... } return i;`
   rather than two returns (404C0's func_80226460).
 - **Constants of different types are kept apart.** Storing -1 into an
