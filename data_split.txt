@@ -41,7 +41,12 @@ main_code 40300 0x10 0 0
 
 # Game objects after the cut that own their .rodata (constants, jump tables,
 # strings), placed where the ROM has it; their .data and .bss stay asm
-# until the cut reaches them.
+# until the cut reaches them (unless all of an object's .data is its own:
+# 53D70's local pattern and its function table).
+main_code 53D70 0x60 0x10 0
+main_code @us 53D70 data=0x802A0150 rodata=0x802A2EE0
+main_code @eu 53D70 data=0x802A0150 rodata=0x802A2EE0
+main_code @jp 53D70 data=0x8029F830 rodata=0x802A2120
 main_code 995C0 0 0x10 0
 main_code @us 995C0 rodata=0x802A4040
 main_code @eu 995C0 rodata=0x802A4030
