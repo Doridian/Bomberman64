@@ -321,16 +321,16 @@ segments:
       - [0x40300, c]
       - [0x404C0, c]
       - [0x40FB0, c]
-      - [0x412F0, asm]
-      - [0x41FD0, asm]
+      - [0x412F0, c]
+      - [0x41FD0, c]
       - [0x426E0, asm]
       - [0x47A80, asm]
       - [0x4DE50, asm]
       - [0x4ED50, asm]
       - [0x52270, asm]
-      - [0x530A0, asm, 530C0]
+      - [0x530A0, c, 530C0]
       - [0x53D50, c, 53D70]
-      - [0x54BC0, asm, 54BE0]
+      - [0x54BC0, c, 54BE0]
       - [0x54E20, asm, 54E40]
       - [0x5DDE0, c, 5E090]
       - [0x5E140, asm, 5E3F0]
@@ -378,13 +378,18 @@ segments:
       - [0xB9450, .data, 40040]
       - [0xB9480, .data, 40300]
       - [0xB9490, data]
+      - [0xB9FE0, .data, 530C0]
       - [0xBA030, .data, 53D70]
       - [0xBA090, rodata]
+      - [0xBC8C0, .rodata, 530C0]
       - [0xBC920, .rodata, 53D70]
-      - [0xBC930, rodata]
+      - [0xBC930, .rodata, 54BE0]
+      - [0xBC940, rodata]
       - [0xBDA70, .rodata, 995C0]
       - [0xBDA80, rodata]
       - {type: bss, vram: 0x802A4530}
+      - {type: .bss, vram: 0x802A4560, name: 412F0}
+      - {type: bss, vram: 0x802A4600, name: bss_802A4600}
   - [0xBED30, bin, pad_main_code]       # zeros
   - name: ovl_09_01
     type: code

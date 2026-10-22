@@ -42,11 +42,24 @@ main_code 40300 0x10 0 0
 # Game objects after the cut that own their .rodata (constants, jump tables,
 # strings), placed where the ROM has it; their .data and .bss stay asm
 # until the cut reaches them (unless all of an object's .data is its own:
-# 53D70's local pattern and its function table).
+# 53D70's local pattern and its function table).  412F0 defines its .bss:
+# with the variables extern, as1 gives two stores into it a `lui` each.
+main_code 412F0 0 0 0xA0
+main_code @us 412F0 bss=0x802A5330
+main_code @eu 412F0 bss=0x802A5320
+main_code @jp 412F0 bss=0x802A4560
+main_code 530C0 0x50 0x60 0
+main_code @us 530C0 data=0x802A0100 rodata=0x802A2E80
+main_code @eu 530C0 data=0x802A0100 rodata=0x802A2E80
+main_code @jp 530C0 data=0x8029F7E0 rodata=0x802A20C0
 main_code 53D70 0x60 0x10 0
 main_code @us 53D70 data=0x802A0150 rodata=0x802A2EE0
 main_code @eu 53D70 data=0x802A0150 rodata=0x802A2EE0
 main_code @jp 53D70 data=0x8029F830 rodata=0x802A2120
+main_code 54BE0 0 0x10 0
+main_code @us 54BE0 rodata=0x802A2EF0
+main_code @eu 54BE0 rodata=0x802A2EF0
+main_code @jp 54BE0 rodata=0x802A2130
 main_code 995C0 0 0x10 0
 main_code @us 995C0 rodata=0x802A4040
 main_code @eu 995C0 rodata=0x802A4030
