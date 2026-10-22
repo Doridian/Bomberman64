@@ -1,7 +1,8 @@
 name: CI
 
-# What can be checked without a ROM: the tools install, IDO runs, and the
-# LZSS codec round-trips with its C and Python encoders in agreement. The
+# What can be checked without a ROM: the tools install, IDO runs, the
+# LZSS codec round-trips with its C and Python encoders in agreement, and
+# the picture converter round-trips and edits synthetic entries. The
 # matching builds need a baserom and run locally (README, "Build").
 
 on:
@@ -34,5 +35,8 @@ jobs:
       - name: LZSS self-test
         run: .env/bin/python3 tools/test_lzss.py
 
+      - name: Asset converter self-test
+        run: .env/bin/python3 tools/test_assets.py --rom
+
       - name: Python tools parse
-        run: .env/bin/python3 -m py_compile tools/*.py
+        run: .env/bin/python3 -m py_compile tools/*.py tools/assetlib/*.py
