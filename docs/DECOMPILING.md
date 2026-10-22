@@ -174,8 +174,9 @@ tools/progress.py                                # per module, overlays per bank
 eu and jp build from the same C. Each version's config comes from its own
 ROM; the C files, the flags and the names are us's. So far every C
 object matches all three unchanged (eu's and jp's differences lie
-elsewhere: docs/LAYOUT.md, "EU" and "JP"), except `85A10`, which has
-`func_8026B9CC` (jp's differs) still GLOBAL_ASM under `#if VERSION_JP`.
+elsewhere: docs/LAYOUT.md, "EU" and "JP"), except `85A10`, whose
+`func_8026B9CC` (jp's differs) is still GLOBAL_ASM: a changed function
+keeps us's name, so one GLOBAL_ASM line serves every version.
 
 - **Objects.** Outside us a text object is named for the us image offset
   of the same code (`tools/layout.py` through `vermap.<v>.txt`): `5E090`
@@ -226,13 +227,12 @@ What a decompiler has to do for jp (and eu):
    `VERSION_*` with other macros is passed through (and then its
    GLOBAL_ASM lines are not hidden). Files without GLOBAL_ASM skip the
    step; `PERMUTER=1` compiles the file as is. The `.d` file still comes
-   from the original source. Example: `src/85A10.c`, an object whose one
-   jp-differing function, `func_8026B9CC`, is `#if VERSION_JP` GLOBAL_ASM
-   / `#else` GLOBAL_ASM. A changed function keeps us's name in jp (the
-   map), so both branches name the same `.s`, which each version's
-   extract fills with its own code; the point is that a branch may name a
-   `.s` the other version doesn't have (a `_jp` function, or one jp's
-   code is written as C in `#if VERSION_JP` while us stays GLOBAL_ASM).
+   from the original source. A changed function keeps us's name in jp (the
+   map), so it needs no `#if` while it is GLOBAL_ASM: each version's
+   extract fills the same `.s` with its own code (`src/85A10.c`'s
+   `func_8026B9CC`). The `#if`s are for a `.s` only one version has (a
+   `_jp` function), and for a function written as C in one version while
+   the other stays GLOBAL_ASM.
 5. Data: `data_split.txt` takes `@jp` placement lines like `@us`/`@eu`
    (the module's data start, an object's `.data`/`.rodata`/`.bss` start);
    `tools/vermap.py`'s map gives jp's addresses (boot_code's data is 0x20

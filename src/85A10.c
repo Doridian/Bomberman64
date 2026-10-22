@@ -18,11 +18,6 @@
 
 #pragma GLOBAL_ASM("asm/nonmatchings/85A10/func_8026B804.s")
 
-/* jp's code differs (docs/DECOMPILING.md, "Versions"): each version's
-   extract writes its own func_8026B9CC.s, and tools/version_ifs.py keeps
-   asm-processor from seeing the line of the other. */
-#if VERSION_JP
+/* jp's code differs (docs/DECOMPILING.md, "Versions"); each version's
+   extract writes its own func_8026B9CC.s. */
 #pragma GLOBAL_ASM("asm/nonmatchings/85A10/func_8026B9CC.s")
-#else
-#pragma GLOBAL_ASM("asm/nonmatchings/85A10/func_8026B9CC.s")
-#endif
