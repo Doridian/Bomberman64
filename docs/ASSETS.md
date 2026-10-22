@@ -1,9 +1,10 @@
 # Assets
 
 What the archives hold, how the game finds it, and what is known about each
-format. This is phase 5's first step, the inventory: research only, nothing
-here is converted or rebuilt yet, except the pictures ("Pictures as PNGs", below). Offsets and addresses are US's (`NBME`)
-unless said otherwise; the EU differences are in "US and EU" below.
+format. This started as phase 5's inventory; the pictures ("Pictures as
+PNGs") and the models ("Models as yaml") are converted to editable files
+and rebuilt, the rest is still research. Offsets and addresses are US's
+(`NBME`) unless said otherwise; the EU differences are in "US and EU" below.
 
 ```
 tools/inventory.py                  summary per bank (both versions)
@@ -167,19 +168,67 @@ a 0x18-byte header, where the others have 0x10 + 12 N).
 
 ### Models (639 entries)
 
-A model is a header, display lists, the vertices and textures they use,
-and a tail. `kind` is 0 (543), 5 (69), 8 (15), 6 (11) or 1 (1); what it
-selects is not known (kind 0 is the plain case, 5 and 8 have more
-records). The directory's first records are `{0x3f800000, offset of a
-display list, ?}` (a float 1.0 and one record per display list: the
-parts, or levels of detail, of the model); then come a few records whose
-shape differs (`{0, offset, 4}` is a table of 0x30-byte nodes that start
-`ff ff ff ff` and hold floats (1.0, 1.0, 1.0 at +0x1C: a scale); `{n, offset, 3}` and `{n, offset, 7}` look
-like animation data; the last, `{4, offset, ...}`, points to a constant list
-`0x11, 0x13, 0x15, 0x35, 0x33, 0x34, ...` that is the same in every model
-checked). Two of the directory's entries are ASCII (`"    "`, `"# 1"`), so
-the directory is not a plain array of the same record and `N` counts more
-than the display lists. This part is the least understood.
+A model is the container's header and records, then display lists, the
+vertices, textures and palettes they load, and (for a hierarchy) a node
+table, poses and animations. The records are a chain (as in the
+pictures, below): each is `{a, offset, type of the next record}`, the
+header's `kind` word is the type of record 0, and the last record's third
+word is 0, or missing when `N` is odd. So `kind` is only the first
+record's type (0 for 543 files, 5, 8, 6 or 1 for the others). The types,
+from the code that reads them (`func_8022D58C` and `func_8022D414` in
+`47A80.s` draw, `func_8022A6C4` and `func_8022AF1C` in `426E0.s` set up an
+object):
+
+| type | `a` | offset points to | read by |
+| ---: | --- | --- | --- |
+| 0 | 1.0 | a display list | `func_8022D58C`: `gSPSegment(2, file)`, `gSPDisplayList(file + offset)` |
+| 5 | 1.0 | a display list, drawn under a pushed matrix that undoes the rotation (`func_8022928C` inverts the 3x3 of the current matrix times `D_802A5418` and drops the translation): a billboard | `func_8022D58C` |
+| 6 | 1.0 | a display list, drawn after the code's own `D_8029FCC8` and a `G_SETTILESIZE` from `D_802A2D50` (a moving texture); the next record of another type gets `G_TEXTURE` off and texgen cleared | `func_8022D58C` |
+| 8 | 1.0 | a display list, drawn with `G_TEXTURE_GEN` (0x40000) set (an environment map) | `func_8022D58C` |
+| 1 | the root node | the node table | `func_8022D414`, recursively |
+| 4 | 0 | nothing: the offset is left-over junk (`"0000"`, `"  0 "`, 41, ...) | nobody; it ends the parts before 2, 3, 7 |
+| 2 | the number of pose groups | the poses | `func_8022AF1C` |
+| 3 | the number of animations | the animations | `func_8022AF1C` |
+| 7 | 4 | six u32s: `0x11, 0x13, 0x15, 0x35, 0x33, 0x34` in all 638 | `func_8022AF1C`, only when `a` is 4 |
+
+The `a` of a display list record (1.0) is read by nothing found. An
+object (`D_800A0D00`, 0x50 bytes) holds the file (`+0x3C`) and a record
+index (`+0x38`); `func_8022A6C4` chooses it: the type 1 record if there is
+one, else the first record of a type below 0x10, and with a type 3 record
+the object is animated (`func_8022AF1C` builds the animation set,
+`func_8022D1D0` its node tree). The ASCII words the inventory saw "in the
+directory" are type 4's offsets.
+
+**The node** (0x30 bytes, `func_8022D414` and `func_8022D280`): `s32` the
+record to draw (-1: none); `f32[3]` a translation and `f32[3]` a rotation,
+each applied only when not all zero (`func_8029CA80`, `func_8029C7A8`);
+`f32[3]` a scale (1.0 in all 3442 nodes; the static draw doesn't read it);
+`s32` the next sibling and `s32` the first child, both relative to the
+node's own index (0: none). The table is as long as what the root reaches.
+
+**Poses** (type 2, `func_8022AF1C`): `a` groups of `{u32 id, u32 m}` and
+`m` parts of `{u32 c, c u32s, f32[9]}`. The nine floats are a translation,
+a rotation and a scale (1.0 in all 5663); the u32s are all below the node
+count (node indices, in pairs mostly).
+
+**Animations** (type 3): `a` clips of `{u32 id, u32 m, u32 length}` and `m`
+tracks, each `{0x30, u32 x, u32 y, u32 c, u32 z}` and `c` keys of `{u32
+frame, f32 value}`, or `{0x2F, u32 c, u32 x}` and `c` pairs of u32s
+(`func_8022AF1C` reads exactly these two shapes and nothing else). In all
+289 tracks of the first kind `x` is 0, `y` is the clip's length and the
+frames are sorted and within it; `z` is below the node count in 263.
+Lengths are 1 to 1500 frames (60, 30, 75, 120 most often;
+`func_8022827C` advances a clip's frame by 1.0 per call). The 0x2F
+tracks' pairs (242 tracks) are not understood (open question 2).
+
+Display lists are F3DEX 1.21 and address the model as segment 2: `G_VTX`
+loads 16-byte vertices, `G_SETTIMG` + `G_LOADBLOCK` (or `G_LOADTILE`) +
+the render tile's `G_SETTILE` a texture (its width is the tile's line,
+its height the load's size), `G_SETTIMG` + `G_LOADTLUT` a palette (the
+load's count is often 256 while the palette has fewer colours: the load
+reads on into what follows, even past the file's end in 279), `G_DL` more
+lists. Everything a model holds is reached that way, except 20 KB in 15
+files that nothing in the file points at (below, "Models as yaml").
 
 What the scanner finds, over all 639 models (`tools/inventory.py us`):
 
@@ -207,10 +256,14 @@ biggest, entries 800 and 639, are 70-80% tail: 800 has 57 KB from 0x68B0 to
 0x15AA0 behind a `{0x64, 0x68B0, 3}` record, which is the biggest
 candidate for animation data).
 
-Models with no display list: 79 (280 bytes: 0x20 vertices after a
-`{1.0, 0xC8, 0x20}` record, nothing draws it) and 472 (168 bytes, three
-records, `0x30303030` where a record's second word is). They look like
-collision or hit shapes.
+Models with no display list: **472** (168 bytes) is an empty hierarchy, a
+node table of two nodes that draw nothing (`-1`), the type 4 record and
+the six words: a placeholder. **79** (280 bytes) has one record, of type
+4 (`{1.0, 0xC8}`), so nothing draws it; at 0xC8 there is a display list in
+the older **Fast3D** encoding (`G_VTX` as `04 70 00 80`, the count less one
+in bits 20-23; `G_TRI1` indices times 10, `00 00 0a 14`) with its addresses
+in segment 0 (raw file offsets: vertices at 0x18 and 0x48). A leftover
+from an earlier version of the engine; it stays raw bytes.
 
 ### Stage maps (96 entries)
 
@@ -317,17 +370,30 @@ compressed size), LAYOUT.md.
   as 16 or 256 colours.
 - Every LZSS entry inflates and recompresses to the ROM's bytes
   (`tools/assets.py extract`, `make lzss-check`).
+- The model format: the display list scanner's counts above are the
+  inventory's heuristic; bm64model.py walks the display lists from the
+  records instead (2689 lists, every command known, every byte placed but
+  20 KB) and checks that each file packs back to itself. The numbers in
+  "Models" (3442 nodes, 5663 pose parts, 289 + 242 tracks, ...) are from
+  parsing all 652 files.
 
 ## Open questions
 
-1. **The model directory.** What `a` and `b` of each record mean, what
-   `kind` means, the node table's 0x30-byte layout, the two ASCII
-   "records", and whether `N` is just the sum of the sections. The code that
-   walks it is `func_8022D58C`/`func_802289C0`/`func_8022D414`; reading
-   them is the way in.
-2. **Animation.** There is no animation entry. Whatever drives the models is
-   in the tails (the `{n, offset, 3}` and `{n, offset, 7}` sections) or
-   in the stage-map-like tables, or in the overlays' code.
+1. **The model format** is answered ("Models" above, "Models as yaml"
+   below). Left: what the six words of the type 7 record (`0x11, 0x13,
+   0x15, 0x35, 0x33, 0x34` everywhere) select (`func_8022AF1C` copies them
+   to the animation set's `+0x00` and `+0x0C`); what the code's own display
+   list `D_8029FCC8` does for a type 6 record; what the 20 KB that nothing in
+   their files points at are for (textures and palettes in 241, 800, 389,
+   ..., most likely swapped in by code); the model-swap table `D_80098C18`
+   (five slots of `{count, object, files, record indices}`, `func_802280F4`)
+   that `func_8022D58C` draws in place of an object's own record.
+2. **Animation** is in the models (type 2 poses and type 3 animations, both
+   decoded and editable). Left: what the tracks mean: a 0x30 track's `z`
+   (below the node count in 263 of 289: a node, or a node and a channel),
+   the 0x2F tracks' pairs, the poses' u32s (node indices, mostly in pairs),
+   the ids; the players are `func_8022C8B8`, `func_8022BB88` and
+   `func_8022827C` (`426E0.s`).
 3. **Which id is which.** Only 9 ids have immediate callers. The overlays'
    (and main_code's) asset id tables are the next thing to find: a table of
    u16/u32 ids below 873 in the `.data` of an overlay or main_code, indexed
@@ -340,22 +406,26 @@ compressed size), LAYOUT.md.
    relate; T2's second header; the encoding of the samples (VADPCM, as
    libultra's would be, or something else); why the sequence blocks are
    not `ALSeqFile`s. The `func_802690DC` and `func_80267730` code is the way in.
-7. **Kinds 1, 4** and the `00`-first-word records (79, 472).
+7. **Kinds 1, 4** are answered: the header's `kind` is the first record's
+   type, 4 is an end marker, 79 is a Fast3D leftover and 472 an empty
+   hierarchy ("Models").
 8. **EU's longer sequences** (S2 sub-blocks 1 and 26): what was added.
 9. **Unreferenced entries.** Some entries may be used by nothing in the
    code; a complete id table (3) will show it.
 
 ## Pictures as PNGs (phase 5, done)
 
-`make extract` turns the 129 picture entries of bank 0x18 into PNGs, and
-`make` builds them back into the same bytes (then recompresses the entry):
+`make extract` turns the 118 picture entries of bank 0x18 into PNGs, and
+`make` builds them back into the same bytes (then recompresses the entry);
+the other 11 pictures are in front of a model and go with it ("Models as
+yaml"):
 `tools/assetlib/bm64image.py` is the converter, `tools/assets.py` calls it,
 `tools/test_assets.py` tests it (`make`-free; it reads baserom.*.z64 if present).
 
 ```
 assets/bank18/NNN.img.yaml     the entry's metadata (archive.yaml lists it in place of NNN.bin)
 assets/bank18/NNN.png          one frame;  NNN.F.png  frame F of several (366 PNGs in all)
-assets/bank18/NNN.rest.bin     the model part of 11 hybrid entries (below)
+assets/bank18/NNN.rest.bin     the model part of a hybrid, if the model converter can't take it (none)
 ```
 
 - **CI4 and CI8** are indexed PNGs (4 and 8 bits) with the picture's palette
@@ -407,24 +477,9 @@ Found while converting (the earlier text above is right but incomplete):
   pictures and keeps the model records and its bytes (`NNN.rest.bin`)
   untouched; offsets in those records that point into the rest are stored
   relative to it (`model.rel` in the yaml), so they follow when a picture
-  changes size. This is a stopgap until the model directory is decoded.
-
-### Model textures
-
-The textures embedded in the `model` entries (2038 of them, CI4 1779, CI8 253,
-RGBA32 6, with 2092 RGBA16 palettes) are the same pixel blocks: CI4 nibbles
-high first, CI8 bytes, RGBA16 5551 palettes, no row padding in the file
-(the display list's `G_SETTILE` line size is what the RDP uses). They are not
-converted: they're found through the display lists (`G_SETTIMG` +
-`G_SETTILESIZE` for size and format, `G_LOADTLUT` for the palette) and
-the directory isn't decoded, so they can't be moved or regrown yet. The
-code that would apply is `bm64image.write_png(path, frame)` /
-`read_png(path, fmt)` with a frame `{fmt, w, h, pixels, palette}`, which
-need nothing from the container; only the "where does it sit and how is
-it referenced" part is new. Same-size edits (32x32 CI4 stays 512 bytes) would
-be possible in place before the directory is understood, by patching the
-bytes the scanner already locates. The external textures (segments 3..14)
-are picture entries and already covered.
+  changes size. This was the stopgap until the models were decoded: now
+  `tools/assets.py` converts the 11 with bm64model.py (pictures, model and
+  display lists in one yaml), and bm64image.py's handling is the fallback.
 
 ### Reuse by the PC port
 
@@ -437,14 +492,94 @@ pure functions on bytes and plain data with no build-tree knowledge; PNG is
 only `write_png`/`read_png`/`dump`/`load`. A port that wants the user's
 modded assets can read the same `NNN.img.yaml` + PNGs through `load()`.
 
-### Not yet
+## Models as yaml (phase 5, done)
 
-Models (directory format), stage maps, the stored tables and the sound
-entries are still `NNN.bin`/`NNN.raw`. What they need:
+`make extract` turns the 641 model entries of bank 0x18, and the 11 picture
+files with a model behind them, into a yaml each and a PNG per texture, and
+`make` builds them back into the same bytes: `tools/assetlib/bm64model.py`
+is the converter, `tools/assets.py` calls it (an entry it couldn't take
+would stay `NNN.bin`: none in us or eu), `tools/test_assets.py` tests it.
 
-- `tools/assets.py` could split the 64 containers' models into `.dl` (display
-  list listings), `.vtx` and a `rest` blob once the directory is understood
-  (open question 1); until then a model is a `.bin`.
+```
+assets/bank18/NNN.mdl.yaml          the records and the blocks (archive.yaml lists it in place of NNN.bin)
+assets/bank18/NNN.tex_XXXX.png      a texture (2202 PNGs in all)
+```
+
+**The yaml** has `records`, the chain (`{type, a, at}`), and `blocks`, the
+file after the header in order. A block's label is its kind and its
+offset in the ROM's file (`dl_06B8`, `vtx_08B8`, `tex_0058`); labels are
+names and don't change when a block moves. `at` and every segment 2
+address in a display list are a label, or `label+0xN` inside a block. An
+address in another segment (3 to 14, the external textures) stays a
+number, and so does type 4's junk offset.
+
+| block | in the yaml |
+| --- | --- |
+| display list | `dl:`, one command per line, `name field=value ...`: `vtx v0=0 n=8 addr=vtx_08B8+0x180`, `tri2 a=0 b=1 c=2 d=2 e=3 f=0`, `settile fmt=ci siz=8b line=4 ...`, `loadtlut tile=7 colours=256`, `settimg fmt=ci siz=16b width=1 addr=tex_0058`, `moveword offset=0x20 index=10 data=0xFFFFFF00`, ... (F3DEX 1.21's opcodes; vertex indices as indices, not doubled; `raw 0xW0 0xW1` for a pair that isn't a known command: none in the ROM) |
+| vertices | `vtx:`, one `[x, y, z, flag, s, t, r, g, b, a]` per vertex (r, g, b are a normal on lit models) |
+| texture | `{fmt, w, h, pal, owner}` and `NNN.tex_XXXX.png`: CI4/CI8 indexed with their palette, RGBA16/32 as RGBA, as for the pictures |
+| palette | `{colours: N}`: N colours, taken from the PLTE of the texture marked `owner` (the first texture drawn with all of it); a palette no texture shows would be a list of RGBA16 hex values (none) |
+| node table | `nodes:`, `{draw, pos, rot, scale, next, child}` per node |
+| poses | `poses:`, groups `{id, parts: [{words, pos, rot, scale}]}` |
+| animations | `anims:`, `{id, length, tracks}`; a track is `{tag: 48, x, y, z, keys: [[frame, value]]}` or `{tag: 47, x, keys: [[u32, u32]]}` |
+| type 7 | `words:`, the six u32s |
+| anything else | `raw:` (hex) or `zeros:` (a count) |
+
+Floats are written as YAML floats when they read back to the same bits
+(all of them in the ROM), else as hex.
+
+**Layout.** `pack()` puts each block after the one before; a block that
+started on a multiple of 8 does so again, with zeros in between (the
+ROM's zero gaps before an 8-aligned block are exactly that and aren't
+kept; any other gap is a `raw` block). Then it resolves the labels. So a
+block can grow or shrink, more vertices, a bigger texture, a longer
+display list, and everything after it moves with the references to it.
+What stays the editor's job: the commands that load a block (`vtx`'s
+`n`, a texture's `loadblock`/`settile`/`settilesize` for another size,
+`loadtlut`'s count) and, in the 11 hybrids, a picture record's `a` (`w <<
+16 | h`, a colour count).
+
+**How a file is cut** (`parse()`): the records give the display lists,
+the node table (as long as what the root reaches), the poses and the
+animations (whose shapes give their lengths), the type 7 words and, in
+the hybrids, the pictures. Walking every display list (and the ones it
+calls) gives the vertex runs (`G_VTX`), the palettes (`G_SETTIMG` +
+`G_LOADTLUT`) and the textures (`G_SETTIMG` + `G_LOADBLOCK` or
+`G_LOADTILE`, then the render tile's `G_SETTILE`: the width is the tile's
+line, or the `G_SETTIMG` width for `G_LOADTILE`, and the height the load's
+size; a CI texture's palette is the last `G_LOADTLUT` before it). Loads
+of the same kind that overlap or touch are one block (vertex runs, a
+smaller load of a texture); a palette is cut where the next block starts.
+A block that doesn't decode and encode back to its bytes stays `raw`
+(none), and `parse()` fails unless `pack()` gives back the input. In us
+and eu: 2689 display lists, 2689 vertex blocks (1.95 MB), 2202 textures
+(CI4 1883, CI8 313, RGBA32 6; 1.31 MB), 2196 palettes, 319 node tables,
+125 pose and 125 animation blocks, 638 type 7 blocks, and 16 `raw` blocks
+(20 KB) in 15 files: 79's Fast3D list ("Models"), and textures with their
+palettes that nothing in their file loads (241: 7408 bytes, 800: 7728, 389,
+391, 393, 395, 397 and 529: 528 each, 395 and 418: 544, ...).
+
+**Edit** a vertex, a node, a key or a command in the yaml, a texel or a
+palette colour in the owner's PNG (an indexed PNG stays indexed), and
+`make`. A texture that isn't its palette's owner shows the palette in its
+PNG, but its PLTE is ignored (a CI4 texture drawn with colours 16 n and on
+of a bigger palette, `settile pal=n`, is never an owner).
+
+### Reuse by the PC port (models)
+
+`parse(bytes)` and `pack(model)` are pure functions on bytes and plain
+data, like the pictures': a parsed model has its records, its display lists
+as command text (`cmd_words()` gives the words back, with a resolver for
+the labels), vertex rows, nodes, poses and animations. A port can draw a
+model the way `func_8022D58C` does with any F3DEX 1.x display list
+renderer, segment 2 being the inflated file, and animate it from the
+decoded poses and tracks once their meaning is known (open question 2).
+
+## Not yet
+
+Stage maps, the stored tables and the sound entries are still
+`NNN.bin`/`NNN.raw`. What they need:
+
 - The ROM link places the bank by its contents' sizes: `rom.py` already packs
   archives from `assets/bankNN/` and refuses a bank that outgrows its
   slot. Bank 0x18's slot is 0x500000 (`0x300000-0x800000`) and US's
@@ -454,4 +589,4 @@ entries are still `NNN.bin`/`NNN.raw`. What they need:
   segment 0x18, is hard-coded in `40FB0.s` and nowhere else).
 - For the PC port: models need the segment 2/3.. rules, and the display
   lists need a F3DEX 1.x renderer (the same as Blast Corps' if it is
-  F3DEX 1.x too).
+  F3DEX 1.x too), and the animation tracks' meaning (open question 2).

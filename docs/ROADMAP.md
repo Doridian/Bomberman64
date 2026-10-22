@@ -202,9 +202,15 @@ other banks are overlay code.
 Done so far: the 129 picture entries of bank 0x18 are PNGs
 (`tools/assetlib/bm64image.py`; indexed CI4/CI8 with their palettes, RGBA32,
 pads kept as data), rebuilt byte for byte and recompressed, edits work
-(`tools/test_assets.py`); docs/ASSETS.md, "Pictures as PNGs". Next: the
-models' directory (then display lists, vertices and their embedded textures),
-stage maps, the stored tables, sound.
+(`tools/test_assets.py`); docs/ASSETS.md, "Pictures as PNGs". The 652
+models (641, and the 11 picture files with a model behind them) are a yaml
+each, with their textures as PNGs (`tools/assetlib/bm64model.py`): the
+record chain, display lists as F3DEX 1.21 text with addresses as block
+references, vertex tables, the node hierarchy, the poses and animation
+tracks; a block can change size and everything after it moves.  All
+rebuild byte for byte in us and eu, edits work; docs/ASSETS.md, "Models as
+yaml". Next: stage maps, the stored tables, sound, and the meaning of the
+animation tracks' fields.
 
 ## Phase 6 — PC port
 
