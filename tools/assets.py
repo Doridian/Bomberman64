@@ -12,6 +12,10 @@ Every archive (docs/LAYOUT.md) becomes a directory `assets/bankNN/`:
   its tail (the stray halfword some tails carry, as hex);
 - one file per entry: `NN.bin` holds an LZSS entry inflated, `NN.raw` a
   stored one byte for byte;
+- bank 0x18's 129 picture entries are `NNN.img.yaml` and PNGs instead
+  (tools/assetlib/bm64image.py: CI4/CI8 as indexed PNGs with their
+  palettes, RGBA32 as RGBA, and what a PNG can't carry as pads in the
+  yaml), rebuilt byte for byte and recompressed;
 - in an overlay bank, entry 0 is the bank's index (a count, then one
   `(u16 file id, u8 entry)` per overlay) and is written as `index.yaml`
   when it rebuilds to the same bytes.  bank0B's count (9) is more than
@@ -43,6 +47,7 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import hudson_lzss  # noqa: E402
 import layout  # noqa: E402
+from assetlib import bm64image  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 TABLE_SIZE = 0x2008
@@ -131,6 +136,21 @@ def extract_bank(rom, num, base, slot_end, out_dir):
                 (out_dir / "index.yaml").write_text(yaml.safe_dump(idx, sort_keys=False))
                 manifest.append({"file": "index.yaml", "lzss": False})
                 continue
+        model = None
+        if data is not None and base == layout.ASSET_BANK and bm64image.is_image(data):
+            try:
+                model = bm64image.parse(data)
+            except ValueError as err:
+                print(f"bank{num:02X} entry {i}: kept as .bin ({err})")
+        if model is not None:
+            # a picture: PNGs and a yaml (assetlib/bm64image.py)
+            stem = f"{i:0{width}d}"
+            y = bm64image.dump(model, stem, out_dir)
+            (out_dir / f"{stem}.img.yaml").write_text(
+                f"# {stem}: picture file, see tools/assetlib/bm64image.py\n"
+                + yaml.safe_dump(y, sort_keys=False, default_flow_style=None))
+            manifest.append({"file": f"{stem}.img.yaml", "lzss": True})
+            continue
         name = f"{i:0{width}d}.{'bin' if data is not None else 'raw'}"
         (out_dir / name).write_bytes(data if data is not None else blob)
         manifest.append({"file": name, "lzss": data is not None})
@@ -157,6 +177,9 @@ def build_bank(src_dir, override=None):
         if override and i in override:
             assert e["lzss"], (src_dir, i)
             blobs.append(compress(override[i]))
+        elif path.name.endswith(".img.yaml"):
+            y = yaml.safe_load(path.read_text())
+            blobs.append(compress(bm64image.pack(bm64image.load(y, path.name[:-9], src_dir))))
         elif path.suffix == ".yaml":
             blobs.append(pack_index(yaml.safe_load(path.read_text())))
         elif e["lzss"]:

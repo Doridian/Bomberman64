@@ -2,7 +2,7 @@
 
 What the archives hold, how the game finds it, and what is known about each
 format. This is phase 5's first step, the inventory: research only, nothing
-here is converted or rebuilt yet. Offsets and addresses are US's (`NBME`)
+here is converted or rebuilt yet, except the pictures ("Pictures as PNGs", below). Offsets and addresses are US's (`NBME`)
 unless said otherwise; the EU differences are in "US and EU" below.
 
 ```
@@ -345,17 +345,106 @@ compressed size), LAYOUT.md.
 9. **Unreferenced entries.** Some entries may be used by nothing in the
    code; a complete id table (3) will show it.
 
-## What phase 5 needs next (proposals, nothing is done)
+## Pictures as PNGs (phase 5, done)
 
-- `tools/assets.py` could split the 64 containers into `assets/bank18/`
-  files (`NNN.png`, `NNN.yaml`, `NNN.dl`) the way Blast Corps' did, with
-  the bytes it cannot explain kept as `rest` (the tail, the stray header
-  bytes) so that a round trip is exact. The images are the easy first
-  step: CI4/CI8 plus a palette, RGBA16 palette colours, RGBA32 pixels, each
-  frame to a PNG; the record table and the 8-byte rounding are
-  regenerated. Models need the directory (open question 1) before they
-  can be rebuilt; until then a model is a `.dl` listing of its display
-  lists, a `.vtx` of its vertices, and a `rest` blob.
+`make extract` turns the 129 picture entries of bank 0x18 into PNGs, and
+`make` builds them back into the same bytes (then recompresses the entry):
+`tools/assetlib/bm64image.py` is the converter, `tools/assets.py` calls it,
+`tools/test_assets.py` tests it (`make`-free; it reads baserom.*.z64 if present).
+
+```
+assets/bank18/NNN.img.yaml     the entry's metadata (archive.yaml lists it in place of NNN.bin)
+assets/bank18/NNN.png          one frame;  NNN.F.png  frame F of several (366 PNGs in all)
+assets/bank18/NNN.rest.bin     the model part of 11 hybrid entries (below)
+```
+
+- **CI4 and CI8** are indexed PNGs (4 and 8 bits) with the picture's palette
+  in `PLTE` and the alpha bit in `tRNS`. **RGBA32** is an 8-bit RGBA PNG.
+  RGBA16 colours widen the way the RDP does (5 bits to 8 by replicating the
+  high bits) and narrow by a shift, so a PNG written by the tool reads back
+  to the same bytes. Alpha is one bit: 128 and up is opaque.
+- **Edit** a pixel or the palette in any editor that keeps an indexed PNG
+  (GIMP, Aseprite; not "convert to RGB"), run `make`, and the entry
+  changes. Palette entries are the PLTE's, so a CI4 picture can have up to
+  16 and a CI8 up to 256; the picture's size is the PNG's. Everything after
+  the edited frame moves with its size (offsets and the record table are
+  regenerated, 8-aligned), and the archive build already lets an entry grow
+  inside its slot.
+- **`NNN.img.yaml`** has one line per frame, `{fmt, w, h}`, plus what a PNG
+  can't carry, only when it isn't the default: `pad`/`palpad` (the bytes
+  after the pixels or the palette, if not zeros up to the next multiple of
+  8), `tailnib` (the unused low nibble of the last byte of an odd-sized CI4
+  picture), `colours` (a palette shorter than the highest index used),
+  `palextra` (palette bytes past 16 or 256 colours), `hdr` (header bytes
+  8-11 if not `02 02 02 02`), and `model` for the hybrids.
+
+### What the format turned out to be
+
+Found while converting (the earlier text above is right but incomplete):
+
+- **The records are a chain.** Each record is `{a, offset, type of the next
+  record}`, the header's word at 0x0C is the type of record 0, and the last
+  record's third word is 0. Types: `0x12` CI4 pixels, `0x15` CI8 pixels,
+  `0x19` RGBA32 pixels, `0x16` RGBA16 pixels, `0x1a` a palette. So **the
+  file's `kind` is only its first frame's format**: entry 68 mixes CI4 and
+  CI8 frames (as do 304, 74-77, 452, ...), and the pair `{w << 16 | h,
+  off, 0x1a}, {colours, off, next format}` is just the chain.
+- When the record count `N` is odd the last record is 8 bytes and the data
+  starts at `align8(0x10 + 12 N - 4)`: that is why the RGBA32 files of one
+  frame have the pixels at 0x18 and only `0x10 + 8` bytes of table.
+- The palette's count is the real number of colours (5, 6, 15, ...), not 16
+  or 256. Pixel indices past it occur (872: indices up to 8 with 5 colours);
+  the PNG palette is then padded up to the highest index and `colours`
+  keeps 5. Entry 378 has a CI8 palette count of 290 (`palextra`).
+- Pixel data is **packed, with no row padding**: 37 (151x19 CI4, "PRESS
+  START") reads right only that way, and its odd last nibble is `7`.
+  Between the 1435 pixel bytes and the palette it has the leftover text
+  `bff 0xff7` (`pad`); 872 has 7 stray bytes after a palette.
+- **11 "image" entries are hybrids** (452-458, 512, 803, 808, 838): the
+  kind word says CI, the records start as pictures, and then the chain
+  continues with `{0x3f800000, offset, ...}` model records, a model whose
+  textures are the pictures at the front. The converter makes PNGs of the
+  pictures and keeps the model records and its bytes (`NNN.rest.bin`)
+  untouched; offsets in those records that point into the rest are stored
+  relative to it (`model.rel` in the yaml), so they follow when a picture
+  changes size. This is a stopgap until the model directory is decoded.
+
+### Model textures
+
+The textures embedded in the `model` entries (2038 of them, CI4 1779, CI8 253,
+RGBA32 6, with 2092 RGBA16 palettes) are the same pixel blocks: CI4 nibbles
+high first, CI8 bytes, RGBA16 5551 palettes, no row padding in the file
+(the display list's `G_SETTILE` line size is what the RDP uses). They are not
+converted: they're found through the display lists (`G_SETTIMG` +
+`G_SETTILESIZE` for size and format, `G_LOADTLUT` for the palette) and
+the directory isn't decoded, so they can't be moved or regrown yet. The
+code that would apply is `bm64image.write_png(path, frame)` /
+`read_png(path, fmt)` with a frame `{fmt, w, h, pixels, palette}`, which
+need nothing from the container; only the "where does it sit and how is
+it referenced" part is new. Same-size edits (32x32 CI4 stays 512 bytes) would
+be possible in place before the directory is understood, by patching the
+bytes the scanner already locates. The external textures (segments 3..14)
+are picture entries and already covered.
+
+### Reuse by the PC port
+
+The port loads assets from the user's ROM at startup (`ASSET_INIT`, as in
+Blast Corps): it inflates entries with `tools/hudson_lzss.py`'s algorithm
+(C in the port) and needs the pictures as texel data, not PNG files. The
+converter is written for that: `bm64image.parse(bytes)` gives
+`{frames: [{fmt, w, h, pixels, palette}]}` and `pack()` is its inverse, both
+pure functions on bytes and plain data with no build-tree knowledge; PNG is
+only `write_png`/`read_png`/`dump`/`load`. A port that wants the user's
+modded assets can read the same `NNN.img.yaml` + PNGs through `load()`.
+
+### Not yet
+
+Models (directory format), stage maps, the stored tables and the sound
+entries are still `NNN.bin`/`NNN.raw`. What they need:
+
+- `tools/assets.py` could split the 64 containers' models into `.dl` (display
+  list listings), `.vtx` and a `rest` blob once the directory is understood
+  (open question 1); until then a model is a `.bin`.
 - The ROM link places the bank by its contents' sizes: `rom.py` already packs
   archives from `assets/bankNN/` and refuses a bank that outgrows its
   slot. Bank 0x18's slot is 0x500000 (`0x300000-0x800000`) and US's
@@ -363,8 +452,6 @@ compressed size), LAYOUT.md.
   edited asset that grows costs the rest of the archive its position,
   which is fine because only the table of offsets changes (`0x300000`,
   segment 0x18, is hard-coded in `40FB0.s` and nowhere else).
-- For the PC port: the archive can be read from the user's ROM at startup
-  (the open-file API above is the only reader; the cache's `get(id)` is
-  the one entry point that matters), models need the segment 2/3.. rules,
-  and the display lists need a F3DEX 1.x renderer (the same as Blast Corps'
-  if it is F3DEX 1.x too).
+- For the PC port: models need the segment 2/3.. rules, and the display
+  lists need a F3DEX 1.x renderer (the same as Blast Corps' if it is
+  F3DEX 1.x too).

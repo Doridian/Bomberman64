@@ -227,7 +227,7 @@ $(TARGET).elf: $(O_FILES) $(BUILD_DIR)/$(BASENAME).ld module_syms_auto.txt undef
 $(IMAGE): $(TARGET).elf
 	$(OBJCOPY) -O binary $< $@
 
-$(TARGET).z64: $(IMAGE) $(ARCHIVE_SRCS) $(CONFIG) $(TOOLS_DIR)/rom.py $(TOOLS_DIR)/assets.py $(TOOLS_DIR)/hudson_lzss.py | $(LZSS_LIB)
+$(TARGET).z64: $(IMAGE) $(ARCHIVE_SRCS) $(CONFIG) $(TOOLS_DIR)/rom.py $(TOOLS_DIR)/assets.py $(wildcard $(TOOLS_DIR)/assetlib/*.py) $(TOOLS_DIR)/hudson_lzss.py | $(LZSS_LIB)
 	$(PYTHON) $(TOOLS_DIR)/rom.py $(VERSION) --image $(IMAGE) --elf $(TARGET).elf --out $@
 	$(PYTHON) $(TOOLS_DIR)/n64crc.py $@
 

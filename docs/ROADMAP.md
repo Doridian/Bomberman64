@@ -199,6 +199,13 @@ code finds them and what is still open. Only bank 0x18 holds assets (873
 entries: 639 models, 129 images, 96 stage maps, two sound containers); the
 other banks are overlay code.
 
+Done so far: the 129 picture entries of bank 0x18 are PNGs
+(`tools/assetlib/bm64image.py`; indexed CI4/CI8 with their palettes, RGBA32,
+pads kept as data), rebuilt byte for byte and recompressed, edits work
+(`tools/test_assets.py`); docs/ASSETS.md, "Pictures as PNGs". Next: the
+models' directory (then display lists, vertices and their embedded textures),
+stage maps, the stored tables, sound.
+
 ## Phase 6 — PC port
 
 The same architecture as Blast Corps' port (its docs/PORT.md):
