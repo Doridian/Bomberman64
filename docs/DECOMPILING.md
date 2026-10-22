@@ -168,7 +168,18 @@ tools/progress.py                                # per module, overlays per bank
   - each inlined call adds its parameters' stack slots to the caller's
     frame, and every local gets a slot in declaration order, from the top
     down, even when it lives in a register: the declaration order fixes
-    the frame.
+    the frame. The order of an inlined static's parameters sets its
+    spill slots too (ACA00's func_80292410 takes `(blob, entry)`);
+  - a function-local static is reached with `lui`/`%lo` at every access,
+    where a global (extern or defined) gets its address kept in a
+    register: 86680's two counters and 4ED50's constants are their
+    functions' statics. A local static table a function registers also
+    keeps that function from being inlined (530C0's, 4ED50's
+    func_80234550);
+  - a callee's declaration moves the caller's registers: 4ED50's
+    func_80236658 matched only with func_80239094 undeclared (an implicit
+    `int` function; as `void`, a temporary leaves `v0` for `a0`), 86680's
+    func_8026C77C only with func_8026A754 returning `s32`.
   The decomp-permuter normally strips a file to the one function, which
   undoes all of this: keep the other definitions (mark them `inline` for
   the permuter and strip the keyword in its compile.sh) and score against
@@ -244,7 +255,12 @@ tools/progress.py                                # per module, overlays per bank
   if/else with a temporary, ovl_09's handlers).
 - **Function-local statics and aggregate initializers are `.data`.**
   53D70's func_80239D6C's local pattern, 530C0's exported function table,
-  4ED50's constants: the object owns them, in its function's place.
+  4ED50's constants: the object owns them, in its function's place (after
+  the globals defined before that function in the source).
+- **Re-read instead of a copy.** 86680's angle matched with the wrap
+  applied to the expression itself (`*angle = WRAP(270.0f - a + b)`), not
+  to a temporary; ACA00's palette fade with every use of the colour as
+  `*src`, not a local copy.
 - **Defining a variable can change the code.** 412F0's two stores into
   its own .bss share a `lui` only when the variables are defined in the
   file (as1 knows they're near), so it defines its .bss.
