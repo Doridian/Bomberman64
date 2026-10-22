@@ -107,18 +107,53 @@ tools/progress.py                                # per module, overlays per bank
     home slot and reloads it (`sw $a2, 8($sp)` ... `lwc1`). A function
     taking three floats shows it at once (4DE50's func_80234500, 4ED50's
     func_802346C8).
-  Seen so far: 40FB0, 4DE50, 4ED50, 9BFD0, 995C0, 86680, 53D70, 9A5F0 and
-  ACA00 are `-O3`; 404C0, 5E090, 87190, 87730, 99F40, A4860 and B11F0 are
-  `-O2` (no
+  Seen so far: 40FB0, 412F0, 41FD0, 4DE50, 4E030 (4DE50's second half:
+  its wrappers call 4DE50's compares with a `jal`, which -O3 would inline
+  in one file), 4ED50, 530C0, 53D70, 86680, 995C0, 9A5F0, 9BFD0, ACA00,
+  AFBF0 and ovl_0A_01-05's objects are `-O3`; 404C0, 5E090, 87190, 87730,
+  99F40, A4860 and B11F0 are `-O2` (no
   inlining between functions that call each other, no cross-call
   registers; A4860's func_8028A318 calls three small functions of its
-  own file and inlines none). asm-processor can't do `-O3`, so an `-O3`
+  own file and inlines none); 54BE0 (one function) builds the same at
+  both. B2410 (setjmp/longjmp) and B2500 (`mtc0` WatchLo) are handwritten
+  asm. asm-processor can't do `-O3`, so an `-O3`
   object is C only once all of its functions are.
+- **`-O3` and `static`.** The rest of what IDO does at `-O3` follows from
+  it processing the file as a whole:
+  - a `static` function may get its own calling convention: arguments in
+    `t` or `s` registers (ACA00's func_80292200: `t0`; 995C0's
+    func_8027F4B0: `s1`, using `s0` unsaved), an unused first argument
+    passed in its home slot (9BFD0's func_80281FA0: the callers' `sw $a0,
+    0($sp)`), and its callers keep values in the `t` registers it
+    doesn't touch (9BFD0: arg1 in `t2`). A static has no symbol in the
+    object;
+  - a static inlined into every caller still leaves an empty `jr ra; nop`
+    where it would have gone, just before its first caller: splat shows
+    it as an empty function, or as a second `jr ra` at the end of the
+    previous one (995C0's func_8027F0B4/func_8027F0BC, 53D70's
+    func_8023A310, 4E030's 0x80234230-40). Each stub is a helper to
+    write;
+  - a function holding `while (1) {}` isn't inlined (`for (;;) {}` is):
+    53D70's func_8023957C, four copies in func_802395A8;
+  - small callees are inlined by size, and dead code counts (a function
+    that isn't inlined in the original but is in the C was bigger);
+  - each inlined call adds its parameters' stack slots to the caller's
+    frame, and every local gets a slot in declaration order, from the top
+    down, even when it lives in a register: the declaration order fixes
+    the frame.
+  The decomp-permuter normally strips a file to the one function, which
+  undoes all of this: keep the other definitions (mark them `inline` for
+  the permuter and strip the keyword in its compile.sh) and score against
+  the whole object.
 - **IDO allocates expression temporaries per source line.** A function
   that builds display-list commands matched only with each command on
   one line, as gbi.h's macros expand (87730's func_8026D2C4); written one
   statement per line, the later commands' constants land in `t0`-`t5`
-  instead of `t6`-`t9`.
+  instead of `t6`-`t9`. A macro of several commands (gSPSetLights2,
+  gDPLoadTextureBlock) is one line too. Write gbi.h's `_SHIFTL` masks as
+  the macro does: 9BFD0's colour matched only with its first component
+  masked too (`(r & 0xFF) << 24`), 412F0's rectangles only with the
+  `(u32)` casts.
 - **`-g`** for main_code's entry (`main_code_entry.c`, func_80225800):
   every value goes through the stack and the return is branched to; `-O1`,
   `-O2` and `-O0` don't give it. bm64 builds its 40000.c `-g` too. Hudson's
@@ -165,6 +200,19 @@ tools/progress.py                                # per module, overlays per bank
   left as they came in).
 - **Busy-waits on a flag** are `while (flag) { func_80297DC0(); }`, and an
   "impossible" argument is trapped with `while (1) {}` (A4860).
+- **Truth values are `int`.** `return a <= b && -b <= a;` matched as an
+  `int` function (4DE50); as `s32` (`long`) IDO builds it in `v1` and
+  moves it.
+- **Float literals keep their type.** `x * 2` multiplies by a 2.0
+  constant where `x * 2.0f` becomes `add.s`; an angle wraps as
+  `a >= 360.0f ? a - 360.0f : a < 0.0f ? a + 360.0f : a` (or the same as
+  if/else with a temporary, ovl_09's handlers).
+- **Function-local statics and aggregate initializers are `.data`.**
+  53D70's func_80239D6C's local pattern, 530C0's exported function table,
+  4ED50's constants: the object owns them, in its function's place.
+- **Defining a variable can change the code.** 412F0's two stores into
+  its own .bss share a `lui` only when the variables are defined in the
+  file (as1 knows they're near), so it defines its .bss.
 - **Callbacks** keep their argument: `D_802B01F8[arg1 - 1](arg0)`
   (99F40), where the array starts one entry after the symbol the asm
   indexes from.
@@ -350,4 +398,11 @@ object's `%hi`/`%lo` relocations against the ROM and checking the bytes.
 `tools/layout.py` carves those subsegments out of the asm blocks (the asm
 before a placed `.data` becomes `data`, since the link puts every .data
 before every .rodata). libultra's objects use this where their code needs
-the data in the same file (docs/LIBULTRA.md, "Data").
+the data in the same file (docs/LIBULTRA.md, "Data"). So do the game's
+objects after main_code's cut that have jump tables, strings or
+constants (995C0, 54BE0: `.rodata` only), or whose `.data`/`.bss` is all
+their own (53D70, 530C0, 412F0); everything else they use stays `extern`.
+Build the object once (the link fails, the `.o` is there), run `--place`
+for each version with `--ref build/us/src/<object>.c.o`, add the lines,
+regenerate the configs and extract again. `--place` finds an object named
+by its image offset (`995C0`) as well as a named one.

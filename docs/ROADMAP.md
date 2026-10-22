@@ -215,7 +215,13 @@ evidence for the flags):
   18), `40FB0` (the overlay loader, all six, `-O3`), `5E090` (7 of 7),
   `87190` (the resource cache, 8 of 8), `87730` (9 of 10), `99F40`
   (the tile maps, 12 of 14), `A4860` (game flags, 12 of 13) and `B11F0`
-  (19 of 25).
+  (19 of 25). Complete `-O3` objects, owning their data where it's
+  theirs (placed through data_split.txt): `412F0` (the graphics thread),
+  `41FD0` (viewports), `530C0` (the thread scheduler), `53D70`
+  (controller input), `995C0` (menu cursor), `9BFD0` (screen fades), and
+  `54BE0`; all of bank 0x09 (`ovl_09_02`-`04` like `ovl_09_01`).
+  Drafts one or two functions short (register allocation) are 4DE50 +
+  4E030, 4ED50, 86680, ACA00, AFBF0, 9A5F0 and ovl_0A_01-05.
   docs/DECOMPILING.md has how `-O3` objects are told apart and what
   Hudson's C looks like.
 - libultra's unmatched objects (phase 3): 28 objects in `src/libultra`,
