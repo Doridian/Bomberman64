@@ -118,6 +118,17 @@ tools/progress.py                                # per module, overlays per bank
   both. B2410 (setjmp/longjmp) and B2500 (`mtc0` WatchLo) are handwritten
   asm. asm-processor can't do `-O3`, so an `-O3`
   object is C only once all of its functions are.
+- **Banks 0x0C-0x17's overlays look `-O3` too**, though their C is
+  committed `-O2`: ovl_0C_03 written last function first and built `-O3`
+  matches with plain calls where the `-O2` file needs one-line macros,
+  `pad[]` locals (an inlined helper's slots) and `if (1)`s, and the
+  callback still GLOBAL_ASM in 0C_03, 0C_08, 12_02 and 12_04 keeps its
+  argument in `t0`. ovl_17_01 (17_06 and 17_08 share its code) passes a
+  static's argument in saved registers. What stops the conversion is
+  bss: at `-O3` IDO lays out only the bss variables the file references,
+  so 0C_03's two unused 4-byte fillers go to common and the variables
+  after them move. Converting these files, once that is solved, should
+  remove their workarounds and finish their GLOBAL_ASM functions.
 - **`-O3` and `static`.** The rest of what IDO does at `-O3` follows from
   it processing the file as a whole:
   - a `static` function may get its own calling convention: arguments in
