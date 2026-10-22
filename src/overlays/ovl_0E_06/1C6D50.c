@@ -87,8 +87,7 @@ u32 D_ovl0E_06_800452F4[][3] = {
 UnkStruct_ovl0E_06_80045300 D_ovl0E_06_80045300 = { NULL, 300.0f, 200.0f, 1300.0f };
 
 /* The three statements are on one line, a macro: only then does IDO
- * schedule across them (the store into the first call's delay slot).  It is
- * used four times here. */
+ * schedule across them (the store into the first call's delay slot). */
 #define UNK_MACRO_ovl0E_06_80043068() \
     D_ovl0E_06_8004537C = func_ovl0E_06_800441B8(); func_ovl0E_06_80044198(&D_ovl0E_06_80045370); func_ovl0E_06_800441C0(D_ovl0E_06_8004537C, D_ovl0E_06_80045360)
 

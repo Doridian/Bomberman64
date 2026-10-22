@@ -35,8 +35,7 @@ void func_ovl0E_10_80045290(s32, f32, f32, f32);
 void func_ovl0E_10_80045298(s32, f32 *);
 
 /* The three statements are on one line, a macro: only then does IDO
- * schedule across them (the store into the first call's delay slot).  It is
- * used four times here. */
+ * schedule across them (the store into the first call's delay slot). */
 #define UNK_MACRO_ovl0E_10_8004325C() \
     D_ovl0E_10_8004557C = func_ovl0E_10_80044378(); func_ovl0E_10_80044358(&D_ovl0E_10_80045570); func_ovl0E_10_80044380(D_ovl0E_10_8004557C, D_ovl0E_10_80045560)
 
