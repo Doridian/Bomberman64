@@ -68,6 +68,7 @@ osViFade = 0x80005140; // type:func segment:boot_code lib=exact
 osAiGetStatus = 0x800051D0; // type:func segment:boot_code lib=exact
 osAiGetLength = 0x800051E0; // type:func segment:boot_code lib=exact
 osAiSetFrequency = 0x800051F0; // type:func segment:boot_code lib=exact
+osAiSetNextBuffer = 0x80005350; // type:func segment:boot_code lib=exact
 osDpGetStatus = 0x80005400; // type:func segment:boot_code lib=exact
 osDpSetStatus = 0x80005410; // type:func segment:boot_code lib=exact
 osDpGetCounters = 0x80005420; // type:func segment:boot_code lib=exact

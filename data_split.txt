@@ -34,6 +34,9 @@ main_code 40300 0x10 0 0
 # Only those whose code needs its data defined in the same file (IDO shares
 # a %hi between fields of a variable it defines) or that own jump tables,
 # strings or constants; the rest refer to the asm data (docs/LIBULTRA.md).
+boot_code libultra/io/aisetnextbuf 0x10 0 0
+boot_code @us libultra/io/aisetnextbuf data=0x8001B0F0
+boot_code @eu libultra/io/aisetnextbuf data=0x8001B0F0
 boot_code libultra/audio/sndplayer 0 0x40 0
 boot_code @us libultra/audio/sndplayer rodata=0x8001BCC0
 boot_code @eu libultra/audio/sndplayer rodata=0x8001BCC0

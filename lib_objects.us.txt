@@ -61,7 +61,7 @@ boot_code 0x80005140 start src/io/vifade.o
 boot_code 0x800051D0 start src/io/aigetstat.o
 boot_code 0x800051E0 start src/io/aigetlen.o
 boot_code 0x800051F0 start src/io/aisetfreq.o
-boot_code 0x80005350 end src/io/aisetfreq.o
+boot_code 0x80005350 start src/io/aisetnextbuf.o
 boot_code 0x80005400 start src/io/dpgetstat.o
 boot_code 0x80005410 start src/io/dpsetstat.o
 boot_code 0x80005420 start src/io/dpctr.o
