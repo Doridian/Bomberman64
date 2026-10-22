@@ -312,8 +312,10 @@ def branch_target(w, o):
 
 
 def lib_objects(version):
-    """{module: {offset in the module}} where a matched library object starts
-    or ends (lib_objects.<version>.txt)."""
+    """{module: {VRAM: library object or None}} where a matched library
+    object starts or ends (lib_objects.<version>.txt).  The object is the
+    one that starts there, as its path in the library's tree without the
+    extension (`io/controller`), or None where one only ends."""
     out = {}
     path = ROOT / f"lib_objects.{version}.txt"
     if not path.exists():
@@ -321,8 +323,11 @@ def lib_objects(version):
     for line in path.read_text().splitlines():
         if line.startswith("#") or not line.strip():
             continue
-        module, addr = line.split()[:2]
-        out.setdefault(module, set()).add(int(addr, 16))
+        module, addr, what, obj = line.split()[:4]
+        objs = out.setdefault(module, {})
+        name = obj.removeprefix("src/").removesuffix(".o") if what == "start" else None
+        if objs.get(int(addr, 16)) is None:
+            objs[int(addr, 16)] = name
     return out
 
 
@@ -358,27 +363,50 @@ def object_starts(b, start, end, known=()):
 
 def data_split(version):
     """{module: ([(object, .data, .rodata, .bss)], {"data": vram,
-    "rodata": vram})} from data_split.txt: the objects whose data is cut
-    out of the module's block, in link order, with their sizes, and this
-    version's starts (docs/DECOMPILING.md, "Data")."""
+    "rodata": vram}, {object: (.data, .rodata, .bss, {section: vram})})}
+    from data_split.txt: the objects whose data is cut out of the module's
+    block, in link order, with their sizes, and this version's starts
+    (docs/DECOMPILING.md, "Data"); then the objects placed on their own
+    (library objects after the game's code), with where this version has
+    each of their sections."""
     out = {}
     path = ROOT / "data_split.txt"
     if not path.exists():
         return out
-    for n, line in enumerate(path.read_text().splitlines(), 1):
-        line = line.split("#")[0].split()
+    lines = [(n, line.split("#")[0].split())
+             for n, line in enumerate(path.read_text().splitlines(), 1)]
+    # an object with a placement line (in any version) is placed on its own
+    placed = {(l[0], l[2]) for _, l in lines
+              if len(l) > 2 and l[1].startswith("@") and "=" not in l[2]}
+    for n, line in lines:
         if not line:
             continue
-        objs, starts = out.setdefault(line[0], ([], {}))
+        objs, starts, islands = out.setdefault(line[0], ([], {}, {}))
         if line[1].startswith("@"):
-            if line[1][1:] == version:
-                for kv in line[2:]:
+            if line[1][1:] != version:
+                continue
+            if "=" not in line[2]:
+                obj = line[2]
+                where = islands.setdefault(obj, [0, 0, 0, {}])[3]
+                for kv in line[3:]:
                     k, v = kv.split("=")
-                    assert k in ("data", "rodata"), f"data_split.txt:{n}: {k}"
-                    starts[k] = int(v, 16)
+                    assert k in ("data", "rodata", "bss"), f"data_split.txt:{n}: {k}"
+                    where[k] = int(v, 16)
+                continue
+            for kv in line[2:]:
+                k, v = kv.split("=")
+                assert k in ("data", "rodata"), f"data_split.txt:{n}: {k}"
+                starts[k] = int(v, 16)
             continue
         assert len(line) == 5, f"data_split.txt:{n}: module object .data .rodata .bss"
-        objs.append((line[1], *(int(x, 16) for x in line[2:])))
+        sizes = [int(x, 16) for x in line[2:]]
+        if (line[0], line[1]) in placed:
+            islands.setdefault(line[1], [0, 0, 0, {}])[:3] = sizes
+        else:
+            objs.append((line[1], *sizes))
+    for m, (_, _, islands) in out.items():
+        for o, v in islands.items():
+            islands[o] = tuple(v)
     return out
 
 
@@ -398,8 +426,12 @@ def cut_data(name, vram, data, text_end, region_end, bss_size, text_objs, split,
     the jump tables there), and one `bss` block.  With no cut, the block is
     one `rodata` as before.
 
+    Objects placed on their own (data_split()'s third part: library
+    objects, which come after the game's code) get their `.data`,
+    `.rodata` and `.bss` at the addresses given, inside the asm blocks.
+
     Returns (subsegments [(offset, kind, name)], bss lines, bss size)."""
-    objs, starts = split or ([], {})
+    objs, starts, islands = split or ([], {}, {})
     # the listed objects must be the module's first, in order (the
     # handwritten ZeroJump stub block has no data)
     order = [o for o in text_objs if o != f"{name}_zerojmp"]
@@ -450,7 +482,7 @@ def cut_data(name, vram, data, text_end, region_end, bss_size, text_objs, split,
     bss = []
     for o, _, _, b in objs:
         if b:
-            bss.append(f"      - {{type: .bss, vram: 0x{bpos:08X}, name: {o}}}")
+            bss.append((bpos, ".bss", o))
             bpos += b
     if complete:
         # the compiler's size, which may include unreferenced variables at
@@ -460,8 +492,53 @@ def cut_data(name, vram, data, text_end, region_end, bss_size, text_objs, split,
         bss_size = bpos - bss_start
     assert bpos <= bss_start + bss_size, f"{name}: the listed .bss overruns the module's"
     if bpos < bss_start + bss_size:
-        bss.append(f"      - {{type: bss, vram: 0x{bpos:08X}}}")
+        bss.append((bpos, "bss", None))
+    # objects placed on their own, inside the asm blocks
+    assert not (islands and complete), f"{name}: every object is cut in order"
+    for o, (d, r, b, where) in islands.items():
+        assert o not in listed and o in order, f"{name}: {o} is placed on its own but isn't a text object after the cut"
+        assert source_exists(seg_dir, o), f"{name}: {o} is in data_split.txt but has no source"
+        for kind, size, sect in ((".data", d, "data"), (".rodata", r, "rodata"), (".bss", b, "bss")):
+            if not size:
+                continue
+            assert sect in where, f"{name}: {o}'s {kind} (0x{size:X}) has no address for this version"
+            if kind == ".bss":
+                bss = _place(name, bss, where[sect], size, kind, o, bss_start + bss_size)
+            else:
+                subs = _place(name, subs, where[sect] - vram, size, kind, o, region_end, vram)
+    # the link puts every .data before every .rodata, so the asm before a
+    # placed object's .data is .data too
+    last = max((a for a, k, o in subs if k == ".data" and o in islands), default=None)
+    if last is not None:
+        assert not any(k == ".rodata" and a < last for a, k, _ in subs), \
+            f"{name}: a .rodata comes before 0x{vram + last:08X}'s .data"
+        subs = [(a, "data" if k == "rodata" and o is None and a < last else k, o) for a, k, o in subs]
+    # an asm bss block has no ROM offset to be named by: after the first,
+    # each is named by its VRAM
+    first = next((a for a, _, o in bss if o is None), None)
+    bss = [f"      - {{type: {k}, vram: 0x{a:08X}"
+           + (f", name: {o}}}" if o else "}" if a == first else f", name: bss_{a:08X}}}")
+           for a, k, o in bss]
     return subs, bss, bss_size
+
+
+def _place(name, subs, at, size, kind, obj, end, base=0):
+    """subs (sorted [(offset, kind, name)], each up to the next or `end`)
+    with `kind` of `obj` at [at, at + size) carved out of the asm block it
+    falls in: the block keeps its part before, and a block of the same kind
+    resumes after it."""
+    i = max((k for k, s in enumerate(subs) if s[0] <= at), default=None)
+    assert i is not None and subs[i][2] is None, \
+        f"{name}: {obj}'s {kind} at 0x{base + at:08X} isn't inside an asm block"
+    nxt = subs[i + 1][0] if i + 1 < len(subs) else end
+    assert at + size <= nxt, f"{name}: {obj}'s {kind} at 0x{base + at:08X} runs past its asm block"
+    asm = subs[i][1]
+    new = [(at, kind, obj)]
+    if at + size < nxt:
+        new.append((at + size, asm, None))
+    if at == subs[i][0]:
+        return subs[:i] + new + subs[i + 1:]
+    return subs[:i + 1] + new + subs[i + 1:]
 
 
 def c_source(seg_dir, obj):
@@ -473,12 +550,35 @@ def c_source(seg_dir, obj):
     return ROOT / "src" / (seg_dir or "") / f"{obj}.c"
 
 
+def lib_source(obj):
+    """A library object's source, if it has one: src/libultra/<object>.c,
+    or .s for libultra's handwritten asm (docs/LIBULTRA.md).  `obj` is
+    lib_objects()'s name for it (`io/controller`).  Returns the subsegment
+    kind and name: (`c`, `libultra/io/controller`), (`hasm`,
+    `libultra/os/exceptasm`), or None."""
+    if obj is None:
+        return None
+    for ext, kind in (("c", "c"), ("s", "hasm")):
+        if (ROOT / "src" / "libultra" / f"{obj}.{ext}").exists():
+            return kind, f"libultra/{obj}"
+    return None
+
+
+def source_exists(seg_dir, obj):
+    """Whether a text object is C or source asm (cut_data())."""
+    return c_source(seg_dir, obj).exists() or \
+        (ROOT / "src" / (seg_dir or "") / f"{obj}.s").exists()
+
+
 def code_segment(name, start, vram, data, bss_size, first_hasm=None,
                  note=None, persist=None, known=(), split=None):
     """The YAML lines of one code segment of the image.  persist: the
     offset of main_code's part that is loaded once (see fixed()).  known:
     object boundaries (VRAM) the padding may not show.  split: the
-    module's entry of data_split() (cut_data())."""
+    module's entry of data_split() (cut_data()).  A known boundary may name
+    the library object that starts there (lib_objects()): one with a source
+    in src/libultra is a `c` (or `hasm`) subsegment of that name."""
+    libnames = {a - vram: n for a, n in dict(known).items()} if isinstance(known, dict) else {}
     known = {a - vram for a in known}
     text_end, stubs = text_split(data)
     subs = []
@@ -491,7 +591,8 @@ def code_segment(name, start, vram, data, bss_size, first_hasm=None,
     def code(a, b):
         """asm objects covering [a, b)"""
         for c in [a] + object_starts(data, a, b, known):
-            subs.append((c, "asm", None))
+            lib = lib_source(libnames.get(c))
+            subs.append((c, *lib) if lib else (c, "asm", None))
 
     if stubs and stubs[0] < text_end:
         # the block starts 16-aligned; whatever precedes it is code

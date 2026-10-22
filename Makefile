@@ -175,6 +175,46 @@ O3_C_FILES := 40FB0.c
 $(foreach f,$(G_C_FILES),$(BUILD_DIR)/src/$(f).o): OPT_FLAGS := -g
 $(foreach f,$(O3_C_FILES),$(BUILD_DIR)/src/$(f).o): OPT_FLAGS := -O3
 
+# libultra (src/libultra/, docs/LIBULTRA.md): ultralib's headers
+# (include/ultralib) and its flags for 2.0I's libultra_rom: -mips2, -O1,
+# and -O3 for libaudio, libc and gu.  Its handwritten .s files are
+# assembled by IDO too (it schedules them), -mips3 as in the SDK.
+LIB_CPPFLAGS = -D_MIPS_SZLONG=32 -DF3DEX_GBI -DBUILD_VERSION=VERSION_I \
+               '-DBUILD_VERSION_STRING="2.0I"' -non_shared -DNDEBUG -D_FINALROM -D$(VERSION_DEFINE)
+LIB_INCLUDE  = -I include/ultralib -I include/ultralib/compiler/ido -I include/ultralib/PR -I src/libultra
+LIB_CFLAGS   = -Wab,-r4300_mul -G 0 -nostdinc -Xcpluscomm -fullwarn -woff 516,649,838,712 \
+               -D_LANGUAGE_C $(LIB_CPPFLAGS) $(LIB_INCLUDE)
+LIB_ASFLAGS  = -Wab,-r4300_mul -G 0 -nostdinc -woff 516,649,838,712 -DMIPSEB -D_LANGUAGE_ASSEMBLY \
+               -D_MIPS_SIM=1 -D_ULTRA64 $(LIB_CPPFLAGS) $(LIB_INCLUDE)
+LIB_O3_DIRS  = audio libc gu
+$(BUILD_DIR)/src/libultra/%.o: CFLAGS = $(LIB_CFLAGS)
+$(BUILD_DIR)/src/libultra/%.o: INCLUDE_CFLAGS = $(LIB_INCLUDE)
+$(BUILD_DIR)/src/libultra/%.o: MIPSISET := -mips2 -32
+$(BUILD_DIR)/src/libultra/%.o: OPT_FLAGS := -O1
+$(foreach d,$(LIB_O3_DIRS),$(BUILD_DIR)/src/libultra/$(d)/%.o): OPT_FLAGS := -O3
+
+# A library .s is a `hasm` subsegment (tools/layout.py), which the link
+# script names asm/libultra/...; it is built from src/libultra/ instead
+# of splat's disassembly.  ld won't mix a -mips3 object with the -mips2
+# ones, so it's relabelled mips2 after (the code is what it is).
+$(BUILD_DIR)/asm/libultra/%.s.o: src/libultra/%.s
+	@mkdir -p $(dir $@)
+	$(IDO) -c $(LIB_ASFLAGS) -O1 -mips3 -32 -o $@ $<
+	$(PYTHON) $(TOOLS_DIR)/elf_mips2.py $@
+
+# The library's sources built on their own, as reference objects for
+# tools/libmatch.py and gen_symbols.py (docs/LIBULTRA.md, "Workflow"): they
+# are a libultra revision like ultralib's builds.  Needs no extract.
+LIB_SRCS := $(shell find src/libultra -name '*.c' -o -name '*.s' 2>/dev/null)
+LIB_REF  := $(patsubst src/libultra/%,build/libultra_bm64/src/%.o,$(basename $(LIB_SRCS)))
+libultra-ref: $(LIB_REF)
+build/libultra_bm64/src/%.o: src/libultra/%.c
+	@mkdir -p $(dir $@)
+	$(IDO) -c $(LIB_CFLAGS) $(if $(filter $(addsuffix /%,$(LIB_O3_DIRS)),$*),-O3,-O1) -mips2 -32 -o $@ $<
+build/libultra_bm64/src/%.o: src/libultra/%.s
+	@mkdir -p $(dir $@)
+	$(IDO) -c $(LIB_ASFLAGS) -O1 -mips3 -32 -o $@ $<
+
 # IDO can't write dependency files: the headers come from the host's cpp
 # (.d), the .s files the GLOBAL_ASM lines pull in from asm-processor
 # (.asmproc.d; re-extracting rewrites them).  Both give every prerequisite
@@ -235,5 +275,5 @@ $(TARGET).z64: $(IMAGE) $(ARCHIVE_SRCS) $(CONFIG) $(TOOLS_DIR)/rom.py $(TOOLS_DI
 	$(PYTHON) $(TOOLS_DIR)/n64crc.py $@
 
 .SECONDARY:
-.PHONY: FORCE all image check shift-check clean default extract lzss-check setup stamp verify vermap
+.PHONY: FORCE libultra-ref all image check shift-check clean default extract lzss-check setup stamp verify vermap
 SHELL = /bin/bash -e -o pipefail

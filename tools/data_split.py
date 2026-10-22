@@ -33,6 +33,9 @@ SECTIONS = (".data", ".rodata", ".bss")
 
 def object_path(version, module, obj):
     seg_dir = f"overlays/{module}/" if module.startswith("ovl_") else ""
+    if (ROOT / "src" / f"{seg_dir}{obj}.s").exists():
+        # libultra's handwritten asm, a hasm subsegment (tools/layout.py)
+        return ROOT / "build" / version / "asm" / f"{seg_dir}{obj}.s.o"
     return ROOT / "build" / version / "src" / f"{seg_dir}{obj}.c.o"
 
 
@@ -51,8 +54,8 @@ def sizes(path):
 def check(version):
     bad = 0
     n = 0
-    for module, (objs, _) in layout.data_split(version).items():
-        for obj, *listed in objs:
+    for module, (objs, _, islands) in layout.data_split(version).items():
+        for obj, *listed in objs + [(o, *v[:3]) for o, v in islands.items()]:
             path = object_path(version, module, obj)
             if not path.exists():
                 print(f"{module} {obj}: {path.relative_to(ROOT)} not built")
@@ -87,13 +90,109 @@ def add(version, module, obj):
     print(line)
 
 
+def text_vram(version, module, obj):
+    """Where a named text subsegment starts: a library object's from
+    lib_objects.<version>.txt, anything else's from bm64.<version>.yaml."""
+    for vram, name in layout.lib_objects(version).get(module, {}).items():
+        if name and f"libultra/{name}" == obj:
+            return vram
+    import yaml
+    cfg = yaml.safe_load((ROOT / f"bm64.{version}.yaml").read_text())
+    seg = next(s for s in cfg["segments"] if isinstance(s, dict) and s.get("name") == module)
+    for sub in seg["subsegments"]:
+        if isinstance(sub, list) and len(sub) > 2 and sub[2] == obj and sub[1] in ("c", "hasm", "asm"):
+            return sub[0] - seg["start"] + seg["vram"]
+    sys.exit(f"{module} has no text object {obj} in bm64.{version}.yaml")
+
+
+def section_bases(version, path, vram):
+    """{section: VRAM} for an object whose .text is at `vram` in this
+    version's code image, found from its .text's %hi/%lo relocations: each
+    pair gives an address in the image, which is the section's base plus
+    what the object adds.  Every pair must agree, and the .data and .rodata
+    bytes must be the image's there (relocated words aside)."""
+    import struct
+    import libmatch
+    image = libmatch.code_image(version)
+    o = libmatch.Obj(path)
+    off = layout_offset(version, vram)
+    word = lambda a: struct.unpack_from(">I", image, a)[0]
+    base = {}
+    hi = None
+    for r, typ, symidx in sorted(o.relocs):
+        if typ == libmatch.R_MIPS_HI16:
+            hi = (r, symidx)
+            continue
+        if typ != libmatch.R_MIPS_LO16 or hi is None or hi[1] != symidx:
+            continue
+        s = o.syms[symidx]
+        if s["shndx"] >= len(o.secs) or s["shndx"] == 0:
+            continue  # an undefined symbol
+        sect = o.secs[s["shndx"]]["name"]
+        if sect == ".text":
+            continue
+        mine_hi, = struct.unpack_from(">I", o.text, hi[0])
+        mine_lo, = struct.unpack_from(">I", o.text, r)
+        ahl = ((mine_hi & 0xFFFF) << 16) + libmatch.sext16(mine_lo & 0xFFFF)
+        got = ((word(off + hi[0]) & 0xFFFF) << 16) + libmatch.sext16(word(off + r) & 0xFFFF)
+        b = (got - ahl - s["value"]) & 0xFFFFFFFF
+        assert base.setdefault(sect, b) == b, f"{path.name}: {sect} at 0x{base[sect]:08X} and 0x{b:08X}"
+    data = path.read_bytes()
+    for sect, b in base.items():
+        if sect == ".bss":
+            continue
+        s = next(x for x in o.secs if x["name"] == sect)
+        mine = data[s["off"]:s["off"] + s["size"]]
+        relocated = set()
+        idx = o.secs.index(s)
+        for x in o.secs:
+            if x["type"] == 9 and x["info"] == idx:
+                for j in range(x["size"] // 8):
+                    relocated.add(struct.unpack_from(">I", data, x["off"] + j * 8)[0] & ~3)
+        at = layout_offset(version, b)
+        for k in range(0, len(mine) - len(mine) % 4, 4):
+            if k not in relocated and mine[k:k + 4] != image[at + k:at + k + 4]:
+                sys.exit(f"{path.name}: its {sect} differs from the image at 0x{b + k:08X}")
+    return base
+
+
+def layout_offset(version, vram):
+    """The code image offset of a boot_code or main_code VRAM (the library
+    is in those two)."""
+    import libmatch
+    segs = {name: (start, v) for name, start, _, v in libmatch.code_segments(version)}
+    start, v = segs["main_code" if vram >= layout.MAIN_VRAM else "boot_code"]
+    return start + vram - v
+
+
+def place(version, module, obj, ref):
+    """Print the data_split.txt lines that place a library object's
+    sections (its sizes, then this version's addresses)."""
+    path = Path(ref) if ref else object_path(version, module, obj)
+    if not path.exists():
+        sys.exit(f"{path} not built")
+    d, r, b = sizes(path)
+    base = section_bases(version, path, text_vram(version, module, obj))
+    where = [f"{k}=0x{base['.' + k]:08X}" for k, n in (("data", d), ("rodata", r), ("bss", b)) if n]
+    missing = [k for k, n in (("data", d), ("rodata", r), ("bss", b)) if n and "." + k not in base]
+    if missing:
+        sys.exit(f"{obj}: no reference shows where its {', '.join(missing)} is")
+    print(" ".join([module, obj] + [f"0x{x:X}" if x else "0" for x in (d, r, b)]))
+    print(" ".join([module, f"@{version}", obj] + where))
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("version", choices=layout.VERSIONS)
     ap.add_argument("--add", nargs=2, metavar=("MODULE", "OBJECT"))
+    ap.add_argument("--place", nargs=2, metavar=("MODULE", "OBJECT"),
+                    help="where a library object's data is in this version's image")
+    ap.add_argument("--ref", help="with --place: the object to read (default: its build)")
     args = ap.parse_args()
     if args.add:
         add(args.version, *args.add)
+    elif args.place:
+        place(args.version, *args.place, args.ref)
     else:
         check(args.version)
 

@@ -44,6 +44,9 @@ def code_image(version):
     return layout.image((ROOT / f"baserom.{version}.z64").read_bytes())
 
 R_MIPS_32, R_MIPS_26, R_MIPS_HI16, R_MIPS_LO16 = 2, 4, 5, 6
+# splat's address names, which src/libultra's objects use for the game's
+# own variables: never a library name
+ADDRESS_NAME = re.compile(r"(D|func)_[0-9A-F]{8}")
 
 
 # ---------------------------------------------------------------------------
@@ -253,6 +256,8 @@ class Module:
 
     def place_refs(self, sig, base):
         for kind, name, tgt in self.reloc_targets(sig, base):
+            if ADDRESS_NAME.fullmatch(name):
+                continue  # the game's, by address (a reference build's extern)
             if kind == "func":
                 cur = self.func_at.get(tgt)
                 if cur is None and name not in self.func_addr:
@@ -304,6 +309,18 @@ class Module:
                         by_addr[addr].add(name)
             for name, where in list(self.cands.items()):
                 if name in self.func_addr:
+                    # placed by a reference first: its own body there still
+                    # counts, and still names what it references
+                    a = self.func_addr[name]
+                    if a in where and not any("match" in e for e in self.evidence[a]):
+                        hits = [h for h in where[a] if self.consistency(h[0], h[1]) is not None]
+                        if hits and (any(how == "object" for _, _, how in hits)
+                                     or max(len(sig) for sig, _, _ in hits) >= min_words
+                                     or (len(where) == 1 and not self.trivial(hits[0][0]))):
+                            how = sorted({h for _, _, h in hits})
+                            self.evidence[a].add(f"{'/'.join(how)} match")
+                            self.place_refs(hits[0][0], hits[0][1])
+                            changed = True
                     continue
                 viable = []
                 for addr, hits in where.items():
@@ -428,7 +445,10 @@ def load_signatures(objdirs):
                     if key not in seen:
                         seen.add(key)
                         funcs.append(sig)
-            if len(fl) > 1:
+            # the whole object too, when it has more than one function or
+            # starts with static ones (which have no symbol, so its one
+            # named function doesn't show where it starts)
+            if len(fl) > 1 or fl[0][1] > 0:
                 whole = Signature(o, p.name, 0, fl[-1][2], True)
                 key = (p.name, tuple(whole.words), tuple(whole.masks))
                 if key not in seen:
@@ -495,13 +515,21 @@ def object_bounds(m, funcs, whole_hits):
     out = {}
 
     def objname(o):
-        return o.path.as_posix().split("/libultra_rom/", 1)[-1]
+        # src/<dir>/<file>.o, as in the library's tree (ultralib's builds,
+        # and the reference build of src/libultra in build/libultra_bm64)
+        return "src/" + o.path.as_posix().rsplit("/src/", 1)[-1]
+
+    def mark(a, what):
+        # where one object ends and the next starts, the start is kept: it
+        # names the object (tools/layout.py names library C objects by it)
+        if a not in out or (out[a].startswith("end ") and what.startswith("start ")):
+            out[a] = what
 
     for whole, parts, base in whole_hits:
         if all(m.func_at.get(m.addr(base + sig.start // 4)) == sig.name for sig in parts):
             a = m.addr(base)
-            out.setdefault(a, f"start {objname(whole.obj)}")
-            out.setdefault(a + len(whole.obj.text), f"end {objname(whole.obj)}")
+            mark(a, f"start {objname(whole.obj)}")
+            mark(a + len(whole.obj.text), f"end {objname(whole.obj)}")
     starts = defaultdict(set)
     for sig in funcs:
         starts[sig.name].add(sig.start)
@@ -510,9 +538,9 @@ def object_bounds(m, funcs, whole_hits):
             continue
         hits = [sig for sig, b, how in m.cands.get(name, {}).get(addr, ())]
         sig = hits[0] if hits else next(s for s in funcs if s.name == name)
-        out.setdefault(addr, f"start {objname(sig.obj)}")
+        mark(addr, f"start {objname(sig.obj)}")
         if hits and len(sig.obj.functions()) == 1:
-            out.setdefault(addr + len(sig.obj.text), f"end {objname(sig.obj)}")
+            mark(addr + len(sig.obj.text), f"end {objname(sig.obj)}")
     return out
 
 
