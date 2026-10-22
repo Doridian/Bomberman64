@@ -7,7 +7,8 @@ header's word at 0x0C is the type of record 0, and when N is odd the last
 record is 8 bytes.  A model's record types, from the code that reads them:
 
   0  a display list        func_8022D58C: gSPSegment(2, file), gSPDisplayList(file + offset)
-  5  a display list drawn with the matrix of func_8022928C pushed (a billboard)
+  5  a display list drawn under a matrix that undoes the rotation
+     (func_8022928C inverts it): a billboard
   6  a display list after the code's own DL (D_8029FCC8) and a G_SETTILESIZE
      from D_802A2D50 (a scrolling texture); G_TEXTURE and the texgen bit
      are cleared after it
@@ -62,7 +63,10 @@ T_NODES, T_POSES, T_ANIMS, T_END, T_T7 = 1, 2, 3, 4, 7
 DEFAULT_HDR = bytes([2, 2, 2, 2])
 # record types whose offset is a place in the file (type 4's is left over
 # junk, "0000" and the like, and stays a number)
-REF_TYPES = DL_TYPES + (T_NODES, T_POSES, T_ANIMS, T_T7)
+# the picture records of the 11 files with pictures in front of the model
+PIC_TYPES = {0x12: ("ci", 0), 0x15: ("ci", 1), 0x16: ("rgba", 2), 0x19: ("rgba", 3)}
+T_PAL = 0x1A
+REF_TYPES = DL_TYPES + (T_NODES, T_POSES, T_ANIMS, T_T7, T_PAL) + tuple(PIC_TYPES)
 ALIGNED = 8
 
 FMTS = ["rgba", "yuv", "ci", "ia", "i", "fmt5", "fmt6", "fmt7"]
@@ -75,9 +79,15 @@ def u32(d, o):
 
 
 def is_model(data):
-    """A "64" container whose first record isn't a picture."""
-    return (len(data) >= 0x10 and u32(data, 0) == MAGIC
-            and u32(data, 12) < 0x10)
+    """A "64" container with a record of a model's type (below 0x10).  A
+    picture file has none; 11 have pictures in front of a model."""
+    if len(data) < 0x10 or u32(data, 0) != MAGIC:
+        return False
+    try:
+        recs = read_header(data)[0]
+    except ValueError:
+        return False
+    return any(t < 0x10 for t, _, _ in recs)
 
 
 # ---- floats ----
@@ -280,9 +290,20 @@ class _Walk:
         self.d = d
         self.claims = []
         self.dls = set()
-        for t, a, off in recs:
+        for i, (t, a, off) in enumerate(recs):
             if t in DL_TYPES:
                 self.dl(off)
+            elif t in PIC_TYPES:
+                # a picture's record (bm64image.py): a = w << 16 | h, and
+                # its palette's record next if it is CI
+                fmt, siz = PIC_TYPES[t]
+                w, h = a >> 16, a & 0xFFFF
+                pal = None
+                if i + 1 < len(recs) and recs[i + 1][0] == T_PAL:
+                    pal = (recs[i + 1][2], 0)
+                self.claim(off, off + (w * h * BITS[siz] + 7) // 8, "tex", (fmt, siz, w, pal))
+            elif t == T_PAL:
+                self.claim(off, min(off + 2 * a, len(d)), "pal")
         for t, a, off in recs:
             if t == T_NODES:
                 self.claim(off, off + 0x30 * _node_count(d, off, a), "nodes")

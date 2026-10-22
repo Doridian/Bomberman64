@@ -12,7 +12,8 @@ those bytes, and a vertex more moves the rest and the references to it.
 
 With baserom.<v>.z64 present (or --rom): every picture entry of bank 0x18
 (129 in us and eu) is converted to PNGs and rebuilt to the ROM's own bytes,
-and one pixel of a real entry is edited; the same for the 641 models, with
+and one pixel of a real entry is edited; the same for the 652 models (641, and
+the 11 pictures with a model behind them), with
 a vertex and a texel edited.
 
   test_assets.py [--rom us|eu ...]
@@ -251,7 +252,7 @@ def test_model_rom(version):
             if sample is None and any("fmt" in e for e in y["blocks"]) and any("vtx" in e for e in y["blocks"]):
                 sample = (i, name, data)
             n += 1
-        assert n == 641, f"{n} models"
+        assert n == 652, f"{n} models"
         i, name, data = sample
         y = model_yaml(d, name)
         first_vtx(y)["vtx"][0][1] += 1

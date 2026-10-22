@@ -139,34 +139,37 @@ def extract_bank(rom, num, base, slot_end, out_dir):
                 (out_dir / "index.yaml").write_text(yaml.safe_dump(idx, sort_keys=False))
                 manifest.append({"file": "index.yaml", "lzss": False})
                 continue
-        model = None
-        if data is not None and base == layout.ASSET_BANK and bm64image.is_image(data):
-            try:
-                model = bm64image.parse(data)
-            except ValueError as err:
-                print(f"bank{num:02X} entry {i}: kept as .bin ({err})")
-        if model is not None:
-            # a picture: PNGs and a yaml (assetlib/bm64image.py)
-            stem = f"{i:0{width}d}"
-            y = bm64image.dump(model, stem, out_dir)
-            (out_dir / f"{stem}.img.yaml").write_text(
-                f"# {stem}: picture file, see tools/assetlib/bm64image.py\n"
-                + yaml.safe_dump(y, sort_keys=False, default_flow_style=None))
-            manifest.append({"file": f"{stem}.img.yaml", "lzss": True})
-            continue
-        if data is not None and base == layout.ASSET_BANK and bm64model.is_model(data):
-            try:
-                model = bm64model.parse(data)
-            except ValueError as err:
-                print(f"bank{num:02X} entry {i}: kept as .bin ({err})")
+        stem = f"{i:0{width}d}"
+        model = picture = None
+        if data is not None and base == layout.ASSET_BANK:
+            # a model (with or without pictures in front), else a picture
+            if bm64model.is_model(data):
+                try:
+                    model = bm64model.parse(data)
+                except ValueError as err:
+                    print(f"bank{num:02X} entry {i}: not converted as a model ({err})")
+            if model is None and bm64image.is_image(data):
+                try:
+                    picture = bm64image.parse(data)
+                except ValueError as err:
+                    print(f"bank{num:02X} entry {i}: kept as .bin ({err})")
+            elif model is None and bm64model.is_model(data):
+                print(f"bank{num:02X} entry {i}: kept as .bin")
         if model is not None:
             # a model: yaml (display lists, vertices, nodes, animations) and
             # its textures as PNGs (assetlib/bm64model.py)
-            stem = f"{i:0{width}d}"
             y = bm64model.dump(model, stem, out_dir)
             (out_dir / f"{stem}.mdl.yaml").write_text(bm64model.to_yaml(
                 y, f"# {stem}: model, see tools/assetlib/bm64model.py\n"))
             manifest.append({"file": f"{stem}.mdl.yaml", "lzss": True})
+            continue
+        if picture is not None:
+            # a picture: PNGs and a yaml (assetlib/bm64image.py)
+            y = bm64image.dump(picture, stem, out_dir)
+            (out_dir / f"{stem}.img.yaml").write_text(
+                f"# {stem}: picture file, see tools/assetlib/bm64image.py\n"
+                + yaml.safe_dump(y, sort_keys=False, default_flow_style=None))
+            manifest.append({"file": f"{stem}.img.yaml", "lzss": True})
             continue
         name = f"{i:0{width}d}.{'bin' if data is not None else 'raw'}"
         (out_dir / name).write_bytes(data if data is not None else blob)

@@ -31,9 +31,11 @@ widen the way the RDP does (the high bits replicated) and narrow by a shift,
 so a PNG written here reads back to the same bytes; alpha is one bit
 (>= 128 is opaque).  Everything else is `NNN.img.yaml`.
 
-The same code reads a model's embedded textures: they are the same CI4/CI8
-pixel blocks and RGBA16 palettes, only found through the display list
-(G_SETTIMG / G_SETTILESIZE / G_LOADTLUT) instead of a record table.
+The same code writes a model's embedded textures (bm64model.py): they are
+the same CI4/CI8 pixel blocks and RGBA16 palettes, only found through the
+display list (G_SETTIMG / G_LOADBLOCK / G_LOADTLUT) instead of a record
+table.  tools/assets.py converts the 11 pictures with a model behind them
+with bm64model.py; the `model` handling here is the fallback.
 """
 import struct
 
