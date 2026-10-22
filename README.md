@@ -1,11 +1,12 @@
 # Bomberman 64
 
-A matching decompilation of Hudson Soft's *Bomberman 64* (N64, 1997),
+A matching decompilation of Hudson Soft's *Bomberman 64* (N64, 1997;
+*Baku Bomberman* in Japan),
 aimed at a PC port, native and WebAssembly, with online multiplayer over
 WebRTC. You need your own ROM. None of the game's code or data is in this
 repository.
 
-Stage 2 is done: both ROMs rebuild byte for byte from disassembled code
+Stage 2 is done: all three ROMs rebuild byte for byte from disassembled code
 (boot code, main code, all 95 overlays) and inflated assets, recompressed
 at build time. A shifted build, with every module's code and data moved,
 plays the same as the original in an emulator. Nothing is decompiled yet. docs/ROADMAP.md has the plan,
@@ -17,15 +18,15 @@ and docs/NETPLAY.md the multiplayer design.
 | --- | --- | --- | --- |
 | `us` | `baserom.us.z64` | `NBME` | `8a7648d8105ac4fc1ad942291b2ef89aeca921c9` |
 | `eu` | `baserom.eu.z64` | `NBMP` | `01e50f41733994bf229bee3b3d8aa9fd46441175` |
+| `jp` | `baserom.jp.z64` | `NBMJ` | `4813b147d552f72fdb0b306469bf9aa0f820fd5b` |
 
-Both are 8 MiB, big-endian `.z64`, CIC 6102. `us` is the working version.
+All three are 8 MiB, big-endian `.z64`, CIC 6102. `us` is the working
+version; `jp` is *Baku Bomberman*, the Japanese release.
 
 Not targets:
 
 - `NHAJ`, sha1 `62f091b8b951238a7fb98459257ecc8a9095f6e9`, 16 MiB, is
   *Bomberman 64* (2001), a different, Japan-only game despite the title.
-- *Baku Bomberman* (`NBMJ`) is the Japanese release of this game. It isn't
-  here yet, and would become a `jp` version.
 
 ## Build
 
@@ -41,7 +42,7 @@ make VERSION=us lzss-check      # every compressed member recompresses exactly
 make VERSION=us shift-check     # a shifted build against the original, in mupen64plus
 ```
 
-`VERSION` is `us` (the default) or `eu`. `asm/` and `assets/` hold one
+`VERSION` is `us` (the default), `eu` or `jp`. `asm/` and `assets/` hold one
 version at a time, so run `make clean` before you switch.
 
 `shift-check` needs mupen64plus (2.6.0): the system's install (a
@@ -63,7 +64,9 @@ run with it pinned (`tools/shift_check.py` explains).
 | `bm64.<v>.sha1` | the ROM's sha1, what the build has to reproduce |
 | `tools/layout.py` | reads the ROM's layout and writes the config; `--check` verifies it |
 | `tools/assets.py` | archives to `assets/bankNN/` (inflated entries, manifests) and back; the code image |
+| `tools/split.py` | runs splat (outside us, with the C files' us names read as the version's) |
 | `tools/postsplit.py` | after splat: what it left as addresses becomes label-relative |
+| `tools/vermap.py`, `vermap.<v>.txt` | where us's addresses are in eu and jp; extract renames those versions' names to us's |
 | `tools/ld_fix.py` | splat's linker script with the ROM's fixed positions kept (and `SHIFT` pads) |
 | `tools/rom.py` | the ROM from the code image and the archives |
 | `tools/find_abs.py` | addresses in the linked code that have no relocation |

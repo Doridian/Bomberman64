@@ -41,7 +41,7 @@ the speed limiter off) and start from a blank save, and with that they are
 exactly repeatable.  The original is still run twice, and what differs
 between those two runs is left out of the comparison (none so far).  Any
 other difference fails.  With the default pad (0x10) every checkpoint
-matches exactly, in us and eu.  A bigger pad makes the overlays bigger, so
+matches exactly, in us, eu and jp.  A bigger pad makes the overlays bigger, so
 the shifted ROM takes a little longer to DMA and inflate one; with 0x100
 some load ends a frame later, and from then on the game's frame counters
 are off (us: by one at frame 300, by 15 at 24000), and what follows them

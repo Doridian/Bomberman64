@@ -1,6 +1,7 @@
 # ROM layout
 
-The map of Bomberman 64 (1997), US (`NBME`) and EU (`NBMP`).
+The map of Bomberman 64 (1997), US (`NBME`), EU (`NBMP`) and JP
+(`NBMJ`, *Baku Bomberman*).
 `tools/layout.py <version>` derives it from the ROM and writes
 `bm64.<version>.yaml`, the splat config of the code image ("Stage 2",
 below). `tools/assets.py` splits the archives into their entries
@@ -8,7 +9,7 @@ below). `tools/assets.py` splits the archives into their entries
 <version>` checks that the config still matches what the ROM says, and
 `tools/layout.py --print <version>` prints the ROM's segment list.
 
-Both ROMs are 8 MiB, CIC-NUS-6102, entry point `0x80000400`.
+All three ROMs are 8 MiB, CIC-NUS-6102, entry point `0x80000400`.
 
 ## US
 
@@ -91,6 +92,50 @@ Same layout and same segment list as US. These parts differ:
 | overlay banks | | | same headers and sizes. Bank 0x0B entry 1, bank 0x10 entry 13 and bank 0x12 entry 5 differ in content (same compressed size) |
 | asset archive | | | entry 32 (`"S2"` container) is 0xFDA58 bytes, 0x978 longer, so every later entry moves by 0x978 and the archive ends at `7B7F1C`. EU has no stray halfword in the tail |
 
+## JP
+
+*Baku Bomberman* (`NBMJ`), the Japanese release. The same layout and the
+same segment list as US: the same banks with the same entries, the same
+95 overlays, the same file table, the same loaders. Almost everything has
+moved, though, because text, pictures and some code differ:
+
+| piece | US | JP | what differs |
+| --- | --- | --- | --- |
+| header | | | name `BAKU-BOMBERMAN`, code `NBMJ`, CRCs |
+| boot_code | `1000-1CBC0` | `1000-1CBA0` | 0x20 shorter. One game function at `800018A8` (in object `2350`) is 4 words shorter. The libultra objects are the same, byte for byte (docs/LIBULTRA.md), except that the 0x60-byte zero gap between two link units sits between `__ll_rshift` and `bzero` (`80012CD0-80012D30`), not after `osSetThreadPri`. zerojump is at `1CBA0`, boot_code's bss is `8001BFA0-80028440` |
+| segment size table | | | byte 2 `FE` (main_code is reloaded whole), byte 3 `8D`, bank 0x0B's `30` (US `31`), filler byte 0x21 `88` |
+| main_code | `40000-BFB00` | `40000-BED30` | 0xDD0 shorter: text `0xB7130` (US `0xB7A50`, 0x920 less), data 0x4B0 less, bss `802A4530-802B28F0`. 19 functions changed, 8 us-only and 5 jp-only (below); 4 ZeroJump stubs fewer |
+| overlay banks | | | every overlay but `ovl_16_01` (which has no ZeroJump block) differs: each has 4 ZeroJump stubs fewer (ids 0x1208, 0x250B-0x250D, in every module), and 10 have changed code (below); most banks are a little shorter (0x13 and 0x16 keep their size, 0x15 is longer) |
+| asset archive | 873 entries, to `7B75A4` | 870 entries, to `7C3B18` | the same entry numbers, without us's last three (pictures); 46 entries differ (docs/ASSETS.md, "US and JP"); the tail has a stray `4009` |
+
+Tails: the stray halfwords are in banks 09, 0B, 0C, 0E, 15, 16, 17 and 18
+(`4009`, `1009` in bank 0x16; US has them in 09, 0C, 0E, 10, 14, 15, 16
+and 18); `assets/bankNN/
+archive.yaml` keeps them as for US.
+
+**The boot thread and main_code.** jp's main_code (0x7ED30 bytes) ends
+before the page the boot thread loads once, so all of it is reloaded each
+time round (`table[2]` = 0xFE: 0x7F000 bytes) and the config has no
+`main_code_persist`. The one-time load is `table[3]` = 0x8D units (0x46800
+bytes) from `0xBF000`, which is all zeros (the pad up to 0x120000): it
+clears `802A4800-802EB000` once. `tools/rom.py` writes byte 2 from the
+link and keeps byte 3 as the ROM has it.
+
+The C files match jp unchanged so far: none of the decompiled functions
+differ. What differs (from `tools/vermap.py --functions <module> jp`):
+
+- **boot_code**: `800018A8` (98 words, 94 in jp), the moved link gap.
+- **main_code**: changed functions in objects `52270`, `54E40` (8
+  functions, three of them among the five that differ in eu), `5E3F0`,
+  `6BBE0`, `85A10`, `96540` (eu's other two), `9A5F0`. In `9A5F0` us has 7 functions jp lacks and jp
+  has 4 of its own (one in an object only jp has, `9A340_jp`, before it);
+  `AD3D0` has one function us-only and one jp-only. The ZeroJump block has
+  706 stubs (710 in us).
+- **overlays**: `ovl_0A_06`, `ovl_0B_01`-`ovl_0B_07` (title, menus and the
+  like: `ovl_0B_04` and `ovl_0B_06` are largely rewritten), `ovl_14_02`,
+  `ovl_15_02`. The other 85 have every function identical; their data
+  (text) and their stub blocks differ.
+
 ## The US to EU map
 
 `tools/vermap.py` aligns eu's code to us's from the two ROMs and writes
@@ -136,6 +181,57 @@ and 4 words of text at `802A2D00` on. The map is 114 ranges (boot_code 5, main_c
 other module), covering all of the text and data and the bss as far as the
 anchors reach; what a range does not cover is named from its eu address.
 
+## The US to JP map
+
+The same tool maps jp: `vermap.jp.txt` (`tools/vermap.py jp`, `make
+vermap` writes both maps, `--check` checks both). Everything above
+applies, with `_jp` for what us lacks. Two things the eu map didn't need:
+
+- **ZeroJump stubs** are aligned one by one, by their ids, so that a
+  module's block maps around the four stubs jp lacks.
+- **A changed function keeps its name**: its start is paired with its
+  counterpart's even where the words inside don't align.
+
+And splat has to find the C files' functions in jp: `tools/split.py` runs
+splat with the names it reads from a C file (functions defined,
+GLOBAL_ASM lines) turned into jp's (`vermap.version_name()`), so it writes
+the GLOBAL_ASM functions' `.s` files, and `vermap.py --rename` then gives
+those files (and their contents) us's names. `tools/layout.py` names jp's
+text objects for us's image offsets through the map (`5E090` is jp's
+`0x5DDE0`), and takes us's object boundaries where jp's padding doesn't
+show them (`5E090` starts right after a function that ends 16-aligned in
+jp), so each C file is the same object in both.
+
+What the alignment finds (functions, ZeroJump stubs not counted):
+
+| module | us | jp | identical | changed | us only | jp only |
+| --- | --- | --- | --- | --- | --- | --- |
+| boot_code | 266 | 266 | 263 | 2 (`800018A8`, `80003470`) | 1 (`80012D14`) | 1 |
+| main_code | 1048 | 1045 | 1021 | 19 | 8 | 5 |
+| 95 overlays | 5524 | 5514 | 5449 | 38 | 37 | 27 |
+| total | 6838 | 6825 | 6733 (98.5%) | 59 | 46 | 33 |
+
+Per overlay (the 85 others are all identical):
+
+| overlay | us | jp | identical | changed | us only | jp only |
+| --- | --- | --- | --- | --- | --- | --- |
+| ovl_0A_06 | 51 | 51 | 46 | 5 | 0 | 0 |
+| ovl_0B_01 | 38 | 38 | 34 | 4 | 0 | 0 |
+| ovl_0B_02 | 15 | 15 | 14 | 1 | 0 | 0 |
+| ovl_0B_03 | 50 | 50 | 48 | 2 | 0 | 0 |
+| ovl_0B_04 | 107 | 105 | 79 | 12 | 16 | 14 |
+| ovl_0B_05 | 47 | 47 | 45 | 2 | 0 | 0 |
+| ovl_0B_06 | 98 | 90 | 73 | 5 | 20 | 12 |
+| ovl_0B_07 | 28 | 28 | 25 | 2 | 1 | 1 |
+| ovl_14_02 | 167 | 167 | 165 | 2 | 0 | 0 |
+| ovl_15_02 | 146 | 146 | 143 | 3 | 0 | 0 |
+
+boot_code's `80003470` and `80012D14` are the moved link gap (the
+function cutter counts the zeros with the function before them), not
+code. The map is 905 ranges, many of them single words in data that
+moved by different amounts (each of jp's strings is shorter or longer
+than us's). After a jp extract, about 500 names are `_jp`.
+
 ## Loaders
 
 The ROM is cut into 128 KiB **segments**, numbered `ROM >> 17`: segment 0
@@ -146,7 +242,8 @@ overlay banks, 0x18 the asset archive.
   n's size in 2 KiB units, where 0 means 0x80000. It is mostly each
   bank's size rounded up to 2 KiB. Exceptions: bank 0x16 has 0x40 although
   its contents fit in 0x07, the asset archive has 0, and the bytes from
-  0x19 on are filler (0x20 is 0x6F in us, 0x70 in eu, the rest 0x40).
+  0x19 on are filler (0x21 is 0x6F in us, 0x70 in eu, 0x88 in jp, the
+  rest 0x40).
   `0x800007F0(seg, dst)` DMAs `seg << 17` for that size.
 - **The boot thread** (0x80001750) DMAs the table, then ROM
   `0x40000 + table[2] * 2K` for `table[3] * 2K` bytes (0xBF800-0xC0000)
@@ -242,6 +339,8 @@ pads that move everything after each module's entry.
 
 - What the size table's filler bytes (0x19 on) and bank 0x16's oversized
   entry mean, if anything. They are kept as the ROM has them.
+- jp's size table byte 3 (0x8D: the boot thread clears 0x46800 bytes past
+  main_code once): whether Hudson's tool meant it, or it is stale.
 - The file table's stale ids (in no bank's index).
 - Text object boundaries the padding doesn't show (functions that end on a
   16-byte boundary), in the game's own code. In libultra, matching found

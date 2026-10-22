@@ -24,7 +24,7 @@ docs/DECOMPILING.md), adapted to one code image with overlays.
   -Wab,-r4300_mul -mips1 -32` and `-O2` by default. Per-file levels are
   lists in the Makefile (`G_C_FILES`, `O3_C_FILES`), the same in every
   version. `include/common.h` is included by every file: the ultra64 types
-  (`include/PR/ultratypes.h`), `uintptr_t`, `VERSION_US`/`VERSION_EU`.
+  (`include/PR/ultratypes.h`), `uintptr_t`, `VERSION_US`/`VERSION_EU`/`VERSION_JP`.
   Declarations shared between files go in `include/functions.h` and
   `include/variables.h`; a name only one file uses is declared there.
 
@@ -32,7 +32,7 @@ To start an object:
 
 ```
 tools/c_stub.py us 80420                 # src/80420.c, every function GLOBAL_ASM
-tools/layout.py us && tools/layout.py eu # the object becomes `c`
+tools/layout.py us && tools/layout.py eu && tools/layout.py jp # the object becomes `c`
 rm -rf asm && make VERSION=us extract    # splat writes asm/nonmatchings/80420/
 make VERSION=us                          # still sha1-matching
 ```
@@ -171,21 +171,62 @@ tools/progress.py                                # per module, overlays per bank
 
 ## Versions
 
-eu builds from the same C. Its config comes from its own ROM, and an
-object is C in eu when `src/` has a file of the eu object's name, which
-for now is the same image offset as in us (true for every C object so
-far: main_code's code up to 0xA4860 and ovl_09_01 sit at the same places
-in both). Two things differ:
+eu and jp build from the same C. Each version's config comes from its own
+ROM; the C files, the flags and the names are us's. So far every C
+object matches all three unchanged (eu's and jp's differences lie
+elsewhere: docs/LAYOUT.md, "EU" and "JP").
 
-- **Names.** eu's asm carries us's names: `make extract` for eu renames
-  splat's address names through `vermap.eu.txt` (`tools/vermap.py`,
-  docs/LAYOUT.md, "The US to EU map"), so a C file's names mean the same
-  things in both versions.
-- **Code.** Where eu's code really differs, the C gets `#if VERSION_EU`.
-  asm-processor reads GLOBAL_ASM lines before the preprocessor, so a
-  version-specific GLOBAL_ASM needs Blast Corps' `version_ifs.py` first
-  (not needed yet). Once eu's objects stop lining up with us's offsets,
-  the object names come from vermap too.
+- **Objects.** Outside us a text object is named for the us image offset
+  of the same code (`tools/layout.py` through `vermap.<v>.txt`): `5E090`
+  is jp's `0x5DDE0`, and `src/5E090.c` is that object in all three. An
+  object only jp has is `<jp offset>_jp` (`9A340_jp`). Where jp's padding
+  doesn't show a boundary us's does, us's is used.
+- **Names.** eu's and jp's asm carries us's names: `make extract` renames
+  splat's address names through `vermap.<v>.txt` (`tools/vermap.py`,
+  docs/LAYOUT.md, "The US to EU map", "The US to JP map"), so a C file's
+  names mean the same things in every version. What us doesn't have is
+  `func_<address>_jp` (`_eu`), at jp's own address. `tools/split.py`
+  reads the C file's names as the version's when splat runs, so the
+  GLOBAL_ASM `.s` files come out in eu and jp too, under us's names.
+- **Code.** Where a version's code really differs, the C gets `#if
+  VERSION_JP` (or `VERSION_EU`), with us's code as the default:
+  `#if VERSION_JP ... #else <us> #endif`. Keep the other versions'
+  bodies next to us's, not in other files.
+
+What a decompiler has to do for jp (and eu):
+
+1. Before starting an object, look at it in the map: `tools/vermap.py
+   --functions <module> jp` lists every function as `identical`,
+   `changed`, `us-only` or `jp-only` (with the us and jp addresses). An
+   object whose functions are all identical needs nothing; most are.
+   jp differs in main_code's `52270`, `54E40`, `5E3F0`, `6BBE0`, `85A10`,
+   `96540`, `9A5F0`, `AD3D0`, boot_code's `2350`, and the overlays
+   `ovl_0A_06`, `ovl_0B_01`-`ovl_0B_07`, `ovl_14_02`, `ovl_15_02`
+   (docs/LAYOUT.md, "JP"). eu differs in `54E40` and `96540` only.
+2. After the C matches us: `tools/layout.py <v>`, `make clean`, `make
+   VERSION=<v> extract` and `make VERSION=<v>` for eu and jp (and
+   `tools/data_split.py <v>` for an object in the data cut). A changed
+   function shows as a sha1 mismatch: `tools/fdiff.py` works in jp's
+   tree as in us's.
+3. A changed function gets its jp body under `#if VERSION_JP`. A
+   function only us has goes under `#if !VERSION_JP`; one only jp has is
+   written under its `_jp` name under `#if VERSION_JP`, where jp's link
+   order puts it.
+4. A GLOBAL_ASM line under `#if` is still read by asm-processor, which
+   runs before the preprocessor and would open a `.s` the other version
+   never writes. When the first one is needed, port Blast Corps'
+   `tools/version_ifs.py` (it decides the VERSION_* conditionals before
+   asm-processor, keeping line numbers) into the C rule; until then a
+   version-specific function has to be C in every version it is
+   conditional in.
+5. Data: `data_split.txt` takes `@jp` placement lines like `@us`/`@eu`
+   (the module's data start, an object's `.data`/`.rodata`/`.bss` start);
+   `tools/vermap.py`'s map gives jp's addresses (boot_code's data is 0x20
+   lower in jp, main_code's objects' `.data` starts at `0x8029EC50`). An
+   object whose data differs in jp (strings: jp's text is in another
+   encoding, docs/ASSETS.md) needs its definitions `#if`'d and a jp size
+   line; the format has no per-version size column yet, so add one when
+   the first object needs it.
 
 ## Data
 
@@ -215,7 +256,7 @@ ZeroJump stub block has no data and is skipped. Where every object of a
 module is listed, the boundary is the compiler's and layout.py checks the
 sizes add up to the block (and takes the module's bss size from them).
 
-Cut so far (us and eu alike):
+Cut so far (the same in us, eu and jp):
 
 | module | objects | .data/.rodata boundary |
 |---|---|---|
@@ -239,9 +280,9 @@ whose data differs between them will need a version column.
    its built sizes. Check the line: its `.rodata` is only the C
    functions' share until the object owns it (step 3), so a file with
    GLOBAL_ASM functions that have jump tables or constants needs the size
-   from the ROM. Give the module's `@us`/`@eu` `rodata=` start if the
+   from the ROM. Give the module's `@us`/`@eu`/`@jp` `rodata=` start if the
    object has .rodata and isn't the module's last.
-3. `tools/layout.py us && tools/layout.py eu`, `make clean`, extract and
+3. `tools/layout.py <v>` for us, eu and jp, `make clean`, extract and
    `make` for both versions. splat now writes the GLOBAL_ASM functions'
    jump tables and constants into their `.s` (`.late_rodata`), which
    asm-processor puts into the object, and the asm block shrinks by the

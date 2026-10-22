@@ -4,14 +4,15 @@ What the archives hold, how the game finds it, and what is known about each
 format. This started as phase 5's inventory; the pictures ("Pictures as
 PNGs") and the models ("Models as yaml") are converted to editable files
 and rebuilt, the rest is still research. Offsets and addresses are US's
-(`NBME`) unless said otherwise; the EU differences are in "US and EU" below.
+(`NBME`) unless said otherwise; the EU and JP differences are in "US and
+EU" and "US and JP" below.
 
 ```
-tools/inventory.py                  summary per bank (both versions)
+tools/inventory.py                  summary per bank (every version)
 tools/inventory.py --entries us     one line per entry
-tools/inventory.py --csv docs       writes docs/inventory.us.csv, inventory.eu.csv
+tools/inventory.py --csv docs       writes docs/inventory.<v>.csv (us, eu, jp)
 tools/inventory.py --check docs     fails if those files are out of date
-tools/inventory.py --diff           the entries that differ between us and eu
+tools/inventory.py --diff           the entries that differ between us and eu, jp
 ```
 
 It reads `baserom.<v>.z64` itself (through `tools/assets.py` and
@@ -48,7 +49,8 @@ Counts by class, bank 0x18 (`tools/inventory.py us`):
 32, 33, 71, 72, 220, 221, 267. There is nothing else: no separate palette,
 vertex or animation entries, no font entries (the fonts are images, and the
 text is in main_code, below), no level geometry separate from the models.
-EU has the same 873 entries in the same classes.
+EU has the same 873 entries in the same classes; JP the first 870 of
+them ("US and JP").
 
 ## How the game finds an entry
 
@@ -354,10 +356,43 @@ different music) and code. Three overlays also differ in content only
 (bank 0x0B entry 1, bank 0x10 entry 13, bank 0x12 entry 5: same
 compressed size), LAYOUT.md.
 
+## US and JP
+
+jp's asset archive (*Baku Bomberman*) has **870 entries**: us's 0-869
+under the same numbers, without us's last three (870: a 320x240 CI4
+picture, 871: an 88x66 CI8, 872: a 19x11 CI4). 825 of the 870 are the
+same as us's (entry 32, the `S2` sequences, is us's, not eu's); 45 differ
+(`tools/inventory.py --diff jp`, `docs/inventory.jp.csv`):
+
+- **Pictures with text** (40 entries): 37 (us's `PUSH START` banner,
+  151x19, is 137x19 in jp), 40, 49, 53, 54, 55, 67 and the screens with
+  their text drawn in (205, 206, 629-632, 654-657, 816-824, 843, 844,
+  856-861, 863-868: Japanese captions in kana). Most keep their sizes;
+  some frames are a few bytes longer or shorter (a palette or pad).
+- **Models** 51 (a textured kind 0 card), 62 and 63 (kind 6, much
+  smaller in jp: 96 and 175 triangles against us's 196 and 284;
+  probably 3D lettering).
+- **Sound**: entry 33 (`T2`, the wave table and waves) is 1,127,160 bytes
+  (us 1,080,664, 46,496 more: Japanese voice samples, presumably) and
+  entry 71 (`audio_data`) has the same size and other contents.
+
+In the classes: 126 pictures (79 CI4, 30 CI8, 17 RGBA32; 11 of them with a
+model behind them), the same 641 models (639, and 2 without a display
+list), 96 stage maps, the same tables.
+Every picture and model converts and rebuilds byte for byte as in us
+(`tools/test_assets.py --rom jp`).
+
+**Text.** jp's strings are in main_code's data like us's (they start at
+`0x8029F8C8`, us `0x802A01E8`), in another one-byte encoding: Latin
+letters and digits are us's (ASCII minus 0x27: `VS` is `2F 2C`), and
+bytes 0x60-0xFF, which us's text doesn't use, are the Japanese glyphs
+(0x0F is where us has a space). Where those glyphs are drawn from is not
+found yet: us's font pictures (304, 305) are the same in jp.
+
 ## Evidence and how to check
 
 - Every number above is from `tools/inventory.py` (`docs/inventory.us.csv`
-  and `.eu.csv`, one row per entry of every bank) or from the code at the
+  `.eu.csv` and `.jp.csv`, one row per entry of every bank) or from the code at the
   addresses named. The code's asset path is `40FB0.s`, `404C0.s`,
   `87190.s` (the cache), `AD3D0.s` (the LZSS decoder), `86680.s` (sound
   init), `426E0.s` / `47A80.s` (the segments).

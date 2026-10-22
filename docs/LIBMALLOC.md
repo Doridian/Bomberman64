@@ -17,14 +17,14 @@ cc -c -g -mips1 -G 0 -non_shared -Xfullwarn -Xcpluscomm -D_LANGUAGE_C \
 ```
 
 the object's `.text` is 0x22E0 bytes, and the ROM has 0x22E0 bytes at
-`0xB3B70` in **both** US and EU. Every word is identical except the fields a
+`0xB3B70` in **both** US and EU, and at `0xB3250` in JP. Every word is identical except the fields a
 relocation fills (jal targets, `%hi`/`%lo`): 0 mismatches of 2232 words,
 469 relocations. Each symbol resolves to one address at all its references
 (and `.data` and `.bss` are contiguous with the right sizes: 0x10 and 0xB0,
 ending at main_code's bss end). `-mips2` does not match (2011 words differ).
 
 `tools/libmalloc_check.py` repeats all of this (downloads the tarball into
-`build/libmalloc/`, compiles, compares both ROMs, `--write` generates
+`build/libmalloc/`, compiles, compares every ROM, `--write` generates
 `symbol_addrs.libmalloc.<v>.txt`). It needs a built `tools/ido`.
 Only stub headers (`stddef.h`, `limits.h`, `string.h`, `sys/param.h`) are
 ours; without them IDO reads the host's `/usr/include`.
@@ -32,7 +32,8 @@ ours; without them IDO reads the host's `/usr/include`.
 ## Where it is
 
 ROM `0xB3B70-0xB5E50` (main_code, vram `0x80299370-0x80299650`). The
-functions are at the same addresses in US and EU. The asm continues after
+functions are at the same addresses in US and EU (in JP, 0x920 lower: from
+`0x80298A50`). The asm continues after
 `0xB5E50` with other code, not part of the allocator.
 
 | function | address | size | | function | address | size |

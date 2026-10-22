@@ -19,7 +19,7 @@ tools/layout.py us                         # the config, with the new boundaries
 make clean && make VERSION=us extract && make VERSION=us
 ```
 
-and the same for eu. `build_ultralib.sh` clones decompals/ultralib at a
+and the same for eu and jp. `build_ultralib.sh` clones decompals/ultralib at a
 fixed commit (the one Blast Corps uses) and builds `libultra_rom` for every
 revision with IDO 5.3 and ultralib's own flags. Its voice library fails to
 build on some hosts; the game doesn't link it, so the script carries on.
@@ -79,6 +79,7 @@ bodies (6 words or more) that match exactly somewhere:
 | --- | --- | --- | --- | --- |
 | us | 319 | 173 | 169 | 169 |
 | eu | 319 | 173 | 169 | 169 |
+| jp | 319 | 173 | 169 | 169 |
 
 Every function whose body differs between I and J matches I and not J:
 `osInitialize`, `__osViInit`, `osCreateViManager`, `osViSetMode`,
@@ -88,10 +89,13 @@ Every function whose body differs between I and J matches I and not J:
 `guMtxXFMF`). Blast Corps, earlier in 1997, has libc built
 `-O1`, which no ultralib revision does. Bomberman 64's is built as in 2.0I.
 
-The two versions link the same libultra. EU's text is byte for byte US's.
-Only a 0x60-byte gap of zeros between two link units sits elsewhere (after
-`osUnmapTLBAll` in EU, after `osSetThreadPri` in US), so `osInitialize`
-and `osSetThreadPri` are 0x60 later in EU. The PAL/MPAL handling is
+The three versions link the same libultra. EU's and JP's text is byte for
+byte US's. Only a 0x60-byte gap of zeros between two link units sits
+elsewhere (after `osUnmapTLBAll` in EU, after `osSetThreadPri` in US,
+between `__ll_rshift` and `bzero` in JP), so `osInitialize` and
+`osSetThreadPri` are 0x60 later in EU. (JP's boot_code is 0x10 shorter
+before them: one game function is.) gen_symbols.py gives jp the same 424
+names, and the C in `src/libultra` matches jp unchanged. The PAL/MPAL handling is
 libultra's own: `__osViInit` picks `osViModePalLan1`, `osViModeMpalLan1`
 or `osViModeNtscLan1` from `osTvType`.
 
@@ -103,12 +107,12 @@ line. The Bomberhackers/bm64 split has the same order.
 
 ## What is named
 
-| | us | eu |
-| --- | --- | --- |
-| boot_code functions | 370 | 370 |
-| boot_code data | 54 | 54 |
-| main_code functions | 12 | 12 |
-| main_code data | 1 (`__libm_qnan_f`) | 1 |
+| | us | eu | jp |
+| --- | --- | --- | --- |
+| boot_code functions | 370 | 370 | 370 |
+| boot_code data | 54 | 54 | 54 |
+| main_code functions | 12 | 12 | 12 |
+| main_code data | 1 (`__libm_qnan_f`) | 1 | 1 |
 
 In boot_code, 366 names are `lib=exact`, 56 `lib=ref` and 2 `lib=fuzzy`
 (the counts include data). A function placed by a reference before its

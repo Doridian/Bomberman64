@@ -7,9 +7,10 @@ are editable files that rebuild to the same bytes, and the same C builds a
 PC port (native and WebAssembly). Bomberman 64 adds one goal on top: online
 multiplayer over WebRTC, native and browser alike (docs/NETPLAY.md).
 
-Versions: **us** (`NBME`) is the working version and **eu** (`NBMP`) builds
-from the same C with `#if`s, the way Blast Corps does it (its CLAUDE.md,
-"Versions"). See docs/LAYOUT.md for the ROMs and README.md for the hashes.
+Versions: **us** (`NBME`) is the working version, and **eu** (`NBMP`) and
+**jp** (`NBMJ`, *Baku Bomberman*) build from the same C with `#if`s, the
+way Blast Corps does it (its CLAUDE.md, "Versions"). See docs/LAYOUT.md
+for the ROMs and README.md for the hashes.
 
 ## Phase 0 — scaffolding (done)
 
@@ -50,7 +51,7 @@ are phase 5.
 ## Phase 2 — stage 2: code split and reassembly (done)
 
 `make extract && make` disassembles every code segment and builds the ROM
-back from the asm, sha1-checked, for us and eu. docs/LAYOUT.md, "Stage 2",
+back from the asm, sha1-checked, for us, eu and jp. docs/LAYOUT.md, "Stage 2",
 describes the pieces:
 
 - **One code image** (`assets/code.bin`): the ROM below 0x120000 as it is,
@@ -118,8 +119,8 @@ docs/LIBULTRA.md has the details.
   --scan` compares them.
 - `tools/libmatch.py` and `tools/gen_symbols.py` (Blast Corps') name 370
   functions and 54 globals in boot_code and 12 functions and 1 global in
-  main_code, in us and eu alike (`symbol_addrs.<module>.<v>.txt`). EU's
-  libultra is byte for byte US's. Only a 0x60-byte gap moves.
+  main_code, in us, eu and jp alike (`symbol_addrs.<module>.<v>.txt`). EU's
+  libultra (and jp's) is byte for byte US's. Only a 0x60-byte gap moves.
 - Library objects whose boundaries the padding didn't show are split
   (`lib_objects.<v>.txt`, read by `tools/layout.py`): 397 text objects in
   us instead of 334.
@@ -133,7 +134,7 @@ docs/LIBULTRA.md has the details.
   with 2.0I's code but an older SP acknowledge; and 2.0I's own static
   functions (`sndplayer.c`, `_Putfld`, `_Genld`) that had no name. All of
   it is C (or `exceptasm.s`) in `src/libultra`, ultralib's 2.0I files with
-  the differences, matching in us and eu (docs/LIBULTRA.md, "What 2.0I
+  the differences, matching in us, eu and jp (docs/LIBULTRA.md, "What 2.0I
   doesn't reproduce"). `make libultra-ref` builds them as a reference
   library, so gen_symbols.py names them and their variables.
 - **Not yet:** `osUnmapTLBAll` (older too, but EU's 0x60-byte gap follows
@@ -143,7 +144,7 @@ docs/LIBULTRA.md has the details.
   VRAM).
 - **Hudson's allocator** is GNU malloc's `gmalloc.c` (1995), IDO 5.3
   `-g -mips1 -DPAGESIZE=0x1000`, a byte-exact match for ROM
-  `0xB3B70-0xB5E50` in us and eu, named in
+  `0xB3B70-0xB5E50` in us and eu (`0xB3250` in jp), named in
   `symbol_addrs.libmalloc.<v>.txt`. docs/LIBMALLOC.md has the details, the
   checking tool and the licence (LGPLv2+).
 - Only library code gets real names until the game's code is understood.
@@ -166,7 +167,7 @@ evidence for the flags):
 - Tools: `tools/m2c.sh`, `tools/fdiff.py` (and asm-differ's
   `diff_settings.py`), `tools/permute.sh`, `tools/progress.py` (per module,
   overlays per bank or each).
-- Done so far, matching in us and eu: `main_code_entry` (func_80225800,
+- Done so far, matching in us, eu and jp: `main_code_entry` (func_80225800,
   `-g`), `40040` (func_80225840, main_code's main function, with its
   `.data`), `40300` (all seven functions: a bump allocator and Hudson's
   string/memory helpers, and its `.data`), `80420` (four of five;
@@ -189,6 +190,14 @@ evidence for the flags):
   names to us's through it, so eu's asm and the C use us's names
   everywhere, and eu-only things get a `_eu` suffix (there are none yet:
   99.9% of the functions are identical, the other 8 changed).
+- jp from the same C, matching from the start (the stage 2 build, the
+  shift check, libultra's C and every decompiled object): `vermap.jp.txt`
+  pairs 98.5% of the functions as identical (59 changed, 46 us-only, 33
+  jp-only, in boot_code, main_code and 10 overlays; docs/LAYOUT.md, "The
+  US to JP map"). jp's objects carry us's names, so the C files are the
+  same objects, and `tools/split.py` gets splat to write their GLOBAL_ASM
+  functions. Its assets (text pictures, voices, 870 entries) extract and
+  rebuild like us's (docs/ASSETS.md, "US and JP").
 
 **Not yet:**
 - Per-object data beyond the cut (phase 2): an object outside the run
@@ -198,9 +207,10 @@ evidence for the flags):
   `tools/data_split.py --place` finds). Each module's cut grows from its start as
   objects are decompiled with their data (docs/DECOMPILING.md, "Data");
   main_code's .data/.rodata boundary isn't shown yet.
-- `#if VERSION_EU` in the C for the 8 changed functions and eu's data,
-  and `version_ifs.py` (Blast Corps) for version-specific GLOBAL_ASM
-  lines, when the first of those is decompiled.
+- `#if VERSION_EU`/`#if VERSION_JP` in the C for the changed functions
+  and the versions' data, and `version_ifs.py` (Blast Corps) for
+  version-specific GLOBAL_ASM lines, when the first of those is
+  decompiled (docs/DECOMPILING.md, "Versions").
 - Hudson's game code is likely all C. Only libultra's `.s` files are real
   asm (`src/libultra/os/exceptasm.s` so far), and the port doesn't use
   those.
@@ -230,7 +240,7 @@ each, with their textures as PNGs (`tools/assetlib/bm64model.py`): the
 record chain, display lists as F3DEX 1.21 text with addresses as block
 references, vertex tables, the node hierarchy, the poses and animation
 tracks; a block can change size and everything after it moves.  All
-rebuild byte for byte in us and eu, edits work; docs/ASSETS.md, "Models as
+rebuild byte for byte in us, eu and jp, edits work; docs/ASSETS.md, "Models as
 yaml". Next: stage maps, the stored tables, sound, and the meaning of the
 animation tracks' fields.
 
@@ -274,6 +284,5 @@ after the port runs battle mode correctly.
 - The **Japan** ROM in this directory (`NHAJ`) is a different game:
   *Bomberman 64* (2001), released only in Japan, and not the Japanese
   release of this one. It is hashed in README.md for completeness. It
-  would be its own project.
-- *Baku Bomberman* (`NBMJ`, Japan, 1997) is the Japanese release of
-  this game. It would be a third version (`jp`) if a dump is added.
+  would be its own project. (*Baku Bomberman*, `NBMJ`, the Japanese
+  release of this game, is the `jp` version.)

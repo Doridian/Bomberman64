@@ -12,14 +12,14 @@
  * asm-processor's prelude.inc (glabel, endlabel, nonmatching, the float
  * register names).
  *
- * The versions: the Makefile defines VERSION_US or VERSION_EU.  C that
+ * The versions: the Makefile defines VERSION_US, VERSION_EU or VERSION_JP.  C that
  * differs between them is #if'd on those, with us's names everywhere
  * (docs/DECOMPILING.md, "Versions").
  */
 
 #include "PR/ultratypes.h"
 
-#if !defined(VERSION_US) && !defined(VERSION_EU)
+#if !defined(VERSION_US) && !defined(VERSION_EU) && !defined(VERSION_JP)
 #define VERSION_US
 #endif
 

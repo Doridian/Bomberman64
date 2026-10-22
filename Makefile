@@ -107,8 +107,8 @@ extract: check stamp $(LZSS_LIB)
 	$(PYTHON) $(TOOLS_DIR)/postsplit.py $(VERSION)
 	$(PYTHON) $(TOOLS_DIR)/vermap.py --rename $(VERSION)
 
-# eu's address map (tools/vermap.py): regenerate after the ROMs or the tool
-# change; needs both ROMs.  `make extract` for eu renames with it.
+# eu's and jp's address maps (tools/vermap.py): regenerate after the ROMs or the tool
+# change; needs us's ROM and theirs.  `make extract` for eu and jp renames with them.
 vermap:
 	$(PYTHON) $(TOOLS_DIR)/vermap.py
 
