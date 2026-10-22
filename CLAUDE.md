@@ -39,6 +39,8 @@ tools/find_abs.py us           # addresses left without a relocation (should be 
 tools/progress.py              # how much is C (docs/DECOMPILING.md has the loop)
 tools/data_split.py us         # data_split.txt's sizes against the built C objects
 tools/data_c.py <mod> <lo> <hi>  # C definitions for a run of asm data or bss
+tools/fcmp.py draft.c -O3 [-v f] # a draft's functions against the original, before it goes in src/
+tools/mkperm.py f.c FUNC OFF DIR # whole-file permuter dir (for -O3 objects)
 tools/build_ultralib.sh        # libultra reference objects in build/ultralib
 tools/gen_symbols.py us build/ultralib/build/I/libultra_rom  # library names
 tools/libmalloc_check.py       # gmalloc against all three ROMs
