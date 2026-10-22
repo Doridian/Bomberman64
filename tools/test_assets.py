@@ -11,12 +11,12 @@ goes to its yaml and PNG and back; a vertex and a texel edit change only
 those bytes, and a vertex more moves the rest and the references to it.
 
 With baserom.<v>.z64 present (or --rom): every picture entry of bank 0x18
-(129 in us and eu) is converted to PNGs and rebuilt to the ROM's own bytes,
+(129 in us and eu, 126 in jp) is converted to PNGs and rebuilt to the ROM's own bytes,
 and one pixel of a real entry is edited; the same for the 652 models (641, and
 the 11 pictures with a model behind them), with
 a vertex and a texel edited.
 
-  test_assets.py [--rom us|eu ...]
+  test_assets.py [--rom us|eu|jp ...]
 """
 import argparse
 import random
@@ -35,6 +35,10 @@ from assetlib import bm64image as B  # noqa: E402
 from assetlib import bm64model as M  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
+VERSIONS = ("us", "eu", "jp")
+# picture entries per version (jp's archive lacks us's last three, all pictures)
+PICTURES = {"us": 129, "eu": 129, "jp": 126}
+MODELS = 652
 
 
 def synthetic(rng):
@@ -133,7 +137,7 @@ def test_rom(version):
             assert assets.compress(data) == rom[at:at + size]
             first = first or (i, name, data)
             n += 1
-        assert n == 129, f"{n} pictures"
+        assert n == PICTURES[version], f"{n} pictures"
         i, name, data = first
         edit_pixel(d / f"{name}.png" if (d / f"{name}.png").exists() else d / f"{name}.0.png", 0, 0, 1)
         new = build_entry(d, name)
@@ -252,7 +256,7 @@ def test_model_rom(version):
             if sample is None and any("fmt" in e for e in y["blocks"]) and any("vtx" in e for e in y["blocks"]):
                 sample = (i, name, data)
             n += 1
-        assert n == 652, f"{n} models"
+        assert n == MODELS, f"{n} models"
         i, name, data = sample
         y = model_yaml(d, name)
         first_vtx(y)["vtx"][0][1] += 1
@@ -266,11 +270,11 @@ def test_model_rom(version):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--rom", nargs="*", choices=("us", "eu"), help="versions to check (default: those present)")
+    ap.add_argument("--rom", nargs="*", choices=VERSIONS, help="versions to check (default: those present)")
     a = ap.parse_args()
     test_synthetic()
     test_model_synthetic()
-    for v in a.rom if a.rom is not None else [v for v in ("us", "eu") if (ROOT / f"baserom.{v}.z64").exists()]:
+    for v in a.rom if a.rom is not None else [v for v in VERSIONS if (ROOT / f"baserom.{v}.z64").exists()]:
         test_rom(v)
         test_model_rom(v)
 

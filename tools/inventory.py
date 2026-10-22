@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 """Inventory of what the archives hold (phase 5, docs/ASSETS.md).
 
-  inventory.py [us|eu ...]            summary (counts by class per bank)
-  inventory.py --entries [us|eu]      one line per entry
+  inventory.py [us|eu|jp ...]         summary (counts by class per bank)
+  inventory.py --entries [us|eu|jp]   one line per entry
   inventory.py --csv DIR              write DIR/inventory.<version>.csv
   inventory.py --check DIR            fail if those files are out of date
-  inventory.py --diff                 entries that differ between us and eu
+  inventory.py --diff [eu|jp ...]     entries that differ between us and eu (jp)
 
 It reads the ROMs (baserom.<v>.z64), not assets/, so both versions work
 without `make extract`. Research only: nothing here changes the build.
 
 What it classifies. Overlay banks (0x09-0x17) are code: entry 0 is the
 bank's index, the rest are overlays; they are listed as `code` and not
-looked into. Bank 0x18 is the asset archive (873 entries). For each of its
-entries, from the bytes alone:
+looked into. Bank 0x18 is the asset archive (873 entries, 870 in jp: the
+same numbers, without us's last three). For each of its entries, from the
+bytes alone:
 
   model       a "64" container (u32 0x36340038) with F3DEX display lists
               in it: the scanner finds the display lists, follows their
@@ -422,9 +423,14 @@ def main():
     ap.add_argument("--entries", action="store_true", help="one line per entry")
     ap.add_argument("--csv", type=Path, help="write inventory.<v>.csv into this directory")
     ap.add_argument("--check", type=Path, help="fail if inventory.<v>.csv there is out of date")
-    ap.add_argument("--diff", action="store_true", help="list the entries that differ between us and eu")
+    ap.add_argument("--diff", action="store_true", help="list the entries that differ between us and the others")
     a = ap.parse_args()
     versions = a.versions or list(layout.VERSIONS)
+    if a.diff:
+        for v in [v for v in versions if v != "us"]:
+            for line in diff_versions(v):
+                print(f"{v}: {line}")
+        sys.exit(0)
     results = {v: inventory(v) for v in versions}
     status = 0
     for v, rows in results.items():
@@ -439,35 +445,35 @@ def main():
         elif a.entries:
             print(f"# {v}")
             print(entry_lines(rows), end="")
-        elif not a.diff:
+        else:
             print(f"# {v}")
             print(summary(rows))
-    if a.diff:
-        if not {"us", "eu"} <= set(results):
-            ap.error("--diff needs both versions")
-        for line in diff_versions():
-            print(line)
     sys.exit(status)
 
 
-def diff_versions():
-    """Entries (archive and bank number) whose inflated contents differ
-    between us and eu."""
-    roms = {v: (ROOT / f"baserom.{v}.z64").read_bytes() for v in layout.VERSIONS}
+def diff_versions(other):
+    """Entries (archive and bank number) whose contents differ between us
+    and `other`, and the entries only one of them has (the numbers are the
+    same as far as both go)."""
+    roms = {v: (ROOT / f"baserom.{v}.z64").read_bytes() for v in ("us", other)}
     out = []
     for num, base, slot_end in assets.banks(roms["us"]):
-        ents = {}
-        for v in layout.VERSIONS:
-            ents[v] = layout.archive_entries(roms[v], base)[0]
-        if len(ents["us"]) != len(ents["eu"]):
-            out.append("bank %02X: %d entries in us, %d in eu" % (num, len(ents["us"]), len(ents["eu"])))
-            continue
-        for i, ((au, su), (ae, se)) in enumerate(zip(ents["us"], ents["eu"])):
-            bu, be = roms["us"][au:au + su], roms["eu"][ae:ae + se]
+        eu_ = layout.archive_entries(roms["us"], base)[0]
+        eo = layout.archive_entries(roms[other], base)[0]
+        if len(eu_) != len(eo):
+            out.append("bank %02X: %d entries in us, %d in %s" % (num, len(eu_), len(eo), other))
+        for i, ((au, su), (ae, se)) in enumerate(zip(eu_, eo)):
+            bu, be = roms["us"][au:au + su], roms[other][ae:ae + se]
             if bu != be:
                 du, de = assets.try_lzss(bu), assets.try_lzss(be)
-                out.append("bank %02X entry %d: us %d bytes, eu %d bytes (inflated %s / %s)" % (
-                    num, i, su, se, len(du) if du is not None else "stored", len(de) if de is not None else "stored"))
+                same = " (the same inflated)" if du is not None and du == de else ""
+                out.append("bank %02X entry %d: us %d bytes, %s %d bytes (inflated %s / %s)%s" % (
+                    num, i, su, other, se, len(du) if du is not None else "stored",
+                    len(de) if de is not None else "stored", same))
+        for i in range(len(eo), len(eu_)):
+            out.append("bank %02X entry %d: us only (%d bytes)" % (num, i, eu_[i][1]))
+        for i in range(len(eu_), len(eo)):
+            out.append("bank %02X entry %d: %s only (%d bytes)" % (num, i, other, eo[i][1]))
     return out
 
 
