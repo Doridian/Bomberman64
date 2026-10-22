@@ -146,10 +146,22 @@ $(INPUTSCRIPT): $(TOOLS_DIR)/src/m64p_inputscript.c
 # the unpacked Linux bundle in $M64P_DIR) with tools/inputs/menus.txt on
 # controller 1: the same game state at every checkpoint frame.
 SHIFT_FRAMES ?= 300,900,1800,3600,6000,10300,12000,18000,24000
-shift-check: $(VICOUNT) $(INPUTSCRIPT)
+# and with tools/inputs/battle.<v>.txt: battle mode, one human and three CPU
+# players, several matches.  --expect makes it fail unless the arena
+# (ovl_17_01) and the result screen (ovl_0B_07) were loaded at checkpoints.
+shift-check: shift-build $(VICOUNT) $(INPUTSCRIPT)
+	$(PYTHON) $(TOOLS_DIR)/shift_check.py $(VERSION) --frames $(SHIFT_FRAMES) $(SHIFT_CHECK_FLAGS)
+	$(PYTHON) $(TOOLS_DIR)/shift_check.py $(VERSION) \
+		--input tools/inputs/battle.$(VERSION).txt --expect ovl_17_01,ovl_0B_07 $(SHIFT_CHECK_FLAGS)
+
+# only the battle run
+shift-check-battle: shift-build $(VICOUNT) $(INPUTSCRIPT)
+	$(PYTHON) $(TOOLS_DIR)/shift_check.py $(VERSION) \
+		--input tools/inputs/battle.$(VERSION).txt --expect ovl_17_01,ovl_0B_07 $(SHIFT_CHECK_FLAGS)
+
+shift-build:
 	$(MAKE) VERSION=$(VERSION) SHIFT=0
 	$(MAKE) VERSION=$(VERSION) SHIFT=1
-	$(PYTHON) $(TOOLS_DIR)/shift_check.py $(VERSION) --frames $(SHIFT_FRAMES) $(SHIFT_CHECK_FLAGS)
 
 # every compressed member decompresses and recompresses to the ROM's bytes
 lzss-check: check $(LZSS_LIB)
@@ -283,5 +295,5 @@ $(TARGET).z64: $(IMAGE) $(ARCHIVE_SRCS) $(CONFIG) $(TOOLS_DIR)/rom.py $(TOOLS_DI
 	$(PYTHON) $(TOOLS_DIR)/n64crc.py $@
 
 .SECONDARY:
-.PHONY: FORCE libultra-ref all image check shift-check clean default extract lzss-check setup stamp verify vermap
+.PHONY: FORCE libultra-ref all image check shift-check shift-check-battle shift-build clean default extract lzss-check setup stamp verify vermap
 SHELL = /bin/bash -e -o pipefail

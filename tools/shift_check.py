@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
 """Run the shifted build against the original and compare the game state.
 
-  shift_check.py <version> [--frames N,N,...] [--input SCRIPT]
+  shift_check.py <version> [--frames N,N,...] [--input SCRIPT] [--expect OVL,...]
 
 Both ROMs (build/<v>/bm64.<v>.z64 and build/<v>-shift/bm64.<v>.z64) run
 headless (tools/emu_ram.py) with the same input script
-(tools/inputs/menus.txt by default: title, menus, the opening, a stage),
-and their RDRAM is read at each checkpoint frame.  Then the data of
+(tools/inputs/menus.txt by default: title, menus, the opening, a stage;
+tools/inputs/battle.<v>.txt: battle mode against CPU players), and their
+RDRAM is read at each checkpoint frame (--frames, else the script's
+`# frames:` line).  --expect names overlays that must be loaded at some
+checkpoint, so that a script stuck in a menu fails; the overlay at each
+checkpoint and the number of words of RDRAM that changed since the one
+before are printed at the end.  Then the data of
 boot_code, main_code and the overlay that is loaded (everything from the
 end of its text to the end of its section: rodata, data, main_code's
 persistent part) is compared word by word: each word is read at its own
@@ -54,8 +59,10 @@ init) fails every checkpoint.  One whose old address lands in the padding
 before its function runs the same, and only find_abs.py sees it.
 """
 import argparse
+import array
 import bisect
 import hashlib
+import operator
 import os
 import re
 import subprocess
@@ -175,8 +182,11 @@ def loaded_overlay(ram, image_path, config):
     for (bank, entry), (start, end) in layout.overlay_offsets(config).items():
         code = image[start:end]
         same = sum(1 for o in range(0, len(code), 4) if here[o:o + 4] == code[o:o + 4])
-        if same * 2 > len(code) // 4 and same > score:
-            best, score = layout.overlay_name(bank, entry), same
+        # by the share of the overlay's own words: a small overlay loaded over
+        # a bigger one leaves the bigger one's tail in RAM, which would win on
+        # a plain count
+        if same * 2 > len(code) // 4 and same / (len(code) // 4) > score:
+            best, score = layout.overlay_name(bank, entry), same / (len(code) // 4)
     return best
 
 
@@ -256,16 +266,41 @@ def check(v, frame, rams, orig, shifted, secs, orig_dir):
         print(f"  {n}: {len(ds)} words (not in the noise)")
         for off, va, vb in ds[:4]:
             print(f"    +0x{off:X}: 0x{va:08X} (-> 0x{translate(va):08X}) vs 0x{vb:08X}")
-    return len(extra)
+    return len(extra), ovl
+
+
+def script_frames(path):
+    """The checkpoints a script asks for, from its `# frames: N,N,...` line."""
+    for line in Path(path).read_text().splitlines() if path else []:
+        m = re.match(r"#\s*frames:\s*([0-9,]+)", line)
+        if m:
+            return m.group(1)
+    return None
+
+
+def activity(frames, rams, seen):
+    """What the run did, from the original's RDRAM: the overlay at each
+    checkpoint and how many words of RAM changed since the one before.  A
+    script that is stuck in a menu changes next to nothing."""
+    print("activity of the original run (words of RDRAM changed since the checkpoint before):")
+    prev = None
+    for f in frames:
+        words = array.array("I", rams[f])
+        n = "-" if prev is None else sum(map(operator.ne, words, prev))
+        print(f"  frame {f}: {seen[f] or 'no overlay'}, {n}")
+        prev = words
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("version")
-    ap.add_argument("--frames", default="300,900,1800,3600,6000,10300,12000,18000,24000",
-                    help="checkpoints, comma-separated")
+    ap.add_argument("--frames", default=None,
+                    help="checkpoints, comma-separated (default: the `# frames:` line of "
+                    "the input script, else 300,900,1800,3600,6000,10300,12000,18000,24000)")
     ap.add_argument("--input", default=str(ROOT / "tools/inputs/menus.txt"),
                     help="input script ('' for none)")
+    ap.add_argument("--expect", default="",
+                    help="overlays (comma-separated) that must be loaded at some checkpoint")
     ap.add_argument("--m64p", default=os.environ.get("M64P_DIR"))
     a = ap.parse_args()
     v = a.version
@@ -274,14 +309,24 @@ def main():
     orig_rom, shift_rom = orig_dir / f"bm64.{v}.z64", shift_dir / f"bm64.{v}.z64"
     orig, shifted = symbols(orig_elf), symbols(shift_elf)
     secs = sections(orig_elf)
-    frames = sorted({int(x) for x in a.frames.split(",")})
+    frames = a.frames or script_frames(a.input) or "300,900,1800,3600,6000,10300,12000,18000,24000"
+    frames = sorted({int(x) for x in frames.split(",")})
     # every run gets the original's mupen64plus.ini settings
     md5 = hashlib.md5(orig_rom.read_bytes()).hexdigest()
     jobs = [(orig_rom, [seed_patch(orig_elf, orig_rom)])] * 2 + \
            [(shift_rom, [seed_patch(shift_elf, shift_rom)])]
     with ThreadPoolExecutor(3) as pool:  # each run is its own process
         rams = list(pool.map(lambda j: run(j[0], frames, a.m64p, a.input or None, j[1], md5), jobs))
-    failed = [f for f in frames if check(v, f, rams, orig, shifted, secs, orig_dir)]
+    failed, seen = [], {}
+    for f in frames:
+        n, seen[f] = check(v, f, rams, orig, shifted, secs, orig_dir)
+        if n:
+            failed.append(f)
+    activity(frames, rams[0], seen)
+    missing = [o for o in a.expect.split(",") if o and o not in seen.values()]
+    if missing:
+        sys.exit(f"no checkpoint had {', '.join(missing)} loaded: the input script "
+                 f"didn't get where it should (loaded: {sorted(map(str, set(seen.values())))})")
     if failed:
         sys.exit(f"the shifted build differs from the original at frame(s) "
                  f"{', '.join(map(str, failed))}")

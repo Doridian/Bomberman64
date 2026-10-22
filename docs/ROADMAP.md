@@ -80,7 +80,8 @@ describes the pieces:
   EEPROM, with a scripted controller (mode select, a new file, the
   opening, the world select, then walking and bombing in the first stage).
   Both versions give identical data (boot_code, main_code, the loaded
-  overlay) at nine checkpoints up to frame 24000. The game seeds its RNG
+  overlay) at nine checkpoints up to frame 24000. A second script per
+  version (`tools/inputs/battle.<v>.txt`, below) covers battle mode. The game seeds its RNG
   with `osGetTime()` when main_code starts, and the shifted build's bigger
   DMAs (main_code is one 2 KiB unit longer, every overlay 0x20 bytes)
   change the cycle count there: unpinned, the seed differs, a stage's
@@ -89,6 +90,34 @@ describes the pieces:
   pinned. bss isn't compared: thread interleaving within a frame, clock
   values and stale overlay bss differ for the same timing reason. A build
   with a process's entry pointer left absolute fails every checkpoint.
+  (Tried on jp with `func_80226B18`, the process main_code's init starts,
+  written as `0x8022`/`0x6B18` in `asm/412F0.s`: 9 of 9 menu checkpoints
+  and 14 of 14 battle checkpoints fail, 27 to 687 words each.)
+- **The battle run** (`tools/inputs/battle.us.txt`, `.eu.txt`, `.jp.txt`;
+  their comments have the frames of each path) plays battle mode with
+  controller 1 alone: title, the logo scene, the mode menu (the stick's Y
+  moves its list; the D-pad doesn't), Battle Game (`ovl_0B_03`, three screens
+  that A takes in turn), then the arena (`ovl_17_01`) against three CPU
+  players, the result screen (`ovl_0B_07`) and the next match, about every
+  3000 frames, with `ovl_0B_03` again after a set. Player 1 walks (the stick
+  turns every 90 frames) and bombs (A every 50-60 frames). A setting for
+  four CPU players on one pad wasn't found; with the defaults the CPUs play
+  and the idle player is killed by them, which is the same code. Screens are
+  told apart by the overlay in RAM and by state: a checkpoint with
+  `--expect ovl_17_01,ovl_0B_07` (the Makefile passes it) fails unless both
+  were loaded at some checkpoint, and `shift_check.py` prints how many words of
+  RDRAM changed since the checkpoint before (50000-150000 in a match, a
+  menu changes next to nothing). The script's `# frames:` line is its
+  checkpoints, chosen inside matches and result screens. The run is about 18000 frames
+  because the shifted build's loads are a little slower (the bigger
+  main_code and overlays), and over a long run one of them ends a frame
+  later: the game's random draws go different ways after it and the states
+  stop being comparable. Patterns that slip after 8000-14000 frames were
+  dropped for ones that hold past 17000 in all three versions, and a
+  checkpoint can catch a harmless transient (us 13500-14500: a heap cursor,
+  `D_8029F880`, is somewhere else for a while and then agrees again), so
+  the checkpoints avoid those. A run takes about 40 s per version
+  (3 emulator processes, 18000 frames), `make shift-check` about 2 min.
 - **A TAS as a longer run** (docs/TAS.md): `tools/tas.py` plays
   TASVideos' any% (4908M, BizHawk 2.8, jp) headless on mupen64plus 2.6.0.
   It follows the movie through the menus, the save-and-reset trick and
