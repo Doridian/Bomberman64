@@ -22,3 +22,6 @@ tools/ido
 .vscode/
 include/macro.inc
 .claude/worktrees/
+
+# drafts and working files kept across sessions (not tmpfs)
+/scratch/

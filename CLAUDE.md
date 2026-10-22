@@ -77,6 +77,12 @@ legitimately changes, so both ROMs run with that seed pinned
 (`tools/shift_check.py` has the details, and why bss isn't compared).
 Run emulator and build commands under `nice -n 10`, headless.
 
+Drafts worth keeping (partial C, permuter bases, helper scripts) go in
+`scratch/<topic>/` of the main checkout, by absolute path even from a
+worktree: it is ignored by git and survives reboots. `/tmp` is a tmpfs
+here, and worktrees are deleted once merged, so nothing that should
+outlive the session belongs in either.
+
 ## Rules that already apply
 
 - **The sha1 is the arbiter.** `bm64.<v>.sha1` is the original ROM. Every
