@@ -299,9 +299,16 @@ In the config (`tools/layout.py`):
   main_code (0xB7A50) and all 95 overlays. Each module's first function
   (its entry) is an object of its own, as is the ZeroJump stub block
   (`<module>_zerojmp`). The rest of the text is split where IDO's 16-byte
-  padding after a function shows an object boundary, and where a matched
-  libultra object starts or ends (`lib_objects.<v>.txt`), unless a branch
-  crosses it.
+  padding after a function shows an object boundary, where a matched
+  libultra object starts or ends (`lib_objects.<v>.txt`), and where
+  `text_objects.txt` says an object starts, unless a branch crosses it.
+  `text_objects.txt` is for the boundaries the padding can't show (the
+  function before ends on a 16-byte boundary) that the code shows another
+  way: one line per object, `<module> <us image offset>` (its name), with
+  the reason in a comment; eu's and jp's addresses come from the map, so
+  the object has the same name and C file everywhere. main_code's `4E030`
+  is one: 4DE50's seven float compares are `-O3`, and 4E030's wrappers
+  call them with a `jal`, which `-O3` would have inlined within one file.
 - **Data** is cut per object where the C shows it (`data_split.txt`,
   docs/DECOMPILING.md, "Data"): a `.data`, `.rodata` and `.bss`
   subsegment for each C object listed there, from the module's first
@@ -343,5 +350,6 @@ pads that move everything after each module's entry.
   main_code once): whether Hudson's tool meant it, or it is stale.
 - The file table's stale ids (in no bank's index).
 - Text object boundaries the padding doesn't show (functions that end on a
-  16-byte boundary), in the game's own code. In libultra, matching found
-  them (`lib_objects.<v>.txt`, docs/LIBULTRA.md).
+  16-byte boundary), in the game's own code, until the C shows them
+  (`text_objects.txt`). In libultra, matching found them
+  (`lib_objects.<v>.txt`, docs/LIBULTRA.md).

@@ -34,8 +34,9 @@ zerojump, main_code, each overlay) with their text, ZeroJump stub block,
 data and bss, and everything else as bins.  A segment's text ends after
 its last `jr ra` (or ZeroJump stub), rounded up to 16, but before any RSP
 code (a j/jal into IMEM), which belongs to the data.  The text is split
-into objects where IDO's padding shows a boundary and where a matched
-library object starts or ends (lib_objects.<version>.txt, from
+into objects where IDO's padding shows a boundary, where text_objects.txt
+says one is (the padding can't show it), and where a matched library
+object starts or ends (lib_objects.<version>.txt, from
 tools/gen_symbols.py).  The library's names come from the
 symbol_addrs.<module>.<version>.txt files gen_symbols.py writes; every one
 that exists is listed in the config.  A text object whose C file exists
@@ -329,6 +330,33 @@ def lib_objects(version):
         name = obj.removeprefix("src/").removesuffix(".o") if what == "start" else None
         if objs.get(int(addr, 16)) is None:
             objs[int(addr, 16)] = name
+    return out
+
+
+def text_objects(version, module, vram, ref_start):
+    """VRAMs in `version` where text_objects.txt says an object of `module`
+    starts: boundaries the padding can't show (the function before ends on
+    a 16-byte boundary) that the C shows instead.  The file gives us's
+    image offsets (the objects' names); eu and jp get them through the map.
+    ref_start: the module's start in us's image."""
+    path = ROOT / "text_objects.txt"
+    if not path.exists() or ref_start is None:
+        return set()
+    out = set()
+    for n, line in enumerate(path.read_text().splitlines(), 1):
+        f = line.split("#")[0].split()
+        if not f or f[0] != module:
+            continue
+        assert len(f) == 2, f"text_objects.txt:{n}: module offset"
+        a = vram + int(f[1], 16) - ref_start
+        if version != "us":
+            import vermap
+            vm = _vermaps.get(version)
+            if vm is None:
+                vm = _vermaps[version] = vermap.read_map(ROOT / f"vermap.{version}.txt")
+            a = vm.to_tgt(module, a)
+            assert a is not None, f"text_objects.txt:{n}: not in {version}'s map"
+        out.add(a)
     return out
 
 
@@ -735,7 +763,10 @@ def config(version, d):
     lib = lib_objects(version)
     us_starts = ref_starts(version)
     us_objs = ref_objects(version)
-    known = lambda name: {**dict.fromkeys(us_objs.get(name, ())), **lib.get(name, {})}
+    def known(name, vram, ref_start):
+        hand = text_objects(version, name, vram, ref_start)
+        return {**dict.fromkeys(us_objs.get(name, ())), **dict.fromkeys(hand),
+                **lib.get(name, {})}
     split = data_split(version)
     starts = [s for s, _, _ in segs] + [FIRST_BANK]
     out = [
@@ -769,7 +800,7 @@ def config(version, d):
         if name == "boot_code":
             out += code_segment(name, start, BOOT_VRAM, blob, boot_bss,
                                 first_hasm=(0x50, "entry"), note=note,
-                                known=known(name), split=split.get(name),
+                                known=known(name, BOOT_VRAM, start), split=split.get(name),
                                 namer=object_namer(version, name, start, BOOT_VRAM, start))
         elif name == "zerojump":
             strings = blob.index(b"ZeroJump")
@@ -794,7 +825,8 @@ def config(version, d):
             if persist >= end - start:
                 persist = None
             out += code_segment(name, start, MAIN_VRAM, blob, main_bss(d, end),
-                                note=note, persist=persist, known=known(name),
+                                note=note, persist=persist,
+                                known=known(name, MAIN_VRAM, start),
                                 split=split.get(name),
                                 namer=object_namer(version, name, start, MAIN_VRAM, start))
         else:
@@ -805,7 +837,8 @@ def config(version, d):
         bss = bss_size(data, OVERLAY_VRAM, OVERLAY_SPACE)
         name = overlay_name(bank, entry)
         out += code_segment(name, pos, OVERLAY_VRAM, data, bss, split=split.get(name),
-                            known=known(name),
+                            known=known(name, OVERLAY_VRAM,
+                                        pos if version == "us" else us_starts.get(name)),
                             namer=object_namer(version, name, pos, OVERLAY_VRAM,
                                                us_starts.get(name)))
         pos += len(data)

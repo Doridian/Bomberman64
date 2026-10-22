@@ -1,0 +1,12 @@
+# Text object boundaries that IDO's 16-byte padding can't show, because
+# the function before them ends on a 16-byte boundary.  tools/layout.py
+# splits the text at these as well as where the padding shows one
+# (docs/LAYOUT.md, "Stage 2").  Each is us's image offset, the object's
+# name; eu and jp get it through vermap.<version>.txt.  Add one only where
+# the code shows the boundary.
+#
+#   <module> <us image offset>
+
+# 4DE50 is the seven float compares, -O3; 4E030's wrappers call them with
+# a jal, which -O3 would have inlined within one file.
+main_code 4E030

@@ -326,6 +326,7 @@ segments:
       - [0x426E0, asm]
       - [0x47A80, asm]
       - [0x4DE50, asm]
+      - [0x4E030, asm]
       - [0x4ED50, asm]
       - [0x52270, asm]
       - [0x530A0, c, 530C0]
