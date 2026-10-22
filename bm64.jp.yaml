@@ -1629,11 +1629,12 @@ segments:
     symbol_name_format: ovl17_04_$VRAM
     dir: overlays/ovl_17_04
     subsegments:
-      - [0x2ABDF0, asm, ovl_17_04_entry]
-      - [0x2ABE00, asm, 2AD480]
+      - [0x2ABDF0, c, ovl_17_04_entry]
+      - [0x2ABE00, c, 2AD480]
       - [0x2AC510, hasm, ovl_17_04_zerojmp]
-      - [0x2ADB30, rodata]
-      - {type: bss, vram: 0x80044E10}
+      - [0x2ADB30, .data, 2AD480]
+      - [0x2ADBB0, .rodata, 2AD480]
+      - {type: .bss, vram: 0x80044E10, name: 2AD480}
   - name: ovl_17_05
     type: code
     start: 0x2ADC00

@@ -33,6 +33,7 @@
 typedef u32 uintptr_t;
 #endif
 
+#include "macros.h"
 #include "structs.h"
 #include "functions.h"
 #include "variables.h"
