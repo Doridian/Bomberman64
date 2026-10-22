@@ -47,16 +47,22 @@ def checksum(rom, cic):
     return t6 ^ t4 ^ t3, t5 ^ t2 ^ t1
 
 
+def header_crc(rom):
+    """(cic, (crc1, crc2)) that the ROM's header should hold; cic is None for
+    an unknown boot code."""
+    cic = BOOT_CRC.get(zlib.crc32(rom[0x40:0x1000]))
+    return cic, checksum(rom, cic) if cic else None
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("rom")
     ap.add_argument("--check", action="store_true")
     args = ap.parse_args()
     rom = bytearray(Path(args.rom).read_bytes())
-    cic = BOOT_CRC.get(zlib.crc32(rom[0x40:0x1000]))
+    cic, crc = header_crc(rom)
     if cic is None:
         sys.exit(f"{args.rom}: unknown boot code")
-    crc = checksum(rom, cic)
     old = struct.unpack(">II", rom[0x10:0x18])
     if args.check:
         if old != crc:
@@ -68,4 +74,5 @@ def main():
         print(f"{args.rom}: CIC-{cic} checksum set to {crc[0]:08X} {crc[1]:08X}")
 
 
-main()
+if __name__ == "__main__":
+    main()

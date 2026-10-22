@@ -55,10 +55,15 @@ has the details.
 build a version other than the one in `.version`, so `make clean` first.
 
 `shift-check` uses the system's mupen64plus (core and rsp-hle), or the
-official Linux bundle unpacked, with `M64P_DIR` pointing at it. It uses two small plugins of ours
-(`tools/src/m64p_*.c`): no video, and a scripted controller
-(`tools/inputs/menus.txt`). Runs are exactly repeatable, so any
-difference fails.
+official Linux bundle unpacked, with `M64P_DIR` pointing at it. It uses
+two small plugins of ours (`tools/src/m64p_*.c`): no video, and a
+scripted controller (`tools/inputs/menus.txt`, from a blank save through
+the opening into the first stage). Runs are exactly repeatable, so any
+difference in the modules' data fails. The game seeds its RNG from the
+cycle counter (`osGetTime()` in main_code's init), which a bigger build
+legitimately changes, so both ROMs run with that seed pinned
+(`tools/shift_check.py` has the details, and why bss isn't compared).
+Run emulator and build commands under `nice -n 10`, headless.
 
 ## Rules that already apply
 

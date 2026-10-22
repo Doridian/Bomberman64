@@ -30,7 +30,10 @@ Blast Corps' port:
    video interrupt, the wall clock and the host's frame rate can't reach
    game state. Where the game reads `osGetCount`, VI counters or the
    retrace count as a timer or RNG seed, the port feeds it a value derived
-   from the frame number.
+   from the frame number. One known case: main_code's init (0x80225980 in
+   both versions) seeds the game's RNG with the low word of `osGetTime()`
+   each time main_code is loaded, i.e. at every scene change;
+   `tools/shift_check.py` pins it for the same reason.
 2. **One logic step can be run on demand.** The host drives
    `port_step(inputs[4])` and gets one game frame back, with rendering
    optional. Rollback re-simulates several frames inside one host frame

@@ -48,7 +48,12 @@ version at a time, so run `make clean` before you switch.
 distribution package with the core and `mupen64plus-rsp-hle`), or the
 [Linux bundle](https://github.com/mupen64plus/mupen64plus-core/releases)
 unpacked somewhere, with `M64P_DIR` set to that directory. It runs
-headless.
+headless, from a blank save, with a scripted controller
+(`tools/inputs/menus.txt`: mode and file select, the opening, the world
+select and the first stage), and compares the modules' data at nine
+checkpoints up to frame 24000. The game's random seed comes from the CPU's
+cycle counter, which the shifted build's bigger DMAs change, so both ROMs
+run with it pinned (`tools/shift_check.py` explains).
 
 ## Layout
 

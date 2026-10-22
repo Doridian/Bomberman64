@@ -2,9 +2,10 @@
  *
  * The core calls a video plugin's UpdateScreen once per vertical interrupt;
  * this one counts those calls and, at the frame set by vicount_set(), calls
- * back into the front end (tools/emu_ram.py), which reads RDRAM and stops
- * the run.  The core's own frame callback only fires from a real plugin's
- * buffer swap, so a headless run needs this.
+ * back into the front end (tools/emu_ram.py), which reads RDRAM and either
+ * sets the next frame (vicount_at()) or stops the run.  The core's own
+ * frame callback only fires from a real plugin's buffer swap, so a
+ * headless run needs this.
  *
  *   cc -O2 -shared -fPIC -o build/tools/m64p_vicount.so tools/src/m64p_vicount.c
  */
@@ -24,6 +25,8 @@ void vicount_set(unsigned int at, frame_cb cb)
     target = at;
     callback = cb;
 }
+
+void vicount_at(unsigned int at) { target = at; }
 
 int PluginStartup(void *core, void *ctx, void *debug)
 {

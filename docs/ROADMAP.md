@@ -75,10 +75,19 @@ describes the pieces:
 - **SHIFT=1** pads every movable module after its entry and before its
   data (`tools/ld_fix.py`). The fixed ROM positions stay put, and the
   segment size table is written from the link. `make shift-check` runs the
-  shifted and the original ROM headless in mupen64plus with a scripted
-  controller (title, menus, a stage). Both versions give identical game
-  state at six checkpoints up to frame 24000. A build with one code
-  pointer left absolute fails it.
+  shifted and the original ROM headless in mupen64plus, from a blank
+  EEPROM, with a scripted controller (mode select, a new file, the
+  opening, the world select, then walking and bombing in the first stage).
+  Both versions give identical data (boot_code, main_code, the loaded
+  overlay) at nine checkpoints up to frame 24000. The game seeds its RNG
+  with `osGetTime()` when main_code starts, and the shifted build's bigger
+  DMAs (main_code is one 2 KiB unit longer, every overlay 0x20 bytes)
+  change the cycle count there: unpinned, the seed differs, a stage's
+  random placement takes another number of tries, and the frame counters
+  drift (11 frames by 1800 in eu). So both ROMs run with that one seed
+  pinned. bss isn't compared: thread interleaving within a frame, clock
+  values and stale overlay bss differ for the same timing reason. A build
+  with a process's entry pointer left absolute fails every checkpoint.
 
 **Not yet: per-object `.data`/`.rodata`/`.bss`.** Each module's data is one
 `rodata` block (as rodata so that spimdisasm labels its jump tables) and
