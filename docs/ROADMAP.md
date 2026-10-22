@@ -175,6 +175,12 @@ edited asset can change size. Blast Corps' `tools/assets.py` and
 stay out of the executable and are loaded from the user's ROM at startup
 (`ASSET_INIT`, as in Blast Corps).
 
+The inventory is done: `tools/inventory.py` classifies every archive entry
+(`docs/inventory.<v>.csv`), and docs/ASSETS.md has what is in them, how the
+code finds them and what is still open. Only bank 0x18 holds assets (873
+entries: 639 models, 129 images, 96 stage maps, two sound containers); the
+other banks are overlay code.
+
 ## Phase 6 — PC port
 
 The same architecture as Blast Corps' port (its docs/PORT.md):
