@@ -37,7 +37,7 @@ def stub(obj):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("version", choices=("us", "eu"))
+    ap.add_argument("version", choices=("us", "eu", "jp"))
     ap.add_argument("objects", nargs="+")
     args = ap.parse_args()
     have = (ROOT / ".version").read_text().strip() if (ROOT / ".version").exists() else None
