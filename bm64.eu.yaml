@@ -344,7 +344,7 @@ segments:
       - [0xACA00, asm]
       - [0xAD3D0, asm]
       - [0xAFBF0, asm]
-      - [0xB11F0, asm]
+      - [0xB11F0, c]
       - [0xB2410, asm]
       - [0xB2500, asm]
       - [0xB2530, hasm, main_code_zerojmp]
