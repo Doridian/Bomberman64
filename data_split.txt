@@ -37,6 +37,9 @@ main_code 40300 0x10 0 0
 boot_code libultra/audio/sndplayer 0 0x40 0
 boot_code @us libultra/audio/sndplayer rodata=0x8001BCC0
 boot_code @eu libultra/audio/sndplayer rodata=0x8001BCC0
+boot_code libultra/os/exceptasm 0x20 0x50 0
+boot_code @us libultra/os/exceptasm data=0x8001B150 rodata=0x8001BD20
+boot_code @eu libultra/os/exceptasm data=0x8001B150 rodata=0x8001BD20
 boot_code libultra/io/cartrominit 0 0 0x80
 boot_code @us libultra/io/cartrominit bss=0x80027130
 boot_code @eu libultra/io/cartrominit bss=0x80027130

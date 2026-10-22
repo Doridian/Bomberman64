@@ -40,6 +40,7 @@ sprintf = 0x800035D4; // type:func segment:boot_code lib=exact
 osVirtualToPhysical = 0x80003630; // type:func segment:boot_code lib=exact
 osJamMesg = 0x800036B0; // type:func segment:boot_code lib=exact
 osStopThread = 0x80003800; // type:func segment:boot_code lib=exact
+osDestroyThread = 0x800038C0; // type:func segment:boot_code lib=ref
 osGetThreadPri = 0x800039C0; // type:func segment:boot_code lib=exact
 osGetThreadId = 0x800039E0; // type:func segment:boot_code lib=exact
 osSetTime = 0x80003A00; // type:func segment:boot_code lib=exact
@@ -94,6 +95,7 @@ __ll_to_d = 0x800060D4; // type:func segment:boot_code lib=exact
 __ll_to_f = 0x800060EC; // type:func segment:boot_code lib=exact
 __ull_to_d = 0x80006104; // type:func segment:boot_code lib=exact
 __ull_to_f = 0x80006138; // type:func segment:boot_code lib=exact
+__osGetCurrFaultedThread = 0x80006170; // type:func segment:boot_code lib=exact
 alUnlink = 0x80006180; // type:func segment:boot_code lib=exact
 alLink = 0x800061B0; // type:func segment:boot_code lib=exact
 alClose = 0x800061D4; // type:func segment:boot_code lib=exact
@@ -263,14 +265,14 @@ osEPiRawStartDma = 0x80010C00; // type:func segment:boot_code lib=exact
 __osDevMgrMain = 0x80010E30; // type:func segment:boot_code lib=exact
 __osDequeueThread = 0x800112C0; // type:func segment:boot_code lib=exact
 __osExceptionPreamble = 0x80011300; // type:func segment:boot_code lib=exact
-__osException = 0x80011310; // type:func segment:boot_code lib=ref
+__osException = 0x80011310; // type:func segment:boot_code lib=exact
 send_mesg = 0x80011844; // type:func segment:boot_code lib=exact
 handle_CpU = 0x800118F8; // type:func segment:boot_code lib=exact
 __osEnqueueAndYield = 0x8001192C; // type:func segment:boot_code lib=exact
 __osEnqueueThread = 0x80011A2C; // type:func segment:boot_code lib=exact
 __osPopThread = 0x80011A74; // type:func segment:boot_code lib=exact
 __osDispatchThread = 0x80011A84; // type:func segment:boot_code lib=exact
-__osCleanupThread = 0x80011C00; // type:func segment:boot_code lib=ref
+__osCleanupThread = 0x80011C00; // type:func segment:boot_code lib=exact
 osPiGetCmdQueue = 0x80011C10; // type:func segment:boot_code lib=exact
 __osTimerServicesInit = 0x80011C40; // type:func segment:boot_code lib=exact
 __osTimerInterrupt = 0x80011CCC; // type:func segment:boot_code lib=exact
@@ -375,6 +377,7 @@ __osCurrentHandle = 0x8001A380; // segment:boot_code lib=ref
 __osViDevMgr = 0x8001A390; // segment:boot_code lib=ref
 osClockRate = 0x8001B0D0; // segment:boot_code lib=ref
 osViClock = 0x8001B0D8; // segment:boot_code lib=ref
+__osShutdown = 0x8001B0DC; // segment:boot_code lib=ref
 __OSGlobalIntMask = 0x8001B0E0; // segment:boot_code lib=ref
 __osContinitialized = 0x8001B100; // segment:boot_code lib=ref
 alGlobals = 0x8001B110; // segment:boot_code lib=ref
@@ -383,6 +386,8 @@ __osThreadTail = 0x8001B130; // segment:boot_code lib=ref
 __osRunQueue = 0x8001B138; // segment:boot_code lib=ref
 __osActiveQueue = 0x8001B13C; // segment:boot_code lib=ref
 __osRunningThread = 0x8001B140; // segment:boot_code lib=ref
+__osFaultedThread = 0x8001B144; // segment:boot_code lib=ref
+__osHwIntTable = 0x8001B150; // segment:boot_code lib=ref
 __osTimerList = 0x8001B170; // segment:boot_code lib=ref
 __osViCurr = 0x8001B1E0; // segment:boot_code lib=ref
 __osViNext = 0x8001B1E4; // segment:boot_code lib=ref
@@ -414,3 +419,5 @@ __osBaseCounter = 0x80027278; // segment:boot_code lib=ref
 __osViIntrCount = 0x8002727C; // segment:boot_code lib=ref
 __osTimerCounter = 0x80027280; // segment:boot_code lib=ref
 __osSiAccessQueue = 0x80027298; // segment:boot_code lib=ref
+__osThreadSave = 0x800272B0; // segment:boot_code lib=ref
+leoDiskStack = 0x80027460; // segment:boot_code lib=ref

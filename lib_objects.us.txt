@@ -36,7 +36,7 @@ boot_code 0x800035B0 start src/libc/sprintf.o
 boot_code 0x80003630 start src/os/virtualtophysical.o
 boot_code 0x800036B0 start src/os/jammesg.o
 boot_code 0x80003800 start src/os/stopthread.o
-boot_code 0x800038C0 end src/os/stopthread.o
+boot_code 0x800038C0 start src/os/destroythread.o
 boot_code 0x800039C0 start src/os/getthreadpri.o
 boot_code 0x800039E0 start src/os/getthreadid.o
 boot_code 0x80003A00 start src/os/settime.o
@@ -78,7 +78,7 @@ boot_code 0x80005CC0 start src/io/contreset.o
 boot_code 0x80005E40 start src/io/contquery.o
 boot_code 0x80005EF0 start src/io/contsetch.o
 boot_code 0x80005F60 start src/libc/llcvt.o
-boot_code 0x80006170 end src/libc/llcvt.o
+boot_code 0x80006170 start src/os/getcurrfaultthread.o
 boot_code 0x80006180 start src/audio/sl.o
 boot_code 0x80006240 start src/audio/copy.o
 boot_code 0x800062C0 start src/audio/heapinit.o

@@ -8,7 +8,7 @@ endif
 
 # asm/ and assets/ hold one version at a time; leftovers from another
 # VERSION would link in silently and only show as a sha1 mismatch.
-ifneq ($(filter-out clean setup,$(or $(MAKECMDGOALS),all)),)
+ifneq ($(filter-out clean setup libultra-ref build/libultra_bm64/%,$(or $(MAKECMDGOALS),all)),)
 TREE_VERSION := $(shell cat .version 2>/dev/null)
 ifneq ($(TREE_VERSION),)
 ifneq ($(TREE_VERSION),$(VERSION))
@@ -184,8 +184,7 @@ LIB_CPPFLAGS = -D_MIPS_SZLONG=32 -DF3DEX_GBI -DBUILD_VERSION=VERSION_I \
 LIB_INCLUDE  = -I include/ultralib -I include/ultralib/compiler/ido -I include/ultralib/PR -I src/libultra
 LIB_CFLAGS   = -Wab,-r4300_mul -G 0 -nostdinc -Xcpluscomm -fullwarn -woff 516,649,838,712 \
                -D_LANGUAGE_C $(LIB_CPPFLAGS) $(LIB_INCLUDE)
-LIB_ASFLAGS  = -Wab,-r4300_mul -G 0 -nostdinc -woff 516,649,838,712 -DMIPSEB -D_LANGUAGE_ASSEMBLY \
-               -D_MIPS_SIM=1 -D_ULTRA64 $(LIB_CPPFLAGS) $(LIB_INCLUDE)
+LIB_ASFLAGS  = -Wab,-r4300_mul -G 0 -nostdinc -woff 516,649,838,712 $(LIB_CPPFLAGS) $(LIB_INCLUDE)
 LIB_O3_DIRS  = audio libc gu
 $(BUILD_DIR)/src/libultra/%.o: CFLAGS = $(LIB_CFLAGS)
 $(BUILD_DIR)/src/libultra/%.o: INCLUDE_CFLAGS = $(LIB_INCLUDE)
@@ -195,11 +194,16 @@ $(foreach d,$(LIB_O3_DIRS),$(BUILD_DIR)/src/libultra/$(d)/%.o): OPT_FLAGS := -O3
 
 # A library .s is a `hasm` subsegment (tools/layout.py), which the link
 # script names asm/libultra/...; it is built from src/libultra/ instead
-# of splat's disassembly.  ld won't mix a -mips3 object with the -mips2
-# ones, so it's relabelled mips2 after (the code is what it is).
+# of splat's disassembly.  IDO's assembler leaves local undefined symbols
+# after the globals, which GNU ld rejects: rewriting the object with strip
+# (as ultralib does for a modern ld) and dropping .mdebug fixes that.  And
+# ld won't mix a -mips3 object with the -mips2 ones, so it's relabelled
+# mips2 (the code is what it is).
 $(BUILD_DIR)/asm/libultra/%.s.o: src/libultra/%.s
 	@mkdir -p $(dir $@)
 	$(IDO) -c $(LIB_ASFLAGS) -O1 -mips3 -32 -o $@ $<
+	$(CROSS)strip $@ -N __rewrite_the_symbol_table__
+	$(OBJCOPY) --remove-section .mdebug $@
 	$(PYTHON) $(TOOLS_DIR)/elf_mips2.py $@
 
 # The library's sources built on their own, as reference objects for
