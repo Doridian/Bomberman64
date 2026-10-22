@@ -119,7 +119,8 @@ tools/progress.py                                # per module, overlays per bank
     func_802346C8).
   Seen so far: 40FB0, 412F0, 41FD0, 4DE50, 4E030 (4DE50's second half:
   its wrappers call 4DE50's compares with a `jal`, which -O3 would inline
-  in one file), 4ED50, 530C0, 53D70, 86680, 995C0, 9A5F0, 9BFD0, ACA00,
+  in one file), 4ED50, 52270 (jp's func_8023876C has no TV-type
+  switch: `#if VERSION_JP`), 530C0, 53D70, 86680, 995C0, 9A5F0, 9BFD0, ACA00,
   AFBF0, ovl_0A_01-05's and ovl_17_01's objects are `-O3`; 404C0, 5E090, 87190, 87730,
   99F40, A4860 and B11F0 are `-O2` (no
   inlining between functions that call each other, no cross-call
@@ -221,6 +222,11 @@ tools/progress.py                                # per module, overlays per bank
   and `a + b` gives `addu` with the operands as IDO evaluated them, which
   is usually the source order reversed; flip one when only the operand
   order of a `beq`/`addu` differs.
+- **Some loops do walk a pointer.** Where the asm keeps both a counter and
+  a pointer stepped by the element size (52270's searches over its eight
+  threads), the C has both: `p = D; for (i = 0; i < 8; i++, p++)`.
+  Indexing `D[i]` gives a pointer compared against the end, or offsets
+  from one base in the unrolled copies.
 - **Unused-looking arguments are passed through.** A wrapper whose callee
   takes more arguments than it sets usually took them itself
   (5E090's func_80243BA8, 9BFD0's func_80281900: the `a` registers are
