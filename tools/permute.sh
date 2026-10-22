@@ -91,7 +91,10 @@ PYEOF
 # The target: the function's .s alone (import.py adds the permuter's
 # prelude, with glabel and nonmatching, and the float register names).
 TMPS=$WORK/$FN.s
-cp "$ASM" "$TMPS"
+# asm-processor's .late_rodata (a jump table or constants splat moved into
+# the .s once the object owns its .rodata) is plain .rodata to as.
+sed -e 's/^\.section \.late_rodata/.section .rodata/' \
+    -e '/^\.late_rodata_alignment/d' "$ASM" > "$TMPS"
 
 SETTINGS=$WORK/$FN.toml
 cat > "$SETTINGS" <<EOF

@@ -54,10 +54,21 @@ def asm_files(module):
     return sorted(p for p in base.glob("*.s"))
 
 
+def inner_labels():
+    """Names postsplit defines as `label + off` (module_syms_auto.txt): an
+    address the code uses inside a bigger object, not a variable."""
+    path = ROOT / "module_syms_auto.txt"
+    if not path.exists():
+        return set()
+    return {m.group(1) for m in re.finditer(r"^(\w+) = \w+ \+ 0x", path.read_text(), re.M)}
+
+
 def labels(files, lo, hi):
     """{vram: name} of the labels in [lo, hi), and {vram: symbol} of the
-    words splat wrote as symbols."""
+    words splat wrote as symbols.  Labels inside another object (postsplit's
+    module syms) are left out: their bytes belong to the label before."""
     names, syms = {}, {}
+    inner = inner_labels()
     for path in files:
         pending = None
         for line in path.read_text().splitlines():
@@ -70,7 +81,7 @@ def labels(files, lo, hi):
                 continue
             vram = int(m.group(2), 16)
             if pending:
-                if lo <= vram < hi:
+                if lo <= vram < hi and pending not in inner:
                     names[vram] = pending
                 pending = None
             if m.group(3) == ".word" and lo <= vram < hi:
@@ -116,7 +127,7 @@ def c_string(raw):
     return f'"{s}"'
 
 
-def bss_defs(names, lo, hi, decl):
+def bss_defs(names, lo, hi, decl, prefix):
     out = []
     pos = lo
     addrs = sorted(names) + [hi]
@@ -124,7 +135,15 @@ def bss_defs(names, lo, hi, decl):
         name, size = names[a], b - a
         want = (pos + ido_align(size) - 1) & ~(ido_align(size) - 1)
         if a > want:
-            out.append(f"u8 D_{pos:08X}[0x{a - pos:X}]; /* not referenced */")
+            out.append(f"u8 D_{prefix}{pos:08X}[0x{a - pos:X}]; /* not referenced */")
+        # a run IDO would align past its address (by its size: an 8-byte
+        # array to 8) is a smaller variable and bytes nothing names
+        while name not in decl and a % ido_align(size):
+            k = 4 if a % 4 == 0 else 2 if a % 2 == 0 else 1
+            out.append(f"u8 {name}[0x{k:X}];")
+            a, size = a + k, size - k
+            name = f"D_{prefix}{a:08X}"
+            out[-1] += " /* split: IDO would align one array past here */"
         if name in decl:
             t, dims = decl[name]
             if dims != "[]":
@@ -189,8 +208,10 @@ def main():
     bss_lo = vram + rom_end - rom
     lo, hi = args.start, args.end
     names, syms = labels(asm_files(args.module), lo, hi)
+    m = re.fullmatch(r"ovl_(\w\w)_(\d\d)", args.module)
+    prefix = f"ovl{m.group(1)}_{m.group(2)}_" if m else ""
     if lo >= bss_lo:
-        print("\n".join(bss_defs(names, lo, hi, declared(args.c))))
+        print("\n".join(bss_defs(names, lo, hi, declared(args.c), prefix)))
     else:
         assert hi <= bss_lo, "a run is data or bss, not both"
         img = (ROOT / "assets" / "code.bin").read_bytes()
