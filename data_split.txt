@@ -76,6 +76,10 @@ ovl_0E_07 1C90B0 0x40 0x50 0x60
 ovl_0E_08 ovl_0E_08_entry 0 0 0
 ovl_0E_08 1CB410 0x40 0x50 0x60
 
+# ovl_0E_10: its C defines all of its .data and .bss
+ovl_0E_10 ovl_0E_10_entry 0 0 0
+ovl_0E_10 1D0700 0x70 0x60 0x60
+
 # ovl_0E_14: all C
 ovl_0E_14 ovl_0E_14_entry 0 0 0
 ovl_0E_14 1DD120 0x40 0x50 0x60

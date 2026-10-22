@@ -995,11 +995,12 @@ segments:
     symbol_name_format: ovl0E_10_$VRAM
     dir: overlays/ovl_0E_10
     subsegments:
-      - [0x1CF580, asm, ovl_0E_10_entry]
-      - [0x1CF590, asm, 1D0700]
+      - [0x1CF580, c, ovl_0E_10_entry]
+      - [0x1CF590, c, 1D0700]
       - [0x1D03D0, hasm, ovl_0E_10_zerojmp]
-      - [0x1D19F0, rodata]
-      - {type: bss, vram: 0x80045540}
+      - [0x1D19F0, .data, 1D0700]
+      - [0x1D1A60, .rodata, 1D0700]
+      - {type: .bss, vram: 0x80045540, name: 1D0700}
   - name: ovl_0E_11
     type: code
     start: 0x1D1AC0
