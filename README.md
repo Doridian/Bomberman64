@@ -71,6 +71,8 @@ run with it pinned (`tools/shift_check.py` explains).
 | `tools/rom.py` | the ROM from the code image and the archives |
 | `tools/find_abs.py` | addresses in the linked code that have no relocation |
 | `tools/shift_check.py`, `tools/emu_ram.py` | shifted vs original, run headless in mupen64plus |
+| `tools/tas.py` | TASVideos' movies played headless, the game's progress reported and compared between ROMs (docs/TAS.md) |
+| `tools/bizhawk_core.sh` | BizHawk 2.8's mupen64plus core built for Linux, a reference for `tas.py` |
 | `tools/hudson_lzss.py` | Hudson's LZSS, both directions (`tools/src/hudson_lzss.c` is the fast encoder) |
 | `tools/lzss_check.py` | round-trips every compressed member of a ROM |
 | `tools/test_lzss.py` | ROM-free codec self-test (CI) |

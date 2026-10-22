@@ -34,6 +34,7 @@ make VERSION=jp                # the same for eu and jp (make clean between vers
 make vermap                    # regenerate vermap.eu.txt and vermap.jp.txt (needs the ROMs); extract renames with them
 make VERSION=us SHIFT=1        # shifted build in build/us-shift/, not sha1-checked
 make VERSION=us shift-check    # both, run in mupen64plus (system or $M64P_DIR), state compared
+tools/tas.py check 4908M build/jp/bm64.jp.z64 build/jp-shift/bm64.jp.z64  # a TAS on two ROMs (docs/TAS.md)
 tools/find_abs.py us           # addresses left without a relocation (should be 0)
 tools/progress.py              # how much is C (docs/DECOMPILING.md has the loop)
 tools/data_split.py us         # data_split.txt's sizes against the built C objects
@@ -134,6 +135,7 @@ Run emulator and build commands under `nice -n 10`, headless.
 - docs/LIBULTRA.md: the libultra revision, the matching, what doesn't match.
 - docs/ROADMAP.md: phases 1–8.
 - docs/DECOMPILING.md: C files, flags, m2c/fdiff/permuter, eu and jp, data.
+- docs/TAS.md: TASVideos' movies played headless (`tools/tas.py`); how far they sync (not to the end).
 - docs/NETPLAY.md: WebRTC (libdatachannel, the browser's WebRTC,
   matchbox-compatible signaling), lockstep then rollback.
 - Bomberhackers/bm64 (GitHub) is an earlier US decomp against a

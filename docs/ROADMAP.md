@@ -89,6 +89,14 @@ describes the pieces:
   pinned. bss isn't compared: thread interleaving within a frame, clock
   values and stale overlay bss differ for the same timing reason. A build
   with a process's entry pointer left absolute fails every checkpoint.
+- **A TAS as a longer run** (docs/TAS.md): `tools/tas.py` plays
+  TASVideos' any% (4908M, BizHawk 2.8, jp) headless on mupen64plus 2.6.0.
+  It follows the movie through the menus, the save-and-reset trick and
+  into the first stage, then desyncs at the stage's first move (movie
+  frame ~1610 of 78034), as BizHawk's own core does with our plugins. The
+  run is repeatable: the jp build matches the original at all 80
+  checkpoints, the shifted build (unpinned) at the first 14, then drifts by
+  a few VIs.
 
 **Per-object `.data`/`.rodata`/`.bss`** come from the compiler: a
 first heuristic for the .data/.rodata boundary (above every stored-to
