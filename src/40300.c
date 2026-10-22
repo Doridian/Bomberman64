@@ -1,8 +1,10 @@
 #include "common.h"
 
-extern u8 *D_8029F5A0;
 extern u8 D_80300000[];
 extern s32 __malloc_initialized;
+
+/* .data: func_80225B00's bump pointer, from 0x80300000 up (1 MiB) */
+u8 *D_8029F5A0 = D_80300000;
 
 void *func_80225B00(s32 size) {
     u8 *p = D_8029F5A0;

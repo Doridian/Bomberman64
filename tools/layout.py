@@ -353,6 +353,114 @@ def object_starts(b, start, end, known=()):
     return [c for c in cand if c not in crossed]
 
 
+def data_split(version):
+    """{module: ([(object, .data, .rodata, .bss)], {"data": vram,
+    "rodata": vram})} from data_split.txt: the objects whose data is cut
+    out of the module's block, in link order, with their sizes, and this
+    version's starts (docs/DECOMPILING.md, "Data")."""
+    out = {}
+    path = ROOT / "data_split.txt"
+    if not path.exists():
+        return out
+    for n, line in enumerate(path.read_text().splitlines(), 1):
+        line = line.split("#")[0].split()
+        if not line:
+            continue
+        objs, starts = out.setdefault(line[0], ([], {}))
+        if line[1].startswith("@"):
+            if line[1][1:] == version:
+                for kv in line[2:]:
+                    k, v = kv.split("=")
+                    assert k in ("data", "rodata"), f"data_split.txt:{n}: {k}"
+                    starts[k] = int(v, 16)
+            continue
+        assert len(line) == 5, f"data_split.txt:{n}: module object .data .rodata .bss"
+        objs.append((line[1], *(int(x, 16) for x in line[2:])))
+    return out
+
+
+def cut_data(name, vram, data, text_end, region_end, bss_size, text_objs, split,
+             seg_dir):
+    """The data and bss subsegments of a module: per-object `.data`,
+    `.rodata` and `.bss` for the objects data_split.txt lists (a run of C
+    objects from the module's first), and asm blocks for the rest.
+
+    The link lays every object's .data out in text order, then every
+    object's .rodata, then (in the bss section) every object's .bss, each
+    padded to 16 (IDO pads its sections).  So the listed objects' .data cut
+    the block from the objects' data start, their .rodata from the
+    .data/.rodata boundary, and their .bss from the bss start.  What no
+    listed object claims stays asm: `data` up to the boundary (so that the
+    link keeps it before the .rodata), `rodata` after it (spimdisasm labels
+    the jump tables there), and one `bss` block.  With no cut, the block is
+    one `rodata` as before.
+
+    Returns (subsegments [(offset, kind, name)], bss lines, bss size)."""
+    objs, starts = split or ([], {})
+    # the listed objects must be the module's first, in order (the
+    # handwritten ZeroJump stub block has no data)
+    order = [o for o in text_objs if o != f"{name}_zerojmp"]
+    listed = [o[0] for o in objs]
+    assert listed == order[:len(listed)], \
+        f"{name}: data_split.txt lists {listed}, the module's objects start {order[:len(listed)]}"
+    for o in listed:
+        assert c_source(seg_dir, o).exists(), f"{name}: {o} is in data_split.txt but not C"
+    complete = len(listed) == len(order)
+    subs = []
+    pos = starts.get("data", vram + text_end) - vram
+    assert text_end <= pos <= region_end, f"{name}: data start 0x{vram + pos:08X}"
+    if pos > text_end:
+        subs.append((text_end, "data", None))  # before the objects' .data (RSP code)
+    for o, d, _, _ in objs:
+        if d:
+            subs.append((pos, ".data", o))
+            pos += d
+    ro = starts.get("rodata")
+    if ro is not None:
+        ro -= vram
+    if complete:
+        assert ro is None or ro == pos, \
+            f"{name}: .rodata starts at 0x{vram + pos:08X} (all objects listed), not 0x{vram + ro:08X}"
+        ro = pos
+    if ro is None:
+        assert not any(r for _, _, r, _ in objs), \
+            f"{name}: an object has .rodata, but the .data/.rodata boundary isn't known"
+        if pos < region_end:
+            subs.append((pos, "rodata", None))
+    else:
+        assert pos <= ro <= region_end, f"{name}: .rodata start 0x{vram + ro:08X}"
+        if pos < ro:
+            subs.append((pos, "data", None))
+        pos = ro
+        for o, _, r, _ in objs:
+            if r:
+                subs.append((pos, ".rodata", o))
+                pos += r
+        assert pos <= region_end, f"{name}: the listed .rodata overruns the block"
+        if pos < region_end:
+            assert not complete, \
+                f"{name}: 0x{region_end - pos:X} bytes after the last object's .rodata"
+            subs.append((pos, "rodata", None))
+    # .bss
+    bss_start = vram + len(data)
+    bpos = bss_start
+    bss = []
+    for o, _, _, b in objs:
+        if b:
+            bss.append(f"      - {{type: .bss, vram: 0x{bpos:08X}, name: {o}}}")
+            bpos += b
+    if complete:
+        # the compiler's size, which may include unreferenced variables at
+        # the end that the references (bss_size()) can't see
+        assert bpos - bss_start >= bss_size, \
+            f"{name}: the objects' .bss (0x{bpos - bss_start:X}) is short of 0x{bss_size:X}"
+        bss_size = bpos - bss_start
+    assert bpos <= bss_start + bss_size, f"{name}: the listed .bss overruns the module's"
+    if bpos < bss_start + bss_size:
+        bss.append(f"      - {{type: bss, vram: 0x{bpos:08X}}}")
+    return subs, bss, bss_size
+
+
 def c_source(seg_dir, obj):
     """The C file of a text object, where splat looks for it: src/, under
     the segment's dir (overlays/ovl_BB_EE), named as the asm is (its image
@@ -363,10 +471,11 @@ def c_source(seg_dir, obj):
 
 
 def code_segment(name, start, vram, data, bss_size, first_hasm=None,
-                 note=None, persist=None, known=()):
+                 note=None, persist=None, known=(), split=None):
     """The YAML lines of one code segment of the image.  persist: the
     offset of main_code's part that is loaded once (see fixed()).  known:
-    object boundaries (VRAM) the padding may not show."""
+    object boundaries (VRAM) the padding may not show.  split: the
+    module's entry of data_split() (cut_data())."""
     known = {a - vram for a in known}
     text_end, stubs = text_split(data)
     subs = []
@@ -392,12 +501,19 @@ def code_segment(name, start, vram, data, bss_size, first_hasm=None,
             code(rest, text_end)
     elif text_end > pos:
         code(pos, text_end)
-    if text_end < len(data):
-        # .data and .rodata as one block until the per-object split; as
-        # rodata, so that spimdisasm labels the jump tables in it
-        subs.append((text_end, "rodata", None))
+    seg_dir = None if vram != OVERLAY_VRAM else f"overlays/{name}"
+    text_objs = [sub or f"{start + off:X}" for off, _, sub in subs]
+    region_end = len(data)
     if persist is not None:
         assert text_end <= persist < len(data), hex(persist)
+        region_end = persist
+    # .data and .rodata: cut per object where data_split.txt says, the rest
+    # as asm (one rodata block where nothing is cut, so that spimdisasm
+    # labels the jump tables in it)
+    data_subs, bss_lines, bss_size = cut_data(
+        name, vram, data, text_end, region_end, bss_size, text_objs, split, seg_dir)
+    subs += data_subs
+    if persist is not None:
         subs.append((persist, "rodata", f"{name}_persist"))
     out = [
         f"  - name: {name}" + (f"  # {note}" if note else ""),
@@ -420,13 +536,11 @@ def code_segment(name, start, vram, data, bss_size, first_hasm=None,
             f"    dir: overlays/{name}",
         ]
     out.append("    subsegments:")
-    seg_dir = None if vram != OVERLAY_VRAM else f"overlays/{name}"
     for off, kind, sub in subs:
         if kind == "asm" and c_source(seg_dir, sub or f"{start + off:X}").exists():
             kind = "c"
         out.append(f"      - [0x{start + off:X}, {kind}" + (f", {sub}]" if sub else "]"))
-    if bss_size:
-        out.append(f"      - {{type: bss, vram: 0x{vram + len(data):08X}}}")
+    out += bss_lines
     return out
 
 
@@ -441,6 +555,7 @@ def config(version, d):
     """The YAML text of bm64.<version>.yaml, and the image's size."""
     segs, boot_bss = fixed(d)
     lib = lib_objects(version)
+    split = data_split(version)
     starts = [s for s, _, _ in segs] + [FIRST_BANK]
     out = [
         f"name: Bomberman 64 ({version.upper()}) code image",
@@ -473,7 +588,7 @@ def config(version, d):
         if name == "boot_code":
             out += code_segment(name, start, BOOT_VRAM, blob, boot_bss,
                                 first_hasm=(0x50, "entry"), note=note,
-                                known=lib.get(name, ()))
+                                known=lib.get(name, ()), split=split.get(name))
         elif name == "zerojump":
             strings = blob.index(b"ZeroJump")
             assert strings % 16 == 0, hex(strings)
@@ -494,14 +609,16 @@ def config(version, d):
             # each time round, and loads the rest once (segment_sizes[3])
             persist = d[0x30000 + (start >> 17)] << 11
             out += code_segment(name, start, MAIN_VRAM, blob, main_bss(d, end),
-                                note=note, persist=persist, known=lib.get(name, ()))
+                                note=note, persist=persist, known=lib.get(name, ()),
+                                split=split.get(name))
         else:
             line = f"  - [0x{start:X}, bin, {name}]"
             out.append(f"{line:<40}# {note}" if note else line)
     pos = FIRST_BANK
     for bank, entry, data in overlays(d):
         bss = bss_size(data, OVERLAY_VRAM, OVERLAY_SPACE)
-        out += code_segment(overlay_name(bank, entry), pos, OVERLAY_VRAM, data, bss)
+        name = overlay_name(bank, entry)
+        out += code_segment(name, pos, OVERLAY_VRAM, data, bss, split=split.get(name))
         pos += len(data)
     out.append(f"  - [0x{pos:X}]")
     return "\n".join(out) + "\n", pos

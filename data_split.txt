@@ -1,0 +1,30 @@
+# Per-object .data/.rodata/.bss: where tools/layout.py cuts each module's data
+# (docs/DECOMPILING.md, "Data").  The sizes are what IDO builds the C files
+# to; tools/data_split.py checks them against build/<version>/src/ (and
+# --write fills them in).
+#
+#   <module> <object> <.data> <.rodata> <.bss>
+#       One line per C object, in link (text) order from the module's first
+#       object on.  The module's data is cut from its start, object by
+#       object, as long as the objects follow each other; the first object
+#       not listed ends the cut and the rest stays one asm block.  The
+#       handwritten ZeroJump stub block has no data and is skipped.
+#   <module> @<version> data=<vram> rodata=<vram>
+#       Where the objects' .data starts, when something else comes first
+#       (main_code: RSP code), and where their .rodata starts (the module's
+#       .data/.rodata boundary), needed once a listed object has .rodata
+#       and the list doesn't cover the whole module.  Either may be left out.
+
+# ovl_09_01: the whole overlay is C, so its boundary is the compiler's:
+# .data 0x80044960-0x80044990, .rodata 0x80044990-0x800449E0
+ovl_09_01 ovl_09_01_entry 0 0 0
+ovl_09_01 120010 0x30 0x50 0x50
+
+# main_code: RSP code (0x2320 bytes, rspboot and microcode) comes first, as
+# asm data; the objects' .data start after it.  The .data/.rodata boundary
+# isn't shown yet: 40040 and 40300 have no .rodata.
+main_code @us data=0x8029F570
+main_code @eu data=0x8029F570
+main_code main_code_entry 0 0 0
+main_code 40040 0x30 0 0
+main_code 40300 0x10 0 0
