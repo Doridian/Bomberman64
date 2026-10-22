@@ -38,21 +38,28 @@ main_code 40300 0x10 0 0
 boot_code libultra/io/aisetnextbuf 0x10 0 0
 boot_code @us libultra/io/aisetnextbuf data=0x8001B0F0
 boot_code @eu libultra/io/aisetnextbuf data=0x8001B0F0
+boot_code @jp libultra/io/aisetnextbuf data=0x8001B0D0
 boot_code libultra/audio/sndplayer 0 0x40 0
 boot_code @us libultra/audio/sndplayer rodata=0x8001BCC0
 boot_code @eu libultra/audio/sndplayer rodata=0x8001BCC0
+boot_code @jp libultra/audio/sndplayer rodata=0x8001BCA0
 boot_code libultra/os/exceptasm 0x20 0x50 0
 boot_code @us libultra/os/exceptasm data=0x8001B150 rodata=0x8001BD20
 boot_code @eu libultra/os/exceptasm data=0x8001B150 rodata=0x8001BD20
+boot_code @jp libultra/os/exceptasm data=0x8001B130 rodata=0x8001BD00
 boot_code libultra/io/cartrominit 0 0 0x80
 boot_code @us libultra/io/cartrominit bss=0x80027130
 boot_code @eu libultra/io/cartrominit bss=0x80027130
+boot_code @jp libultra/io/cartrominit bss=0x80027110
 boot_code libultra/io/leodiskinit 0 0 0x80
 boot_code @us libultra/io/leodiskinit bss=0x800271B0
 boot_code @eu libultra/io/leodiskinit bss=0x800271B0
+boot_code @jp libultra/io/leodiskinit bss=0x80027190
 boot_code libultra/libc/xprintf 0x50 0x100 0
 boot_code @us libultra/libc/xprintf data=0x8001B1F0 rodata=0x8001BD70
 boot_code @eu libultra/libc/xprintf data=0x8001B1F0 rodata=0x8001BD70
+boot_code @jp libultra/libc/xprintf data=0x8001B1D0 rodata=0x8001BD50
 boot_code libultra/libc/xldtob 0 0x60 0
 boot_code @us libultra/libc/xldtob rodata=0x8001BF60
 boot_code @eu libultra/libc/xldtob rodata=0x8001BF60
+boot_code @jp libultra/libc/xldtob rodata=0x8001BF40
