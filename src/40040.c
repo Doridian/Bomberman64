@@ -9,11 +9,6 @@ typedef struct {
 void func_80225CC0(void);
 void func_80225CCC(void);
 void func_80225FB8(void);
-void func_8022616C(void);
-void func_80226368(void);
-void func_80226604(void);
-void func_802266DC(void);
-void func_802266E8(void);
 void func_80226860(void);
 void func_80226D80(void);
 void func_80226E84(Gfx_80225840 *);
@@ -71,7 +66,7 @@ extern s32 D_802A123C;
 extern s32 D_802AC5C0;
 
 /* .data */
-void (*D_8029F570[])(void) = {
+void *D_8029F570[] = {
     func_802266E8, func_80226604, func_80226368, func_8022616C,
     func_80225FB8, func_80225CCC, func_80225CC0, func_802266DC,
 };
