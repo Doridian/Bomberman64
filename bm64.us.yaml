@@ -351,7 +351,7 @@ segments:
       - [0x995C0, asm]
       - [0x99F40, c]
       - [0x9A5F0, asm]
-      - [0x9BFD0, asm]
+      - [0x9BFD0, c]
       - [0x9CAB0, asm]
       - [0xA2840, asm]
       - [0xA4860, c]

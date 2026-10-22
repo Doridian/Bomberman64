@@ -352,7 +352,7 @@ segments:
       - [0x99C90, c, 99F40]
       - [0x9A340, asm, 9A340_jp]
       - [0x9A4D0, asm, 9A5F0]
-      - [0x9B6D0, asm, 9BFD0]
+      - [0x9B6D0, c, 9BFD0]
       - [0x9C1B0, asm, 9CAB0]
       - [0xA1F40, asm, A2840]
       - [0xA3F60, c, A4860]
