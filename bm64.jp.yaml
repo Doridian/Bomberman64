@@ -1616,11 +1616,12 @@ segments:
     symbol_name_format: ovl17_03_$VRAM
     dir: overlays/ovl_17_03
     subsegments:
-      - [0x2A9FD0, asm, ovl_17_03_entry]
-      - [0x2A9FE0, asm, 2AB640]
+      - [0x2A9FD0, c, ovl_17_03_entry]
+      - [0x2A9FE0, c, 2AB640]
       - [0x2AA740, hasm, ovl_17_03_zerojmp]
-      - [0x2ABD60, rodata]
-      - {type: bss, vram: 0x80044E20}
+      - [0x2ABD60, .data, 2AB640]
+      - [0x2ABDA0, .rodata, 2AB640]
+      - {type: .bss, vram: 0x80044E20, name: 2AB640}
   - name: ovl_17_04
     type: code
     start: 0x2ABDF0
