@@ -84,6 +84,35 @@ tools/progress.py                                # per module, overlays per bank
   `-O3` files (10D0, 13F0, sched, 412F0, 41FD0, 52270, 530C0) and a note
   that "a majority of the gamecode" may be `-O3`. That is evidence, not
   proof: check each object, the function order is the quickest test.
+- **`-O3` objects show it in their code**, so an object can be classed
+  before any C is written (m2c on its asm: "saved_reg_*" or "unset
+  register" in its output is the giveaway). IDO 5.3 `-O3` (umerge/uopt
+  across the file):
+  - inlines a file's small functions into their callers in that file, and
+    still emits them (40FB0: func_80226860 holds func_80226818's and
+    func_802267E0's bodies; 53D70's func_802395A8 holds four copies of
+    func_8023957C);
+  - allocates registers across calls within the file: a caller keeps a
+    value in a caller-saved register across a call to a function of the
+    file that doesn't touch it (9BFD0: func_80282034 keeps `a1` in `t2`
+    across func_80281FA0), a callee reads its caller's `s` registers, and
+    a `static` callee may take an argument in a non-argument register
+    (ACA00: func_802922A4 passes func_80292200 its second argument in `t0`);
+  - emits the functions in the order it processes them: last to first in
+    the source, except that a function's callees from the same file come
+    out just before it if they haven't yet. So the source order is the
+    reverse of the object's (40FB0.c is written last function first).
+  Seen so far: 40FB0, 9BFD0, 995C0, 86680, 53D70, 9A5F0 and ACA00 are
+  `-O3`; 404C0, 5E090, 87190, 87730, 99F40 and A4860 are `-O2` (no
+  inlining between functions that call each other, no cross-call
+  registers; A4860's func_8028A318 calls three small functions of its
+  own file and inlines none). asm-processor can't do `-O3`, so an `-O3`
+  object is C only once all of its functions are.
+- **IDO allocates expression temporaries per source line.** A function
+  that builds display-list commands matched only with each command on
+  one line, as gbi.h's macros expand (87730's func_8026D2C4); written one
+  statement per line, the later commands' constants land in `t0`-`t5`
+  instead of `t6`-`t9`.
 - **`-g`** for main_code's entry (`main_code_entry.c`, func_80225800):
   every value goes through the stack and the return is branched to; `-O1`,
   `-O2` and `-O0` don't give it. bm64 builds its 40000.c `-g` too. Hudson's
@@ -94,13 +123,43 @@ tools/progress.py                                # per module, overlays per bank
 - Character signedness: IDO's default (unsigned `char`, `lbu`) matched
   40300's string functions, so no `-signed`.
 
+## Hudson's C: patterns that have mattered
+
+- **Array indexing, not pointer walking.** Loops are `for (i = 0; i < N;
+  i++)` over `D_xxx[i].field`, written out each time (87190's
+  func_8026CE28 matched only once its `entry` pointer became
+  `D_800A7F30[i]` everywhere). IDO turns them into pointer loops itself
+  and unrolls a constant-count loop by 4, the remainder iterations first
+  (99F40's 6-map and 7-callback loops; 404C0's 8-file loops).
+- **`break` loops aren't unrolled, `return` loops are.** A search loop
+  that returns from inside is unrolled; one that `break`s isn't (87190's
+  func_8026CBD4 vs func_8026CC34).
+- **One exit for a found case.** `if (...) { ... } else { ... } return i;`
+  rather than two returns (404C0's func_80226460).
+- **Constants of different types are kept apart.** Storing -1 into an
+  `s32`, a pointer and a `u32` field takes three registers (87190's
+  func_8026C990); that is how the fields' types show.
+- **Comparison operands come out reversed**: `D != x` gives `beq x, D`,
+  and `a + b` gives `addu` with the operands as IDO evaluated them, which
+  is usually the source order reversed; flip one when only the operand
+  order of a `beq`/`addu` differs.
+- **Unused-looking arguments are passed through.** A wrapper whose callee
+  takes more arguments than it sets usually took them itself
+  (5E090's func_80243BA8, 9BFD0's func_80281900: the `a` registers are
+  left as they came in).
+- **Busy-waits on a flag** are `while (flag) { func_80297DC0(); }`, and an
+  "impossible" argument is trapped with `while (1) {}` (A4860).
+- **Callbacks** keep their argument: `D_802B01F8[arg1 - 1](arg0)`
+  (99F40), where the array starts one entry after the symbol the asm
+  indexes from.
+
 ## Versions
 
 eu builds from the same C. Its config comes from its own ROM, and an
 object is C in eu when `src/` has a file of the eu object's name, which
-for now is the same image offset as in us (true for every C object so far:
-main_code's code up to 0x80420 and ovl_09_01 sit at the same places in
-both). Two things differ:
+for now is the same image offset as in us (true for every C object so
+far: main_code's code up to 0xA4860 and ovl_09_01 sit at the same places
+in both). Two things differ:
 
 - **Names.** eu's asm carries us's names: `make extract` for eu renames
   splat's address names through `vermap.eu.txt` (`tools/vermap.py`,

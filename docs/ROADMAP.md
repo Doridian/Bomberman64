@@ -164,6 +164,12 @@ evidence for the flags):
   func_80265D10 is a run of 13 empty functions spimdisasm sees as one),
   and all of ovl_09_01: its entry and `120010` (seven functions and the
   twelve empty ones, with its `.data`, `.rodata` jump table and `.bss`).
+  Then, data-free functions only: `404C0` (the ROM file system: 15 of
+  18), `40FB0` (the overlay loader, all six, `-O3`), `5E090` (7 of 7),
+  `87190` (the resource cache, 8 of 8), `87730` (9 of 10), `99F40`
+  (the tile maps, 12 of 14) and `A4860` (game flags, 12 of 13).
+  docs/DECOMPILING.md has how `-O3` objects are told apart and what
+  Hudson's C looks like.
 - eu from the same C: `tools/vermap.py` (docs/LAYOUT.md, "The US to EU
   map") aligns eu's functions to us's by masked bodies and maps the data
   through them (`vermap.eu.txt`). `make extract` for eu renames splat's
