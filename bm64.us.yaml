@@ -348,7 +348,7 @@ segments:
       - [0x87D80, asm]
       - [0x93850, asm]
       - [0x96540, asm]
-      - [0x995C0, asm]
+      - [0x995C0, c]
       - [0x99F40, c]
       - [0x9A5F0, asm]
       - [0x9BFD0, c]
@@ -377,6 +377,8 @@ segments:
       - [0xB9D70, .data, 40040]
       - [0xB9DA0, .data, 40300]
       - [0xB9DB0, rodata]
+      - [0xBE840, .rodata, 995C0]
+      - [0xBE850, rodata]
       - [0xBF800, rodata, main_code_persist]
       - {type: bss, vram: 0x802A5300}
   - [0xBFB00, bin, pad_main_code]       # zeros

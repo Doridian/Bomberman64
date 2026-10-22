@@ -348,7 +348,7 @@ segments:
       - [0x87AD0, asm, 87D80]
       - [0x935A0, asm, 93850]
       - [0x96290, asm, 96540]
-      - [0x99310, asm, 995C0]
+      - [0x99310, c, 995C0]
       - [0x99C90, c, 99F40]
       - [0x9A340, asm, 9A340_jp]
       - [0x9A4D0, asm, 9A5F0]
@@ -378,6 +378,8 @@ segments:
       - [0xB9450, .data, 40040]
       - [0xB9480, .data, 40300]
       - [0xB9490, rodata]
+      - [0xBDA70, .rodata, 995C0]
+      - [0xBDA80, rodata]
       - {type: bss, vram: 0x802A4530}
   - [0xBED30, bin, pad_main_code]       # zeros
   - name: ovl_09_01

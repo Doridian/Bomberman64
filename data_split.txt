@@ -39,6 +39,14 @@ main_code main_code_entry 0 0 0
 main_code 40040 0x30 0 0
 main_code 40300 0x10 0 0
 
+# Game objects after the cut that own their .rodata (constants, jump tables,
+# strings), placed where the ROM has it; their .data and .bss stay asm
+# until the cut reaches them.
+main_code 995C0 0 0x10 0
+main_code @us 995C0 rodata=0x802A4040
+main_code @eu 995C0 rodata=0x802A4030
+main_code @jp 995C0 rodata=0x802A3270
+
 # Library objects after the game's code, placed on their own (where the ROM
 # has their data; `tools/data_split.py <v> --place MODULE OBJECT` finds it).
 # Only those whose code needs its data defined in the same file (IDO shares

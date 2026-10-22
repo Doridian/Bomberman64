@@ -100,7 +100,10 @@ def text_vram(version, module, obj):
     cfg = yaml.safe_load((ROOT / f"bm64.{version}.yaml").read_text())
     seg = next(s for s in cfg["segments"] if isinstance(s, dict) and s.get("name") == module)
     for sub in seg["subsegments"]:
-        if isinstance(sub, list) and len(sub) > 2 and sub[2] == obj and sub[1] in ("c", "hasm", "asm"):
+        if not isinstance(sub, list) or len(sub) < 2 or sub[1] not in ("c", "hasm", "asm"):
+            continue
+        # a named subsegment, or one named by its image offset (`995C0`)
+        if (sub[2] if len(sub) > 2 else f"{sub[0]:X}") == obj:
             return sub[0] - seg["start"] + seg["vram"]
     sys.exit(f"{module} has no text object {obj} in bm64.{version}.yaml")
 

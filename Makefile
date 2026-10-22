@@ -183,7 +183,7 @@ G_C_FILES  := main_code_entry.c
 # -O3: IDO inlines a file's small functions into their callers there (40FB0:
 # func_80226860 holds func_80226818's and func_802267E0's bodies), which
 # -O2 never does.  asm-processor can't do -O3 either: these are all C.
-O3_C_FILES := 40FB0.c 9BFD0.c
+O3_C_FILES := 40FB0.c 995C0.c 9BFD0.c
 $(foreach f,$(G_C_FILES),$(BUILD_DIR)/src/$(f).o): OPT_FLAGS := -g
 $(foreach f,$(O3_C_FILES),$(BUILD_DIR)/src/$(f).o): OPT_FLAGS := -O3
 
