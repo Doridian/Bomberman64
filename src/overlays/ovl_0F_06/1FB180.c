@@ -1,21 +1,5 @@
 #include "common.h"
 
-typedef struct {
-    /* 0x00 */ u8 unk0[0x10];
-    /* 0x10 */ s32 unk10;
-    /* 0x14 */ s32 unk14;
-    /* 0x18 */ s32 unk18;
-} UnkStruct_ovl0F_06_800430FC_Inner;
-
-typedef struct {
-    /* 0x00 */ u8 unk0[0x40];
-    /* 0x40 */ UnkStruct_ovl0F_06_800430FC_Inner *unk40;
-} UnkStruct_ovl0F_06_800430FC;
-
-typedef struct {
-    f32 x, y, z;
-} Vec3f_ovl0F_06_80044970;
-
 void func_ovl0F_06_80043598(s32);
 void func_ovl0F_06_800435B0(s32);
 void func_ovl0F_06_80043748(void);
@@ -26,14 +10,14 @@ void func_ovl0F_06_80043DF8(f32, f32, f32);
 void func_ovl0F_06_80043E00(f32 *, f32 *, f32 *);
 void func_ovl0F_06_80044108(s32);
 void func_ovl0F_06_800445F8(s32, s32, s32);
-void func_ovl0F_06_80044690(s32, s32, s32, s32);
+void func_ovl0F_06_80044690(s32, f32, f32, f32);
 
 /* .bss, in first-seen order (docs/DECOMPILING.md, "Data") */
 u8 D_ovl0F_06_80044940[0x24]; /* not referenced here */
 s32 D_ovl0F_06_80044964;
 s32 D_ovl0F_06_80044968;
 u8 D_ovl0F_06_8004496C[4]; /* not referenced here */
-Vec3f_ovl0F_06_80044970 D_ovl0F_06_80044970;
+Vec3f D_ovl0F_06_80044970;
 
 /* .data: six 12-byte records, each passed to func_ovl0F_06_800445F8 */
 u32 D_ovl0F_06_80044890[][3] = {
@@ -101,8 +85,8 @@ void func_ovl0F_06_80043018(s32 arg0) {
     }
 }
 
-void func_ovl0F_06_800430FC(s32 arg0, UnkStruct_ovl0F_06_800430FC *arg1) {
-    UnkStruct_ovl0F_06_800430FC_Inner *p;
+void func_ovl0F_06_800430FC(s32 arg0, UnkStructA *arg1) {
+    UnkStructA_40 *p;
 
     p = arg1->unk40;
     if (1) { /* fake, as in ovl_09_01: without it arg1 is spilled */
