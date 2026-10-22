@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
-"""Where each us address is in eu, and the names that follow.
+"""Where each us address is in eu and jp, and the names that follow.
 
 us is the reference version: its names (`func_80225840`,
 `func_ovl09_01_8004316C`, `D_8001A07C`: the address of the thing in us) are
-the names of the same things in eu, so one C source compiles for both
-(docs/ROADMAP.md, phase 4).  This tool works out the correspondence from the
-two ROMs alone (it needs baserom.us.z64 and baserom.eu.z64, not the tree),
-writes it to vermap.eu.txt (generated, committed), and renames what
-`make extract` leaves for eu with it.
+the names of the same things in
+eu and jp, so one C source compiles for all three (docs/ROADMAP.md, phase
+4).  This tool works out the correspondence from two ROMs alone (it needs
+baserom.us.z64 and the other version's ROM, not the tree), writes it to
+vermap.<version>.txt (generated, committed), and renames what `make
+extract` leaves for that version with it.  Each version is mapped from us
+on its own.
 
 How:
 
 1. Each module (boot_code, zerojump, main_code, and every overlay: bank and
-   entry numbers are the same in both ROMs) is cut into functions (a start
+   entry numbers are the same in every ROM) is cut into functions (a start
    after every return that no branch or jump table crosses, and every jal
    target).  The two lists are aligned on the functions' bodies with the
    linker-filled fields masked (jal targets, lui/lo immediates): in order
@@ -20,29 +22,31 @@ How:
    object can sit elsewhere in the link order), then by similarity.  A pair
    is "identical" (same masked body) or "changed".  Words are aligned inside
    changed functions.
-2. Every jal and every lui/lo pair in aligned code gives a (us address, eu
-   address) pair.  The pairs most code agrees on are anchors, rising in
+2. Every jal and every lui/lo pair in aligned code gives a (us address,
+   other version's address) pair.  The pairs most code agrees on are anchors, rising in
    both versions.  Between two anchors the same distance apart in both the
    range maps as a whole; elsewhere only the anchors, and what the aligned
    code and the words of aligned data (pointers compared through the map)
    add.  Overlay-local addresses (0x80043000 and up, inside an overlay) are
    per overlay; all others are one space.
 
-The naming rule: in us nothing changes.  In eu, a function or datum that
-sits where us has X is named for X, and one with no us counterpart keeps its
-own address with `_eu` appended (`func_ovl09_01_80043A00_eu`).  Names given
-in symbol_addrs.us.txt carry over to the eu address.  The renaming works on
-splat's output (after postsplit.py), every func_/D_/jtbl_/L token at once, so
-no eu name can clash with a us name at another address.
+The naming rule: in us nothing changes.  In eu (jp), a function or datum
+that sits where us has X is named for X, and one with no us counterpart
+keeps its own address with `_eu` (`_jp`) appended
+(`func_ovl09_01_80043A00_jp`).  Names given in symbol_addrs.us.txt carry
+over to the other version's address.  The renaming works on splat's output
+(after postsplit.py), every func_/D_/jtbl_/L token at once, so no name can
+clash with a us name at another address.
 
 Usage:
-  vermap.py                  write vermap.eu.txt (needs both ROMs)
-  vermap.py --check          fail if vermap.eu.txt differs from what the ROMs give
-  vermap.py --report         per-module alignment statistics
-  vermap.py --functions [M]  every function and how it aligned (one module)
-  vermap.py --rename eu      rename the symbols in asm/ and the *_auto.txt
-                             files to us's (make extract does this; needs
-                             only vermap.eu.txt)
+  vermap.py [V...]             write vermap.<V>.txt (default: eu and jp; needs
+                               us's ROM and V's)
+  vermap.py --check [V...]     fail if vermap.<V>.txt differs from what the ROMs give
+  vermap.py --report [V...]    per-module alignment statistics
+  vermap.py --functions M [V]  every function and how it aligned (one module, or all)
+  vermap.py --rename V         rename the symbols in asm/ and the *_auto.txt
+                               files to us's (make extract does this; needs
+                               only vermap.<V>.txt)
 """
 import argparse
 import bisect
@@ -56,10 +60,14 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
 import layout  # noqa: E402
 
-REF, TGT = "us", "eu"
+REF = "us"
+TARGETS = ("eu", "jp")
 LO_OPS = layout.LO_OPS
 OVL_LO = layout.OVERLAY_VRAM
-MAP_FILE = ROOT / f"vermap.{TGT}.txt"
+
+
+def map_file(tgt):
+    return ROOT / f"vermap.{tgt}.txt"
 
 # ---------------------------------------------------------------------------
 # The modules of a ROM
@@ -196,7 +204,9 @@ def jump_target(m, w):
 class Func:
     def __init__(self, m, s, e, stub=False):
         self.m, self.s, self.e, self.stub = m, s, e, stub
-        self.tok = tuple(mask(w) for w in m.words[s:e])
+        # a ZeroJump stub is known by its id (`li $t0, id`), which is no
+        # linker-filled field
+        self.tok = tuple(m.words[s:e]) if stub else tuple(mask(w) for w in m.words[s:e])
 
     @property
     def addr(self):
@@ -279,14 +289,17 @@ def functions(m):
             keep.add(c)
     starts |= keep
     if stubs:
+        # each stub of the block is aligned on its own: versions add and
+        # drop entries (jp's main_code has 4 fewer)
         starts = {s for s in starts if not stubs[0] <= s < stubs[1]} | {stubs[0]}
+        starts |= set(range(m.stubs[0] // 4, m.stubs[1] // 4, 2))
         if stubs[1] < n:
             starts.add(stubs[1])
     starts = sorted(s for s in starts if s < n)
     out = []
     for k, s in enumerate(starts):
         e = starts[k + 1] if k + 1 < len(starts) else n
-        out.append(Func(m, s, e, stub=bool(stubs and s == stubs[0])))
+        out.append(Func(m, s, e, stub=bool(stubs and stubs[0] <= s < stubs[1])))
     return out, tables
 
 
@@ -366,6 +379,8 @@ def word_pairs(rm, tm, rf, tf, exact, changed):
             pairs[rf[i].s + k] = tf[j].s + k
     for i, j in changed.items():
         f, g = rf[i], tf[j]
+        # a changed function is the same function: its start is its name
+        pairs[f.s] = g.s
         for key in (mask, shape):
             ra = [key(x) for x in rm.words[f.s:f.e]]
             ta = [key(x) for x in tm.words[g.s:g.e]]
@@ -523,14 +538,14 @@ class Alignment:
         self.wp = word_pairs(rm, tm, self.rf, self.tf, self.exact, self.changed)
 
     def stats(self):
-        """Counts over the functions (the ZeroJump stub block is not one)."""
+        """Counts over the functions (the ZeroJump stubs are not)."""
         real = lambda fs: [i for i, f in enumerate(fs) if not f.stub]
         rr, tt = set(real(self.rf)), set(real(self.tf))
         ident = len([i for i in self.exact if i in rr])
         chg = len([i for i in self.changed if i in rr])
-        return {"us": len(rr), "eu": len(tt), "identical": ident, "changed": chg,
-                "us_only": len(rr) - ident - chg,
-                "eu_only": len(tt) - len([j for j in self.exact.values() if j in tt])
+        return {"ref": len(rr), "tgt": len(tt), "identical": ident, "changed": chg,
+                "ref_only": len(rr) - ident - chg,
+                "tgt_only": len(tt) - len([j for j in self.exact.values() if j in tt])
                 - len([j for j in self.changed.values() if j in tt])}
 
     def code_pairs(self):
@@ -641,10 +656,10 @@ def build(rmods, tmods):
 # ---------------------------------------------------------------------------
 # Writing
 
-def write_map(vm, path):
-    lines = [f"# generated by tools/vermap.py: where {REF}'s addresses are in {TGT}.",
-             "# `@ module vram us-end eu-end`: a module's extent (bss included);",
-             "# then `module us-start us-end eu-start` ranges (hex).  An address is",
+def write_map(vm, path, tgt):
+    lines = [f"# generated by tools/vermap.py: where {REF}'s addresses are in {tgt}.",
+             f"# `@ module vram {REF}-end {tgt}-end`: a module's extent (bss included);",
+             f"# then `module {REF}-start {REF}-end {tgt}-start` ranges (hex).  An address is",
              "# looked up in its module: an overlay's own, or else a fixed module's."]
     for m, (v, ue, te) in vm.ext.items():
         lines.append(f"@ {m} {v:08X} {ue:08X} {te:08X}")
@@ -702,8 +717,8 @@ class Renamer:
     has what us has at X, the name symbol_addrs.us.txt gives X if it does,
     else `func_Y_eu` for an eu address Y with no us counterpart."""
 
-    def __init__(self, vm):
-        self.vm = vm
+    def __init__(self, vm, tgt):
+        self.vm, self.tgt = vm, tgt
         self.names = us_names(vm)
         self.count = collections.Counter()
 
@@ -712,12 +727,12 @@ class Renamer:
         mod = self.vm.owner(addr, 2, "ovl_" + ovl if ovl else None)
         if mod is None:
             if self.vm.owner(addr, 1, "ovl_" + ovl if ovl else None):
-                return f"{m[0]}_{TGT}"   # would read as a us name
+                return f"{m[0]}_{self.tgt}"   # would read as a us name
             return m[0]     # not in any module: a hardware or fixed address
         us = self.vm.to_ref(mod, addr)
         if us is None:
-            self.count["eu only"] += 1
-            return f"{m[0]}_{TGT}"
+            self.count[f"{self.tgt} only"] += 1
+            return f"{m[0]}_{self.tgt}"
         if (mod, us) in self.names and pre != "L":
             self.count["named"] += 1
             return self.names[(mod, us)]
@@ -729,13 +744,38 @@ class Renamer:
         return TOKEN.sub(self.name, s)
 
 
+NAME = re.compile(r"^(func|D|jtbl)_(?:ovl([0-9A-F]{2}_[0-9]{2})_)?([0-9A-F]{8})(?:_(\w+))?$")
+
+
+def version_name(vm, tgt, name):
+    """The other way: the name splat gives in `tgt` to what us calls `name`
+    (an address name; any other name is the same in every version).
+    `func_X_jp` is jp's own X; a us name with no counterpart in `tgt`
+    becomes `<name>_us`, which nothing there is called.  tools/split.py
+    reads the C files' names through this."""
+    m = NAME.match(name)
+    if not m:
+        return name
+    pre, ovl, addr, suffix = m[1], m[2], int(m[3], 16), m[4]
+    mid = f"ovl{ovl}_" if ovl else ""
+    if suffix == tgt:
+        return f"{pre}_{mid}{addr:08X}"
+    if suffix:
+        return f"{name}_us"     # another version's own: nothing in tgt
+    mod = vm.owner(addr, 1, "ovl_" + ovl if ovl else None)
+    t = vm.to_tgt(mod, addr) if mod else None
+    if t is None:
+        return f"{name}_us" if mod else name
+    return f"{pre}_{mid}{t:08X}"
+
+
 def rename_tree(version):
     """Rename every symbol in asm/ and the generated symbol files of
     `version` (what `make extract` leaves) from its addresses to us's.
     Idempotent: a stamp in asm/ says the files were done."""
     if version == REF:
         return
-    vm = read_map(MAP_FILE)
+    vm = read_map(map_file(version))
     files = sorted((ROOT / "asm").rglob("*.s")) + [ROOT / f for f in
             ("module_syms_auto.txt", "undefined_syms_auto.txt", "undefined_funcs_auto.txt")
             if (ROOT / f).exists()]
@@ -743,12 +783,24 @@ def rename_tree(version):
     if stamp.exists() and all(f.stat().st_mtime <= stamp.stat().st_mtime for f in files):
         print("vermap: names already renamed")
         return
-    rn = Renamer(vm)
+    rn = Renamer(vm, version)
     for f in files:
         t = f.read_text()
         n = rn.text(t)
         if n != t:
             f.write_text(n)
+    # the GLOBAL_ASM functions' files are named for them (tools/split.py
+    # had splat write them under this version's names); two passes, as a
+    # new name can be another file's old one
+    moves = []
+    for f in (ROOT / "asm").glob("*matchings/**/*.s"):
+        new = f.with_name(TOKEN.sub(rn.name, f.stem) + ".s")
+        if new != f:
+            moves.append((f, new))
+    for f, new in moves:
+        f.rename(f.with_name(f.name + ".vermap"))
+    for f, new in moves:
+        f.with_name(f.name + ".vermap").rename(new)
     stamp.write_text("")
     print(f"vermap: {version}'s names renamed to {REF}'s (" +
           ", ".join(f"{v} {k}" for k, v in sorted(rn.count.items())) + ")")
@@ -757,24 +809,25 @@ def rename_tree(version):
 # ---------------------------------------------------------------------------
 # Reports
 
-def report(al, rmods, tmods, out=sys.stdout):
+def report(al, tgt, out=sys.stdout):
     tot = collections.Counter()
-    print(f"{'module':<10} {'us':>5} {'eu':>5} {'ident':>6} {'changed':>8} {'us only':>8} {'eu only':>8}"
+    t = tgt
+    print(f"{'module':<10} {REF:>5} {t:>5} {'ident':>6} {'changed':>8} {REF + ' only':>8} {t + ' only':>8}"
           f" {'ident %':>8}", file=out)
     for name, a in al.items():
         s = a.stats()
         tot.update(s)
-        if name.startswith("ovl_") and s["identical"] == s["us"] == s["eu"]:
+        if name.startswith("ovl_") and s["identical"] == s["ref"] == s["tgt"]:
             tot["ovl_same"] += 1
             continue
-        print(f"{name:<10} {s['us']:>5} {s['eu']:>5} {s['identical']:>6} {s['changed']:>8} "
-              f"{s['us_only']:>8} {s['eu_only']:>8} {100 * s['identical'] / max(s['us'], 1):>7.1f}%", file=out)
-    print(f"{'total':<10} {tot['us']:>5} {tot['eu']:>5} {tot['identical']:>6} {tot['changed']:>8} "
-          f"{tot['us_only']:>8} {tot['eu_only']:>8} {100 * tot['identical'] / max(tot['us'], 1):>7.1f}%", file=out)
+        print(f"{name:<10} {s['ref']:>5} {s['tgt']:>5} {s['identical']:>6} {s['changed']:>8} "
+              f"{s['ref_only']:>8} {s['tgt_only']:>8} {100 * s['identical'] / max(s['ref'], 1):>7.1f}%", file=out)
+    print(f"{'total':<10} {tot['ref']:>5} {tot['tgt']:>5} {tot['identical']:>6} {tot['changed']:>8} "
+          f"{tot['ref_only']:>8} {tot['tgt_only']:>8} {100 * tot['identical'] / max(tot['ref'], 1):>7.1f}%", file=out)
     print(f"({tot['ovl_same']} overlays have every function identical and are not listed)", file=out)
 
 
-def list_functions(a, out=sys.stdout):
+def list_functions(a, tgt, out=sys.stdout):
     inv_ex = {j: i for i, j in a.exact.items()}
     inv_ch = {j: i for i, j in a.changed.items()}
     for i, f in enumerate(a.rf):
@@ -783,49 +836,60 @@ def list_functions(a, out=sys.stdout):
         elif i in a.changed:
             g, st = a.tf[a.changed[i]], "changed"
         else:
-            g, st = None, "us-only"
+            g, st = None, f"{REF}-only"
         print(f"{a.rm.name} {f.addr:08X} {g.addr if g else 0:08X} {st} {f.size}"
               + (f" {g.size}" if g else ""), file=out)
     for j, g in enumerate(a.tf):
         if j not in inv_ex and j not in inv_ch:
-            print(f"{a.rm.name} {0:08X} {g.addr:08X} eu-only 0 {g.size}", file=out)
+            print(f"{a.rm.name} {0:08X} {g.addr:08X} {tgt}-only 0 {g.size}", file=out)
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--check", action="store_true", help="fail if vermap.eu.txt is out of date")
+    ap.add_argument("versions", nargs="*", metavar="VERSION",
+                    help=f"the versions to map from {REF} (default: {' '.join(TARGETS)})")
+    ap.add_argument("--check", action="store_true", help="fail if vermap.<V>.txt is out of date")
     ap.add_argument("--report", action="store_true", help="alignment statistics per module")
-    ap.add_argument("--functions", nargs="?", const="all", metavar="MODULE",
-                    help="list every function and how it aligned")
+    ap.add_argument("--functions", metavar="MODULE",
+                    help="list every function and how it aligned (`all` for every module)")
     ap.add_argument("--rename", metavar="VERSION",
                     help="rename the names in asm/ (as `make extract` leaves it) to us's")
     args = ap.parse_args()
     if args.rename:
         rename_tree(args.rename)
         return
-    rmods, tmods = load_modules(REF), load_modules(TGT)
-    assert list(rmods) == list(tmods), "the versions' modules differ"
-    vm, al = build(rmods, tmods)
-    if args.report:
-        report(al, rmods, tmods)
-        return
-    if args.functions:
-        for name, a in al.items():
-            if args.functions in ("all", name):
-                list_functions(a)
-        return
-    if args.check:
-        import tempfile
-        with tempfile.TemporaryDirectory() as td:
-            tmp = Path(td) / "map"
-            write_map(vm, tmp)
-            if not MAP_FILE.exists() or MAP_FILE.read_text() != tmp.read_text():
-                sys.exit(f"{MAP_FILE.name} out of date; run tools/vermap.py")
-        print(f"{MAP_FILE.name}: up to date")
-        return
-    write_map(vm, MAP_FILE)
-    print(f"{MAP_FILE.name}: {sum(len(r) for r in vm.ranges.values())} ranges")
-    report(al, rmods, tmods)
+    targets = args.versions or TARGETS
+    for v in targets:
+        if v not in TARGETS:
+            ap.error(f"{v}: not one of {', '.join(TARGETS)}")
+    rmods = load_modules(REF)
+    for tgt in targets:
+        if len(targets) > 1 and (args.report or args.functions):
+            print(f"== {REF} -> {tgt}")
+        tmods = load_modules(tgt)
+        assert list(rmods) == list(tmods), f"{REF}'s and {tgt}'s modules differ"
+        vm, al = build(rmods, tmods)
+        if args.report:
+            report(al, tgt)
+            continue
+        if args.functions:
+            for name, a in al.items():
+                if args.functions in ("all", name):
+                    list_functions(a, tgt)
+            continue
+        path = map_file(tgt)
+        if args.check:
+            import tempfile
+            with tempfile.TemporaryDirectory() as td:
+                tmp = Path(td) / "map"
+                write_map(vm, tmp, tgt)
+                if not path.exists() or path.read_text() != tmp.read_text():
+                    sys.exit(f"{path.name} out of date; run tools/vermap.py {tgt}")
+            print(f"{path.name}: up to date")
+            continue
+        write_map(vm, path, tgt)
+        print(f"{path.name}: {sum(len(r) for r in vm.ranges.values())} ranges")
+        report(al, tgt)
 
 
 if __name__ == "__main__":
