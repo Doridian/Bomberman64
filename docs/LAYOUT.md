@@ -205,8 +205,14 @@ In the config (`tools/layout.py`):
   padding after a function shows an object boundary, and where a matched
   libultra object starts or ends (`lib_objects.<v>.txt`), unless a branch
   crosses it.
-- **Data** is one `rodata` block per module for now (docs/ROADMAP.md,
-  phase 2, "Not yet"), plus `main_code_persist` from main_code's
+- **Data** is cut per object where the C shows it (`data_split.txt`,
+  docs/DECOMPILING.md, "Data"): a `.data`, `.rodata` and `.bss`
+  subsegment for each C object listed there, from the module's first
+  object on, and asm for the rest: `data` before the module's
+  .data/.rodata boundary, `rodata` after it (one `rodata` block where
+  nothing is cut, so that spimdisasm labels the jump tables), one `bss`
+  block. main_code's RSP code (0xB7A50-0xB9D70) is an asm `data` block
+  before its objects' .data. Plus `main_code_persist` from main_code's
   persistent part on.
 
 `tools/ld_fix.py` turns splat's linker script into the build's. Splat

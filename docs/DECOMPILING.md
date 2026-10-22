@@ -98,7 +98,7 @@ tools/progress.py                                # per module, overlays per bank
 
 eu builds from the same C. Its config comes from its own ROM, and an
 object is C in eu when `src/` has a file of the eu object's name, which
-for now is the same image offset as in us (true for all four C objects:
+for now is the same image offset as in us (true for every C object so far:
 main_code's code up to 0x80420 and ovl_09_01 sit at the same places in
 both). Two things differ:
 
@@ -114,44 +114,101 @@ both). Two things differ:
 
 ## Data
 
-Each module's `.data`/`.rodata` is still one asm `rodata` block and its
-`.bss` one `bss` block (docs/ROADMAP.md, phase 2, "Not yet"). Until a
-module's data is split per object:
+A module's `.data`, `.rodata` and `.bss` are cut per object where the C
+shows them, the way Blast Corps did it, except that the cut points come
+from the compiler, not from a heuristic on the data (one that put the
+boundary above every stored-to address and below every jump table and
+float constant disagreed with the reference decomp in 26 of 95 overlays).
 
-- **A C function must not produce data.** No string literals, no float or
-  double constants IDO puts in `.rodata` (one with the low 16 bits zero is
-  built with `lui` and is fine: 80420's `32768.0f`), no `switch` that
-  becomes a jump table, no `static` or initialized globals. Check with
-  `mips-linux-gnu-objdump -h build/us/src/<object>.c.o`: `.data`,
-  `.rodata` and `.bss` must be empty. The functions decompiled so far are
-  chosen that way.
-- **Variables are `extern`,** named `D_<us address>`, and defined by the
-  asm blocks.
+**How the cut works.** IDO pads each of a file's sections to 16, and the
+link lays out every object's `.data` in text order, then every object's
+`.rodata` (strings and other early constants, then `.late_rodata`: jump
+tables, floats and doubles), then, in the bss section, every object's
+`.bss`. So once an object's C defines all of its data, its section sizes
+say where the next object's start. `data_split.txt` lists them: per
+module, the C objects from its first on, with the sizes IDO builds them
+to (`<module> <object> <.data> <.rodata> <.bss>`), and, per version,
+where the objects' `.data` start if something else comes first
+(main_code's RSP code) and where their `.rodata` start (the module's
+.data/.rodata boundary), when the list doesn't cover the whole module.
+`tools/layout.py` cuts the module's block from those: a `.data`,
+`.rodata` and `.bss` subsegment for each listed object, and asm for the
+rest, `data` up to the boundary (the link keeps it before the `.rodata`),
+`rodata` after it and one `bss` block. The cut stops at the first object
+not listed; everything after it stays asm, however much of it is C. The
+ZeroJump stub block has no data and is skipped. Where every object of a
+module is listed, the boundary is the compiler's and layout.py checks the
+sizes add up to the block (and takes the module's bss size from them).
 
-How the split will work, object by object, as in Blast Corps:
+Cut so far (us and eu alike):
 
-1. An object's data is the run of the module's data block that its C
-   compiles to. IDO puts a file's `.data`, then `.rodata` (early, then
-   `.late_rodata`), then `.bss`, each padded to 16, and the link lays the
-   objects' sections out in text order. So once one object's C defines
-   all of its data, its `.data` size is known, and so is where the next
-   object's starts.
-2. `tools/layout.py` then cuts the module's block at those points: a
-   `.data`/`.rodata`/`.bss` subsegment per C object, and an asm `data` /
-   `rodata` / `bss` block for each run still unclaimed (as Blast Corps'
-   `gen_code_yaml.py` does). The cut points come from a list of object
-   sizes that grows as files are decompiled, not from a heuristic on the
-   data (the jump-table/float heuristic disagrees with the reference
-   decomp in 26 of 95 overlays).
-3. `data_c.py` and `bss_c.py` (Blast Corps) write a file's definitions
-   from its asm block while the block is still asm, and `inline_rodata.py`
-   turns `extern` constants into literals once the file owns its `.rodata`.
-   Their rules carry over: IDO lays `.data` out in definition order, `.bss`
-   in order of first use, aligns each variable by its type and pads the
-   section to 16.
+| module | objects | .data/.rodata boundary |
+|---|---|---|
+| ovl_09_01 | all: `ovl_09_01_entry`, `120010` (.data 0x30, .rodata 0x50: the handler's jump table, .bss 0x50) | 0x80044990 (the compiler's) |
+| main_code | `main_code_entry`, `40040` (.data 0x30: two tables), `40300` (.data 0x10: the bump pointer) after the RSP code at 0x8029D250-0x8029F570 | not shown yet: none of the three has .rodata |
 
-The first candidates are the objects at the start of a module, where
-nothing before them needs a size: main_code's `main_code_entry` (no data
-at `-g`), then `40040`, `40300`. An overlay's first C object after its
-entry is the easiest start of all, since each overlay's data block begins
-with that object's data.
+The sizes are the same in both versions as long as the C is; an object
+whose data differs between them will need a version column.
+
+**Making an object own its data:**
+
+1. Decompile the object's functions, and write its `.data` and `.bss`
+   definitions: `tools/data_c.py <module> <start> <end> [--c src/<object>.c]`
+   prints them from the extracted asm for a VRAM run of the data block or
+   of the bss (types from the file's `extern`s, `u8` arrays otherwise),
+   and `tools/inline_rodata.py src/<object>.c` turns `extern` strings,
+   floats and doubles into literals. The run is the object's own: from
+   where the previous object's ends to the next 16-byte boundary its
+   references and padding show.
+2. `make`, then `tools/data_split.py us --add <module> <object>` appends
+   its built sizes. Check the line: its `.rodata` is only the C
+   functions' share until the object owns it (step 3), so a file with
+   GLOBAL_ASM functions that have jump tables or constants needs the size
+   from the ROM. Give the module's `@us`/`@eu` `rodata=` start if the
+   object has .rodata and isn't the module's last.
+3. `tools/layout.py us && tools/layout.py eu`, `make clean`, extract and
+   `make` for both versions. splat now writes the GLOBAL_ASM functions'
+   jump tables and constants into their `.s` (`.late_rodata`), which
+   asm-processor puts into the object, and the asm block shrinks by the
+   object's share. `tools/data_split.py <v>` checks every listed object's
+   sizes against its build.
+
+What mattered:
+
+- An object is listed only once its C defines all of its `.data` and
+  `.bss` (GLOBAL_ASM can't bring those, only `.rodata`). A wrong size
+  shifts every later cut, and the sha1 catches it.
+- IDO lays `.data` out in definition order, `.bss` in the order it first
+  sees each variable (defined or used; an extern doesn't count), so the
+  `.bss` definitions go before the first function. Unreferenced bytes
+  between variables are `u8 D_<address>[n]` arrays (120010.c has two).
+  A table's trailing zeros may be its own or the section's padding to 16:
+  the bytes are the same, so pick the one the code suggests and say so.
+- A `switch` gets its jump table only when its cases are dense enough:
+  120010.c's handler needs all of cases 1 to 17, most of them empty
+  (Blast Corps: "Empty cases still count toward IDO's jump-table
+  decision").
+- Defining a variable in its own file didn't change the code that uses it
+  (40300's bump pointer, 40040's tables), so the `extern` can simply
+  become the definition.
+- Local declaration order sets stack slots: 40040's `count` had to come
+  first.
+- A C object changes nothing in a shifted build: the `SHIFT=1` image with
+  the cut is byte-identical to the one built from the asm alone, and
+  `ld_fix.py`'s data pad still goes at the module's `_DATA_START`.
+
+**Objects not in the cut** (any object after the first one not listed)
+still can't produce data: no string literals, no float or double
+constants IDO puts in `.rodata` (one with the low 16 bits zero is built
+with `lui` and is fine: 80420's `32768.0f`), no `switch` that becomes a
+jump table, no `static` or initialized globals. Check with
+`mips-linux-gnu-objdump -h build/us/src/<object>.c.o`: `.data`, `.rodata`
+and `.bss` must be empty. Their variables are `extern`, named
+`D_<us address>`, and defined by the asm blocks.
+
+The next candidates are the objects that extend a cut (main_code's
+`404C0`) and each overlay's first object after its entry, where nothing
+before it needs a size. Library objects have known sizes from their
+reference builds, but boot_code starts with its handwritten entry, and
+main_code's libraries come after most of its game code, so they don't
+help yet.

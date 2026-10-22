@@ -47,7 +47,7 @@ comes with stage 2's disassembly, and the `SHIFT` build will prove it.
 Editable formats for what the entries contain (models, textures, sound)
 are phase 5.
 
-## Phase 2 — stage 2: code split and reassembly (done, except per-object data)
+## Phase 2 — stage 2: code split and reassembly (done)
 
 `make extract && make` disassembles every code segment and builds the ROM
 back from the asm, sha1-checked, for us and eu. docs/LAYOUT.md, "Stage 2",
@@ -89,18 +89,23 @@ describes the pieces:
   values and stale overlay bss differ for the same timing reason. A build
   with a process's entry pointer left absolute fails every checkpoint.
 
-**Not yet: per-object `.data`/`.rodata`/`.bss`.** Each module's data is one
-`rodata` block (as rodata so that spimdisasm labels its jump tables) and
-one bss block. Splitting them by object needs the `.data`/`.rodata`
-boundary. A first heuristic (above every stored-to address, below every
-jump table and float constant) disagrees with the reference decomp in 26
-of 95 overlays: floats in `.data` are loaded with `lwc1` too, and tables of
-function pointers look like jump tables. The reference's own boundaries are
-partly guesses as well. The reliable source is the compiler: once a file
-is C, its object shows exactly which data is `.data` and which `.rodata`.
-So this is done object by object as files are decompiled, starting with
-the first ones in phase 4, the way Blast Corps' `data_c.py`/`bss_c.py`
-did it (docs/DECOMPILING.md, "Data").
+**Per-object `.data`/`.rodata`/`.bss`** come from the compiler: a
+first heuristic for the .data/.rodata boundary (above every stored-to
+address, below every jump table and float constant) disagreed with the
+reference decomp in 26 of 95 overlays (floats in `.data` are loaded with
+`lwc1` too, and tables of function pointers look like jump tables), and
+the reference's own boundaries are partly guesses. Instead,
+`data_split.txt` lists each module's C objects from its first on with the
+section sizes IDO builds them to, and `tools/layout.py` cuts the module's
+block object by object: `.data`/`.rodata`/`.bss` subsegments for those,
+asm `data`, `rodata` and `bss` for the rest (docs/DECOMPILING.md, "Data",
+has the workflow and `tools/data_split.py`, `data_c.py`,
+`inline_rodata.py`). Without a cut a module's data is one `rodata` block
+(as rodata so that spimdisasm labels its jump tables) and one bss block.
+Cut so far: all of ovl_09_01 (its boundary is the compiler's,
+0x80044990) and main_code's first three objects after its RSP code. The
+SHIFT=1 image with the cut is byte-identical to the one from the asm
+alone. The rest grows object by object with phase 4.
 
 ## Phase 3 — libraries (done, except what no revision matches)
 
@@ -153,9 +158,12 @@ evidence for the flags):
   `diff_settings.py`), `tools/permute.sh`, `tools/progress.py` (per module,
   overlays per bank or each).
 - Done so far, matching in us and eu: `main_code_entry` (func_80225800,
-  `-g`), `40300` (all seven functions: a bump allocator and Hudson's
-  string/memory helpers), `80420` (four of five; func_80265D10 is a run of
-  13 empty functions spimdisasm sees as one), and ovl_09_01's entry.
+  `-g`), `40040` (func_80225840, main_code's main function, with its
+  `.data`), `40300` (all seven functions: a bump allocator and Hudson's
+  string/memory helpers, and its `.data`), `80420` (four of five;
+  func_80265D10 is a run of 13 empty functions spimdisasm sees as one),
+  and all of ovl_09_01: its entry and `120010` (seven functions and the
+  twelve empty ones, with its `.data`, `.rodata` jump table and `.bss`).
 - eu from the same C: `tools/vermap.py` (docs/LAYOUT.md, "The US to EU
   map") aligns eu's functions to us's by masked bodies and maps the data
   through them (`vermap.eu.txt`). `make extract` for eu renames splat's
@@ -164,10 +172,11 @@ evidence for the flags):
   99.9% of the functions are identical, the other 8 changed).
 
 **Not yet:**
-- Per-object data (phase 2's "Not yet"): a C function must produce no
-  `.data`/`.rodata`/`.bss` until its module's data block is cut per
-  object. docs/DECOMPILING.md, "Data", has how the cut will be made from
-  the C files' own sections, object by object from each module's start.
+- Per-object data beyond the cut (phase 2): an object outside the run
+  `data_split.txt` lists from its module's first must still produce no
+  `.data`/`.rodata`/`.bss`. Each module's cut grows from its start as
+  objects are decompiled with their data (docs/DECOMPILING.md, "Data");
+  main_code's .data/.rodata boundary isn't shown yet.
 - `#if VERSION_EU` in the C for the 8 changed functions and eu's data,
   and `version_ifs.py` (Blast Corps) for version-specific GLOBAL_ASM
   lines, when the first of those is decompiled.

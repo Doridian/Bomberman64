@@ -38,7 +38,10 @@ into objects where IDO's padding shows a boundary and where a matched
 library object starts or ends (lib_objects.<version>.txt, from
 tools/gen_symbols.py).  The library's names come from the
 symbol_addrs.<module>.<version>.txt files gen_symbols.py writes; every one
-that exists is listed in the config.
+that exists is listed in the config.  A text object whose C file exists
+is a `c` subsegment, and a module's data and bss are cut per object as
+far as data_split.txt lists its C objects' sizes (cut_data()); the rest
+is asm.
 """
 import argparse
 import struct

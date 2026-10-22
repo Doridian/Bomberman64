@@ -9,8 +9,9 @@ has the phases. Phases 0-2 are done: the ROM is built from its pieces
 shifted build runs the same as the original. Phase 3 has libultra named
 (2.0I, docs/LIBULTRA.md) and Hudson's allocator identified (GNU
 gmalloc, docs/LIBMALLOC.md). Phase 4's C pipeline works
-(docs/DECOMPILING.md), with a few objects decompiled. Not yet: per-object
-`.data`/`.rodata`/`.bss` (phase 2, "Not yet").
+(docs/DECOMPILING.md), with a few objects decompiled. Each module's
+`.data`/`.rodata`/`.bss` is cut per object as far as its C objects from
+its first on are listed in `data_split.txt` (docs/DECOMPILING.md, "Data").
 
 ## Versions
 
@@ -32,6 +33,8 @@ make VERSION=us SHIFT=1        # shifted build in build/us-shift/, not sha1-chec
 make VERSION=us shift-check    # both, run in mupen64plus (system or $M64P_DIR), state compared
 tools/find_abs.py us           # addresses left without a relocation (should be 0)
 tools/progress.py              # how much is C (docs/DECOMPILING.md has the loop)
+tools/data_split.py us         # data_split.txt's sizes against the built C objects
+tools/data_c.py <mod> <lo> <hi>  # C definitions for a run of asm data or bss
 tools/build_ultralib.sh        # libultra reference objects in build/ultralib
 tools/gen_symbols.py us build/ultralib/build/I/libultra_rom  # library names
 ```
@@ -102,7 +105,12 @@ Run emulator and build commands under `nice -n 10`, headless.
 - **C must match in both versions.** A C file is built for us and eu;
   version differences are `#if VERSION_EU`. eu's asm carries us's names
   (`tools/vermap.py`), so the C uses us's names in both.
-  Until data is split per object, C defines no data (docs/DECOMPILING.md).
+- **Data sizes come from the compiler.** `data_split.txt` lists a
+  module's C objects from its first on with the section sizes IDO builds
+  them to (`tools/data_split.py` checks them), and `tools/layout.py` cuts
+  the module's data at those. An object is listed only once its C defines
+  all its `.data` and `.bss`; one outside a module's cut defines no data
+  (docs/DECOMPILING.md, "Data").
 - **Port-only changes are `#ifdef TARGET_PC`.** The port must stay
   deterministic from the start: docs/NETPLAY.md, "Requirements", lists
   what online play needs from it.
