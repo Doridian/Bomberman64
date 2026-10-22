@@ -25,6 +25,7 @@ ovl_09_01 120010 0x30 0x50 0x50
 # isn't shown yet: 40040 and 40300 have no .rodata.
 main_code @us data=0x8029F570
 main_code @eu data=0x8029F570
+main_code @jp data=0x8029EC50
 main_code main_code_entry 0 0 0
 main_code 40040 0x30 0 0
 main_code 40300 0x10 0 0

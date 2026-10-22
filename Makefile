@@ -1,7 +1,7 @@
 BASENAME  = bm64
 VERSION  := us
 
-VERSIONS  := us eu
+VERSIONS  := us eu jp
 ifeq ($(filter $(VERSION),$(VERSIONS)),)
 $(error Unknown VERSION '$(VERSION)'; expected one of $(VERSIONS))
 endif
@@ -103,7 +103,7 @@ stamp:
 # image assets/code.bin, which splat then splits into asm/ and bins.
 extract: check stamp $(LZSS_LIB)
 	$(PYTHON) $(TOOLS_DIR)/assets.py extract $(VERSION)
-	$(PYTHON) -m splat split $(CONFIG) | grep -v "^File split suggestions" || true
+	$(PYTHON) $(TOOLS_DIR)/split.py $(VERSION) | grep -v "^File split suggestions" || true
 	$(PYTHON) $(TOOLS_DIR)/postsplit.py $(VERSION)
 	$(PYTHON) $(TOOLS_DIR)/vermap.py --rename $(VERSION)
 

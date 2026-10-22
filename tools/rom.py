@@ -66,10 +66,16 @@ def write_sizes(rom, syms, banks):
     sizes = rom[SEGMENT_SIZES:SEGMENT_SIZES + 0x100]
     sizes[0] = max(sizes[0], units(syms["zerojump_ROM_END"]))
     main = syms["main_code_ROM_START"] >> 17
-    reload = syms["main_code_PERSIST_START"] - syms["main_code_VRAM"]
-    assert reload % 0x800 == 0, hex(reload)
-    sizes[main] = units(reload)
-    sizes[main + 1] = units(syms["main_code_ROM_END"] - syms["main_code_ROM_START"] - reload)
+    size = syms["main_code_ROM_END"] - syms["main_code_ROM_START"]
+    if "main_code_PERSIST_START" in syms:
+        reload = syms["main_code_PERSIST_START"] - syms["main_code_VRAM"]
+        assert reload % 0x800 == 0, hex(reload)
+        sizes[main] = units(reload)
+        sizes[main + 1] = units(size - reload)
+    else:
+        # jp: all of main_code is reloaded, and the boot thread's one-time
+        # load (byte 3: 0x8D, 0x46800 bytes of the ROM's zeros) is kept
+        sizes[main] = units(size)
     for base, data, _ in banks:
         if base != layout.ASSET_BANK:
             seg = base >> 17

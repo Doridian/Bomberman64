@@ -1,0 +1,2 @@
+// zerojump's stub: the page boot_code DMAs to 0x80042000 and maps at virtual 0.
+func_80042000 = 0x80042000; // type:func rom:0x1CBA0

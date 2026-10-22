@@ -52,7 +52,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import hudson_lzss  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
-VERSIONS = ("us", "eu")
+VERSIONS = ("us", "eu", "jp")
 ARCHIVE_MAGIC = bytes.fromhex("0000200800000400")
 FIRST_BANK = 0x120000
 BANK_STEP = 0x20000
@@ -135,7 +135,8 @@ def fixed(d):
     # boot_code's entry (0x1050) DMAs zerojump: a2 = ROM start, t6 = end
     zj_start = lui_addiu(d, 0x1054, 6)
     zj_end = lui_addiu(d, 0x1054, 14)
-    assert zj_start == 0x1CBC0, hex(zj_start)
+    # us and eu 0x1CBC0, jp 0x1CBA0 (its boot_code is 0x20 shorter)
+    assert 0x1000 < zj_start < zj_end <= 0x30000, (hex(zj_start), hex(zj_end))
     # the entry (0x1000) clears bss: lui/addiu t0 = start, ori t1 = size
     bss = lui_addiu(d, 0x1000, 8)
     assert u32(d, 0x1008) >> 16 == 0x3409, hex(u32(d, 0x1008))
@@ -571,14 +572,18 @@ def source_exists(seg_dir, obj):
 
 
 def code_segment(name, start, vram, data, bss_size, first_hasm=None,
-                 note=None, persist=None, known=(), split=None):
+                 note=None, persist=None, known=(), split=None, namer=None):
     """The YAML lines of one code segment of the image.  persist: the
     offset of main_code's part that is loaded once (see fixed()).  known:
     object boundaries (VRAM) the padding may not show.  split: the
     module's entry of data_split() (cut_data()).  A known boundary may name
     the library object that starts there (lib_objects()): one with a source
-    in src/libultra is a `c` (or `hasm`) subsegment of that name."""
+    in src/libultra is a `c` (or `hasm`) subsegment of that name.  namer:
+    the name of the text object at an offset in the module
+    (object_namer())."""
     libnames = {a - vram: n for a, n in dict(known).items()} if isinstance(known, dict) else {}
+    if namer is None:
+        namer = lambda off: f"{start + off:X}"
     known = {a - vram for a in known}
     text_end, stubs = text_split(data)
     subs = []
@@ -606,7 +611,10 @@ def code_segment(name, start, vram, data, bss_size, first_hasm=None,
     elif text_end > pos:
         code(pos, text_end)
     seg_dir = None if vram != OVERLAY_VRAM else f"overlays/{name}"
-    text_objs = [sub or f"{start + off:X}" for off, _, sub in subs]
+    subs = [(off, kind, sub or namer(off)) for off, kind, sub in subs]
+    text_objs = [sub for _, _, sub in subs]
+    assert len(set(text_objs)) == len(text_objs), f"{name}: two text objects with one name"
+
     region_end = len(data)
     if persist is not None:
         assert text_end <= persist < len(data), hex(persist)
@@ -641,10 +649,76 @@ def code_segment(name, start, vram, data, bss_size, first_hasm=None,
         ]
     out.append("    subsegments:")
     for off, kind, sub in subs:
-        if kind == "asm" and c_source(seg_dir, sub or f"{start + off:X}").exists():
+        if kind == "asm" and c_source(seg_dir, sub).exists():
             kind = "c"
+        # an object named for its own offset needs no name (splat's default)
+        if sub == f"{start + off:X}":
+            sub = None
         out.append(f"      - [0x{start + off:X}, {kind}" + (f", {sub}]" if sub else "]"))
     out += bss_lines
+    return out
+
+
+def object_namer(version, module, start, vram, ref_start):
+    """The names of a module's text objects in `version`: the image offset
+    of the same code in us (tools/vermap.py's map, vermap.<version>.txt),
+    so that an object has one name, and one C file, in every version; an
+    object with no us counterpart is `<its own offset>_<version>`.  The
+    object's first word is looked up, else the first one in its first 0x40
+    bytes the map has (a changed function's first words may not pair).
+    ref_start: the module's start in us's image."""
+    if version == "us":
+        return None
+    import vermap
+    vm = _vermaps.get(version)
+    if vm is None:
+        vm = _vermaps[version] = vermap.read_map(ROOT / f"vermap.{version}.txt")
+
+    def name(off):
+        a = vram + off
+        for b in range(a, a + 0x40, 4):
+            r = vm.to_ref(module, b)
+            if r is not None:
+                r -= b - a
+                if r % 16 == 0:
+                    return f"{ref_start + r - vram:X}"
+                break
+        return f"{start + off:X}_{version}"
+    return name
+
+
+_vermaps = {}
+
+
+def ref_starts(version):
+    """{overlay name: its start in us's code image} (from bm64.us.yaml, which
+    is generated and committed); the fixed modules start where they do in
+    every version."""
+    if version == "us":
+        return {}
+    return {overlay_name(b, e): s for (b, e), (s, _) in overlay_offsets(ROOT / "bm64.us.yaml").items()}
+
+
+def ref_objects(version):
+    """{module: {VRAM in `version`}}: where us's text objects (bm64.us.yaml)
+    start, through the map.  An object boundary that us's padding shows
+    may not show in another version (the function before it happens to end
+    16-aligned there), and the object is the same C file."""
+    if version == "us":
+        return {}
+    import vermap
+    import yaml
+    vm = vermap.read_map(ROOT / f"vermap.{version}.txt")
+    out = {}
+    for s in yaml.safe_load((ROOT / "bm64.us.yaml").read_text())["segments"]:
+        if not isinstance(s, dict) or s.get("type") != "code":
+            continue
+        name, start, vram = s["name"], s["start"], s["vram"]
+        for sub in s.get("subsegments", []):
+            if isinstance(sub, list) and sub[1] in ("asm", "c", "hasm") and sub[0] > start:
+                t = vm.to_tgt(name, vram + sub[0] - start)
+                if t is not None:
+                    out.setdefault(name, set()).add(t)
     return out
 
 
@@ -659,6 +733,9 @@ def config(version, d):
     """The YAML text of bm64.<version>.yaml, and the image's size."""
     segs, boot_bss = fixed(d)
     lib = lib_objects(version)
+    us_starts = ref_starts(version)
+    us_objs = ref_objects(version)
+    known = lambda name: {**dict.fromkeys(us_objs.get(name, ())), **lib.get(name, {})}
     split = data_split(version)
     starts = [s for s, _, _ in segs] + [FIRST_BANK]
     out = [
@@ -692,7 +769,8 @@ def config(version, d):
         if name == "boot_code":
             out += code_segment(name, start, BOOT_VRAM, blob, boot_bss,
                                 first_hasm=(0x50, "entry"), note=note,
-                                known=lib.get(name, ()), split=split.get(name))
+                                known=known(name), split=split.get(name),
+                                namer=object_namer(version, name, start, BOOT_VRAM, start))
         elif name == "zerojump":
             strings = blob.index(b"ZeroJump")
             assert strings % 16 == 0, hex(strings)
@@ -710,11 +788,15 @@ def config(version, d):
             ]
         elif name == "main_code":
             # the boot thread reloads main_code up to segment_sizes[2] * 2 KiB
-            # each time round, and loads the rest once (segment_sizes[3])
+            # each time round, and loads the rest once (segment_sizes[3]).
+            # jp's main_code ends before that page: all of it is reloaded
             persist = d[0x30000 + (start >> 17)] << 11
+            if persist >= end - start:
+                persist = None
             out += code_segment(name, start, MAIN_VRAM, blob, main_bss(d, end),
-                                note=note, persist=persist, known=lib.get(name, ()),
-                                split=split.get(name))
+                                note=note, persist=persist, known=known(name),
+                                split=split.get(name),
+                                namer=object_namer(version, name, start, MAIN_VRAM, start))
         else:
             line = f"  - [0x{start:X}, bin, {name}]"
             out.append(f"{line:<40}# {note}" if note else line)
@@ -722,7 +804,10 @@ def config(version, d):
     for bank, entry, data in overlays(d):
         bss = bss_size(data, OVERLAY_VRAM, OVERLAY_SPACE)
         name = overlay_name(bank, entry)
-        out += code_segment(name, pos, OVERLAY_VRAM, data, bss, split=split.get(name))
+        out += code_segment(name, pos, OVERLAY_VRAM, data, bss, split=split.get(name),
+                            known=known(name),
+                            namer=object_namer(version, name, pos, OVERLAY_VRAM,
+                                               us_starts.get(name)))
         pos += len(data)
     out.append(f"  - [0x{pos:X}]")
     return "\n".join(out) + "\n", pos
