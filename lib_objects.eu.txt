@@ -181,7 +181,7 @@ boot_code 0x8000F310 start src/io/pfssetlabel.o
 boot_code 0x8000F410 start src/io/pfsisplug.o
 boot_code 0x8000F780 start src/io/pfsfreeblocks.o
 boot_code 0x8000F8D0 start src/io/pfsnumfiles.o
-boot_code 0x8000FA20 end src/io/pfsnumfiles.o
+boot_code 0x8000FA20 start src/io/pfsresizefile.o
 boot_code 0x80010440 start src/io/pfsinitpak.o
 boot_code 0x800106B0 start src/io/pfsrepairid.o
 boot_code 0x80010910 start src/io/cartrominit.o

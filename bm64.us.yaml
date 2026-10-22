@@ -218,7 +218,7 @@ segments:
       - [0x10010, c, libultra/io/pfsisplug]
       - [0x10380, asm]
       - [0x104D0, asm]
-      - [0x10620, asm]
+      - [0x10620, c, libultra/io/pfsresizefile]
       - [0x11040, c, libultra/io/pfsinitpak]
       - [0x112B0, asm]
       - [0x11510, c, libultra/io/cartrominit]

@@ -252,6 +252,7 @@ __osPfsRequestData = 0x8000F5B0; // type:func segment:boot_code lib=exact
 __osPfsGetInitData = 0x8000F6AC; // type:func segment:boot_code lib=exact
 osPfsFreeBlocks = 0x8000F780; // type:func segment:boot_code lib=exact
 osPfsNumFiles = 0x8000F8D0; // type:func segment:boot_code lib=exact
+osPfsReSizeFile = 0x8000FA20; // type:func segment:boot_code lib=exact
 osPfsInitPak = 0x80010440; // type:func segment:boot_code lib=exact
 osPfsRepairId = 0x800106B0; // type:func segment:boot_code lib=exact
 osCartRomInit = 0x80010910; // type:func segment:boot_code lib=exact
