@@ -103,7 +103,7 @@ def text_vram(version, module, obj):
         if not isinstance(sub, list) or len(sub) < 2 or sub[1] not in ("c", "hasm", "asm"):
             continue
         # a named subsegment, or one named by its image offset (`995C0`)
-        if (sub[2] if len(sub) > 2 else f"{sub[0]:X}") == obj:
+        if (str(sub[2]) if len(sub) > 2 else f"{sub[0]:X}") == obj:
             return sub[0] - seg["start"] + seg["vram"]
     sys.exit(f"{module} has no text object {obj} in bm64.{version}.yaml")
 

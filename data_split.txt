@@ -72,6 +72,10 @@ main_code 54BE0 0 0x10 0
 main_code @us 54BE0 rodata=0x802A2EF0
 main_code @eu 54BE0 rodata=0x802A2EF0
 main_code @jp 54BE0 rodata=0x802A2130
+main_code 86680 0x50 0x10 0x10
+main_code @us 86680 data=0x802A1380 rodata=0x802A3B50 bss=0x802AFC20
+main_code @eu 86680 data=0x802A1380 rodata=0x802A3B40 bss=0x802AFC10
+main_code @jp 86680 data=0x802A09E0 rodata=0x802A2D80 bss=0x802AEE50
 main_code 995C0 0 0x10 0
 main_code @us 995C0 rodata=0x802A4040
 main_code @eu 995C0 rodata=0x802A4030
