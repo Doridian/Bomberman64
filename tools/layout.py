@@ -408,16 +408,31 @@ def data_split(version):
     block, in link order, with their sizes, and this version's starts
     (docs/DECOMPILING.md, "Data"); then the objects placed on their own
     (library objects after the game's code), with where this version has
-    each of their sections."""
+    each of their sections.  An object whose C builds to other sizes in a
+    version (jp's text) has them on a `<module> @<version> <object>
+    sizes=<.data>,<.rodata>,<.bss>` line, which replaces its size line's
+    in that version."""
     out = {}
     path = ROOT / "data_split.txt"
     if not path.exists():
         return out
     lines = [(n, line.split("#")[0].split())
              for n, line in enumerate(path.read_text().splitlines(), 1)]
-    # an object with a placement line (in any version) is placed on its own
+    # an object with a placement line (in any version) is placed on its own;
+    # a line giving only a version's sizes doesn't place it
     placed = {(l[0], l[2]) for _, l in lines
-              if len(l) > 2 and l[1].startswith("@") and "=" not in l[2]}
+              if len(l) > 2 and l[1].startswith("@") and "=" not in l[2]
+              and any(not kv.startswith("sizes=") for kv in l[3:])}
+    # this version's own sizes, where its C builds to others
+    vsizes = {}
+    for n, l in lines:
+        if len(l) > 2 and l[1] == f"@{version}" and "=" not in l[2]:
+            for kv in l[3:]:
+                k, v = kv.split("=")
+                if k == "sizes":
+                    vs = [int(x, 16) for x in v.split(",")]
+                    assert len(vs) == 3, f"data_split.txt:{n}: sizes=<.data>,<.rodata>,<.bss>"
+                    vsizes[l[0], l[2]] = vs
     for n, line in lines:
         if not line:
             continue
@@ -427,9 +442,13 @@ def data_split(version):
                 continue
             if "=" not in line[2]:
                 obj = line[2]
+                if (line[0], obj) not in placed:
+                    continue  # only sizes (above)
                 where = islands.setdefault(obj, [0, 0, 0, {}])[3]
                 for kv in line[3:]:
                     k, v = kv.split("=")
+                    if k == "sizes":
+                        continue
                     assert k in ("data", "rodata", "bss"), f"data_split.txt:{n}: {k}"
                     where[k] = int(v, 16)
                 continue
@@ -439,7 +458,7 @@ def data_split(version):
                 starts[k] = int(v, 16)
             continue
         assert len(line) == 5, f"data_split.txt:{n}: module object .data .rodata .bss"
-        sizes = [int(x, 16) for x in line[2:]]
+        sizes = vsizes.get((line[0], line[1]), [int(x, 16) for x in line[2:]])
         if (line[0], line[1]) in placed:
             islands.setdefault(line[1], [0, 0, 0, {}])[:3] = sizes
         else:

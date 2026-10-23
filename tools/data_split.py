@@ -3,13 +3,17 @@
 
   data_split.py <version>                    check every listed object
   data_split.py <version> --add MODULE OBJ   list OBJ (the next C object of
-                                             MODULE) with its built sizes
+                                             MODULE) with its built sizes;
+                                             if it is listed, add this
+                                             version's sizes where they differ
 
 data_split.txt lists, per module, the C objects whose .data, .rodata and
 .bss tools/layout.py cuts out of the module's block, with their sizes
 (docs/DECOMPILING.md, "Data").  The sizes are the compiler's: this reads
 them from build/<version>/src/.../<object>.c.o (so run `make` first) and
-fails if a listed size differs.  --add appends a line for a new object
+fails if a listed size differs; a version whose C builds to other sizes
+(jp's text) has its own on a `MODULE @<version> OBJ sizes=...` line, which
+is what that version is checked against.  --add appends a line for a new object
 with the sizes it has now; an object is listed once its C defines all of
 its .data and .bss (its .rodata may still come partly from GLOBAL_ASM
 functions, which splat gives their share once the object owns it: until
@@ -80,8 +84,21 @@ def add(version, module, obj):
     line = " ".join([module, obj] + [f"0x{x:X}" if x else "0" for x in (d, r, b)])
     lines = SPLIT.read_text().splitlines()
     mine = [k for k, l in enumerate(lines) if re.match(rf"{re.escape(module)}\s+[^@\s]", l)]
-    if any(l.split()[:2] == [module, obj] for l in lines):
-        sys.exit(f"{module} {obj} is listed already")
+    have = [k for k, l in enumerate(lines) if l.split()[:2] == [module, obj]]
+    if have:
+        # listed (from another version's build): this version's own sizes
+        # where its C builds to others
+        listed = tuple(int(x, 16) for x in lines[have[0]].split()[2:5])
+        if listed == (d, r, b) or any(l.split()[:3] == [module, f"@{version}", obj]
+                                      and "sizes=" in l for l in lines):
+            sys.exit(f"{module} {obj} is listed already")
+        line = f"{module} @{version} {obj} sizes=" + ",".join(f"0x{x:X}" if x else "0" for x in (d, r, b))
+        at = max(k for k, l in enumerate(lines) if l.split()[:1] == [module]
+                 and obj in l.split()[1:3])
+        lines.insert(at + 1, line)
+        SPLIT.write_text("\n".join(lines) + "\n")
+        print(line)
+        return
     if mine:
         lines.insert(mine[-1] + 1, line)
     else:

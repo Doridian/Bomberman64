@@ -161,6 +161,13 @@ tools/progress.py                                # per module, overlays per bank
     previous one (995C0's func_8027F0B4/func_8027F0BC, 53D70's
     func_8023A310, 4E030's 0x80234230-40). Each stub is a helper to
     write;
+  - a function that calls itself last becomes a loop (tail recursion):
+    AFBF0's func_8029608C ends in `func_8029608C(x, y)` for two of its
+    cases. Written as a `while (1)` with the arguments reassigned, the
+    same code comes out but its entry block is scheduled differently
+    (the loop's first load goes before the hoisted constants, not after
+    them); a loop whose only difference is the prologue's order may be
+    one of these;
   - a function holding `while (1) {}` isn't inlined (`for (;;) {}` is):
     53D70's func_8023957C, four copies in func_802395A8;
   - small callees are inlined by size, and dead code counts (a function
@@ -339,9 +346,10 @@ What a decompiler has to do for jp (and eu):
    `tools/vermap.py`'s map gives jp's addresses (boot_code's data is 0x20
    lower in jp, main_code's objects' `.data` starts at `0x8029EC50`). An
    object whose data differs in jp (strings: jp's text is in another
-   encoding, docs/ASSETS.md) needs its definitions `#if`'d and a jp size
-   line; the format has no per-version size column yet, so add one when
-   the first object needs it.
+   encoding, docs/ASSETS.md) needs its definitions `#if`'d and jp's own
+   sizes: `<module> @jp <object> sizes=<.data>,<.rodata>,<.bss>`
+   (`tools/data_split.py jp --add <module> <object>` writes it), as
+   AFBF0's (its strings make jp's `.data` 0xE60 against us's 0xE70).
 
 ## Data
 
@@ -378,8 +386,15 @@ Cut so far (the same in us, eu and jp):
 | ovl_09_01 | all: `ovl_09_01_entry`, `120010` (.data 0x30, .rodata 0x50: the handler's jump table, .bss 0x50) | 0x80044990 (the compiler's) |
 | main_code | `main_code_entry`, `40040` (.data 0x30: two tables), `40300` (.data 0x10: the bump pointer) after the RSP code at 0x8029D250-0x8029F570 | not shown yet: none of the three has .rodata |
 
-The sizes are the same in both versions as long as the C is; an object
-whose data differs between them will need a version column.
+The sizes are the same in every version as long as the C is. Where a
+version's C builds to other sizes (`#if VERSION_JP` data: jp's text), a
+`<module> @<version> <object> sizes=<.data>,<.rodata>,<.bss>` line gives
+that version's, in place of the size line's: `tools/layout.py` cuts or
+places the object with them, and `tools/data_split.py <version>` checks
+the version's build against them. `tools/data_split.py <version> --add
+<module> <object>` on an object listed already writes the line if that
+version's build differs. A sizes line alone doesn't place an object; its
+placement lines do.
 
 **Making an object own its data:**
 
@@ -456,7 +471,8 @@ before every .rodata). libultra's objects use this where their code needs
 the data in the same file (docs/LIBULTRA.md, "Data"). So do the game's
 objects after main_code's cut that have jump tables, strings or
 constants (995C0, 54BE0: `.rodata` only), or whose `.data`/`.bss` is all
-their own (53D70, 530C0, 412F0); everything else they use stays `extern`.
+their own (53D70, 530C0, 412F0, AFBF0: all three sections, jp's .data
+its own size); everything else they use stays `extern`.
 Build the object once (the link fails, the `.o` is there), run `--place`
 for each version with `--ref build/us/src/<object>.c.o`, add the lines,
 regenerate the configs and extract again. `--place` finds an object named
