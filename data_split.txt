@@ -14,6 +14,10 @@
 #       (main_code: RSP code), and where their .rodata starts (the module's
 #       .data/.rodata boundary), needed once a listed object has .rodata
 #       and the list doesn't cover the whole module.  Either may be left out.
+#   <module> @<version> <object> sizes=<.data>,<.rodata>,<.bss>
+#       That version's sizes, where its C builds to others (jp's text), in
+#       place of the object's size line's; `tools/data_split.py <version>
+#       --add` writes it for an object listed already.
 
 # ovl_09_01: the whole overlay is C, so its boundary is the compiler's:
 # .data 0x80044960-0x80044990, .rodata 0x80044990-0x800449E0
@@ -88,6 +92,11 @@ main_code ACA00 0x20 0 0
 main_code @us ACA00 data=0x802A1D70
 main_code @eu ACA00 data=0x802A1D70
 main_code @jp ACA00 data=0x802A0FC0
+main_code AFBF0 0xE70 0x70 0x80
+main_code @us AFBF0 data=0x802A1E00 rodata=0x802A46D0 bss=0x802B0320
+main_code @eu AFBF0 data=0x802A1E00 rodata=0x802A46C0 bss=0x802B0310
+main_code @jp AFBF0 data=0x802A1050 rodata=0x802A3900 bss=0x802AF540
+main_code @jp AFBF0 sizes=0xE60,0x70,0x80
 
 # Library objects after the game's code, placed on their own (where the ROM
 # has their data; `tools/data_split.py <v> --place MODULE OBJECT` finds it).

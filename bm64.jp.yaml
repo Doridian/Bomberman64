@@ -360,7 +360,7 @@ segments:
       - [0xA9C80, asm, AA580]
       - [0xAC100, c, ACA00]
       - [0xACAD0, asm, AD3D0]
-      - [0xAF2F0, asm, AFBF0]
+      - [0xAF2F0, c, AFBF0]
       - [0xB08F0, c, B11F0]
       - [0xB1B10, asm, B2410]
       - [0xB1C00, asm, B2500]
@@ -387,7 +387,9 @@ segments:
       - [0xBB1E0, .data, 86680]
       - [0xBB230, data]
       - [0xBB7C0, .data, ACA00]
-      - [0xBB7E0, rodata]
+      - [0xBB7E0, data]
+      - [0xBB850, .data, AFBF0]
+      - [0xBC6B0, rodata]
       - [0xBC850, .rodata, 4E030]
       - [0xBC880, .rodata, 4ED50]
       - [0xBC8C0, .rodata, 530C0]
@@ -398,6 +400,8 @@ segments:
       - [0xBD590, rodata]
       - [0xBDA70, .rodata, 995C0]
       - [0xBDA80, rodata]
+      - [0xBE100, .rodata, AFBF0]
+      - [0xBE170, rodata]
       - {type: bss, vram: 0x802A4530}
       - {type: .bss, vram: 0x802A4560, name: 412F0}
       - {type: bss, vram: 0x802A4600, name: bss_802A4600}
@@ -406,6 +410,8 @@ segments:
       - {type: bss, vram: 0x802A4C90, name: bss_802A4C90}
       - {type: .bss, vram: 0x802AEE50, name: 86680}
       - {type: bss, vram: 0x802AEE60, name: bss_802AEE60}
+      - {type: .bss, vram: 0x802AF540, name: AFBF0}
+      - {type: bss, vram: 0x802AF5C0, name: bss_802AF5C0}
   - [0xBED30, bin, pad_main_code]       # zeros
   - name: ovl_09_01
     type: code
