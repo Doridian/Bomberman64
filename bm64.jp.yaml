@@ -1020,16 +1020,17 @@ segments:
     type: code
     start: 0x1CC610
     vram: 0x80043000
-    bss_size: 0x50
+    bss_size: 0x60
     exclusive_ram_id: overlay
     symbol_name_format: ovl0E_09_$VRAM
     dir: overlays/ovl_0E_09
     subsegments:
-      - [0x1CC610, asm, ovl_0E_09_entry]
-      - [0x1CC620, asm, 1CD770]
+      - [0x1CC610, c, ovl_0E_09_entry]
+      - [0x1CC620, c, 1CD770]
       - [0x1CDD50, hasm, ovl_0E_09_zerojmp]
-      - [0x1CF370, rodata]
-      - {type: bss, vram: 0x80045F70}
+      - [0x1CF370, .data, 1CD770]
+      - [0x1CF4F0, .rodata, 1CD770]
+      - {type: .bss, vram: 0x80045F70, name: 1CD770}
   - name: ovl_0E_10
     type: code
     start: 0x1CF580
