@@ -177,6 +177,10 @@ tools/progress.py                                # per module, overlays per bank
     down, even when it lives in a register: the declaration order fixes
     the frame. The order of an inlined static's parameters sets its
     spill slots too (ACA00's func_80292410 takes `(blob, entry)`);
+  - where an inlined static is defined matters even though the functions
+    come out in the same order: 9A5F0's func_80281278 got its loop's
+    constants after the pointers' set-up (as1 orders the preheader
+    differently) until its static was defined above it rather than below;
   - a function-local static is reached with `lui`/`%lo` at every access,
     where a global (extern or defined) gets its address kept in a
     register: 86680's two counters and 4ED50's constants are their
@@ -256,6 +260,10 @@ tools/progress.py                                # per module, overlays per bank
   moves it. `int` and `long` differ elsewhere too: `arg3 + c * size` adds
   its operands in the other order when `arg3` is a `long` parameter
   (9A5F0's func_80280274 matched only with `int arg3`).
+- **A constant part of a local is set early.** 9A5F0's func_802807A8
+  reloads its `u8` argument into `a3` only with `offset = 8;` before the
+  file is opened and `offset += arg1 * 32;` after; any one expression
+  for the offset puts it in `a1`.
 - **Float literals keep their type.** `x * 2` multiplies by a 2.0
   constant where `x * 2.0f` becomes `add.s`; an angle wraps as
   `a >= 360.0f ? a - 360.0f : a < 0.0f ? a + 360.0f : a` (or the same as
@@ -349,7 +357,8 @@ What a decompiler has to do for jp (and eu):
    encoding, docs/ASSETS.md) needs its definitions `#if`'d and jp's own
    sizes: `<module> @jp <object> sizes=<.data>,<.rodata>,<.bss>`
    (`tools/data_split.py jp --add <module> <object>` writes it), as
-   AFBF0's (its strings make jp's `.data` 0xE60 against us's 0xE70).
+   AFBF0's (its strings make jp's `.data` 0xE60 against us's 0xE70) and
+   9A5F0's (jp has no proportional font: `.data` 0x40, no `.bss`).
 
 ## Data
 

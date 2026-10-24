@@ -14,6 +14,9 @@
 #       (main_code: RSP code), and where their .rodata starts (the module's
 #       .data/.rodata boundary), needed once a listed object has .rodata
 #       and the list doesn't cover the whole module.  Either may be left out.
+#   <module> @<version> <object> data=<vram> rodata=<vram> bss=<vram>
+#       An object placed on its own (below): where this version has its
+#       sections.
 #   <module> @<version> <object> sizes=<.data>,<.rodata>,<.bss>
 #       That version's sizes, where its C builds to others (jp's text), in
 #       place of the object's size line's; `tools/data_split.py <version>
@@ -88,6 +91,13 @@ main_code 995C0 0 0x10 0
 main_code @us 995C0 rodata=0x802A4040
 main_code @eu 995C0 rodata=0x802A4030
 main_code @jp 995C0 rodata=0x802A3270
+# 9A5F0: jp has no proportional font (its glyph table, D_802A1A44, the
+# three functions at the end of the function table and D_802B0220)
+main_code 9A5F0 0x450 0 0x10
+main_code @jp 9A5F0 sizes=0x40,0,0
+main_code @us 9A5F0 data=0x802A1630 bss=0x802B0220
+main_code @eu 9A5F0 data=0x802A1630 bss=0x802B0210
+main_code @jp 9A5F0 data=0x802A0C90
 main_code ACA00 0x20 0 0
 main_code @us ACA00 data=0x802A1D70
 main_code @eu ACA00 data=0x802A1D70
