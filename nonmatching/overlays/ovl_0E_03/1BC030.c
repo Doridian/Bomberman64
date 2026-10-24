@@ -9,7 +9,8 @@
  * - func_ovl0E_03_800430A8 (3): ovl_0E_12's 80043164: `sll t4,s3,5` (the
  *   next call's &D_80046B78[i]) is scheduled before the stores to unk0 and
  *   unk4; the original has it after them. Store order, one line or two, and
- *   the call on their line don't move it.
+ *   the call on their line don't move it; the original seems to have a
+ *   block boundary before the call (ovl_0E_12's header).
  */
 #include "common.h"
 
