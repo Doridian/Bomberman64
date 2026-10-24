@@ -202,9 +202,9 @@ module's asm blocks, though the draft defines it.
   it matches but func_ovl0C_08_80043654 (the object setup inlined, as a
   static taking the struct's address, with 8004361C called from it), whose
   epilogue restores `s2`, `s1`, `s0` where the original restores `s0`
-  first (scratch/ovl_rest/0C_08_struct_abc.c).
+  first (nonmatching/overlays/ovl_0C_08/18D110.c).
   Bank 0x0E's bigger overlays (ovl_0E_09, and the drafts of 0E_05 and
-  0E_12 in scratch/bank0E/) add:
+  0E_12 in nonmatching/) add:
   - the set-up function the handler calls (case 2) registers the two
     callbacks; at its own turn it pulls them out ahead of the movers' tasks
     defined between them. Defined above those tasks (0E_09's 80043968 just
@@ -315,8 +315,8 @@ module's asm blocks, though the draft defines it.
     func_80043F1C between 80043EA8 and 80043F24). The same holds for a
     non-empty global: ovl_0D_04's func_80043478 comes out after
     800433F0 (pulled by 800435AC) only when defined above 800435AC.
-  Bank 0x0D's stage overlays (drafts in scratch/bank0D/ of the main
-  checkout, not matching yet) add: ZeroJump 0xD08 (a position to its tile)
+  Bank 0x0D's stage overlays (drafts of 0D_04 and 0D_05 in
+  nonmatching/, not matching yet) add: ZeroJump 0xD08 (a position to its tile)
   fills 6 words, so its buffer is `s32 pos[6]` (that fixed two frames);
   0x1820 returns `s32` (only then does its caller keep its temporaries in
   `v1`); float products of constants propagated from locals are not
