@@ -248,9 +248,39 @@ tools/progress.py                                # per module, overlays per bank
     scheduled into the stores before it; a chained assignment (`x =
     p->unk10 = rec->unk4;`) and a ternary repeating its operand (`a = a +
     5.0f >= 360.0f ? a + 5.0f - 360.0f : ...`) each fixed a register
-    choice there.
+    choice there. The fake must test a variable the function doesn't
+    otherwise use: ovl_0D_05's func_80043210 (its first call's
+    `lui`/`lw a0` not scheduled into the prologue, the delay slot a `nop`)
+    matched with `if (!D_80046154 && ...) {}` at its top, where testing the
+    call's own argument only moved that load into the fake's block;
+  - a function pulls its static callees in the reverse order of their
+    last calls, so a static last called after another static N comes out
+    just before N: ovl_0D_05's stub before func_8004352C is a static that
+    func_80043790 calls at its very end, after its last call of 8004352C;
+  - an empty static with no parameters still adds a 4-byte slot to its
+    caller's frame (8004352C's frame was 8 bytes too big while its stub
+    was an empty static it called); called inside an `if`, the same
+    static fixed ovl_0D_04's func_80044D98 frame;
+  - a small function the handler calls can stay a call only by being
+    bigger: ovl_0D_04's func_80044840 calls its empty static twice (a
+    fake), where once it was inlined into the handler;
+  - a global empty function a static calls is inlined and still emitted;
+    defined above the static's caller it comes out pulled, between the
+    statics, defined below it comes out at its own turn (ovl_0D_04's
+    func_80043F1C between 80043EA8 and 80043F24). The same holds for a
+    non-empty global: ovl_0D_04's func_80043478 comes out after
+    800433F0 (pulled by 800435AC) only when defined above 800435AC.
+  Bank 0x0D's stage overlays (drafts in scratch/bank0D/ of the main
+  checkout, not matching yet) add: ZeroJump 0xD08 (a position to its tile)
+  fills 6 words, so its buffer is `s32 pos[6]` (that fixed two frames);
+  0x1820 returns `s32` (only then does its caller keep its temporaries in
+  `v1`); float products of constants propagated from locals are not
+  folded (`x = 170.0f; e->unk14 = x; ... = x * 10.0f` gives a `mul.s`);
+  an angle-to-direction `if` chain is a `static s32` helper.
   `tools/fcmp.py` and `tools/mkperm.py` compile `-mips1`; for a `-mips2`
-  object (`MIPS2_C_FILES`), pass them `-mips2`.
+  object (`MIPS2_C_FILES`), pass them `-mips2`. mkperm.py's `IMAGE_OFFSET`
+  is the object's text start, not the function's: with the function's,
+  every base score is meaningless.
   The decomp-permuter normally strips a file to the one function, which
   undoes all of this: keep the other definitions (mark them `inline` for
   the permuter and strip the keyword in its compile.sh) and score against
