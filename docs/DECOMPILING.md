@@ -176,6 +176,21 @@ module's asm blocks, though the draft defines it.
   both. B2410 (setjmp/longjmp) and B2500 (`mtc0` WatchLo) are handwritten
   asm. asm-processor can't do `-O3`, so an `-O3`
   object is C only once all of its functions are.
+- **Arguments kept in `t` registers mean `-O3`.** A non-leaf function
+  that copies an argument to a `t` register on entry (`move t0, a0`) and
+  spills it to its home slot only around a call is `-O3`; IDO 5.3 `-O2`
+  stores every such argument to its home slot in the prologue and reloads
+  it (`sw a0, 32(sp)` ... `lw`), however the C is written. That puts the
+  `-O2` list above in doubt: 404C0's func_80225FB8 matches only at `-O3`
+  (with an unused local ahead of its `entry` struct for the frame), and the
+  whole of 404C0 written last function first matches at `-O3` but for one
+  register in func_80225EBC (`lui a3` where ours is `lui a2`; drafts in
+  scratch/main_code/ of the main checkout). 85A10 (func_8026B72C's
+  argument; func_8026B238 uses `s` registers it never saves), B11F0
+  (func_80297564's `move t4, a1`) and A2840 (func_802884D4 reads `f16`
+  unset) show it too. Their GLOBAL_ASM functions are the ones `-O2` can't
+  give; 87190, 87730, 99F40 and A4860 match their remaining functions at
+  `-O2` so far (A4860's func_8028A154 inlines func_8028A08C at `-O3`).
 - **Banks 0x0C-0x17's overlays are `-O3` too**: ovl_0C_03, 12_02 and
   12_04 written last function first and built `-O3` match with plain calls
   where their earlier `-O2` C needed `pad[]` locals and `if (1)`s, and
