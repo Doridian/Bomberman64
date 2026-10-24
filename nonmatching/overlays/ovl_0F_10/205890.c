@@ -1,9 +1,33 @@
 /*
  * NON_MATCHING: ovl_0F_10's game object, complete: every function and its data
- * (.data and .rodata as the original, .bss 0x60).
+ * (.data and .rodata as the original; .bss 0x60 with its unused words common).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1006
+ * differing words: us 828
+ *
+ * Every function is in the original's place, stubs included (the inlined
+ * statics are named for the stubs they leave). What still differs in us
+ * (words):
+ * - func_ovl0F_10_80043430 (430): case 2's
+ *   `D_ovl0F_10_80046AE0[1]->unk40->unk14 += 3200.0f` keeps a load-delay
+ *   nop and its store before the `jal` of func_ovl0F_10_80046190 in the
+ *   original (ours moves the store into the delay slot), so ours is one
+ *   word short and the rest shifts; the frame's spill slots also sit 16
+ *   bytes lower and the inlined func_ovl0F_10_80043344's local 8 higher.
+ * - func_ovl0F_10_80044074 (252): ovl_0F_07's 80043A58 family. The
+ *   original masks unk64's speed first (into a1), the flags second, and
+ *   leaves one word less in the side-flag if/else; ours the other way,
+ *   which renames every temporary after. The unused 0x5C bytes of its
+ *   frame are `pad0`/`pad` (a guess: inlined statics' slots).
+ * - func_ovl0F_10_80044B8C (97): ovl_0F_07's 80044208, same miss (the
+ *   `move s1,v0` before `mtc1 zero,$f12`).
+ * - func_ovl0F_10_80043CCC (29): s0 and s1 swapped (the counter and
+ *   &D_ovl0F_10_800468B0), `i = 0` before the branch, and the original's
+ *   six nops after its endless loop.
+ * - func_ovl0F_10_800448A0 (18): the original's extra nop after its
+ *   endless loop; `pad[1]` gives its frame's unused word.
+ * - func_ovl0F_10_80043E08 (2): `id` is spilled at 0x28 in the original,
+ *   0x2C in ours.
  */
 #include "common.h"
 
@@ -144,7 +168,7 @@ static void func_ovl0F_10_800431BC(UnkStruct_ovl0F_10_8004672C *, s32);
 static void func_ovl0F_10_800432E0(s32 *);
 static void func_ovl0F_10_8004338C(s32);
 static void func_ovl0F_10_80043FAC(f32, f32 *, s32 *);
-static void func_ovl0F_10_8004406C(UnkStructA *, s32 *, f32 *);
+static void func_ovl0F_10_8004406C(void);
 static void func_ovl0F_10_80044064(UnkStructA *);
 static void func_ovl0F_10_8004405C(UnkStructA *, f32 *);
 static void func_ovl0F_10_80044054(UnkStructA *, s32, f32);
@@ -383,6 +407,14 @@ s32 D_ovl0F_10_800468B4 = 0;
 UnkStructA *D_ovl0F_10_800468B8 = NULL;
 s32 D_ovl0F_10_800468BC = -1;
 UnkStruct_ovl0F_10_800468C0 D_ovl0F_10_800468C0 = { 0, 3, 3.75f, 15, 0, 0, 0 };
+/* the camera scripts func_ovl0F_10_80043E08 passes to func_ovl0F_10_800455C0 */
+char D_ovl0F_10_800468DC[] = "WM1 WG1 WSL WAP WDN WB3 WDNE WB1 WDN WB2";
+char D_ovl0F_10_80046908[] = "M9 ST90";
+char D_ovl0F_10_80046910[] = "WM1 WG1 WSH WAP WDN WB12 WDNW WB7 WDW WB8 WDNW WB3 WDW WB4";
+char D_ovl0F_10_8004694C[] = "WM1 WG1 WSL WAP WDSW WB0 ST80";
+char D_ovl0F_10_8004696C[] = "M8 ST80";
+char D_ovl0F_10_80046974[] = "M7 ST120 WM1 WG1 WSH WAP WDSW WB1";
+char D_ovl0F_10_80046998[] = "WM1 WG1 WSL WAP WDSE WB1 WDS WB0 ST60";
 
 /* a task: the trembling flight to the end of the stage */
 void func_ovl0F_10_80044AD4(void) {
@@ -401,6 +433,7 @@ void func_ovl0F_10_80044AD4(void) {
 }
 
 void func_ovl0F_10_800448A0(void) {
+    s32 pad[1];
     f32 x;
     f32 y;
     f32 z;
@@ -423,7 +456,7 @@ void func_ovl0F_10_800448A0(void) {
     }
     func_ovl0F_10_80045F28(110);
     for (i = 0; i < 500; i++) {
-        rx += 0.1846f;
+        rx += 0.18460001f;
         func_ovl0F_10_80045C18(rx, 32768.0f, 32768.0f);
         func_ovl0F_10_80045F50();
     }
@@ -440,9 +473,9 @@ void func_ovl0F_10_800448A0(void) {
     }
     func_ovl0F_10_80045F28(360);
     for (i = 0; i < 600; i++) {
-        rz += 2.8933334f;
-        ry += -0.0068333307f;
         rx += -0.33816665f;
+        ry += -0.0068333307f;
+        rz += 2.8933334f;
         func_ovl0F_10_80045C18(rx, ry, rz);
         func_ovl0F_10_80045F50();
     }
@@ -458,7 +491,7 @@ void func_ovl0F_10_80044780(UnkStructA *arg0) {
     s32 i;
 
     if (arg0->unk8 & 1) {
-        func_ovl0F_10_80045DC0(arg0, 0x10);
+        func_ovl0F_10_80045C60(0x10);
     }
     dx = arg0->unk40->unk28 / 30.0f;
     dy = arg0->unk40->unk2C / 30.0f;
@@ -475,13 +508,19 @@ void func_ovl0F_10_80044780(UnkStructA *arg0) {
 }
 
 void func_ovl0F_10_80044074(UnkStructA *arg0) {
+    s32 pad0[1];
     s32 flags;
     f32 speed;
     f32 dist;
     f32 angle;
     f32 pos[3];
+    s32 pad[22];
+    s32 v;
 
-    func_ovl0F_10_8004406C(arg0, &flags, &speed);
+    func_ovl0F_10_8004406C();
+    v = arg0->unk64;
+    flags = v & 0xF0000000;
+    speed = (v & 0x0FFFFFFF) * 0.01;
     dist = 0.0f;
     angle = 0.0f;
     if (arg0->unk8 & 0x20000) {
@@ -569,9 +608,7 @@ void func_ovl0F_10_80044074(UnkStructA *arg0) {
     }
 }
 
-static void func_ovl0F_10_8004406C(UnkStructA *arg0, s32 *flags, f32 *speed) {
-    *flags = arg0->unk64 & 0xF0000000;
-    *speed = (arg0->unk64 & 0x0FFFFFFF) * 0.01;
+static void func_ovl0F_10_8004406C(void) {
 }
 
 /* the side flags */
@@ -672,15 +709,15 @@ void func_ovl0F_10_80043E08(void) {
     }
     task = func_ovl0F_10_80045F08(func_ovl0F_10_800448A0, NULL, 0, 0, 0x130);
     func_ovl0F_10_80045658(1);
-    func_ovl0F_10_800455C0("WM1 WG1 WSL WAP WDN WB3 WDNE WB1 WDN WB2");
-    func_ovl0F_10_800455C0("M9 ST90");
-    func_ovl0F_10_800455C0("WM1 WG1 WSH WAP WDN WB12 WDNW WB7 WDW WB8 WDNW WB3 WDW WB4");
-    func_ovl0F_10_800455C0("WM1 WG1 WSL WAP WDSW WB0 ST80");
+    func_ovl0F_10_800455C0(D_ovl0F_10_800468DC);
+    func_ovl0F_10_800455C0(D_ovl0F_10_80046908);
+    func_ovl0F_10_800455C0(D_ovl0F_10_80046910);
+    func_ovl0F_10_800455C0(D_ovl0F_10_8004694C);
     func_ovl0F_10_80045648(id, 0xB);
     func_ovl0F_10_80045F28(60);
-    func_ovl0F_10_800455C0("M8 ST80");
-    func_ovl0F_10_800455C0("M7 ST120 WM1 WG1 WSH WAP WDSW WB1");
-    func_ovl0F_10_800455C0("WM1 WG1 WSL WAP WDSE WB1 WDS WB0 ST60");
+    func_ovl0F_10_800455C0(D_ovl0F_10_8004696C);
+    func_ovl0F_10_800455C0(D_ovl0F_10_80046974);
+    func_ovl0F_10_800455C0(D_ovl0F_10_80046998);
     func_ovl0F_10_80045658(0);
     func_ovl0F_10_800455E0(0x4000000);
     func_ovl0F_10_80045F28(40);
