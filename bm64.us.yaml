@@ -1275,11 +1275,12 @@ segments:
     symbol_name_format: ovl10_01_$VRAM
     dir: overlays/ovl_10_01
     subsegments:
-      - [0x209360, asm, ovl_10_01_entry]
-      - [0x209370, asm]
+      - [0x209360, c, ovl_10_01_entry]
+      - [0x209370, c]
       - [0x20BD30, hasm, ovl_10_01_zerojmp]
-      - [0x20D370, rodata]
-      - {type: bss, vram: 0x800472F0}
+      - [0x20D370, .data, 209370]
+      - [0x20D510, .rodata, 209370]
+      - {type: .bss, vram: 0x800472F0, name: 209370}
   - name: ovl_10_02
     type: code
     start: 0x20D650

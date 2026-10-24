@@ -212,6 +212,10 @@ ovl_0E_14 1DD120 0x40 0x50 0x60
 ovl_0F_06 ovl_0F_06_entry 0 0 0
 ovl_0F_06 1FB180 0x50 0x60 0x40
 
+# ovl_10_01: all C (-O3); from 80043E14 on it is ovl_10_03's code
+ovl_10_01 ovl_10_01_entry 0 0 0
+ovl_10_01 209370 0x1A0 0x140 0x520
+
 # ovl_10_02: all C (-O3); .rodata is its two strings, the handler's jump
 # table and floats
 ovl_10_02 ovl_10_02_entry 0 0 0

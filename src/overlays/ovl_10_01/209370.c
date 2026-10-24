@@ -1,23 +1,6 @@
+#include "common.h"
+
 /*
- * NON_MATCHING: ovl_10_01's game object, complete: every function and its
- * .data/.bss/.rodata (sizes 0x1A0/0x140/0x520 and their bytes as the
- * original; .text 0x29C0 as the original). Not built into the ROM
- * (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 29, eu 29, jp 29
- *
- * What still differs in us (words; eu and jp the same): the three
- * functions ovl_10_03's draft (210390.c) has left, with the same code and
- * the same differences there.
- * - func_ovl10_01_80044154 (14): only stack offsets. Its four Vec3f sit 12
- *   bytes higher than the original's (player at sp+0xE8, not 0xDC); the
- *   original has 0x10 free above them and 0x10 below.
- * - func_ovl10_01_800445F8 (11): case 10 stores v.y (0.0f) before loading
- *   v.x, where the original loads v.x first and stores v.y in the jal's
- *   way.
- * - func_ovl10_01_80044A10 (4): the three Vec3f are 8 bytes higher than
- *   the original's in the same 0x70 frame.
- *
  * ovl_10_01's game object, IDO -O3: the functions are written last to first
  * (IDO -O3 emits a file's functions in reverse, each one after the ones it
  * calls that aren't out yet, last call first; unreferenced statics go to
@@ -34,9 +17,8 @@
  * 80043060, 8004337C and 8004345C; 800432DC inlines 80043294; 80043AB8
  * inlines 80043768. D_ovl10_01_80047100 is .data no function reads, and
  * the handler's table D_ovl10_01_80047188 ends in one word, not a record.
+ * 80044154 and 80044A10 have an unused local for the original's frame.
  */
-
-#include "common.h"
 
 /* What func_ovl10_01_80046830 returns. */
 typedef struct {
@@ -621,10 +603,11 @@ void func_ovl10_01_80044B04(UnkStructA *arg0) {
 }
 
 void func_ovl10_01_80044A10(void) {
+    s32 i;
+    s32 pad; /* unused: the original's frame has the slot */
     Vec3f ang;
     Vec3f a;
     Vec3f b;
-    s32 i;
 
     if (func_ovl10_01_80045F58(0)->unk40->unk14 == 700.0f) {
         for (i = 0; i < 2; i++) {
@@ -652,8 +635,8 @@ void func_ovl10_01_800445F8(void) {
         case 10:
             if (D_ovl10_01_80047640[n] & 4) {
                 v.z = 70.0f;
-                v.y = 0.0f;
                 v.x = D_ovl10_01_80047610[n]->unk40->unk20;
+                v.y = 0.0f;
                 func_ovl10_01_800466B0(&v, &out);
                 x = D_ovl10_01_80047610[n]->unk40->unk10 + out.x;
                 z = D_ovl10_01_80047610[n]->unk40->unk18 + out.z;
@@ -719,16 +702,16 @@ void func_ovl10_01_800445DC(void) {
 }
 
 void func_ovl10_01_80044154(void) {
-    s32 pad;
-    Vec3f player;
-    Vec3f pos;
-    Vec3f pos2;
-    Vec3f ang;
     s32 i;
     s32 j;
     f32 dist;
     f32 speed;
+    Vec3f player;
+    Vec3f pos;
+    Vec3f pos2;
+    Vec3f ang;
     f32 a;
+    s32 pad; /* unused: the original's frame has the slot */
 
     func_ovl10_01_800467E8(func_ovl10_01_80045F58(0), &player);
     if (player.y == 700.0f || D_ovl10_01_80047330 != 0) {
