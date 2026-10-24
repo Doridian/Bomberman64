@@ -20,7 +20,11 @@
  * tools/nonmatching.py doesn't see the statics before 800439B0 (no symbol
  * before them); a whole-object diff shows they match.
  *
- * What still differs in us (words):
+ * jp has its own strings (the .data is 0x110 there), places three labels
+ * and the bottom line differently, and 80043254 shows one string or the
+ * other at one height (`#if VERSION_JP`).
+ *
+ * What still differs in us (words; eu and jp the same):
  * - func_ovl0B_05_80044DD8 (static, counted with 80044D48): as in
  *   ovl_0B_01's 8004464C, the original takes &D_ovl0B_05_8004669C before
  *   storing arg0 to its home slot, and leaves the final store out of the
@@ -208,6 +212,24 @@ s32 D_ovl0B_05_80046858[2];
 static void func_ovl0B_05_80044DD8(s32 arg0, Gfx_ovl0B_05 **arg1);
 
 /* .data */
+#if VERSION_JP
+u8 D_ovl0B_05_80046580_jp[] = "d\xA2k]_";
+u8 D_ovl0B_05_800465AC[] = "jb_\x9A";
+u8 D_ovl0B_05_800465B4[] = "lr\x89" "d";
+u8 D_ovl0B_05_800465BC[] = "\x82x\x86\x88";
+u8 D_ovl0B_05_800465C4[8] = "\xB6\xAD\xB7";
+u8 D_ovl0B_05_800465CC[] = "\x10\x10";
+u8 D_ovl0B_05_800465D0[] = "\x9F\x80\xC4\xDF";
+u8 D_ovl0B_05_800465E0[] = "lrVZg";
+u8 D_ovl0B_05_800465BC_jp[] = "\x1B\x9Fo_";
+u8 D_ovl0B_05_80046600[] = "\xF7\xF7\xF7\xF7";
+u8 D_ovl0B_05_80046608[] = "k`o\xF9";
+u8 D_ovl0B_05_80046610[] = "\xCF\xD8";
+u8 D_ovl0B_05_8004661C[] = "{\x88\xA0\x8B\xF9";
+u8 D_ovl0B_05_8004662C[8] = "('\x0F";
+u8 D_ovl0B_05_80046630[8] = "(\x1F\x1F";
+u8 D_ovl0B_05_80046638[] = ",-\x1A+-\x9Fo_\xE9\xB8\xAA\xC2\xB1";
+#else
 u8 D_ovl0B_05_800465A0[12] = "(IMBHGL";
 u8 D_ovl0B_05_800465AC[] = ",HNG=";
 u8 D_ovl0B_05_800465B4[] = ",M>K>H";
@@ -224,6 +246,7 @@ u8 D_ovl0B_05_8004661C[] = "\x1FNEE\xFF\x0F\x0F)HP>K";
 u8 D_ovl0B_05_8004662C[] = "(G";
 u8 D_ovl0B_05_80046630[8] = "(\x3F\x3F";
 u8 D_ovl0B_05_80046638[] = ")K>LL\x0F,-\x1A+-\x0FMH\x0F,>E><M";
+#endif
 s32 D_ovl0B_05_80046650 = 0;
 s32 D_ovl0B_05_80046654 = 0;
 s32 D_ovl0B_05_80046658 = 0;
@@ -233,7 +256,7 @@ s32 D_ovl0B_05_80046664 = 0;
 s32 D_ovl0B_05_80046668 = 0;
 u8 *D_ovl0B_05_8004666C[2] = { D_ovl0B_05_800465B4, D_ovl0B_05_800465BC };
 UnkStruct_ovl0B_05_80046674 D_ovl0B_05_80046674[5] = {
-    { 0xA2, 0x4D, 0x02, 0x00, 0x00, 0x00 },
+    { 0xA2, 0x4D, 0x00, 0x02, 0x00, 0x00 },
     { 0xA2, 0x67, 0x01, 0x03, 0x00, 0x00 },
     { 0xA2, 0x81, 0x02, 0x00, 0x03, 0x03 },
     { 0xA2, 0x9B, 0x03, 0x00, 0x00, 0x00 },
@@ -782,11 +805,23 @@ static void func_ovl0B_05_80043438(s32 arg0) {
     switch (arg0) {
         case 0:
             i = 0;
+#if VERSION_JP
+            D_ovl0B_05_80046828[i++] = func_ovl0B_05_80046238(D_ovl0B_05_80046580_jp, 0x6E, 0x23, 0.85f, 0.85f, 0);
+#else
             D_ovl0B_05_80046828[i++] = func_ovl0B_05_80046238(D_ovl0B_05_800465A0, 0x73, 0x23, 0.85f, 0.85f, 0);
+#endif
             D_ovl0B_05_80046828[i++] = func_ovl0B_05_80046238(D_ovl0B_05_800465AC, 0x50, 0x46, 0.6f, 0.6f, 5);
             D_ovl0B_05_80046828[i++] = func_ovl0B_05_80046238(D_ovl0B_05_8004666C[0], 0xAF, 0x46, 0.6f, 0.6f, 1);
+#if VERSION_JP
+            D_ovl0B_05_80046828[i++] = func_ovl0B_05_80046238(D_ovl0B_05_800465D0, 0x50, 0x60, 0.6f, 0.6f, 5);
+#else
             D_ovl0B_05_80046828[i++] = func_ovl0B_05_80046238(D_ovl0B_05_800465D0, 0x50, 0x59, 0.6f, 0.6f, 5);
+#endif
+#if VERSION_JP
+            D_ovl0B_05_80046828[i++] = func_ovl0B_05_80046238(D_ovl0B_05_800465E0, 0xAF, 0x60, 0.6f, 0.6f, 1);
+#else
             D_ovl0B_05_80046828[i++] = func_ovl0B_05_80046238(D_ovl0B_05_800465E0, 0xAF, 0x59, 0.6f, 0.6f, 1);
+#endif
             switch (D_ovl0B_05_80046658) {
                 case 0:
                     D_ovl0B_05_80046828[5] = func_ovl0B_05_80046238(D_ovl0B_05_80046600, 0x50, 0x7A, 0.6f, 0.6f, 5);
@@ -814,7 +849,11 @@ static void func_ovl0B_05_80043438(s32 arg0) {
                 case 2:
                     i = 0;
                     D_ovl0B_05_80046848[i++] = func_ovl0B_05_80046238(D_ovl0B_05_80046600, 0x50, 0x94, 0.6f, 0.6f, 5);
+#if VERSION_JP
+                    D_ovl0B_05_80046848[i++] = func_ovl0B_05_80046238(D_ovl0B_05_8004661C, 0x50, 0xAE, 0.6f, 0.6f, 5);
+#else
                     D_ovl0B_05_80046848[i++] = func_ovl0B_05_80046238(D_ovl0B_05_8004661C, 0x50, 0xAA, 0.6f, 0.6f, 5);
+#endif
                     D_ovl0B_05_80046848[i++] = func_ovl0B_05_80046238(D_ovl0B_05_80046630, 0xAF, 0xAE, 0.6f, 0.6f, 1);
                     break;
                 case 3:
@@ -822,13 +861,21 @@ static void func_ovl0B_05_80043438(s32 arg0) {
                     D_ovl0B_05_80046848[i++] = func_ovl0B_05_80046238(D_ovl0B_05_80046608, 0x50, 0x94, 0.6f, 0.6f, 5);
                     D_ovl0B_05_80046848[i++] = func_ovl0B_05_80046238(D_ovl0B_05_80046610, 0xAF, 0x94, 0.6f, 0.6f, 1);
                     D_ovl0B_05_80046848[i++] = func_ovl0B_05_80046238(D_ovl0B_05_80046630, 0xAF, 0xAE, 0.6f, 0.6f, 1);
+#if VERSION_JP
+                    D_ovl0B_05_80046848[i++] = func_ovl0B_05_80046238(D_ovl0B_05_8004661C, 0x50, 0xAE, 0.6f, 0.6f, 5);
+#else
                     D_ovl0B_05_80046848[i++] = func_ovl0B_05_80046238(D_ovl0B_05_8004661C, 0x50, 0xAA, 0.6f, 0.6f, 5);
+#endif
                     break;
             }
             break;
         case 2:
             i = 0;
+#if VERSION_JP
+            D_ovl0B_05_80046858[i++] = func_ovl0B_05_80046238(D_ovl0B_05_80046638, 0x41, 0xC8, 0.6f, 0.6f, 4);
+#else
             D_ovl0B_05_80046858[i++] = func_ovl0B_05_80046238(D_ovl0B_05_80046638, 0x3F, 0xCB, 0.6f, 0.6f, 4);
+#endif
             break;
     }
 }
@@ -881,6 +928,9 @@ static void func_ovl0B_05_80043254(s32 arg0) {
             D_ovl0B_05_80046664 = 1;
         }
     }
+#if VERSION_JP
+    id = func_ovl0B_05_80046238(D_ovl0B_05_80046664 ? D_ovl0B_05_800465BC_jp : D_ovl0B_05_800465E0, 0xAF, 0x60, 0.6f, 0.6f, 1);
+#else
     if (D_ovl0B_05_80046664) {
         str = D_ovl0B_05_800465F4;
         y = 0x60;
@@ -889,6 +939,7 @@ static void func_ovl0B_05_80043254(s32 arg0) {
         y = 0x59;
     }
     id = func_ovl0B_05_80046238(str, 0xAF, y, 0.6f, 0.6f, 1);
+#endif
     func_ovl0B_05_800461E8(D_ovl0B_05_80046828[4]);
     D_ovl0B_05_80046828[4] = id;
 }
