@@ -414,6 +414,8 @@ segments:
       - {type: bss, vram: 0x802A4C90, name: bss_802A4C90}
       - {type: .bss, vram: 0x802AEE50, name: 86680}
       - {type: bss, vram: 0x802AEE60, name: bss_802AEE60}
+      - {type: .bss, vram: 0x802AF420, name: 99F40}
+      - {type: bss, vram: 0x802AF450, name: bss_802AF450}
       - {type: .bss, vram: 0x802AF540, name: AFBF0}
       - {type: bss, vram: 0x802AF5C0, name: bss_802AF5C0}
   - [0xBED30, bin, pad_main_code]       # zeros

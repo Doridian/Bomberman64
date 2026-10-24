@@ -415,6 +415,7 @@ segments:
       - {type: bss, vram: 0x802A5A50, name: bss_802A5A50}
       - {type: .bss, vram: 0x802AFC10, name: 86680}
       - {type: bss, vram: 0x802AFC20, name: bss_802AFC20}
+      - {type: .bss, vram: 0x802B01E0, name: 99F40}
       - {type: .bss, vram: 0x802B0210, name: 9A5F0}
       - {type: bss, vram: 0x802B0220, name: bss_802B0220}
       - {type: .bss, vram: 0x802B0310, name: AFBF0}

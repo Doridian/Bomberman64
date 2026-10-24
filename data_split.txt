@@ -103,6 +103,12 @@ main_code 995C0 0 0x10 0
 main_code @us 995C0 rodata=0x802A4040
 main_code @eu 995C0 rodata=0x802A4030
 main_code @jp 995C0 rodata=0x802A3270
+# 99F40 defines its .bss: with the callback table extern, as1 gives the
+# stores into its first two entries a `lui` each.
+main_code 99F40 0 0 0x30
+main_code @us 99F40 bss=0x802B01F0
+main_code @eu 99F40 bss=0x802B01E0
+main_code @jp 99F40 bss=0x802AF420
 # 9A5F0: jp has no proportional font (its glyph table, D_802A1A44, the
 # three functions at the end of the function table and D_802B0220)
 main_code 9A5F0 0x450 0 0x10

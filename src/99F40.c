@@ -20,9 +20,9 @@ s32 func_8026D7D8(s32, s32, s32);
 
 extern UnkStruct_800B5F20 D_800B5F20[6];
 extern u8 D_802A1610[];
-extern s32 D_802B01F0;
-extern void (*D_802B01F8[7])(s32);
-extern void (*D_802B0214)(void);
+s32 D_802B01F0;
+void (*D_802B01F8[7])(s32);
+void (*D_802B0214)(void);
 
 void func_8027F740(void) {
     s32 i;
@@ -33,7 +33,14 @@ void func_8027F740(void) {
     D_802B01F0 = 0;
 }
 
-#pragma GLOBAL_ASM("asm/nonmatchings/99F40/func_8027F79C.s")
+void func_8027F79C(void) {
+    s32 i;
+
+    for (i = 0; i < 7; i++) {
+        D_802B01F8[i] = NULL;
+    }
+    D_802B0214 = NULL;
+}
 
 void func_8027F7E0(void) {
     func_80297D30(14, D_802A1610);
