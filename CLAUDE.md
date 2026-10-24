@@ -40,6 +40,7 @@ tools/progress.py              # how much is C (docs/DECOMPILING.md has the loop
 tools/data_split.py us         # data_split.txt's sizes against the built C objects
 tools/data_c.py <mod> <lo> <hi>  # C definitions for a run of asm data or bss
 tools/fcmp.py draft.c -O3 [-v f] # a draft's functions against the original, before it goes in src/
+make VERSION=us nonmatching-check  # nonmatching/'s drafts compile and are no worse than their headers
 tools/mkperm.py f.c FUNC OFF DIR # whole-file permuter dir (for -O3 objects)
 tools/build_ultralib.sh        # libultra reference objects in build/ultralib
 tools/gen_symbols.py us build/ultralib/build/I/libultra_rom  # library names
@@ -133,6 +134,12 @@ outlive the session belongs in either.
   the module's data at those. An object is listed only once its C defines
   all its `.data` and `.bss`; one outside a module's cut defines no data
   (docs/DECOMPILING.md, "Data").
+- **Near misses go in `nonmatching/`.** A complete C draft of an `-O3`
+  object that doesn't match yet (it can't keep GLOBAL_ASM) goes in
+  `nonmatching/`, at its `src/` path, with a header giving its flags and,
+  per version, how many words still differ (`tools/nonmatching.py`). It
+  isn't built into the ROM and `data_split.txt` doesn't list it; it moves
+  to `src/` once it matches (docs/DECOMPILING.md, "NON_MATCHING drafts").
 - **Port-only changes are `#ifdef TARGET_PC`.** The port must stay
   deterministic from the start: docs/NETPLAY.md, "Requirements", lists
   what online play needs from it.

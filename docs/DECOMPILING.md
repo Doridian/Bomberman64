@@ -67,6 +67,51 @@ tools/progress.py                                # per module, overlays per bank
 - The permuter's "fake" matches (`if (1) {}` and the like) are accepted
   with a comment saying so; prefer a natural spelling when one is found.
 
+## NON_MATCHING drafts
+
+An `-O3` object can't keep GLOBAL_ASM functions: IDO inlines, orders and
+allocates across the whole file (below), so its functions come out right
+only with all of them C, and it goes into `src/` only once every one
+matches. A complete draft that comes
+within a few instructions goes into `nonmatching/` instead, at the path
+it will have in `src/` (`nonmatching/overlays/ovl_0E_12/1D6120.c`, plus
+its `_entry.c` if drafted). Nothing builds it into the ROM: the object
+stays asm, every sha1 is unchanged, and the C is there for the PC port and
+for the next matching pass. It is outside `src/` because `tools/layout.py`
+makes any `src/<seg>/<obj>.c` a C object. An `-O2` or `-g` object doesn't
+go there: its unmatched functions stay GLOBAL_ASM in `src/`.
+
+Each draft starts with a comment giving its flags, the words that still
+differ per version, and what differs, function by function:
+
+```
+/*
+ * NON_MATCHING: ovl_0E_12's game object, complete; not in the ROM.
+ * flags: -O3
+ * differing words: us 5, jp 5
+ *
+ * - func_ovl0E_12_80043164 (3 words): ...
+ */
+```
+
+`tools/nonmatching.py [draft.c ...]` compiles every draft (or the ones
+named) with its flags and compares it with the extracted version's
+original, function by function (`tools/fcmp.py`'s comparison, which it
+imports): the functions that match, those that differ with their word
+counts, and the total. A function already C in `src/` is found in the
+linked build's map, so `make` first. `make nonmatching-check` runs it with
+`--check`, which fails if a draft doesn't compile or differs in more words
+than its header records for the version, so a change to a shared header
+or a tool can't silently make a draft worse. When a draft gets better,
+lower its number.
+
+Once a draft matches in every version, it moves to `src/` as any C object
+does: `git mv` it, drop the header's NON_MATCHING lines, add it to the
+Makefile's `O3_C_FILES` (and `MIPS2_C_FILES` if `-mips2`), regenerate the
+configs (`tools/layout.py`) and extract again, then give it its data
+(below). Until then `data_split.txt` doesn't list it: its data stays in the
+module's asm blocks, though the draft defines it.
+
 ## Compiler flags: the evidence
 
 - **`-mips1`** for Hudson's game code: main_code's text up to its ZeroJump

@@ -8,36 +8,30 @@ For a draft before it goes into src/: an -O3 object has to match as a
 whole file, which tools/fdiff.py (one function in the linked build)
 can't show. The version is the extracted one (.version). The original's place and size come from the extracted asm (asm/**/*.s:
 `nonmatching NAME, SIZE` and the first instruction's image offset), so a
-function must still be asm somewhere (an asm object or a GLOBAL_ASM .s).
-Relocated words are compared without their relocated bits.
+function must still be asm somewhere (an asm object or a GLOBAL_ASM .s),
+or C already built: a function of a C object is found in the linked
+build's map (build/<v>/bm64.<v>.map). A symbol found in neither (a
+function splat folded into the one before, like an empty stub) is
+compared as part of the function before it. Relocated words are compared
+without their relocated bits.
+
+tools/nonmatching.py imports compare() for the drafts in nonmatching/.
 """
 import difflib, json, os, re, shutil, subprocess, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-args = sys.argv[1:]
-cfile = None; opt = "-O2"; isa = "-mips1"; verbose = None; extra = []
-i = 0
-while i < len(args):
-    a = args[i]
-    if a == "-v": verbose = args[i + 1]; i += 2; continue
-    if a == "--root": ROOT = args[i + 1]; i += 2; continue
-    if a.startswith("-O") or a == "-g": opt = a
-    elif a.startswith("-mips"): isa = a
-    elif a.startswith("-"): extra.append(a)
-    else: cfile = os.path.abspath(a)
-    i += 1
-
-VERSION = open(os.path.join(ROOT, ".version")).read().strip()
-os.makedirs(os.path.join(ROOT, "build"), exist_ok=True)
-INDEX = os.path.join(ROOT, "build", "fcmp_index.json")
 
 
-def build_index():
+class CompileError(Exception):
+    pass
+
+
+def build_index(root):
     idx = {}
     nm = re.compile(r"^nonmatching (\S+), 0x([0-9A-Fa-f]+)")
     gl = re.compile(r"^glabel (\S+)")
     ins = re.compile(r"^\s*/\* ([0-9A-F]+) ([0-9A-F]{8}) ")
-    for d, _, files in os.walk(os.path.join(ROOT, "asm")):
+    for d, _, files in os.walk(os.path.join(root, "asm")):
         for f in files:
             if not f.endswith(".s"): continue
             sizes = {}
@@ -52,98 +46,196 @@ def build_index():
                     if m:
                         idx.setdefault(pending, (int(m.group(1), 16), sizes.get(pending, 0)))
                         pending = None
-    json.dump(idx, open(INDEX, "w"))
+    # functions of C objects, from the linked build's map: an output
+    # section's load address is its image offset
+    mp = map_path(root)
+    if os.path.exists(mp):
+        sec = re.compile(r"^\.\S+\s+0x([0-9a-f]+)\s+0x[0-9a-f]+\s+load address 0x([0-9a-f]+)")
+        inp = re.compile(r"^ \.(\S+)\s+0x([0-9a-f]+)\s+0x([0-9a-f]+)\s+(\S+)$")
+        sym = re.compile(r"^\s+0x([0-9a-f]+)\s+([A-Za-z_][\w]*)$")
+        base = None; ctext = None; funcs = []
+        def flush():
+            for k, (a, n) in enumerate(funcs):
+                end = funcs[k + 1][0] if k + 1 < len(funcs) else ctext[1]
+                idx.setdefault(n, (a - base[0] + base[1], end - a))
+            funcs.clear()
+        for line in open(mp, errors="replace"):
+            m = sec.match(line)
+            if m:
+                if ctext: flush()
+                base = (int(m.group(1), 16), int(m.group(2), 16)); ctext = None; continue
+            m = inp.match(line)
+            if m:
+                if ctext: flush()
+                ctext = None
+                if base and m.group(1) == "text" and m.group(4).endswith(".c.o"):
+                    a = int(m.group(2), 16)
+                    ctext = (a, a + int(m.group(3), 16))
+                continue
+            m = sym.match(line)
+            if m and ctext:
+                funcs.append((int(m.group(1), 16), m.group(2)))
+        if ctext: flush()
+    json.dump(idx, open(os.path.join(root, "build", "fcmp_index.json"), "w"))
     return idx
 
 
-def load_index():
-    if os.path.exists(INDEX):
-        stamp = os.path.getmtime(INDEX)
-        if stamp > os.path.getmtime(os.path.join(ROOT, "asm")):
-            return json.load(open(INDEX))
-    return build_index()
+def map_path(root):
+    v = version(root)
+    return os.path.join(root, "build", v, f"bm64.{v}.map")
 
 
-tmp = tempfile.mkdtemp(dir=os.path.join(ROOT, "build"))
-try:
-    obj = os.path.join(tmp, "a.o")
-    cmd = (f"{ROOT}/tools/ido/5.3/cc -c -G 0 -Xfullwarn -Xcpluscomm -nostdinc -non_shared -Wab,-r4300_mul "
-           f"-D_LANGUAGE_C -D_FINALROM -DVERSION_{VERSION.upper()} -woff 649,838,712,807 -I {ROOT}/include -I {ROOT}/include/PR "
-           f"-I {ROOT}/src {opt} {isa} -32 {' '.join(extra)} -o {obj} {cfile}")
-    r = subprocess.run(cmd, shell=True, cwd=tmp, capture_output=True, text=True)
-    if r.returncode:
-        print(r.stdout, r.stderr); sys.exit(1)
-    subprocess.run(["mips-linux-gnu-objcopy", "-O", "binary", "-j", ".text", obj, tmp + "/t.bin"], check=True)
-    text = open(tmp + "/t.bin", "rb").read()
-    relocs = {}
-    out = subprocess.run(["mips-linux-gnu-readelf", "-rW", obj], capture_output=True, text=True).stdout
-    sec = None
-    for line in out.splitlines():
-        m = re.match(r"Relocation section '\.rel\.?(\S*)'", line)
-        if m: sec = m.group(1); continue
-        m = re.match(r"^([0-9a-f]{8})\s+\S+\s+(\S+)", line)
-        if m and sec == "text": relocs[int(m.group(1), 16)] = m.group(2)
-    syms = []
-    out = subprocess.run(["mips-linux-gnu-nm", "-n", obj], capture_output=True, text=True).stdout
-    for line in out.splitlines():
-        p = line.split()
-        if len(p) == 3 and p[1] in "tT": syms.append((int(p[0], 16), p[2]))
-    hd = subprocess.run(["mips-linux-gnu-objdump", "-h", obj], capture_output=True, text=True).stdout
-    secs = {l.split()[1]: int(l.split()[2], 16) for l in hd.splitlines() if re.match(r"\s+\d+ \.", l)}
-    idx = load_index()
-    code = open(f"{ROOT}/assets/code.bin", "rb").read()
+def load_index(root):
+    index = os.path.join(root, "build", "fcmp_index.json")
+    if os.path.exists(index):
+        stamp = os.path.getmtime(index)
+        mp = map_path(root)
+        if stamp > os.path.getmtime(os.path.join(root, "asm")) and \
+                (not os.path.exists(mp) or stamp > os.path.getmtime(mp)):
+            return json.load(open(index))
+    return build_index(root)
+
+
+def version(root=ROOT):
+    return open(os.path.join(root, ".version")).read().strip()
+
+
+def compare(cfile, opt="-O2", isa="-mips1", extra=(), verbose=None, root=ROOT, out=print):
+    """Compile cfile and compare its functions with the original.
+
+    Returns (results, sections): results is a list of (name, bad words,
+    our size, original size), with bad None for a function the asm
+    doesn't have; sections maps .text/.data/.rodata/.bss to sizes.
+    Prints a diff of the function named verbose ("all": every bad one)
+    through out. Raises CompileError with IDO's output if it fails."""
+    ver = version(root)
+    os.makedirs(os.path.join(root, "build"), exist_ok=True)
+    tmp = tempfile.mkdtemp(dir=os.path.join(root, "build"))
+    try:
+        obj = os.path.join(tmp, "a.o")
+        cmd = (f"{root}/tools/ido/5.3/cc -c -G 0 -Xfullwarn -Xcpluscomm -nostdinc -non_shared -Wab,-r4300_mul "
+               f"-D_LANGUAGE_C -D_FINALROM -DVERSION_{ver.upper()} -woff 649,838,712,807 -I {root}/include -I {root}/include/PR "
+               f"-I {root}/src {opt} {isa} -32 {' '.join(extra)} -o {obj} {os.path.abspath(cfile)}")
+        r = subprocess.run(cmd, shell=True, cwd=tmp, capture_output=True, text=True)
+        if r.returncode:
+            raise CompileError(r.stdout + r.stderr)
+        subprocess.run(["mips-linux-gnu-objcopy", "-O", "binary", "-j", ".text", obj, tmp + "/t.bin"], check=True)
+        text = open(tmp + "/t.bin", "rb").read()
+        relocs = {}
+        res = subprocess.run(["mips-linux-gnu-readelf", "-rW", obj], capture_output=True, text=True).stdout
+        sec = None
+        for line in res.splitlines():
+            m = re.match(r"Relocation section '\.rel\.?(\S*)'", line)
+            if m: sec = m.group(1); continue
+            m = re.match(r"^([0-9a-f]{8})\s+\S+\s+(\S+)", line)
+            if m and sec == "text": relocs[int(m.group(1), 16)] = m.group(2)
+        syms = []
+        res = subprocess.run(["mips-linux-gnu-nm", "-n", obj], capture_output=True, text=True).stdout
+        for line in res.splitlines():
+            p = line.split()
+            if len(p) == 3 and p[1] in "tT": syms.append((int(p[0], 16), p[2]))
+        hd = subprocess.run(["mips-linux-gnu-objdump", "-h", obj], capture_output=True, text=True).stdout
+        secs = {l.split()[1]: int(l.split()[2], 16) for l in hd.splitlines() if re.match(r"\s+\d+ \.", l)}
+        secs = {k: v for k, v in secs.items() if k in (".text", ".data", ".rodata", ".bss")}
+        idx = load_index(root)
+        code = open(f"{root}/assets/code.bin", "rb").read()
+        results = []
+        # a symbol the original doesn't have (a function splat folded into
+        # the one before) goes with the function before it, unless it's first
+        first = next((k for k, (a, s) in enumerate(syms) if s in idx), len(syms))
+        for a, s in syms[:first]:
+            results.append((s, None, len(text[a:]), 0))
+        syms = syms[first:]
+        syms = [(a, s, [x for _, x in syms[k + 1:next((j for j in range(k + 1, len(syms)) if syms[j][1] in idx), len(syms))]])
+                for k, (a, s) in enumerate(syms) if s in idx]
+        starts = {o: n for n, (o, _) in idx.items()}
+        names = {s for _, s, _ in syms}
+        for k, (a, s, folded) in enumerate(syms):
+            end = syms[k + 1][0] if k + 1 < len(syms) else len(text)
+            mine = text[a:end]
+            off, size = idx[s]
+            # static functions have no symbol in IDO's object: what follows a
+            # function up to our next symbol is compared with what follows it
+            # in the original up to that symbol (empty stubs splat folded in)
+            if k + 1 < len(syms):
+                nxt = idx[syms[k + 1][1]][0]
+                if 0 < nxt - off < 0x10000:
+                    size = nxt - off
+            else:
+                # after the last one, the original's functions we don't
+                # name (statics) as far as ours reaches
+                while off + size in starts and starts[off + size] not in names \
+                        and size + idx[starts[off + size]][1] <= len(mine):
+                    size += idx[starts[off + size]][1]
+            orig = code[off:off + size]
+            # IDO pads the last function of a file to 16 with nops
+            while len(mine) > size and mine[-4:] == b"\0\0\0\0" and k + 1 == len(syms):
+                mine = mine[:-4]
+            bad = 0
+            for o in range(0, max(len(mine), size), 4):
+                x, y = mine[o:o + 4], orig[o:o + 4]
+                if x == y: continue
+                if len(x) == 4 and len(y) == 4 and (a + o) in relocs:
+                    wx, wy = int.from_bytes(x, "big"), int.from_bytes(y, "big")
+                    op = wx >> 26
+                    mask = 0xFC000000 if op in (2, 3) else 0xFFFF0000
+                    if wx & mask == wy & mask: continue
+                bad += 1
+            results.append((s + "".join(" +" + x for x in folded), bad, len(mine), size))
+            if verbose == s or (verbose == "all" and bad):
+                open(tmp + "/m.bin", "wb").write(mine)
+                open(tmp + "/o.bin", "wb").write(orig)
+                def dis(p):
+                    o = subprocess.run(f"mips-linux-gnu-objdump -D -b binary -m mips:4300 -EB {p}", shell=True,
+                                       capture_output=True, text=True).stdout
+                    res = []
+                    for l in o.splitlines():
+                        l = l.split("\t")
+                        if len(l) >= 3 and re.match(r"\s*[0-9a-f]+:", l[0]):
+                            res.append(" ".join(x.strip() for x in l[2:]))
+                    return res
+                # mark relocated words
+                md, od = dis(tmp + "/m.bin"), dis(tmp + "/o.bin")
+                for o in range(len(md)):
+                    if (a + o * 4) in relocs:
+                        md[o] = re.sub(r"0x[0-9a-f]+|\b\d+\b", "R", md[o]) if relocs[a + o * 4] != "R_MIPS_26" else md[o].split()[0] + " R"
+                        if o < len(od):
+                            od[o] = re.sub(r"0x[0-9a-f]+|\b\d+\b", "R", od[o]) if relocs[a + o * 4] != "R_MIPS_26" else od[o].split()[0] + " R"
+                out(f"--- {s}")
+                for l in difflib.unified_diff(od, md, "orig", "mine", lineterm="", n=4):
+                    out(l)
+        return results, secs
+    finally:
+        shutil.rmtree(tmp)
+
+
+def main():
+    global ROOT
+    args = sys.argv[1:]
+    cfile = None; opt = "-O2"; isa = "-mips1"; verbose = None; extra = []
+    i = 0
+    while i < len(args):
+        a = args[i]
+        if a == "-v": verbose = args[i + 1]; i += 2; continue
+        if a == "--root": ROOT = args[i + 1]; i += 2; continue
+        if a.startswith("-O") or a == "-g": opt = a
+        elif a.startswith("-mips"): isa = a
+        elif a.startswith("-"): extra.append(a)
+        else: cfile = os.path.abspath(a)
+        i += 1
+    try:
+        results, secs = compare(cfile, opt, isa, extra, verbose, ROOT)
+    except CompileError as e:
+        print(e); sys.exit(1)
     nbad = 0
-    for k, (a, s) in enumerate(syms):
-        end = syms[k + 1][0] if k + 1 < len(syms) else len(text)
-        mine = text[a:end]
-        if s not in idx:
+    for s, bad, mine, size in results:
+        if bad is None:
             print(f"??  {s} (not in the asm)"); continue
-        off, size = idx[s]
-        # static functions have no symbol in IDO's object: what follows a
-        # function up to our next symbol is compared with what follows it
-        # in the original up to that symbol (empty stubs splat folded in)
-        if k + 1 < len(syms) and syms[k + 1][1] in idx:
-            nxt = idx[syms[k + 1][1]][0]
-            if 0 < nxt - off < 0x10000:
-                size = nxt - off
-        orig = code[off:off + size]
-        # IDO pads the last function of a file to 16 with nops
-        while len(mine) > size and mine[-4:] == b"\0\0\0\0" and k + 1 == len(syms):
-            mine = mine[:-4]
-        bad = 0
-        for o in range(0, max(len(mine), size), 4):
-            x, y = mine[o:o + 4], orig[o:o + 4]
-            if x == y: continue
-            if len(x) == 4 and len(y) == 4 and (a + o) in relocs:
-                wx, wy = int.from_bytes(x, "big"), int.from_bytes(y, "big")
-                op = wx >> 26
-                mask = 0xFC000000 if op in (2, 3) else 0xFFFF0000
-                if wx & mask == wy & mask: continue
-            bad += 1
         if bad: nbad += 1
-        print(("ok  " if not bad else "BAD ") + s + ("" if not bad else f" ({bad} words, size 0x{len(mine):X} vs 0x{size:X})"))
-        if verbose == s or (verbose == "all" and bad):
-            open(tmp + "/m.bin", "wb").write(mine)
-            open(tmp + "/o.bin", "wb").write(orig)
-            def dis(p):
-                o = subprocess.run(f"mips-linux-gnu-objdump -D -b binary -m mips:4300 -EB {p}", shell=True,
-                                   capture_output=True, text=True).stdout
-                res = []
-                for l in o.splitlines():
-                    l = l.split("\t")
-                    if len(l) >= 3 and re.match(r"\s*[0-9a-f]+:", l[0]):
-                        res.append(" ".join(x.strip() for x in l[2:]))
-                return res
-            # mark relocated words
-            md, od = dis(tmp + "/m.bin"), dis(tmp + "/o.bin")
-            for o in range(len(md)):
-                if (a + o * 4) in relocs:
-                    md[o] = re.sub(r"0x[0-9a-f]+|\b\d+\b", "R", md[o]) if relocs[a + o * 4] != "R_MIPS_26" else md[o].split()[0] + " R"
-                    if o < len(od):
-                        od[o] = re.sub(r"0x[0-9a-f]+|\b\d+\b", "R", od[o]) if relocs[a + o * 4] != "R_MIPS_26" else od[o].split()[0] + " R"
-            for l in difflib.unified_diff(od, md, "orig", "mine", lineterm="", n=4):
-                print(l)
-    print("sections:", " ".join(f"{k}=0x{v:X}" for k, v in secs.items() if k in (".text", ".data", ".rodata", ".bss")))
+        print(("ok  " if not bad else "BAD ") + s + ("" if not bad else f" ({bad} words, size 0x{mine:X} vs 0x{size:X})"))
+    print("sections:", " ".join(f"{k}=0x{v:X}" for k, v in secs.items()))
     sys.exit(1 if nbad else 0)
-finally:
-    shutil.rmtree(tmp)
+
+
+if __name__ == "__main__":
+    main()

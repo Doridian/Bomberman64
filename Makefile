@@ -167,6 +167,12 @@ shift-build:
 lzss-check: check $(LZSS_LIB)
 	$(PYTHON) $(TOOLS_DIR)/lzss_check.py $(BASEROM)
 
+# the NON_MATCHING drafts (nonmatching/, docs/DECOMPILING.md): each still
+# compiles and differs in no more words than its header records; needs the
+# linked build's map for the functions already C in src/
+nonmatching-check: $(TARGET).elf
+	$(PYTHON) $(TOOLS_DIR)/nonmatching.py --check
+
 .baserom.$(VERSION).ok: $(BASEROM)
 	@echo "$$(cat $(BASENAME).$(VERSION).sha1)  $<" | sha1sum --check
 	@touch $@
@@ -301,5 +307,5 @@ $(TARGET).z64: $(IMAGE) $(ARCHIVE_SRCS) $(CONFIG) $(TOOLS_DIR)/rom.py $(TOOLS_DI
 	$(PYTHON) $(TOOLS_DIR)/n64crc.py $@
 
 .SECONDARY:
-.PHONY: FORCE libultra-ref all image check shift-check shift-check-battle shift-build clean default extract lzss-check setup stamp verify vermap
+.PHONY: FORCE libultra-ref all image check shift-check shift-check-battle shift-build clean default extract lzss-check nonmatching-check setup stamp verify vermap
 SHELL = /bin/bash -e -o pipefail
