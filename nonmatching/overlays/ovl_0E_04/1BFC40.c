@@ -1,15 +1,11 @@
 /*
  * NON_MATCHING: ovl_0E_04's game object, complete: every function and its data
- * (.data 0x410, .rodata 0xB0 and .bss 0x60 as the original); .text 0x30
- * short of 0x23F0.
+ * (.data 0x410, .rodata 0xB0 and .bss 0x60 as the original).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 216, eu 216, jp 216
+ * differing words: us 21, eu 21, jp 21
  *
  * What still differs in us (words):
- * - func_ovl0E_04_80044EB4 (195): ovl_0E_05's 800443B4 (the same code and
- *   the same difference): the original also saves $f26-$f29, which nothing
- *   uses, and is 12 words longer; everything after the prologue is shifted.
  * - func_ovl0E_04_800439A4 (17): ovl_12_01's 80043190 (the same camera
  *   set-up, func_ovl0E_04_8004399C): the original saves s1/s2 and sets
  *   &D_ovl0E_04_80046F30 and the count before computing x, and stores y
@@ -368,11 +364,11 @@ void func_ovl0E_04_800451D4(UnkStructA *arg0) {
 }
 
 void func_ovl0E_04_80044EB4(void) {
-    f32 pad[5];
     UnkStruct_ovl0E_04_80046A88 *rec;
+    s32 flag;
     f32 a[3];
     f32 b[3];
-    f32 pad2[1];
+    UnkStructA_40 *p;
 
     rec = func_ovl0E_04_800462C0();
     rec->unk8 = func_ovl0E_04_80046170(0x1BC, 0x0D080040, 0x20, 0);
@@ -389,6 +385,7 @@ void func_ovl0E_04_80044EB4(void) {
     rec->unk8->unk34 = 50.0f;
     rec->unk8->unk38 = 2500.0f;
     func_ovl0E_04_800462B8(func_ovl0E_04_80046458(60) + 30);
+    flag = 0;
     while (TRUE) {
         func_ovl0E_04_80046258(rec->unk8);
         rec->unk10 += rec->unk18;
@@ -408,8 +405,18 @@ void func_ovl0E_04_80044EB4(void) {
             }
         }
         rec->unk18 -= rec->unk24;
-        rec->unk8->unk40->unk20 += 20.0f;
-        rec->unk8->unk40->unk14 = rec->unk10;
+        /* through a variable: $v0 for both, where the expression gives $t9 */
+        p = rec->unk8->unk40;
+        p->unk20 += 20.0f;
+        p = rec->unk8->unk40;
+        p->unk14 = rec->unk10;
+        /* never runs: what it did is unknown, but two float constants live
+         * across the loop's calls take $f26 and $f28, which the original
+         * saves and never uses (ovl_0E_02's 800447F8) */
+        if (flag) {
+            rec->unkC = 3.0f;
+            rec->unk14 = 5.0f;
+        }
         func_ovl0E_04_800462E0();
     }
 }
