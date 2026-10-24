@@ -369,7 +369,7 @@ segments:
       - [0xB5E50, asm]
       - [0xB6180, asm]
       - [0xB63F0, asm]
-      - [0xB6680, asm]
+      - [0xB6680, c]
       - [0xB7500, asm]
       - [0xB7710, asm]
       - [0xB7720, asm]
@@ -404,6 +404,8 @@ segments:
       - [0xBE850, rodata]
       - [0xBEED0, .rodata, AFBF0]
       - [0xBEF40, rodata]
+      - [0xBEF60, .rodata, B6680]
+      - [0xBEF90, rodata]
       - [0xBF800, rodata, main_code_persist]
       - {type: bss, vram: 0x802A5300}
       - {type: .bss, vram: 0x802A5330, name: 412F0}

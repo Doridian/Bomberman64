@@ -119,6 +119,10 @@ main_code @us AFBF0 data=0x802A1E00 rodata=0x802A46D0 bss=0x802B0320
 main_code @eu AFBF0 data=0x802A1E00 rodata=0x802A46C0 bss=0x802B0310
 main_code @jp AFBF0 data=0x802A1050 rodata=0x802A3900 bss=0x802AF540
 main_code @jp AFBF0 sizes=0xE60,0x70,0x80
+main_code B6680 0 0x30 0
+main_code @us B6680 rodata=0x802A4760
+main_code @eu B6680 rodata=0x802A4750
+main_code @jp B6680 rodata=0x802A3990
 
 # Library objects after the game's code, placed on their own (where the ROM
 # has their data; `tools/data_split.py <v> --place MODULE OBJECT` finds it).

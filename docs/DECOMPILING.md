@@ -76,7 +76,9 @@ tools/progress.py                                # per module, overlays per bank
   never use branch-likely. boot_code's libraries do both: they are
   `-mips2`, as libultra is. So are the objects after main_code's ZeroJump
   block (`B3B70` on: `beql`), Hudson's allocator and other library code
-  (phase 3). Compiling 40300.c `-mips2` changes it.
+  (phase 3). Compiling 40300.c `-mips2` changes it. The game's own C there
+  (`B6680`, render-mode and combiner strings, matrix rotations) is listed
+  in the Makefile's `MIPS2_C_FILES`.
 - **`-O2`**, not `-O3`, for 40300 and 80420: the same C at `-O3` gives the
   same function bodies but in the reverse order within the object (IDO 5.3
   `-O3` emits a file's functions last to first), and at `-O1` the code
@@ -121,7 +123,7 @@ tools/progress.py                                # per module, overlays per bank
   its wrappers call 4DE50's compares with a `jal`, which -O3 would inline
   in one file), 4ED50, 52270 (jp's func_8023876C has no TV-type
   switch: `#if VERSION_JP`), 530C0, 53D70, 86680, 995C0, 9A5F0, 9BFD0, ACA00,
-  AFBF0, ovl_0A_01-05's and ovl_17_01's objects are `-O3`; 404C0, 5E090, 87190, 87730,
+  AFBF0, B6680 (`-mips2`), ovl_0A_01-05's and ovl_17_01's objects are `-O3`; 404C0, 5E090, 87190, 87730,
   99F40, A4860 and B11F0 are `-O2` (no
   inlining between functions that call each other, no cross-call
   registers; A4860's func_8028A318 calls three small functions of its
@@ -191,6 +193,19 @@ tools/progress.py                                # per module, overlays per bank
     func_80236658 matched only with func_80239094 undeclared (an implicit
     `int` function; as `void`, a temporary leaves `v0` for `a0`), 86680's
     func_8026C77C only with func_8026A754 returning `s32`.
+  - a small global is inlined too, its own copy still emitted: B6680's
+    func_8029BF30 ends in `func_8029BE80(gfx, v | b)` (the word stores come
+    out second word first), and a statement whose value is dead still
+    takes a temporary register: its last `if (*p++ == '1') v |= 0;` (the
+    render mode's TEX_EDGE, 0 since it stopped being 0x8000) keeps the
+    final pointer increment and moves every later `t` register by one;
+  - a spilled value lands in an array's slot when the array holds it:
+    B6680's rotations pass the radians through `tmp[0]` (`t = angle *
+    DEG; tmp[0] = t; s = sinf(tmp[0]);`), which is where the original
+    spills them; the frame also counts named temporaries (func_8029C680's
+    four products `a`-`d`).
+  `tools/fcmp.py` and `tools/mkperm.py` compile `-mips1`; for a `-mips2`
+  object, use copies with `-mips2` in their compiler command.
   The decomp-permuter normally strips a file to the one function, which
   undoes all of this: keep the other definitions (mark them `inline` for
   the permuter and strip the keyword in its compile.sh) and score against

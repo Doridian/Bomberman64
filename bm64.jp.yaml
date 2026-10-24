@@ -369,7 +369,7 @@ segments:
       - [0xB5530, asm, B5E50]
       - [0xB5860, asm, B6180]
       - [0xB5AD0, asm, B63F0]
-      - [0xB5D60, asm, B6680]
+      - [0xB5D60, c, B6680]
       - [0xB6BE0, asm, B7500]
       - [0xB6DF0, asm, B7710]
       - [0xB6E00, asm, B7720]
@@ -404,6 +404,8 @@ segments:
       - [0xBDA80, rodata]
       - [0xBE100, .rodata, AFBF0]
       - [0xBE170, rodata]
+      - [0xBE190, .rodata, B6680]
+      - [0xBE1C0, rodata]
       - {type: bss, vram: 0x802A4530}
       - {type: .bss, vram: 0x802A4560, name: 412F0}
       - {type: bss, vram: 0x802A4600, name: bss_802A4600}
