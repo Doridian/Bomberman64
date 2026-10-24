@@ -4,7 +4,7 @@
  * ovl_0C_05's skeleton.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 12
+ * differing words: us 12, eu 12, jp 12
  *
  * What still differs in us (words):
  * - func_ovl0C_04_80043878 (2): the epilogue restores s2, s1, s0; the
