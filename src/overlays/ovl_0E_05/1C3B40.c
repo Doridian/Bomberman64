@@ -1,14 +1,3 @@
-/*
- * NON_MATCHING: ovl_0E_05's game object, complete: every function and its data.
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 2, eu 2, jp 2
- *
- * What still differs in us (words):
- * - func_ovl0E_05_80043860 (2): `move a1,s2` scheduled into a load delay
- *   slot where the original has it in a call's delay slot (as ovl_0E_12's
- *   80043A64).
- */
 #include "common.h"
 
 /*
@@ -596,6 +585,10 @@ void func_ovl0E_05_80043860(void) {
         D_ovl0E_05_8004615C[i].unk0->unk40->unk28 = D_ovl0E_05_8004615C[i].unk2C;
         D_ovl0E_05_8004615C[i].unk0->unk40->unk2C = D_ovl0E_05_8004615C[i].unk30;
         D_ovl0E_05_8004615C[i].unk0->unk40->unk30 = D_ovl0E_05_8004615C[i].unk34;
+        /* a fake (ends the block): without it `move a1` for the next call is
+         * scheduled into a load delay slot above, not the call's delay slot */
+        if (!D_ovl0E_05_8004615C[i].unkE && !D_ovl0E_05_8004615C[i].unkE && !D_ovl0E_05_8004615C[i].unkE) {
+        }
         func_ovl0E_05_80045658(D_ovl0E_05_8004615C[i].unk0, 0x02000000);
         func_ovl0E_05_80045660(D_ovl0E_05_8004615C[i].unk0, 0x80000);
         if (((UnkStruct_ovl0E_05_40 *) D_ovl0E_05_8004615C[i].unk0->unk40)->unk48->unk4->unk4 != 0.0f) {

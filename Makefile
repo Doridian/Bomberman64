@@ -191,7 +191,7 @@ G_C_FILES  := main_code_entry.c overlays/ovl_16_01/ovl_16_01_entry.c overlays/ov
 # -O2 never does.  asm-processor can't do -O3 either: these are all C.
 O3_C_FILES := 40FB0.c 412F0.c 41FD0.c 4DE50.c 4E030.c 4ED50.c 52270.c 530C0.c 53D70.c 86680.c 995C0.c 9A5F0.c 9BFD0.c ACA00.c AFBF0.c B6680.c \
               overlays/ovl_0A_02/12C630.c overlays/ovl_0A_03/131B30.c overlays/ovl_0A_04/137330.c overlays/ovl_0A_05/13A9F0.c \
-              overlays/ovl_0C_03/17A5B0.c overlays/ovl_0C_05/17F9F0.c overlays/ovl_0E_02/1B88D0.c overlays/ovl_0E_09/1CD770.c overlays/ovl_0E_11/1D2C60.c overlays/ovl_10_01/209370.c overlays/ovl_10_02/20D660.c overlays/ovl_10_03/210390.c overlays/ovl_10_04/214340.c overlays/ovl_10_05/217050.c overlays/ovl_12_02/24EA00.c overlays/ovl_12_04/253A10.c \
+              overlays/ovl_0C_03/17A5B0.c overlays/ovl_0C_05/17F9F0.c overlays/ovl_0E_02/1B88D0.c overlays/ovl_0E_05/1C3B40.c overlays/ovl_0E_09/1CD770.c overlays/ovl_0E_11/1D2C60.c overlays/ovl_10_01/209370.c overlays/ovl_10_02/20D660.c overlays/ovl_10_03/210390.c overlays/ovl_10_04/214340.c overlays/ovl_10_05/217050.c overlays/ovl_12_02/24EA00.c overlays/ovl_12_04/253A10.c \
               overlays/ovl_17_01/2A7080.c overlays/ovl_17_06/2B1100.c overlays/ovl_17_08/2B60C0.c overlays/ovl_17_10/2BC0B0.c
 # -mips2: main_code's objects after its ZeroJump block (branch-likely).
 MIPS2_C_FILES := B6680.c
