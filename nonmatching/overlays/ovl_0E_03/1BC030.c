@@ -1,16 +1,11 @@
 /*
  * NON_MATCHING: ovl_0E_03's game object, complete: every function and its data
- * (.data 0x490, .rodata 0x70 and .bss 0x60 as the original); .text 0x20
- * short of 0x20C0.
+ * (.data 0x490, .rodata 0x70 and .bss 0x60 as the original; .text 0x20C0).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 188, eu 188, jp 188
+ * differing words: us 3, eu 3, jp 3
  *
  * What still differs in us (words):
- * - func_ovl0E_03_80044B78 (185): ovl_0E_02's 800447F8 and ovl_0E_05's
- *   800443B4 (the same code and the same difference): the original also
- *   saves $f26-$f29, which nothing uses, and is 8 words longer (4 saves,
- *   4 restores); everything after the prologue is shifted.
  * - func_ovl0E_03_800430A8 (3): ovl_0E_12's 80043164: `sll t4,s3,5` (the
  *   next call's &D_80046B78[i]) is scheduled before the stores to unk0 and
  *   unk4; the original has it after them. Store order, one line or two, and
@@ -21,7 +16,7 @@
 /*
  * ovl_0E_03's game object, IDO -O3: the functions are written last to first
  * (IDO -O3 emits a file's functions in reverse). Most of it is ovl_0E_02's
- * code (nonmatching/overlays/ovl_0E_02), with ovl_0E_12's object that a flag
+ * code (src/overlays/ovl_0E_02), with ovl_0E_12's object that a flag
  * replaces (func_ovl0E_03_800430A8, 80043AB8; nonmatching/overlays/ovl_0E_12).
  */
 
@@ -366,11 +361,11 @@ void func_ovl0E_03_80044E94(UnkStructA *arg0) {
 }
 
 void func_ovl0E_03_80044B78(void) {
-    f32 pad[5];
     UnkStruct_ovl0E_03_80046758 *rec;
+    s32 flag;
     f32 a[3];
     f32 b[3];
-    f32 pad2[1];
+    UnkStructA_40 *p;
 
     rec = func_ovl0E_03_80045F90();
     rec->unk8 = func_ovl0E_03_80045E40(0x1BC, 0x0D080040, 0x20, 0);
@@ -387,6 +382,7 @@ void func_ovl0E_03_80044B78(void) {
     rec->unk8->unk34 = 50.0f;
     rec->unk8->unk38 = 2500.0f;
     func_ovl0E_03_80045F88(func_ovl0E_03_80046128(60) + 30);
+    flag = 0;
     while (TRUE) {
         func_ovl0E_03_80045F28(rec->unk8);
         rec->unk10 += rec->unk18;
@@ -406,8 +402,18 @@ void func_ovl0E_03_80044B78(void) {
             }
         }
         rec->unk18 -= rec->unk24;
-        rec->unk8->unk40->unk20 += 20.0f;
-        rec->unk8->unk40->unk14 = rec->unk10;
+        /* through a variable: $v0 for both, where the expression gives $t9 */
+        p = rec->unk8->unk40;
+        p->unk20 += 20.0f;
+        p = rec->unk8->unk40;
+        p->unk14 = rec->unk10;
+        /* never runs: what it did is unknown, but two float constants live
+         * across the loop's calls take $f26 and $f28, which the original
+         * saves and never uses */
+        if (flag) {
+            rec->unkC = 3.0f;
+            rec->unk14 = 5.0f;
+        }
         func_ovl0E_03_80045FB0();
     }
 }
