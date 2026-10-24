@@ -191,6 +191,12 @@ module's asm blocks, though the draft defines it.
   unset) show it too. Their GLOBAL_ASM functions are the ones `-O2` can't
   give; 87190, 87730, 99F40 and A4860 match their remaining functions at
   `-O2` so far (A4860's func_8028A154 inlines func_8028A08C at `-O3`).
+  78CA0 (func_8025E5EC keeps `&D_802ACFE0` in `a3` across a `jal` to
+  its own file's func_8025E4A0), 7D840 (func_802639E4 passes
+  func_80263040 arguments in `t1`-`t4`) and 96540 (func_8027C5E0 keeps
+  `a0` in `t3` across a `jal` to func_8027C560) are `-O3` too: a value
+  left in a caller-saved register across a call into the same file
+  shows it as surely.
 - **Banks 0x0C-0x17's overlays are `-O3` too**: ovl_0C_03, 12_02 and
   12_04 written last function first and built `-O3` match with plain calls
   where their earlier `-O2` C needed `pad[]` locals and `if (1)`s, and
