@@ -451,6 +451,12 @@ module's asm blocks, though the draft defines it.
 - **Callbacks** keep their argument: `D_802B01F8[arg1 - 1](arg0)`
   (99F40), where the array starts one entry after the symbol the asm
   indexes from.
+- **Source lines steer the scheduler.** Where two instruction orders are
+  equally good, IDO's choice depends on which statements share a line.
+  Joining statements onto one line, or into one macro (which expands to a
+  single line), fixed ovl_0E_13's 80043444 (`UNK_MACRO_ovl0E_13_80043444`)
+  and two words of ovl_0E_12's 80043164. Try it on a store/load order
+  that no reordering of statements fixes.
 
 ## Versions
 
