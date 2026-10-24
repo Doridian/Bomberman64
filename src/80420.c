@@ -53,4 +53,41 @@ void func_80265CF8(void) {
     D_802AD108 = -1;
 }
 
-#pragma GLOBAL_ASM("asm/nonmatchings/80420/func_80265D10.s")
+void func_80265D10(void) {
+}
+
+void func_80265D18(void) {
+}
+
+void func_80265D20(void) {
+}
+
+void func_80265D28(void) {
+}
+
+void func_80265D30(void) {
+}
+
+void func_80265D38(void) {
+}
+
+void func_80265D40(void) {
+}
+
+void func_80265D48(void) {
+}
+
+void func_80265D50(void) {
+}
+
+void func_80265D58(void) {
+}
+
+void func_80265D60(void) {
+}
+
+void func_80265D68(void) {
+}
+
+void func_80265D70(void) {
+}
