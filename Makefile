@@ -178,8 +178,8 @@ $(BUILD_DIR)/%.s.o: %.s
 ### Per-file compiler flags (paths under src/; the same in every version)
 
 # main_code's entry (func_80225800): -g (every value goes through the stack,
-# and the return is branched to).
-G_C_FILES  := main_code_entry.c
+# and the return is branched to).  So is all of ovl_16_01.
+G_C_FILES  := main_code_entry.c overlays/ovl_16_01/ovl_16_01_entry.c overlays/ovl_16_01/2A4DF0.c
 # -O3: IDO inlines a file's small functions into their callers there (40FB0:
 # func_80226860 holds func_80226818's and func_802267E0's bodies), which
 # -O2 never does.  asm-processor can't do -O3 either: these are all C.

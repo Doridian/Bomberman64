@@ -198,6 +198,11 @@ ovl_12_02 24EA00 0x70 0x50 0x60
 ovl_12_04 ovl_12_04_entry 0 0 0
 ovl_12_04 253A10 0x60 0x50 0x60
 
+# ovl_16_01: all C (-g); .rodata is its debug messages, a float and the
+# handler's jump table
+ovl_16_01 ovl_16_01_entry 0 0 0
+ovl_16_01 2A4DF0 0 0xD0 0x40
+
 # ovl_17_01: all C (-O3); ovl_17_06 and ovl_17_08 are the same object
 ovl_17_01 ovl_17_01_entry 0 0 0
 ovl_17_01 2A7080 0x180 0x50 0x90

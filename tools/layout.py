@@ -292,10 +292,15 @@ def main_bss(d, main_end):
 def first_function_end(b):
     """The end of a module's first function (after its jr ra and delay
     slot), rounded up to 16: the module's entry, which the loader jumps to,
-    so it is an object of its own and a shifted build pads after it."""
+    so it is an object of its own and a shifted build pads after it.  An
+    object is padded to 16 with nops, so where code follows the function
+    before the next 16-byte boundary, the entry's file goes on (ovl_16_01's
+    holds two empty functions after the entry)."""
     for o in range(0, len(b), 4):
         if u32(b, o) == 0x03E00008:
-            return (o + 8 + 15) & ~15
+            end = o + 8
+            if all(u32(b, q) == 0 for q in range(end, (end + 15) & ~15, 4)):
+                return (end + 15) & ~15
     raise ValueError("no jr ra")
 
 
