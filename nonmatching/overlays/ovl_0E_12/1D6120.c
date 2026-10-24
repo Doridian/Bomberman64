@@ -2,11 +2,14 @@
  * NON_MATCHING: ovl_0E_12's game object, complete: every function and its data.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 5, eu 5, jp 5
+ * differing words: us 4, eu 4, jp 4
  *
  * What still differs in us (words):
- * - func_ovl0E_12_80043164 (3): `sll t4,s3,5` scheduled before two
- *   stores; the original has it after them.
+ * - func_ovl0E_12_80043164 (2): `sll t4,s3,5` (the next call's &D_FCC[i])
+ *   scheduled before the stores to unk0 and unk4; the original has it
+ *   after them (ours: sll, unk4, unk0). IDO's scheduling follows source
+ *   lines: with the two stores on separate lines it's 3 words, with the
+ *   call on their line too 4.
  * - func_ovl0E_12_80043A64 (2): `move a1,s4` in a load delay slot where
  *   the original has it in the next call's delay slot (a nop in ours).
  */
@@ -754,8 +757,8 @@ void func_ovl0E_12_80043164(void) {
                         D_ovl0E_12_80045F94[i].unk10 != 0xFFFF && D_ovl0E_12_80045F94[i].unk12 != 0xFFFF) {
                         func_ovl0E_12_80045398(D_ovl0E_12_80045F94[i].unk4);
                     }
-                    D_ovl0E_12_80045F94[i].unk0 = NULL;
-                    D_ovl0E_12_80045F94[i].unk4 = -1;
+                    /* one line: see the header */
+                    D_ovl0E_12_80045F94[i].unk0 = NULL; D_ovl0E_12_80045F94[i].unk4 = -1;
                     func_ovl0E_12_8004311C(&D_ovl0E_12_80045FCC[i]);
                     func_ovl0E_12_80045A10(p->unk0);
                 } else {
