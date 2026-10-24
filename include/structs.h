@@ -36,7 +36,8 @@ typedef struct {
 typedef struct {
     /* 0x00 */ u8 unk0[8];
     /* 0x08 */ s32 unk8;
-    /* 0x0C */ u8 unkC[0xC];
+    /* 0x0C */ s32 unkC;
+    /* 0x10 */ u8 unk10[8];
     /* 0x18 */ f32 unk18;
     /* 0x1C */ f32 unk1C;
     /* 0x20 */ u8 unk20[0x10];
@@ -49,9 +50,10 @@ typedef struct {
     /* 0x4C */ f32 unk4C;
     /* 0x50 */ u8 unk50[4];
     /* 0x54 */ f32 unk54;
-    /* 0x58 */ u8 unk58[4];
+    /* 0x58 */ f32 unk58;
     /* 0x5C */ f32 unk5C;
-    /* 0x60 */ u8 unk60[8];
+    /* 0x60 */ f32 unk60;
+    /* 0x64 */ s32 unk64;
     /* 0x68 */ f32 unk68;
     /* 0x6C */ f32 unk6C;
     /* 0x70 */ f32 unk70;

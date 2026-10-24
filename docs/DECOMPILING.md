@@ -123,7 +123,7 @@ tools/progress.py                                # per module, overlays per bank
   its wrappers call 4DE50's compares with a `jal`, which -O3 would inline
   in one file), 4ED50, 52270 (jp's func_8023876C has no TV-type
   switch: `#if VERSION_JP`), 530C0, 53D70, 86680, 995C0, 9A5F0, 9BFD0, ACA00,
-  AFBF0, B6680 (`-mips2`), ovl_0A_01-05's, ovl_0C_03's, ovl_12_02's, ovl_12_04's and ovl_17_01's objects are `-O3`; 404C0, 5E090, 87190, 87730,
+  AFBF0, B6680 (`-mips2`), ovl_0A_02-05's, ovl_0C_03's, ovl_12_02's, ovl_12_04's, ovl_17_01's and ovl_17_10's objects are `-O3`; 404C0, 5E090, 87190, 87730,
   99F40, A4860 and B11F0 are `-O2` (no
   inlining between functions that call each other, no cross-call
   registers; A4860's func_8028A318 calls three small functions of its
@@ -214,6 +214,23 @@ tools/progress.py                                # per module, overlays per bank
     DEG; tmp[0] = t; s = sinf(tmp[0]);`), which is where the original
     spills them; the frame also counts named temporaries (func_8029C680's
     four products `a`-`d`).
+  - a function whose address is taken (a task or a callback) counts as a
+    callee for the order: it comes out before the function taking its
+    address, unless some address-taken function of the file takes an
+    address itself (ovl_17_01's 3034 → 365C → 398C, ovl_17_10's 3034 →
+    3E14 → 412C); then they mostly come out at their own turn, but small
+    test files show more rules than this (`scratch/ovl_17_rest/exp*.py`
+    in the main checkout);
+  - whether a static is inlined depends on its size and on its caller's:
+    ovl_17_10's func_80044464 stays a call (with its `s`-register
+    convention) only because its caller writes its x and z steps out
+    itself; with those steps in statics it was inlined;
+  - `if (a && a && a) {}` (a fake, with a comment) ends a block without
+    code: ovl_17_10's handler needs it to keep a call from being
+    scheduled into the stores before it; a chained assignment (`x =
+    p->unk10 = rec->unk4;`) and a ternary repeating its operand (`a = a +
+    5.0f >= 360.0f ? a + 5.0f - 360.0f : ...`) each fixed a register
+    choice there.
   `tools/fcmp.py` and `tools/mkperm.py` compile `-mips1`; for a `-mips2`
   object (`MIPS2_C_FILES`), pass them `-mips2`.
   The decomp-permuter normally strips a file to the one function, which

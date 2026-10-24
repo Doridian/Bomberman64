@@ -1765,9 +1765,10 @@ segments:
     symbol_name_format: ovl17_10_$VRAM
     dir: overlays/ovl_17_10
     subsegments:
-      - [0x2BA960, asm, ovl_17_10_entry]
-      - [0x2BA970, asm, 2BC0B0]
+      - [0x2BA960, c, ovl_17_10_entry]
+      - [0x2BA970, c, 2BC0B0]
       - [0x2BC7B0, hasm, ovl_17_10_zerojmp]
-      - [0x2BDDD0, rodata]
-      - {type: bss, vram: 0x800466D0}
+      - [0x2BDDD0, .data, 2BC0B0]
+      - [0x2BDFB0, .rodata, 2BC0B0]
+      - {type: .bss, vram: 0x800466D0, name: 2BC0B0}
   - [0x2BE030]

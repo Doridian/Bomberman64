@@ -230,3 +230,7 @@ ovl_17_06 2B1100 0x180 0x50 0x90
 # ovl_17_08: all C (-O3), ovl_17_01 with a swaying camera
 ovl_17_08 ovl_17_08_entry 0 0 0
 ovl_17_08 2B60C0 0x180 0x70 0xB0
+
+# ovl_17_10: all C (-O3), ovl_17_01 with more models moving on paths
+ovl_17_10 ovl_17_10_entry 0 0 0
+ovl_17_10 2BC0B0 0x1E0 0x80 0x90
