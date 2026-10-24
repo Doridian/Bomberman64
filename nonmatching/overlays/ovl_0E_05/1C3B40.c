@@ -2,15 +2,12 @@
  * NON_MATCHING: ovl_0E_05's game object, complete: every function and its data.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 197, eu 197, jp 197
+ * differing words: us 2, eu 2, jp 2
  *
  * What still differs in us (words):
  * - func_ovl0E_05_80043860 (2): `move a1,s2` scheduled into a load delay
  *   slot where the original has it in a call's delay slot (as ovl_0E_12's
  *   80043A64).
- * - func_ovl0E_05_800443B4 (195): the original keeps two more float
- *   pairs live ($f26-$f29, saved in the prologue) and is 12 words longer;
- *   everything after the prologue is shifted.
  */
 #include "common.h"
 
@@ -325,11 +322,11 @@ void func_ovl0E_05_800446D4(UnkStructA *arg0) {
 }
 
 void func_ovl0E_05_800443B4(void) {
-    f32 pad[5];
     UnkStruct_ovl0E_05_80045F98 *rec;
+    s32 flag;
     f32 a[3];
     f32 b[3];
-    f32 pad2[1];
+    UnkStructA_40 *p;
 
     rec = func_ovl0E_05_800457D0();
     rec->unk8 = func_ovl0E_05_80045680(0x1BC, 0x0D080040, 0x20, 0);
@@ -346,6 +343,7 @@ void func_ovl0E_05_800443B4(void) {
     rec->unk8->unk34 = 50.0f;
     rec->unk8->unk38 = 2500.0f;
     func_ovl0E_05_800457C8(func_ovl0E_05_80045968(60) + 30);
+    flag = 0;
     while (TRUE) {
         func_ovl0E_05_80045768(rec->unk8);
         rec->unk10 += rec->unk18;
@@ -365,8 +363,18 @@ void func_ovl0E_05_800443B4(void) {
             }
         }
         rec->unk18 -= rec->unk24;
-        rec->unk8->unk40->unk20 += 20.0f;
-        rec->unk8->unk40->unk14 = rec->unk10;
+        /* through a variable: $v0 for both, where the expression gives $t9 */
+        p = rec->unk8->unk40;
+        p->unk20 += 20.0f;
+        p = rec->unk8->unk40;
+        p->unk14 = rec->unk10;
+        /* never runs: what it did is unknown, but two float constants live
+         * across the loop's calls take $f26 and $f28, which the original
+         * saves and never uses */
+        if (flag) {
+            rec->unkC = 3.0f;
+            rec->unk14 = 5.0f;
+        }
         func_ovl0E_05_800457F0();
     }
 }
