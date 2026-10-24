@@ -2,7 +2,7 @@
 """Compile a C file with IDO and compare each of its functions with the
 original (assets/code.bin), by name.
 
-    tools/fcmp.py file.c [-O3|-O2|-g ...] [-v func] [--root DIR]
+    tools/fcmp.py file.c [-O3|-O2|-g ...] [-mips2] [-v func] [--root DIR]
 
 For a draft before it goes into src/: an -O3 object has to match as a
 whole file, which tools/fdiff.py (one function in the linked build)
@@ -15,13 +15,14 @@ import difflib, json, os, re, shutil, subprocess, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 args = sys.argv[1:]
-cfile = None; opt = "-O2"; verbose = None; extra = []
+cfile = None; opt = "-O2"; isa = "-mips1"; verbose = None; extra = []
 i = 0
 while i < len(args):
     a = args[i]
     if a == "-v": verbose = args[i + 1]; i += 2; continue
     if a == "--root": ROOT = args[i + 1]; i += 2; continue
     if a.startswith("-O") or a == "-g": opt = a
+    elif a.startswith("-mips"): isa = a
     elif a.startswith("-"): extra.append(a)
     else: cfile = os.path.abspath(a)
     i += 1
@@ -68,7 +69,7 @@ try:
     obj = os.path.join(tmp, "a.o")
     cmd = (f"{ROOT}/tools/ido/5.3/cc -c -G 0 -Xfullwarn -Xcpluscomm -nostdinc -non_shared -Wab,-r4300_mul "
            f"-D_LANGUAGE_C -D_FINALROM -DVERSION_{VERSION.upper()} -woff 649,838,712,807 -I {ROOT}/include -I {ROOT}/include/PR "
-           f"-I {ROOT}/src {opt} -mips1 -32 {' '.join(extra)} -o {obj} {cfile}")
+           f"-I {ROOT}/src {opt} {isa} -32 {' '.join(extra)} -o {obj} {cfile}")
     r = subprocess.run(cmd, shell=True, cwd=tmp, capture_output=True, text=True)
     if r.returncode:
         print(r.stdout, r.stderr); sys.exit(1)

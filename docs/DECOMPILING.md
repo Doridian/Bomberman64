@@ -205,7 +205,7 @@ tools/progress.py                                # per module, overlays per bank
     spills them; the frame also counts named temporaries (func_8029C680's
     four products `a`-`d`).
   `tools/fcmp.py` and `tools/mkperm.py` compile `-mips1`; for a `-mips2`
-  object, use copies with `-mips2` in their compiler command.
+  object (`MIPS2_C_FILES`), pass them `-mips2`.
   The decomp-permuter normally strips a file to the one function, which
   undoes all of this: keep the other definitions (mark them `inline` for
   the permuter and strip the keyword in its compile.sh) and score against

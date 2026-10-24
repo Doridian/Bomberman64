@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Whole-file permuter setup for an -O3 object (or any all-C object):
 
-    tools/mkperm.py FILE.c FUNC IMAGE_OFFSET OUTDIR [-O3]
+    tools/mkperm.py FILE.c FUNC IMAGE_OFFSET OUTDIR [-O3] [-mips2]
 
 base.c is FILE.c preprocessed (every function kept, so -O3's inlining and
 cross-function register allocation happen as in the real build); target.o
@@ -15,7 +15,8 @@ import os, subprocess, sys
 W = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 VERSION = open(os.path.join(W, ".version")).read().strip()
 cfile, func, off, out = sys.argv[1:5]
-opt = sys.argv[5] if len(sys.argv) > 5 else "-O3"
+opt = next((a for a in sys.argv[5:] if a.startswith("-O") or a == "-g"), "-O3")
+isa = next((a for a in sys.argv[5:] if a.startswith("-mips")), "-mips1")
 off = int(off, 16)
 os.makedirs(out, exist_ok=True)
 out = os.path.abspath(out)
@@ -23,7 +24,7 @@ tmp = os.path.join(out, "tmp")
 os.makedirs(tmp, exist_ok=True)
 cc = (f"{W}/tools/ido/5.3/cc -c -G 0 -Xfullwarn -Xcpluscomm -nostdinc -non_shared -Wab,-r4300_mul "
       f"-D_LANGUAGE_C -D_FINALROM -DVERSION_{VERSION.upper()} -woff 649,838,712,807 -I {W}/include -I {W}/include/PR "
-      f"{opt} -mips1 -32")
+      f"{opt} {isa} -32")
 # preprocess (keep it C89-ish for pycparser: drop line markers)
 pp = subprocess.run(["cpp", "-P", "-undef", "-D_LANGUAGE_C", "-D_FINALROM", f"-DVERSION_{VERSION.upper()}", "-D__sgi",
                      "-I", f"{W}/include", "-I", f"{W}/include/PR", cfile],
