@@ -1,8 +1,26 @@
 /*
- * NON_MATCHING: ovl_0E_04's game object, complete: every function and its data.
+ * NON_MATCHING: ovl_0E_04's game object, complete: every function and its data
+ * (.data 0x410, .rodata 0xB0 and .bss 0x60 as the original); .text 0x30
+ * short of 0x23F0.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 313, eu 313, jp 313
+ * differing words: us 216, eu 216, jp 216
+ *
+ * What still differs in us (words):
+ * - func_ovl0E_04_80044EB4 (195): ovl_0E_05's 800443B4 (the same code and
+ *   the same difference): the original also saves $f26-$f29, which nothing
+ *   uses, and is 12 words longer; everything after the prologue is shifted.
+ * - func_ovl0E_04_800439A4 (17): ovl_12_01's 80043190 (the same camera
+ *   set-up, func_ovl0E_04_8004399C): the original saves s1/s2 and sets
+ *   &D_ovl0E_04_80046F30 and the count before computing x, and stores y
+ *   before x. The copies inlined into func_ovl0E_04_80043DD4 and
+ *   func_ovl0E_04_80044274 match.
+ * - func_ovl0E_04_80043158 (2): ovl_12_01's 80043754: the `lui a0` of
+ *   D_ovl0E_04_80046F20 is scheduled before `sw ra`; the original has it
+ *   after.
+ * - func_ovl0E_04_80043B4C (2): ovl_0E_05's 80043860: `move a1,s4` is
+ *   scheduled into a load delay slot where the original has it in a call's
+ *   delay slot.
  */
 #include "common.h"
 
@@ -657,9 +675,6 @@ void func_ovl0E_04_80044124(void) {
 /* The overlay's handler: the entry returns it to the loader. */
 void func_ovl0E_04_80043FB8(s32 arg0) {
     switch (arg0) {
-        case 1:
-            func_ovl0E_04_80043038();
-            break;
         case 2:
             func_ovl0E_04_80043DD4();
             break;
@@ -689,6 +704,9 @@ void func_ovl0E_04_80043FB8(s32 arg0) {
             break;
         case 12:
             func_ovl0E_04_80043088();
+            break;
+        case 1:
+            func_ovl0E_04_80043038();
             break;
         case 0x52:
             break;
@@ -823,11 +841,11 @@ void func_ovl0E_04_80043908(void) {
     if (func_ovl0E_04_80046520(0x406) != 0) {
         flag = 0;
     } else {
+        flag = 1;
         func_ovl0E_04_80046518(0x401);
         func_ovl0E_04_80046518(0x402);
         func_ovl0E_04_80046518(0x403);
         func_ovl0E_04_80046518(0x417);
-        flag = 1;
     }
     for (i = 0; i < 3; i++) {
         func_ovl0E_04_80043840(i, flag);
@@ -835,20 +853,18 @@ void func_ovl0E_04_80043908(void) {
 }
 
 void func_ovl0E_04_80043840(s16 idx, s16 flag) {
-    UnkStruct_ovl0E_04_80046DE0 *rec;
-    UnkStructA *obj;
     s32 model;
+    UnkStructA *obj;
 
     if (flag) {
         model = 0x1BF;
     } else {
         model = 0x1C0;
     }
-    rec = &D_ovl0E_04_80046DE0[idx];
-    obj = func_ovl0E_04_80046190(model, 0xC0, rec->unkC, rec->unk10, rec->unk14);
-    rec->unk8 = obj;
+    obj = func_ovl0E_04_80046190(model, 0xC0, D_ovl0E_04_80046DE0[idx].unkC, D_ovl0E_04_80046DE0[idx].unk10, D_ovl0E_04_80046DE0[idx].unk14);
+    D_ovl0E_04_80046DE0[idx].unk8 = obj;
     func_ovl0E_04_80046148(obj, 0x01008010);
-    obj->unk40->unk20 = rec->unk18;
+    obj->unk40->unk20 = D_ovl0E_04_80046DE0[idx].unk18;
     obj->unk30 = 1;
     obj->unk34 = 50.0f;
     obj->unk38 = 100.0f;
