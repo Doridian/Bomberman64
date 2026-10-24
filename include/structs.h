@@ -91,7 +91,10 @@ typedef struct {
 /* What the main_code function behind the overlays' ZeroJump stub at
  * 0x80044690 (ovl_17_03) returns. */
 typedef struct {
-    /* 0x00 */ u8 unk0[0x3C];
+    /* 0x00 */ u8 unk0[0x18];
+    /* 0x18 */ f32 unk18;
+    /* 0x1C */ f32 unk1C;
+    /* 0x20 */ u8 unk20[0x1C];
     /* 0x3C */ f32 unk3C;
     /* 0x40 */ f32 unk40;
     /* 0x44 */ f32 unk44;
