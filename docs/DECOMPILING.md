@@ -45,7 +45,7 @@ tools/m2c.sh func_80265C9C                       # a first draft
 make VERSION=us; tools/fdiff.py func_80265C9C    # OK, or a diff
 tools/permute.sh func_80265C20 draft.c           # when it's close
 nice -n 10 .env/bin/python3 tools/decomp-permuter/permuter.py -j16 permuter/nonmatchings/func_80265C20
-tools/progress.py                                # per module, overlays per bank (--overlays: each)
+tools/progress.py                                # per module, overlays per bank (--overlays: each); +drafts counts nonmatching/ too
 ```
 
 - `tools/fdiff.py <function>` diffs the function in `assets/code.bin`

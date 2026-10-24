@@ -9,6 +9,13 @@ module's ZeroJump stub block) are counted apart: they are not meant to
 become C for the matching build.  Libraries count with the module they are
 linked into until phase 3 tells them apart.
 
+The "+drafts" column also counts the objects that have a complete
+NON_MATCHING draft in nonmatching/ (docs/DECOMPILING.md): C that compiles
+and differs from the original only in the few words its header records
+(register choice, scheduling), so it isn't built into the ROM yet but
+is there for the port. That the drafts behave the same is not tested;
+`make nonmatching-check` only keeps them from drifting further.
+
 Run after `make VERSION=<v>` (one version's build is there at a time):
 
     tools/progress.py [--version us] [--overlays] [--json]
@@ -55,13 +62,23 @@ def hasm_objects(version: str) -> set:
     return out
 
 
+def drafted_objects() -> set:
+    """The asm objects nonmatching/'s drafts stand for, as .s paths."""
+    out = set()
+    for c in (ROOT / "nonmatching").rglob("*.c"):
+        rel = c.relative_to(ROOT / "nonmatching").with_suffix(".s")
+        out.add(f"asm/{rel.as_posix()}")
+    return out
+
+
 def progress(version: str) -> dict:
     map_path = ROOT / "build" / version / f"bm64.{version}.map"
     if not map_path.exists():
         sys.exit(f"{map_path.relative_to(ROOT)} is missing; build {version} first")
     hand = hasm_objects(version)
-    rows = defaultdict(lambda: {"total": 0, "decompiled": 0, "functions_left": 0,
-                                "c_files": 0, "handwritten": 0})
+    drafts = drafted_objects()
+    rows = defaultdict(lambda: {"total": 0, "decompiled": 0, "drafted": 0,
+                                "functions_left": 0, "c_files": 0, "handwritten": 0})
     module = None
     prefix = f"build/{version}/"
     with map_path.open() as f:
@@ -87,10 +104,14 @@ def progress(version: str) -> dict:
                 r["total"] += size
                 r["decompiled"] += size - left
                 r["c_files"] += 1
+                if "asm/" + obj.removeprefix("src/").removesuffix(".c.o") + ".s" in drafts:
+                    r["drafted"] += left
             elif obj.endswith(".s.o") and obj.removesuffix(".o") in hand:
                 r["handwritten"] += size
             elif obj.endswith(".s.o"):
                 r["total"] += size
+                if obj.removesuffix(".o") in drafts:
+                    r["drafted"] += size
     return rows
 
 
@@ -121,18 +142,23 @@ def main() -> None:
             shown[key][k] += v
 
     print(f"{args.version}:")
-    print(f"{'module':<24}{'C bytes':>10}{'total':>10}{'%':>9}"
+    print(f"{'module':<24}{'C bytes':>10}{'total':>10}{'%':>9}{'+drafts':>9}"
           f"{'C files':>9}{'funcs left':>12}{'hand asm':>10}")
     for key, r in shown.items():
         print(f"{key:<24}{r['decompiled']:>10}{r['total']:>10}"
-              f"{pct(r['decompiled'], r['total']):>8.2f}%{r['c_files']:>9}"
+              f"{pct(r['decompiled'], r['total']):>8.2f}%"
+              f"{pct(r['decompiled'] + r['drafted'], r['total']):>8.2f}%{r['c_files']:>9}"
               f"{r['functions_left']:>12}{r['handwritten']:>10}")
-    done = sum(r["decompiled"] for r in rows.values())
-    total = sum(r["total"] for r in rows.values())
-    ovl = [r for m, r in rows.items() if m.startswith("ovl_")]
-    odone, ototal = sum(r["decompiled"] for r in ovl), sum(r["total"] for r in ovl)
-    print(f"{'overlays':<24}{odone:>10}{ototal:>10}{pct(odone, ototal):>8.2f}%")
-    print(f"{'all':<24}{done:>10}{total:>10}{pct(done, total):>8.2f}%")
+
+    def total_row(name, rs):
+        done = sum(r["decompiled"] for r in rs)
+        drafted = sum(r["drafted"] for r in rs)
+        total = sum(r["total"] for r in rs)
+        print(f"{name:<24}{done:>10}{total:>10}{pct(done, total):>8.2f}%"
+              f"{pct(done + drafted, total):>8.2f}%")
+
+    total_row("overlays", [r for m, r in rows.items() if m.startswith("ovl_")])
+    total_row("all", list(rows.values()))
 
 
 if __name__ == "__main__":
