@@ -200,6 +200,10 @@ ovl_0E_09 1CD770 0x180 0x90 0x60
 ovl_0E_10 ovl_0E_10_entry 0 0 0
 ovl_0E_10 1D0700 0x70 0x60 0x60
 
+# ovl_0E_11: all C (-O3); .rodata is two jump tables and two floats
+ovl_0E_11 ovl_0E_11_entry 0 0 0
+ovl_0E_11 1D2C60 0x230 0x70 0x60
+
 # ovl_0E_14: all C
 ovl_0E_14 ovl_0E_14_entry 0 0 0
 ovl_0E_14 1DD120 0x40 0x50 0x60
