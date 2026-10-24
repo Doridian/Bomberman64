@@ -83,11 +83,22 @@ typedef struct {
  * 0x80043BE8 (ovl_17_04) returns. */
 typedef struct {
     /* 0x00 */ s32 unk0;
-    /* 0x04 */ u8 unk4[0x28];
+    /* 0x04 */ s32 unk4[4];
+    /* 0x14 */ u8 unk14[0x10];
+    /* 0x24 */ s32 unk24;
+    /* 0x28 */ u8 unk28[4];
     /* 0x2C */ s32 unk2C;
     /* 0x30 */ s32 unk30;
     /* 0x34 */ u8 unk34[4];
     /* 0x38 */ s32 unk38;
+    /* 0x3C */ u8 unk3C[4];
+    /* 0x40 */ s32 unk40[4];
+    /* 0x50 */ s32 unk50[4][4];
+    /* 0x90 */ s32 unk90[4];
+    /* 0xA0 */ s32 unkA0;
+    /* 0xA4 */ s32 unkA4[4];
+    /* 0xB4 */ u8 unkB4[0x10];
+    /* 0xC4 */ u8 unkC4[4][9];
 } UnkStructB;
 
 /* What the main_code function behind the overlays' ZeroJump stub at
