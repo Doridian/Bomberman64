@@ -2,17 +2,19 @@
  * NON_MATCHING: ovl_12_03's game object, complete: every function and its data.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 33, eu 33, jp 33
+ * differing words: us 23, eu 23, jp 23
  *
  * What still differs (words; the same in all three):
- * - func_ovl12_03_80043174 (27): the inlined func_ovl12_03_8004316C is
- *   scheduled differently: the original saves s1/s2 and sets the count
- *   before computing x, stores y before x, and stores the result of
- *   func_ovl12_03_80045890 before the epilogue; ours puts that store in
- *   the epilogue. The copies inlined into 80043408 and 80043F68 match.
+ * - func_ovl12_03_80043174 (17): the inlined func_ovl12_03_8004316C's
+ *   first block is scheduled differently: the original saves s1/s2 and
+ *   sets &D_ovl12_03_80045ED0 and the count before computing x, and
+ *   stores y before x. The copies inlined into 80043408 and 80043F68
+ *   match. (The store before the epilogue is the fake test's; see the
+ *   static. ovl_12_01's draft lists what else was tried.)
  * - func_ovl12_03_80043668 (4): each `func_ovl12_03_80044B98(n)` call
  *   sets `a0` again in its delay slot; the original has a nop there (`a0`
- *   is already set in the branch's delay slot).
+ *   is already set in the branch's delay slot; the two calls or the whole
+ *   `if` on one line, no `!= 0`, `D + k` for `&D[k]`: no change).
  * - func_ovl12_03_80043108 (2): the `lui a0` of D_ovl12_03_80045EC0 is
  *   scheduled before `sw ra`; the original has it after.
  * The entry (ovl_12_03_entry, `return func_ovl12_03_8004418C;`) goes to
@@ -679,18 +681,27 @@ void func_ovl12_03_80043174(void) {
 
 /* Inlined into func_ovl12_03_80043174 only; that one is inlined into its
  * callers in turn. Called from more than one function it isn't inlined.
- * The parameter order sets func_ovl12_03_80043408's frame. */
+ * The parameter order sets func_ovl12_03_80043408's frame.
+ * The empty test after the body is a fake (the permuter's, found for
+ * ovl_12_01's copy): the branch IDO folds away still ends the block, so
+ * the store of D_ovl12_03_80045EC0 comes before the epilogue as in the
+ * original (27 words to 18). The body on one line (a macro) saves one more. */
+#define UNK_MACRO_ovl12_03_8004316C()                                                     \
+    D_ovl12_03_80045ED0[0] = x * 100.0f;                                                  \
+    D_ovl12_03_80045ED0[1] = 0.0f;                                                        \
+    for (i = 0; i < count; i++) {                                                         \
+        D_ovl12_03_80045ED0[1] += func_ovl12_03_80044950(i) * 100.0f;                     \
+    }                                                                                     \
+    D_ovl12_03_80045ED0[1] += 100.0f;                                                     \
+    D_ovl12_03_80045ED0[2] = z * 100.0f;                                                  \
+    D_ovl12_03_80045EC0 = func_ovl12_03_80045890(0x28, (Vec3f *) D_ovl12_03_80045ED0, 0)
+
 static void func_ovl12_03_8004316C(f32 x, s32 z, s32 count) {
     s32 i;
 
-    D_ovl12_03_80045ED0[0] = x * 100.0f;
-    D_ovl12_03_80045ED0[1] = 0.0f;
-    for (i = 0; i < count; i++) {
-        D_ovl12_03_80045ED0[1] += func_ovl12_03_80044950(i) * 100.0f;
+    UNK_MACRO_ovl12_03_8004316C();
+    if (!i && !i) {
     }
-    D_ovl12_03_80045ED0[1] += 100.0f;
-    D_ovl12_03_80045ED0[2] = z * 100.0f;
-    D_ovl12_03_80045EC0 = func_ovl12_03_80045890(0x28, (Vec3f *) D_ovl12_03_80045ED0, 0);
 }
 
 void func_ovl12_03_80043138(s32 arg0) {
