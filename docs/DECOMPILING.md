@@ -123,7 +123,7 @@ tools/progress.py                                # per module, overlays per bank
   its wrappers call 4DE50's compares with a `jal`, which -O3 would inline
   in one file), 4ED50, 52270 (jp's func_8023876C has no TV-type
   switch: `#if VERSION_JP`), 530C0, 53D70, 86680, 995C0, 9A5F0, 9BFD0, ACA00,
-  AFBF0, B6680 (`-mips2`), ovl_0A_02-05's, ovl_0C_03's, ovl_12_02's, ovl_12_04's, ovl_17_01's and ovl_17_10's objects are `-O3`; 404C0, 5E090, 87190, 87730,
+  AFBF0, B6680 (`-mips2`), ovl_0A_02-05's, ovl_0C_03's, ovl_0E_09's, ovl_12_02's, ovl_12_04's, ovl_17_01's and ovl_17_10's objects are `-O3`; 404C0, 5E090, 87190, 87730,
   99F40, A4860 and B11F0 are `-O2` (no
   inlining between functions that call each other, no cross-call
   registers; A4860's func_8028A318 calls three small functions of its
@@ -158,6 +158,24 @@ tools/progress.py                                # per module, overlays per bank
   static taking the struct's address, with 8004361C called from it), whose
   epilogue restores `s2`, `s1`, `s0` where the original restores `s0`
   first (scratch/ovl_rest/0C_08_struct_abc.c).
+  Bank 0x0E's bigger overlays (ovl_0E_09, and the drafts of 0E_05 and
+  0E_12 in scratch/bank0E/) add:
+  - the set-up function the handler calls (case 2) registers the two
+    callbacks; at its own turn it pulls them out ahead of the movers' tasks
+    defined between them. Defined above those tasks (0E_09's 80043968 just
+    above 80043D50), it is pulled out by the handler and the callbacks stay
+    at the end (`scratch/bank0E/place.py` tries a function at every place);
+  - the movers' tasks (`while (TRUE)` loops) start their loop on the same
+    line as their set-up: `for (doneZ = 0, doneX = 0, rec->unkE =
+    rec->unkC;;)` where the same statements on lines of their own put the
+    table's `addiu` after the zeroing; 80043094's `i = 0; do {` likewise;
+  - a store whose value is also a call's argument can come out of the
+    call (`rec->unk8 = func(...); obj = rec->unk8;`, not the reverse);
+  - an argument nobody sets is a register the caller happened to hold:
+    80043F8C's `func_ovl0E_09_80045508(obj)` gets `a1 = 2` from its
+    compares (declared with two parameters, the 2 goes into `a2`);
+  - the collision checks compare `s16` fields with `0xFFFF`, never true
+    (`ori $s, $zero, 0xFFFF`), where the set-up compares with `-1`.
 - **`-O3` and `static`.** The rest of what IDO does at `-O3` follows from
   it processing the file as a whole:
   - a `static` function may get its own calling convention: arguments in
