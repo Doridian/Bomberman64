@@ -1,17 +1,3 @@
-/*
- * NON_MATCHING: ovl_0E_02's game object, complete: every function and its data
- * (.data 0x360 and .rodata 0x60 as the original; .bss laid out as the
- * original's labels, 0x5C where the overlay table gives 0x50); .text 0x10
- * short of 0x1D50.
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 185, eu 185, jp 185
- *
- * What still differs in us (words):
- * - func_ovl0E_02_800447F8 (185): ovl_0E_05's 800443B4 (the same code and
- *   the same difference): the original also saves $f26-$f29, which nothing
- *   uses, and is 4 words longer; everything after the prologue is shifted.
- */
 #include "common.h"
 
 /*
@@ -333,11 +319,11 @@ void func_ovl0E_02_80044B14(UnkStructA *arg0) {
 }
 
 void func_ovl0E_02_800447F8(void) {
-    f32 pad[5];
     UnkStruct_ovl0E_02_800463DC *rec;
+    s32 flag;
     f32 a[3];
     f32 b[3];
-    f32 pad2[1];
+    UnkStructA_40 *p;
 
     rec = func_ovl0E_02_80045C20();
     rec->unk8 = func_ovl0E_02_80045AD0(0x1BC, 0x0D080040, 0x20, 0);
@@ -354,6 +340,7 @@ void func_ovl0E_02_800447F8(void) {
     rec->unk8->unk34 = 50.0f;
     rec->unk8->unk38 = 2500.0f;
     func_ovl0E_02_80045C18(func_ovl0E_02_80045DB8(60) + 30);
+    flag = 0;
     while (TRUE) {
         func_ovl0E_02_80045BB8(rec->unk8);
         rec->unk10 += rec->unk18;
@@ -373,8 +360,18 @@ void func_ovl0E_02_800447F8(void) {
             }
         }
         rec->unk18 -= rec->unk24;
-        rec->unk8->unk40->unk20 += 20.0f;
-        rec->unk8->unk40->unk14 = rec->unk10;
+        /* through a variable: $v0 for both, where the expression gives $t9 */
+        p = rec->unk8->unk40;
+        p->unk20 += 20.0f;
+        p = rec->unk8->unk40;
+        p->unk14 = rec->unk10;
+        /* never runs: what it did is unknown, but two float constants live
+         * across the loop's calls take $f26 and $f28, which the original
+         * saves and never uses */
+        if (flag) {
+            rec->unkC = 3.0f;
+            rec->unk14 = 5.0f;
+        }
         func_ovl0E_02_80045C40();
     }
 }

@@ -457,6 +457,18 @@ module's asm blocks, though the draft defines it.
   single line), fixed ovl_0E_13's 80043444 (`UNK_MACRO_ovl0E_13_80043444`)
   and two words of ovl_0E_12's 80043164. Try it on a store/load order
   that no reordering of statements fixes.
+- **Saved registers nothing uses come from dead code IDO removes late.**
+  A callee-saved register the prologue saves and the body never touches
+  was allocated before a branch was found dead. ovl_0E_02's 800447F8
+  (and ovl_0E_03's 80044B78, ovl_0E_05's 800443B4) saves `$f26`-`$f29`
+  for nothing: `flag = 0;` before its loop and
+  `if (flag) { ...two float constants... }` inside it reproduces that.
+  Constant propagation removes the branch only after the loop's
+  invariants (the constants) were given registers. Dead code after an
+  infinite loop, unused locals and `if (0)` don't do it, because they
+  go too early. Such a flag takes a stack slot like any local.
+  In -O3 objects the other source is a static callee: the caller saves
+  what the callee uses unsaved (86680's func_8026C0A8).
 
 ## Versions
 

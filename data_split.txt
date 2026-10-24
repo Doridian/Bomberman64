@@ -180,6 +180,10 @@ ovl_0C_05 17F9F0 0xB0 0x60 0x60
 ovl_0C_08 ovl_0C_08_entry 0 0 0
 ovl_0C_08 18D110 0x80 0x60 0x60
 
+# ovl_0E_02: all C (-O3); .rodata is the handler's jump table and floats
+ovl_0E_02 ovl_0E_02_entry 0 0 0
+ovl_0E_02 1B88D0 0x360 0x60 0x60
+
 # ovl_0E_06: all C
 ovl_0E_06 ovl_0E_06_entry 0 0 0
 ovl_0E_06 1C6D50 0x40 0x50 0x60
