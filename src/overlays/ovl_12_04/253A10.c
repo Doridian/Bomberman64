@@ -1,5 +1,10 @@
 #include "common.h"
 
+/*
+ * ovl_12_04's game object, IDO -O3: the functions are written last to first
+ * (IDO -O3 emits a file's functions in reverse).
+ */
+
 typedef struct {
     /* 0x00 */ s32 unk0;
     /* 0x04 */ s32 unk4;
@@ -8,26 +13,6 @@ typedef struct {
     /* 0x10 */ s32 unk10;
 } UnkStruct_ovl12_04_800450B0;
 
-void func_ovl12_04_80043E88(void *);
-s32 func_ovl12_04_80043EA8(void);
-void func_ovl12_04_80043EB0(s32, void *);
-void func_ovl12_04_80043EC0(s32);
-void func_ovl12_04_80043ED8(void);
-void func_ovl12_04_80043F10(s32);
-void func_ovl12_04_80044508(f32, f32, f32);
-void func_ovl12_04_80044528(f32, f32, f32);
-void func_ovl12_04_80044530(f32 *, f32 *, f32 *);
-void func_ovl12_04_80044838(s32);
-void func_ovl12_04_80044A98(s32);
-void func_ovl12_04_80044DC0(s32, f32, f32, f32);
-
-/* The three statements are on one line, a macro: only then does IDO
- * schedule across them (the store into the first call's delay slot). */
-#define UNK_MACRO_ovl12_04_800430B0() \
-    D_ovl12_04_8004508C = func_ovl12_04_80043EA8(); func_ovl12_04_80043E88(&D_ovl12_04_80045080); func_ovl12_04_80043EB0(D_ovl12_04_8004508C, D_ovl12_04_80045070)
-
-void func_ovl12_04_80043750(UnkStructA *);
-void func_ovl12_04_80043810(UnkStructA *);
 void func_ovl12_04_80043CC8(s32);
 void func_ovl12_04_80043CE0(s32);
 void func_ovl12_04_80043D50(UnkStructA_40 *, f32 *, f32 *);
@@ -36,37 +21,83 @@ void func_ovl12_04_80043DC0(s32, s32, s32);
 void func_ovl12_04_80043E00(void (*)(UnkStructA *));
 void func_ovl12_04_80043E78(void);
 void func_ovl12_04_80043E80(s32, s32, s32);
+void func_ovl12_04_80043E88(void *);
 s32 func_ovl12_04_80043E90(s32, s32, s32, s32);
+s32 func_ovl12_04_80043EA8(void);
+void func_ovl12_04_80043EB0(s32, void *);
+void func_ovl12_04_80043EC0(s32);
 void func_ovl12_04_80043EC8(s32, s32, f32, s32, s32, s32, s32);
+void func_ovl12_04_80043ED8(void);
+void func_ovl12_04_80043F10(s32);
 s32 func_ovl12_04_80043F48(s32);
+void func_ovl12_04_80044508(f32, f32, f32);
+void func_ovl12_04_80044528(f32, f32, f32);
+void func_ovl12_04_80044530(f32 *, f32 *, f32 *);
 void func_ovl12_04_80044570(s32);
 s32 func_ovl12_04_80044678(UnkStructA *, s32);
 void func_ovl12_04_800446D0(UnkStructA *, s32);
 void func_ovl12_04_80044748(UnkStructA *);
 s32 func_ovl12_04_800447E8(UnkStructA *, s32, s32);
+void func_ovl12_04_80044838(s32);
 void func_ovl12_04_80044860(void);
 UnkStructA *func_ovl12_04_800448A0(s32);
 void func_ovl12_04_800448B0(UnkStructA *, s32);
+void func_ovl12_04_80044A98(s32);
 void func_ovl12_04_80044B40(s32, s32, s32);
 void func_ovl12_04_80044B80(u32 (*)[3]);
 void func_ovl12_04_80044B98(u32 (*)[3]);
 void func_ovl12_04_80044D18(UnkStructA *, s32, f32);
 void func_ovl12_04_80044D28(s32, s32, s32);
+void func_ovl12_04_80044DC0(s32, f32, f32, f32);
 
-/* The five stores are one line too: IDO orders them by line otherwise. */
-#define UNK_MACRO_ovl12_04_800450B0(a, b, c, d, e) \
-    D_ovl12_04_800450B0.unk0 = (a); D_ovl12_04_800450B0.unk4 = (b); D_ovl12_04_800450B0.unk8 = (c); D_ovl12_04_800450B0.unkC = (d); D_ovl12_04_800450B0.unk10 = (e)
+void func_ovl12_04_80043010(void);
+void func_ovl12_04_80043020(void);
+void func_ovl12_04_80043040(void);
+void func_ovl12_04_80043068(void);
+void func_ovl12_04_800430B0(void);
+void func_ovl12_04_80043108(void);
+void func_ovl12_04_80043170(void);
+void func_ovl12_04_800431B8(void);
+void func_ovl12_04_800431D8(f32);
+void func_ovl12_04_80043220(void);
+void func_ovl12_04_80043338(void);
+void func_ovl12_04_80043358(s32, s32, s32, f32, s32);
+void func_ovl12_04_80043380(void);
+void func_ovl12_04_800433CC(void);
+void func_ovl12_04_80043418(void);
+void func_ovl12_04_80043420(void);
+void func_ovl12_04_80043460(void);
+void func_ovl12_04_800434CC(void);
+void func_ovl12_04_80043570(s32);
+void func_ovl12_04_80043690(UnkStructA *);
+void func_ovl12_04_80043750(UnkStructA *);
+void func_ovl12_04_80043810(UnkStructA *);
+void func_ovl12_04_80043888(s32, UnkStructA *);
+void func_ovl12_04_800438BC(f32, f32, f32);
+void func_ovl12_04_80043918(void);
+void func_ovl12_04_80043930(void);
+
+/* empty statics: each leaves a `jr ra; nop` just before its caller */
+static void func_ovl12_04_80043018(void);
+static void func_ovl12_04_80043060(void);
+static void func_ovl12_04_800430F8(void);
+static void func_ovl12_04_80043100(void);
+
+/* The three statements are on one line, a macro: only then does IDO
+ * schedule across them (the store into the first call's delay slot). */
+#define UNK_MACRO_ovl12_04_800430B0() \
+    D_ovl12_04_8004508C = func_ovl12_04_80043EA8(); func_ovl12_04_80043E88(&D_ovl12_04_80045080); func_ovl12_04_80043EB0(D_ovl12_04_8004508C, D_ovl12_04_80045070)
 
 /* .bss */
 u8 D_ovl12_04_80045070[0x10];
 Vec3f D_ovl12_04_80045080;
 s32 D_ovl12_04_8004508C;
-u8 D_ovl12_04_80045090[0x4]; /* split for alignment */
+u8 D_ovl12_04_80045090[0x4]; /* unused (func_ovl12_04_80043978) */
 s32 D_ovl12_04_80045094;
 s32 D_ovl12_04_80045098;
-u8 D_ovl12_04_8004509C[0x4]; /* not referenced here */
+u8 D_ovl12_04_8004509C[0x4]; /* unused (func_ovl12_04_80043978) */
 Vec3f D_ovl12_04_800450A0;
-u8 D_ovl12_04_800450AC[0x4]; /* not referenced here */
+u8 D_ovl12_04_800450AC[0x4]; /* unused (func_ovl12_04_80043978) */
 UnkStruct_ovl12_04_800450B0 D_ovl12_04_800450B0;
 
 /* .data */
@@ -87,129 +118,80 @@ u32 D_ovl12_04_80044FFC[][3] = {
     { 1, 0x1F, 0xFD },
 };
 
-void func_ovl12_04_80043010(void) {
+/* unused: the stubs IDO -O3 leaves at the end of the object; one of them
+ * refers to the .bss nothing else uses, which would otherwise be common */
+static void func_ovl12_04_80043978(void) {
+    D_ovl12_04_80045090[0] = D_ovl12_04_8004509C[0] + D_ovl12_04_800450AC[0];
 }
 
-void func_ovl12_04_80043018(void) {
+static void func_ovl12_04_80043970(void) {
 }
 
-void func_ovl12_04_80043020(void) {
-    func_ovl12_04_80043F10(1);
+static void func_ovl12_04_80043968(void) {
 }
 
-void func_ovl12_04_80043040(void) {
-    func_ovl12_04_80043F10(1);
+static void func_ovl12_04_80043960(void) {
 }
 
-void func_ovl12_04_80043060(void) {
+static void func_ovl12_04_80043958(void) {
 }
 
-void func_ovl12_04_80043068(void) {
-    D_ovl12_04_8004508C = func_ovl12_04_80043EA8();
-    func_ovl12_04_80043E88(&D_ovl12_04_80045080);
-    func_ovl12_04_80043EB0(D_ovl12_04_8004508C, D_ovl12_04_80045070);
+static void func_ovl12_04_80043950(void) {
 }
 
-void func_ovl12_04_800430B0(void) {
-    UNK_MACRO_ovl12_04_800430B0();
+static void func_ovl12_04_80043948(void) {
 }
 
-void func_ovl12_04_800430F8(void) {
+static void func_ovl12_04_80043940(void) {
 }
 
-void func_ovl12_04_80043100(void) {
+static void func_ovl12_04_80043938(void) {
 }
 
-void func_ovl12_04_80043108(void) {
-    if (func_ovl12_04_80043E90(0x1D, 1, 0x1E, 2) != 0) {
-        func_ovl12_04_80043DC0(0x7B, 0x12, 0);
+void func_ovl12_04_80043930(void) {
+}
+
+void func_ovl12_04_80043918(void) {
+    D_ovl12_04_80045094 = -1;
+    D_ovl12_04_80045098 = -1;
+}
+
+void func_ovl12_04_800438BC(f32 arg0, f32 arg1, f32 arg2) {
+    func_ovl12_04_80044508(D_ovl12_04_800450A0.x, D_ovl12_04_800450A0.y, D_ovl12_04_800450A0.z);
+    func_ovl12_04_80044528(arg0, arg1, arg2);
+    func_ovl12_04_80044838(180);
+}
+
+void func_ovl12_04_80043888(s32 arg0, UnkStructA *arg1) {
+    UnkStructA_40 *p;
+
+    p = arg1->unk40;
+    func_ovl12_04_80044DC0(arg0, p->unk10, p->unk14, p->unk18);
+}
+
+void func_ovl12_04_80043810(UnkStructA *arg0) {
+    s32 i;
+
+    if (arg0->unk8 & 1) {
+        func_ovl12_04_80044570(0x10);
     }
-    if (func_ovl12_04_80043E90(0xC, 0x16, 0xD, 0x17) != 0) {
-        func_ovl12_04_80043DC0(0x7B, 0x12, 0);
+    func_ovl12_04_800446D0(arg0, 0x02000000);
+    for (i = 0; i < 30; i++) {
+        func_ovl12_04_80044748(arg0);
+        func_ovl12_04_80044860();
     }
 }
 
-void func_ovl12_04_80043170(void) {
-    func_ovl12_04_80043EC8(D_ovl12_04_800450B0.unk4, 3, 4.0f, D_ovl12_04_800450B0.unk10, 0, 1, 1);
-}
-
-void func_ovl12_04_800431B8(void) {
-    func_ovl12_04_80043170();
-}
-
-void func_ovl12_04_800431D8(f32 arg0) {
-    f32 sp1C;
-
-    func_ovl12_04_80044530(&sp1C, NULL, NULL);
-    func_ovl12_04_80044528(sp1C + arg0, 32768.0f, 32768.0f);
-}
-
-void func_ovl12_04_80043220(void) {
-    f32 pad[2]; /* unused: the original's frame is 8 bytes bigger */
-    f32 angle;
-    f32 sp20;
-    f32 sp1C;
-
-    func_ovl12_04_80043ED8();
-    switch (D_ovl12_04_800450B0.unk8) {
-        case 0:
-            angle = 0.0f;
-            break;
-        case 0x80:
-            angle = 180.0f;
-            break;
-        case 0xC0:
-            angle = 90.0f;
-            break;
-        case 0x40:
-            angle = 270.0f;
-            break;
-        case 1:
-        default:
-            angle = 360.0f;
-            break;
-    }
-    if (angle != 360.0f) {
-        func_ovl12_04_80044528(angle, 32768.0f, 32768.0f);
-    } else {
-        sp20 = D_ovl12_04_800450B0.unkC;
-        func_ovl12_04_80044530(&sp1C, NULL, NULL);
-        func_ovl12_04_80044528(sp1C + sp20, 32768.0f, 32768.0f);
-    }
-    func_ovl12_04_80043EC0(D_ovl12_04_800450B0.unk4);
-}
-
-void func_ovl12_04_80043338(void) {
-    func_ovl12_04_80043220();
-}
-
-void func_ovl12_04_80043358(s32 arg0, s32 arg1, s32 arg2, f32 arg3, s32 arg4) {
-    D_ovl12_04_800450B0.unk0 = arg0;
-    D_ovl12_04_800450B0.unk4 = arg1;
-    D_ovl12_04_800450B0.unk8 = arg2;
-    D_ovl12_04_800450B0.unkC = arg3;
-    D_ovl12_04_800450B0.unk10 = arg4;
-}
-
-void func_ovl12_04_80043380(void) {
-    func_ovl12_04_80043E80(0x1D, 4, 2);
-    UNK_MACRO_ovl12_04_800450B0(2, 0x80, 0, 0.0f, 2);
-}
-
-void func_ovl12_04_800433CC(void) {
-    func_ovl12_04_80043E80(0x13, 4, 7);
-    UNK_MACRO_ovl12_04_800450B0(1, 0x80, 0, 0.0f, 0);
-}
-
-void func_ovl12_04_80043418(void) {
-}
-
-void func_ovl12_04_80043420(void) {
-    func_ovl12_04_80044A98(0x400);
-    func_ovl12_04_80044A98(0x401);
-    func_ovl12_04_80044A98(0x402);
-    func_ovl12_04_80044A98(0x403);
-    func_ovl12_04_80044A98(0x404);
+void func_ovl12_04_80043750(UnkStructA *arg0) {
+    func_ovl12_04_80044838(10);
+    func_ovl12_04_80043D50(arg0->unk40, &arg0->unk40->unk1C, &arg0->unk40->unk20);
+    arg0->unk40->unk28 *= 2.0f;
+    arg0->unk40->unk30 *= 2.0f;
+    arg0->unk40->unk2C *= 0.1f;
+    arg0->unk40->unk14 += 20.0f;
+    arg0->unk6C = 0.0f;
+    arg0->unk70 = 0.0f;
+    func_ovl12_04_80044838(60);
 }
 
 void func_ovl12_04_80043460(void) {
@@ -224,24 +206,27 @@ void func_ovl12_04_80043460(void) {
     obj->unk1C = 0.0f;
 }
 
-void func_ovl12_04_800434CC(void) {
-    u32 (*p)[3];
-    s32 i;
-    s32 count;
+void func_ovl12_04_80043690(UnkStructA *arg0) {
+    s32 hit;
+    s32 t;
 
-    func_ovl12_04_80043460();
-    func_ovl12_04_80044B80(D_ovl12_04_80044FC0);
-    func_ovl12_04_80044B98(D_ovl12_04_80044FE4);
-    func_ovl12_04_80043CC8(0x2DA);
-    p = D_ovl12_04_80044FFC;
-    count = 2;
-    for (i = 0; i < count; i++) {
-        func_ovl12_04_80044D28((*p)[0], (*p)[1], (*p)[2]);
-        p++;
+    func_ovl12_04_80044D18(arg0, 0, 5.0f);
+    hit = FALSE;
+    if (arg0->unk8 & 1) {
+        t = func_ovl12_04_80043F48(func_ovl12_04_80043EA8());
+        if (t != 0) {
+            if (func_ovl12_04_800447E8(arg0, 0x10, t) != 0) {
+                hit = TRUE;
+            }
+        } else if (func_ovl12_04_80044678(arg0, 0x10) != 0) {
+            hit = TRUE;
+        }
+    } else if (func_ovl12_04_80044678(arg0, 0x10) != 0) {
+        hit = TRUE;
     }
-    func_ovl12_04_80043CE0(0x2E2);
-    func_ovl12_04_80043E78();
-    func_ovl12_04_80044B40(0, 0x72, 0x37);
+    if (hit) {
+        func_ovl12_04_80044D18(arg0, 0x80, 5.0f);
+    }
 }
 
 /* The overlay's handler: the entry returns it to the loader. */
@@ -280,90 +265,156 @@ void func_ovl12_04_80043570(s32 arg0) {
     }
 }
 
-void func_ovl12_04_80043690(UnkStructA *arg0) {
-    s32 hit;
-    s32 t;
-
-    func_ovl12_04_80044D18(arg0, 0, 5.0f);
-    hit = FALSE;
-    if (arg0->unk8 & 1) {
-        t = func_ovl12_04_80043F48(func_ovl12_04_80043EA8());
-        if (t != 0) {
-            if (func_ovl12_04_800447E8(arg0, 0x10, t) != 0) {
-                hit = TRUE;
-            }
-        } else if (func_ovl12_04_80044678(arg0, 0x10) != 0) {
-            hit = TRUE;
-        }
-    } else if (func_ovl12_04_80044678(arg0, 0x10) != 0) {
-        hit = TRUE;
-    }
-    if (hit) {
-        func_ovl12_04_80044D18(arg0, 0x80, 5.0f);
-    }
-}
-
-#pragma GLOBAL_ASM("asm/nonmatchings/overlays/ovl_12_04/253A10/func_ovl12_04_80043750.s")
-
-void func_ovl12_04_80043810(UnkStructA *arg0) {
+void func_ovl12_04_800434CC(void) {
+    u32 (*p)[3];
     s32 i;
+    s32 count;
 
-    if (arg0->unk8 & 1) {
-        func_ovl12_04_80044570(0x10);
+    func_ovl12_04_80043460();
+    func_ovl12_04_80044B80(D_ovl12_04_80044FC0);
+    func_ovl12_04_80044B98(D_ovl12_04_80044FE4);
+    func_ovl12_04_80043CC8(0x2DA);
+    p = D_ovl12_04_80044FFC;
+    count = 2;
+    for (i = 0; i < count; i++) {
+        func_ovl12_04_80044D28((*p)[0], (*p)[1], (*p)[2]);
+        p++;
     }
-    func_ovl12_04_800446D0(arg0, 0x02000000);
-    for (i = 0; i < 30; i++) {
-        func_ovl12_04_80044748(arg0);
-        func_ovl12_04_80044860();
+    func_ovl12_04_80043CE0(0x2E2);
+    func_ovl12_04_80043E78();
+    func_ovl12_04_80044B40(0, 0x72, 0x37);
+}
+
+void func_ovl12_04_80043420(void) {
+    func_ovl12_04_80044A98(0x400);
+    func_ovl12_04_80044A98(0x401);
+    func_ovl12_04_80044A98(0x402);
+    func_ovl12_04_80044A98(0x403);
+    func_ovl12_04_80044A98(0x404);
+}
+
+void func_ovl12_04_80043418(void) {
+}
+
+void func_ovl12_04_800433CC(void) {
+    func_ovl12_04_80043E80(0x13, 4, 7);
+    func_ovl12_04_80043358(1, 0x80, 0, 0.0f, 0);
+}
+
+void func_ovl12_04_80043380(void) {
+    func_ovl12_04_80043E80(0x1D, 4, 2);
+    func_ovl12_04_80043358(2, 0x80, 0, 0.0f, 2);
+}
+
+void func_ovl12_04_80043358(s32 arg0, s32 arg1, s32 arg2, f32 arg3, s32 arg4) {
+    D_ovl12_04_800450B0.unk0 = arg0;
+    D_ovl12_04_800450B0.unk4 = arg1;
+    D_ovl12_04_800450B0.unk8 = arg2;
+    D_ovl12_04_800450B0.unkC = arg3;
+    D_ovl12_04_800450B0.unk10 = arg4;
+}
+
+void func_ovl12_04_80043338(void) {
+    func_ovl12_04_80043220();
+}
+
+void func_ovl12_04_80043220(void) {
+    f32 pad[2]; /* unused: the original's frame is 8 bytes bigger */
+    f32 angle;
+    f32 sp20;
+    f32 sp1C;
+
+    func_ovl12_04_80043ED8();
+    switch (D_ovl12_04_800450B0.unk8) {
+        case 0:
+            angle = 0.0f;
+            break;
+        case 0x80:
+            angle = 180.0f;
+            break;
+        case 0xC0:
+            angle = 90.0f;
+            break;
+        case 0x40:
+            angle = 270.0f;
+            break;
+        case 1:
+        default:
+            angle = 360.0f;
+            break;
+    }
+    if (angle != 360.0f) {
+        func_ovl12_04_80044528(angle, 32768.0f, 32768.0f);
+    } else {
+        sp20 = D_ovl12_04_800450B0.unkC;
+        func_ovl12_04_80044530(&sp1C, NULL, NULL);
+        func_ovl12_04_80044528(sp1C + sp20, 32768.0f, 32768.0f);
+    }
+    func_ovl12_04_80043EC0(D_ovl12_04_800450B0.unk4);
+}
+
+void func_ovl12_04_800431D8(f32 arg0) {
+    f32 sp1C;
+
+    func_ovl12_04_80044530(&sp1C, NULL, NULL);
+    func_ovl12_04_80044528(sp1C + arg0, 32768.0f, 32768.0f);
+}
+
+void func_ovl12_04_800431B8(void) {
+    func_ovl12_04_80043170();
+}
+
+void func_ovl12_04_80043170(void) {
+    /* empty: what the other overlays fade in here (the test keeps the
+     * function too big to inline) */
+    if (D_ovl12_04_800450B0.unk0 == 2) {
+    }
+    func_ovl12_04_80043EC8(D_ovl12_04_800450B0.unk4, 3, 4.0f, D_ovl12_04_800450B0.unk10, 0, 1, 1);
+}
+
+void func_ovl12_04_80043108(void) {
+    func_ovl12_04_80043100();
+    func_ovl12_04_800430F8();
+    if (func_ovl12_04_80043E90(0x1D, 1, 0x1E, 2) != 0) {
+        func_ovl12_04_80043DC0(0x7B, 0x12, 0);
+    }
+    if (func_ovl12_04_80043E90(0xC, 0x16, 0xD, 0x17) != 0) {
+        func_ovl12_04_80043DC0(0x7B, 0x12, 0);
     }
 }
 
-void func_ovl12_04_80043888(s32 arg0, UnkStructA *arg1) {
-    UnkStructA_40 *p;
-
-    p = arg1->unk40;
-    if (1) { /* fake, as in ovl_09_01: without it arg1 is spilled */
-    }
-    func_ovl12_04_80044DC0(arg0, p->unk10, p->unk14, p->unk18);
+static void func_ovl12_04_80043100(void) {
 }
 
-void func_ovl12_04_800438BC(f32 arg0, f32 arg1, f32 arg2) {
-    func_ovl12_04_80044508(D_ovl12_04_800450A0.x, D_ovl12_04_800450A0.y, D_ovl12_04_800450A0.z);
-    func_ovl12_04_80044528(arg0, arg1, arg2);
-    func_ovl12_04_80044838(180);
+static void func_ovl12_04_800430F8(void) {
 }
 
-void func_ovl12_04_80043918(void) {
-    D_ovl12_04_80045094 = -1;
-    D_ovl12_04_80045098 = -1;
+void func_ovl12_04_800430B0(void) {
+    UNK_MACRO_ovl12_04_800430B0();
 }
 
-void func_ovl12_04_80043930(void) {
+void func_ovl12_04_80043068(void) {
+    func_ovl12_04_80043060();
+    D_ovl12_04_8004508C = func_ovl12_04_80043EA8();
+    func_ovl12_04_80043E88(&D_ovl12_04_80045080);
+    func_ovl12_04_80043EB0(D_ovl12_04_8004508C, D_ovl12_04_80045070);
 }
 
-void func_ovl12_04_80043938(void) {
+static void func_ovl12_04_80043060(void) {
 }
 
-void func_ovl12_04_80043940(void) {
+void func_ovl12_04_80043040(void) {
+    func_ovl12_04_80043F10(1);
 }
 
-void func_ovl12_04_80043948(void) {
+void func_ovl12_04_80043020(void) {
+    func_ovl12_04_80043018();
+    func_ovl12_04_80043F10(1);
 }
 
-void func_ovl12_04_80043950(void) {
+static void func_ovl12_04_80043018(void) {
 }
 
-void func_ovl12_04_80043958(void) {
+void func_ovl12_04_80043010(void) {
 }
 
-void func_ovl12_04_80043960(void) {
-}
-
-void func_ovl12_04_80043968(void) {
-}
-
-void func_ovl12_04_80043970(void) {
-}
-
-void func_ovl12_04_80043978(void) {
-}
