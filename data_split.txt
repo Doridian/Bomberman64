@@ -190,7 +190,7 @@ ovl_0E_14 1DD120 0x40 0x50 0x60
 ovl_0F_06 ovl_0F_06_entry 0 0 0
 ovl_0F_06 1FB180 0x50 0x60 0x40
 
-# ovl_12_02: its C defines all of its .data and .bss
+# ovl_12_02: all C (-O3); .rodata is its floats and the handler's jump table
 ovl_12_02 ovl_12_02_entry 0 0 0
 ovl_12_02 24EA00 0x70 0x50 0x60
 
