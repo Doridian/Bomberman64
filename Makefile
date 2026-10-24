@@ -185,6 +185,7 @@ G_C_FILES  := main_code_entry.c
 # -O2 never does.  asm-processor can't do -O3 either: these are all C.
 O3_C_FILES := 40FB0.c 412F0.c 41FD0.c 4DE50.c 4E030.c 4ED50.c 52270.c 530C0.c 53D70.c 86680.c 995C0.c 9A5F0.c 9BFD0.c ACA00.c AFBF0.c B6680.c \
               overlays/ovl_0A_02/12C630.c overlays/ovl_0A_03/131B30.c overlays/ovl_0A_04/137330.c overlays/ovl_0A_05/13A9F0.c \
+              overlays/ovl_0C_03/17A5B0.c \
               overlays/ovl_17_01/2A7080.c overlays/ovl_17_06/2B1100.c overlays/ovl_17_08/2B60C0.c
 # -mips2: main_code's objects after its ZeroJump block (branch-likely).
 MIPS2_C_FILES := B6680.c
