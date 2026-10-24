@@ -1,20 +1,23 @@
 /*
  * NON_MATCHING: ovl_0E_13's game object, complete: every function and its data
- * (.data 0x530, .rodata 0x80, .bss 0x60 as the original); .text 0x20
- * short of 0x2150. Much of it is ovl_0E_09's code.
+ * (.text 0x2150, .data 0x530, .rodata 0x80, .bss 0x60 as the original).
+ * Much of it is ovl_0E_09's code.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 177, eu 177, jp 177
+ * differing words: us 35, eu 35, jp 35
  *
  * What still differs in us (words):
- * - func_ovl0E_13_80043110 (48), 80043444 (68), 8004439C (52): the D80
- *   position set-up (UNK_MACRO_ovl0E_13_80043110): the original keeps &D80
- *   in s1 for every access to .y; ours stores .y through `lui at` in the
- *   loop and after it, 3 instructions more per site.
+ * - func_ovl0E_13_80043110 (24), 8004439C (9): the D80 position set-up
+ *   (UNK_MACRO_ovl0E_13_80043110) is scheduled differently: the original
+ *   sets s1 = &D80 first and stores .y before .x; in 80043110 it also
+ *   stores D70 right after the last call, ours in the epilogue. Its `p += 0`
+ *   is a fake that keeps &D80 in s1 (without it .y goes through `lui at`,
+ *   177 words in all).
  * - func_ovl0E_13_80043940 (2): the epilogue restores s1 before s0 (the
  *   original s0 first), as in ovl_0C_08's 80043654.
- * - func_ovl0E_13_80044780 (7): only the alignment nops at the end, from
- *   the size difference above.
+ * IDO's scheduling follows source lines: 80043444 matches only with its
+ * two camera pans on one line (UNK_MACRO_ovl0E_13_80043444), the second
+ * reusing the first's a and y.
  */
 #include "common.h"
 
@@ -222,22 +225,58 @@ static void func_ovl0E_13_80043108(void);
 #define UNK_MACRO_ovl0E_13_80043BE0() \
     D_ovl0E_13_80046D6C = func_ovl0E_13_80045688(); func_ovl0E_13_80045668(&D_ovl0E_13_80046D60); func_ovl0E_13_80045690(D_ovl0E_13_80046D6C, D_ovl0E_13_80046D50)
 
-/* the position of something at tile (22, ?, 30), set up in three places */
-#define UNK_MACRO_ovl0E_13_80043110()                                                    \
-    {                                                                                    \
-        f32 unit;                                                                        \
-        s32 i;                                                                           \
-        s32 n;                                                                           \
-        unit = 100.0f;                                                                   \
-        D_ovl0E_13_80046D80.x = 22.0f * unit;                                            \
-        D_ovl0E_13_80046D80.y = 0.0f;                                                    \
-        n = 3;                                                                           \
-        for (i = 0; i < n; i++) {                                                        \
-            D_ovl0E_13_80046D80.y += func_ovl0E_13_80045510(i) * unit;                   \
-        }                                                                                \
-        D_ovl0E_13_80046D80.y += unit;                                                   \
-        D_ovl0E_13_80046D80.z = (n * 10) * unit;                                         \
-        D_ovl0E_13_80046D70 = func_ovl0E_13_80046450(0x27, &D_ovl0E_13_80046D80.x, 0);   \
+/* the position of something at tile (22, ?, 30), set up in three places.
+ * `p += 0` is a fake (the permuter's): without it
+ * IDO folds p into D80 and stores .y through `lui at`; the original keeps &D80
+ * in an s register for .x and .y (not .z) and passes it on. */
+#define UNK_MACRO_ovl0E_13_80043110()                                                \
+    {                                                                                \
+        f32 unit;                                                                    \
+        s32 i;                                                                       \
+        s32 n;                                                                       \
+        Vec3f *p = &D_ovl0E_13_80046D80;                                             \
+        p += 0;                                                                      \
+        unit = 100.0f;                                                               \
+        p->x = 22.0f * unit;                                                         \
+        p->y = 0.0f;                                                                 \
+        n = 3;                                                                       \
+        for (i = 0; i < n; i++) {                                                    \
+            p->y += func_ovl0E_13_80045510(i) * unit;                                \
+        }                                                                            \
+        p->y += unit;                                                                \
+        D_ovl0E_13_80046D80.z = (n * 10) * unit;                                     \
+        D_ovl0E_13_80046D70 = func_ovl0E_13_80046450(0x27, &p->x, 0);                \
+    }
+
+/* The two camera pans of func_ovl0E_13_80043444, a macro (one line): IDO's
+ * scheduling follows source lines, and only this matches. */
+#define UNK_MACRO_ovl0E_13_80043444()                                                \
+    {                                                                                \
+        a = 135.0f;                                                                  \
+        y = 1600.0f;                                                                 \
+        z = 2800.0f;                                                                 \
+        c = 3500.0f;                                                                 \
+        b = 30.0f;                                                                   \
+        for (i = 60; i > 0; i--) {                                                   \
+            func_ovl0E_13_80045CE8(2250.0f, y, z);                                   \
+            func_ovl0E_13_80045D08(a, b, c);                                         \
+            func_ovl0E_13_80046040();                                                \
+            a += 0.75f;                                                              \
+            y += -3.3333333f;                                                        \
+            z += 16.666666f;                                                         \
+            c += -41.666668f;                                                        \
+            b += 0.5f;                                                               \
+        }                                                                            \
+        func_ovl0E_13_80046018(30);                                                  \
+        a = 3800.0f;                                                                 \
+        y = 1000.0f;                                                                 \
+        for (i = 60; i > 0; i--) {                                                   \
+            func_ovl0E_13_80045CE8(2250.0f, 1400.0f, a);                             \
+            func_ovl0E_13_80045D08(180.0f, 60.0f, y);                                \
+            func_ovl0E_13_80046040();                                                \
+            a += -13.333333f;                                                        \
+            y += 16.666666f;                                                         \
+        }                                                                            \
     }
 
 /* .bss */
@@ -899,31 +938,7 @@ void func_ovl0E_13_80043444(void) {
     func_ovl0E_13_80046018(30);
     func_ovl0E_13_80043244();
     func_ovl0E_13_80046018(30);
-    a = 135.0f;
-    y = 1600.0f;
-    z = 2800.0f;
-    c = 3500.0f;
-    b = 30.0f;
-    for (i = 60; i > 0; i--) {
-        func_ovl0E_13_80045CE8(2250.0f, y, z);
-        func_ovl0E_13_80045D08(a, b, c);
-        func_ovl0E_13_80046040();
-        a += 0.75f;
-        y += -3.3333333f;
-        z += 16.666666f;
-        c += -41.666668f;
-        b += 0.5f;
-    }
-    func_ovl0E_13_80046018(30);
-    z = 3800.0f;
-    c = 1000.0f;
-    for (i = 60; i > 0; i--) {
-        func_ovl0E_13_80045CE8(2250.0f, 1400.0f, z);
-        func_ovl0E_13_80045D08(180.0f, 60.0f, c);
-        func_ovl0E_13_80046040();
-        z += -13.333333f;
-        c += 16.666666f;
-    }
+    UNK_MACRO_ovl0E_13_80043444();
     func_ovl0E_13_80046018(10);
     func_ovl0E_13_80046580(0x2C);
     UNK_MACRO_ovl0E_13_80043110();
