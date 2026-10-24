@@ -91,6 +91,10 @@ void func_80225E2C(s32 arg0) {
     }
 }
 
+/* This object may be -O3 after all: func_80225FB8 keeps its arguments in
+ * t registers (-O2 homes them), and it matches only at -O3; the whole file,
+ * written last function first at -O3, matches but for func_80225EBC's
+ * `lui a3` (scratch/main_code/404C0_O3.c in the main checkout). */
 #pragma GLOBAL_ASM("asm/nonmatchings/404C0/func_80225EBC.s")
 
 #pragma GLOBAL_ASM("asm/nonmatchings/404C0/func_80225FB8.s")
@@ -166,7 +170,19 @@ s32 func_8022616C(u8 *arg0, s32 arg1, s32 arg2, UnkStruct_80225CC0 *arg3) {
     return size;
 }
 
-#pragma GLOBAL_ASM("asm/nonmatchings/404C0/func_80226304.s")
+s32 func_80226304(UnkStruct_80225CC0 *arg0) {
+    u32 pos;
+    s32 ret;
+
+    if (arg0->unk8 >= arg0->unkC) {
+        ret = -1;
+    } else {
+        pos = arg0->unk8;
+        func_802260A8(arg0, pos);
+        ret = D_8014B8A8[arg0->unk8++ & 0x3FF];
+    }
+    return ret;
+}
 
 void func_80226368(UnkStruct_80225CC0 *arg0) {
     if (arg0 == D_802A5304) {
