@@ -213,6 +213,11 @@ ovl_0F_06 1FB180 0x50 0x60 0x40
 ovl_10_02 ovl_10_02_entry 0 0 0
 ovl_10_02 20D660 0xC0 0x90 0x2F0
 
+# ovl_10_04: all C (-O3), ovl_10_02's object with other numbers; .rodata
+# is its two strings, the handler's jump table and floats
+ovl_10_04 ovl_10_04_entry 0 0 0
+ovl_10_04 214340 0xC0 0x90 0x2F0
+
 # ovl_12_02: all C (-O3); .rodata is its floats and the handler's jump table
 ovl_12_02 ovl_12_02_entry 0 0 0
 ovl_12_02 24EA00 0x70 0x50 0x60

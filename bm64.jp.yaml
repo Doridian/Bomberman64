@@ -1315,11 +1315,12 @@ segments:
     symbol_name_format: ovl10_04_$VRAM
     dir: overlays/ovl_10_04
     subsegments:
-      - [0x212F60, asm, ovl_10_04_entry]
-      - [0x212F70, asm, 214340]
+      - [0x212F60, c, ovl_10_04_entry]
+      - [0x212F70, c, 214340]
       - [0x2144E0, hasm, ovl_10_04_zerojmp]
-      - [0x215B00, rodata]
-      - {type: bss, vram: 0x80045CF0}
+      - [0x215B00, .data, 214340]
+      - [0x215BC0, .rodata, 214340]
+      - {type: .bss, vram: 0x80045CF0, name: 214340}
   - name: ovl_10_05
     type: code
     start: 0x215C50
