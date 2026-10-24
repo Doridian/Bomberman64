@@ -3,10 +3,25 @@
  * data (.rodata and .bss as the original).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 524, eu 524, jp 524
+ * differing words: us 306, eu 306, jp 306
  *
  * What still differs in us (words):
- * - TODO
+ * - func_ovl0E_15_800444C4 (300): mostly the same code with other registers
+ *   and stack slots.  Ours keeps &D_ovl0E_15_80046958 in s2 for its three
+ *   `= 0` stores (the original uses `lui at` each time, and s2 for a loop
+ *   bound), so the s registers of the later loops differ; dz's slot is 84
+ *   where the original's is 80; the three divisions by 60 load 60.0f once
+ *   (the original three times) and are scheduled differently.
+ * - func_ovl0E_15_800433E0 (6): the frame, 0x98 where the original's is
+ *   0xA0, and the spilled random value at 0x70 (the original 0x60).  As in
+ *   ovl_12_06 and ovl_0C_10, each function inlined into the handler (here
+ *   80043378, 80043340 and 80043010) takes 8 bytes below the locals: with
+ *   case 2 written out, plus two unused Vec3f locals, the handler matches,
+ *   but then 80043340 and 80043378 come out after it.
+ * The text order: 80043340 must be defined above 800444C4 (anywhere above
+ * it); defined next to 80043378, the reference to 80045024 it makes pulls
+ * 80045024 out ahead of 80044E90.  The two `jr ra; nop` after 80043010 and
+ * 800430E4 are statics inlined into the next function, as in ovl_12_06.
  */
 #include "common.h"
 
@@ -68,9 +83,9 @@ void func_ovl0E_15_80045F88(UnkStructA *);
 void func_ovl0E_15_80046018(UnkStructA *);
 s32 func_ovl0E_15_80046058(void (*)(void), void *, s32, s32, s32);
 void func_ovl0E_15_80046068(void);
-void func_ovl0E_15_80046078(s32);
+s32 func_ovl0E_15_80046078(s32);
 void *func_ovl0E_15_80046080(void);
-void func_ovl0E_15_800460A0(void);
+s32 func_ovl0E_15_800460A0(void);
 void func_ovl0E_15_800460C8(s32, s32, s32);
 void func_ovl0E_15_800460D0(s32, s32);
 f32 func_ovl0E_15_80046200(f32);
@@ -82,7 +97,7 @@ void func_ovl0E_15_80046280(void);
 void func_ovl0E_15_800462D8(s32);
 void func_ovl0E_15_800464A8(s32, f32, f32, f32, s32);
 void func_ovl0E_15_800464B0(s32, f32 *, s32);
-void func_ovl0E_15_800465E0(s32);
+s32 func_ovl0E_15_800465E0(s32);
 void func_ovl0E_15_800465F0(s32);
 void func_ovl0E_15_800465F8(void);
 void func_ovl0E_15_80046600(s32, f32, f32, f32);
@@ -224,7 +239,8 @@ void func_ovl0E_15_80045024(UnkStructA *arg0) {
     func_ovl0E_15_80046608(180, pos);
 }
 
-/* a task: one of the four that fly across (n: which) */
+/* a task: one of four objects moved along x for 120 frames (its argument,
+ * 0-3, picks where it starts) */
 void func_ovl0E_15_80044E90(void) {
     s32 n;
     UnkStructA *obj;
@@ -283,22 +299,25 @@ void func_ovl0E_15_80043340(void) {
     func_ovl0E_15_80045640(func_ovl0E_15_800438DC);
 }
 
-/* a task: the scene after the battle */
+/* a task, started by the handler's case 4 for D_ovl0E_15_80046954 0x10,
+ * 0x1A and 0x1B.  The camera deltas are block locals and the random values
+ * locals: only so do the stack slots of y, a, z and the spilled random
+ * value come out where the original has them. */
 void func_ovl0E_15_800444C4(void) {
     UnkStructA *obj0;
     UnkStructA *obj1;
+    UnkStructA_40 *snd;
+    f32 y;
+    s32 i;
+    f32 a;
+    s32 j;
+    f32 z;
+    s32 id;
     UnkStructA *obj;
     UnkStructA_40 *p;
-    UnkStructA_40 *snd;
-    s32 i;
-    s32 j;
-    s32 id;
-    f32 y;
-    f32 a;
-    f32 z;
-    f32 dy;
-    f32 da;
-    f32 dz;
+    f64 rx;
+    f64 ry;
+    f64 rz;
 
     obj0 = func_ovl0E_15_80045748(0);
     obj1 = func_ovl0E_15_80045748(1);
@@ -335,27 +354,35 @@ void func_ovl0E_15_800444C4(void) {
     }
     func_ovl0E_15_80045D50(NULL, &y, NULL);
     func_ovl0E_15_80045D70(NULL, &a, &z);
-    dy = (1250.0f - y) / 60.0f;
-    da = (35.0f - a) / 60.0f;
-    dz = (1770.0f - z) / 60.0f;
-    for (j = 0; j < 60; j++) {
-        func_ovl0E_15_80045D48(32768.0f, y, 32768.0f);
-        func_ovl0E_15_80045D68(32768.0f, a, z);
-        y += dy;
-        a += da;
-        z += dz;
-        func_ovl0E_15_800460A0();
+    {
+        f32 dy;
+        f32 da;
+        f32 dz;
+
+        dy = (1250.0f - y) / 60.0f;
+        da = (35.0f - a) / 60.0f;
+        dz = (1770.0f - z) / 60.0f;
+        for (j = 0; j < 60; j++) {
+            func_ovl0E_15_80045D48(32768.0f, y, 32768.0f);
+            func_ovl0E_15_80045D68(32768.0f, a, z);
+            y += dy;
+            a += da;
+            z += dz;
+            func_ovl0E_15_800460A0();
+        }
     }
     func_ovl0E_15_800465E0(0x236);
     for (j = 0; j < 64; j++) {
         func_ovl0E_15_80046218(0x100);
-        id = 0x16;
         if (func_ovl0E_15_80046218(0x100) & 1) {
             id = 0xE;
+        } else {
+            id = 0x16;
         }
-        func_ovl0E_15_800464A8(id, func_ovl0E_15_80046210() * 500.0 + 2100.0,
-                               func_ovl0E_15_80046210() * 500.0 + 1050.0,
-                               func_ovl0E_15_80046210() * 500.0 + 950.0, 0);
+        rx = func_ovl0E_15_80046210();
+        ry = func_ovl0E_15_80046210();
+        rz = func_ovl0E_15_80046210();
+        func_ovl0E_15_800464A8(id, rx * 500.0 + 2100.0, ry * 500.0 + 1050.0, rz * 500.0 + 950.0, 0);
         if (j == 54) {
             func_ovl0E_15_800465E0(0x22C);
             func_ovl0E_15_80045BF0(snd);
@@ -457,9 +484,10 @@ void func_ovl0E_15_800444C4(void) {
     func_ovl0E_15_80046068();
 }
 
-/* a task: grows and spins on the object it is given, then fades */
+/* a task: an object at the one it is given, scaled up and turned for 500
+ * frames, its unk36 lowered after 300 */
 void func_ovl0E_15_80044290(void) {
-    s32 pad; /* unused: the original's frame is 8 bytes bigger */
+    s32 pad; /* unused: the original's frame is 8 bytes bigger (one slot, aligned) */
     UnkStructA *src;
     UnkStructA *obj;
     UnkStructA_40 *p;
@@ -511,8 +539,8 @@ void func_ovl0E_15_80044048(void) {
     obj->unk40->unk18 = src->unk40->unk18;
     angle = n * 90.0f + 45.0f;
     obj->unk34 = 80.0f;
-    dx = func_ovl0E_15_80046200(ANGLE_WRAP(angle)) * 2.0f;
-    dz = func_ovl0E_15_80046208(ANGLE_WRAP(angle)) * 2.0f;
+    dx = func_ovl0E_15_80046200(ANGLE_WRAP(angle)) * 2;
+    dz = func_ovl0E_15_80046208(ANGLE_WRAP(angle)) * 2;
     for (i = 0; i < 240; i++) {
         obj->unk40->unk10 += 4.1666665f * dx;
         obj->unk40->unk18 += 4.1666665f * dz;
@@ -527,7 +555,7 @@ void func_ovl0E_15_80044048(void) {
     func_ovl0E_15_80046068();
 }
 
-/* a task: a spark near the object it is given */
+/* a task: an object put at random near the one it is given, for four frames */
 void func_ovl0E_15_80043E8C(void) {
     UnkStructA *src;
     UnkStructA *obj;
@@ -547,16 +575,17 @@ void func_ovl0E_15_80043E8C(void) {
     p->unk10 += func_ovl0E_15_80046210() * 200.0 - 100.0;
     p->unk14 += func_ovl0E_15_80046210() * 200.0 - 100.0 + 150.0;
     p->unk18 += func_ovl0E_15_80046210() * 200.0 - 100.0;
-    for (i = 0; i < 8; i += 2) {
-        func_ovl0E_15_80045C18(p, 0x1D0, 0, i);
-        func_ovl0E_15_80045C18(p, 0x1D0, 1, i + 1);
+    for (i = 0; i < 4; i++) {
+        func_ovl0E_15_80045C18(p, 0x1D0, 0, i * 2);
+        func_ovl0E_15_80045C18(p, 0x1D0, 1, i * 2 + 1);
         func_ovl0E_15_800460A0();
     }
     func_ovl0E_15_80045F20(obj);
     func_ovl0E_15_80046068();
 }
 
-/* a task: a ring spreading on the ground under the object it is given */
+/* a task: an object under the one it is given, scaled up while its unk36
+ * falls to 0 */
 void func_ovl0E_15_80043D4C(void) {
     UnkStructA *src;
     UnkStructA *obj;
@@ -584,7 +613,9 @@ void func_ovl0E_15_80043D4C(void) {
     func_ovl0E_15_80046068();
 }
 
-/* a task: a glow on the object it is given, growing and fading */
+/* a task: an object at the one it is given, scaled up for 300 frames while
+ * its unk36 falls.  The two stores on one line: only so does unk36's go
+ * after unk18's load. */
 void func_ovl0E_15_80043C18(void) {
     UnkStructA *src;
     UnkStructA *obj;
@@ -782,7 +813,6 @@ void func_ovl0E_15_80043010(void) {
 void func_ovl0E_15_800433E0(s32 arg0) {
     UnkStructA *obj0;
     UnkStructA *obj1;
-    void (*task)(void);
     s32 i;
     s32 id;
 
@@ -831,13 +861,13 @@ void func_ovl0E_15_800433E0(s32 arg0) {
             }
             func_ovl0E_15_800456A8(50);
             func_ovl0E_15_800465F8();
-            task = func_ovl0E_15_80043E8C;
             for (i = 0; i < 32; i++) {
                 func_ovl0E_15_80046218(0x100);
-                func_ovl0E_15_80046058(task, obj1, 0, 0, 0x130);
-                id = 0x18;
+                func_ovl0E_15_80046058(func_ovl0E_15_80043E8C, obj1, 0, 0, 0x130);
                 if (func_ovl0E_15_80046218(0x100) & 1) {
                     id = 0xC;
+                } else {
+                    id = 0x18;
                 }
                 func_ovl0E_15_800464A8(id, func_ovl0E_15_80046210() * 160.0 + (obj1->unk40->unk10 - 80.0f),
                                        func_ovl0E_15_80046210() * 50.0 + obj1->unk40->unk14 + 50.0,
