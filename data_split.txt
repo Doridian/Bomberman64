@@ -36,6 +36,10 @@ ovl_09_03 1234C0 0x30 0xB0 0x50
 ovl_09_04 ovl_09_04_entry 0 0 0
 ovl_09_04 124F10 0x30 0xB0 0x50
 
+# ovl_0A_02: all C (-O3); .rodata is its floats, two doubles and a jump table
+ovl_0A_02 ovl_0A_02_entry 0 0 0
+ovl_0A_02 12C630 0x110 0x100 0xA0
+
 # ovl_0A_04: all C (-O3); .rodata is its floats, a double and two jump tables
 ovl_0A_04 ovl_0A_04_entry 0 0 0
 ovl_0A_04 137330 0 0xC0 0x50
