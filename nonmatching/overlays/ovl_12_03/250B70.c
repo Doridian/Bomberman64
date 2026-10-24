@@ -66,23 +66,6 @@ typedef struct {
     /* 0x10 */ f32 unk10;
 } UnkStruct_ovl12_03_80045CE4;
 
-typedef struct {
-    /* 0x00 */ u8 unk0[4];
-    /* 0x04 */ f32 unk4;
-} UnkStruct_ovl12_03_48_4;
-
-typedef struct {
-    /* 0x00 */ u8 unk0[4];
-    /* 0x04 */ UnkStruct_ovl12_03_48_4 *unk4;
-} UnkStruct_ovl12_03_48;
-
-/* UnkStructA_40 with what lies past it */
-typedef struct {
-    /* 0x00 */ UnkStructA_40 unk0;
-    /* 0x38 */ u8 unk38[0x10];
-    /* 0x48 */ UnkStruct_ovl12_03_48 *unk48;
-} UnkStruct_ovl12_03_A40;
-
 void func_ovl12_03_800448E8(s32);
 void func_ovl12_03_80044900(s32);
 s32 func_ovl12_03_80044950(s32);
@@ -568,7 +551,7 @@ void func_ovl12_03_80043844(void) {
             func_ovl12_03_80045480();
         }
     } else {
-        ((UnkStruct_ovl12_03_A40 *) D_ovl12_03_80045E24[0].unk0->unk40)->unk48->unk4->unk4 =
+        D_ovl12_03_80045E24[0].unk0->unk40->unk48->unk4->unk4 =
             func_ovl12_03_80045028(D_ovl12_03_80045E24[0].unk0->unk40, 0) - 1.0f;
     }
 }
