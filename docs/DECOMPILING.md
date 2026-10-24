@@ -123,7 +123,7 @@ tools/progress.py                                # per module, overlays per bank
   its wrappers call 4DE50's compares with a `jal`, which -O3 would inline
   in one file), 4ED50, 52270 (jp's func_8023876C has no TV-type
   switch: `#if VERSION_JP`), 530C0, 53D70, 86680, 995C0, 9A5F0, 9BFD0, ACA00,
-  AFBF0, B6680 (`-mips2`), ovl_0A_01-05's and ovl_17_01's objects are `-O3`; 404C0, 5E090, 87190, 87730,
+  AFBF0, B6680 (`-mips2`), ovl_0A_01-05's, ovl_0C_03's, ovl_12_02's, ovl_12_04's and ovl_17_01's objects are `-O3`; 404C0, 5E090, 87190, 87730,
   99F40, A4860 and B11F0 are `-O2` (no
   inlining between functions that call each other, no cross-call
   registers; A4860's func_8028A318 calls three small functions of its
@@ -131,23 +131,33 @@ tools/progress.py                                # per module, overlays per bank
   both. B2410 (setjmp/longjmp) and B2500 (`mtc0` WatchLo) are handwritten
   asm. asm-processor can't do `-O3`, so an `-O3`
   object is C only once all of its functions are.
-- **Banks 0x0C-0x17's overlays look `-O3` too**, though their C is
-  committed `-O2`: ovl_0C_03 written last function first and built `-O3`
-  matches with plain calls where the `-O2` file needs one-line macros,
-  `pad[]` locals (an inlined helper's slots) and `if (1)`s, and the
-  callback still GLOBAL_ASM in 0C_03, 0C_08, 12_02 and 12_04 keeps its
-  argument in `t0`. ovl_17_01 (17_06 and 17_08 share its code) passes a
-  static's argument in saved registers, and it is C at `-O3` now. What
-  stopped the conversion was bss: at `-O3` IDO lays out only the bss
-  variables the file references, so 0C_03's two unused 4-byte fillers
-  go to common and the variables after them move. The fix is in the
-  overlays themselves: each ends in a row of `jr ra; nop` stubs, the
-  statics nothing calls, and IDO drops an unused static's body but
-  still counts what it refers to. So one of those statics refers to the
-  unused fillers (ovl_17_01's func_ovl17_01_80043FE8), and they stay in
-  `.bss` where the original has them. Converting the other files this
-  way should remove their workarounds and finish their GLOBAL_ASM
-  functions.
+- **Banks 0x0C-0x17's overlays are `-O3` too**: ovl_0C_03, 12_02 and
+  12_04 written last function first and built `-O3` match with plain calls
+  where their earlier `-O2` C needed `pad[]` locals and `if (1)`s, and
+  their callbacks (an argument kept in `t0`) match. ovl_17_01 (17_06 and
+  17_08 share its code) passes a static's argument in saved registers.
+  The bss: at `-O3` IDO lays out only the bss variables the file
+  references, so the unused 4-byte fillers would go to common and the
+  variables after them move. Each object ends in a row of `jr ra; nop`
+  stubs, the statics nothing calls, and IDO drops an unused static's body
+  but still counts what it refers to; so the last of them refers to the
+  fillers (ovl_17_01's func_ovl17_01_80043FE8, ovl_0C_03's
+  func_ovl0C_03_80043F74), and they stay in `.bss` where the original has
+  them. What else the template showed:
+  - the empty `jr ra; nop` after 80043010, 80043040 and 800430B0 are empty
+    statics called by the next function;
+  - a function that registers the callbacks pulls them out ahead of itself
+    when it is processed at its own turn (ovl_12_02's 80043608); defined
+    above the handler, it is pulled out by its caller instead and the
+    callbacks stay after the handler;
+  - 12_02's and 12_04's `80043258`/`80043170` (the handler's case 5) keep
+    the other overlays' `unk0 == 2` test with an empty body: without it
+    they are small enough to be inlined into their callers.
+  ovl_0C_08 is still `-O2` with two GLOBAL_ASM functions: at `-O3` all of
+  it matches but func_ovl0C_08_80043654 (the object setup inlined, as a
+  static taking the struct's address, with 8004361C called from it), whose
+  epilogue restores `s2`, `s1`, `s0` where the original restores `s0`
+  first (scratch/ovl_rest/0C_08_struct_abc.c).
 - **`-O3` and `static`.** The rest of what IDO does at `-O3` follows from
   it processing the file as a whole:
   - a `static` function may get its own calling convention: arguments in
@@ -222,7 +232,11 @@ tools/progress.py                                # per module, overlays per bank
 - **`-g`** for main_code's entry (`main_code_entry.c`, func_80225800):
   every value goes through the stack and the return is branched to; `-O1`,
   `-O2` and `-O0` don't give it. bm64 builds its 40000.c `-g` too. Hudson's
-  `gmalloc` is `-g` in bm64 as well (another agent's area).
+  `gmalloc` is `-g` in bm64 as well (another agent's area). All of
+  ovl_16_01 is `-g` (its entry too: the return's `jr ra` is followed by
+  the two that end every `-g` function, which makes the entry's file 0x20
+  bytes, `tools/layout.py`'s first_function_end()); a `return;` at the end
+  of a void function is one more branch to the epilogue.
 - asm-processor can't do `-g` with `-mips1` and GLOBAL_ASM; a `-g` file has
   to be all C before it builds (the Makefile compiles a file without
   GLOBAL_ASM directly).
