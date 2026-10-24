@@ -28,6 +28,15 @@ typedef struct {
     /* 0x30 */ f32 unk30;
     /* 0x34 */ u8 unk34[2];
     /* 0x36 */ s16 unk36;
+    /* 0x38 */ u8 unk38[0x10];
+    /* 0x48 */ struct {
+        /* 0x00 */ u8 unk0[4];
+        /* 0x04 */ struct {
+            /* 0x00 */ u8 unk0[4];
+            /* 0x04 */ f32 unk4;
+            /* 0x08 */ s32 unk8;
+        } *unk4;
+    } *unk48;
 } UnkStructA_40;
 
 /* What the overlays' tasks and callbacks get, and what the main_code
