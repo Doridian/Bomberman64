@@ -2,16 +2,19 @@
  * NON_MATCHING: ovl_0E_12's game object, complete: every function and its data.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4, eu 4, jp 4
+ * differing words: us 2, eu 2, jp 2
  *
  * What still differs in us (words):
  * - func_ovl0E_12_80043164 (2): `sll t4,s3,5` (the next call's &D_FCC[i])
  *   scheduled before the stores to unk0 and unk4; the original has it
  *   after them (ours: sll, unk4, unk0). IDO's scheduling follows source
  *   lines: with the two stores on separate lines it's 3 words, with the
- *   call on their line too 4.
- * - func_ovl0E_12_80043A64 (2): `move a1,s4` in a load delay slot where
- *   the original has it in the next call's delay slot (a nop in ours).
+ *   call on their line too 4. Assembling IDO's -S output with a label
+ *   between the stores (two lines) and the call gives the original's
+ *   order exactly, so the original has a block boundary there; the folded
+ *   fake that fixed 80043A64 leaves its branch in here (a store fills its
+ *   delay slot), and do/while(0), goto, labels, inlined statics, other
+ *   fake tests and the permuter didn't give one.
  */
 #include "common.h"
 
@@ -559,6 +562,10 @@ void func_ovl0E_12_80043A64(void) {
             D_ovl0E_12_80045F94[i].unk0->unk40->unk28 = D_ovl0E_12_80045F94[i].unk2C;
             D_ovl0E_12_80045F94[i].unk0->unk40->unk2C = D_ovl0E_12_80045F94[i].unk30;
             D_ovl0E_12_80045F94[i].unk0->unk40->unk30 = D_ovl0E_12_80045F94[i].unk34;
+            /* a fake (ends the block): without it `move a1` for the next call is
+             * scheduled into a load delay slot above, not the call's delay slot */
+            if (!D_ovl0E_12_80045F94[i].unkE && !D_ovl0E_12_80045F94[i].unkE && !D_ovl0E_12_80045F94[i].unkE) {
+            }
             func_ovl0E_12_80045648(D_ovl0E_12_80045F94[i].unk0, 0x02000000);
             func_ovl0E_12_80045650(D_ovl0E_12_80045F94[i].unk0, 0x80000);
             D_ovl0E_12_80045F94[i].unk0->unk40->unk20 = D_ovl0E_12_80045FCC[i].unk10;
