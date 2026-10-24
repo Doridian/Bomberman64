@@ -219,6 +219,15 @@ module's asm blocks, though the draft defines it.
   - 12_02's and 12_04's `80043258`/`80043170` (the handler's case 5) keep
     the other overlays' `unk0 == 2` test with an empty body: without it
     they are small enough to be inlined into their callers.
+  - ovl_12_03 (draft in nonmatching/) inlines one body into three
+    functions with a single stub: a static (`8004316C`) called only by the
+    small global after its stub (`80043174`), which is inlined in turn.
+    Called directly from a second function the static isn't inlined
+    anywhere. Its parameters' order fixed a caller's frame, and values
+    the original converts or multiplies at run time (`z * 100.0f` with
+    `z` an int) are its parameters. A loop over a table that keeps the
+    counter in the lower `s` register indexes the table (`tbl[i].x`)
+    rather than taking `p = &tbl[i]`.
   ovl_0C_08 is still `-O2` with two GLOBAL_ASM functions: at `-O3` all of
   it matches but func_ovl0C_08_80043654 (the object setup inlined, as a
   static taking the struct's address, with 8004361C called from it), whose
