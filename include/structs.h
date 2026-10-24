@@ -29,15 +29,23 @@ typedef struct {
     /* 0x34 */ u8 unk34[2];
     /* 0x36 */ s16 unk36;
     /* 0x38 */ u8 unk38[0x10];
-    /* 0x48 */ struct {
-        /* 0x00 */ u8 unk0[4];
-        /* 0x04 */ struct {
-            /* 0x00 */ u8 unk0[4];
-            /* 0x04 */ f32 unk4;
-            /* 0x08 */ s32 unk8;
-        } *unk4;
-    } *unk48;
+    /* 0x48 */ struct UnkStructA_40_48 *unk48;
 } UnkStructA_40;
+
+/* The structure at UnkStructA_40's 0x48, and the one at its 0x4. */
+typedef struct {
+    /* 0x00 */ u8 unk0[4];
+    /* 0x04 */ f32 unk4;
+    /* 0x08 */ s32 unk8;
+    /* 0x0C */ u8 unkC[4];
+    /* 0x10 */ f32 unk10;
+    /* 0x14 */ s32 unk14;
+} UnkStructA_40_48_4;
+
+typedef struct UnkStructA_40_48 {
+    /* 0x00 */ u8 unk0[4];
+    /* 0x04 */ UnkStructA_40_48_4 *unk4;
+} UnkStructA_40_48;
 
 /* What the overlays' tasks and callbacks get, and what the main_code
  * function behind the overlays' ZeroJump stub at 0x80044A20 (ovl_0E_06)
