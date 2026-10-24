@@ -1,9 +1,30 @@
 /*
  * NON_MATCHING: ovl_0F_05's game object, complete: every function and its data
- * (.data and .rodata as the original, .bss 0x80).
+ * (.data as the original, .rodata but for one constant, .bss 0x80).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
  * differing words: us 619, eu 619, jp 619
+ *
+ * The stubs and functions are all in place; func_ovl0F_05_8004373C and the
+ * small functions match. What still differs in us (words):
+ * - func_ovl0F_05_800430BC (232): two words long, so the rest is shifted.
+ *   After case 2's func_ovl0F_05_80045A30 block the original loads 2400.0f
+ *   (`mtc1 at,$f4`) after `lw t7,8(s1)` and materializes D_..._80046164's
+ *   0.0f late; ours hoists both and leaves two nops. As in ovl_0F_08, the
+ *   loops put `move s2,zero` before the table's address, and case 1 keeps
+ *   the count in v1 (ours v0). The frame is right; the spill of case 2's
+ *   loop counter is at 0x54(sp) (ours 0x50).
+ * - func_ovl0F_05_80043B74 (271): nine words short. The original saves
+ *   $f20-$f31 and, before the 180-frame loop, loads &D_ovl0F_05_80046550 into
+ *   s0 and 1/3 (rodata 0x8004649C, which this draft lacks, so the .rodata
+ *   after it is a word early) into $f28, unused: dead code that went after
+ *   the loads were placed. The dead call in the loop gives the saved
+ *   registers but not the loads or the original's register choice.
+ * - func_ovl0F_05_800440AC (112): ovl_0F_08's func_ovl0F_08_80043A28 (64
+ *   words there: branch operand order, float registers in the pack at the
+ *   end), shifted here by the functions before it.
+ * - func_ovl0F_05_8004472C (4): only the nops after its endless loop, which
+ *   IDO pads to a 32-byte boundary of the object.
  */
 #include "common.h"
 
@@ -291,6 +312,8 @@ void func_ovl0F_05_8004472C(void) {
     }
 }
 
+/* empty: as func_ovl0F_05_80043B6C, for the callback (ovl_0F_08's twin has
+ * one stub fewer here) */
 static void func_ovl0F_05_8004409C(void) {
 }
 
@@ -422,6 +445,8 @@ static void func_ovl0F_05_80043FF4(f32 arg0) {
     }
 }
 
+/* empty: the stub IDO leaves before func_ovl0F_05_80043B74 (an inlined callee
+ * of it; what it was is unknown) */
 static void func_ovl0F_05_80043B6C(void) {
 }
 
@@ -457,6 +482,8 @@ void func_ovl0F_05_80043B74(void) {
     func_ovl0F_05_800459F0();
     cam->unk8 = 30.0f;
     cam->unk0 = 60.0f;
+    /* its own counter: with i (used in the loops below) it compares with
+     * slti rather than bne */
     for (k = 0; k < 300; k++) {
         cam->unk0 += 0.08f;
         func_ovl0F_05_800459F0();
@@ -481,6 +508,10 @@ void func_ovl0F_05_80043B74(void) {
             objs[j]->unk10 -= (j + 1) * 4.0f;
             objs[j]->unk14 -= (j + 1);
         }
+        /* never runs: a guess. The original saves $f20-$f31 and before the
+         * loop loads &D_ovl0F_05_80046550 into s0 and 1/3 (rodata 0x8004649C)
+         * into $f28, none of which the loop uses; a dead call here gives the
+         * register count, not the loads */
         if (flag) {
             func_ovl0F_05_800459C8(1);
             D_ovl0F_05_80046550.x += 0.33333334f;
@@ -510,7 +541,7 @@ void func_ovl0F_05_80043B74(void) {
 
 void func_ovl0F_05_8004373C(void) {
     s32 running;
-    f32 pos[3];
+    f32 pos[3]; /* below running: pos at sp+0x78 */
 
     running = 1;
     do {
@@ -547,6 +578,7 @@ void func_ovl0F_05_8004373C(void) {
             func_ovl0F_05_80045F30(0x90);
         } else if (D_ovl0F_05_80046164 < 940.0f) {
         } else if (D_ovl0F_05_80046164 == 940.0f) {
+            /* 0, not 0.0f: `mtc1 zero` rather than the 0.0f in $f22 */
             func_ovl0F_05_80044EB8(22.0f, 0, 3.0f, pos, 0);
             pos[1] += 2.0f;
             func_ovl0F_05_80045F30(0x2C);
@@ -609,7 +641,7 @@ static void func_ovl0F_05_80043018(s32 count, UnkStruct_ovl0F_05_800461E0 *p) {
 
 /* The overlay's handler: the entry returns it to the loader. */
 void func_ovl0F_05_800430BC(s32 arg0) {
-    s32 pad[2];
+    s32 pad[2]; /* the original's frame is 8 bytes bigger */
 
     switch (arg0) {
         case 2:
