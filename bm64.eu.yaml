@@ -1299,16 +1299,17 @@ segments:
     type: code
     start: 0x210380
     vram: 0x80043000
-    bss_size: 0x500
+    bss_size: 0x520
     exclusive_ram_id: overlay
     symbol_name_format: ovl10_03_$VRAM
     dir: overlays/ovl_10_03
     subsegments:
-      - [0x210380, asm, ovl_10_03_entry]
-      - [0x210390, asm]
+      - [0x210380, c, ovl_10_03_entry]
+      - [0x210390, c]
       - [0x212B00, hasm, ovl_10_03_zerojmp]
-      - [0x214140, rodata]
-      - {type: bss, vram: 0x80046FB0}
+      - [0x214140, .data, 210390]
+      - [0x214260, .rodata, 210390]
+      - {type: .bss, vram: 0x80046FB0, name: 210390}
   - name: ovl_10_04
     type: code
     start: 0x214330

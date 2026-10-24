@@ -1,24 +1,6 @@
+#include "common.h"
+
 /*
- * NON_MATCHING: ovl_10_03's game object, complete: every function and its
- * .data/.bss/.rodata (sizes 0x120/0xD0/0x520; .text 0x2770 as the
- * original). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
- * drafts").
- * flags: -O3
- * differing words: us 29, eu 29, jp 29
- *
- * What still differs in us (words):
- * - func_ovl10_03_80043E34 (14): only stack offsets. Its four Vec3f sit 12
- *   bytes higher than the original's (player at sp+0xE8, not 0xDC); the
- *   original has 0x10 free above them and 0x10 below. The unused `pad`
- *   gives the frame (0xF8) and the spill slots; s32 pad[2..6], a Vec3f
- *   pad or an f64 don't place the locals.
- * - func_ovl10_03_800442D8 (11): case 10 stores v.y (0.0f) before loading
- *   v.x, where the original loads v.x first and stores v.y in the jal's
- *   way; reordering the three stores is worse (34-44).
- * - func_ovl10_03_800446F0 (4): the three Vec3f are 8 bytes higher than
- *   the original's in the same 0x70 frame; an unused local declared
- *   first moves them by 4 or grows the frame.
- *
  * ovl_10_03's game object, IDO -O3: the functions are written last to first
  * (IDO -O3 emits a file's functions in reverse, each one after the ones it
  * calls that aren't out yet, last call first; unreferenced statics go to
@@ -28,9 +10,11 @@
  * one of bank 0x10's overlays. 800433AC is defined above its caller
  * 80043440 so that 80043334 comes out before it; 800431B4, 80043618,
  * 800442BC and 800447E4 are inlined into their callers and still emitted.
+ * .data is in definition order: 80043720 is defined first (its
+ * initializers come first, as in ovl_10_05) and D_ovl10_03_80046EB0 after
+ * 800433AC, whose initializers it follows. 80043E34 and 800446F0 have an
+ * unused local for the original's frame.
  */
-
-#include "common.h"
 
 /* What func_ovl10_03_800465E0 returns. */
 typedef struct {
@@ -203,9 +187,28 @@ s32 D_ovl10_03_80047328[64]; /* per task: which of the two */
 f32 D_ovl10_03_80047428[2][10];
 f32 D_ovl10_03_80047478[2][10];
 
+/* the first .data: its initializers */
+void func_ovl10_03_80043720(void) {
+    s32 i;
+    f32 xs[8] = { 1150.0f, 2060.0f, 2660.0f, 3550.0f, 1160.0f, 2070.0f, 2660.0f, 3550.0f };
+    f32 zs[2] = { 770.0f, 2330.0f };
+
+    for (i = 0; i < 8; i++) {
+        D_ovl10_03_80047208[i] = func_ovl10_03_800464F0(0x1FE, 0x01080000, 0xD0, 0);
+        D_ovl10_03_80047208[i]->unk40->unk10 = xs[i];
+        D_ovl10_03_80047208[i]->unk40->unk14 = 1240.0f;
+        D_ovl10_03_80047208[i]->unk40->unk18 = zs[i / 4];
+        D_ovl10_03_80047208[i]->unk40->unkC |= 0x8000;
+        func_ovl10_03_800464C8(D_ovl10_03_80047208[i], 0x80000);
+        func_ovl10_03_800461D0(D_ovl10_03_80047208[i]->unk40, 1);
+        func_ovl10_03_800461D8(D_ovl10_03_80047208[i]->unk40, 0x1FF, 0, 0);
+    }
+}
+
 /* .data */
 s32 D_ovl10_03_80046DE8[8] = { 0, 5, 4, 1, 2, 7, 6, 3 };
 s32 D_ovl10_03_80046E08[8] = { 0, 20, 20, 10, 20, 20, 20, 30 };
+extern u32 D_ovl10_03_80046EB0[][3];
 s32 D_ovl10_03_80046E28[8] = { 90, 190, 310, 350, 480, 580, 780, 940 };
 
 /* unused: the stubs IDO -O3 leaves at the end of the object */
@@ -575,10 +578,11 @@ void func_ovl10_03_800447E4(UnkStructA *arg0) {
 }
 
 void func_ovl10_03_800446F0(void) {
+    s32 i;
+    s32 pad; /* unused: the original's frame has the slot */
     Vec3f ang;
     Vec3f a;
     Vec3f b;
-    s32 i;
 
     if (func_ovl10_03_80045D08(0)->unk40->unk14 == 700.0f) {
         for (i = 0; i < 2; i++) {
@@ -606,8 +610,8 @@ void func_ovl10_03_800442D8(void) {
         case 10:
             if (D_ovl10_03_80047300[n] & 4) {
                 v.z = 70.0f;
-                v.y = 0.0f;
                 v.x = D_ovl10_03_800472D0[n]->unk40->unk20;
+                v.y = 0.0f;
                 func_ovl10_03_80046460(&v, &out);
                 x = D_ovl10_03_800472D0[n]->unk40->unk10 + out.x;
                 z = D_ovl10_03_800472D0[n]->unk40->unk18 + out.z;
@@ -673,16 +677,16 @@ void func_ovl10_03_800442BC(void) {
 }
 
 void func_ovl10_03_80043E34(void) {
-    s32 pad;
-    Vec3f player;
-    Vec3f pos;
-    Vec3f pos2;
-    Vec3f ang;
     s32 i;
     s32 j;
     f32 dist;
     f32 speed;
+    Vec3f player;
+    Vec3f pos;
+    Vec3f pos2;
+    Vec3f ang;
     f32 a;
+    s32 pad; /* unused: the original's frame has the slot */
 
     func_ovl10_03_80046598(func_ovl10_03_80045D08(0), &player);
     if (player.y == 700.0f || D_ovl10_03_80046FF0 != 0) {
@@ -826,14 +830,6 @@ void func_ovl10_03_80043A30(s32 arg0) {
     }
 }
 
-/* passed to func_ovl10_03_80046980: three 12-byte records and an end */
-u32 D_ovl10_03_80046EB0[][3] = {
-    { 0xA70001, 0xE, 4 },
-    { 0xB70000, 0xE, 4 },
-    { 0xA50003, 0xF, 4 },
-    { 0, 0, 0 },
-};
-
 void func_ovl10_03_800438D8(void) {
     func_ovl10_03_80046980(D_ovl10_03_80046EB0);
     func_ovl10_03_80046B28(0, 0, 0xDE);
@@ -854,23 +850,6 @@ void func_ovl10_03_800438D8(void) {
     func_ovl10_03_80043618();
     func_ovl10_03_80043440();
     func_ovl10_03_80045BB0(func_ovl10_03_80045320);
-}
-
-void func_ovl10_03_80043720(void) {
-    s32 i;
-    f32 xs[8] = { 1150.0f, 2060.0f, 2660.0f, 3550.0f, 1160.0f, 2070.0f, 2660.0f, 3550.0f };
-    f32 zs[2] = { 770.0f, 2330.0f };
-
-    for (i = 0; i < 8; i++) {
-        D_ovl10_03_80047208[i] = func_ovl10_03_800464F0(0x1FE, 0x01080000, 0xD0, 0);
-        D_ovl10_03_80047208[i]->unk40->unk10 = xs[i];
-        D_ovl10_03_80047208[i]->unk40->unk14 = 1240.0f;
-        D_ovl10_03_80047208[i]->unk40->unk18 = zs[i / 4];
-        D_ovl10_03_80047208[i]->unk40->unkC |= 0x8000;
-        func_ovl10_03_800464C8(D_ovl10_03_80047208[i], 0x80000);
-        func_ovl10_03_800461D0(D_ovl10_03_80047208[i]->unk40, 1);
-        func_ovl10_03_800461D8(D_ovl10_03_80047208[i]->unk40, 0x1FF, 0, 0);
-    }
 }
 
 void func_ovl10_03_800436A4(void) {
@@ -927,6 +906,14 @@ void func_ovl10_03_800433AC(void) {
         D_ovl10_03_800472D8[i] = NULL;
     }
 }
+
+/* passed to func_ovl10_03_80046980: three 12-byte records and an end */
+u32 D_ovl10_03_80046EB0[][3] = {
+    { 0xA70001, 0xE, 4 },
+    { 0xB70000, 0xE, 4 },
+    { 0xA50003, 0xF, 4 },
+    { 0, 0, 0 },
+};
 
 void func_ovl10_03_80043440(void) {
     s32 i;
