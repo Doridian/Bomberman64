@@ -159,15 +159,32 @@ def compare(cfile, opt="-O2", isa="-mips1", extra=(), verbose=None, root=ROOT, o
         for line in res.splitlines():
             p = line.split()
             if len(p) == 3 and p[1] in "tT": syms.append((int(p[0], 16), p[2]))
-        # static functions have no ELF symbol, so statics emitted first would
-        # go uncounted: .mdebug names the first, and what follows it up to
-        # our first symbol is compared as one run, as below
-        if not syms or syms[0][0] > 0:
-            syms[:0] = [(a, s) for a, s in mdebug_procs(obj) if a == 0]
         hd = subprocess.run(["mips-linux-gnu-objdump", "-h", obj], capture_output=True, text=True).stdout
         secs = {l.split()[1]: int(l.split()[2], 16) for l in hd.splitlines() if re.match(r"\s+\d+ \.", l)}
         secs = {k: v for k, v in secs.items() if k in (".text", ".data", ".rodata", ".bss")}
         idx = load_index(root)
+        # static functions have no ELF symbol, so statics emitted first would
+        # go uncounted: .mdebug names the first, and what follows it up to
+        # our first symbol is compared as one run, as below. Ours may come
+        # out first under another static's name than the original's (one the
+        # asm doesn't label, or a static emitted later there), so the run
+        # starts at the original's first static: back from where our first
+        # labelled function starts, over the functions the draft defines as
+        # statics
+        if not syms or syms[0][0] > 0:
+            procs = mdebug_procs(obj)
+            lead = [(a, s) for a, s in procs if a == 0]
+            nxt = next((s for _, s in syms if s in idx), None)
+            if lead and nxt:
+                statics = {s for _, s in procs} - {s for _, s in syms}
+                ends = {o + z: n for n, (o, z) in idx.items() if z}
+                start, name = idx[nxt][0], None
+                while start in ends and ends[start] in statics:
+                    name = ends[start]
+                    start = idx[name][0]
+                if name:
+                    lead = [(0, name)]
+            syms[:0] = lead
         code = open(f"{root}/assets/code.bin", "rb").read()
         results = []
         # a symbol the original doesn't have (a function splat folded into
