@@ -478,7 +478,24 @@ module's asm blocks, though the draft defines it.
   from a stored `50.0f` (ovl_0C_06's 800430A8). A `0.0f` argument can
   pin 0.0f in `$f20` for the whole function (a bigger frame, `$f20`
   saved). The original passed ints: `func(13, 0, 8, &pos, 0)` (ovl_10_07's
-  800458C4, 58 words to 0).
+  800458C4, 58 words to 0). In an eased move (`t += 90.0f / n`) the loop
+  test is `t < 90.0f` where the original keeps 90.0 in one saved register
+  for the division and the test, and `t < 90` where the test reloads it
+  each time (ovl_0C_01's 80043248 and 80044080).
+- **Check the delay slot of every `jal`.** m2c gave
+  `func_ovl0C_01_80049BA0(void)`, but its callers load `a0 = 0x15` in the
+  delay slot; with `(s32)` and the argument, several functions matched.
+- **A ternary with equal arms keeps a constant out of a saved register.**
+  An infinite loop's `0x01000000` was hoisted into `s3` (a bigger frame);
+  `p->unk28 ? 0x01000000 : 0x01000000` leaves it a `lui` in a delay slot
+  (ovl_0C_01's 80047A60, 136 words to 36).
+- **Re-read a global after each call** where m2c keeps it in a temporary
+  and the original reloads it (ovl_0C_01's 80046224, 51 words to 0).
+- **Declaration order picks the saved float registers.** Which value gets
+  which `$f2x`, and which is spilled, follows the order the locals are
+  declared and first assigned. A file of small functions compiles in
+  about 0.1 s, so trying every order (with pads) is cheap:
+  `scratch/0C_01b/perm.py` (ovl_0C_01's 80043C20 and the eased moves).
 - **Check m2c's local types.** Counters it gives as `s32` may be `s16`
   (an `sll`/`sra` pair after each change), and a volume it gives as `s8`
   may be `s32`, narrowed only by the callee's prototype (ovl_0C_06's
