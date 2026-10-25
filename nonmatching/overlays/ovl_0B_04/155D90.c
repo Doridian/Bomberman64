@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3298, jp 4192
+ * differing words: us 3294, jp 4192
  *
  * Order (scratch/ord/search.py, hill-climb over definition order, scored by
  * the emitted sequence's edit distance from the original's address order):
@@ -37,21 +37,27 @@
  * (scratch/0B_04/gendata.py in the main checkout); the .bss in address
  * order without the unreferenced gaps.
  *
- * What still differs in us (words), mostly because the statics don't come
- * out between the same globals as in the original yet (the comparison
- * counts a global with the statics after it):
- * - 80043110 350, 800436C8 368, 80043CD0 211, 80043ADC 207,
- *   80043F24 362, 800444E8 579, 80044BE8 205, 800450C0 105,
- *   80045214 431, 800459C4 233, 80046180 544 (the statics after them);
+ * What still differs in us (words; the comparison counts a global with the
+ * statics after it, so a static of the wrong size costs the rest of its run):
+ * - 80043CD0 173: it comes out first (an indirect call pulls it, see
+ *   above), so 80043110's lead (8 stubs, 80043050, 2 stubs) is counted
+ *   with it; FreeEntries/MakeEntries aren't inlined yet (the original
+ *   inlines them: its loops are 80043110's sltu end-pointer loops);
+ * - 80043110 349, 80043ADC 207, 80044BE8 205, 800450C0 81 (their own code);
+ * - 800436C8 246: its frame and saved registers (s8 where the original
+ *   keeps -65 in s7) and 0xC too long; its run (80043A24/80043A7C, which
+ *   walk their parameters in the caller's s0/s2/s3, match) follows it;
+ * - 800444E8 334: 8004462C 0x10 and 8004471C 0x10 too long, 800447DC 0x1C
+ *   short; 80045214 425: 80045540 0x74 short, 800458F4/80045958 4 long;
+ *   80046180 537: 80046294 0x10C, 80046734 0x74 and 800468F0 0x34 short;
  * - 80045AF0/80045D20 25 each, 80045F50 24 (it passes D[0]'s value to
- *   800458F4 by a cast, as the original does; its D[1] in $s1 isn't in C), 80045BF4/80045E24/80046054 73
- *   each, 80046B28 109, 80046FA8 79, 80046D74 73, 800471F4 77,
- *   80046AA0 42, 80046CEC/80046F20/8004716C 3 each;
- *   80046D74, 80046FA8 and 800471F4 have their 0x30-byte pad (the frame
- *   is 144 as in the original) and their FreeEntries loops written out
- *   (80046D74 and 80046FA8 are 8 bytes short: the empty stub after each
- *   isn't written yet);
- * - 80043E4C, 80043E80, 80043EC8 match.
+ *   800458F4 by a cast, as the original does; its D[1] in $s1 isn't in C),
+ *   80045BF4/80045E24/80046054/800459C4 73 each, 80046B28 111,
+ *   80046FA8/800471F4 79, 80046D74 73; 80046D74, 80046FA8 and 800471F4
+ *   have their 0x30-byte pad (the frame is 144 as in the original) and
+ *   their FreeEntries loops written out;
+ * - 80043E4C, 80043E80, 80043EC8, 80043F24's run (29), 80046AA0,
+ *   80046CEC, 80046F20 and 8004716C match.
  */
 #include "common.h"
 
@@ -2010,16 +2016,16 @@ void func_ovl0B_04_80043ADC(void) {
 static void func_ovl0B_04_80043A7C(Item *items, s32 *ids, s32 n) {
     s32 i;
 
-    for (i = 0; i < n; i++) {
-        ids[i] = func_ovl0B_04_80048630(items[i].unk0, items[i].unk4, items[i].unk6, items[i].unk8, items[i].unkC, items[i].unk10);
+    for (i = 0; i < n; i++, ids++, items++) {
+        *ids = func_ovl0B_04_80048630(items->unk0, items->unk4, items->unk6, items->unk8, items->unkC, items->unk10);
     }
 }
 
 static void func_ovl0B_04_80043A24(Item *items, s32 *ids, s32 n) {
     s32 i;
 
-    for (i = 0; i < n; i++) {
-        ids[i] = func_ovl0B_04_80048688(items[i].unk0, items[i].unk4, items[i].unk6, items[i].unk8, items[i].unkC, items[i].unk10);
+    for (i = 0; i < n; i++, ids++, items++) {
+        *ids = func_ovl0B_04_80048688(items->unk0, items->unk4, items->unk6, items->unk8, items->unkC, items->unk10);
     }
 }
 
