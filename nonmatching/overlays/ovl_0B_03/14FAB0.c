@@ -6,7 +6,10 @@
  * tables, .bss 0x1140, as the original's sizes). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2897, jp 4082
+ * differing words: us 2899, jp 3225
+ *
+ * jp's code differs and has no #if yet: the statics after 800431FC are
+ * 5 instructions longer in jp, and 8004386C is 0xF4 bytes shorter.
  *
  * From m2c (wk/ in scratch/0B_03/ of the main checkout has the scripts,
  * p2/ the second pass's): functions written last to first. The helpers
