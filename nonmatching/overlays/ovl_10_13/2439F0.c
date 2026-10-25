@@ -3,7 +3,7 @@
  * .bss. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 1841
+ * differing words: us 1841, jp 1841
  *
  * What still differs in us (words, as tools/nonmatching.py counts them):
  * - func_ovl10_13_80046940 (552): the handler. Its callees 800460E0-800468BC
