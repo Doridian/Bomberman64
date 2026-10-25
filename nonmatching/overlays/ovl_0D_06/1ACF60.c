@@ -4,7 +4,7 @@
  * 0x70 and .bss 0x60 as the original (sizes; .text 0x2A00 of 0x2A30).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 552, eu 723, jp 723 (eu and jp not re-measured)
+ * differing words: us 552, eu 723, jp 552 (eu not re-measured)
  *
  * The sibling of ovl_0D_04 (nonmatching/overlays/ovl_0D_04): its gate code
  * (80044414, 80044808, 800440AC) and model tables are the same. What still

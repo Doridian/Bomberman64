@@ -3,7 +3,7 @@
  * and .bss 0x60 as the original, and the stubs' places.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 512, eu 684, jp 684 (eu and jp not re-measured)
+ * differing words: us 512, eu 684, jp 512 (eu not re-measured)
  *
  * The gate 80044318 matches in us: its loop calls the per-gate static
  * 80044300 (Ent, flag), as ovl_0D_02's 800434F8 does, with a fake that
