@@ -590,7 +590,9 @@ module's asm blocks, though the draft defines it.
   Matched functions that restore s0 first reach their epilogue as a
   branch target. No C has been found that leaves the label without a
   branch. A flag that is always zero doesn't do it: ugen folds the test
-  and its label together. The scripts are in `scratch/0C_09/d08_block/` and
+  and its label together, and an empty `if (x) {}` on a parameter, local
+  or global, at any statement, doesn't either (2200 variants,
+  `scratch/emptyif/`). The scripts are in `scratch/0C_09/d08_block/` and
   `scratch/epi/`.
 
 ## Versions
