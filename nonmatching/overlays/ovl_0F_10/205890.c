@@ -3,7 +3,7 @@
  * (.data and .rodata as the original; .bss 0x60 with its unused words common).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 828, eu 828, jp 828
+ * differing words: us 826, eu 828, jp 828
  *
  * Every function is in the original's place, stubs included (the inlined
  * statics are named for the stubs they leave). What still differs in us
@@ -23,11 +23,11 @@
  *   `move s1,v0` before `mtc1 zero,$f12`).
  * - func_ovl0F_10_80043CCC (29): s0 and s1 swapped (the counter and
  *   &D_ovl0F_10_800468B0), `i = 0` before the branch, and the original's
- *   six nops after its endless loop.
+ *   six nops after its endless loop. (Tried, no gain: while/do/for forms,
+ *   `i != 90`, u8/s16/u32 counters, a float pointer, pads, `i = 0` before
+ *   the `if`: the counter stays in s1.)
  * - func_ovl0F_10_800448A0 (18): the original's extra nop after its
  *   endless loop; `pad[1]` gives its frame's unused word.
- * - func_ovl0F_10_80043E08 (2): `id` is spilled at 0x28 in the original,
- *   0x2C in ours.
  */
 #include "common.h"
 
@@ -694,8 +694,8 @@ static void func_ovl0F_10_80043F94(s32 *dst, s32 flags, f32 speed) {
 
 
 void func_ovl0F_10_80043E08(void) {
-    s32 id;
     s32 task;
+    s32 id;
 
     id = func_ovl0F_10_80045598();
     func_ovl0F_10_800455F8(id);
