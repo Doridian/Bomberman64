@@ -3,12 +3,12 @@
  * .bss. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 1335, jp 1335
+ * differing words: us 982, jp 1335
  *
  * What still differs in us (words, as tools/nonmatching.py counts them):
  * - 800464B0 (4): v1 for v0; a third temporary grows the frame.
- * - The statics, compared with 80043010 as one run (1331). Each on its
- *   own (scratch/10_13/allf.py): 80043070 936 and 8004574C 395;
+ * - The statics, compared with 80043010 as one run (978). Each on its
+ *   own (scratch/10_13/allf.py): 80043070 936 and 8004574C 42;
  *   80044E48 matches (its two unused pads give the original's frame,
  *   with i and a between the vectors and angle). They are the
  *   cut-scenes the handler and 800474EC-800477E8 run. They save no callee-saved registers (their
@@ -21,13 +21,16 @@
  *   code is the original's length, but 3.0f isn't kept in $f28 from the
  *   20-frame loop to the turn (270.0f takes $f28 for $f30), so the
  *   floats' registers differ from 0x800438xx to 0x800446xx.
- * - 8004574C has the original's frame (0x50) with dx shared with the
- *   turn's angle and dz with its distance. What differs is the same as
- *   in 80043070, the other way: it keeps 1150.0f in a saved float
- *   register (passed with mfc1) where the original loads it as an
- *   immediate (lui/ori into a2), and the stores and divisions around
- *   dx/dy/dz are scheduled differently; it is 0x20 short (the alignment
- *   nops before the epilogue), so what follows shifts.
+ * - 8004574C has the original's code size: each move first takes the
+ *   differences into a, b and c (a and b are the turn's angle and
+ *   distance later; c stays in a temporary), then divides them in the
+ *   reverse of the original's order (dy, dx, dz). With the differences
+ *   folded into the divisions, 1150.0f and 1438.0f were kept in a saved
+ *   float register (mfc1) instead of being loaded as immediates, and the
+ *   function was 0x20 short. What's left: the saved s6-s8 are permuted,
+ *   the temporaries after the turn loop are two registers off, and the
+ *   wrap's temporary needs the unused pad (which makes the frame 0x60,
+ *   not 0x50). 8004A130 returns a value (v1 after it).
  * The handler's cases 800460E0-800468BC are globals defined above the
  * handler: it pulls them out, with the statics, in the reverse order of
  * their calls (statics first, as in the original). As statics they were
@@ -132,7 +135,7 @@ UnkStructA *func_ovl10_13_8004A010(UnkStructA *);
 void func_ovl10_13_8004A058(UnkStructA *);
 void func_ovl10_13_8004A0A8(UnkStructA *, Vec3f *);
 s32 func_ovl10_13_8004A128(void (*)(), void *, s32, s32, s32);
-void func_ovl10_13_8004A130(s32);
+s32 func_ovl10_13_8004A130(s32);
 void func_ovl10_13_8004A138(void);
 void func_ovl10_13_8004A140(u16, s32);
 s32 func_ovl10_13_8004A148(s32);
@@ -1242,8 +1245,12 @@ static void func_ovl10_13_8004574C(void) {
     f32 dy;
     f32 dx;
     f32 dz;
+    f32 a;
+    f32 b;
+    f32 c;
     s32 limit;
     s32 i;
+    s32 pad;
 
     info = func_ovl10_13_80049728();
     D_ovl10_13_8004ADD0 = info->unk30;
@@ -1309,9 +1316,12 @@ static void func_ovl10_13_8004574C(void) {
         D_ovl10_13_8004ADD4 = func_ovl10_13_8004A128((void (*)(UnkStructA *)) func_ovl10_13_80048850, (void *)1, 0, 0, 0x130);
         func_ovl10_13_8004A148(0x3C);
         obj0->unk40->unk20 = func_ovl10_13_80043010(obj0->unk40, obj1->unk40);
-        dz = (1400.0f - obj1->unk40->unk18) / 300.0f;
-        dx = (2000.0f - obj1->unk40->unk10) / 300.0f;
-        dy = (800.0f - obj1->unk40->unk14) / 300.0f;
+        a = 2000.0f - obj1->unk40->unk10;
+        b = 800.0f - obj1->unk40->unk14;
+        c = 1400.0f - obj1->unk40->unk18;
+        dy = b / 300.0f;
+        dx = a / 300.0f;
+        dz = c / 300.0f;
         for (i = 0; i < 0x12C; i++) {
             obj1->unk40->unk14 += dy;
             obj1->unk40->unk10 += dx;
@@ -1327,9 +1337,12 @@ static void func_ovl10_13_8004574C(void) {
         D_ovl10_13_8004ADD8 = func_ovl10_13_8004A128((void (*)(UnkStructA *)) func_ovl10_13_80048850, (void *)2, 0, 0, 0x130);
         func_ovl10_13_8004A148(0x3C);
         i = 0;
-        dz = (1400.0f - obj2->unk40->unk18) / 300.0f;
-        dx = (2700.0f - obj2->unk40->unk10) / 300.0f;
-        dy = (800.0f - obj2->unk40->unk14) / 300.0f;
+        a = 2700.0f - obj2->unk40->unk10;
+        b = 800.0f - obj2->unk40->unk14;
+        c = 1400.0f - obj2->unk40->unk18;
+        dy = b / 300.0f;
+        dx = a / 300.0f;
+        dz = c / 300.0f;
         for (i = 0; i < 0x12C; i++) {
             obj2->unk40->unk14 += dy;
             obj2->unk40->unk10 += dx;
@@ -1350,8 +1363,10 @@ static void func_ovl10_13_8004574C(void) {
     func_ovl10_13_80049E08(1);
     func_ovl10_13_80049E18(2350.0f, 864.0f, 1399.0f);
     func_ovl10_13_80049E38(314.0f, 32.0f, 1438.0f);
-    dy = (2350.0f - obj2->unk40->unk10) / 300.0f;
-    dx = (2350.0f - obj1->unk40->unk10) / 300.0f;
+    a = 2350.0f - obj1->unk40->unk10;
+    b = 2350.0f - obj2->unk40->unk10;
+    dy = b / 300.0f;
+    dx = a / 300.0f;
     for (i = 0; i < 0x12C; i++) {
         obj1->unk40->unk10 += dx;
         obj2->unk40->unk10 += dy;
@@ -1362,15 +1377,15 @@ static void func_ovl10_13_8004574C(void) {
     D_ovl10_13_8004ADE0 = func_ovl10_13_8004A128(func_ovl10_13_800486A8, obj1, 0, 0, 0x130);
     func_ovl10_13_8004A148(0x1E);
     func_ovl10_13_8004A440(0xFF, 0xFF, 0xFF, 0xAA);
-    dz = 1438.0f;
-    dx = 314.0f;
+    b = 1438.0f;
+    a = 314.0f;
     for (i = 0; i < 0xB4; i++) {
         if (i == 0xAA) {
             func_ovl10_13_8004A6B0(0x250);
         }
-        func_ovl10_13_80049E38(dx, 32768.0f, dz);
-        ANGLE_ADD(dx, 0.15555556f);
-        dz -= 6.311111f;
+        func_ovl10_13_80049E38(a, 32768.0f, b);
+        ANGLE_ADD(a, 0.15555556f);
+        b -= 6.311111f;
         func_ovl10_13_8004A170();
     }
     D_ovl10_13_8004ADE0 = 0;
