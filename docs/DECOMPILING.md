@@ -806,6 +806,19 @@ What a decompiler has to do for jp (and eu):
    (`tools/data_split.py jp --add <module> <object>` writes it), as
    AFBF0's (its strings make jp's `.data` 0xE60 against us's 0xE70) and
    9A5F0's (jp has no proportional font: `.data` 0x40, no `.bss`).
+6. A draft's jp code (ovl_0A_06, jp 1444 words to 250): keep a us
+   extract's `asm/overlays/<ovl>` and `asm/data/overlays/<ovl>` before
+   extracting jp, list the changed functions with `--functions`, and diff
+   each with its branch labels renumbered (`scratch/0A_06jp/fdiff.py`);
+   relocations are masked, so only constants, calls and structure count.
+   jp's `_jp` labels give its new strings and floats, and the pointer
+   words in jp's data asm map its strings back to us's
+   (`scratch/0A_06jp/datadump.py` writes the `#if VERSION_JP` arrays).
+   Then check functions that should be the same as us: a change of
+   register pressure can move a static's argument to another register in
+   every caller (`s32 m = msg;` put ovl_0A_06's 80043E68 argument back in
+   `s1`, for every version). `scratch/0A_06jp/flipjp.py` turns one `#if`
+   back to us's code at a time to find the block that hurts.
 
 ## Data
 
