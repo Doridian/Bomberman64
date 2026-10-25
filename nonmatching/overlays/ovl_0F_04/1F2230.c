@@ -3,7 +3,7 @@
  * data (.data and .bss as the original's sizes).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 7510
+ * differing words: us 7510, jp 7510
  *
  * A first complete draft: the functions are right, the layout is not yet.
  * What still differs in us (words, by tools/nonmatching.py's ranges, which

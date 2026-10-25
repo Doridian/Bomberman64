@@ -4,7 +4,7 @@
  * IDO's, and most of the count is functions compared against the wrong
  * code. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 7607
+ * differing words: us 7607, jp 7607
  *
  * What still differs in us (words; fcmp compares from each global to the
  * next global emitted, so a global out of place takes its neighbours'
