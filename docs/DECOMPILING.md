@@ -749,6 +749,16 @@ module's asm blocks, though the draft defines it.
   reproduces it (95 words to 0 in each, found by the permuter): a use of
   the parameter that IDO removes only after register allocation.
   `arg0 * 0` in a loop's indices does much the same, less cleanly.
+- **A big function: lengths first, then locals.** fcmp compares at the
+  same offset, so a case one word short misaligns everything after it;
+  `scratch/0B_03/p3/drift.py` pairs the k-th `jal` of both and prints
+  where the offset difference changes. m2c's temporaries fold into the
+  few locals the original's saved registers show (one counter in `$fp`
+  that also holds spare values, one angle for every case); ovl_0B_03's
+  8004386C went from 2758 to 1584 and its frame from 720 to 320 bytes
+  that way. Check m2c's float constants against the data (its -10.0f
+  there was a load of a model-table field), and inspect with `-mips1`:
+  `-mips2` saves floats with `sdc1` and shifts every offset.
 - **Unsolved: a block boundary with no branch.** Two misses come from
   how as1 schedules a block, not from ugen, so `cc -c -S` (ugen's
   `u.out.s`, before as1) shows them. In each, adding a single label to
