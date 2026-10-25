@@ -3,7 +3,7 @@
  * data (.data as the original). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2996, jp 5736
+ * differing words: us 2996, jp 2996
  *
  * Every function and static comes out in the original's order. The order
  * is ovl_0F_03's: the handler, defined last but for func_ovl0F_02_80043010,
