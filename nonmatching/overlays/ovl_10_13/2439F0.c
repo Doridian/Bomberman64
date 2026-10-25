@@ -3,10 +3,10 @@
  * .bss. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 1296, jp 1841
+ * differing words: us 1023, jp 1841
  *
  * What still differs in us (words, as tools/nonmatching.py counts them):
- * - 80047A0C (699), 800475F8 (126), 80048850 (117), 800470C8 (111),
+ * - 80047A0C (TBD), 800475F8 (126), 80048850 (117), 800470C8 (111),
  *   80047298 (90), 80048BBC (76), 800486A8 (55), 80047418 (8), 80048EA8 (8),
  *   800464B0 (4: v1 for v0, a third temporary grows the frame),
  *   80046E88 (2): m2c's C, cleaned up only where it didn't compile.
@@ -68,6 +68,12 @@ typedef struct {
     /* 0x0A4 */ u8 unkA4[0x80];
     /* 0x124 */ s32 unk124;
 } UnkStruct_ovl10_13_8004A770;
+
+/* an angle in degrees moved by d and kept in [0, 360) */
+#define ANGLE_ADD(a, d) \
+    (a) = ((a) + (d) >= 360.0f) ? (a) + (d) - 360.0f : ((a) + (d) < 0.0f) ? (a) + (d) + 360.0f : (a) + (d)
+#define ANGLE_SUB(a, d) \
+    (a) = ((a) - (d) >= 360.0f) ? (a) - (d) - 360.0f : ((a) < (d)) ? (a) - (d) + 360.0f : (a) - (d)
 
 void func_ovl10_13_80049298(const char *, ...);
 void func_ovl10_13_800495D8(s32);
@@ -533,326 +539,96 @@ loop_3:
 }
 
 void func_ovl10_13_80047A0C(void) {
-    UnkStructA *sp5C;
-    UnkStructA *sp54;
-    f32 sp4C;
-    s32 sp44;
-    s32 sp40;
-    UnkStructA *temp_s2;
-    UnkStructA *temp_v0_7;
-    UnkStructA_40 *temp_s1;
-    UnkStructA_40 *temp_v0;
-    UnkStructA_40 *temp_v0_10;
-    UnkStructA_40 *temp_v0_2;
-    UnkStructA_40 *temp_v0_3;
-    UnkStructA_40 *temp_v0_4;
-    UnkStructA_40 *temp_v0_5;
-    UnkStructA_40 *temp_v0_6;
-    UnkStructA_40 *temp_v0_9;
-    UnkStructA_40 *temp_v1;
-    UnkStructA_40 *temp_v1_2;
-    UnkStructA_40 *temp_v1_3;
-    UnkStructA_40 *temp_v1_4;
-    UnkStructA_40 *temp_v1_5;
-    UnkStructA_40 *temp_v1_6;
-    UnkStruct_ovl10_13_8004A770 *temp_v0_8;
-    f32 temp_fv0;
-    f32 temp_fv0_2;
-    f32 temp_fv0_3;
-    f32 temp_fv0_4;
-    f32 temp_fv0_5;
-    f32 temp_fv0_6;
-    f32 temp_fv0_7;
-    f32 temp_fv0_8;
-    f32 temp_fv1;
-    f32 temp_fv1_10;
-    f32 temp_fv1_11;
-    f32 temp_fv1_12;
-    f32 temp_fv1_13;
-    f32 temp_fv1_2;
-    f32 temp_fv1_3;
-    f32 temp_fv1_4;
-    f32 temp_fv1_5;
-    f32 temp_fv1_6;
-    f32 temp_fv1_7;
-    f32 temp_fv1_8;
-    f32 temp_fv1_9;
-    f32 var_fa0;
-    f32 var_fa0_2;
-    f32 var_fv0;
-    f32 var_fv0_10;
-    f32 var_fv0_11;
-    f32 var_fv0_12;
-    f32 var_fv0_13;
-    f32 var_fv0_2;
-    f32 var_fv0_3;
-    f32 var_fv0_4;
-    f32 var_fv0_5;
-    f32 var_fv0_6;
-    f32 var_fv0_7;
-    f32 var_fv0_8;
-    f32 var_fv0_9;
-    s32 var_s0;
-    s32 var_s0_10;
-    s32 var_s0_11;
-    s32 var_s0_12;
-    s32 var_s0_13;
-    s32 var_s0_14;
-    s32 var_s0_15;
-    s32 var_s0_16;
-    s32 var_s0_17;
-    s32 var_s0_2;
-    s32 var_s0_3;
-    s32 var_s0_4;
-    s32 var_s0_5;
-    s32 var_s0_6;
-    s32 var_s0_7;
-    s32 var_s0_8;
-    s32 var_s0_9;
+    UnkStructA *obj0;
+    UnkStructA *obj2;
+    UnkStructA *obj1;
+    UnkStructA_40 *p;
+    f32 angle;
+    s32 i;
+    s32 task1;
+    s32 task2;
+    UnkStruct_ovl10_13_8004A770 *player;
 
-    sp5C = func_ovl10_13_80049818(0);
-    temp_s2 = func_ovl10_13_80049818(2);
+    obj0 = func_ovl10_13_80049818(0);
+    obj2 = func_ovl10_13_80049818(2);
     func_ovl10_13_80049868(0, 3);
-    var_s0 = 0;
-    do {
-        temp_v0 = sp5C->unk40;
-        temp_v0->unk18 -= 8.0f;
+    for (i = 0; i < 600; i += 8) {
+        obj0->unk40->unk18 -= 8.0f;
         func_ovl10_13_8004A170();
-        var_s0 += 8;
-    } while (var_s0 < 0x258);
+    }
     func_ovl10_13_8004A6B0(0x263);
     func_ovl10_13_80049E38(185.0f, 10.0f, 2000.0f);
-    var_s0_2 = 0;
-    do {
-        temp_v0_2 = sp5C->unk40;
-        temp_v0_2->unk18 -= 8.0f;
+    for (i = 0; i < 600; i += 8) {
+        obj0->unk40->unk18 -= 8.0f;
         func_ovl10_13_8004A170();
-        var_s0_2 += 8;
-    } while (var_s0_2 < 0x258);
+    }
     func_ovl10_13_80049868(0, 0);
     func_ovl10_13_8004A6B0(0x276);
-    var_s0_3 = 0;
-    do {
-        temp_v1 = temp_s2->unk40;
-        temp_v1->unk14 -= 8.333333f;
-        temp_v1_2 = temp_s2->unk40;
-        temp_v1_2->unk18 -= 10.0f;
-        temp_v1_3 = temp_s2->unk40;
-        temp_v1_3->unk1C -= 1.5f;
+    for (i = 0; i < 60; i++) {
+        obj2->unk40->unk14 -= 8.333333f;
+        obj2->unk40->unk18 -= 10.0f;
+        obj2->unk40->unk1C -= 1.5f;
         func_ovl10_13_8004A170();
-        var_s0_3 += 1;
-    } while (var_s0_3 < 0x3C);
-    var_s0_4 = 0;
-    do {
-        temp_v0_3 = sp5C->unk40;
-        temp_fv1 = temp_v0_3->unk20 + 18.0f;
-        if (temp_fv1 >= 360.0f) {
-            temp_v0_3->unk20 = temp_fv1 - 360.0f;
-        } else {
-            if (temp_fv1 < 0.0f) {
-                var_fv0 = temp_fv1 + 360.0f;
-            } else {
-                var_fv0 = temp_fv1;
-            }
-            temp_v0_3->unk20 = var_fv0;
-        }
+    }
+    for (i = 0; i < 10; i++) {
+        ANGLE_ADD(obj0->unk40->unk20, 18.0f);
         func_ovl10_13_8004A170();
-        var_s0_4 += 1;
-    } while (var_s0_4 < 0xA);
+    }
     func_ovl10_13_8004A148(0x1E);
-    temp_v1_4 = temp_s2->unk40;
-    func_ovl10_13_80049E18(temp_v1_4->unk10, temp_v1_4->unk14, temp_v1_4->unk18);
+    func_ovl10_13_80049E18(obj2->unk40->unk10, obj2->unk40->unk14, obj2->unk40->unk18);
     func_ovl10_13_80049E38(204.0f, 25.1f, 722.0f);
-    var_fa0 = 0.0f;
-    var_s0_5 = 0;
-    do {
-        sp4C = var_fa0;
-        temp_v1_5 = temp_s2->unk40;
-        temp_fv1_2 = var_fa0 + 5.0f;
-        temp_v1_5->unk14 += func_ovl10_13_8004A2D8(var_fa0) * 1.8f;
-        if (temp_fv1_2 >= 360.0f) {
-            var_fa0_2 = temp_fv1_2 - 360.0f;
-        } else {
-            if (temp_fv1_2 < 0.0f) {
-                var_fv0_2 = temp_fv1_2 + 360.0f;
-            } else {
-                var_fv0_2 = temp_fv1_2;
-            }
-            var_fa0_2 = var_fv0_2;
-        }
-        sp4C = var_fa0_2;
+    angle = 0.0f;
+    for (i = 0; i < 120; i++) {
+        obj2->unk40->unk14 += func_ovl10_13_8004A2D8(angle) * 1.8f;
+        ANGLE_ADD(angle, 5.0f);
         func_ovl10_13_8004A170();
-        var_s0_5 += 1;
-        var_fa0 = var_fa0_2;
-    } while (var_s0_5 < 0x78);
+    }
     func_ovl10_13_80049DF8(1);
     func_ovl10_13_80049E08(0);
-    sp44 = func_ovl10_13_8004A128(func_ovl10_13_80048F00, temp_s2, 0, 0, 0x130);
-    sp40 = func_ovl10_13_8004A128(func_ovl10_13_80048EA8, temp_s2, 0, 0, 0x130);
-    temp_s1 = temp_s2->unk40;
-    var_s0_6 = 0;
-    do {
-        temp_fv0 = temp_s1->unk1C;
-        temp_fv1_3 = temp_fv0 - 0.6666667f;
-        if (temp_fv1_3 >= 360.0f) {
-            temp_s1->unk1C = temp_fv1_3 - 360.0f;
-        } else {
-            if (temp_fv0 < 0.6666667f) {
-                var_fv0_3 = temp_fv1_3 + 360.0f;
-            } else {
-                var_fv0_3 = temp_fv1_3;
-            }
-            temp_s1->unk1C = var_fv0_3;
-        }
-        temp_fv1_4 = temp_s1->unk20 + 3.0f;
-        if (temp_fv1_4 >= 360.0f) {
-            temp_s1->unk20 = temp_fv1_4 - 360.0f;
-        } else {
-            if (temp_fv1_4 < 0.0f) {
-                var_fv0_4 = temp_fv1_4 + 360.0f;
-            } else {
-                var_fv0_4 = temp_fv1_4;
-            }
-            temp_s1->unk20 = var_fv0_4;
-        }
+    task1 = func_ovl10_13_8004A128(func_ovl10_13_80048F00, obj2, 0, 0, 0x130);
+    task2 = func_ovl10_13_8004A128(func_ovl10_13_80048EA8, obj2, 0, 0, 0x130);
+    p = obj2->unk40;
+    for (i = 0; i < 30; i++) {
+        ANGLE_SUB(p->unk1C, 0.6666667f);
+        ANGLE_ADD(p->unk20, 3.0f);
         func_ovl10_13_8004A170();
-        var_s0_6 += 1;
-    } while (var_s0_6 < 0x1E);
+    }
     func_ovl10_13_80049E28(2927.0f, 2951.0f, 1300.0f);
-    var_s0_7 = 0;
-    do {
-        temp_fv0_2 = temp_s1->unk1C;
-        temp_fv1_5 = temp_fv0_2 - 2.3333333f;
-        if (temp_fv1_5 >= 360.0f) {
-            temp_s1->unk1C = temp_fv1_5 - 360.0f;
-        } else {
-            if (temp_fv0_2 < 2.3333333f) {
-                var_fv0_5 = temp_fv1_5 + 360.0f;
-            } else {
-                var_fv0_5 = temp_fv1_5;
-            }
-            temp_s1->unk1C = var_fv0_5;
-        }
+    for (i = 0; i < 30; i++) {
+        ANGLE_SUB(p->unk1C, 2.3333333f);
         func_ovl10_13_8004A170();
-        var_s0_7 += 1;
-    } while (var_s0_7 < 0x1E);
-    var_s0_8 = 0;
-    do {
-        temp_fv0_3 = temp_s1->unk1C;
-        temp_fv1_6 = temp_fv0_3 - 3.0f;
-        if (temp_fv1_6 >= 360.0f) {
-            temp_s1->unk1C = temp_fv1_6 - 360.0f;
-        } else {
-            if (temp_fv0_3 < 3.0f) {
-                var_fv0_6 = temp_fv1_6 + 360.0f;
-            } else {
-                var_fv0_6 = temp_fv1_6;
-            }
-            temp_s1->unk1C = var_fv0_6;
-        }
+    }
+    for (i = 0; i < 30; i++) {
+        ANGLE_SUB(p->unk1C, 3.0f);
         func_ovl10_13_8004A170();
-        var_s0_8 += 1;
-    } while (var_s0_8 < 0x1E);
+    }
     func_ovl10_13_8004A148(0x1E);
-    var_s0_9 = 0;
-    do {
-        temp_fv1_7 = temp_s1->unk20 + 0.33333334f;
-        if (temp_fv1_7 >= 360.0f) {
-            temp_s1->unk20 = temp_fv1_7 - 360.0f;
-        } else {
-            if (temp_fv1_7 < 0.0f) {
-                var_fv0_7 = temp_fv1_7 + 360.0f;
-            } else {
-                var_fv0_7 = temp_fv1_7;
-            }
-            temp_s1->unk20 = var_fv0_7;
-        }
+    for (i = 0; i < 30; i++) {
+        ANGLE_ADD(p->unk20, 0.33333334f);
         func_ovl10_13_8004A170();
-        var_s0_9 += 1;
-    } while (var_s0_9 < 0x1E);
-    var_s0_10 = 0;
-    do {
-        temp_fv0_4 = temp_s1->unk1C;
-        temp_fv1_8 = temp_fv0_4 - 5.0f;
-        if (temp_fv1_8 >= 360.0f) {
-            temp_s1->unk1C = temp_fv1_8 - 360.0f;
-        } else {
-            if (temp_fv0_4 < 5.0f) {
-                var_fv0_8 = temp_fv1_8 + 360.0f;
-            } else {
-                var_fv0_8 = temp_fv1_8;
-            }
-            temp_s1->unk1C = var_fv0_8;
-        }
+    }
+    for (i = 0; i < 30; i++) {
+        ANGLE_SUB(p->unk1C, 5.0f);
         func_ovl10_13_8004A170();
-        var_s0_10 += 1;
-    } while (var_s0_10 < 0x1E);
+    }
     func_ovl10_13_80049E28(1282.0f, 1408.0f, 2745.0f);
     func_ovl10_13_8004A170();
-    func_ovl10_13_8004A128(func_ovl10_13_80048CEC, temp_s2, 0, 0, 0x130);
-    var_s0_11 = 0;
-    do {
-        temp_fv0_5 = temp_s1->unk20;
-        temp_fv1_9 = temp_fv0_5 - 0.5f;
-        if (temp_fv1_9 >= 360.0f) {
-            temp_s1->unk20 = temp_fv1_9 - 360.0f;
-        } else {
-            if (temp_fv0_5 < 0.5f) {
-                var_fv0_9 = temp_fv1_9 + 360.0f;
-            } else {
-                var_fv0_9 = temp_fv1_9;
-            }
-            temp_s1->unk20 = var_fv0_9;
-        }
-        temp_fv0_6 = temp_s1->unk1C;
-        temp_fv1_10 = temp_fv0_6 - 0.16666667f;
-        if (temp_fv1_10 >= 360.0f) {
-            temp_s1->unk1C = temp_fv1_10 - 360.0f;
-        } else {
-            if (temp_fv0_6 < 0.16666667f) {
-                var_fv0_10 = temp_fv1_10 + 360.0f;
-            } else {
-                var_fv0_10 = temp_fv1_10;
-            }
-            temp_s1->unk1C = var_fv0_10;
-        }
+    func_ovl10_13_8004A128(func_ovl10_13_80048CEC, obj2, 0, 0, 0x130);
+    for (i = 0; i < 60; i++) {
+        ANGLE_SUB(p->unk20, 0.5f);
+        ANGLE_SUB(p->unk1C, 0.16666667f);
         func_ovl10_13_8004A170();
-        var_s0_11 += 1;
-    } while (var_s0_11 < 0x3C);
-    func_ovl10_13_8004A130(sp40);
+    }
+    func_ovl10_13_8004A130(task2);
     func_ovl10_13_80049E28(3811.0f, 384.0f, 3048.0f);
     func_ovl10_13_8004A128(func_ovl10_13_80048BBC, NULL, 0, 0, 0x130);
-    var_s0_12 = 0;
-    do {
-        temp_fv0_7 = temp_s1->unk20;
-        temp_fv1_11 = temp_fv0_7 - 3.3333333f;
-        if (temp_fv1_11 >= 360.0f) {
-            temp_s1->unk20 = temp_fv1_11 - 360.0f;
-        } else {
-            if (temp_fv0_7 < 3.3333333f) {
-                var_fv0_11 = temp_fv1_11 + 360.0f;
-            } else {
-                var_fv0_11 = temp_fv1_11;
-            }
-            temp_s1->unk20 = var_fv0_11;
-        }
-        temp_fv0_8 = temp_s1->unk1C;
-        temp_fv1_12 = temp_fv0_8 - 2.6666667f;
-        if (temp_fv1_12 >= 360.0f) {
-            temp_s1->unk1C = temp_fv1_12 - 360.0f;
-        } else {
-            if (temp_fv0_8 < 2.6666667f) {
-                var_fv0_12 = temp_fv1_12 + 360.0f;
-            } else {
-                var_fv0_12 = temp_fv1_12;
-            }
-            temp_s1->unk1C = var_fv0_12;
-        }
+    for (i = 0; i < 30; i++) {
+        ANGLE_SUB(p->unk20, 3.3333333f);
+        ANGLE_SUB(p->unk1C, 2.6666667f);
         func_ovl10_13_8004A170();
-        var_s0_12 += 1;
-    } while (var_s0_12 < 0x1E);
+    }
     func_ovl10_13_8004A148(0xB4);
-    func_ovl10_13_8004A130(sp44);
+    func_ovl10_13_8004A130(task1);
     if (D_ovl10_13_8004ADA8 == 0x1A) {
         func_ovl10_13_8004A130(func_ovl10_13_8004A770(2)->unkA0.w);
         func_ovl10_13_8004A828();
@@ -862,70 +638,48 @@ void func_ovl10_13_80047A0C(void) {
     func_ovl10_13_80049E18(2350.0f, 0.0f, 1500.0f);
     func_ovl10_13_80049E08(1);
     func_ovl10_13_80049E38(0.0f, 30.0f, 1573.0f);
-    var_s0_13 = 0;
-    do {
-        temp_v0_4 = sp5C->unk40;
-        temp_fv1_13 = temp_v0_4->unk20 + 18.0f;
-        if (temp_fv1_13 >= 360.0f) {
-            temp_v0_4->unk20 = temp_fv1_13 - 360.0f;
-        } else {
-            if (temp_fv1_13 < 0.0f) {
-                var_fv0_13 = temp_fv1_13 + 360.0f;
-            } else {
-                var_fv0_13 = temp_fv1_13;
-            }
-            temp_v0_4->unk20 = var_fv0_13;
-        }
+    for (i = 0; i < 10; i++) {
+        ANGLE_ADD(obj0->unk40->unk20, 18.0f);
         func_ovl10_13_8004A170();
-        var_s0_13 += 1;
-    } while (var_s0_13 < 0xA);
+    }
     func_ovl10_13_80049868(0, 3);
-    var_s0_14 = 0;
-    do {
-        temp_v0_5 = sp5C->unk40;
-        temp_v0_5->unk18 -= 8.0f;
+    for (i = 0; i < 200; i += 8) {
+        obj0->unk40->unk18 -= 8.0f;
         func_ovl10_13_8004A170();
-        var_s0_14 += 8;
-    } while (var_s0_14 < 0xC8);
+    }
     func_ovl10_13_80049868(0, 0);
-    temp_s2->unk40->unk10 = 2600.0f;
-    temp_s2->unk40->unk14 = 400.0f;
-    temp_s2->unk40->unk18 = 1200.0f;
-    temp_s2->unk40->unk1C = 0.0f;
-    temp_s2->unk40->unk20 = 0.0f;
-    temp_s2->unk40->unk24 = 0.0f;
+    obj2->unk40->unk10 = 2600.0f;
+    obj2->unk40->unk14 = 400.0f;
+    obj2->unk40->unk18 = 1200.0f;
+    obj2->unk40->unk1C = 0.0f;
+    obj2->unk40->unk20 = 0.0f;
+    obj2->unk40->unk24 = 0.0f;
     func_ovl10_13_8004A6B0(0x278);
-    var_s0_15 = 0;
-    do {
-        temp_v1_6 = temp_s2->unk40;
-        temp_v1_6->unk14 -= 1.6666666f;
+    for (i = 0; i < 240; i++) {
+        obj2->unk40->unk14 -= 1.6666666f;
         func_ovl10_13_8004A170();
-        var_s0_15 += 1;
-    } while (var_s0_15 < 0xF0);
+    }
     func_ovl10_13_8004A148(0x3C);
-    temp_v0_6 = func_ovl10_13_80049CB8(0x2D4, 0);
-    temp_v0_6->unkC |= 0x80;
-    temp_v0_6->unk36 = 0x5A;
-    temp_v0_6->unk10 = 2100.0f;
-    temp_v0_6->unk14 = 400.0f;
-    temp_v0_6->unk18 = 1200.0f;
-    temp_v0_6->unk2C = 200.0f;
+    p = func_ovl10_13_80049CB8(0x2D4, 0);
+    p->unkC |= 0x80;
+    p->unk36 = 0x5A;
+    p->unk10 = 2100.0f;
+    p->unk14 = 400.0f;
+    p->unk18 = 1200.0f;
+    p->unk2C = 200.0f;
     func_ovl10_13_8004A6D0(0x245, 2100.0f, 400.0f, 1200.0f);
-    var_s0_16 = 0;
-    do {
-        temp_v0_6->unk14 -= 2.2222223f;
+    for (i = 0; i < 180; i++) {
+        p->unk14 -= 2.2222223f;
         func_ovl10_13_8004A170();
-        var_s0_16 += 1;
-    } while (var_s0_16 < 0xB4);
-    temp_v0_6->unk14 = 0.0f;
+    }
+    p->unk14 = 0.0f;
     func_ovl10_13_8004A758(1, 4, 0x15, 0, 0xC);
     func_ovl10_13_8004A778(0);
-    temp_v0_7 = func_ovl10_13_80049818(1);
-    sp54 = temp_v0_7;
-    temp_v0_7->unk40->unk14 = 800.0f;
-    temp_v0_8 = func_ovl10_13_8004A770(1);
-    temp_v0_8->unk90 = 0x3C;
-    func_ovl10_13_8004A140(temp_v0_8->unkA0.h.lo, 0);
+    obj1 = func_ovl10_13_80049818(1);
+    obj1->unk40->unk14 = 800.0f;
+    player = func_ovl10_13_8004A770(1);
+    player->unk90 = 0x3C;
+    func_ovl10_13_8004A140(player->unkA0.h.lo, 0);
     func_ovl10_13_80049848(1);
     func_ovl10_13_800497C8(1);
     func_ovl10_13_80049848(0);
@@ -933,33 +687,25 @@ void func_ovl10_13_80047A0C(void) {
     func_ovl10_13_80049DF8(1);
     func_ovl10_13_80049E08(0);
     func_ovl10_13_80049E28(2327.0f, 632.0f, 1807.0f);
-    var_s0_17 = 0;
-    if (0.0f < 360.0f) {
-        do {
-            temp_v0_9 = sp54->unk40;
-            temp_v0_9->unk14 -= 2.2222223f;
-            if (var_s0_17 < 0xF0) {
-                temp_v0_10 = sp54->unk40;
-                func_ovl10_13_80049E18(temp_v0_10->unk10, temp_v0_10->unk14, temp_v0_10->unk18);
-            }
-            if (var_s0_17 == 0xF0) {
-                func_ovl10_13_80049E08(1);
-                func_ovl10_13_80049E78(0x10);
-                func_ovl10_13_80049E80(0xF);
-                func_ovl10_13_8004A778(1);
-            }
-            func_ovl10_13_8004A170();
-            var_s0_17 += 1;
-        } while ((f32) var_s0_17 < 360.0f);
-        var_s0_17 = 0;
-    }
-    sp54->unk40->unk14 = 0.0f;
-    do {
-        temp_v0_6->unk36 = (s16) (s32) ((f32) temp_v0_6->unk36 - 3.0f);
+    for (i = 0; i < 360.0f; i++) {
+        obj1->unk40->unk14 -= 2.2222223f;
+        if (i < 240) {
+            func_ovl10_13_80049E18(obj1->unk40->unk10, obj1->unk40->unk14, obj1->unk40->unk18);
+        }
+        if (i == 240) {
+            func_ovl10_13_80049E08(1);
+            func_ovl10_13_80049E78(0x10);
+            func_ovl10_13_80049E80(0xF);
+            func_ovl10_13_8004A778(1);
+        }
         func_ovl10_13_8004A170();
-        var_s0_17 += 1;
-    } while (var_s0_17 != 0x1E);
-    func_ovl10_13_80049CC0(temp_v0_6);
+    }
+    obj1->unk40->unk14 = 0.0f;
+    for (i = 0; i < 30; i++) {
+        p->unk36 -= 3.0f;
+        func_ovl10_13_8004A170();
+    }
+    func_ovl10_13_80049CC0(p);
     func_ovl10_13_80049848(1);
     func_ovl10_13_800497C8(0);
     func_ovl10_13_80049848(2);
