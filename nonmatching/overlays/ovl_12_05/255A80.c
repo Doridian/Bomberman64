@@ -2,7 +2,7 @@
  * NON_MATCHING: ovl_12_05's game object, complete: every function and its data.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1203, jp 1813
+ * differing words: us 161, jp 1813
  *
  * Most of the small functions are still m2c's C, cleaned up only where it
  * didn't compile; the functions with twins elsewhere are their C, renamed
@@ -166,7 +166,7 @@ void func_ovl12_05_8004A510(s32, s32, s32, s32);
 void func_ovl12_05_8004A648(s32, f32, f32, f32, s32);
 void func_ovl12_05_8004A688(void);
 void func_ovl12_05_8004A6E8(void);
-void func_ovl12_05_8004A780(s32);
+s32 func_ovl12_05_8004A780(s32);
 void func_ovl12_05_8004A790(s32);
 void func_ovl12_05_8004A798(void);
 void func_ovl12_05_8004A7A0(s32, f32, f32, f32);
@@ -1369,26 +1369,18 @@ static void func_ovl12_05_80044534(void) {
     UnkStructA *obj;
     UnkStructA_40 *e0;
     UnkStructA_40 *e1;
-    s32 t;
     s32 i;
+    UnkStruct_ovl12_05_8004A840 *player;
     s32 j;
     f32 dx;
     f32 dz;
-    f32 angle;
-    f32 scale;
-    f32 f;
-    s32 padA0;
-    UnkStruct_ovl12_05_8004A840 *player;
-    s32 padB0;
-    s32 padB1;
-    s32 padB2;
     Vec3f sp80;
     Vec3f sp74;
     Vec3f sp68;
     UnkStructA_40 *sp48[8];
     s32 sp38[4] = { 0x290, 0x291, 0x292, 0x293 };
-    s32 padC0;
-    s32 padC1;
+    f32 f;
+    f32 angle;
 
     s = func_ovl12_05_800497F8();
     D_ovl12_05_8004AC74 = s->unk30;
@@ -1451,10 +1443,10 @@ static void func_ovl12_05_80044534(void) {
     func_ovl12_05_80049EE8(sp1->unk40->unk10, sp1->unk40->unk14 + 50.0f, sp1->unk40->unk18);
     func_ovl12_05_80049F08(90.0f, 20.0f, 800.0f);
     obj = func_ovl12_05_8004A0D0(0x320, 0x01000000, 0xC0, 0);
-    t = func_ovl12_05_80049E18(obj->unk40, 0x10);
+    j = func_ovl12_05_80049E18(obj->unk40, 0x10);
     for (i = 0; i < 16; i++) {
-        func_ovl12_05_80049E20(t, i, 0x322);
-        func_ovl12_05_80049E30(t, i, i);
+        func_ovl12_05_80049E20(j, i, 0x322);
+        func_ovl12_05_80049E30(j, i, i);
     }
     obj->unk40->unk10 = sp1->unk40->unk10;
     obj->unk40->unk14 = sp1->unk40->unk14;
@@ -1501,13 +1493,13 @@ static void func_ovl12_05_80044534(void) {
     e1->unk2C = 0.5f;
     e1->unk30 = 0.5f;
     angle = 0.0f;
-    scale = 0.5f;
+    dx = 0.5f;
     for (i = 0; i < 120; i++) {
-        f = func_ovl12_05_8004A3A0(angle) * 0.5f + scale;
+        f = func_ovl12_05_8004A3A0(angle) * 0.5f + dx;
         e0->unk30 = f;
         e0->unk2C = f;
         e0->unk28 = f;
-        f = func_ovl12_05_8004A3A0(angle) * 0.5f + scale;
+        f = func_ovl12_05_8004A3A0(angle) * 0.5f + dx;
         e1->unk30 = f;
         e1->unk2C = f;
         e1->unk28 = f;
@@ -1517,7 +1509,7 @@ static void func_ovl12_05_80044534(void) {
         } else {
             angle = (f < 0.0f) ? f + 360.0f : f;
         }
-        scale += 0.004166667f;
+        dx += 0.004166667f;
         func_ovl12_05_8004A240();
     }
     func_ovl12_05_80049EE8(sp1->unk40->unk10, sp1->unk40->unk14 + 50.0f, sp1->unk40->unk18);
@@ -1697,12 +1689,9 @@ static f32 func_ovl12_05_800444D4(UnkStructA_40 *from, UnkStructA_40 *to) {
 
 /* twin of 12_03:80043E68 (nonmatching/overlays/ovl_12_03/250B70.c) */
 void func_ovl12_05_80044488(void) {
-    UnkStructA *obj;
-
     func_ovl12_05_80044480();
-    obj = func_ovl12_05_8004A0F0(0x2DD, 0x50, 0.0f, 0.0f, 0.0f);
-    D_ovl12_05_8004AC48 = obj;
-    func_ovl12_05_8004A0A8(obj, 0x01000000);
+    D_ovl12_05_8004AC48 = func_ovl12_05_8004A0F0(0x2DD, 0x50, 0.0f, 0.0f, 0.0f);
+    func_ovl12_05_8004A0A8(D_ovl12_05_8004AC48, 0x01000000);
 }
 
 static void func_ovl12_05_80044480(void) {
