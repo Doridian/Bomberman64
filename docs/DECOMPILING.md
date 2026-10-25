@@ -567,6 +567,18 @@ module's asm blocks, though the draft defines it.
 - **A count passed to a static** gives the original's `slt`/`bnez` where
   a constant limit gives `bne` (ovl_0A_01's 8004607C, called as
   `(1, LIGHTS)`).
+- **Saved registers show which variables are one.** Where m2c gives a
+  cut-scene a new counter per loop, the original's `s0`-`s2` use shows
+  how few there were and which loops share each: ovl_10_13's 80043070
+  has three (`i` for the first loops, the total and every length, `j` for
+  the later loops, `n` for one count), and sharing them took it from 1660
+  words to 936. Write each loop as a plain `for (i = 0; ...)`; resetting
+  the counter by hand before a `for (; ...)` did much worse.
+- **The frame gives the declaration order.** Earlier declarations get
+  higher offsets and unused locals the lowest; matching the arrays' and
+  vectors' sp offsets shows how many scalars sit between them
+  (`scratch/10_13/p4/spoff.sh`; ovl_10_13's 80044E48 needed two of them
+  and two pads there).
 - **Fix a static's size before its code.** fcmp counts a run of statics
   as one, so a static one word long or short shifts the rest of its run:
   a `u16` local that fixed 8004311C's length took ovl_0A_06's first run
