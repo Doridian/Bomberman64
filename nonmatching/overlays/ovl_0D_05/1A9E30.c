@@ -2,7 +2,7 @@
  * NON_MATCHING: ovl_0D_05's stage object, complete: every function and its data.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 124, eu 124, jp 124
+ * differing words: us 120, eu 124, jp 124
  *
  * What still differs in us (words):
  * - func_ovl0D_05_80043018 (10): the original computes &D_80046170
@@ -778,6 +778,8 @@ static void func_ovl0D_05_800430BC(void) {
 void func_ovl0D_05_80043018(void) {
     if (func_ovl0D_05_800459D0(0x409) != 0) {
         D_ovl0D_05_8004617C = func_ovl0D_05_80044CC8(0x15A);
+        if (!D_ovl0D_05_8004614C) {
+        }
         func_ovl0D_05_80044CD0(D_ovl0D_05_8004617C, 0, 0, D_ovl0D_05_80046170[0] - 1, D_ovl0D_05_80046170[2] - 1, 0, 0, 0);
         func_ovl0D_05_80045600(D_ovl0D_05_80045F2C[0].obj, 0x01000000);
         func_ovl0D_05_80045600(D_ovl0D_05_80045F64[0].obj, 0x01000000);
