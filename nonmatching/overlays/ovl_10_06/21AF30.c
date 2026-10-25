@@ -5,7 +5,7 @@
  * floats in another order). .text is the original's size. Not built into
  * the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 375, jp 1687
+ * differing words: us 318, jp 1687
  *
  * What still differs in us (words, as tools/nonmatching.py counts them; a
  * static's words go to the named function before it):
@@ -15,14 +15,14 @@
  *   a second pass matched it (8004322C-80043338's stubs, 800445DC,
  *   80044D00, 80045518, 80047D14): 80043A68 (0), 80043CB0 (0),
  *   80043FF8 (0), 8004411C (0), 800442D4 (2), 800443DC (7), 80044804
- *   (6), 80044A54 (6), 80044AE4 (3), 80044BCC (15), 80044F8C (4), 80045458
+ *   (6), 80044A54 (6), 80044AE4 (3), 80044BCC (0), 80044F8C (4), 80045458
  *   (8), 800455EC (3), 8004584C (9), 80045CE4 (38), 80045F9C (0),
  *   800460C8 (2), 800463C0 (0), 80046478 (0), 800465F4 (0), 800466C4
  *   (18), 8004683C (30), 80046A04 (0), 80046BF0 (0), 80046C64 (0),
  *   80046D74 (0), 80047110 (2), 800473FC (0), 80047450 (0), 80047634
- *   (0), 80047810 (15), 80047B0C (3), 80047BE0 (0), 80047C98 (16),
+ *   (0), 80047810 (0), 80047B0C (3), 80047BE0 (0), 80047C98 (0),
  *   80047E10 (0), 80048110 (22), 80048498 (0), 80048944 (0), 800489FC
- *   (0), 80049020 (11).
+ *   (0), 80049020 (0).
  * - 80045888 (104): its frame is right (pad2 fills what is probably an
  *   inlined static's slots), but its t registers are one off from the
  *   start and 8004AFF8's address is loaded late.
@@ -865,15 +865,12 @@ void func_ovl10_06_80047D14(void) {
 }
 
 void func_ovl10_06_80047C98(void) {
-    s32 temp_t2;
-
     D_ovl10_06_8004B3AC &= ~2;
     D_ovl10_06_8004B3B4 = 4;
     D_ovl10_06_8004B3BC = 1;
-    D_ovl10_06_8004B3B8 = 0xA;
-    temp_t2 = D_ovl10_06_8004B3AC & ~2;
-    D_ovl10_06_8004B3AC = temp_t2;
-    D_ovl10_06_8004B3AC = temp_t2 | 4;
+    D_ovl10_06_8004B3B8 = 10;
+    D_ovl10_06_8004B3AC &= ~2;
+    D_ovl10_06_8004B3AC |= 4;
     D_ovl10_06_8004B9A8 = NULL;
     func_ovl10_06_800430A8(func_ovl10_06_80048110);
 }
@@ -957,8 +954,9 @@ void func_ovl10_06_80047810(void) {
     Vec3f pos2;
     Vec3f from;
     Vec3f to;
-    f32 angles[2];
+    Vec3f ang;
     s32 i;
+    s32 pad[1];
 
     i = D_ovl10_06_8004B7F8[D_ovl10_06_8004ACA8];
     D_ovl10_06_8004B8F8++;
@@ -967,10 +965,10 @@ void func_ovl10_06_80047810(void) {
     D_ovl10_06_8004BBD0[i]->unk40->unk18 += D_ovl10_06_8004B110[i];
     func_ovl10_06_8004A018(D_ovl10_06_8004BBD0[i]);
     func_ovl10_06_8004A068(D_ovl10_06_8004BBD0[i], &to);
-    func_ovl10_06_80049F28(&from.x, &to.x, angles);
-    D_ovl10_06_8004BBD0[i]->unk40->unk1C = 90.0f - angles[1];
-    D_ovl10_06_8004BBD0[i]->unk40->unk20 = angles[0];
-    if (D_ovl10_06_8004BBD0[i]->unk6C == 0.0f || func_ovl10_06_80049F48(D_ovl10_06_8004BBD0[i], 0x10) == 0) {
+    func_ovl10_06_80049F28(&from.x, &to.x, &ang.x);
+    D_ovl10_06_8004BBD0[i]->unk40->unk1C = 90.0f - ang.y;
+    D_ovl10_06_8004BBD0[i]->unk40->unk20 = ang.x;
+    if (D_ovl10_06_8004BBD0[i]->unk6C == 0.0f || func_ovl10_06_80049F48(D_ovl10_06_8004BBD0[i], 0x10) != 0) {
         func_ovl10_06_8004A068(D_ovl10_06_8004BBD0[i], &pos2);
         pos2.y += 50.0f;
         func_ovl10_06_8004A540(0xA, &pos2.x, 0);
@@ -1824,8 +1822,8 @@ void func_ovl10_06_80044BCC(f32 arg0) {
     D_ovl10_06_8004AF38 = 25.0f;
     D_ovl10_06_8004AF44 = 4000.0f;
     D_ovl10_06_8004AF48 = 3200.0f;
-    D_ovl10_06_8004AF50 = 4000.0f;
     D_ovl10_06_8004AF4C = 2700.0f;
+    D_ovl10_06_8004AF50 = 4000.0f;
     D_ovl10_06_8004AF3C = (D_ovl10_06_8004AF38 - D_ovl10_06_8004AF34) / arg0;
     D_ovl10_06_8004AF40 = (D_ovl10_06_8004AF48 - D_ovl10_06_8004AF44) / arg0;
     D_ovl10_06_8004AF54 = (D_ovl10_06_8004AF50 - D_ovl10_06_8004AF4C) / arg0;
