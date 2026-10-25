@@ -8,8 +8,8 @@
  * the original's layout. What still differs in us (words):
  * - func_ovl0D_07_80043660 (13): registers only. Event 5 keeps
  *   D_8004671C in v1 where the original has v0; in event 11 the inlined
- *   func_ovl0D_07_80043028 has p0 and p1 in a3 and v1 (the original: v1
- *   and a3). How 80043028 is called decides event 4's register:
+ *   func_ovl0D_07_80043010 has p0 and p1 in a3 and v1 (the original: v1
+ *   and a3). How 80043010 is called decides event 4's register:
  *   with (obj[0], obj[1]) both arguments take a t register for the whole
  *   function and event 4 gets t2 for the original's t0; passing player 0
  *   through `o` and player 1's unk40 leaves only one, as in the original.
@@ -123,10 +123,10 @@ void func_ovl0D_07_800432F8(void);
 void func_ovl0D_07_8004342C(void);
 void func_ovl0D_07_80043660(s32 arg0);
 void func_ovl0D_07_80043D80(void);
-static void func_ovl0D_07_80043010(void);
-static void func_ovl0D_07_80043018(void);
+static void func_ovl0D_07_80043028(void);
 static void func_ovl0D_07_80043020(void);
-static f32 func_ovl0D_07_80043028(UnkStructA *obj0, UnkStructA_40 *p1);
+static void func_ovl0D_07_80043018(void);
+static f32 func_ovl0D_07_80043010(UnkStructA *obj0, UnkStructA_40 *p1);
 static void func_ovl0D_07_80043424(UnkStruct_ovl0D_07_800465A0 *e);
 static void func_ovl0D_07_800432F0(UnkStruct_ovl0D_07_800465A0 *e);
 void func_ovl0D_07_80044628(void);
@@ -625,9 +625,9 @@ void func_ovl0D_07_80043108(void) {
 void func_ovl0D_07_80043030(void) {
     UnkStructA_40 *p;
 
-    func_ovl0D_07_80043010(); /* the stubs' placement (above) */
-    func_ovl0D_07_80043018();
+    func_ovl0D_07_80043028(); /* the stubs' placement (above) */
     func_ovl0D_07_80043020();
+    func_ovl0D_07_80043018();
     func_ovl0D_07_80045460(0x17, 0, 0x17);
     func_ovl0D_07_800454A0(0);
     D_ovl0D_07_800465A0.unk0->unk40->unk48->unk4->unk4 =
@@ -644,7 +644,7 @@ void func_ovl0D_07_80043030(void) {
 /* the two players face each other (event 11): the angle for player 1. A
  * static: its locals sit below the caller's and the spill, as in the original
  * (`pad` is a word the frame has there: a p1 copy does the same) */
-static f32 func_ovl0D_07_80043028(UnkStructA *obj0, UnkStructA_40 *p1) {
+static f32 func_ovl0D_07_80043010(UnkStructA *obj0, UnkStructA_40 *p1) {
     s32 pad;
     UnkStructA_40 *p0;
     Vec3f pos0;
@@ -664,21 +664,21 @@ static f32 func_ovl0D_07_80043028(UnkStructA *obj0, UnkStructA_40 *p1) {
 
 /* three of the four stubs before func_ovl0D_07_80043030: statics inlined
  * everywhere. Called from 80043030 they come out there; which statics they
- * were, and who called them, isn't known (the fourth is 80043028's) */
-static void func_ovl0D_07_80043020(void) {
-}
-
+ * were, and who called them, isn't known (the first is 80043010's) */
 static void func_ovl0D_07_80043018(void) {
 }
 
-static void func_ovl0D_07_80043010(void) {
+static void func_ovl0D_07_80043020(void) {
+}
+
+static void func_ovl0D_07_80043028(void) {
 }
 
 
 /* the stage object's callback (the entry returns it): what each event does.
  * Last in the source, so it is processed first: it pulls out its callees
  * 80043030-8004342C ahead of itself, in the reverse order of their last calls,
- * which puts 80043028's stub (case 11 calls it last) with 80043030's three */
+ * which puts 80043010's stub (case 11 calls it last) with 80043030's three */
 void func_ovl0D_07_80043660(s32 arg0) {
     UnkStructA *o;
     s32 pad[3]; /* a guess: the frame has three more words here */
@@ -730,7 +730,7 @@ void func_ovl0D_07_80043660(s32 arg0) {
             func_ovl0D_07_80045E18(30);
             obj[1] = func_ovl0D_07_800454E8(1);
             obj[0] = o = func_ovl0D_07_800454E8(0);
-            obj[0]->unk40->unk20 = func_ovl0D_07_80043028(o, obj[1]->unk40);
+            obj[0]->unk40->unk20 = func_ovl0D_07_80043010(o, obj[1]->unk40);
             func_ovl0D_07_80045AE8(obj[1]->unk40->unk10, obj[1]->unk40->unk14 + 50.0f, obj[1]->unk40->unk18);
             func_ovl0D_07_80045AD8(0);
             func_ovl0D_07_80045AF8(2350.0f, 300.0f, 1550.0f);
