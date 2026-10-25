@@ -3,24 +3,31 @@
  * .bss. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 982, jp 1335
+ * differing words: us 46, jp 1335
  *
  * What still differs in us (words, as tools/nonmatching.py counts them):
  * - 800464B0 (4): v1 for v0; a third temporary grows the frame.
- * - The statics, compared with 80043010 as one run (978). Each on its
- *   own (scratch/10_13/allf.py): 80043070 936 and 8004574C 42;
- *   80044E48 matches (its two unused pads give the original's frame,
- *   with i and a between the vectors and angle). They are the
- *   cut-scenes the handler and 800474EC-800477E8 run. They save no callee-saved registers (their
- *   callers do), so they are static; they come first in the object.
+ * - The statics, compared with 80043010 as one run (42), are all
+ *   8004574C's; 80043070 and 80044E48 match (scratch/10_13/allf.py
+ *   counts each on its own). 80044E48's two unused pads give the
+ *   original's frame, with i and a between the vectors and angle. They
+ *   are the cut-scenes the handler and 800474EC-800477E8 run. They save
+ *   no callee-saved registers (their callers do), so they are static;
+ *   they come first in the object.
  * - 80043070 is Hudson's loops with the original's frame (0xA0: two
  *   locals above `pair`, four between it and the vectors, ten below;
- *   k, m and y are unused and only place the rest). Its counters are the
- *   original's three: i (the first loops, the total and the animation
- *   lengths), j (the last five's count and every later loop) and n. Its
- *   code is the original's length, but 3.0f isn't kept in $f28 from the
- *   20-frame loop to the turn (270.0f takes $f28 for $f30), so the
- *   floats' registers differ from 0x800438xx to 0x800446xx.
+ *   k, m, y and step are unused and only place the rest). Its counters
+ *   are the original's three: i (the first loops, the total and the
+ *   animation lengths), j (the last five's count and every later loop)
+ *   and n. Its saved float registers came from the constants' literals:
+ *   the 0x2D5 block's 3 and a.x/b.x's 10 are ints, so they are other
+ *   constants than the loops' 3.0f and 10.0f (as 3.0f, one live range
+ *   ran from the 20-frame loop to the 0x2D5 block and lost its register,
+ *   936 words to 721; 10, 721 to 13). The sine before the 10-frame walk
+ *   is `scale` (the 150-frame loop's) and the cosine `x`. The last
+ *   words: 8004A170 returns a value (v1 for the global read after it),
+ *   the ring loop breaks at j == 50, and the turn after the 0x335 voice
+ *   faces 8004ADC4's object, not 8004ADC0's.
  * - 8004574C has the original's code size: each move first takes the
  *   differences into a, b and c (a and b are the turn's angle and
  *   distance later; c stays in a temporary), then divides them in the
@@ -140,7 +147,7 @@ void func_ovl10_13_8004A138(void);
 void func_ovl10_13_8004A140(u16, s32);
 s32 func_ovl10_13_8004A148(s32);
 void *func_ovl10_13_8004A150(void);
-void func_ovl10_13_8004A170(void);
+s32 func_ovl10_13_8004A170(void);
 void func_ovl10_13_8004A188(u16);
 void func_ovl10_13_8004A198(s32, s32, s32);
 UnkStructC *func_ovl10_13_8004A1B0(s32);
@@ -1793,14 +1800,14 @@ static void func_ovl10_13_80043070(void) {
             func_ovl10_13_8004A148(0x1E);
             func_ovl10_13_80049868(0, 0);
             D_ovl10_13_8004ADC0->unk40->unk48->unk4->unk8 |= 0x60;
-            obj->unk40->unk20 = func_ovl10_13_80043010(obj->unk40, D_ovl10_13_8004ADC0->unk40);
+            obj->unk40->unk20 = func_ovl10_13_80043010(obj->unk40, D_ovl10_13_8004ADC4->unk40);
             func_ovl10_13_80049E18(obj->unk40->unk10, 100.0f, obj->unk40->unk18);
             func_ovl10_13_80049E38(obj->unk40->unk20, 5.0f, 800.0f);
-            x = func_ovl10_13_8004A2D0(obj->unk40->unk20);
-            step = func_ovl10_13_8004A2D8(obj->unk40->unk20);
+            scale = func_ovl10_13_8004A2D0(obj->unk40->unk20);
+            x = func_ovl10_13_8004A2D8(obj->unk40->unk20);
             for (j = 0; j < 10; j++) {
-                obj->unk40->unk10 += x * 12.0f;
-                obj->unk40->unk18 += step * 12.0f;
+                obj->unk40->unk10 += scale * 12.0f;
+                obj->unk40->unk18 += x * 12.0f;
                 func_ovl10_13_80049E18(obj->unk40->unk10, 100.0f, obj->unk40->unk18);
                 func_ovl10_13_8004A170();
             }
@@ -1832,10 +1839,10 @@ static void func_ovl10_13_80043070(void) {
             func_ovl10_13_8004A6B0(0x25C);
             func_ovl10_13_80049D00(obj->unk40, 0x17, 0);
             func_ovl10_13_80049FD8(obj, 0x04000000);
-            a.x = obj->unk40->unk10 + 10.0f;
+            a.x = obj->unk40->unk10 + 10;
             a.y = obj->unk40->unk14 + 50.0f;
             a.z = obj->unk40->unk18 + 50.0f;
-            b.x = obj->unk40->unk10 + 10.0f;
+            b.x = obj->unk40->unk10 + 10;
             b.y = obj->unk40->unk14 + 50.0f;
             b.z = obj->unk40->unk18 - 50.0f;
             func_ovl10_13_8004A6B0(0x25E);
@@ -1879,7 +1886,7 @@ static void func_ovl10_13_80043070(void) {
             fx->unk18 = a.z;
             fx->unk24 = 295.0f;
             fx->unk2C = 70.0f;
-            fx->unk28 = fx->unk30 = 3.0f;
+            fx->unk28 = fx->unk30 = 3;
             D_ovl10_13_8004ADA4 = func_ovl10_13_80049CB8(0x2D5, 0xA);
             D_ovl10_13_8004ADA4->unkC |= 0x80;
             D_ovl10_13_8004ADA4->unk36 = 0x50;
@@ -1888,8 +1895,8 @@ static void func_ovl10_13_80043070(void) {
             D_ovl10_13_8004ADA4->unk18 = b.z;
             D_ovl10_13_8004ADA4->unk24 = 295.0f;
             D_ovl10_13_8004ADA4->unk2C = 70.0f;
-            fx->unk30 = 3.0f;
-            D_ovl10_13_8004ADA4->unk28 = 3.0f;
+            fx->unk30 = 3;
+            D_ovl10_13_8004ADA4->unk28 = 3;
             func_ovl10_13_80049E18(2520.0f, 249.0f, 1392.0f);
             func_ovl10_13_80049E38(0.0f, 18.0f, 2353.0f);
             for (j = 0; j < 120; j++) {
@@ -1918,7 +1925,7 @@ static void func_ovl10_13_80043070(void) {
                     ring->unk40->unk36 = 0;
                 }
                 func_ovl10_13_8004A170();
-                if ((D_ovl10_13_8004ADA8 == 0x1F) && (j == 49)) {
+                if ((D_ovl10_13_8004ADA8 == 0x1F) && (j == 50)) {
                     break;
                 }
             }
