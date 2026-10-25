@@ -5,16 +5,23 @@
  * .bss as the original.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1025, jp 1025
+ * differing words: us 791, jp 1025 (jp not re-measured since the 80043770
+ *   split; us is current)
  *
  * ovl_0D_02's sibling (nonmatching/overlays/ovl_0D_02, renamed by
  * scratch/0D_03/ren02.py): most functions are 0D_02's. What still differs
  * in us (fcmp counts a static with the function before it):
- * - func_ovl0D_03_80044CBC (238; the handler): the original inlines the
- *   gates' code (80043770's body) into case 3; here it stays a call, so the
- *   handler is 0x134 bytes, not 0x3C0, and every later function is shifted.
- *   Tried without gain: 80043770 without its fake, defined above the
- *   handler, and case 3 written out (then 80043758 is no longer inlined).
+ * - 80043770 is split into a static body (the old code, named _body: a
+ *   placeholder, since the address is the wrapper's) and the global wrapper
+ *   at 80043770. The handler (case 3) now inlines the wrapper and the body
+ *   with it, 0x3C0 bytes as in the original; the wrapper's own copy has the
+ *   right words except its frame: 0xB0 here, 0xA8 in the original (2 words,
+ *   also in the handler, which still differs in 2 words).
+ *   Tried without gain: 80043770 as one global (small enough not to inline:
+ *   handler 0x134), as one static (inlined, but its own copy is not emitted:
+ *   handler 0x3C0 and 1385 words), without its fake (967 words), the
+ *   body above the handler, the three locals of 80043758 in any order
+ *   (799 to 807 words), the fake's condition in other forms (967 words).
  * - func_ovl0D_03_8004305C (432 with the gate statics after it): 26 words
  *   short; the original keeps the entity indices 1 and 2 in s0 (an
  *   inlined static's parameter, as it seems) and spills 175.0f * 10.0f.
@@ -1283,7 +1290,7 @@ static void func_ovl0D_03_80043A7C(void) {
 }
 
 /* the gates: each opens when something hits it */
-void func_ovl0D_03_80043770(void) {
+static void func_ovl0D_03_80043770_body(void) {
     s32 i;
 
     /* a fake (as in ovl_0D_05's 80043210): keeps the first call out of the prologue */
@@ -1294,6 +1301,13 @@ void func_ovl0D_03_80043770(void) {
     for (i = 0; i < 2; i++) {
         func_ovl0D_03_80043758(&D_ovl0D_03_80047E6C[i], D_ovl0D_03_80047EDC[i]);
     }
+}
+
+/* the global 80043770 is a one-call wrapper of the body above: small enough
+ * for IDO to inline into case 3 (with the body in it), and its own copy is
+ * still emitted (as in the original) */
+void func_ovl0D_03_80043770(void) {
+    func_ovl0D_03_80043770_body();
 }
 
 static void func_ovl0D_03_80043768(void) {
