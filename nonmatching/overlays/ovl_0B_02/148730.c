@@ -6,7 +6,7 @@
  * of it 800431C4's local table). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3418, eu ?, jp ?
+ * differing words: us 3418, eu 3418, jp 3425
  * jp has no `#if VERSION_JP` yet.
  *
  * A first draft from m2c (with a context of the ZeroJump prototypes the
