@@ -2,13 +2,13 @@
  * NON_MATCHING: ovl_12_05's game object, complete: every function and its data.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 104, jp 1813
+ * differing words: us 100, jp 1813
  *
- * Most of the small functions are still m2c's C, cleaned up only where it
- * didn't compile; the functions with twins elsewhere are their C, renamed
- * (ovl_12_03, 12_04, 12_06, 10_13, 0C_10, 0E_15, 17_09, 17_10). The
+ * The functions with twins elsewhere are their C, renamed (ovl_12_03,
+ * 12_04, 12_06, 10_13, 0C_10, 0E_15, 17_09, 17_10), with this object's
+ * callees, globals and constants where they differ; the rest, the
  * cut-scenes (80043018, 800434C8, 80044534, 80047F94, 80047238 and
- * 800486C4) are rewritten as Hudson's loops.
+ * 800486C4) among them, are rewritten from m2c's C as Hudson's loops.
  * .data (0x10: the initializer of 80044534's local sound table), .rodata
  * (0x240, the original's bytes but for the jump tables' relocations) and
  * .bss (0xA0) build to the original's sizes.
@@ -21,25 +21,25 @@
  * so that IDO emits them, with the statics, in the reverse order of the
  * handler's calls, as in the original. The empty statics leave the
  * `jr ra; nop` stubs at 80043010, 80044480, 80045834/3C, 80046318,
- * 80046340 and, unused, the twelve at 800492FC-80049354.
- *
- * The pads in the cut-scenes' locals place their arrays and vectors where
- * the original has them: each declared local, even one kept in a
- * register, moves the frame.
+ * 80046340 and, unused, the eleven at 800492FC-8004934C.
  *
  * What still differs (words by allf.py, each function on its own):
- * - 80044534 (157): its code has the original's length, but the original
- *   has seven nops between its closing infinite loop and the epilogue
- *   (ovl_0C_07's 800448D0 too) and a smaller frame; nonmatching.py, which
- *   compares 80044488 and its statics as one run, counts it misaligned.
- *   Registers: dx/dz and sp0 come out swapped, temporaries in v0 for v1.
- * - 80045B00 (106), 800475C8 (102), 80048C3C (99), 800485A0 (63),
- *   80048DD4 (58), 80046D20 (57), 80048F04 (32), 800479B0 (30), 80047774
- *   (26), 80047238 (22: one nop more than the original's seven after its
- *   infinite loop), 80047860 (21), 800492E4 and its stubs (42), 800466C4
- *   (15), 80046990 (15), 80044488 (10), 80046F44 (9), 80047B64 (5), and
- *   2 or fewer in 800434C8, 80046348, 8004712C, 80047544, 800486C4 and
- *   80048EC8.
+ * - 80044534 (99): registers only, the frame and code are the
+ *   original's. sp0 and obj come out in s5/s6 swapped, dx and the
+ *   constants of the scale loop in other saved float registers, and
+ *   D_8004AC54->unk40 in v0 for t0 when dx is computed.
+ *   nonmatching.py compares 80044488 and its statics as one run.
+ * - 800486C4 (1): the slot its float is reloaded from is 0x58, not 0x5C;
+ *   no order of its declarations moves it.
+ *
+ * Every declared local of the cut-scenes takes a frame slot, even one
+ * kept in a register, so their frames come out the original's size only
+ * with the original's number of locals, and the pads place the arrays
+ * and vectors: 80044534 shares dx with scale
+ * and j with t, 800434C8 keeps three locals above its array.
+ * The nops before the epilogue after an infinite loop (80044534's
+ * seven) align it to 32 bytes in the object; they follow from the
+ * functions before it.
  */
 #include "common.h"
 
@@ -247,7 +247,6 @@ static void func_ovl12_05_80049334(void);
 static void func_ovl12_05_8004933C(void);
 static void func_ovl12_05_80049344(void);
 static void func_ovl12_05_8004934C(void);
-static void func_ovl12_05_80049354(void);
 
 /* .data: the sound table 80044534 initializes its local from (0x10) */
 
@@ -277,9 +276,6 @@ f32 D_ovl12_05_8004AC80;
 UnkStructA *D_ovl12_05_8004AC84;
 
 /* unused: the stubs IDO -O3 leaves at the end of the object */
-static void func_ovl12_05_80049354(void) {
-}
-
 static void func_ovl12_05_8004934C(void) {
 }
 
@@ -466,6 +462,7 @@ void func_ovl12_05_800486C4(void) {
     f32 angle;
     f32 step;
     s32 i;
+    s32 n;
 
     D_ovl12_05_8004AC84 = func_ovl12_05_8004A0D0(0x346, 0x01080000, 0xC0, 0);
     p = D_ovl12_05_8004AC84->unk40;
@@ -490,8 +487,8 @@ void func_ovl12_05_800486C4(void) {
         ANGLE_ADD(angle, 5.4f);
         func_ovl12_05_8004A240();
     }
-    i = p->unk36;
-    step = i / 60.0f;
+    n = p->unk36;
+    step = n / 60.0f;
     for (i = 0; i < 60; i++) {
         p->unk1C = D_ovl12_05_8004AC54->unk40->unk1C;
         p->unk20 = D_ovl12_05_8004AC54->unk40->unk20;
@@ -1116,7 +1113,9 @@ void func_ovl12_05_80046390(f32 arg0) {
 /* twin of 12_04:80043068 (src/overlays/ovl_12_04/253A10.c) */
 void func_ovl12_05_80046348(void) {
     func_ovl12_05_80046340();
-    D_ovl12_05_8004AC0C[0] = func_ovl12_05_80049888(); func_ovl12_05_80049868(&D_ovl12_05_8004AC00); func_ovl12_05_80049890(D_ovl12_05_8004AC0C[0], D_ovl12_05_8004ABF0);
+    D_ovl12_05_8004AC0C[0] = func_ovl12_05_80049888();
+    func_ovl12_05_80049868(&D_ovl12_05_8004AC00);
+    func_ovl12_05_80049890(D_ovl12_05_8004AC0C[0], D_ovl12_05_8004ABF0);
 }
 
 static void func_ovl12_05_80046340(void) {
