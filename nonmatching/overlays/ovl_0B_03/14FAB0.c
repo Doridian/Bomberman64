@@ -6,7 +6,7 @@
  * tables, .bss 0x1140, as the original's sizes). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4076, jp 4082
+ * differing words: us 3446, jp 4082
  *
  * A first draft from m2c (wk/ in scratch/0B_03/ of the main checkout has
  * the scripts): functions written last to first. The statics the original
@@ -102,6 +102,9 @@ typedef struct {
     /* 0x8 */ s32 unk8;
 } Anim_ovl0B_03;
 
+#define WRAP_ovl0B_03(x) ((x) >= 360.0f ? (x) - 360.0f : (x) < 0.0f ? (x) + 360.0f : (x))
+#define GFX_W_ovl0B_03(pkt, a, b) { Gfx_ovl0A_01 *_g = (pkt); _g->w0 = (a); _g->w1 = (b); }
+
 void func_ovl0B_03_800478B0(s32, s32, s32);
 s32 func_ovl0B_03_800478B8(void);
 s32 *func_ovl0B_03_80047908(void);
@@ -145,24 +148,24 @@ void func_ovl0B_03_800488A8(void);
 void func_ovl0B_03_800488B0(s32, f32, f32, f32);
 s32 func_ovl0B_03_800489F8(s32);
 
-void func_ovl0B_03_80043010(void);
+static void func_ovl0B_03_80043010(void);
 void func_ovl0B_03_80043060(s32 arg0);
-void func_ovl0B_03_80043134(Box_ovl0B_03 *boxes, s32 n);
-void func_ovl0B_03_80043170(Box_ovl0B_03 *box, f32 scale);
+static void func_ovl0B_03_80043134(Box_ovl0B_03 *boxes, s32 n);
+static void func_ovl0B_03_80043170(Box_ovl0B_03 *box, f32 scale);
 void func_ovl0B_03_800431FC(void);
-s32 func_ovl0B_03_80043234(u8 *str, f32 scale);
-s32 func_ovl0B_03_800432A0(void);
-s32 func_ovl0B_03_800432F0(void);
-void func_ovl0B_03_80043340(Box_ovl0B_03 *boxes, s32 n, s32 model);
-void func_ovl0B_03_800433BC(void);
-void func_ovl0B_03_80043428(Label_ovl0B_03 *labels, s32 n);
-void func_ovl0B_03_80043464(Label_ovl0B_03 *labels, s32 n);
-void func_ovl0B_03_800434BC(void);
-void func_ovl0B_03_8004368C(s32 obj, s32 *vals);
-void func_ovl0B_03_800436EC(s32 n, Box_ovl0B_03 *boxes, s16 alpha);
+static s32 func_ovl0B_03_80043234(u8 *str, f32 scale);
+static s32 func_ovl0B_03_800432A0(void);
+static s32 func_ovl0B_03_800432F0(void);
+static void func_ovl0B_03_80043340(Box_ovl0B_03 *boxes, s32 n, s32 model);
+static void func_ovl0B_03_800433BC(void);
+static void func_ovl0B_03_80043428(Label_ovl0B_03 *labels, s32 n);
+static void func_ovl0B_03_80043464(Label_ovl0B_03 *labels, s32 n);
+static void func_ovl0B_03_800434BC(void);
+static void func_ovl0B_03_8004368C(s32 obj, s32 *vals);
+static void func_ovl0B_03_800436EC(s32 n, Box_ovl0B_03 *boxes, s32 alpha);
 void func_ovl0B_03_80043834(void);
 void func_ovl0B_03_8004386C(void);
-void func_ovl0B_03_800464B0(Model_ovl0B_03 *models, s32 n);
+static void func_ovl0B_03_800464B0(Model_ovl0B_03 *models, s32 n);
 void func_ovl0B_03_80046510(void);
 s32 func_ovl0B_03_80046850(u8 arg0, u16 arg1);
 void func_ovl0B_03_80046918(s32 arg0, Gfx_ovl0A_01 **arg1);
@@ -174,6 +177,7 @@ void func_ovl0B_03_80046E8C(void);
 void func_ovl0B_03_80046F78(void);
 void func_ovl0B_03_80047064(s32 arg0, Gfx_ovl0A_01 **arg1);
 void func_ovl0B_03_80047188(void);
+static void func_ovl0B_03_80047190(void);
 void func_ovl0B_03_80047198(s32 arg0);
 void func_ovl0B_03_8004730C(s32 arg0, void *arg1);
 void func_ovl0B_03_80047340(f32 arg0);
@@ -398,11 +402,9 @@ void func_ovl0B_03_8004730C(s32 arg0, void *arg1) {
 }
 
 void func_ovl0B_03_80047198(s32 arg0) {
-    u8 *var_s0_2;
-    u8 *var_s0_3;
-    UnkStructA_40 **var_s1;
-    UnkStructA_40 **var_s3;
-    s32 var_s0;
+    s32 i;
+    s32 j;
+    Model_ovl0B_03 *p;
 
     switch (arg0) {
     case 2:
@@ -414,37 +416,28 @@ void func_ovl0B_03_80047198(s32 arg0) {
         func_ovl0B_03_80048308(func_ovl0B_03_80046510, NULL, 0, 0, 0x130);
         return;
     case 1:
-        var_s3 = &D_ovl0B_03_8004A340;
-        var_s0 = 0;
-        do {
-            var_s1 = var_s3;
-loop_6:
-            func_ovl0B_03_80047EA0(*var_s1);
-            var_s0 += 0xC;
-            var_s1 += 0xC;
-            if (var_s0 != 0x3C) {
-                goto loop_6;
+        for (i = 0; i < 3; i++) {
+            for (j = 0; j < 5; j++) {
+                func_ovl0B_03_80047EA0(D_ovl0B_03_8004A340[i][j].unk0);
             }
-            var_s3 += 0x3C;
-            var_s0 = 0;
-        } while ((u32) var_s3 < (u32) &D_ovl0B_03_8004A3F4);
-        var_s0_2 = (u8 *)D_ovl0B_03_80048D08;
-        do {
-            func_ovl0B_03_80047EA0(M2C_FIELD(var_s0_2, UnkStructA_40 **, 0x10));
-            var_s0_2 += 0x14;
-        } while ((u32) var_s0_2 < (u32) ((u8 *)D_ovl0B_03_80048D08 + 0x50));
-        var_s0_3 = (u8 *)D_ovl0B_03_80048E9C;
-        do {
-            func_ovl0B_03_80047EA0(M2C_FIELD(var_s0_3, UnkStructA_40 **, 0x10));
-            var_s0_3 += 0x14;
-        } while ((u32) var_s0_3 < (u32) ((u8 *)D_ovl0B_03_80048E9C + 0x50));
+        }
+        for (p = D_ovl0B_03_80048D08, i = 0; i < 4; i++, p++) {
+            func_ovl0B_03_80047EA0(p->unk10);
+        }
+        for (p = D_ovl0B_03_80048E9C, i = 0; i < 4; i++, p++) {
+            func_ovl0B_03_80047EA0(p->unk10);
+        }
         return;
     case 12:
         func_ovl0B_03_800488A8();
-        /* fallthrough */
-    default:
+        return;
+    case 17:
+        func_ovl0B_03_80047190();
         return;
     }
+}
+
+static void func_ovl0B_03_80047190(void) {
 }
 
 void func_ovl0B_03_80047188(void) {
@@ -452,223 +445,128 @@ void func_ovl0B_03_80047188(void) {
 }
 
 void func_ovl0B_03_80047064(s32 arg0, Gfx_ovl0A_01 **arg1) {
-    Gfx_ovl0A_01 *temp_a0;
-    Gfx_ovl0A_01 *temp_a2;
-    Gfx_ovl0A_01 *temp_a3;
-    Gfx_ovl0A_01 *temp_v1;
+    Gfx_ovl0A_01 *g;
 
-    temp_v1 = *arg1;
-    temp_a0 = temp_v1 + 8;
-    temp_v1->w0 = 0xFA000000;
-    temp_v1->w1 = 0xFF0080;
-    M2C_FIELD(temp_v1, s32 *, 8) = 0xFCFFFFFF;
-    temp_a0->w1 = 0xFFFDF6FB;
-    temp_a2 = temp_a0 + 8;
-    M2C_FIELD(temp_a0, s32 *, 8) = 0xF7000000;
-    temp_a2->w1 = 0x10001;
-    temp_a3 = temp_a2 + 8;
-    M2C_FIELD(temp_a2, s32 *, 8) = (s32) ((((D_ovl0B_03_8004A414 + 0xA0) & 0x3FF) << 0xE) | 0xF6000000 | ((((s32) ((f32) D_ovl0B_03_8004A414 * 0.72f) + 0x88) & 0x3FF) * 4));
-    temp_a3->w1 = (((0xA0 - D_ovl0B_03_8004A414) & 0x3FF) << 0xE) | (((0x88 - (s32) ((f32) D_ovl0B_03_8004A414 * 0.72f)) & 0x3FF) * 4);
-    *arg1 = temp_a3 + 8;
+    g = *arg1;
+    GFX_W_ovl0B_03(g++, 0xFA000000, 0xFF0080);
+    GFX_W_ovl0B_03(g++, 0xFCFFFFFF, 0xFFFDF6FB);
+    GFX_W_ovl0B_03(g++, 0xF7000000, 0x10001);
+    GFX_W_ovl0B_03(g++,
+                   0xF6000000 | (((D_ovl0B_03_8004A414 + 160) & 0x3FF) << 14) |
+                       ((((s32) (D_ovl0B_03_8004A414 * 0.72f) + 136) & 0x3FF) << 2),
+                   (((160 - D_ovl0B_03_8004A414) & 0x3FF) << 14) |
+                       (((136 - (s32) (D_ovl0B_03_8004A414 * 0.72f)) & 0x3FF) << 2));
+    *arg1 = g;
 }
 
 void func_ovl0B_03_80046F78(void) {
-    f32 var_fs0;
+    f32 t;
 
-    var_fs0 = -60.0f;
-    if (-60.0f < 0.0f) {
-        do {
-            func_ovl0B_03_80048018(0.0f, 0.0f, (var_fs0 * var_fs0 * -0.061f) + 420.0f);
-            func_ovl0B_03_80048350();
-            var_fs0 += 1.0f;
-        } while (var_fs0 < 0.0f);
+    for (t = -60.0f; t < 0; t += 1.0f) {
+        func_ovl0B_03_80048018(0.0f, 0.0f, t * t * -0.061f + 420.0f);
+        func_ovl0B_03_80048350();
     }
     func_ovl0B_03_80048318();
 }
 
 void func_ovl0B_03_80046E8C(void) {
-    f32 var_fs0;
+    f32 t;
 
-    var_fs0 = 0.0f;
-    if (-60.0f < 0.0f) {
-        do {
-            func_ovl0B_03_80048018(0.0f, 0.0f, (var_fs0 * var_fs0 * -0.061f) + 420.0f);
-            func_ovl0B_03_80048350();
-            var_fs0 -= 1.0f;
-        } while (var_fs0 > -60.0f);
+    for (t = 0; t > -60.0f; t -= 1.0f) {
+        func_ovl0B_03_80048018(0.0f, 0.0f, t * t * -0.061f + 420.0f);
+        func_ovl0B_03_80048350();
     }
     func_ovl0B_03_80048318();
 }
 
 void func_ovl0B_03_80046D54(void) {
-    f32 temp_fs5;
-    f32 temp_fv0;
-    f32 temp_fv1;
-    f32 var_fs0;
-    f32 var_fv1;
+    f32 t;
+    f32 a;
 
-    var_fs0 = 20.0f;
-    temp_fs5 = M2C_FIELD(D_ovl0B_03_80048D08[1].unk10, f32 *, 0x1C);
-    if (0.0f <= 20.0f) {
-        do {
-            temp_fv1 = (var_fs0 * var_fs0 * 0.225f) + temp_fs5;
-            temp_fv0 = temp_fv1 - 90.0f;
-            if (temp_fv0 >= 360.0f) {
-                M2C_FIELD(D_ovl0B_03_80048D08[1].unk10, f32 *, 0x1C) = (f32) (temp_fv0 - 360.0f);
-            } else {
-                if (temp_fv1 < 90.0f) {
-                    var_fv1 = temp_fv0 + 360.0f;
-                } else {
-                    var_fv1 = temp_fv0;
-                }
-                M2C_FIELD(D_ovl0B_03_80048D08[1].unk10, f32 *, 0x1C) = var_fv1;
-            }
-            func_ovl0B_03_80048350();
-            var_fs0 -= 1.0f;
-        } while (var_fs0 >= 0.0f);
+    a = M2C_FIELD(D_ovl0B_03_80048D08[1].unk10, f32 *, 0x1C);
+    for (t = 20.0f; t >= 0.0f; t -= 1.0f) {
+        M2C_FIELD(D_ovl0B_03_80048D08[1].unk10, f32 *, 0x1C) = WRAP_ovl0B_03(t * t * 0.225f + a - 90.0f);
+        func_ovl0B_03_80048350();
     }
     func_ovl0B_03_80048318();
 }
 
 void func_ovl0B_03_80046C20(void) {
-    f32 sp48;
-    f32 temp_fv0;
-    f32 var_fa0;
-    f32 var_fs0;
-    f32 var_fv1;
+    f32 t;
+    f32 a;
 
-    var_fs0 = 20.0f;
-    var_fa0 = M2C_FIELD(D_ovl0B_03_80048D08[1].unk10, f32 *, 0x1C);
-    if (0.0f <= 20.0f) {
-        do {
-            temp_fv0 = (var_fs0 * var_fs0 * -0.225f) + var_fa0 + 90.0f;
-            if (temp_fv0 >= 360.0f) {
-                M2C_FIELD(D_ovl0B_03_80048D08[1].unk10, f32 *, 0x1C) = (f32) (temp_fv0 - 360.0f);
-            } else {
-                if (temp_fv0 < 0.0f) {
-                    var_fv1 = temp_fv0 + 360.0f;
-                } else {
-                    var_fv1 = temp_fv0;
-                }
-                M2C_FIELD(D_ovl0B_03_80048D08[1].unk10, f32 *, 0x1C) = var_fv1;
-            }
-            sp48 = var_fa0;
-            func_ovl0B_03_80048350();
-            var_fs0 -= 1.0f;
-        } while (var_fs0 >= 0.0f);
+    a = M2C_FIELD(D_ovl0B_03_80048D08[1].unk10, f32 *, 0x1C);
+    for (t = 20.0f; t >= 0.0f; t -= 1.0f) {
+        M2C_FIELD(D_ovl0B_03_80048D08[1].unk10, f32 *, 0x1C) = WRAP_ovl0B_03(t * t * -0.225f + a + 90.0f);
+        func_ovl0B_03_80048350();
     }
     func_ovl0B_03_80048318();
 }
 
 void func_ovl0B_03_80046AE8(void) {
-    f32 temp_fs5;
-    f32 temp_fv0;
-    f32 temp_fv1;
-    f32 var_fs0;
-    f32 var_fv1;
+    f32 t;
+    f32 a;
 
-    var_fs0 = 20.0f;
-    temp_fs5 = M2C_FIELD(D_ovl0B_03_80048D08[1].unk10, f32 *, 0x1C);
-    if (0.0f <= 20.0f) {
-        do {
-            temp_fv1 = (var_fs0 * var_fs0 * 0.45f) + temp_fs5;
-            temp_fv0 = temp_fv1 - 180.0f;
-            if (temp_fv0 >= 360.0f) {
-                M2C_FIELD(D_ovl0B_03_80048D08[1].unk10, f32 *, 0x1C) = (f32) (temp_fv0 - 360.0f);
-            } else {
-                if (temp_fv1 < 180.0f) {
-                    var_fv1 = temp_fv0 + 360.0f;
-                } else {
-                    var_fv1 = temp_fv0;
-                }
-                M2C_FIELD(D_ovl0B_03_80048D08[1].unk10, f32 *, 0x1C) = var_fv1;
-            }
-            func_ovl0B_03_80048350();
-            var_fs0 -= 1.0f;
-        } while (var_fs0 >= 0.0f);
+    a = M2C_FIELD(D_ovl0B_03_80048D08[1].unk10, f32 *, 0x1C);
+    for (t = 20.0f; t >= 0.0f; t -= 1.0f) {
+        M2C_FIELD(D_ovl0B_03_80048D08[1].unk10, f32 *, 0x1C) = WRAP_ovl0B_03(t * t * 0.45f + a - 180.0f);
+        func_ovl0B_03_80048350();
     }
     func_ovl0B_03_80048318();
 }
 
 void func_ovl0B_03_800469B4(void) {
-    f32 sp48;
-    f32 temp_fv0;
-    f32 var_fa0;
-    f32 var_fs0;
-    f32 var_fv1;
+    f32 t;
+    f32 a;
 
-    var_fs0 = 20.0f;
-    var_fa0 = M2C_FIELD(D_ovl0B_03_80048D08[1].unk10, f32 *, 0x1C);
-    if (0.0f <= 20.0f) {
-        do {
-            temp_fv0 = (var_fs0 * var_fs0 * -0.45f) + var_fa0 + 180.0f;
-            if (temp_fv0 >= 360.0f) {
-                M2C_FIELD(D_ovl0B_03_80048D08[1].unk10, f32 *, 0x1C) = (f32) (temp_fv0 - 360.0f);
-            } else {
-                if (temp_fv0 < 0.0f) {
-                    var_fv1 = temp_fv0 + 360.0f;
-                } else {
-                    var_fv1 = temp_fv0;
-                }
-                M2C_FIELD(D_ovl0B_03_80048D08[1].unk10, f32 *, 0x1C) = var_fv1;
-            }
-            sp48 = var_fa0;
-            func_ovl0B_03_80048350();
-            var_fs0 -= 1.0f;
-        } while (var_fs0 >= 0.0f);
+    a = M2C_FIELD(D_ovl0B_03_80048D08[1].unk10, f32 *, 0x1C);
+    for (t = 20.0f; t >= 0.0f; t -= 1.0f) {
+        M2C_FIELD(D_ovl0B_03_80048D08[1].unk10, f32 *, 0x1C) = WRAP_ovl0B_03(t * t * -0.45f + a + 180.0f);
+        func_ovl0B_03_80048350();
     }
     func_ovl0B_03_80048318();
 }
 
 void func_ovl0B_03_80046918(s32 arg0, Gfx_ovl0A_01 **arg1) {
-    Gfx_ovl0A_01 *temp_a0;
-    Gfx_ovl0A_01 *temp_a2;
-    Gfx_ovl0A_01 *temp_a3;
-    Gfx_ovl0A_01 *temp_v1;
+    Gfx_ovl0A_01 *g;
 
-    temp_v1 = *arg1;
-    temp_a0 = temp_v1 + 8;
-    temp_v1->w1 = -0x80U;
-    temp_v1->w0 = 0xFA000000;
-    M2C_FIELD(temp_v1, s32 *, 8) = 0xFCFFFFFF;
-    temp_a0->w1 = 0xFFFDF6FB;
-    temp_a2 = temp_a0 + 8;
-    M2C_FIELD(temp_a0, s32 *, 8) = 0xF7000000;
-    temp_a2->w1 = 0x10001;
-    temp_a3 = temp_a2 + 8;
-    M2C_FIELD(temp_a2, s32 *, 8) = (s32) ((((D_ovl0B_03_8004A410 + 0x6D) & 0x3FF) << 0xE) | 0xF6000000 | 0x33C);
-    temp_a3->w1 = (((D_ovl0B_03_8004A410 + 0x3C) & 0x3FF) << 0xE) | 0x110;
-    *arg1 = temp_a3 + 8;
+    g = *arg1;
+    GFX_W_ovl0B_03(g++, 0xFA000000, 0xFFFFFF80);
+    GFX_W_ovl0B_03(g++, 0xFCFFFFFF, 0xFFFDF6FB);
+    GFX_W_ovl0B_03(g++, 0xF7000000, 0x10001);
+    GFX_W_ovl0B_03(g++, 0xF6000000 | (((D_ovl0B_03_8004A410 + 109) & 0x3FF) << 14) | ((207 & 0x3FF) << 2),
+                   (((D_ovl0B_03_8004A410 + 60) & 0x3FF) << 14) | ((68 & 0x3FF) << 2));
+    *arg1 = g;
 }
 
 s32 func_ovl0B_03_80046850(u8 arg0, u16 arg1) {
-    s32 temp_t6;
-    s32 temp_v0;
+    s32 b;
+    s32 p;
 
-    temp_v0 = arg1 & 0xFFFF;
-    temp_t6 = arg0 & 0xFF;
-    if (temp_v0 & 1) {
+    b = arg1;
+    p = arg0;
+    if (b & 1) {
         func_ovl0B_03_80048890(1);
         D_ovl0B_03_8004A320 = -1;
         return 0;
     }
-    if (temp_v0 & 2) {
+    if (b & 2) {
         func_ovl0B_03_80048890(2);
         D_ovl0B_03_8004A320 = -2;
         return 0;
     }
-    if (temp_v0 & 0x180) {
-        if (temp_v0 & 0x80) {
-            D_ovl0B_03_8004A320 = temp_t6 + 0x10;
+    if (b & 0x180) {
+        if (b & 0x80) {
+            D_ovl0B_03_8004A320 = p + 0x10;
             return 0;
         }
-        if (temp_v0 & 0x100) {
-            D_ovl0B_03_8004A320 = temp_t6 + 0x20;
+        if (b & 0x100) {
+            D_ovl0B_03_8004A320 = p + 0x20;
         }
         return 0;
     }
-    if (temp_v0 & 0x60) {
-
+    if (b & 0x60) {
+        return 1;
     }
     return 1;
 }
@@ -740,7 +638,7 @@ void func_ovl0B_03_80046510(void) {
 }
 
 /* The original passes n in $s2 (its callers' register). */
-void func_ovl0B_03_800464B0(Model_ovl0B_03 *models, s32 n) {
+static void func_ovl0B_03_800464B0(Model_ovl0B_03 *models, s32 n) {
     s32 i;
 
     for (i = 0; i < n; i++) {
@@ -748,6 +646,31 @@ void func_ovl0B_03_800464B0(Model_ovl0B_03 *models, s32 n) {
         models[i].unk10->unk10 = models[i].unk4;
         models[i].unk10->unk14 = models[i].unk8;
         models[i].unk10->unk18 = models[i].unkC;
+    }
+}
+
+void func_ovl0B_03_80043834(void) {
+    func_ovl0B_03_80048308(func_ovl0B_03_80046F78, NULL, 0, 0, 0x130);
+}
+
+void func_ovl0B_03_800431FC(void) {
+    func_ovl0B_03_80048308(func_ovl0B_03_80046E8C, NULL, 0, 0, 0x130);
+}
+
+void func_ovl0B_03_80043060(s32 arg0) {
+    switch (arg0) {                                 /* irregular */
+    case 0:
+        func_ovl0B_03_80048308(func_ovl0B_03_80046D54, NULL, 0, 0, 0x130);
+        return;
+    case 1:
+        func_ovl0B_03_80048308(func_ovl0B_03_80046C20, NULL, 0, 0, 0x130);
+        return;
+    case 2:
+        func_ovl0B_03_80048308(func_ovl0B_03_80046AE8, NULL, 0, 0, 0x130);
+        return;
+    case 3:
+        func_ovl0B_03_80048308(func_ovl0B_03_800469B4, NULL, 0, 0, 0x130);
+        return;
     }
 }
 
@@ -1964,12 +1887,8 @@ block_370:
     }
 }
 
-void func_ovl0B_03_80043834(void) {
-    func_ovl0B_03_80048308(func_ovl0B_03_80046F78, NULL, 0, 0, 0x130);
-}
-
 /* Fades n boxes' objects to alpha (0xF1 and over: opaque). */
-void func_ovl0B_03_800436EC(s32 n, Box_ovl0B_03 *boxes, s16 alpha) {
+static void func_ovl0B_03_800436EC(s32 n, Box_ovl0B_03 *boxes, s32 alpha) {
     s32 i;
 
     for (i = 0; i < n; i++) {
@@ -1984,7 +1903,7 @@ void func_ovl0B_03_800436EC(s32 n, Box_ovl0B_03 *boxes, s16 alpha) {
 }
 
 /* The original passes obj in $s2 and vals in $s1. */
-void func_ovl0B_03_8004368C(s32 obj, s32 *vals) {
+static void func_ovl0B_03_8004368C(s32 obj, s32 *vals) {
     s32 i;
 
     for (i = 0; i < 4; i++) {
@@ -1996,11 +1915,11 @@ void func_ovl0B_03_8004368C(s32 obj, s32 *vals) {
     }
 }
 
-void func_ovl0B_03_800434BC(void) {
+static void func_ovl0B_03_800434BC(void) {
     s32 i;
     s32 j;
     s32 mode;
-    s32 frame;
+    u32 frame;
 
     for (i = 0; i < 4; i++) {
         mode = D_ovl0B_03_8004A324->unk4[i];
@@ -2036,7 +1955,7 @@ void func_ovl0B_03_800434BC(void) {
 }
 
 /* The original passes n in $s2. */
-void func_ovl0B_03_80043464(Label_ovl0B_03 *labels, s32 n) {
+static void func_ovl0B_03_80043464(Label_ovl0B_03 *labels, s32 n) {
     s32 i;
 
     for (i = 0; i < n; i++) {
@@ -2046,7 +1965,7 @@ void func_ovl0B_03_80043464(Label_ovl0B_03 *labels, s32 n) {
 }
 
 /* The original passes n in $s2. */
-void func_ovl0B_03_80043428(Label_ovl0B_03 *labels, s32 n) {
+static void func_ovl0B_03_80043428(Label_ovl0B_03 *labels, s32 n) {
     s32 i;
 
     for (i = 0; i < n; i++) {
@@ -2054,13 +1973,12 @@ void func_ovl0B_03_80043428(Label_ovl0B_03 *labels, s32 n) {
     }
 }
 
-void func_ovl0B_03_800433BC(void) {
+static void func_ovl0B_03_800433BC(void) {
     UnkStructA_40 *temp_v0;
     s32 var_s0;
 
-    temp_v0 = func_ovl0B_03_80047F18(func_ovl0B_03_80047064, -1);
-    D_ovl0B_03_8004A3F8 = temp_v0;
-    temp_v0->unkC |= 0x480;
+    D_ovl0B_03_8004A3F8 = func_ovl0B_03_80047F18(func_ovl0B_03_80047064, -1);
+    D_ovl0B_03_8004A3F8->unkC |= 0x480;
     var_s0 = 5;
     do {
         D_ovl0B_03_8004A414 = var_s0;
@@ -2071,7 +1989,7 @@ void func_ovl0B_03_800433BC(void) {
 }
 
 /* The original takes n in $s4 and the model in $s5. */
-void func_ovl0B_03_80043340(Box_ovl0B_03 *boxes, s32 n, s32 model) {
+static void func_ovl0B_03_80043340(Box_ovl0B_03 *boxes, s32 n, s32 model) {
     s32 i;
 
     for (i = 0; i < n; i++) {
@@ -2082,7 +2000,7 @@ void func_ovl0B_03_80043340(Box_ovl0B_03 *boxes, s32 n, s32 model) {
     }
 }
 
-s32 func_ovl0B_03_800432F0(void) {
+static s32 func_ovl0B_03_800432F0(void) {
     s32 var_s0;
     s32 var_s1;
 
@@ -2097,7 +2015,7 @@ s32 func_ovl0B_03_800432F0(void) {
     return var_s1;
 }
 
-s32 func_ovl0B_03_800432A0(void) {
+static s32 func_ovl0B_03_800432A0(void) {
     s32 var_s0;
     s32 var_s1;
 
@@ -2113,16 +2031,12 @@ s32 func_ovl0B_03_800432A0(void) {
 }
 
 /* The original takes the scale in $f20 (its callers' register). */
-s32 func_ovl0B_03_80043234(u8 *str, f32 scale) {
-    return (320.0f - func_ovl0B_03_80048740(str) * scale) / 2.0f;
-}
-
-void func_ovl0B_03_800431FC(void) {
-    func_ovl0B_03_80048308(func_ovl0B_03_80046E8C, NULL, 0, 0, 0x130);
+static s32 func_ovl0B_03_80043234(u8 *str, f32 scale) {
+    return (320.0f - func_ovl0B_03_80048740(str) * scale) / 2;
 }
 
 /* The original takes the scale in $f12. */
-void func_ovl0B_03_80043170(Box_ovl0B_03 *box, f32 scale) {
+static void func_ovl0B_03_80043170(Box_ovl0B_03 *box, f32 scale) {
     box->unk10 = scale;
     box->unk14->unk10 = box->unk0 - box->unk8 * scale * 0.5f;
     box->unk14->unk14 = box->unk4 - box->unkC * box->unk10 * 0.5f;
@@ -2131,7 +2045,7 @@ void func_ovl0B_03_80043170(Box_ovl0B_03 *box, f32 scale) {
 }
 
 /* The original passes n in $s2 (its callers' register). */
-void func_ovl0B_03_80043134(Box_ovl0B_03 *boxes, s32 n) {
+static void func_ovl0B_03_80043134(Box_ovl0B_03 *boxes, s32 n) {
     s32 i;
 
     for (i = 0; i < n; i++) {
@@ -2139,24 +2053,7 @@ void func_ovl0B_03_80043134(Box_ovl0B_03 *boxes, s32 n) {
     }
 }
 
-void func_ovl0B_03_80043060(s32 arg0) {
-    switch (arg0) {                                 /* irregular */
-    case 0:
-        func_ovl0B_03_80048308(func_ovl0B_03_80046D54, NULL, 0, 0, 0x130);
-        return;
-    case 1:
-        func_ovl0B_03_80048308(func_ovl0B_03_80046C20, NULL, 0, 0, 0x130);
-        return;
-    case 2:
-        func_ovl0B_03_80048308(func_ovl0B_03_80046AE8, NULL, 0, 0, 0x130);
-        return;
-    case 3:
-        func_ovl0B_03_80048308(func_ovl0B_03_800469B4, NULL, 0, 0, 0x130);
-        return;
-    }
-}
-
-void func_ovl0B_03_80043010(void) {
+static void func_ovl0B_03_80043010(void) {
     s32 var_s0;
 
     var_s0 = 0x6E;
