@@ -3,7 +3,7 @@
  * data (.data 0x270, .rodata 0xA0 and .bss 0x60 laid out as the original).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 21 (jp 23 as last recorded; not rebuilt for jp here)
+ * differing words: us 21, jp 21
  *
  * Float zeros come in two kinds: the original keeps the zero it compares
  * with (written `0`) in one register and the zero it stores (`0.0f`) in
