@@ -3,7 +3,7 @@
  * (.data and .rodata as the original; .bss 0x60 with its unused words common).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 826, eu 828, jp 828
+ * differing words: us 826, eu 828, jp 826
  *
  * Every function is in the original's place, stubs included (the inlined
  * statics are named for the stubs they leave). What still differs in us
