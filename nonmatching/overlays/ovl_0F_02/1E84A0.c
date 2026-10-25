@@ -4,20 +4,22 @@
  * IDO's, and most of the count is functions compared against the wrong
  * code. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 5736, jp 5736
+ * differing words: us 3348, jp 5736
  *
- * What still differs in us (words; fcmp compares from each global to the
- * next global emitted, so a global out of place takes its neighbours'
- * code with it):
- * - the order: the definitions follow a search for the order closest to
- *   the original's (ovl_0F_04's method, its header; the search is
- *   scratch/ovl_0F_02/ord/ in the main checkout). IDO emits
- *   3010 3028 3324 33A0 3404 34F8 3618, a static, 3858 38B4 3944, then
- *   4824 4B28 4C6C, 4D20 533C, 54E8 5EB0, 3FEC, 5024, the handler 62F8
- *   and 6D20-6DF8, with the address-taken block (DECOMPILING.md) putting
- *   3FEC and 5024 late; the original has them in address order. So
- *   80043944 (913), 80043FEC (985), 80045024 (1196), 80044D20 (387) and
- *   80045EB0 (290) are mostly measured against other code.
+ * Every function and static comes out in the original's order. The order
+ * is ovl_0F_03's: the handler, defined last but for func_ovl0F_02_80043010,
+ * is compiled first, its direct callees (3028 3324 33A0) out before
+ * everything it only takes the address of; those come out in the reverse
+ * of the order of their first references, the statics' (in definition
+ * order) before the handler's own. Hudson's natural order of references
+ * would give 3944 3618 3404 34F8 38B4 5024 5EB0 3FEC 4824 4D20 54E8 533C
+ * 3858; the `if (0)` at the top of func_ovl0F_02_80046178 is a fake that
+ * makes every first reference in descending address order, so they come
+ * out ascending as in the original (5736 words to 3348;
+ * scratch/0F_02/p3/ord.py and hf.sh in the main checkout). What the
+ * original's source had instead is open.
+ *
+ * What still differs in us (words):
  * - func_ovl0F_02_800454E8 (620): ovl_0F_03's 80044258, the same register
  *   and frame misses as there.
  * - func_ovl0F_02_800462F8 (606), func_ovl0F_02_80044824 (184): frames
@@ -514,187 +516,27 @@ void func_ovl0F_02_80046D20(s32 arg0, UnkStructA *arg1) {
     func_ovl0F_02_800483E0(arg0, p->unk10, p->unk14, p->unk18);
 }
 
-/* The overlay's handler: the entry returns it to the loader. */
-void func_ovl0F_02_800462F8(s32 arg0) {
-    s32 i;
-
-    switch (arg0) {
-        case 2:
-            D_ovl0F_02_80048D7C = func_ovl0F_02_800473E8();
-            if (D_ovl0F_02_80048D7C == 0x14) {
-                D_ovl0F_02_80048954 = 1;
-                func_ovl0F_02_80048368(0);
-            } else {
-                D_ovl0F_02_80048954 = 0;
-            }
-            func_ovl0F_02_800481A0(D_ovl0F_02_80048958);
-            for (i = 0; i < 6; i++) {
-                func_ovl0F_02_80048348(D_ovl0F_02_8004897C[i][0], D_ovl0F_02_8004897C[i][1], D_ovl0F_02_8004897C[i][2]);
-            }
-            func_ovl0F_02_800472E8(0x224);
-            func_ovl0F_02_80047300(0x238);
-            func_ovl0F_02_80047498();
-            if (D_ovl0F_02_80048954 == 0) {
-                func_ovl0F_02_80046178(5, 6);
-            } else {
-                func_ovl0F_02_80046178(1, 2);
-            }
-            func_ovl0F_02_80044F74(&D_ovl0F_02_800489C4, 1);
-            if (func_ovl0F_02_800480C0(D_ovl0F_02_800489F4.unk0[0].unk28) == 0) {
-                func_ovl0F_02_80047E38(func_ovl0F_02_80045024, &D_ovl0F_02_800489F4, 0, 0, 0x110);
-            } else {
-                D_ovl0F_02_800489F4.unk58();
-                D_ovl0F_02_800489F4.unk5C();
-                D_ovl0F_02_800489F4.unk0[1].unk10 -= 1.0f;
-                func_ovl0F_02_80044F74(&D_ovl0F_02_800489F4.unk0[1], 1);
-                *D_ovl0F_02_800489F4.unk0[0].unk0 = NULL;
-                D_ovl0F_02_800489F4.unk0[1].unk10 += 1.0f;
-            }
-            func_ovl0F_02_80044F74(D_ovl0F_02_8004883C, 5);
-            for (i = 0; i < 5; i++) {
-                if (D_ovl0F_02_8004883C[i].unk1C == 0.0f) {
-                    func_ovl0F_02_80047328((s32) D_ovl0F_02_8004883C[i].unkC - 1, D_ovl0F_02_8004883C[i].unk10,
-                                           (s32) D_ovl0F_02_8004883C[i].unk14 - 1, (s32) D_ovl0F_02_8004883C[i].unkC - 1,
-                                           D_ovl0F_02_8004883C[i].unk14, 0x1411);
-                    func_ovl0F_02_80047328(D_ovl0F_02_8004883C[i].unkC, D_ovl0F_02_8004883C[i].unk10,
-                                           (s32) D_ovl0F_02_8004883C[i].unk14 - 1, D_ovl0F_02_8004883C[i].unkC,
-                                           D_ovl0F_02_8004883C[i].unk14, 0x141A);
-                }
-                D_ovl0F_02_80048918[i].unk0 = 1;
-                D_ovl0F_02_80048918[i].unk8 = -1;
-            }
-            D_ovl0F_02_80048918[func_ovl0F_02_80047FF8(4)].unk8 = 3;
-            if (func_ovl0F_02_800480C0(0x400) == 0) {
-                func_ovl0F_02_80045F24(&D_ovl0F_02_800489F0);
-            }
-            func_ovl0F_02_800473C8(func_ovl0F_02_800438B4, 7);
-            break;
-        case 17:
-            func_ovl0F_02_800474E0(0x40);
-            func_ovl0F_02_800474A0(0x1C, 0, 0x10);
-            break;
-        case 18:
-            func_ovl0F_02_800474A0(0xB, 4, 0x12);
-            break;
-        case 19:
-            func_ovl0F_02_800474E0(0xA0);
-            func_ovl0F_02_800474A0(0xD, 4, 2);
-            break;
-        case 20:
-            D_ovl0F_02_80048954 = 1;
-            func_ovl0F_02_800474A0(0x16, 2, 0x17);
-            break;
-        case 4:
-            func_ovl0F_02_800474F8();
-            func_ovl0F_02_800473D0(func_ovl0F_02_800434F8);
-            func_ovl0F_02_80047DC8(40.0f);
-            func_ovl0F_02_80047DD0(30);
-            if (D_ovl0F_02_80048954 == 1) {
-                func_ovl0F_02_80047B48(0.0f, 32768.0f, 32768.0f);
-                func_ovl0F_02_80047E38(func_ovl0F_02_80043404, NULL, 0, 0, 0x130);
-                func_ovl0F_02_80047B90(0xF);
-                func_ovl0F_02_80047BA0(1);
-            }
-            break;
-        case 5:
-            switch (func_ovl0F_02_800473E8()) {
-                case 17:
-                    func_ovl0F_02_800474E8(D_ovl0F_02_80048A8C[0].unk0, D_ovl0F_02_80048A8C[0].unk4,
-                                           D_ovl0F_02_80048A8C[0].unk8, D_ovl0F_02_80048A8C[0].unkC,
-                                           D_ovl0F_02_80048A8C[0].unk10, D_ovl0F_02_80048A8C[0].unk14,
-                                           D_ovl0F_02_80048A8C[0].unk18);
-                    break;
-                case 19:
-                    func_ovl0F_02_800474E8(D_ovl0F_02_80048A8C[1].unk0, D_ovl0F_02_80048A8C[1].unk4,
-                                           D_ovl0F_02_80048A8C[1].unk8, D_ovl0F_02_80048A8C[1].unkC,
-                                           D_ovl0F_02_80048A8C[1].unk10, D_ovl0F_02_80048A8C[1].unk14,
-                                           D_ovl0F_02_80048A8C[1].unk18);
-                    func_ovl0F_02_80047E38(func_ovl0F_02_80043618, NULL, 0, 0, 0x130);
-                    break;
-            }
-            break;
-        case 0x50:
-            func_ovl0F_02_800433A0(D_ovl0F_02_80048A54);
-            func_ovl0F_02_800433A0(D_ovl0F_02_80048A70);
-            break;
-        case 0x52:
-            if (func_ovl0F_02_800474B0(0x12, 0xA, 0x12, 0xA) != 0) {
-                if (func_ovl0F_02_800480C0(0x406) == 0) {
-                    func_ovl0F_02_80047DC8(0.0f);
-                    func_ovl0F_02_80047DD0(0x7F);
-                    func_ovl0F_02_800480B0(0x406);
-                    func_ovl0F_02_800480B8(0x407);
-                    func_ovl0F_02_80047C48();
-                    func_ovl0F_02_80047B90(0xF);
-                    func_ovl0F_02_80047B88(0x10);
-                    func_ovl0F_02_80047B18(0);
-                    func_ovl0F_02_80047B38(581.4f, 1430.1f, 1133.3f);
-                    func_ovl0F_02_80043324(60, "WM1 WG1 WSH WAP WDW WB3 ST10");
-                }
-            } else {
-                i = func_ovl0F_02_80043018();
-                if (i != -1) {
-                    D_ovl0F_02_80048D74 = i;
-                    func_ovl0F_02_80047E38(func_ovl0F_02_80043944, NULL, 0, 0, 0x110);
-                }
-            }
-            break;
-        case 0x53:
-            if (func_ovl0F_02_800474B0(0x13, 0xA, 0x13, 0xA) != 0 && func_ovl0F_02_800480C0(0x406) != 0) {
-                func_ovl0F_02_80047DC8(40.0f);
-                func_ovl0F_02_80047DD0(30);
-                func_ovl0F_02_800480B8(0x406);
-                func_ovl0F_02_800480B0(0x407);
-                func_ovl0F_02_80047B88(0x1F);
-                func_ovl0F_02_80047B18(1);
-                func_ovl0F_02_80047C50();
-                func_ovl0F_02_80047C18(D_ovl0F_02_80048D38);
-                func_ovl0F_02_80043324(60, "WM1 WG1 WSH WAP WDE WB2 ST30");
-            }
-            break;
-        case 1:
-            func_ovl0F_02_800479D8(D_ovl0F_02_80048F1C);
-            func_ovl0F_02_800479C0(0x258);
-            func_ovl0F_02_80043020(5, D_ovl0F_02_8004883C);
-            func_ovl0F_02_80043020(1, &D_ovl0F_02_800489C4);
-            if (func_ovl0F_02_800480C0(D_ovl0F_02_800489F4.unk0[0].unk28) == 0) {
-                func_ovl0F_02_80043020(2, D_ovl0F_02_800489F4.unk0);
-            } else {
-                func_ovl0F_02_80043020(1, &D_ovl0F_02_800489F4.unk0[1]);
-            }
-            *D_ovl0F_02_800489F4.unk0[0].unk0 = NULL;
-            if (D_ovl0F_02_80048954 == 1) {
-                func_ovl0F_02_80048540();
-            }
-            break;
-        case 12:
-            func_ovl0F_02_80047530(1);
-            break;
-        case 3:
-            D_ovl0F_02_80048D54 = func_ovl0F_02_800474C8();
-            func_ovl0F_02_800474A8(&D_ovl0F_02_80048D48);
-            func_ovl0F_02_800474D0(D_ovl0F_02_80048D54, D_ovl0F_02_80048D38);
-            D_ovl0F_02_80048B08[0] = 1;
-            func_ovl0F_02_80043028();
-            break;
-        case 6:
-        case 7:
-        case 8:
-        case 9:
-        case 10:
-        case 11:
-        case 13:
-        case 14:
-        case 15:
-        case 16:
-            break;
-    }
-}
-
 /* case 2's: the wind, the particles and the fog */
 static void func_ovl0F_02_80046178(s32 n1, s32 n2) {
     s32 i;
 
+    if (0) {
+        func_ovl0F_02_80047E38((void (*)(void)) func_ovl0F_02_80045EB0, NULL, 0, 0, 0);
+        func_ovl0F_02_80047E38((void (*)(void)) func_ovl0F_02_800454E8, NULL, 0, 0, 0);
+        func_ovl0F_02_80047E38((void (*)(void)) func_ovl0F_02_8004533C, NULL, 0, 0, 0);
+        func_ovl0F_02_80047E38((void (*)(void)) func_ovl0F_02_80045024, NULL, 0, 0, 0);
+        func_ovl0F_02_80047E38((void (*)(void)) func_ovl0F_02_80044D20, NULL, 0, 0, 0);
+        func_ovl0F_02_80047E38((void (*)(void)) func_ovl0F_02_80044C6C, NULL, 0, 0, 0);
+        func_ovl0F_02_80047E38((void (*)(void)) func_ovl0F_02_80044B28, NULL, 0, 0, 0);
+        func_ovl0F_02_80047E38((void (*)(void)) func_ovl0F_02_80044824, NULL, 0, 0, 0);
+        func_ovl0F_02_80047E38((void (*)(void)) func_ovl0F_02_80043FEC, NULL, 0, 0, 0);
+        func_ovl0F_02_80047E38((void (*)(void)) func_ovl0F_02_80043944, NULL, 0, 0, 0);
+        func_ovl0F_02_80047E38((void (*)(void)) func_ovl0F_02_800438B4, NULL, 0, 0, 0);
+        func_ovl0F_02_80047E38((void (*)(void)) func_ovl0F_02_80043858, NULL, 0, 0, 0);
+        func_ovl0F_02_80047E38((void (*)(void)) func_ovl0F_02_80043618, NULL, 0, 0, 0);
+        func_ovl0F_02_80047E38((void (*)(void)) func_ovl0F_02_800434F8, NULL, 0, 0, 0);
+        func_ovl0F_02_80047E38((void (*)(void)) func_ovl0F_02_80043404, NULL, 0, 0, 0);
+    }
     if (func_ovl0F_02_80047438()->unk10 == 0) {
         D_ovl0F_02_80048600 = 8.5f;
     } else {
@@ -774,6 +616,96 @@ void func_ovl0F_02_80045EB0(void) {
     func_ovl0F_02_80047E48();
 }
 
+/* the particles: a display list of textured rectangles */
+void func_ovl0F_02_800454E8(s32 arg0, UnkStruct_ovl0F_02_Gfx **arg1) {
+    UnkStruct_ovl0F_02_Gfx *gfx;
+    UnkStruct_ovl0F_02_80048D80 *p;
+    f32 oldx;
+    f32 oldz;
+    f32 s;
+    f32 c;
+    f32 scale;
+    f32 sign;
+    f32 dx;
+    f64 drift;
+    s32 dsdx;
+    s32 i;
+    f32 view[8];
+
+    gfx = *arg1;
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xB900031D; g->w1 = 0x00553048; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xFCFFFFFF; g->w1 = 0xFFFCF279; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xBB000001; g->w1 = 0x80008000; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xBA001301; g->w1 = 0; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xBA000E02; g->w1 = 0x8000; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xFD100000; g->w1 = D_ovl0F_02_800485E0->unk20 + (u32) D_ovl0F_02_800485E0; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xE8000000; g->w1 = 0; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xF5000100; g->w1 = 0x07000000; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xE6000000; g->w1 = 0; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xF0000000; g->w1 = 0x0703C000; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xE7000000; g->w1 = 0; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xFD500000; g->w1 = D_ovl0F_02_800485E0->unk14 + (u32) D_ovl0F_02_800485E0; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xF5500000; g->w1 = 0x07000000; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xE6000000; g->w1 = 0; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xF3000000; g->w1 = 0x0703F800; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xE7000000; g->w1 = 0; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xF5400200; g->w1 = 0; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xF2000000; g->w1 = 0x0003C03C; }
+    oldx = D_ovl0F_02_80048F10.x;
+    oldz = D_ovl0F_02_80048F10.z;
+    func_ovl0F_02_80047C30(&D_ovl0F_02_80048F10);
+    func_ovl0F_02_80047C40(view);
+    s = func_ovl0F_02_80047FE8(view[0]);
+    c = func_ovl0F_02_80047FE0(view[0]);
+    D_ovl0F_02_800485E4 = ((D_ovl0F_02_80048F10.x - oldx) * s - c * (D_ovl0F_02_80048F10.z - oldz)) * 0.5f;
+    s = func_ovl0F_02_80047FE8(view[0]);
+    c = func_ovl0F_02_80047FE0(view[0]);
+    D_ovl0F_02_800485E8 = (c * (D_ovl0F_02_80048F10.x - oldx) + (D_ovl0F_02_80048F10.z - oldz) * s) * 0.2f;
+    scale = 1500.0f / view[2];
+    D_ovl0F_02_800485E4 *= scale;
+    D_ovl0F_02_800485E8 *= scale;
+    i = 0;
+    if (func_ovl0F_02_800480C0(0x407) == 0) {
+        goto update;
+    }
+    do {
+        p = &D_ovl0F_02_80048D80[i];
+        dsdx = 16.0f / (p->unk8 - 1.0f) * 1024.0f;
+        {
+            UnkStruct_ovl0F_02_Gfx *g = gfx++;
+            g->w0 = _SHIFTL(0xE4, 24, 8) | _SHIFTL((u32) (p->unk0 + p->unk8 - 1.0f) << 2, 12, 12) | _SHIFTL((u32) (p->unk4 + p->unk8 - 1.0f) << 2, 0, 12);
+            g->w1 = _SHIFTL(0, 24, 3) | _SHIFTL((u32) p->unk0 << 2, 12, 12) | _SHIFTL((u32) p->unk4 << 2, 0, 12);
+        }
+        { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xB4000000; g->w1 = 0; }
+        { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xB3000000; g->w1 = _SHIFTL(dsdx, 16, 16) | _SHIFTL(dsdx, 0, 16); }
+    update:
+        if (D_ovl0F_02_800485F4 != 0.0f) {
+            p = &D_ovl0F_02_80048D80[i];
+            s = func_ovl0F_02_80047FE8(view[0]);
+            dx = -D_ovl0F_02_800485E4;
+            p->unk0 += dx - (f32) func_ovl0F_02_80047FF0() * (dx * 0.25f) + D_ovl0F_02_800485EC * s;
+            sign = func_ovl0F_02_800454E0(D_ovl0F_02_800485EC);
+            if (func_ovl0F_02_80047FE0(view[0]) * (sign * D_ovl0F_02_800485EC) + D_ovl0F_02_800485F0 < 0.0f) {
+                sign = func_ovl0F_02_800454E0(D_ovl0F_02_800485EC);
+                drift = (func_ovl0F_02_80047FE0(view[0]) * (sign * D_ovl0F_02_800485EC) + D_ovl0F_02_800485F0) * 0.5;
+            } else {
+                sign = func_ovl0F_02_800454E0(D_ovl0F_02_800485EC);
+                drift = func_ovl0F_02_80047FE0(view[0]) * (sign * D_ovl0F_02_800485EC) + D_ovl0F_02_800485F0;
+            }
+            p->unk4 += (p->unkC - D_ovl0F_02_800485E8) - (f32) func_ovl0F_02_80047FF0() * ((p->unkC - D_ovl0F_02_800485E8) * 0.6f) + drift;
+            p->unk8 -= 0.1f * (p->unk8 * 0.0625f);
+            if (340.0f <= p->unk0 || 240.0f <= p->unk4 || p->unk8 <= 3.0f || p->unk10++ >= 240 || p->unk0 < -20.0f ||
+                p->unk4 < -10.0f) {
+                func_ovl0F_02_800453A4(p);
+            }
+        }
+        i++;
+    } while (i != 20);
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xBA001301; g->w1 = 0x00080000; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xBA000E02; g->w1 = 0; }
+    *arg1 = gfx;
+}
+
 static f32 func_ovl0F_02_800454E0(f32 v) {
     return v == 0.0f ? 0.0f : 1.0f;
 }
@@ -794,6 +726,185 @@ static void func_ovl0F_02_800453A4(UnkStruct_ovl0F_02_80048D80 *p) {
     p->unk10 = 0;
     p->unk8 = r * 12.0f + 4.0f;
     p->unkC = r * r * 5.0f + 0.5f;
+}
+
+/* a callback (case 2): the wind pushes an object, more weakly */
+void func_ovl0F_02_8004533C(UnkStructA *obj) {
+    func_ovl0F_02_800436D8(obj, D_ovl0F_02_800485FC * 0.42857143f);
+}
+
+/* a task: the door opens once its switch is hit */
+void func_ovl0F_02_80045024(void) {
+    UnkStruct_ovl0F_02_800489F4 *task;
+    f32 pos[3];
+    s32 hit;
+
+    task = func_ovl0F_02_80047E60();
+    func_ovl0F_02_80047348(task->unk0[0].unkC, task->unk0[0].unk10, task->unk0[0].unk14, pos, 0);
+    func_ovl0F_02_80044F74(task->unk0, 2);
+    (*task->unk0[0].unk0)->unk34 = 250.0f;
+    (*task->unk0[0].unk0)->unkC = 0;
+    (*task->unk0[1].unk0)->unkC = 0;
+    (*task->unk0[1].unk0)->unk70 = 2.45f;
+    while (func_ovl0F_02_800480C0(task->unk0[0].unk28) == 0) {
+        hit = func_ovl0F_02_80047C98(*task->unk0[0].unk0, 0x40);
+        if (hit != 0) {
+            if ((hit & 0x2000) || (hit & 0x4000)) {
+                func_ovl0F_02_800480B0(task->unk0[0].unk28);
+            } else {
+                func_ovl0F_02_800483E8(0x26, pos);
+            }
+        }
+        func_ovl0F_02_80047E58(5);
+    }
+    func_ovl0F_02_800483E8(0x8A, pos);
+    func_ovl0F_02_80044E9C(pos, 0x14, 250.0f, 120.0f);
+    func_ovl0F_02_80047E58(10);
+    func_ovl0F_02_80044E9C(pos, 0x16, 250.0f, 120.0f);
+    func_ovl0F_02_80043020(1, task->unk0);
+    *task->unk0[0].unk0 = NULL;
+    func_ovl0F_02_80047328((s32) task->unk0[1].unkC - 2, (s32) task->unk0[1].unk10, (s32) task->unk0[1].unk14 - 2,
+                           (s32) task->unk0[1].unkC + 2, (s32) task->unk0[1].unk14 + 2, 0x1410);
+    task->unk58();
+    func_ovl0F_02_80047D68(*task->unk0[1].unk0);
+    func_ovl0F_02_80047E80();
+    do {
+        func_ovl0F_02_80047D68(*task->unk0[1].unk0);
+        func_ovl0F_02_80047E80();
+    } while ((*task->unk0[1].unk0)->unk6C != 0.0f);
+    task->unk5C();
+    func_ovl0F_02_80047E48();
+}
+
+static void func_ovl0F_02_80044F74(UnkStruct_ovl0F_02_80048734 *arg0, s32 arg1) {
+    s32 i;
+
+    for (i = 0; i < arg1; i++) {
+        *arg0->unk0 = func_ovl0F_02_80047D58(arg0->unk4, arg0->unk8);
+        func_ovl0F_02_80047CE8(*arg0->unk0, arg0->unk24 | 0x01000000);
+        func_ovl0F_02_80044C94(arg0);
+        (*arg0->unk0)->unk40->unk1C = arg0->unk18;
+        (*arg0->unk0)->unk40->unk20 = arg0->unk1C;
+        (*arg0->unk0)->unk40->unk24 = arg0->unk20;
+        arg0++;
+    }
+}
+
+/* four effects at the corners of a square around pos */
+static void func_ovl0F_02_80044E9C(f32 *pos, s32 id, f32 d, f32 h) {
+    func_ovl0F_02_80048288(id, pos[0] + d, pos[1] + h, pos[2] + d, 0);
+    func_ovl0F_02_80048288(id, pos[0] + d, pos[1] + h, pos[2] - d, 0);
+    func_ovl0F_02_80048288(id, pos[0] - d, pos[1] + h, pos[2] + d, 0);
+    func_ovl0F_02_80048288(id, pos[0] - d, pos[1] + h, pos[2] - d, 0);
+}
+
+/* the movers' callback (D_ovl0F_02_80048F20.unk20): mover i back to its
+ * start, shown (flag set) or hidden */
+void func_ovl0F_02_80044D20(s32 i, s32 flag) {
+    UnkStruct_ovl0F_02_80048734 *rec;
+    UnkStruct_ovl0F_02_800486A4 *st;
+
+    rec = &D_ovl0F_02_80048734[i];
+    func_ovl0F_02_80044C94(rec);
+    st = &D_ovl0F_02_800486A4[i];
+    st->unkC = 0;
+    st->unk12 = 0;
+    st->unk14 = 1;
+    st->unk11 = flag;
+    if (flag == 0) {
+        func_ovl0F_02_80047CF0(*rec->unk0, 0x01000070);
+    } else {
+        func_ovl0F_02_80047CE8(*rec->unk0, 0x01000070);
+    }
+    st->unk10 = 0;
+    st->unk4 = 1.0f;
+    st->unk8 = 0.05f;
+    (*rec->unk0)->unk40->unk14 = 2200.0f;
+    if (flag != 0) {
+        (*rec->unk0)->unk68 = 20.0f;
+        (*rec->unk0)->unk6C = 0.0f;
+        func_ovl0F_02_80048288(0xC, (*rec->unk0)->unk40->unk10, (*rec->unk0)->unk40->unk14,
+                               (*rec->unk0)->unk40->unk18, 0);
+    }
+}
+
+static void func_ovl0F_02_80044C94(UnkStruct_ovl0F_02_80048734 *arg0) {
+    f32 pos[3];
+
+    func_ovl0F_02_80047348(arg0->unkC, arg0->unk10, arg0->unk14, pos, 0);
+    (*arg0->unk0)->unk40->unk10 = pos[0];
+    (*arg0->unk0)->unk40->unk14 = pos[1];
+    (*arg0->unk0)->unk40->unk18 = pos[2];
+}
+
+/* passed to func_ovl0F_02_80048330 */
+s32 func_ovl0F_02_80044C6C(s32 arg0) {
+    if ((arg0 & 0xF) == 0xF) {
+        return 0;
+    }
+    return 1;
+}
+
+/* a task: the sparks over a mover that was hit */
+void func_ovl0F_02_80044B28(void) {
+    UnkStruct_ovl0F_02_80048734 *rec;
+    s32 i;
+
+    rec = &D_ovl0F_02_80048734[(s32) func_ovl0F_02_80047E60()];
+    for (i = 0; i < 3; i++) {
+        func_ovl0F_02_80048288(7, (*rec->unk0)->unk40->unk10, (*rec->unk0)->unk40->unk14 + 100.0f,
+                               (*rec->unk0)->unk40->unk18, 0);
+        func_ovl0F_02_80047E58(3);
+    }
+    for (i = 0; i < 5; i++) {
+        func_ovl0F_02_80048288(0x18, (*rec->unk0)->unk40->unk10, (*rec->unk0)->unk40->unk14 + 100.0f,
+                               (*rec->unk0)->unk40->unk18, 0);
+        func_ovl0F_02_80047E58(3);
+    }
+    func_ovl0F_02_80048288(0x16, (*rec->unk0)->unk40->unk10, (*rec->unk0)->unk40->unk14 + 100.0f,
+                           (*rec->unk0)->unk40->unk18, 0);
+    func_ovl0F_02_80047E48();
+}
+
+/* the callback func_ovl0F_02_80045F24 registers: an object a mover hit
+ * flies off */
+void func_ovl0F_02_80044824(UnkStructA *obj) {
+    s32 dir;
+    f32 speed;
+    s32 i;
+    f32 dy;
+
+    dir = 0;
+    speed = 0.0f;
+    func_ovl0F_02_800483C0(0x1E);
+    if (D_ovl0F_02_80048F20.unk16 != -1) {
+        dir = D_ovl0F_02_800486A4[D_ovl0F_02_80048F20.unk16].unk0;
+        speed = D_ovl0F_02_800486A4[D_ovl0F_02_80048F20.unk16].unk4 * 0.8f;
+    }
+    func_ovl0F_02_80047A10(obj->unk40, 0x11, 0);
+    func_ovl0F_02_80047A40(obj->unk40, 4, 0xC);
+    func_ovl0F_02_80047A40(obj->unk40, 5, 0xD);
+    func_ovl0F_02_80048288(0, obj->unk40->unk10, obj->unk40->unk14 + 100.0f, obj->unk40->unk18, 0);
+    obj->unk68 = 30.0f;
+    obj->unk70 = 1.6333334f;
+    for (i = 1; i < 201 && obj->unk68 > 0.0f && !func_ovl0F_02_80043B28(obj); i++) {
+        dy = func_ovl0F_02_80047FE8(obj->unk40->unk1C) * 30.0f;
+        func_ovl0F_02_80048330(obj, dir, speed, func_ovl0F_02_80044C6C);
+        obj->unk40->unk1C += 10.0f;
+        obj->unk40->unk10 -= func_ovl0F_02_80047FE0(obj->unk40->unk1C);
+        if (dy > 0.0f) {
+            dy = 0.0f;
+        }
+        obj->unk40->unk14 -= dy;
+        func_ovl0F_02_80047E80();
+    }
+    if (func_ovl0F_02_80043B28(obj)) {
+        func_ovl0F_02_800434F8(obj);
+    } else {
+        obj->unk6C = 0.0f;
+        obj->unk70 = 0.0f;
+    }
+    func_ovl0F_02_80047E58(0x50);
 }
 
 /* a task: the movers, every frame, until they are all gone */
@@ -929,275 +1040,6 @@ void func_ovl0F_02_80043FEC(void) {
         func_ovl0F_02_80047D00(*D_ovl0F_02_80048734[i].unk0);
     }
     func_ovl0F_02_80047E48();
-}
-
-/* a task: the door opens once its switch is hit */
-void func_ovl0F_02_80045024(void) {
-    UnkStruct_ovl0F_02_800489F4 *task;
-    f32 pos[3];
-    s32 hit;
-
-    task = func_ovl0F_02_80047E60();
-    func_ovl0F_02_80047348(task->unk0[0].unkC, task->unk0[0].unk10, task->unk0[0].unk14, pos, 0);
-    func_ovl0F_02_80044F74(task->unk0, 2);
-    (*task->unk0[0].unk0)->unk34 = 250.0f;
-    (*task->unk0[0].unk0)->unkC = 0;
-    (*task->unk0[1].unk0)->unkC = 0;
-    (*task->unk0[1].unk0)->unk70 = 2.45f;
-    while (func_ovl0F_02_800480C0(task->unk0[0].unk28) == 0) {
-        hit = func_ovl0F_02_80047C98(*task->unk0[0].unk0, 0x40);
-        if (hit != 0) {
-            if ((hit & 0x2000) || (hit & 0x4000)) {
-                func_ovl0F_02_800480B0(task->unk0[0].unk28);
-            } else {
-                func_ovl0F_02_800483E8(0x26, pos);
-            }
-        }
-        func_ovl0F_02_80047E58(5);
-    }
-    func_ovl0F_02_800483E8(0x8A, pos);
-    func_ovl0F_02_80044E9C(pos, 0x14, 250.0f, 120.0f);
-    func_ovl0F_02_80047E58(10);
-    func_ovl0F_02_80044E9C(pos, 0x16, 250.0f, 120.0f);
-    func_ovl0F_02_80043020(1, task->unk0);
-    *task->unk0[0].unk0 = NULL;
-    func_ovl0F_02_80047328((s32) task->unk0[1].unkC - 2, (s32) task->unk0[1].unk10, (s32) task->unk0[1].unk14 - 2,
-                           (s32) task->unk0[1].unkC + 2, (s32) task->unk0[1].unk14 + 2, 0x1410);
-    task->unk58();
-    func_ovl0F_02_80047D68(*task->unk0[1].unk0);
-    func_ovl0F_02_80047E80();
-    do {
-        func_ovl0F_02_80047D68(*task->unk0[1].unk0);
-        func_ovl0F_02_80047E80();
-    } while ((*task->unk0[1].unk0)->unk6C != 0.0f);
-    task->unk5C();
-    func_ovl0F_02_80047E48();
-}
-
-/* the particles: a display list of textured rectangles */
-void func_ovl0F_02_800454E8(s32 arg0, UnkStruct_ovl0F_02_Gfx **arg1) {
-    UnkStruct_ovl0F_02_Gfx *gfx;
-    UnkStruct_ovl0F_02_80048D80 *p;
-    f32 oldx;
-    f32 oldz;
-    f32 s;
-    f32 c;
-    f32 scale;
-    f32 sign;
-    f32 dx;
-    f64 drift;
-    s32 dsdx;
-    s32 i;
-    f32 view[8];
-
-    gfx = *arg1;
-    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xB900031D; g->w1 = 0x00553048; }
-    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xFCFFFFFF; g->w1 = 0xFFFCF279; }
-    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xBB000001; g->w1 = 0x80008000; }
-    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xBA001301; g->w1 = 0; }
-    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xBA000E02; g->w1 = 0x8000; }
-    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xFD100000; g->w1 = D_ovl0F_02_800485E0->unk20 + (u32) D_ovl0F_02_800485E0; }
-    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xE8000000; g->w1 = 0; }
-    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xF5000100; g->w1 = 0x07000000; }
-    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xE6000000; g->w1 = 0; }
-    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xF0000000; g->w1 = 0x0703C000; }
-    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xE7000000; g->w1 = 0; }
-    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xFD500000; g->w1 = D_ovl0F_02_800485E0->unk14 + (u32) D_ovl0F_02_800485E0; }
-    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xF5500000; g->w1 = 0x07000000; }
-    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xE6000000; g->w1 = 0; }
-    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xF3000000; g->w1 = 0x0703F800; }
-    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xE7000000; g->w1 = 0; }
-    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xF5400200; g->w1 = 0; }
-    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xF2000000; g->w1 = 0x0003C03C; }
-    oldx = D_ovl0F_02_80048F10.x;
-    oldz = D_ovl0F_02_80048F10.z;
-    func_ovl0F_02_80047C30(&D_ovl0F_02_80048F10);
-    func_ovl0F_02_80047C40(view);
-    s = func_ovl0F_02_80047FE8(view[0]);
-    c = func_ovl0F_02_80047FE0(view[0]);
-    D_ovl0F_02_800485E4 = ((D_ovl0F_02_80048F10.x - oldx) * s - c * (D_ovl0F_02_80048F10.z - oldz)) * 0.5f;
-    s = func_ovl0F_02_80047FE8(view[0]);
-    c = func_ovl0F_02_80047FE0(view[0]);
-    D_ovl0F_02_800485E8 = (c * (D_ovl0F_02_80048F10.x - oldx) + (D_ovl0F_02_80048F10.z - oldz) * s) * 0.2f;
-    scale = 1500.0f / view[2];
-    D_ovl0F_02_800485E4 *= scale;
-    D_ovl0F_02_800485E8 *= scale;
-    i = 0;
-    if (func_ovl0F_02_800480C0(0x407) == 0) {
-        goto update;
-    }
-    do {
-        p = &D_ovl0F_02_80048D80[i];
-        dsdx = 16.0f / (p->unk8 - 1.0f) * 1024.0f;
-        {
-            UnkStruct_ovl0F_02_Gfx *g = gfx++;
-            g->w0 = _SHIFTL(0xE4, 24, 8) | _SHIFTL((u32) (p->unk0 + p->unk8 - 1.0f) << 2, 12, 12) | _SHIFTL((u32) (p->unk4 + p->unk8 - 1.0f) << 2, 0, 12);
-            g->w1 = _SHIFTL(0, 24, 3) | _SHIFTL((u32) p->unk0 << 2, 12, 12) | _SHIFTL((u32) p->unk4 << 2, 0, 12);
-        }
-        { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xB4000000; g->w1 = 0; }
-        { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xB3000000; g->w1 = _SHIFTL(dsdx, 16, 16) | _SHIFTL(dsdx, 0, 16); }
-    update:
-        if (D_ovl0F_02_800485F4 != 0.0f) {
-            p = &D_ovl0F_02_80048D80[i];
-            s = func_ovl0F_02_80047FE8(view[0]);
-            dx = -D_ovl0F_02_800485E4;
-            p->unk0 += dx - (f32) func_ovl0F_02_80047FF0() * (dx * 0.25f) + D_ovl0F_02_800485EC * s;
-            sign = func_ovl0F_02_800454E0(D_ovl0F_02_800485EC);
-            if (func_ovl0F_02_80047FE0(view[0]) * (sign * D_ovl0F_02_800485EC) + D_ovl0F_02_800485F0 < 0.0f) {
-                sign = func_ovl0F_02_800454E0(D_ovl0F_02_800485EC);
-                drift = (func_ovl0F_02_80047FE0(view[0]) * (sign * D_ovl0F_02_800485EC) + D_ovl0F_02_800485F0) * 0.5;
-            } else {
-                sign = func_ovl0F_02_800454E0(D_ovl0F_02_800485EC);
-                drift = func_ovl0F_02_80047FE0(view[0]) * (sign * D_ovl0F_02_800485EC) + D_ovl0F_02_800485F0;
-            }
-            p->unk4 += (p->unkC - D_ovl0F_02_800485E8) - (f32) func_ovl0F_02_80047FF0() * ((p->unkC - D_ovl0F_02_800485E8) * 0.6f) + drift;
-            p->unk8 -= 0.1f * (p->unk8 * 0.0625f);
-            if (340.0f <= p->unk0 || 240.0f <= p->unk4 || p->unk8 <= 3.0f || p->unk10++ >= 240 || p->unk0 < -20.0f ||
-                p->unk4 < -10.0f) {
-                func_ovl0F_02_800453A4(p);
-            }
-        }
-        i++;
-    } while (i != 20);
-    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xBA001301; g->w1 = 0x00080000; }
-    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xBA000E02; g->w1 = 0; }
-    *arg1 = gfx;
-}
-
-/* a callback (case 2): the wind pushes an object, more weakly */
-void func_ovl0F_02_8004533C(UnkStructA *obj) {
-    func_ovl0F_02_800436D8(obj, D_ovl0F_02_800485FC * 0.42857143f);
-}
-
-static void func_ovl0F_02_80044F74(UnkStruct_ovl0F_02_80048734 *arg0, s32 arg1) {
-    s32 i;
-
-    for (i = 0; i < arg1; i++) {
-        *arg0->unk0 = func_ovl0F_02_80047D58(arg0->unk4, arg0->unk8);
-        func_ovl0F_02_80047CE8(*arg0->unk0, arg0->unk24 | 0x01000000);
-        func_ovl0F_02_80044C94(arg0);
-        (*arg0->unk0)->unk40->unk1C = arg0->unk18;
-        (*arg0->unk0)->unk40->unk20 = arg0->unk1C;
-        (*arg0->unk0)->unk40->unk24 = arg0->unk20;
-        arg0++;
-    }
-}
-
-/* four effects at the corners of a square around pos */
-static void func_ovl0F_02_80044E9C(f32 *pos, s32 id, f32 d, f32 h) {
-    func_ovl0F_02_80048288(id, pos[0] + d, pos[1] + h, pos[2] + d, 0);
-    func_ovl0F_02_80048288(id, pos[0] + d, pos[1] + h, pos[2] - d, 0);
-    func_ovl0F_02_80048288(id, pos[0] - d, pos[1] + h, pos[2] + d, 0);
-    func_ovl0F_02_80048288(id, pos[0] - d, pos[1] + h, pos[2] - d, 0);
-}
-
-/* the movers' callback (D_ovl0F_02_80048F20.unk20): mover i back to its
- * start, shown (flag set) or hidden */
-void func_ovl0F_02_80044D20(s32 i, s32 flag) {
-    UnkStruct_ovl0F_02_80048734 *rec;
-    UnkStruct_ovl0F_02_800486A4 *st;
-
-    rec = &D_ovl0F_02_80048734[i];
-    func_ovl0F_02_80044C94(rec);
-    st = &D_ovl0F_02_800486A4[i];
-    st->unkC = 0;
-    st->unk12 = 0;
-    st->unk14 = 1;
-    st->unk11 = flag;
-    if (flag == 0) {
-        func_ovl0F_02_80047CF0(*rec->unk0, 0x01000070);
-    } else {
-        func_ovl0F_02_80047CE8(*rec->unk0, 0x01000070);
-    }
-    st->unk10 = 0;
-    st->unk4 = 1.0f;
-    st->unk8 = 0.05f;
-    (*rec->unk0)->unk40->unk14 = 2200.0f;
-    if (flag != 0) {
-        (*rec->unk0)->unk68 = 20.0f;
-        (*rec->unk0)->unk6C = 0.0f;
-        func_ovl0F_02_80048288(0xC, (*rec->unk0)->unk40->unk10, (*rec->unk0)->unk40->unk14,
-                               (*rec->unk0)->unk40->unk18, 0);
-    }
-}
-
-static void func_ovl0F_02_80044C94(UnkStruct_ovl0F_02_80048734 *arg0) {
-    f32 pos[3];
-
-    func_ovl0F_02_80047348(arg0->unkC, arg0->unk10, arg0->unk14, pos, 0);
-    (*arg0->unk0)->unk40->unk10 = pos[0];
-    (*arg0->unk0)->unk40->unk14 = pos[1];
-    (*arg0->unk0)->unk40->unk18 = pos[2];
-}
-
-/* passed to func_ovl0F_02_80048330 */
-s32 func_ovl0F_02_80044C6C(s32 arg0) {
-    if ((arg0 & 0xF) == 0xF) {
-        return 0;
-    }
-    return 1;
-}
-
-/* a task: the sparks over a mover that was hit */
-void func_ovl0F_02_80044B28(void) {
-    UnkStruct_ovl0F_02_80048734 *rec;
-    s32 i;
-
-    rec = &D_ovl0F_02_80048734[(s32) func_ovl0F_02_80047E60()];
-    for (i = 0; i < 3; i++) {
-        func_ovl0F_02_80048288(7, (*rec->unk0)->unk40->unk10, (*rec->unk0)->unk40->unk14 + 100.0f,
-                               (*rec->unk0)->unk40->unk18, 0);
-        func_ovl0F_02_80047E58(3);
-    }
-    for (i = 0; i < 5; i++) {
-        func_ovl0F_02_80048288(0x18, (*rec->unk0)->unk40->unk10, (*rec->unk0)->unk40->unk14 + 100.0f,
-                               (*rec->unk0)->unk40->unk18, 0);
-        func_ovl0F_02_80047E58(3);
-    }
-    func_ovl0F_02_80048288(0x16, (*rec->unk0)->unk40->unk10, (*rec->unk0)->unk40->unk14 + 100.0f,
-                           (*rec->unk0)->unk40->unk18, 0);
-    func_ovl0F_02_80047E48();
-}
-
-/* the callback func_ovl0F_02_80045F24 registers: an object a mover hit
- * flies off */
-void func_ovl0F_02_80044824(UnkStructA *obj) {
-    s32 dir;
-    f32 speed;
-    s32 i;
-    f32 dy;
-
-    dir = 0;
-    speed = 0.0f;
-    func_ovl0F_02_800483C0(0x1E);
-    if (D_ovl0F_02_80048F20.unk16 != -1) {
-        dir = D_ovl0F_02_800486A4[D_ovl0F_02_80048F20.unk16].unk0;
-        speed = D_ovl0F_02_800486A4[D_ovl0F_02_80048F20.unk16].unk4 * 0.8f;
-    }
-    func_ovl0F_02_80047A10(obj->unk40, 0x11, 0);
-    func_ovl0F_02_80047A40(obj->unk40, 4, 0xC);
-    func_ovl0F_02_80047A40(obj->unk40, 5, 0xD);
-    func_ovl0F_02_80048288(0, obj->unk40->unk10, obj->unk40->unk14 + 100.0f, obj->unk40->unk18, 0);
-    obj->unk68 = 30.0f;
-    obj->unk70 = 1.6333334f;
-    for (i = 1; i < 201 && obj->unk68 > 0.0f && !func_ovl0F_02_80043B28(obj); i++) {
-        dy = func_ovl0F_02_80047FE8(obj->unk40->unk1C) * 30.0f;
-        func_ovl0F_02_80048330(obj, dir, speed, func_ovl0F_02_80044C6C);
-        obj->unk40->unk1C += 10.0f;
-        obj->unk40->unk10 -= func_ovl0F_02_80047FE0(obj->unk40->unk1C);
-        if (dy > 0.0f) {
-            dy = 0.0f;
-        }
-        obj->unk40->unk14 -= dy;
-        func_ovl0F_02_80047E80();
-    }
-    if (func_ovl0F_02_80043B28(obj)) {
-        func_ovl0F_02_800434F8(obj);
-    } else {
-        obj->unk6C = 0.0f;
-        obj->unk70 = 0.0f;
-    }
-    func_ovl0F_02_80047E58(0x50);
 }
 
 /* the movers' script (D_ovl0F_02_80048614), one frame */
@@ -1579,6 +1421,183 @@ static s32 func_ovl0F_02_80043018(void) {
         }
     }
     return -1;
+}
+
+/* The overlay's handler: the entry returns it to the loader. */
+void func_ovl0F_02_800462F8(s32 arg0) {
+    s32 i;
+
+    switch (arg0) {
+        case 2:
+            D_ovl0F_02_80048D7C = func_ovl0F_02_800473E8();
+            if (D_ovl0F_02_80048D7C == 0x14) {
+                D_ovl0F_02_80048954 = 1;
+                func_ovl0F_02_80048368(0);
+            } else {
+                D_ovl0F_02_80048954 = 0;
+            }
+            func_ovl0F_02_800481A0(D_ovl0F_02_80048958);
+            for (i = 0; i < 6; i++) {
+                func_ovl0F_02_80048348(D_ovl0F_02_8004897C[i][0], D_ovl0F_02_8004897C[i][1], D_ovl0F_02_8004897C[i][2]);
+            }
+            func_ovl0F_02_800472E8(0x224);
+            func_ovl0F_02_80047300(0x238);
+            func_ovl0F_02_80047498();
+            if (D_ovl0F_02_80048954 == 0) {
+                func_ovl0F_02_80046178(5, 6);
+            } else {
+                func_ovl0F_02_80046178(1, 2);
+            }
+            func_ovl0F_02_80044F74(&D_ovl0F_02_800489C4, 1);
+            if (func_ovl0F_02_800480C0(D_ovl0F_02_800489F4.unk0[0].unk28) == 0) {
+                func_ovl0F_02_80047E38(func_ovl0F_02_80045024, &D_ovl0F_02_800489F4, 0, 0, 0x110);
+            } else {
+                D_ovl0F_02_800489F4.unk58();
+                D_ovl0F_02_800489F4.unk5C();
+                D_ovl0F_02_800489F4.unk0[1].unk10 -= 1.0f;
+                func_ovl0F_02_80044F74(&D_ovl0F_02_800489F4.unk0[1], 1);
+                *D_ovl0F_02_800489F4.unk0[0].unk0 = NULL;
+                D_ovl0F_02_800489F4.unk0[1].unk10 += 1.0f;
+            }
+            func_ovl0F_02_80044F74(D_ovl0F_02_8004883C, 5);
+            for (i = 0; i < 5; i++) {
+                if (D_ovl0F_02_8004883C[i].unk1C == 0.0f) {
+                    func_ovl0F_02_80047328((s32) D_ovl0F_02_8004883C[i].unkC - 1, D_ovl0F_02_8004883C[i].unk10,
+                                           (s32) D_ovl0F_02_8004883C[i].unk14 - 1, (s32) D_ovl0F_02_8004883C[i].unkC - 1,
+                                           D_ovl0F_02_8004883C[i].unk14, 0x1411);
+                    func_ovl0F_02_80047328(D_ovl0F_02_8004883C[i].unkC, D_ovl0F_02_8004883C[i].unk10,
+                                           (s32) D_ovl0F_02_8004883C[i].unk14 - 1, D_ovl0F_02_8004883C[i].unkC,
+                                           D_ovl0F_02_8004883C[i].unk14, 0x141A);
+                }
+                D_ovl0F_02_80048918[i].unk0 = 1;
+                D_ovl0F_02_80048918[i].unk8 = -1;
+            }
+            D_ovl0F_02_80048918[func_ovl0F_02_80047FF8(4)].unk8 = 3;
+            if (func_ovl0F_02_800480C0(0x400) == 0) {
+                func_ovl0F_02_80045F24(&D_ovl0F_02_800489F0);
+            }
+            func_ovl0F_02_800473C8(func_ovl0F_02_800438B4, 7);
+            break;
+        case 17:
+            func_ovl0F_02_800474E0(0x40);
+            func_ovl0F_02_800474A0(0x1C, 0, 0x10);
+            break;
+        case 18:
+            func_ovl0F_02_800474A0(0xB, 4, 0x12);
+            break;
+        case 19:
+            func_ovl0F_02_800474E0(0xA0);
+            func_ovl0F_02_800474A0(0xD, 4, 2);
+            break;
+        case 20:
+            D_ovl0F_02_80048954 = 1;
+            func_ovl0F_02_800474A0(0x16, 2, 0x17);
+            break;
+        case 4:
+            func_ovl0F_02_800474F8();
+            func_ovl0F_02_800473D0(func_ovl0F_02_800434F8);
+            func_ovl0F_02_80047DC8(40.0f);
+            func_ovl0F_02_80047DD0(30);
+            if (D_ovl0F_02_80048954 == 1) {
+                func_ovl0F_02_80047B48(0.0f, 32768.0f, 32768.0f);
+                func_ovl0F_02_80047E38(func_ovl0F_02_80043404, NULL, 0, 0, 0x130);
+                func_ovl0F_02_80047B90(0xF);
+                func_ovl0F_02_80047BA0(1);
+            }
+            break;
+        case 5:
+            switch (func_ovl0F_02_800473E8()) {
+                case 17:
+                    func_ovl0F_02_800474E8(D_ovl0F_02_80048A8C[0].unk0, D_ovl0F_02_80048A8C[0].unk4,
+                                           D_ovl0F_02_80048A8C[0].unk8, D_ovl0F_02_80048A8C[0].unkC,
+                                           D_ovl0F_02_80048A8C[0].unk10, D_ovl0F_02_80048A8C[0].unk14,
+                                           D_ovl0F_02_80048A8C[0].unk18);
+                    break;
+                case 19:
+                    func_ovl0F_02_800474E8(D_ovl0F_02_80048A8C[1].unk0, D_ovl0F_02_80048A8C[1].unk4,
+                                           D_ovl0F_02_80048A8C[1].unk8, D_ovl0F_02_80048A8C[1].unkC,
+                                           D_ovl0F_02_80048A8C[1].unk10, D_ovl0F_02_80048A8C[1].unk14,
+                                           D_ovl0F_02_80048A8C[1].unk18);
+                    func_ovl0F_02_80047E38(func_ovl0F_02_80043618, NULL, 0, 0, 0x130);
+                    break;
+            }
+            break;
+        case 0x50:
+            func_ovl0F_02_800433A0(D_ovl0F_02_80048A54);
+            func_ovl0F_02_800433A0(D_ovl0F_02_80048A70);
+            break;
+        case 0x52:
+            if (func_ovl0F_02_800474B0(0x12, 0xA, 0x12, 0xA) != 0) {
+                if (func_ovl0F_02_800480C0(0x406) == 0) {
+                    func_ovl0F_02_80047DC8(0.0f);
+                    func_ovl0F_02_80047DD0(0x7F);
+                    func_ovl0F_02_800480B0(0x406);
+                    func_ovl0F_02_800480B8(0x407);
+                    func_ovl0F_02_80047C48();
+                    func_ovl0F_02_80047B90(0xF);
+                    func_ovl0F_02_80047B88(0x10);
+                    func_ovl0F_02_80047B18(0);
+                    func_ovl0F_02_80047B38(581.4f, 1430.1f, 1133.3f);
+                    func_ovl0F_02_80043324(60, "WM1 WG1 WSH WAP WDW WB3 ST10");
+                }
+            } else {
+                i = func_ovl0F_02_80043018();
+                if (i != -1) {
+                    D_ovl0F_02_80048D74 = i;
+                    func_ovl0F_02_80047E38(func_ovl0F_02_80043944, NULL, 0, 0, 0x110);
+                }
+            }
+            break;
+        case 0x53:
+            if (func_ovl0F_02_800474B0(0x13, 0xA, 0x13, 0xA) != 0 && func_ovl0F_02_800480C0(0x406) != 0) {
+                func_ovl0F_02_80047DC8(40.0f);
+                func_ovl0F_02_80047DD0(30);
+                func_ovl0F_02_800480B8(0x406);
+                func_ovl0F_02_800480B0(0x407);
+                func_ovl0F_02_80047B88(0x1F);
+                func_ovl0F_02_80047B18(1);
+                func_ovl0F_02_80047C50();
+                func_ovl0F_02_80047C18(D_ovl0F_02_80048D38);
+                func_ovl0F_02_80043324(60, "WM1 WG1 WSH WAP WDE WB2 ST30");
+            }
+            break;
+        case 1:
+            func_ovl0F_02_800479D8(D_ovl0F_02_80048F1C);
+            func_ovl0F_02_800479C0(0x258);
+            func_ovl0F_02_80043020(5, D_ovl0F_02_8004883C);
+            func_ovl0F_02_80043020(1, &D_ovl0F_02_800489C4);
+            if (func_ovl0F_02_800480C0(D_ovl0F_02_800489F4.unk0[0].unk28) == 0) {
+                func_ovl0F_02_80043020(2, D_ovl0F_02_800489F4.unk0);
+            } else {
+                func_ovl0F_02_80043020(1, &D_ovl0F_02_800489F4.unk0[1]);
+            }
+            *D_ovl0F_02_800489F4.unk0[0].unk0 = NULL;
+            if (D_ovl0F_02_80048954 == 1) {
+                func_ovl0F_02_80048540();
+            }
+            break;
+        case 12:
+            func_ovl0F_02_80047530(1);
+            break;
+        case 3:
+            D_ovl0F_02_80048D54 = func_ovl0F_02_800474C8();
+            func_ovl0F_02_800474A8(&D_ovl0F_02_80048D48);
+            func_ovl0F_02_800474D0(D_ovl0F_02_80048D54, D_ovl0F_02_80048D38);
+            D_ovl0F_02_80048B08[0] = 1;
+            func_ovl0F_02_80043028();
+            break;
+        case 6:
+        case 7:
+        case 8:
+        case 9:
+        case 10:
+        case 11:
+        case 13:
+        case 14:
+        case 15:
+        case 16:
+            break;
+    }
 }
 
 void func_ovl0F_02_80043010(void) {
