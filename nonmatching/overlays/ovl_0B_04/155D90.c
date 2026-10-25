@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4204, jp 4172
+ * differing words: us 4120, jp 4172
  *
  * Order (scratch/ord/search.py, hill-climb over definition order, scored by
  * the emitted sequence's edit distance from the original's address order):
@@ -31,8 +31,12 @@
  *   80043F24 362, 800444E8 579, 80044BE8 205, 800450C0 105,
  *   80045214 431, 800459C4 233, 80046180 544 (the statics after them);
  * - 80045AF0/80045D20/80045F50 25 each, 80045BF4/80045E24/80046054 73
- *   each, 80046B28/80046FA8 109, 80046D74 97, 800471F4 107,
+ *   each, 80046B28 109, 80046FA8 79, 80046D74 73, 800471F4 77,
  *   80046AA0 42, 80046CEC/80046F20/8004716C 3 each;
+ *   80046D74, 80046FA8 and 800471F4 have their 0x30-byte pad (the frame
+ *   is 144 as in the original) and their FreeEntries loops written out
+ *   (80046D74 and 80046FA8 are 8 bytes short: the empty stub after each
+ *   isn't written yet);
  * - 80043E4C, 80043E80, 80043EC8 match.
  */
 #include "common.h"
@@ -762,6 +766,8 @@ static void func_ovl0B_04_SetText(s32 id, u8 *str, s32 col, f32 scale) {
  * open), in two halves of five. */
 u8 func_ovl0B_04_800471F4(u8 arg0, u16 arg1) {
     u8 ret = 1;
+    u8 pad[0x30];
+    Entry *p;
 
     func_ovl0B_04_80046734(arg1, arg0);
     if (arg1 & 1) {
@@ -778,8 +784,12 @@ u8 func_ovl0B_04_800471F4(u8 arg0, u16 arg1) {
     } else if (arg1 & 2) {
         func_ovl0B_04_800487D0(2);
         func_ovl0B_04_80043FA4(&ret, 0, 5, 0);
-        func_ovl0B_04_FreeEntries(&D_ovl0B_04_8004A060[10], 1);
-        func_ovl0B_04_FreeEntries(&D_ovl0B_04_8004A060[11], 1);
+        for (p = &D_ovl0B_04_8004A060[10]; p < &D_ovl0B_04_8004A060[10] + 1; p++) {
+            func_ovl0B_04_80047DE0(p->unk0);
+        }
+        for (p = &D_ovl0B_04_8004A060[11]; p < &D_ovl0B_04_8004A060[11] + 1; p++) {
+            func_ovl0B_04_80047DE0(p->unk0);
+        }
     }
     return ret;
 }
@@ -790,6 +800,8 @@ void func_ovl0B_04_8004716C(Obj *arg0) {
 
 u8 func_ovl0B_04_80046FA8(u8 arg0, u16 arg1) {
     u8 ret = 1;
+    u8 pad[0x30];
+    Entry *p;
 
     func_ovl0B_04_80046734(arg1, arg0);
     if (arg1 & 1) {
@@ -806,8 +818,12 @@ u8 func_ovl0B_04_80046FA8(u8 arg0, u16 arg1) {
     } else if (arg1 & 2) {
         func_ovl0B_04_800487D0(2);
         func_ovl0B_04_80043FA4(&ret, 0, 4, 0);
-        func_ovl0B_04_FreeEntries(&D_ovl0B_04_8004A060[10], 1);
-        func_ovl0B_04_FreeEntries(&D_ovl0B_04_8004A060[11], 1);
+        for (p = &D_ovl0B_04_8004A060[10]; p < &D_ovl0B_04_8004A060[10] + 1; p++) {
+            func_ovl0B_04_80047DE0(p->unk0);
+        }
+        for (p = &D_ovl0B_04_8004A060[11]; p < &D_ovl0B_04_8004A060[11] + 1; p++) {
+            func_ovl0B_04_80047DE0(p->unk0);
+        }
     }
     return ret;
 }
@@ -818,6 +834,8 @@ void func_ovl0B_04_80046F20(Obj *arg0) {
 
 u8 func_ovl0B_04_80046D74(u8 arg0, u16 arg1) {
     u8 ret = 1;
+    u8 pad[0x30];
+    Entry *p;
 
     func_ovl0B_04_80046734(arg1, arg0);
     if (arg1 & 1) {
@@ -833,8 +851,12 @@ u8 func_ovl0B_04_80046D74(u8 arg0, u16 arg1) {
     } else if (arg1 & 2) {
         func_ovl0B_04_800487D0(2);
         func_ovl0B_04_80043FA4(&ret, 0, 3, 0);
-        func_ovl0B_04_FreeEntries(&D_ovl0B_04_8004A060[10], 1);
-        func_ovl0B_04_FreeEntries(&D_ovl0B_04_8004A060[11], 1);
+        for (p = &D_ovl0B_04_8004A060[10]; p < &D_ovl0B_04_8004A060[10] + 1; p++) {
+            func_ovl0B_04_80047DE0(p->unk0);
+        }
+        for (p = &D_ovl0B_04_8004A060[11]; p < &D_ovl0B_04_8004A060[11] + 1; p++) {
+            func_ovl0B_04_80047DE0(p->unk0);
+        }
     }
     return ret;
 }
