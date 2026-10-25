@@ -934,9 +934,8 @@ void func_ovl10_06_80047BE0(s32 arg0) {
     sp20 = var_t0;
     func_ovl10_06_8004A068(D_ovl10_06_8004B9A4, &sp24);
     func_ovl10_06_80049FB0(D_ovl10_06_8004B9A4);
-    temp_v0 = func_ovl10_06_80049FC0(sp20, 0x11080000, 0xD0, 0);
-    D_ovl10_06_8004B9A4 = temp_v0;
-    temp_v0->unk40->unk10 = sp24.x;
+    D_ovl10_06_8004B9A4 = func_ovl10_06_80049FC0(sp20, 0x11080000, 0xD0, 0);
+    D_ovl10_06_8004B9A4->unk40->unk10 = sp24.x;
     D_ovl10_06_8004B9A4->unk40->unk14 = sp24.y;
     D_ovl10_06_8004B9A4->unk40->unk18 = sp24.z;
     D_ovl10_06_8004B9A4->unk40->unk36 = 0xC0;
@@ -2397,9 +2396,8 @@ void func_ovl10_06_80043CB0(void) {
     func_ovl10_06_80049F30(&sp3C.x, &sp30.x);
     func_ovl10_06_80049780(func_ovl10_06_80049778(), &sp24.x);
     func_ovl10_06_800430A8(func_ovl10_06_8004411C);
-    temp_v0 = func_ovl10_06_80049FC0(0x328, 0x01000000, 0xC0, 0);
-    D_ovl10_06_8004AF18 = temp_v0;
-    temp_v0->unk40->unk10 = sp30.x + sp24.x + 200.0f;
+    D_ovl10_06_8004AF18 = func_ovl10_06_80049FC0(0x328, 0x01000000, 0xC0, 0);
+    D_ovl10_06_8004AF18->unk40->unk10 = sp30.x + sp24.x + 200.0f;
     D_ovl10_06_8004AF18->unk40->unk14 = sp30.y + sp24.y + 500.0f;
     D_ovl10_06_8004AF18->unk40->unk18 = sp30.z + sp24.z;
     D_ovl10_06_8004AF18->unk40->unk20 = 0.0f;
@@ -2588,9 +2586,8 @@ void func_ovl10_06_8004368C(void) {
     func_ovl10_06_8004A5F8(4, 0xC, 0xEA);
     func_ovl10_06_8004A5F8(5, 0xC, 0xE0);
     func_ovl10_06_80049598(0x1E0);
-    temp_v0 = func_ovl10_06_80049FC0(0xBC, 0x01000000, 0xD0, 0);
-    D_ovl10_06_8004ADB8 = temp_v0;
-    temp_v0->unk40->unk10 = 0.0f;
+    D_ovl10_06_8004ADB8 = func_ovl10_06_80049FC0(0xBC, 0x01000000, 0xD0, 0);
+    D_ovl10_06_8004ADB8->unk40->unk10 = 0.0f;
     D_ovl10_06_8004ADB8->unk40->unk14 = 0.0f;
     D_ovl10_06_8004ADB8->unk40->unk18 = 0.0f;
     func_ovl10_06_800435FC(0x1FD);
