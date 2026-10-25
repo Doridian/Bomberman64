@@ -535,7 +535,9 @@ module's asm blocks, though the draft defines it.
   `var_s0 += 0x30` on a struct pointer (steps 0x30 records; `p++` is
   right and matched ovl_0C_02's 80043338), and `+= 1; if (>= 6)` where
   the `slti` sits before the increment in its delay slot
-  (`if (wait++ >= 6)`, 80046924).
+  (`if (wait++ >= 6)`, 80046924). IDO compiles a leftover `M2C_ERROR(...)`
+  as an implicit call, so grep for it after a clean compile. Its
+  `cfc1`/`& 0x78` blocks are a float-to-`u32` conversion: `(u32)f`.
 - **A constant computed at run time was a variable.** Where the original
   multiplies `22.0f * 100.0f` at run time or converts an int 14 with
   `cvt`, the source had `tx = 22.0f; tz = 14; n = 5;` just before use. A
