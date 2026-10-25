@@ -4,7 +4,7 @@
  * words are the original's, though IDO puts the scripts' strings in .rodata).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1757, jp 2028
+ * differing words: us 1757, jp 1757
  *
  * A first complete draft: the functions with a ratio-1.00 sibling are that
  * sibling's C translated (scratch/0C_01/sib.py: ovl_0C_06 first, then
