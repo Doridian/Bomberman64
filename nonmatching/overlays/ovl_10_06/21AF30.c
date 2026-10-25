@@ -5,7 +5,7 @@
  * floats in another order). .text is the original's size. Not built into
  * the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 219, jp 1687
+ * differing words: us 198, jp 1687
  *
  * What still differs in us (words, as tools/nonmatching.py counts them; a
  * static's words go to the named function before it):
@@ -15,12 +15,12 @@
  *   a second pass matched it (8004322C-80043338's stubs, 800445DC,
  *   80044D00, 80045518, 80047D14): 80043A68 (0), 80043CB0 (0),
  *   80043FF8 (0), 8004411C (0), 800442D4 (2), 800443DC (7), 80044804
- *   (6), 80044A54 (6), 80044AE4 (3), 80044BCC (0), 80044F8C (4), 80045458
- *   (8), 800455EC (3), 8004584C (9), 80045CE4 (38), 80045F9C (0),
+ *   (0), 80044A54 (0), 80044AE4 (0), 80044BCC (0), 80044F8C (4), 80045458
+ *   (8), 800455EC (0), 8004584C (9), 80045CE4 (38), 80045F9C (0),
  *   800460C8 (2), 800463C0 (0), 80046478 (0), 800465F4 (0), 800466C4
  *   (0), 8004683C (0), 80046A04 (0), 80046BF0 (0), 80046C64 (0),
  *   80046D74 (0), 80047110 (2), 800473FC (0), 80047450 (0), 80047634
- *   (0), 80047810 (0), 80047B0C (3), 80047BE0 (0), 80047C98 (0),
+ *   (0), 80047810 (0), 80047B0C (0), 80047BE0 (0), 80047C98 (0),
  *   80047E10 (0), 80048110 (22), 80048498 (0), 80048944 (0), 800489FC
  *   (0), 80049020 (0).
  * - 80045888 (104): its frame is right (pad2 fills what is probably an
@@ -903,15 +903,15 @@ void func_ovl10_06_80047B78(void) {
 }
 
 void func_ovl10_06_80047B0C(void) {
-    f32 sp34;
+    Vec3f ang;
     Vec3f sp28;
     Vec3f sp1C;
 
     if (D_ovl10_06_8004B9A4 != NULL) {
-        func_ovl10_06_8004A068(D_ovl10_06_8004ADD0, &sp28);
+        func_ovl10_06_8004A068(D_ovl10_06_8004ADD0[0], &sp28);
         func_ovl10_06_8004A068(D_ovl10_06_8004B9A4, &sp1C);
-        func_ovl10_06_80049F28(&sp28.x, &sp1C.x, &sp34);
-        D_ovl10_06_8004ADD0[0]->unk40->unk20 = sp34;
+        func_ovl10_06_80049F28(&sp28.x, &sp1C.x, &ang.x);
+        D_ovl10_06_8004ADD0[0]->unk40->unk20 = ang.x;
     }
 }
 
@@ -1616,23 +1616,13 @@ void func_ovl10_06_800456D4(void) {
 }
 
 void func_ovl10_06_800455EC(void) {
-    s32 var_s1;
-    s32 var_s2;
-    void **var_s0;
+    s32 i;
 
-    var_s2 = 0;
-    if (D_ovl10_06_8004B7F4 > 0) {
-        var_s0 = D_ovl10_06_8004B990;
-        var_s1 = 0;
-        do {
-            if (*var_s0 != NULL) {
-                func_ovl10_06_80049FB0(*(UnkStructA * *)((u8 *)D_ovl10_06_8004ADE0 + var_s1));
-                *var_s0 = NULL;
-            }
-            var_s2 += 1;
-            var_s1 += 4;
-            var_s0 += 1;
-        } while (var_s2 < D_ovl10_06_8004B7F4);
+    for (i = 0; i < D_ovl10_06_8004B7F4; i++) {
+        if (D_ovl10_06_8004B990[i] != NULL) {
+            func_ovl10_06_80049FB0(D_ovl10_06_8004ADE0[i]);
+            D_ovl10_06_8004B990[i] = NULL;
+        }
     }
     func_ovl10_06_80049EC0(10.0f, 10.0f, 10.0f);
     func_ovl10_06_80049EB0(0x3C);
@@ -1834,23 +1824,13 @@ void func_ovl10_06_80044BCC(f32 arg0) {
 }
 
 void func_ovl10_06_80044AE4(void) {
-    s32 var_s1;
-    s32 var_s2;
-    void **var_s0;
+    s32 i;
 
-    var_s2 = 0;
-    if (D_ovl10_06_8004B7F4 > 0) {
-        var_s0 = D_ovl10_06_8004B990;
-        var_s1 = 0;
-        do {
-            if (*var_s0 != NULL) {
-                func_ovl10_06_80049FB0(*(UnkStructA * *)((u8 *)D_ovl10_06_8004ADE0 + var_s1));
-                *var_s0 = NULL;
-            }
-            var_s2 += 1;
-            var_s1 += 4;
-            var_s0 += 1;
-        } while (var_s2 < D_ovl10_06_8004B7F4);
+    for (i = 0; i < D_ovl10_06_8004B7F4; i++) {
+        if (D_ovl10_06_8004B990[i] != NULL) {
+            func_ovl10_06_80049FB0(D_ovl10_06_8004ADE0[i]);
+            D_ovl10_06_8004B990[i] = NULL;
+        }
     }
     func_ovl10_06_80049EC0(10.0f, 10.0f, 10.0f);
     func_ovl10_06_80049EB0(0x3C);
@@ -1860,6 +1840,7 @@ void func_ovl10_06_80044AE4(void) {
 
 void func_ovl10_06_80044A54(void) {
     Vec3f sp2C;
+    s32 pad[2];
 
     func_ovl10_06_800495F8(44.0f, 1.0f, 15.0f, &sp2C.x, 0);
     func_ovl10_06_80049DD8(sp2C.x, sp2C.y, sp2C.z);
@@ -1898,6 +1879,7 @@ void func_ovl10_06_800448EC(void) {
 
 void func_ovl10_06_80044804(void) {
     Vec3f sp2C;
+    s32 pad[2];
 
     func_ovl10_06_80049E40(0x1F);
     if (func_ovl10_06_80049E28() & 1) {
