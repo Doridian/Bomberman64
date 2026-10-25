@@ -579,6 +579,18 @@ module's asm blocks, though the draft defines it.
   vectors' sp offsets shows how many scalars sit between them
   (`scratch/10_13/p4/spoff.sh`; ovl_10_13's 80044E48 needed two of them
   and two pads there).
+- **An empty stub is a static called once and inlined.** It leaves an
+  8-byte body just before its caller, and a caller's stubs come out in
+  reverse call order; a static nothing calls is cut to a stub at the
+  object's end. Calling each stub from the function after it put all 23
+  of ovl_0B_06's in place.
+- **Statics take arguments in the caller's registers.** IDO passes an
+  inlined-once static's arguments in whatever `$s`/`$t`/`$fp` register or
+  stack slot the caller holds them in, which m2c can't follow; the setup
+  before each call gives the parameters (`scratch/0B_06/sites.py`). m2c
+  given a context (preprocessed `common.h` plus the draft's types,
+  prototypes and externs, `scratch/0B_06/m2c.sh`) leaves far fewer
+  unresolved fields.
 - **Fix a static's size before its code.** fcmp counts a run of statics
   as one, so a static one word long or short shifts the rest of its run:
   a `u16` local that fixed 8004311C's length took ovl_0A_06's first run
