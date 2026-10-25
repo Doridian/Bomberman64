@@ -474,6 +474,16 @@ module's asm blocks, though the draft defines it.
   against and the zero it stores in two saved registers (an extra saved
   float pair in the prologue), the comparisons are written with an int
   `0` and the stores with `0.0f`: ovl_0C_09's 80045934, 282 words to 19.
+  The same goes for other constants: `dz * 50` keeps the multiplier apart
+  from a stored `50.0f` (ovl_0C_06's 800430A8).
+- **Check m2c's local types.** Counters it gives as `s32` may be `s16`
+  (an `sll`/`sra` pair after each change), and a volume it gives as `s8`
+  may be `s32`, narrowed only by the callee's prototype (ovl_0C_06's
+  80046CF0, 8004696C and 800458D8).
+- **Walking the parameter.** A list kept in its own stack slot apart
+  from the loop pointer means the loop advances the parameter itself, and
+  a copy taken at the top is what's kept for later (ovl_0C_06's
+  80043544, 97 words to 0).
 - **Loops:** `while (TRUE) { if (cond) break; ... }` rather than
   `while (!cond)`; re-reading `D[i].x` after a call rather than keeping
   a pointer removed a duplicated register (ovl_0C_09's 80043AA4, 84 words
