@@ -3,7 +3,7 @@
  * data (.data and .bss as the original's sizes).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4358, jp 4358
+ * differing words: us 4362, jp 4362
  *
  * A first complete draft: the functions are right, the layout is not yet.
  * What still differs in us (words, by tools/nonmatching.py's ranges, which
@@ -251,6 +251,7 @@ static void func_ovl0F_04_800460C4(void);
 static void func_ovl0F_04_800460BC(void);
 void func_ovl0F_04_80045E14(void);
 void func_ovl0F_04_8004544C(s32 arg0, UnkStruct_ovl0F_04_Gfx **arg1);
+static f32 func_ovl0F_04_80045444(f32 v);
 static void func_ovl0F_04_80045308(UnkStruct_ovl0F_04_80048AF0 *p);
 void func_ovl0F_04_800452A0(UnkStructA *obj);
 void func_ovl0F_04_80044F88(void);
@@ -588,6 +589,10 @@ void func_ovl0F_04_80045E14(void) {
         func_ovl0F_04_80047D10();
     }
     func_ovl0F_04_80047CD8();
+}
+
+static f32 func_ovl0F_04_80045444(f32 v) {
+    return v == 0.0f ? 0.0f : 1.0f;
 }
 
 void func_ovl0F_04_8004544C(s32 arg0, UnkStruct_ovl0F_04_Gfx **arg1) {
