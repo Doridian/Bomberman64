@@ -470,6 +470,17 @@ module's asm blocks, though the draft defines it.
 - **Callbacks** keep their argument: `D_802B01F8[arg1 - 1](arg0)`
   (99F40), where the array starts one entry after the symbol the asm
   indexes from.
+- **Two float zeros.** Where the original keeps the zero it compares
+  against and the zero it stores in two saved registers (an extra saved
+  float pair in the prologue), the comparisons are written with an int
+  `0` and the stores with `0.0f`: ovl_0C_09's 80045934, 282 words to 19.
+- **Loops:** `while (TRUE) { if (cond) break; ... }` rather than
+  `while (!cond)`; re-reading `D[i].x` after a call rather than keeping
+  a pointer removed a duplicated register (ovl_0C_09's 80043AA4, 84 words
+  to 0), while other loops walk a pointer (`for (i = 0, p = D; i < 6;
+  i++, p++)`, its 80043244). A body repeated in callers whose frames
+  leave no room for a callee's parameters is a macro (its 80044610 and
+  80045060).
 - **Source lines steer the scheduler.** Where two instruction orders are
   equally good, IDO's choice depends on which statements share a line.
   Joining statements onto one line, or into one macro (which expands to a
