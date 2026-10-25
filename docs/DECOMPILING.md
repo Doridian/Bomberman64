@@ -851,6 +851,11 @@ What a decompiler has to do for jp (and eu):
    every caller (`s32 m = msg;` put ovl_0A_06's 80043E68 argument back in
    `s1`, for every version). `scratch/0A_06jp/flipjp.py` turns one `#if`
    back to us's code at a time to find the block that hurts.
+   For a big function, diff only its calls, symbol references and
+   constants between us and jp (`scratch/0B_03jp/skel.py`): a full
+   instruction diff is mostly register noise. ovl_0B_03 (jp 3225 to 2683)
+   showed what else jp changes: fixed-width text counted in the C instead
+   of ZeroJump 0x250B, and ZeroJump 0x2501 for 0x250C.
 
 ## Data
 
