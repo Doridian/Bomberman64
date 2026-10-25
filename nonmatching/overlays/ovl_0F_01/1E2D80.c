@@ -3,7 +3,7 @@
  * data (.data and .bss as the original's sizes).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3482
+ * differing words: us 3482, jp 3482
  *
  * The definition order is a hill-climb's (scratch/ovl_0F_01/search.py, from
  * the committed order, scored by distance from the original's emitted order,
