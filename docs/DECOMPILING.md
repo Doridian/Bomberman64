@@ -765,6 +765,20 @@ module's asm blocks, though the draft defines it.
   that way. Check m2c's float constants against the data (its -10.0f
   there was a load of a model-table field), and inspect with `-mips1`:
   `-mips2` saves floats with `sdc1` and shifts every offset.
+- **Indexed globals, not m2c's pointer arithmetic.** Hudson re-reads
+  `D_X[i]->unk40->...` at every use and tests flags as
+  `if (D_B3A0[i] & n)`; rewriting m2c's raw style that way matched 22 of
+  ovl_10_06's functions at once (1687 to 187 words in all). There:
+  - a function nothing references is a callee inlined into its caller,
+    and its locals take slots in the caller's frame (what pad arrays
+    stood in for; `scratch/10_06/p3/unref.py` lists them);
+  - an `f32[4]` that is a Vec3f and a word must be a struct: IDO keeps a
+    field in a register across a store to another field, not across one
+    to another element;
+  - an empty `if (a >= 0.0 && a < 22.5) {} else if (...) {}` leaves only
+    the first test's compares (80047308);
+  - switch on the global itself, not a `state` copy (80046D74), and write
+    `&= ~2; |= 4` as two statements so the stores aren't merged.
 - **Unsolved: a block boundary with no branch.** Two misses come from
   how as1 schedules a block, not from ugen, so `cc -c -S` (ugen's
   `u.out.s`, before as1) shows them. In each, adding a single label to
