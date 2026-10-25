@@ -583,7 +583,11 @@ module's asm blocks, though the draft defines it.
   8-byte body just before its caller, and a caller's stubs come out in
   reverse call order; a static nothing calls is cut to a stub at the
   object's end. Calling each stub from the function after it put all 23
-  of ovl_0B_06's in place.
+  of ovl_0B_06's in place, but the original has 48: count every second
+  `jr ra; nop` in a row as a stub before tuning sizes, since one static of
+  the wrong size makes fcmp count the rest of its run as different. A
+  stub may have a body after all (ovl_0B_06's 8004382C is 80043834's
+  first loop, `f(p, 6)`).
 - **Statics take arguments in the caller's registers.** IDO passes an
   inlined-once static's arguments in whatever `$s`/`$t`/`$fp` register or
   stack slot the caller holds them in, which m2c can't follow; the setup
