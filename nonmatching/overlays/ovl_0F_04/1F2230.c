@@ -3,7 +3,7 @@
  * data (.data and .bss as the original's sizes).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3090, jp 4362
+ * differing words: us 2988, jp 4362
  *
  * Every function comes out in the original's order; most of the stubs
  * don't yet. The order is ovl_0F_02's (and ovl_0F_03's): the functions
@@ -38,6 +38,13 @@
  * - 80046BC8, 80046BFC, 80045E14 and 800436B0 match.
  */
 #include "common.h"
+static void func_ovl0F_04_800439D4(void);
+static void func_ovl0F_04_80043DDC(void);
+static void func_ovl0F_04_80043DE4(void);
+static void func_ovl0F_04_80043DEC(void);
+static void func_ovl0F_04_80043DF4(void);
+static void func_ovl0F_04_80043DFC(void);
+static void func_ovl0F_04_80043BB8(void);
 static void func_ovl0F_04_80043018(void);
 static void func_ovl0F_04_80044D24(void);
 static void func_ovl0F_04_80043578(void);
@@ -878,13 +885,7 @@ void func_ovl0F_04_80044D34(s32 idx, s32 flag) {
 }
 
 static s32 func_ovl0F_04_80044D2C(UnkStructA *obj) {
-    s32 below;
-
-    below = 0;
-    if (obj->unk40->unk14 <= func_ovl0F_04_800471A0()) {
-        below = 1;
-    }
-    return below;
+    return obj->unk40->unk14 <= func_ovl0F_04_800471A0();
 }
 
 /* the movers' step filter: every direction but 0xF */
@@ -944,7 +945,7 @@ void func_ovl0F_04_800448BC(UnkStructA *arg0) {
         arg0->unk40->unk14 -= dy;
         func_ovl0F_04_80047D10();
     }
-    if (arg0->unk40->unk14 <= func_ovl0F_04_800471A0()) {
+    if (func_ovl0F_04_80044D2C(arg0)) {
         func_ovl0F_04_80043590(arg0);
     } else {
         arg0->unk6C = 0.0f;
@@ -1083,12 +1084,32 @@ void func_ovl0F_04_80044084(void) {
     func_ovl0F_04_80047CD8();
 }
 
+static void func_ovl0F_04_80043DDC(void) {
+}
+
+static void func_ovl0F_04_80043DE4(void) {
+}
+
+static void func_ovl0F_04_80043DEC(void) {
+}
+
+static void func_ovl0F_04_80043DF4(void) {
+}
+
+static void func_ovl0F_04_80043DFC(void) {
+}
+
 /* one step of the movers' script */
 static void func_ovl0F_04_80043E04(UnkStruct_ovl0F_04_80048C90 *s, s32 arg1, s32 arg2, s32 flag) {
     u16 *e;
     s32 kind;
     s32 arg;
 
+    func_ovl0F_04_80043DDC();
+    func_ovl0F_04_80043DE4();
+    func_ovl0F_04_80043DEC();
+    func_ovl0F_04_80043DF4();
+    func_ovl0F_04_80043DFC();
     e = s->unk18[s->unk14];
     if (e[0] == s->unk10++) {
         if (e[1] != 100) {
@@ -1165,11 +1186,15 @@ static void func_ovl0F_04_80043E04(UnkStruct_ovl0F_04_80048C90 *s, s32 arg1, s32
     }
 }
 
+static void func_ovl0F_04_80043BB8(void) {
+}
+
 /* a mover turns towards its direction, a tenth of the way (at least 1) a frame */
 static void func_ovl0F_04_80043BC8(s16 i) {
     f32 target;
     f32 d;
 
+    func_ovl0F_04_80043BB8();
     target = 0.0f;
     switch (D_ovl0F_04_80048534[i].unk0) {
         case 0x00:
@@ -1231,12 +1256,16 @@ static s32 func_ovl0F_04_80043BC0(void) {
     return -1;
 }
 
+static void func_ovl0F_04_800439D4(void) {
+}
+
 /* a task: a panel is stepped on and its block drops */
 void func_ovl0F_04_800439DC(void) {
     s32 i;
     UnkStructA *obj;
     s32 k;
 
+    func_ovl0F_04_800439D4();
     i = D_ovl0F_04_80048AE4;
     if (D_ovl0F_04_800486CC[i].unk1C == 0.0f) {
         func_ovl0F_04_800471B8((s32) D_ovl0F_04_800486CC[i].unkC - 1, (s32) D_ovl0F_04_800486CC[i].unk10,
