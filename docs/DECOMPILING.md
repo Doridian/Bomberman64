@@ -311,9 +311,15 @@ module's asm blocks, though the draft defines it.
     callee for the order: it comes out before the function taking its
     address, unless some address-taken function of the file takes an
     address itself (ovl_17_01's 3034 → 365C → 398C, ovl_17_10's 3034 →
-    3E14 → 412C); then they mostly come out at their own turn, but small
-    test files show more rules than this (`scratch/ovl_17_rest/exp*.py`
-    in the main checkout);
+    3E14 → 412C); then they mostly come out at their own turn. In more
+    detail (ovl_0F_03 and ovl_0F_10 bear this out): a function's
+    address-taken functions come out after all its direct callees,
+    together, at the earliest reference in the source; among them, the
+    references made in its inlined statics (in the statics' definition
+    order) and then its own come out as that list reversed; statics
+    nothing uses come out at the very end, in file order
+    (`scratch/ovl_0F_03/order.py` lists a draft's functions and stubs at
+    their addresses);
   - whether a static is inlined depends on its size and on its caller's:
     ovl_17_10's func_80044464 stays a call (with its `s`-register
     convention) only because its caller writes its x and z steps out
