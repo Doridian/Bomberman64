@@ -528,6 +528,20 @@ module's asm blocks, though the draft defines it.
   comes first, whatever m2c wrote. An angle macro's step as an int
   (`ANGLE_SUB(p->unk1C, 5)`) moves the constant's reload to the loop's
   tail (80047A0C).
+- **Get the statics' order right first.** tools/fcmp.py counts each run
+  of statics with the named function before it, so statics out of order
+  cost hundreds of words that aren't in their code. m2c's gotos can
+  reorder them: rewriting ovl_0B_03's 8004386C cases 1 and 5 as
+  `while (TRUE)` loops (an if/else chain over the buttons, the redraw at
+  the end) put the statics it calls in the original's order (about 400
+  words).
+- **More from ovl_0B_03:** unused m2c locals still take frame slots at
+  -O3 (30 of them made 8004386C's frame 120 bytes too big); a float loop
+  whose entry test the original keeps is a `for` with float constants
+  (m2c's `if (0.0f <= 20.0f) do {} while` is folded away); a loop's end
+  pointer as `base + size` with `sltu` came from a static inlined at two
+  call sites; `temp + 8` on a `Gfx *` steps 64 bytes, so write display
+  lists one macro per command.
 - **A twin's C carries the twin's constants.** `scratch/tools/simil_all.py`
   compares mnemonics, so a function that scores 1.00 may pass other
   immediates (ovl_10_10's 800442B8 passes `0x28, 0x2E, 2, 0x10` where
