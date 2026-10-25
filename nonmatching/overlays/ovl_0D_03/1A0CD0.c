@@ -5,8 +5,7 @@
  * .bss as the original.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 791, jp 1025 (jp not re-measured since the 80043770
- *   split; us is current)
+ * differing words: us 791, jp 791
  *
  * ovl_0D_02's sibling (nonmatching/overlays/ovl_0D_02, renamed by
  * scratch/0D_03/ren02.py): most functions are 0D_02's. What still differs
