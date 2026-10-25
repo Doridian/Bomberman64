@@ -3,22 +3,15 @@
  * .bss. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 3495, jp 3495
+ * differing words: us 6, jp 899
  *
  * What still differs in us (words, as tools/nonmatching.py counts them):
- * - 80047A0C (429): rewritten; 74 words by instruction (scratch/10_13's
- *   cmps.sh), the rest is a shift of two: the 5.0f loop's constant is
- *   rematerialized at the loop's head, not its tail, and four
- *   obj2->unk40 loads take v0 where the original has v1.
- * - 800475F8 (126), 80048850 (117), 800470C8 (111), 80047298 (90),
- *   80048BBC (76), 800486A8 (55), 80047418 (8), 80048EA8 (7),
- *   80046E88 (2): m2c's C, cleaned up only where it didn't compile.
  * - 800464B0 (4): v1 for v0; a third temporary grows the frame.
- * - The statics 80043070 (1507, still m2c's C), 80044E48 (31) and
- *   8004574C (394: frame and s-register choice), the cut-scenes the
- *   handler and 800474EC-800477E8 run, by scratch/10_13/allf.py, which
- *   counts each on its own. nonmatching.py compares them with 80043010 as
- *   one run, so 80043070's length shifts the rest (2596 words). They
+ * - 80046E88 (2).
+ * - Not counted by nonmatching.py: the statics 80043070 (1503, still m2c's
+ *   C), 80044E48 (31) and 8004574C (394: frame and s-register choice),
+ *   1928 in all, the cut-scenes the handler and 800474EC-800477E8 run
+ *   (scratch/10_13/allf.py counts them from the object's .mdebug). They
  *   save no callee-saved registers (their callers do), so they are
  *   static; they come first in the object.
  *
@@ -129,7 +122,7 @@ s32 func_ovl10_13_8004A128(void (*)(), void *, s32, s32, s32);
 void func_ovl10_13_8004A130(s32);
 void func_ovl10_13_8004A138(void);
 void func_ovl10_13_8004A140(u16, s32);
-void func_ovl10_13_8004A148(s32);
+s32 func_ovl10_13_8004A148(s32);
 void *func_ovl10_13_8004A150(void);
 void func_ovl10_13_8004A170(void);
 void func_ovl10_13_8004A188(u16);
@@ -152,7 +145,7 @@ void func_ovl10_13_8004A430(s32, s32, s32, s32);
 void func_ovl10_13_8004A440(s32, s32, s32, s32);
 void func_ovl10_13_8004A578(s32, f32, f32, f32, s32);
 void func_ovl10_13_8004A580(s32, f32 *, s32);
-void func_ovl10_13_8004A6B0(s32);
+s32 func_ovl10_13_8004A6B0(s32);
 void func_ovl10_13_8004A6C0(s32);
 void func_ovl10_13_8004A6C8(void);
 s32 func_ovl10_13_8004A6D0(s32, f32, f32, f32);
@@ -203,7 +196,7 @@ void func_ovl10_13_800477E8(void);
 void func_ovl10_13_800478D4(void);
 void func_ovl10_13_80047A0C(void);
 void func_ovl10_13_800486A8(void);
-void func_ovl10_13_80048850(s32 arg0);
+void func_ovl10_13_80048850(void);
 void func_ovl10_13_80048BBC(void);
 void func_ovl10_13_80048CEC(void);
 void func_ovl10_13_80048EA8(void);
@@ -411,136 +404,108 @@ void func_ovl10_13_80048CEC(void) {
 }
 
 void func_ovl10_13_80048BBC(void) {
-    s32 var_s0;
-    s32 var_s0_2;
+    s32 i;
 
     func_ovl10_13_8004A6B0(0x243);
-    var_s0 = 0;
-    do {
-        func_ovl10_13_8004A740(D_ovl10_13_8004ADB0, 0x1F, 0, 4, (f32) var_s0 / 140.0f);
+
+    for (i = 0; i < 60; i++) {
+        func_ovl10_13_8004A740(D_ovl10_13_8004ADB0, 0x1F, 0, 4, (f32) i / 140.0f);
         func_ovl10_13_8004A170();
-        var_s0 += 1;
-    } while (var_s0 < 0x3C);
+    }
     D_ovl10_13_8004ADB0->unkC |= 0x1080;
-    var_s0_2 = 0x3C;
     D_ovl10_13_8004ADB0->unk36 = 0xFF;
-    do {
-        D_ovl10_13_8004ADB0->unk36 = (s16) (s32) (((f32) var_s0_2 / 60.0f) * 255.0f);
+    for (i = 60; i != 0; i--) {
+        D_ovl10_13_8004ADB0->unk36 = (f32) i / 60.0f * 255.0f;
         func_ovl10_13_8004A170();
-        var_s0_2 -= 1;
-    } while (var_s0_2 != 0);
+    }
     func_ovl10_13_80049CC0(D_ovl10_13_8004ADB0);
     func_ovl10_13_8004A138();
 }
 
-void func_ovl10_13_80048850(s32 arg0) {
-    UnkStructA *temp_s3;
-    UnkStructA_40 *temp_v0_2;
-    f32 temp_fv0;
-    f32 temp_fv1;
-    f32 temp_fv1_2;
-    f32 var_fs0;
-    f32 var_fv0;
-    s32 temp_s7;
-    s32 temp_v0;
-    s32 var_a0;
-    s32 var_s1;
+void func_ovl10_13_80048850(void) {
+    UnkStructA *obj;
+    UnkStructA_40 *p;
+    f32 scale;
+    f32 angle;
+    s32 sound;
+    s32 who;
+    s32 i;
 
-    temp_v0 = func_ovl10_13_8004A150();
-    temp_s3 = func_ovl10_13_80049818(temp_v0);
-    temp_v0_2 = func_ovl10_13_80049CB8(0x302, 0);
-    temp_v0_2->unkC |= 0x80;
-    temp_v0_2->unk36 = 0x80;
-    temp_v0_2->unk30 = 0.1f;
-    temp_v0_2->unk2C = 0.1f;
-    temp_v0_2->unk28 = 0.1f;
-    temp_v0_2->unk10 = temp_s3->unk40->unk10;
-    var_a0 = 0x24F;
-    temp_v0_2->unk14 = temp_s3->unk40->unk14 + 50.0f;
-    temp_v0_2->unk18 = temp_s3->unk40->unk18;
-    if (temp_v0 == 1) {
-        var_a0 = 0x24B;
-    }
-    temp_s7 = func_ovl10_13_8004A6D0(var_a0, temp_v0_2->unk10, temp_v0_2->unk14, temp_v0_2->unk18);
+    who = func_ovl10_13_8004A150();
+    obj = func_ovl10_13_80049818(who);
+    p = func_ovl10_13_80049CB8(0x302, 0);
+    p->unkC |= 0x80;
+    p->unk36 = 0x80;
+    p->unk30 = 0.1f;
+    p->unk2C = 0.1f;
+    p->unk28 = 0.1f;
+    p->unk10 = obj->unk40->unk10;
+    p->unk14 = obj->unk40->unk14 + 50.0f;
+    p->unk18 = obj->unk40->unk18;
+    sound = func_ovl10_13_8004A6D0(who == 1 ? 0x24B : 0x24F, p->unk10, p->unk14, p->unk18);
     if (D_ovl10_13_8004ADA8 != 0x1C) {
-        var_s1 = 0;
-        do {
-            temp_v0_2->unk30 += 0.033333335f;
-            temp_fv0 = temp_v0_2->unk30;
-            temp_v0_2->unk2C = temp_fv0;
-            temp_v0_2->unk28 = temp_fv0;
+        for (i = 0; i != 60; i++) {
+            p->unk30 += 0.033333335f;
+            p->unk2C = p->unk30;
+            p->unk28 = p->unk30;
             func_ovl10_13_8004A170();
-            var_s1 += 1;
-        } while (var_s1 != 0x3C);
-    } else {
-        temp_v0_2->unk30 = 2.0f;
-        temp_v0_2->unk2C = 2.0f;
-        temp_v0_2->unk28 = 2.0f;
-    }
-    var_fs0 = 0.0f;
-loop_8:
-    if (((temp_v0 != 1) || (D_ovl10_13_8004ADD4 != 0)) && ((temp_v0 != 2) || (D_ovl10_13_8004ADD8 != 0))) {
-        temp_v0_2->unk10 = temp_s3->unk40->unk10;
-        temp_v0_2->unk14 = temp_s3->unk40->unk14 + 50.0f;
-        temp_v0_2->unk18 = temp_s3->unk40->unk18;
-        temp_fv1 = (func_ovl10_13_8004A2D8(var_fs0) * 0.2f) + 2.5f;
-        temp_v0_2->unk30 = temp_fv1;
-        temp_v0_2->unk2C = temp_fv1;
-        temp_v0_2->unk28 = temp_fv1;
-        temp_v0_2->unk36 = (s16) (s32) (128.0f - (func_ovl10_13_8004A2D8(var_fs0) * 10.0f));
-        temp_fv1_2 = var_fs0 + 9.0f + (f32) D_ovl10_13_8004ADDC;
-        if (temp_fv1_2 >= 360.0f) {
-            var_fs0 = temp_fv1_2 - 360.0f;
-        } else {
-            if (temp_fv1_2 < 0.0f) {
-                var_fv0 = temp_fv1_2 + 360.0f;
-            } else {
-                var_fv0 = temp_fv1_2;
-            }
-            var_fs0 = var_fv0;
         }
-        func_ovl10_13_8004A700(temp_s7, temp_v0_2->unk10, temp_v0_2->unk14, temp_v0_2->unk18);
-        func_ovl10_13_8004A170();
-        goto loop_8;
+    } else {
+        p->unk30 = 2.0f;
+        p->unk2C = 2.0f;
+        p->unk28 = 2.0f;
     }
-    func_ovl10_13_80049CC0(temp_v0_2);
+    angle = 0.0f;
+    while (TRUE) {
+        if (who == 1 && D_ovl10_13_8004ADD4 == 0) {
+            break;
+        }
+        if (who == 2 && D_ovl10_13_8004ADD8 == 0) {
+            break;
+        }
+        p->unk10 = obj->unk40->unk10;
+        p->unk14 = obj->unk40->unk14 + 50.0f;
+        p->unk18 = obj->unk40->unk18;
+        scale = func_ovl10_13_8004A2D8(angle) * 0.2f + 2.5f;
+        p->unk30 = scale;
+        p->unk2C = scale;
+        p->unk28 = scale;
+        p->unk36 = 128.0f - func_ovl10_13_8004A2D8(angle) * 10;
+        angle = angle + 9.0f + D_ovl10_13_8004ADDC >= 360.0f ? angle + 9.0f + D_ovl10_13_8004ADDC - 360.0f
+              : angle + 9.0f + D_ovl10_13_8004ADDC < 0.0f ? angle + 9.0f + D_ovl10_13_8004ADDC + 360.0f
+              : angle + 9.0f + D_ovl10_13_8004ADDC;
+        func_ovl10_13_8004A700(sound, p->unk10, p->unk14, p->unk18);
+        func_ovl10_13_8004A170();
+    }
+    func_ovl10_13_80049CC0(p);
     func_ovl10_13_8004A138();
 }
 
 void func_ovl10_13_800486A8(void) {
-    UnkStructA *temp_s0;
-    UnkStructA_40 *temp_v0;
-    f32 temp_fv0;
-    s32 var_s0;
-    s32 var_s1;
+    UnkStructA *obj;
+    UnkStructA_40 *p;
+    f32 scale;
+    s32 i;
+    s32 angle;
 
-    temp_s0 = func_ovl10_13_8004A150();
-    temp_v0 = func_ovl10_13_80049CB8(0x2C7, 0);
-    temp_v0->unk36 = 0;
-    temp_v0->unkC |= 0x80;
-    temp_v0->unk10 = temp_s0->unk40->unk10;
-    temp_v0->unk14 = temp_s0->unk40->unk14 + 50.0f;
-    temp_v0->unk18 = temp_s0->unk40->unk18;
-    if (D_ovl10_13_8004ADE0 != 0) {
-        var_s0 = 0;
-        do {
-            var_s1 = 0;
-loop_3:
-            temp_fv0 = 15.0f - (((f32) var_s0 * 14.0f) / 30.0f);
-            temp_v0->unk30 = temp_fv0;
-            temp_v0->unk2C = temp_fv0;
-            temp_v0->unk28 = temp_fv0;
-            temp_v0->unk36 = (s16) (s32) (func_ovl10_13_8004A2D0((f32) var_s1) * 120.0f);
+    obj = func_ovl10_13_8004A150();
+    p = func_ovl10_13_80049CB8(0x2C7, 0);
+    p->unk36 = 0;
+    p->unkC |= 0x80;
+    p->unk10 = obj->unk40->unk10;
+    p->unk14 = obj->unk40->unk14 + 50.0f;
+    p->unk18 = obj->unk40->unk18;
+    while (D_ovl10_13_8004ADE0 != 0) {
+        for (i = 0, angle = 0; i != 30; i++, angle += 6) {
+            scale = 15.0f - (f32) i * 14.0f / 30.0f;
+            p->unk30 = scale;
+            p->unk2C = scale;
+            p->unk28 = scale;
+            p->unk36 = func_ovl10_13_8004A2D0(angle) * 120.0f;
             func_ovl10_13_8004A170();
-            var_s0 += 1;
-            var_s1 += 6;
-            if (var_s0 != 0x1E) {
-                goto loop_3;
-            }
-            var_s0 = 0;
-        } while (D_ovl10_13_8004ADE0 != 0);
+        }
     }
-    func_ovl10_13_80049CC0(temp_v0);
+    func_ovl10_13_80049CC0(p);
     func_ovl10_13_8004A138();
 }
 
@@ -614,7 +579,7 @@ void func_ovl10_13_80047A0C(void) {
         func_ovl10_13_8004A170();
     }
     for (i = 0; i < 30; i++) {
-        ANGLE_SUB(p->unk1C, 5.0f);
+        ANGLE_SUB(p->unk1C, 5);
         func_ovl10_13_8004A170();
     }
     func_ovl10_13_80049E28(1282.0f, 1408.0f, 2745.0f);
@@ -799,63 +764,40 @@ void func_ovl10_13_800474EC(void) {
 }
 
 void func_ovl10_13_80047418(void) {
-    UnkStructA *temp_s1;
-    UnkStructA_40 *temp_v1;
-    UnkStructA_40 *temp_v1_2;
-    UnkStructA_40 *temp_v1_3;
-    s32 temp_s2;
-    s32 var_s0;
+    UnkStructA *obj;
+    UnkStructA_40 *p;
+    s32 sound;
+    s32 i;
 
-    temp_s1 = func_ovl10_13_8004A150();
+    obj = func_ovl10_13_8004A150();
     func_ovl10_13_8004A148(0x78);
-    temp_v1 = temp_s1->unk40;
-    temp_s2 = func_ovl10_13_8004A6D0(0x213, temp_v1->unk10, temp_v1->unk14, temp_v1->unk18);
-    var_s0 = 0;
-    do {
-        temp_v1_2 = temp_s1->unk40;
-        temp_v1_2->unk10 -= 50.0f;
-        temp_v1_3 = temp_s1->unk40;
-        func_ovl10_13_8004A700(temp_s2, temp_v1_3->unk10, temp_v1_3->unk14, temp_v1_3->unk18);
+    p = obj->unk40;
+    sound = func_ovl10_13_8004A6D0(0x213, p->unk10, p->unk14, p->unk18);
+    for (i = 0; i != 40; i++) {
+        p = obj->unk40;
+        p->unk10 -= 50.0f;
+        p = obj->unk40;
+        func_ovl10_13_8004A700(sound, p->unk10, p->unk14, p->unk18);
         func_ovl10_13_8004A170();
-        var_s0 += 1;
-    } while (var_s0 != 0x28);
+    }
     func_ovl10_13_8004A138();
 }
 
 void func_ovl10_13_80047298(void) {
-    UnkStructA *temp_s1;
-    f32 temp_fv0;
-    f32 var_fs0;
-    f32 var_fv1;
-    f32 var_fv1_2;
-    s32 var_s0;
+    UnkStructA *obj;
+    f32 angle;
+    s32 i;
 
-    var_fs0 = 0.0f;
-    temp_s1 = func_ovl10_13_8004A150();
-loop_1:
-    var_s0 = 0;
-    do {
-        if ((func_ovl10_13_8004A2D0(var_fs0) * 0.5f) < 0.0f) {
-            var_fv1 = -(func_ovl10_13_8004A2D0(var_fs0) * 0.5f);
-        } else {
-            var_fv1 = func_ovl10_13_8004A2D0(var_fs0) * 0.5f;
+    angle = 0.0f;
+    obj = func_ovl10_13_8004A150();
+    while (TRUE) {
+        for (i = 0; i != 60; i++) {
+            func_ovl10_13_8004A740(obj->unk40, 0x1F, 0x1F, 0x1F,
+                func_ovl10_13_8004A2D0(angle) * 0.5f < 0 ? -(func_ovl10_13_8004A2D0(angle) * 0.5f) : func_ovl10_13_8004A2D0(angle) * 0.5f);
+            angle = angle + 6.0f >= 360.0f ? angle + 6.0f - 360.0f : angle + 6.0f < 0.0f ? angle + 6.0f + 360.0f : angle + 6.0f;
+            func_ovl10_13_8004A170();
         }
-        func_ovl10_13_8004A740(temp_s1->unk40, 0x1F, 0x1F, 0x1F, var_fv1);
-        temp_fv0 = var_fs0 + 6.0f;
-        if (temp_fv0 >= 360.0f) {
-            var_fs0 = temp_fv0 - 360.0f;
-        } else {
-            if (temp_fv0 < 0.0f) {
-                var_fv1_2 = temp_fv0 + 360.0f;
-            } else {
-                var_fv1_2 = temp_fv0;
-            }
-            var_fs0 = var_fv1_2;
-        }
-        func_ovl10_13_8004A170();
-        var_s0 += 1;
-    } while (var_s0 != 0x3C);
-    goto loop_1;
+    }
 }
 
 void func_ovl10_13_800470C8(void) {
@@ -866,7 +808,6 @@ void func_ovl10_13_800470C8(void) {
     s32 green;
     s32 blue;
     f32 angle;
-    f32 temp;
 
     objs = func_ovl10_13_8004A150();
     a = objs[0];
@@ -877,11 +818,10 @@ void func_ovl10_13_800470C8(void) {
         green = func_ovl10_13_8004A2E8(31);
         blue = func_ovl10_13_8004A2E8(31);
         func_ovl10_13_8004A740(a->unk40, red, green, blue,
-                               func_ovl10_13_8004A2D0(angle) < 0.0f ? -func_ovl10_13_8004A2D0(angle) : func_ovl10_13_8004A2D0(angle));
+                               func_ovl10_13_8004A2D0(angle) < 0 ? -func_ovl10_13_8004A2D0(angle) : func_ovl10_13_8004A2D0(angle));
         func_ovl10_13_8004A740(b->unk40, red, green, blue,
-                               func_ovl10_13_8004A2D0(angle) < 0.0f ? -func_ovl10_13_8004A2D0(angle) : func_ovl10_13_8004A2D0(angle));
-        temp = angle + 20.0f;
-        angle = temp >= 360.0f ? temp - 360.0f : temp < 0.0f ? temp + 360.0f : temp;
+                               func_ovl10_13_8004A2D0(angle) < 0 ? -func_ovl10_13_8004A2D0(angle) : func_ovl10_13_8004A2D0(angle));
+        angle = angle + 20.0f >= 360.0f ? angle + 20.0f - 360.0f : angle + 20.0f < 0.0f ? angle + 20.0f + 360.0f : angle + 20.0f;
         func_ovl10_13_8004A148(4);
     }
 }
