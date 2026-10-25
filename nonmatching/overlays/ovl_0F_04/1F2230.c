@@ -3,26 +3,30 @@
  * data (.data and .bss as the original's sizes).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4362, jp 4362
+ * differing words: us 3417, jp 4362
  *
- * A first complete draft: the functions are right, the layout is not yet.
+ * Every function comes out in the original's order; most of the stubs
+ * don't yet. The order is ovl_0F_02's (and ovl_0F_03's): the functions
+ * are defined in reverse address order, but the handler
+ * (func_ovl0F_04_8004624C) is defined last but for func_ovl0F_04_80043010
+ * and so compiled first. Its direct callees come out first, then what it
+ * only takes the address of, in the reverse of the order of their first
+ * references, the statics' (in definition order) before the handler's
+ * own. 80046244 and 8004623C (inlined into the handler) reference
+ * 80044F88 and 8004394C ahead of 800460CC's references, so the fake is in
+ * an empty static defined first, func_ovl0F_04_800460B4, the handler's
+ * first call (the original has a stub there): its `if (0)` lists every
+ * address-taken function in descending address order, so they come out
+ * ascending (4362 words to 3417; scratch/0F_04/p3/fk.sh and rev.py in the
+ * main checkout). What the original's source had instead is open.
+ *
  * What still differs in us (words, by tools/nonmatching.py's ranges, which
  * take in the statics after each global):
- * - The order. Defined in about the reverse of the original's addresses,
- *   with the handler just below func_ovl0F_04_80044084 (so compiled before
- *   it) and func_ovl0F_04_80043324 static at the top (compiled last), the
- *   address-taken functions come out as the original's but for three
- *   places: 80043324 after 800439DC (the original: after 80043028),
- *   80044D34 before 80044BC0/80044D04, and 8004544C before 800452A0.
- *   What decides it (probes in scratch/ovl_0F_04/ord/): compiling an
- *   address-taken function that itself takes addresses (80044084) first
- *   emits every address-taken function not yet out, in the reverse of the
- *   order of their first references in the source, then itself; so in
- *   plain reverse address order 80045E14, 80044BC0, 80044D04, 800448BC,
- *   80044D34, 8004544C, 800452A0 and 80044F88 come out at 80044084's turn.
- *   No definition order gives the original's 80044084..80045E14 run from
- *   that (800460CC's references put 8004544C before 800452A0), so the
- *   original's mechanism is still open.
+ * - Stubs: 80043BC0's comes out after 80043324 and 8004623C's after
+ *   80043530 (the handler's inlined statics come out in about the reverse
+ *   of its calls), 80044D2C is not inlined (0x40), and the original's
+ *   other stubs (80043018, 800432FC-8004331C, 80043388-80043398, ...) are
+ *   missing.
  * - func_ovl0F_04_80043028 (the wind): 161 words, the original 181 (it
  *   keeps &D_ovl0F_04_80048488 in s0, which the handler saves).
  * - func_ovl0F_04_80043770 (the pushed blocks): 82 words, the original 96.
@@ -250,6 +254,7 @@ static void func_ovl0F_04_800460CC(s32 n1, s32 n2);
 static void func_ovl0F_04_80046244(void);
 static void func_ovl0F_04_800460C4(void);
 static void func_ovl0F_04_800460BC(void);
+static void func_ovl0F_04_800460B4(void);
 void func_ovl0F_04_80045E14(void);
 void func_ovl0F_04_8004544C(s32 arg0, UnkStruct_ovl0F_04_Gfx **arg1);
 static f32 func_ovl0F_04_80045444(f32 v);
@@ -407,16 +412,6 @@ char D_ovl0F_04_80048954[] = "MA";
 char D_ovl0F_04_80048958[] = "WM1 WG1 WSH WAP WDW WB3 ST10";
 char D_ovl0F_04_80048978[] = "WM1 WG1 WSH WAP WDE WB2 ST30";
 
-/* the switches' cut-scene: a task counts n frames while a message shows */
-static void func_ovl0F_04_80043324(s32 n, char *msg) {
-    func_ovl0F_04_80047418(1);
-    func_ovl0F_04_80048158();
-    func_ovl0F_04_80047CC8(func_ovl0F_04_80045E14, (void *) n, 0, 0, 0x130);
-    func_ovl0F_04_80047380(msg);
-    func_ovl0F_04_80047418(0);
-    func_ovl0F_04_80047380(D_ovl0F_04_80048950);
-}
-
 /* unused: the stubs IDO -O3 leaves at the end of the object */
 static void func_ovl0F_04_80046CD0(void) {
 }
@@ -479,6 +474,27 @@ void func_ovl0F_04_80046C58(void) {
     D_ovl0F_04_80048AD0 = -1;
 }
 
+static void func_ovl0F_04_800460B4(void) {
+    /* fake: first references in descending address order (the header) */
+    if (0) {
+        func_ovl0F_04_80047258((void (*)(UnkStructA *)) func_ovl0F_04_80045E14, 0);
+        func_ovl0F_04_80047258((void (*)(UnkStructA *)) func_ovl0F_04_8004544C, 0);
+        func_ovl0F_04_80047258((void (*)(UnkStructA *)) func_ovl0F_04_800452A0, 0);
+        func_ovl0F_04_80047258((void (*)(UnkStructA *)) func_ovl0F_04_80044F88, 0);
+        func_ovl0F_04_80047258((void (*)(UnkStructA *)) func_ovl0F_04_80044D34, 0);
+        func_ovl0F_04_80047258((void (*)(UnkStructA *)) func_ovl0F_04_80044D04, 0);
+        func_ovl0F_04_80047258((void (*)(UnkStructA *)) func_ovl0F_04_80044BC0, 0);
+        func_ovl0F_04_80047258((void (*)(UnkStructA *)) func_ovl0F_04_800448BC, 0);
+        func_ovl0F_04_80047258((void (*)(UnkStructA *)) func_ovl0F_04_80044084, 0);
+        func_ovl0F_04_80047258((void (*)(UnkStructA *)) func_ovl0F_04_800439DC, 0);
+        func_ovl0F_04_80047258((void (*)(UnkStructA *)) func_ovl0F_04_8004394C, 0);
+        func_ovl0F_04_80047258((void (*)(UnkStructA *)) func_ovl0F_04_800438F0, 0);
+        func_ovl0F_04_80047258((void (*)(UnkStructA *)) func_ovl0F_04_800436B0, 0);
+        func_ovl0F_04_80047258((void (*)(UnkStructA *)) func_ovl0F_04_80043590, 0);
+        func_ovl0F_04_80047258((void (*)(UnkStructA *)) func_ovl0F_04_80043530, 0);
+    }
+}
+
 void func_ovl0F_04_80046BFC(f32 arg0, f32 arg1, f32 arg2) {
     func_ovl0F_04_800479B8(D_ovl0F_04_80048AD8.x, D_ovl0F_04_80048AD8.y, D_ovl0F_04_80048AD8.z);
     func_ovl0F_04_800479D8(arg0, arg1, arg2);
@@ -490,6 +506,20 @@ void func_ovl0F_04_80046BC8(s32 arg0, UnkStructA *arg1) {
 
     p = arg1->unk40;
     func_ovl0F_04_80048270(arg0, p->unk10, p->unk14, p->unk18);
+}
+
+/* case 2's: the door, closed or already open */
+static void func_ovl0F_04_80046244(void) {
+    if (func_ovl0F_04_80047F50(D_ovl0F_04_80048880.unk0[0].unk28) == 0) {
+        func_ovl0F_04_80047CC8(func_ovl0F_04_80044F88, &D_ovl0F_04_80048880, 0, 0, 0x110);
+    } else {
+        D_ovl0F_04_80048880.unk58();
+        D_ovl0F_04_80048880.unk5C();
+        D_ovl0F_04_80048880.unk0[1].unk10 -= 1.0f;
+        func_ovl0F_04_80043480(&D_ovl0F_04_80048880.unk0[1], 1);
+        *D_ovl0F_04_80048880.unk0[0].unk0 = NULL;
+        D_ovl0F_04_80048880.unk0[1].unk10 += 1.0f;
+    }
 }
 
 /* case 2's: the panels and their tiles; one hides something */
@@ -545,20 +575,6 @@ static void func_ovl0F_04_800460CC(s32 n1, s32 n2) {
     D_ovl0F_04_80048498 = 960.0f;
 }
 
-/* case 2's: the door, closed or already open */
-static void func_ovl0F_04_80046244(void) {
-    if (func_ovl0F_04_80047F50(D_ovl0F_04_80048880.unk0[0].unk28) == 0) {
-        func_ovl0F_04_80047CC8(func_ovl0F_04_80044F88, &D_ovl0F_04_80048880, 0, 0, 0x110);
-    } else {
-        D_ovl0F_04_80048880.unk58();
-        D_ovl0F_04_80048880.unk5C();
-        D_ovl0F_04_80048880.unk0[1].unk10 -= 1.0f;
-        func_ovl0F_04_80043480(&D_ovl0F_04_80048880.unk0[1], 1);
-        *D_ovl0F_04_80048880.unk0[0].unk0 = NULL;
-        D_ovl0F_04_80048880.unk0[1].unk10 += 1.0f;
-    }
-}
-
 /* case 2's: the stage's tables */
 static void func_ovl0F_04_800460C4(void) {
     s32 count;
@@ -580,6 +596,44 @@ static void func_ovl0F_04_800460BC(void) {
     func_ovl0F_04_80047328();
 }
 
+/* case 2's: the movers and their script */
+static void func_ovl0F_04_80045E88(UnkStructA **arg0) {
+    UnkStruct_ovl0F_04_800485C4 *p;
+    s32 i;
+
+    D_ovl0F_04_80048C90.unk0 = func_ovl0F_04_800473B8(func_ovl0F_04_80047358());
+    D_ovl0F_04_80048C90.unk4 = arg0;
+    D_ovl0F_04_80048C90.unkC = 0;
+    D_ovl0F_04_80048C90.unk10 = 0;
+    D_ovl0F_04_80048C90.unk14 = 0;
+    D_ovl0F_04_80048C90.unk16 = -1;
+    D_ovl0F_04_80048C90.unk8 = 0.0f;
+    D_ovl0F_04_800484A0 = 1;
+    D_ovl0F_04_80048C90.unk18 = D_ovl0F_04_800484A4;
+    D_ovl0F_04_80048C90.unk20 = func_ovl0F_04_80044D34;
+    for (i = 0; i < 6; i++) {
+        D_ovl0F_04_800485C4[i].unkC = 36.0f;
+        D_ovl0F_04_800485C4[i].unk14 = 13.0f;
+        D_ovl0F_04_800485C4[i].unk1C = 90.0f;
+    }
+    p = D_ovl0F_04_800485C4;
+    for (i = 0; i < 6; i++) {
+        *p->unk0 = func_ovl0F_04_80047BA0(p->unk4, p->unk24 | 0x01000000, 0x30, p->unk8);
+        func_ovl0F_04_800433FC(p);
+        (*p->unk0)->unk40->unk1C = p->unk18;
+        (*p->unk0)->unk40->unk20 = p->unk1C;
+        (*p->unk0)->unk40->unk24 = p->unk20;
+        p++;
+    }
+    for (i = 0; i < 6; i++) {
+        func_ovl0F_04_80047B78(func_ovl0F_04_80047BB0(*D_ovl0F_04_800485C4[i].unk0), 0x02100000);
+        D_ovl0F_04_80048534[i].unk11 = 0;
+        D_ovl0F_04_80048C90.unk20(i, 0);
+    }
+    func_ovl0F_04_800472B0(func_ovl0F_04_800448BC);
+    func_ovl0F_04_80047CC8(func_ovl0F_04_80044084, NULL, 0, 0, 0x110);
+}
+
 void func_ovl0F_04_80045E14(void) {
     s32 n;
     s32 i;
@@ -590,10 +644,6 @@ void func_ovl0F_04_80045E14(void) {
         func_ovl0F_04_80047D10();
     }
     func_ovl0F_04_80047CD8();
-}
-
-static f32 func_ovl0F_04_80045444(f32 v) {
-    return v == 0.0f ? 0.0f : 1.0f;
 }
 
 void func_ovl0F_04_8004544C(s32 arg0, UnkStruct_ovl0F_04_Gfx **arg1) {
@@ -683,6 +733,10 @@ void func_ovl0F_04_8004544C(s32 arg0, UnkStruct_ovl0F_04_Gfx **arg1) {
     { UnkStruct_ovl0F_04_Gfx *g = gfx++; g->w0 = 0xBA001301; g->w1 = 0x00080000; }
     { UnkStruct_ovl0F_04_Gfx *g = gfx++; g->w0 = 0xBA000E02; g->w1 = 0; }
     *arg1 = gfx;
+}
+
+static f32 func_ovl0F_04_80045444(f32 v) {
+    return v == 0.0f ? 0.0f : 1.0f;
 }
 
 static void func_ovl0F_04_80045308(UnkStruct_ovl0F_04_80048AF0 *p) {
@@ -988,135 +1042,6 @@ void func_ovl0F_04_80044084(void) {
     } while (again);
     func_ovl0F_04_80043020(6, D_ovl0F_04_800485C4);
     func_ovl0F_04_80047CD8();
-}
-
-/* The overlay's handler: the entry returns it to the loader. */
-void func_ovl0F_04_8004624C(s32 arg0) {
-    s32 i;
-    f32 sp1C;
-
-    switch (arg0) {
-        case 2:
-            func_ovl0F_04_80047F48(0x406);
-            func_ovl0F_04_800460C4();
-            func_ovl0F_04_800460BC();
-            func_ovl0F_04_800460CC(5, 5);
-            func_ovl0F_04_80046244();
-            if (func_ovl0F_04_80047F50(0x402) == 0) {
-                func_ovl0F_04_80045E88(&D_ovl0F_04_8004887C);
-            }
-            func_ovl0F_04_8004623C();
-            break;
-        case 17:
-            func_ovl0F_04_800479D8(45.0f, 32768.0f, 32768.0f);
-            func_ovl0F_04_80047370(0x40);
-            func_ovl0F_04_80047330(0x1B, 0, 0x10);
-            break;
-        case 19:
-            func_ovl0F_04_80043530(180.0f);
-            func_ovl0F_04_80047370(0xE0);
-            func_ovl0F_04_80047330(8, 4, 0x1D);
-            break;
-        case 20:
-            func_ovl0F_04_80047330(6, 4, 0x1B);
-            break;
-        case 4:
-            func_ovl0F_04_80047388();
-            func_ovl0F_04_80047260(func_ovl0F_04_80043590);
-            func_ovl0F_04_80043480(&D_ovl0F_04_80048850, 1);
-            func_ovl0F_04_80047C58(40.0f);
-            func_ovl0F_04_80047C60(30);
-            break;
-        case 5:
-            switch (func_ovl0F_04_80047278()) {
-                case 0x11:
-                    func_ovl0F_04_80047378(D_ovl0F_04_80048918[0].unk0, D_ovl0F_04_80048918[0].unk4,
-                                           D_ovl0F_04_80048918[0].unk8, D_ovl0F_04_80048918[0].unkC,
-                                           D_ovl0F_04_80048918[0].unk10, D_ovl0F_04_80048918[0].unk14,
-                                           D_ovl0F_04_80048918[0].unk18);
-                    break;
-                case 0x13:
-                    func_ovl0F_04_80047378(D_ovl0F_04_80048918[1].unk0, D_ovl0F_04_80048918[1].unk4,
-                                           D_ovl0F_04_80048918[1].unk8, D_ovl0F_04_80048918[1].unkC,
-                                           D_ovl0F_04_80048918[1].unk10, D_ovl0F_04_80048918[1].unk14,
-                                           D_ovl0F_04_80048918[1].unk18);
-                    func_ovl0F_04_80047CC8(func_ovl0F_04_800436B0, NULL, 0, 0, 0x130);
-                    break;
-            }
-            break;
-        case 0x50:
-            func_ovl0F_04_800433A0(D_ovl0F_04_800488E0);
-            func_ovl0F_04_800433A0(D_ovl0F_04_800488FC);
-            break;
-        case 0x52:
-            if (func_ovl0F_04_80047340(0x12, 0xA, 0x12, 0xA) != 0) {
-                if (func_ovl0F_04_80047F50(0x406) == 0) {
-                    func_ovl0F_04_80047C58(0.0f);
-                    func_ovl0F_04_80047C60(0x7F);
-                    func_ovl0F_04_80047F40(0x406);
-                    func_ovl0F_04_80047F48(0x407);
-                    func_ovl0F_04_80047AD8();
-                    func_ovl0F_04_80047A20(0xF);
-                    func_ovl0F_04_80047A18(0x10);
-                    func_ovl0F_04_800479A8(0);
-                    func_ovl0F_04_800479C8(581.4f, 1430.1f, 1133.3f);
-                    func_ovl0F_04_80043324(60, D_ovl0F_04_80048958);
-                }
-            } else {
-                i = func_ovl0F_04_80043BC0();
-                if (i != -1) {
-                    D_ovl0F_04_80048AE4 = i;
-                    func_ovl0F_04_80047CC8(func_ovl0F_04_800439DC, NULL, 0, 0, 0x110);
-                }
-            }
-            break;
-        case 0x53:
-            if (func_ovl0F_04_80047340(0x13, 0xA, 0x13, 0xA) != 0) {
-                if (func_ovl0F_04_80047F50(0x406) != 0) {
-                    func_ovl0F_04_80047C58(40.0f);
-                    func_ovl0F_04_80047C60(30);
-                    func_ovl0F_04_80047F48(0x406);
-                    func_ovl0F_04_80047F40(0x407);
-                    func_ovl0F_04_80047A18(0x1F);
-                    func_ovl0F_04_800479A8(1);
-                    func_ovl0F_04_80047AE0();
-                    func_ovl0F_04_80047AA8(D_ovl0F_04_80048AA8);
-                    func_ovl0F_04_80043324(60, D_ovl0F_04_80048978);
-                }
-            }
-            break;
-        case 1:
-            func_ovl0F_04_80047868(D_ovl0F_04_80048C8C);
-            func_ovl0F_04_80047850(0x258);
-            func_ovl0F_04_80043020(5, D_ovl0F_04_800486CC);
-            func_ovl0F_04_80043020(1, &D_ovl0F_04_80048850);
-            if (func_ovl0F_04_80047F50(D_ovl0F_04_80048880.unk0[0].unk28) == 0) {
-                func_ovl0F_04_80043020(2, D_ovl0F_04_80048880.unk0);
-            } else {
-                func_ovl0F_04_80043020(1, &D_ovl0F_04_80048880.unk0[1]);
-            }
-            *D_ovl0F_04_80048880.unk0[0].unk0 = NULL;
-            break;
-        case 12:
-            func_ovl0F_04_800473C0(1);
-            break;
-        case 3:
-            D_ovl0F_04_80048AC4 = func_ovl0F_04_80047358();
-            func_ovl0F_04_80047338(&D_ovl0F_04_80048AB8);
-            func_ovl0F_04_80047360(D_ovl0F_04_80048AC4, D_ovl0F_04_80048AA8);
-            func_ovl0F_04_80043028();
-            break;
-        case 6:
-        case 7:
-        case 8:
-        case 9:
-        case 10:
-        case 11:
-        case 13:
-        case 14:
-        case 15:
-            break;
-    }
 }
 
 /* one step of the movers' script */
@@ -1456,42 +1381,14 @@ void func_ovl0F_04_800433A0(s32 *arg0) {
     }
 }
 
-/* case 2's: the movers and their script */
-static void func_ovl0F_04_80045E88(UnkStructA **arg0) {
-    UnkStruct_ovl0F_04_800485C4 *p;
-    s32 i;
-
-    D_ovl0F_04_80048C90.unk0 = func_ovl0F_04_800473B8(func_ovl0F_04_80047358());
-    D_ovl0F_04_80048C90.unk4 = arg0;
-    D_ovl0F_04_80048C90.unkC = 0;
-    D_ovl0F_04_80048C90.unk10 = 0;
-    D_ovl0F_04_80048C90.unk14 = 0;
-    D_ovl0F_04_80048C90.unk16 = -1;
-    D_ovl0F_04_80048C90.unk8 = 0.0f;
-    D_ovl0F_04_800484A0 = 1;
-    D_ovl0F_04_80048C90.unk18 = D_ovl0F_04_800484A4;
-    D_ovl0F_04_80048C90.unk20 = func_ovl0F_04_80044D34;
-    for (i = 0; i < 6; i++) {
-        D_ovl0F_04_800485C4[i].unkC = 36.0f;
-        D_ovl0F_04_800485C4[i].unk14 = 13.0f;
-        D_ovl0F_04_800485C4[i].unk1C = 90.0f;
-    }
-    p = D_ovl0F_04_800485C4;
-    for (i = 0; i < 6; i++) {
-        *p->unk0 = func_ovl0F_04_80047BA0(p->unk4, p->unk24 | 0x01000000, 0x30, p->unk8);
-        func_ovl0F_04_800433FC(p);
-        (*p->unk0)->unk40->unk1C = p->unk18;
-        (*p->unk0)->unk40->unk20 = p->unk1C;
-        (*p->unk0)->unk40->unk24 = p->unk20;
-        p++;
-    }
-    for (i = 0; i < 6; i++) {
-        func_ovl0F_04_80047B78(func_ovl0F_04_80047BB0(*D_ovl0F_04_800485C4[i].unk0), 0x02100000);
-        D_ovl0F_04_80048534[i].unk11 = 0;
-        D_ovl0F_04_80048C90.unk20(i, 0);
-    }
-    func_ovl0F_04_800472B0(func_ovl0F_04_800448BC);
-    func_ovl0F_04_80047CC8(func_ovl0F_04_80044084, NULL, 0, 0, 0x110);
+/* the switches' cut-scene: a task counts n frames while a message shows */
+static void func_ovl0F_04_80043324(s32 n, char *msg) {
+    func_ovl0F_04_80047418(1);
+    func_ovl0F_04_80048158();
+    func_ovl0F_04_80047CC8(func_ovl0F_04_80045E14, (void *) n, 0, 0, 0x130);
+    func_ovl0F_04_80047380(msg);
+    func_ovl0F_04_80047418(0);
+    func_ovl0F_04_80047380(D_ovl0F_04_80048950);
 }
 
 /* the wind: it blows one way from frame 160 to 460, the other from 540 to
@@ -1539,6 +1436,136 @@ static void func_ovl0F_04_80043020(s32 count, UnkStruct_ovl0F_04_800485C4 *p) {
     for (i = 0; i < count; i++) {
         func_ovl0F_04_80047B90(*p->unk0);
         p++;
+    }
+}
+
+/* The overlay's handler: the entry returns it to the loader. */
+void func_ovl0F_04_8004624C(s32 arg0) {
+    s32 i;
+    f32 sp1C;
+
+    switch (arg0) {
+        case 2:
+            func_ovl0F_04_800460B4();
+            func_ovl0F_04_80047F48(0x406);
+            func_ovl0F_04_800460C4();
+            func_ovl0F_04_800460BC();
+            func_ovl0F_04_800460CC(5, 5);
+            func_ovl0F_04_80046244();
+            if (func_ovl0F_04_80047F50(0x402) == 0) {
+                func_ovl0F_04_80045E88(&D_ovl0F_04_8004887C);
+            }
+            func_ovl0F_04_8004623C();
+            break;
+        case 17:
+            func_ovl0F_04_800479D8(45.0f, 32768.0f, 32768.0f);
+            func_ovl0F_04_80047370(0x40);
+            func_ovl0F_04_80047330(0x1B, 0, 0x10);
+            break;
+        case 19:
+            func_ovl0F_04_80043530(180.0f);
+            func_ovl0F_04_80047370(0xE0);
+            func_ovl0F_04_80047330(8, 4, 0x1D);
+            break;
+        case 20:
+            func_ovl0F_04_80047330(6, 4, 0x1B);
+            break;
+        case 4:
+            func_ovl0F_04_80047388();
+            func_ovl0F_04_80047260(func_ovl0F_04_80043590);
+            func_ovl0F_04_80043480(&D_ovl0F_04_80048850, 1);
+            func_ovl0F_04_80047C58(40.0f);
+            func_ovl0F_04_80047C60(30);
+            break;
+        case 5:
+            switch (func_ovl0F_04_80047278()) {
+                case 0x11:
+                    func_ovl0F_04_80047378(D_ovl0F_04_80048918[0].unk0, D_ovl0F_04_80048918[0].unk4,
+                                           D_ovl0F_04_80048918[0].unk8, D_ovl0F_04_80048918[0].unkC,
+                                           D_ovl0F_04_80048918[0].unk10, D_ovl0F_04_80048918[0].unk14,
+                                           D_ovl0F_04_80048918[0].unk18);
+                    break;
+                case 0x13:
+                    func_ovl0F_04_80047378(D_ovl0F_04_80048918[1].unk0, D_ovl0F_04_80048918[1].unk4,
+                                           D_ovl0F_04_80048918[1].unk8, D_ovl0F_04_80048918[1].unkC,
+                                           D_ovl0F_04_80048918[1].unk10, D_ovl0F_04_80048918[1].unk14,
+                                           D_ovl0F_04_80048918[1].unk18);
+                    func_ovl0F_04_80047CC8(func_ovl0F_04_800436B0, NULL, 0, 0, 0x130);
+                    break;
+            }
+            break;
+        case 0x50:
+            func_ovl0F_04_800433A0(D_ovl0F_04_800488E0);
+            func_ovl0F_04_800433A0(D_ovl0F_04_800488FC);
+            break;
+        case 0x52:
+            if (func_ovl0F_04_80047340(0x12, 0xA, 0x12, 0xA) != 0) {
+                if (func_ovl0F_04_80047F50(0x406) == 0) {
+                    func_ovl0F_04_80047C58(0.0f);
+                    func_ovl0F_04_80047C60(0x7F);
+                    func_ovl0F_04_80047F40(0x406);
+                    func_ovl0F_04_80047F48(0x407);
+                    func_ovl0F_04_80047AD8();
+                    func_ovl0F_04_80047A20(0xF);
+                    func_ovl0F_04_80047A18(0x10);
+                    func_ovl0F_04_800479A8(0);
+                    func_ovl0F_04_800479C8(581.4f, 1430.1f, 1133.3f);
+                    func_ovl0F_04_80043324(60, D_ovl0F_04_80048958);
+                }
+            } else {
+                i = func_ovl0F_04_80043BC0();
+                if (i != -1) {
+                    D_ovl0F_04_80048AE4 = i;
+                    func_ovl0F_04_80047CC8(func_ovl0F_04_800439DC, NULL, 0, 0, 0x110);
+                }
+            }
+            break;
+        case 0x53:
+            if (func_ovl0F_04_80047340(0x13, 0xA, 0x13, 0xA) != 0) {
+                if (func_ovl0F_04_80047F50(0x406) != 0) {
+                    func_ovl0F_04_80047C58(40.0f);
+                    func_ovl0F_04_80047C60(30);
+                    func_ovl0F_04_80047F48(0x406);
+                    func_ovl0F_04_80047F40(0x407);
+                    func_ovl0F_04_80047A18(0x1F);
+                    func_ovl0F_04_800479A8(1);
+                    func_ovl0F_04_80047AE0();
+                    func_ovl0F_04_80047AA8(D_ovl0F_04_80048AA8);
+                    func_ovl0F_04_80043324(60, D_ovl0F_04_80048978);
+                }
+            }
+            break;
+        case 1:
+            func_ovl0F_04_80047868(D_ovl0F_04_80048C8C);
+            func_ovl0F_04_80047850(0x258);
+            func_ovl0F_04_80043020(5, D_ovl0F_04_800486CC);
+            func_ovl0F_04_80043020(1, &D_ovl0F_04_80048850);
+            if (func_ovl0F_04_80047F50(D_ovl0F_04_80048880.unk0[0].unk28) == 0) {
+                func_ovl0F_04_80043020(2, D_ovl0F_04_80048880.unk0);
+            } else {
+                func_ovl0F_04_80043020(1, &D_ovl0F_04_80048880.unk0[1]);
+            }
+            *D_ovl0F_04_80048880.unk0[0].unk0 = NULL;
+            break;
+        case 12:
+            func_ovl0F_04_800473C0(1);
+            break;
+        case 3:
+            D_ovl0F_04_80048AC4 = func_ovl0F_04_80047358();
+            func_ovl0F_04_80047338(&D_ovl0F_04_80048AB8);
+            func_ovl0F_04_80047360(D_ovl0F_04_80048AC4, D_ovl0F_04_80048AA8);
+            func_ovl0F_04_80043028();
+            break;
+        case 6:
+        case 7:
+        case 8:
+        case 9:
+        case 10:
+        case 11:
+        case 13:
+        case 14:
+        case 15:
+            break;
     }
 }
 
