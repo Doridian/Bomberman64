@@ -76,7 +76,7 @@ def build_index(root):
             if m and ctext:
                 funcs.append((int(m.group(1), 16), m.group(2)))
         if ctext: flush()
-    json.dump(idx, open(os.path.join(root, "build", "fcmp_index.json"), "w"))
+    json.dump(idx, open(os.path.join(root, "build", f"fcmp_index.{version(root)}.json"), "w"))
     return idx
 
 
@@ -86,7 +86,7 @@ def map_path(root):
 
 
 def load_index(root):
-    index = os.path.join(root, "build", "fcmp_index.json")
+    index = os.path.join(root, "build", f"fcmp_index.{version(root)}.json")
     if os.path.exists(index):
         stamp = os.path.getmtime(index)
         mp = map_path(root)
