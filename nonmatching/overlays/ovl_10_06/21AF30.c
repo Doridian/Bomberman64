@@ -5,7 +5,7 @@
  * floats in another order). .text is the original's size. Not built into
  * the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 423, jp 1687
+ * differing words: us 375, jp 1687
  *
  * What still differs in us (words, as tools/nonmatching.py counts them; a
  * static's words go to the named function before it):
@@ -13,8 +13,8 @@
  *   m2c's was wrong (80044EFC, 80044F8C, 80045888, 800460C8, 800466C4,
  *   8004683C, 80046B58, 80046D74, 80047810, 800479B8, 80048110) or where
  *   a second pass matched it (8004322C-80043338's stubs, 800445DC,
- *   80044D00, 80045518, 80047D14): 80043A68 (16), 80043CB0 (0),
- *   80043FF8 (32), 8004411C (0), 800442D4 (2), 800443DC (7), 80044804
+ *   80044D00, 80045518, 80047D14): 80043A68 (0), 80043CB0 (0),
+ *   80043FF8 (0), 8004411C (0), 800442D4 (2), 800443DC (7), 80044804
  *   (6), 80044A54 (6), 80044AE4 (3), 80044BCC (15), 80044F8C (4), 80045458
  *   (8), 800455EC (3), 8004584C (9), 80045CE4 (38), 80045F9C (0),
  *   800460C8 (2), 800463C0 (0), 80046478 (0), 800465F4 (0), 800466C4
@@ -1536,7 +1536,7 @@ void func_ovl10_06_80045888(void) {
     s32 effects[10] = { 12, 13, 14, 15, 16, 19, 20, 22, 23, 24 };
     Vec3f ang;
     Vec3f pos;
-    s32 pad2[7];
+    s32 pad2[3];
 
     i = D_ovl10_06_8004B290[D_ovl10_06_8004ACA8];
     D_ovl10_06_8004B7D8[i]--;
@@ -1565,16 +1565,14 @@ void func_ovl10_06_80045888(void) {
         func_ovl10_06_80049FB0(D_ovl10_06_8004ADC0[i]);
         D_ovl10_06_8004ADD0[i] = NULL;
         D_ovl10_06_8004ADC0[i] = NULL;
-        D_ovl10_06_8004ACB0[D_ovl10_06_8004B3C0[D_ovl10_06_8004B290[D_ovl10_06_8004ACA8]]] = NULL;
+        func_ovl10_06_8004584C();
         if (--D_ovl10_06_8004B240[i] != 0) {
             D_ovl10_06_8004B3A0[i] |= 0x30;
             D_ovl10_06_8004B270[i] = -1;
             return;
         }
         if (D_ovl10_06_8004B240[0] == 0 && D_ovl10_06_8004B240[1] == 0 && D_ovl10_06_8004B240[2] == 0) {
-            func_ovl10_06_80049700(0);
-            func_ovl10_06_800430A8(func_ovl10_06_800452EC);
-            func_ovl10_06_8004A360(0x401);
+            func_ovl10_06_800448EC();
         }
         D_ovl10_06_8004ACB0[D_ovl10_06_8004ACA8] = NULL;
     }
@@ -2042,31 +2040,24 @@ void func_ovl10_06_8004411C(void) {
 }
 
 void func_ovl10_06_80043FF8(void) {
-    UnkStructA_40 *temp_v0;
-    s32 *temp_v0_2;
-    s32 temp_t8;
-
     func_ovl10_06_8004A018(D_ovl10_06_8004AF18);
-    temp_v0 = D_ovl10_06_8004AF18->unk40;
-    temp_v0->unk10 += D_ovl10_06_8004B00C;
-    temp_t8 = D_ovl10_06_8004B7E4 - 1;
+    D_ovl10_06_8004AF18->unk40->unk10 += D_ovl10_06_8004B00C;
     D_ovl10_06_8004B00C += -1.0f;
-    D_ovl10_06_8004B7E4 = temp_t8;
-    if (temp_t8 == 0) {
+    if (--D_ovl10_06_8004B7E4 == 0) {
         func_ovl10_06_80049FB0(D_ovl10_06_8004AF18);
         D_ovl10_06_8004AF18 = NULL;
         D_ovl10_06_8004ADB4 = func_ovl10_06_800496E8();
-                if (!(*D_ovl10_06_8004ADB4 & 2)) {
+        if (!(*D_ovl10_06_8004ADB4 & 2)) {
             func_ovl10_06_80049788(0);
             func_ovl10_06_80049700(1);
         }
         if (func_ovl10_06_8004A370(0x401) != 0) {
             func_ovl10_06_80049788(1);
-            D_ovl10_06_8004ABA8[D_ovl10_06_8004ACA8] = 0x3C;
+            D_ovl10_06_8004ABA8[D_ovl10_06_8004ACA8] = 60;
             D_ovl10_06_8004ACB0[D_ovl10_06_8004ACA8] = func_ovl10_06_80043FAC;
-            return;
+        } else {
+            D_ovl10_06_8004ACB0[D_ovl10_06_8004ACA8] = NULL;
         }
-        D_ovl10_06_8004ACB0[D_ovl10_06_8004ACA8] = NULL;
     }
 }
 
@@ -2186,8 +2177,8 @@ void func_ovl10_06_80043A68(void) {
     func_ovl10_06_800430A8(func_ovl10_06_80043FF8);
     D_ovl10_06_8004B7E4 = 0x78;
     D_ovl10_06_8004B00C = -10.0f;
-    D_ovl10_06_8004AF20.unk4 = 0x20F;
     D_ovl10_06_8004AF20.unk0 = D_ovl10_06_8004AF18->unk40;
+    D_ovl10_06_8004AF20.unk4 = 0x20F;
     D_ovl10_06_8004AF20.unk8 = D_ovl10_06_8004B7E4;
     func_ovl10_06_8004A0E0(&D_ovl10_06_8004AF20);
 }
