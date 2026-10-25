@@ -6,33 +6,30 @@
  * tables, .bss 0x1140, as the original's sizes). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2914, jp 4082
+ * differing words: us 2897, jp 4082
  *
- * A first draft from m2c (wk/ in scratch/0B_03/ of the main checkout has
- * the scripts): functions written last to first. The statics the original
- * passes arguments in its callers' saved registers (80043134, 80043428,
- * 80043464: n in $s2; 80043340: n in $s4, the model in $s5; 8004368C:
- * $s1/$s2; 800464B0: n in $s2; 80043234: the scale in $f20; 80043170: the
- * scale in $f12) take ordinary parameters here, their values read from the
- * asm at each call; 800434BC, 800436EC, 800464B0 and 80046510 are
- * rewritten (m2c stepped struct pointers by bytes). 8004386C is m2c's
- * output with its float-to-unsigned conversions, unset-register reads and
- * the table entries it named as symbols of their own (80048D2C,
- * 80048DA4-80048DEC, 80048E80, 80048E98, 80048EAC-80048EE8, 8004918E)
- * fixed; its gotos and its M2C_FIELD byte offsets are m2c's and only
- * partly checked. The ZeroJump stubs are declared as other drafts declare
+ * From m2c (wk/ in scratch/0B_03/ of the main checkout has the scripts,
+ * p2/ the second pass's): functions written last to first. The helpers
+ * 8004386C calls (80043010-80043834 but 80043060, 800431FC and 80043834)
+ * and 800464B0 are static, with the original's own conventions (n in
+ * $s2 and the like), and come out in the original's order once
+ * 8004386C's last calls are in its order; 80043060, 800431FC and 80043834
+ * are defined above 8004386C so that it pulls them out too. The handler's
+ * stub at 80047190 is a static freeing n models, inlined twice, and its
+ * jump table needs the empty case 17. The four turning tasks wrap the
+ * expression itself and test t >= 0.0f before their first pass; the zoom
+ * tasks compare t with an int; the display lists are one macro per
+ * command. 8004386C: cases 1 and 5 are while (TRUE) input loops with
+ * the redraw at their end; the other cases are still m2c's gotos, and
+ * its m2c temporaries make its frame 0x1C0 bytes too big (every local
+ * takes a slot). The ZeroJump stubs are declared as other drafts declare
  * the same codes. The .bss's unreferenced words (800492E0, 8004930C,
  * 8004A33C, 8004A3FC, 8004A418) are arrays, not yet kept in place.
  *
- * What still differs in us (words): 80043010 21, 80043134 21, 80043170 36,
- * 80043234 15, 800432A0 26, 800432F0 26, 80043340 45, 800433BC 29,
- * 80043428 21, 80043464 28, 800434BC 130, 8004368C 32, 800436EC 85,
- * 8004386C 2758, 800464B0 30, 80046510 156, 80046850 23, 80046918 37,
- * 800469B4/80046C20 73 each, 80046AE8/80046D54 73 each, 80046E8C 57,
- * 80046F78 59, 80047064 68, 80047188 2 (the stub after it isn't drafted),
- * 80047198 79. 80043060, 800431FC, 80043834, 8004730C-800473E4 and the
- * end stubs (800473FC on) match. None of the twins simil_all finds
- * (ovl_0B_02, 17_09, 0B_07) was ported yet; the statics aren't `static`.
+ * What still differs in us (words): 8004386C 2758 (the statics' two
+ * misplaced relocations land in 800431FC), 80046510 137 (its frame is 32
+ * bytes too small, and the s1/s2 roles in its first loop are swapped).
+ * Everything else matches.
  */
 
 #include "common.h"
@@ -177,7 +174,7 @@ void func_ovl0B_03_80046E8C(void);
 void func_ovl0B_03_80046F78(void);
 void func_ovl0B_03_80047064(s32 arg0, Gfx_ovl0A_01 **arg1);
 void func_ovl0B_03_80047188(void);
-static void func_ovl0B_03_80047190(void);
+static void func_ovl0B_03_80047190(Model_ovl0B_03 *models, s32 n);
 void func_ovl0B_03_80047198(s32 arg0);
 void func_ovl0B_03_8004730C(s32 arg0, void *arg1);
 void func_ovl0B_03_80047340(f32 arg0);
@@ -404,7 +401,6 @@ void func_ovl0B_03_8004730C(s32 arg0, void *arg1) {
 void func_ovl0B_03_80047198(s32 arg0) {
     s32 i;
     s32 j;
-    Model_ovl0B_03 *p;
 
     switch (arg0) {
     case 2:
@@ -421,23 +417,23 @@ void func_ovl0B_03_80047198(s32 arg0) {
                 func_ovl0B_03_80047EA0(D_ovl0B_03_8004A340[i][j].unk0);
             }
         }
-        for (p = D_ovl0B_03_80048D08, i = 0; i < 4; i++, p++) {
-            func_ovl0B_03_80047EA0(p->unk10);
-        }
-        for (p = D_ovl0B_03_80048E9C, i = 0; i < 4; i++, p++) {
-            func_ovl0B_03_80047EA0(p->unk10);
-        }
+        func_ovl0B_03_80047190(D_ovl0B_03_80048D08, 4);
+        func_ovl0B_03_80047190(D_ovl0B_03_80048E9C, 4);
         return;
     case 12:
         func_ovl0B_03_800488A8();
         return;
     case 17:
-        func_ovl0B_03_80047190();
         return;
     }
 }
 
-static void func_ovl0B_03_80047190(void) {
+static void func_ovl0B_03_80047190(Model_ovl0B_03 *models, s32 n) {
+    s32 i;
+
+    for (i = 0; i < n; i++) {
+        func_ovl0B_03_80047EA0(models[i].unk10);
+    }
 }
 
 void func_ovl0B_03_80047188(void) {
@@ -682,24 +678,15 @@ void func_ovl0B_03_8004386C(void) {
     s32 sp104;
     MenuPos_ovl0B_03 spCC[6] = { { 71, 87, 0, 2, 0, 0 }, { 71, 117, 1, 3, 0, 0 }, { 71, 147, 2, 4, 0, 0 }, { 71, 177, 3, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0 } };
     MenuPos_ovl0B_03 spA4[5] = { { 172, 78, 0, 2, 0, 0 }, { 172, 108, 1, 3, 0, 0 }, { 172, 138, 2, 4, 0, 0 }, { 172, 168, 3, 5, 0, 0 }, { 172, 198, 4, 0, 0, 0 } };
-    Box_ovl0B_03 (*sp88)[];
-    u32 sp84;
     Inner *temp_v0_16;
-    u8 *var_s7_3;
-    u8 *var_s7_5;
-    UnkStructA_40 *temp_t7;
     UnkStructA_40 *temp_v0_18;
     UnkStructA_40 *temp_v0_19;
     UnkStructA_40 *temp_v0_21;
     UnkStructA_40 *temp_v0_22;
     UnkStructA_40 *temp_v0_23;
-    UnkStructB **var_s0;
-    UnkStructB **var_s0_2;
-    UnkStructB *temp_t0;
     UnkStructB *temp_t0_2;
     UnkStructB *temp_t0_3;
     UnkStructB *temp_t0_4;
-    UnkStructB *var_v0_2;
     UnkStructB *var_v0_3;
     UnkStructB *var_v0_6;
     f32 temp_fa0;
@@ -707,26 +694,16 @@ void func_ovl0B_03_8004386C(void) {
     f32 temp_fa0_3;
     f32 temp_ft0;
     f32 temp_ft2;
-    f32 temp_fv0;
     f32 temp_fv0_2;
     f32 temp_fv0_3;
     f32 temp_fv0_4;
-    f32 temp_fv1;
     f32 var_fa0;
     f32 var_fa0_2;
-    f32 var_fa0_3;
-    f32 var_fa0_4;
-    f32 var_fa0_5;
-    f32 var_fa0_6;
     f32 var_fs1;
     f32 var_fs1_2;
     f32 var_fs1_3;
     f32 var_fs4;
     f32 var_fs4_2;
-    f32 var_fs4_3;
-    f32 var_fs4_4;
-    f32 var_fs4_5;
-    f32 var_fs4_6;
     s16 var_fp;
     s16 var_fp_2;
     s16 var_fp_5;
@@ -748,7 +725,6 @@ void func_ovl0B_03_8004386C(void) {
     s32 temp_s3_8;
     s32 temp_s4;
     s32 temp_s7;
-    s32 temp_t6;
     s32 temp_t8;
     s32 temp_t8_2;
     s32 temp_v0;
@@ -764,7 +740,6 @@ void func_ovl0B_03_8004386C(void) {
     s32 temp_v0_6;
     s32 temp_v0_8;
     s32 temp_v0_9;
-    s32 var_a1_2;
     s32 var_a1_3;
     s32 var_a1_4;
     s32 var_a1_5;
@@ -796,27 +771,18 @@ void func_ovl0B_03_8004386C(void) {
     s32 var_t8;
     s32 var_t9;
     s32 var_t9_2;
-    s32 var_v1_2;
     s32 var_v1_3;
     Label_ovl0B_03 *var_s7_6;
     Box_ovl0B_03 *temp_a0;
     Box_ovl0B_03 *temp_a0_2;
     Box_ovl0B_03 *var_a0;
-    Box_ovl0B_03 *var_a0_2;
     Box_ovl0B_03 *var_a1;
-    Box_ovl0B_03 *var_s3_2;
-    Box_ovl0B_03 *var_s3_3;
-    Box_ovl0B_03 *var_v0;
-    Box_ovl0B_03 *var_v1;
     u32 var_s3;
     u32 var_s4;
     void *temp_s7_2;
     void *temp_s7_3;
     void *temp_v0_14;
     void *temp_v0_15;
-    void *temp_v0_5;
-    void *temp_v0_7;
-    void *temp_v1;
     void *temp_v1_2;
     void *temp_v1_3;
     void *temp_v1_4;
