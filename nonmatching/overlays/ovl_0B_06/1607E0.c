@@ -6,7 +6,7 @@
  * floats). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 3686, eu 4335, jp 4563
+ * differing words: us 3675, eu 4335, jp 4563
  * jp has no `#if VERSION_JP` yet: its strings, text positions and code
  * changes are not drafted (docs/DECOMPILING.md, "Versions", step 6).
  *
@@ -22,8 +22,17 @@
  * 80046F14 ($a0, $a3), 80047880 ($s0). The empty stubs (48 of them, where
  * the original has two `jr ra` in a row) are statics inlined into the
  * function after each, which leaves their 8-byte bodies in place; most are
- * still empty here, their code written into the caller. One is 8004382C,
- * the first loop of 80043834 (walking its pointer parameter up to a count).
+ * still empty here, their code written into the caller. 8004382C is the
+ * first loop of 80043834 (walking its pointer parameter up to a count) and
+ * 80046164 the error sound and wait 8004616C inlines twice (its parameter
+ * in $s7).
+ *
+ * 80045C24 takes seven parameters in the original: (a, b, dx, dy, fa, str,
+ * fb), the two u8 flags being a->unk14 and b->unk14, loaded by every caller
+ * ($t0/$s6; dx, dy, fa and fb in argument slots 2, 3, 4 and 6). With that
+ * prototype it matches by itself and 8004616C's argument area is the
+ * original's, but the callers' runs, still the wrong size, count 14 words
+ * more, so it isn't in yet (scratch/0B_06/p2/t7.c has it).
  *
  * Order: the globals 8004390C, 80043B20 and 80043220 come out in place only
  * when defined above their callers (the handler; 80043220 is inlined into
@@ -33,9 +42,10 @@
  *
  * What still differs in us (words):
  * - 80043220 253: with the statics after it (80043280-80043834); 80043480 is
- *   8 bytes long.
+ *   8 bytes long (it holds 3.0, 6.0 and 9.0 in $f26-$f30 where this keeps
+ *   0.0, 6.0 and 9.0).
  * - 80043C48 592: the handler, 0x20 bytes short.
- * - 8004473C 1386, 8004616C 1171: each with the statics after it up to the
+ * - 8004473C 1375, 8004616C 1171: each with the statics after it up to the
  *   next global (80044908-80045F20 and 800464C0-80047030), most of them
  *   the wrong size.
  * - 8004747C 248, 800478D4 18 (with 80047880); 80043010 12 (the stubs and
@@ -67,8 +77,8 @@ typedef struct {
 typedef struct {
     /* 0x00 */ u8 *unk0;
     /* 0x04 */ s32 unk4;
-    /* 0x08 */ s16 unk8;
-    /* 0x0A */ s16 unkA;
+    /* 0x08 */ u16 unk8;
+    /* 0x0A */ u16 unkA;
     /* 0x0C */ f32 unkC;
     /* 0x10 */ f32 unk10;
     /* 0x14 */ u8 unk14;
@@ -267,7 +277,7 @@ static void func_ovl0B_06_80045C24(Label_ovl0B_06 *a, Label_ovl0B_06 *b, u8 *str
 static void func_ovl0B_06_80045D20(void);
 static void func_ovl0B_06_80045D28(s32 arg0, s32 arg1);
 static s32 func_ovl0B_06_80045F20(s32 arg0, Col_ovl0B_06 *on, Col_ovl0B_06 *off, s32 n);
-static void func_ovl0B_06_80046164(void);
+static void func_ovl0B_06_80046164(s32 n);
 void func_ovl0B_06_8004616C(void);
 static void func_ovl0B_06_800464C0(s32 arg0);
 static void func_ovl0B_06_80046558(s32 arg0, s32 arg1);
@@ -1177,7 +1187,6 @@ void func_ovl0B_06_8004616C(void) {
     s32 sub;
     s32 slot;
 
-    func_ovl0B_06_80046164();
     loop = 1;
     sel = 0;
     do {
@@ -1189,8 +1198,8 @@ void func_ovl0B_06_8004616C(void) {
                 sel &= 0xF0;
                 func_ovl0B_06_80048CA8(func_ovl0B_06_8004473C, NULL, 0, 0, 0x130);
                 func_ovl0B_06_80044908(0);
-                func_ovl0B_06_80045C24(&D_ovl0B_06_80049B94[0], &D_ovl0B_06_80049B94[5], D_ovl0B_06_80049534, -0x28, 0);
-                func_ovl0B_06_800433B0(&D_ovl0B_06_80049B94[5]);
+                func_ovl0B_06_80045C24(&D_ovl0B_06_80049B94[0], &D_ovl0B_06_80049B94[6], D_ovl0B_06_80049534, -0x28, 0);
+                func_ovl0B_06_800433B0(&D_ovl0B_06_80049B94[6]);
                 do {
                     sub = func_ovl0B_06_80045F20(sub & 0xF, &D_ovl0B_06_8004A264, &D_ovl0B_06_8004A244, 3);
                     if ((sub & 0xF0) == 0x30) {
@@ -1199,8 +1208,7 @@ void func_ovl0B_06_8004616C(void) {
                         slot = sub & 0xF;
                         if (func_ovl0B_06_80049368(slot, 0) == 10) {
                             D_ovl0B_06_8004992C = 0x1064;
-                            func_ovl0B_06_80049230(0x18);
-                            func_ovl0B_06_80048CC8(0x32);
+                            func_ovl0B_06_80046164(0x32);
                         } else {
                             D_ovl0B_06_8004992C = 0;
                             inner = 0;
@@ -1211,8 +1219,8 @@ void func_ovl0B_06_8004616C(void) {
                     func_ovl0B_06_80048CF0();
                 } while (inner != 0);
                 func_ovl0B_06_80044908(1);
-                func_ovl0B_06_80045C24(&D_ovl0B_06_80049B94[0], &D_ovl0B_06_80049B94[5], D_ovl0B_06_80049508, 0, 0);
-                func_ovl0B_06_800433B0(&D_ovl0B_06_80049B94[5]);
+                func_ovl0B_06_80045C24(&D_ovl0B_06_80049B94[0], &D_ovl0B_06_80049B94[6], D_ovl0B_06_80049508, 0, 0);
+                func_ovl0B_06_800433B0(&D_ovl0B_06_80049B94[6]);
                 D_ovl0B_06_8004992C = 0x400;
                 sel |= sub & 0xF;
             } else if ((sel & 0xF) == 4) {
@@ -1220,8 +1228,7 @@ void func_ovl0B_06_8004616C(void) {
             } else {
                 slot = sel & 0xF;
                 if (func_ovl0B_06_80049368(slot, 0) == 10) {
-                    func_ovl0B_06_80049230(0x18);
-                    func_ovl0B_06_80048CC8(0x32);
+                    func_ovl0B_06_80046164(0x32);
                 } else {
                     loop = 0;
                     func_ovl0B_06_80049378(slot);
@@ -1250,7 +1257,9 @@ void func_ovl0B_06_8004616C(void) {
 
 
 /* @80046164 */
-static void func_ovl0B_06_80046164(void) {
+static void func_ovl0B_06_80046164(s32 n) {
+    func_ovl0B_06_80049230(0x18);
+    func_ovl0B_06_80048CC8(n);
 }
 
 
