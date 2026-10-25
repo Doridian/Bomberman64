@@ -3,7 +3,7 @@
  * function and its .data/.bss; .text 0x40C0 as the original.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 286, eu 4920, jp 4920
+ * differing words: us 286, eu 286, jp 286
  *
  * What still differs in us (words):
  * - func_ovl0A_01_80043028 (6): `beq a0,s0` where the original has
