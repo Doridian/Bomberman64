@@ -3,7 +3,7 @@
  * data (.data 0x270, .rodata 0xA0 and .bss 0x60 laid out as the original).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 21, jp 21
+ * differing words: us 17, jp 21
  *
  * Float zeros come in two kinds: the original keeps the zero it compares
  * with (written `0`) in one register and the zero it stores (`0.0f`) in
@@ -13,15 +13,23 @@
  * 80045060's second flag is an s16.
  *
  * What still differs in us (words):
- * - func_ovl0C_09_80043D08 (21): the prologue's schedule (the constants
- *   and the D_ovl0C_09_80047B10 address come out in another order) and the
- *   store of D_ovl0C_09_80047B00 is one slot later.  ovl_12_03's 8004316C
- *   spelling (macro, fake, static defined above) doesn't give it here.
- *   Tried, none below 21: the macro's statements in any order (y=0 first,
- *   z first, the store before the y+=100), the fake dropped or moved to the
- *   top, all on one line, 100.0f * x, y = y + 100.0f, an f32 local copy of
- *   x, s16 z, and a while loop for the count.  Moving the store earlier
- *   or the z store first is worse (36, 59).
+ * - func_ovl0C_09_80043D08 (17): the prologue's schedule only.  The
+ *   original has a block boundary right after the hoisted invariants
+ *   (&D_ovl0C_09_80047B10 in s1, 100.0f in fs0, the count in s2): IDO's
+ *   ugen output (cc -c -S, u.out.s) assembled with a referenced label
+ *   inserted after `li $18, 5` gives the original's 19 words exactly, so
+ *   the body after it is a block of its own (x, 0 and the mul late, y
+ *   stored before x).  No C found for that boundary yet: fakes at the top
+ *   of the static or the wrapper, goto/do-while(0)/while(1)-break around
+ *   the body, a self call under `if (0)` and every placement of the static
+ *   are no better (they change the loop test to `bne` or store x through
+ *   `lui at`); without `.noalias $17,$sp` or with the saves reordered the
+ *   schedule doesn't come out either.  Line breaks, parameter order and
+ *   types, the callees' declarations and -r4300_mul make no difference.
+ *   The static defined below 80043D08 and the second fake
+ *   (`!count && !count`) put the store of D_ovl0C_09_80047B00 right after
+ *   its call (21 words to 17); in ovl_12_01/12_03/0E_04, whose wrappers end
+ *   with the static, the second fake doesn't help.
  * - func_ovl0C_09_80044BA4: 0 (`hit = FALSE` shares its line with the
  *   while, which keeps it after the lw of obj->unk40).
  */
@@ -256,6 +264,7 @@ static void func_ovl0C_09_80043130(void);
 static void func_ovl0C_09_80043138(void);
 static void func_ovl0C_09_80043140(void);
 static void func_ovl0C_09_80043E00(void);
+static void func_ovl0C_09_80043D00(f32 x, s32 z, s32 count);
 
 /* The three statements are on one line, a macro: only then does IDO
  * schedule across them (as in ovl_0C_04). */
@@ -1023,6 +1032,11 @@ void func_ovl0C_09_80043E80(void) {
 static void func_ovl0C_09_80043E00(void) {
 }
 
+void func_ovl0C_09_80043D08(void) {
+    func_ovl0C_09_80043D00(33.0f, 15, 5);
+    func_ovl0C_09_80046518(0x1F, 5, 0xF, 0x20, 0x10, 0x12);
+}
+
 /* Inlined into func_ovl0C_09_80043D08 only, as ovl_12_03's 8004316C. */
 #define UNK_MACRO_ovl0C_09_80043D00()                                          \
     D_ovl0C_09_80047B10.x = x * 100.0f;                                        \
@@ -1040,11 +1054,8 @@ static void func_ovl0C_09_80043D00(f32 x, s32 z, s32 count) {
     UNK_MACRO_ovl0C_09_80043D00();
     if (!i && !i) {
     }
-}
-
-void func_ovl0C_09_80043D08(void) {
-    func_ovl0C_09_80043D00(33.0f, 15, 5);
-    func_ovl0C_09_80046518(0x1F, 5, 0xF, 0x20, 0x10, 0x12);
+    if (!count && !count) {
+    }
 }
 
 void func_ovl0C_09_80043C40(UnkStruct_ovl0C_09_8004784C *arg0) {
