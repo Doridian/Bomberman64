@@ -3,7 +3,7 @@
  * data (.data and .bss as the original's sizes).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3417, jp 4362
+ * differing words: us 3090, jp 4362
  *
  * Every function comes out in the original's order; most of the stubs
  * don't yet. The order is ovl_0F_02's (and ovl_0F_03's): the functions
@@ -38,6 +38,19 @@
  * - 80046BC8, 80046BFC, 80045E14 and 800436B0 match.
  */
 #include "common.h"
+static void func_ovl0F_04_80043018(void);
+static void func_ovl0F_04_80044D24(void);
+static void func_ovl0F_04_80043578(void);
+static void func_ovl0F_04_80043580(void);
+static void func_ovl0F_04_80043588(void);
+static void func_ovl0F_04_800432FC(void);
+static void func_ovl0F_04_80043304(void);
+static void func_ovl0F_04_8004330C(void);
+static void func_ovl0F_04_80043314(void);
+static void func_ovl0F_04_8004331C(void);
+static void func_ovl0F_04_80045E70(void);
+static void func_ovl0F_04_80045E78(void);
+static void func_ovl0F_04_80045E80(void);
 
 /*
  * ovl_0F_04's game object, IDO -O3: the functions are written last to first
@@ -154,6 +167,16 @@ typedef struct {
 /* gbi.h's _SHIFTL */
 #define _SHIFTL(v, s, w) ((u32) (((u32) (v) & ((0x01 << (w)) - 1)) << (s)))
 
+f32 func_ovl0F_04_800471A0(void);
+void func_ovl0F_04_800472B0(void (*)(UnkStructA *));
+void func_ovl0F_04_800478A0(UnkStructA_40 *, s32, s32);
+f32 func_ovl0F_04_800478B8(UnkStructA_40 *, s32);
+void func_ovl0F_04_800478D0(UnkStructA_40 *, s32, s32);
+void func_ovl0F_04_800479C8(f32, f32, f32);
+void func_ovl0F_04_80047C88(UnkStructA *);
+void func_ovl0F_04_80047F48(s32);
+void func_ovl0F_04_800481C0(UnkStructA *, s32, f32, s32 (*)(s32));
+void func_ovl0F_04_80048230(f32 *);
 f32 func_ovl0F_04_80047238(UnkStructA_40 *);
 f32 func_ovl0F_04_80047E70(f32);
 f32 func_ovl0F_04_80047E78(f32);
@@ -283,7 +306,7 @@ static void func_ovl0F_04_80043750(UnkStructA *obj, f32 speed);
 void func_ovl0F_04_800436B0(void);
 void func_ovl0F_04_80043590(UnkStructA *arg0);
 void func_ovl0F_04_80043530(f32 arg0);
-void func_ovl0F_04_80043480(UnkStruct_ovl0F_04_800485C4 *arg0, s32 arg1);
+static void func_ovl0F_04_80043480(UnkStruct_ovl0F_04_800485C4 *arg0, s32 arg1);
 static void func_ovl0F_04_800433FC(UnkStruct_ovl0F_04_800485C4 *arg0);
 void func_ovl0F_04_800433A0(s32 *arg0);
 static void func_ovl0F_04_80045E88(UnkStructA **arg0);
@@ -596,11 +619,23 @@ static void func_ovl0F_04_800460BC(void) {
     func_ovl0F_04_80047328();
 }
 
+static void func_ovl0F_04_80045E70(void) {
+}
+
+static void func_ovl0F_04_80045E78(void) {
+}
+
+static void func_ovl0F_04_80045E80(void) {
+}
+
 /* case 2's: the movers and their script */
 static void func_ovl0F_04_80045E88(UnkStructA **arg0) {
     UnkStruct_ovl0F_04_800485C4 *p;
     s32 i;
 
+    func_ovl0F_04_80045E70();
+    func_ovl0F_04_80045E78();
+    func_ovl0F_04_80045E80();
     D_ovl0F_04_80048C90.unk0 = func_ovl0F_04_800473B8(func_ovl0F_04_80047358());
     D_ovl0F_04_80048C90.unk4 = arg0;
     D_ovl0F_04_80048C90.unkC = 0;
@@ -810,11 +845,15 @@ static void func_ovl0F_04_80044EB0(f32 *pos, s32 id, f32 d, f32 h) {
     func_ovl0F_04_80048118(id, pos[0] - d, pos[1] + h, pos[2] - d, 0);
 }
 
+static void func_ovl0F_04_80044D24(void) {
+}
+
 /* the script's command: a mover (re)starts; with flag 0 it stays stopped */
 void func_ovl0F_04_80044D34(s32 idx, s32 flag) {
     UnkStruct_ovl0F_04_800485C4 *p;
     UnkStruct_ovl0F_04_80048534 *m;
 
+    func_ovl0F_04_80044D24();
     p = &D_ovl0F_04_800485C4[idx];
     func_ovl0F_04_800433FC(p);
     m = &D_ovl0F_04_80048534[idx];
@@ -883,7 +922,7 @@ void func_ovl0F_04_800448BC(UnkStructA *arg0) {
 
     dir = 0;
     speed = 0.0f;
-    func_ovl0F_04_80048250(3);
+    func_ovl0F_04_80048250(0x1E);
     if (D_ovl0F_04_80048C90.unk16 != -1) {
         dir = D_ovl0F_04_80048534[D_ovl0F_04_80048C90.unk16].unk0;
         speed = D_ovl0F_04_80048534[D_ovl0F_04_80048C90.unk16].unk4 * 0.8f;
@@ -894,7 +933,7 @@ void func_ovl0F_04_800448BC(UnkStructA *arg0) {
     func_ovl0F_04_80048118(0, arg0->unk40->unk10, arg0->unk40->unk14 + 100.0f, arg0->unk40->unk18, 0);
     arg0->unk68 = 30.0f;
     arg0->unk70 = 1.6333334f;
-    for (i = 1; i <= 200 && arg0->unk68 > 0.0f && !func_ovl0F_04_80044D2C(arg0); i++) {
+    for (i = 1; i <= 200 && arg0->unk68 > 0.0f && !(arg0->unk40->unk14 <= func_ovl0F_04_800471A0()); i++) {
         dy = func_ovl0F_04_80047E78(arg0->unk40->unk1C) * 30.0f;
         func_ovl0F_04_800481C0(arg0, dir, speed, func_ovl0F_04_80044D04);
         arg0->unk40->unk1C += 10.0f;
@@ -905,7 +944,7 @@ void func_ovl0F_04_800448BC(UnkStructA *arg0) {
         arg0->unk40->unk14 -= dy;
         func_ovl0F_04_80047D10();
     }
-    if (func_ovl0F_04_80044D2C(arg0)) {
+    if (arg0->unk40->unk14 <= func_ovl0F_04_800471A0()) {
         func_ovl0F_04_80043590(arg0);
     } else {
         arg0->unk6C = 0.0f;
@@ -916,130 +955,130 @@ void func_ovl0F_04_800448BC(UnkStructA *arg0) {
 
 /* a task: the movers, until the script ends and all have stopped */
 void func_ovl0F_04_80044084(void) {
-    s32 again;
-    s16 i;
-    UnkStruct_ovl0F_04_80048534 *m;
-    UnkStruct_ovl0F_04_800485C4 *p;
-    UnkStruct_ovl0F_04_800484BC *st;
-    UnkStructA *pl;
-    f32 dist;
-    f32 angle;
-    f32 pos[3];
+    s32 active;
+    s32 i;
+    UnkStruct_ovl0F_04_80048534 *st;
+    UnkStruct_ovl0F_04_800485C4 *rec;
+    UnkStruct_ovl0F_04_800484BC *step;
+    UnkStructA *obj;
+    UnkStructA *player;
     s32 hit;
+    f32 pos[3];
+    f32 tilt;
+    f32 slope;
 
-    again = 1;
+    active = TRUE;
     do {
         func_ovl0F_04_80043E04(&D_ovl0F_04_80048C90, 0, 0, D_ovl0F_04_800484A0);
-        if (D_ovl0F_04_80048C90.unkC != 0 && *D_ovl0F_04_80048C90.unk4 != NULL &&
-            (*D_ovl0F_04_80048C90.unk4)->unk40->unk48 != NULL) {
-            (*D_ovl0F_04_80048C90.unk4)->unk40->unk48->unk4->unk4 = D_ovl0F_04_80048C90.unk8;
-            if (D_ovl0F_04_80048C90.unkC == 1) {
-                D_ovl0F_04_80048C90.unk8 += 1.0f;
-                if (func_ovl0F_04_800478B8((*D_ovl0F_04_80048C90.unk4)->unk40, 0) <= D_ovl0F_04_80048C90.unk8) {
-                    D_ovl0F_04_80048C90.unk8 = 0.0f;
-                    D_ovl0F_04_80048C90.unkC = 0;
-                }
-            } else {
-                D_ovl0F_04_80048C90.unk8 -= 1.0f;
-                if (D_ovl0F_04_80048C90.unk8 < 0.0f) {
-                    D_ovl0F_04_80048C90.unk8 = 0.0f;
-                    D_ovl0F_04_80048C90.unkC = 0;
-                    if (*D_ovl0F_04_80048C90.unk4 != NULL) {
-                        func_ovl0F_04_80048270(0x8C, (*D_ovl0F_04_80048C90.unk4)->unk40->unk10,
-                                               (*D_ovl0F_04_80048C90.unk4)->unk40->unk14,
-                                               (*D_ovl0F_04_80048C90.unk4)->unk40->unk18);
+        if (D_ovl0F_04_80048C90.unkC != 0) {
+            obj = *D_ovl0F_04_80048C90.unk4;
+            if (obj != NULL && obj->unk40->unk48 != NULL) {
+                obj->unk40->unk48->unk4->unk4 = D_ovl0F_04_80048C90.unk8;
+                if (D_ovl0F_04_80048C90.unkC == 1) {
+                    D_ovl0F_04_80048C90.unk8 += 1.0f;
+                    if (func_ovl0F_04_800478B8((*D_ovl0F_04_80048C90.unk4)->unk40, 0) <= D_ovl0F_04_80048C90.unk8) {
+                        D_ovl0F_04_80048C90.unk8 = 0.0f;
+                        D_ovl0F_04_80048C90.unkC = 0;
+                    }
+                } else {
+                    D_ovl0F_04_80048C90.unk8 -= 1.0f;
+                    if (D_ovl0F_04_80048C90.unk8 < 0.0f) {
+                        D_ovl0F_04_80048C90.unk8 = 0.0f;
+                        D_ovl0F_04_80048C90.unkC = 0;
+                        obj = *D_ovl0F_04_80048C90.unk4;
+                        if (obj != NULL) {
+                            func_ovl0F_04_80048270(0x8C, obj->unk40->unk10, obj->unk40->unk14, obj->unk40->unk18);
+                        }
                     }
                 }
             }
         }
         for (i = 0; i < 6; i++) {
-            m = &D_ovl0F_04_80048534[i];
-            p = &D_ovl0F_04_800485C4[i];
-            if (m->unk11 == 1) {
-                func_ovl0F_04_80047C88(*p->unk0);
-                pl = D_ovl0F_04_80048C90.unk0;
-                if (pl->unk40->unk10 <= (*p->unk0)->unk40->unk10 + 300.0f &&
-                    (*p->unk0)->unk40->unk10 - 300.0f <= pl->unk40->unk10 &&
-                    pl->unk40->unk18 <= (*p->unk0)->unk40->unk18 + 300.0f &&
-                    (*p->unk0)->unk40->unk18 - 300.0f <= pl->unk40->unk18) {
-                    if (m->unk14 != 0) {
+            if (D_ovl0F_04_80048534[i].unk11 == 1) {
+                func_ovl0F_04_80047C88((*D_ovl0F_04_800485C4[i].unk0));
+                player = D_ovl0F_04_80048C90.unk0;
+                if (player->unk40->unk10 <= (*D_ovl0F_04_800485C4[i].unk0)->unk40->unk10 + 300.0f &&
+                    (*D_ovl0F_04_800485C4[i].unk0)->unk40->unk10 - 300.0f <= player->unk40->unk10 &&
+                    player->unk40->unk18 <= (*D_ovl0F_04_800485C4[i].unk0)->unk40->unk18 + 300.0f &&
+                    (*D_ovl0F_04_800485C4[i].unk0)->unk40->unk18 - 300.0f <= player->unk40->unk18) {
+                    if (D_ovl0F_04_80048534[i].unk14 != 0) {
                         func_ovl0F_04_80048250(0x87);
-                        m->unk14 = 0;
+                        D_ovl0F_04_80048534[i].unk14 = 0;
                     }
-                } else if (m->unk14 == 0) {
-                    m->unk14 = 1;
+                } else if (D_ovl0F_04_80048534[i].unk14 == 0) {
+                    D_ovl0F_04_80048534[i].unk14 = 1;
                 }
-                if ((*p->unk0)->unk6C == 0.0f) {
-                    st = &D_ovl0F_04_800484BC[m->unk10][m->unk12];
-                    if (m->unkC >= st->unk0) {
-                        if (p->unk1C == 90.0f) {
-                            m->unkC = 0;
-                            m->unk0 = st->unk2;
-                            m->unk8 = st->unk4;
-                            m->unk12 = st->unk3;
-                        } else if (p->unk1C == 270.0f) {
-                            m->unk0 = (st->unk2 + 0x80) & 0xFF;
-                            m->unkC = 0;
-                            m->unk8 = st->unk4;
-                            m->unk12 = st->unk3;
+                if ((*D_ovl0F_04_800485C4[i].unk0)->unk6C == 0.0f) {
+                    step = &D_ovl0F_04_800484BC[D_ovl0F_04_80048534[i].unk10][D_ovl0F_04_80048534[i].unk12];
+                    if (D_ovl0F_04_80048534[i].unkC >= step->unk0) {
+                        if (D_ovl0F_04_800485C4[i].unk1C == 90.0f) {
+                            D_ovl0F_04_80048534[i].unkC = 0;
+                            D_ovl0F_04_80048534[i].unk0 = step->unk2;
+                            D_ovl0F_04_80048534[i].unk8 = step->unk4;
+                            D_ovl0F_04_80048534[i].unk12 = step->unk3;
+                        } else if (D_ovl0F_04_800485C4[i].unk1C == 270.0f) {
+                            D_ovl0F_04_80048534[i].unk0 = (step->unk2 + 0x80) & 0xFF;
+                            D_ovl0F_04_80048534[i].unkC = 0;
+                            D_ovl0F_04_80048534[i].unk8 = step->unk4;
+                            D_ovl0F_04_80048534[i].unk12 = step->unk3;
                         }
                     }
                 }
-                m->unkC++;
+                D_ovl0F_04_80048534[i].unkC++;
                 func_ovl0F_04_80043BC8(i);
-                func_ovl0F_04_800481C0(*p->unk0, m->unk0, m->unk4, func_ovl0F_04_80044D04);
-                dist = 0.0f;
-                angle = 0.0f;
-                func_ovl0F_04_80047200((*p->unk0)->unk40, &dist, &angle);
-                if (func_ovl0F_04_80047E70((*p->unk0)->unk40->unk20) >= 0.707f && angle != 0.0f) {
-                    dist *= func_ovl0F_04_80047E70(angle);
+                func_ovl0F_04_800481C0((*D_ovl0F_04_800485C4[i].unk0), D_ovl0F_04_80048534[i].unk0, D_ovl0F_04_80048534[i].unk4, func_ovl0F_04_80044D04);
+                tilt = 0.0f;
+                slope = 0.0f;
+                func_ovl0F_04_80047200((*D_ovl0F_04_800485C4[i].unk0)->unk40, &tilt, &slope);
+                if (func_ovl0F_04_80047E70((*D_ovl0F_04_800485C4[i].unk0)->unk40->unk20) >= 0.707f && slope != 0.0f) {
+                    tilt *= func_ovl0F_04_80047E70(slope);
                 }
-                (*p->unk0)->unk40->unk1C = dist * 0.6f;
-                if (func_ovl0F_04_80044D2C(*p->unk0)) {
+                (*D_ovl0F_04_800485C4[i].unk0)->unk40->unk1C = tilt * 0.6f;
+                if (func_ovl0F_04_80044D2C((*D_ovl0F_04_800485C4[i].unk0))) {
                     D_ovl0F_04_80048C90.unk20(i, 0);
-                } else {
-                    hit = func_ovl0F_04_80047B28(*p->unk0, 0x40);
-                    if (hit != 0 && ((hit & 0x2000) || (hit & 0x4000))) {
-                        pos[0] = (*p->unk0)->unk40->unk10;
-                        pos[1] = (*p->unk0)->unk40->unk14;
-                        pos[2] = (*p->unk0)->unk40->unk18;
-                        func_ovl0F_04_80048278(0x168, pos);
-                        func_ovl0F_04_80048230(pos);
-                        (*p->unk0)->unk68 = 20.0f;
-                        (*p->unk0)->unk70 = 0.8166667f;
-                        m->unk11 = 2;
-                        func_ovl0F_04_80047CC8(func_ovl0F_04_80044BC0, (void *) (s32) i, 0, 0, 0x150);
-                    }
-                    if (func_ovl0F_04_80047B40(D_ovl0F_04_80048C90.unk0, *p->unk0) != 0) {
-                        D_ovl0F_04_80048C90.unk16 = i;
-                    }
-                    m->unk4 += m->unk8;
+                    continue;
                 }
-            } else if (m->unk11 == 2) {
-                if ((*p->unk0)->unk68 == 0.0f && (*p->unk0)->unk6C == 0.0f) {
+                hit = func_ovl0F_04_80047B28((*D_ovl0F_04_800485C4[i].unk0), 0x40);
+                if (hit != 0 && ((hit & 0x2000) || (hit & 0x4000))) {
+                    pos[0] = (*D_ovl0F_04_800485C4[i].unk0)->unk40->unk10;
+                    pos[1] = (*D_ovl0F_04_800485C4[i].unk0)->unk40->unk14;
+                    pos[2] = (*D_ovl0F_04_800485C4[i].unk0)->unk40->unk18;
+                    func_ovl0F_04_80048278(0x168, pos);
+                    func_ovl0F_04_80048230(pos);
+                    (*D_ovl0F_04_800485C4[i].unk0)->unk68 = 20.0f;
+                    (*D_ovl0F_04_800485C4[i].unk0)->unk70 = 0.81666666f;
+                    D_ovl0F_04_80048534[i].unk11 = 2;
+                    func_ovl0F_04_80047CC8(func_ovl0F_04_80044BC0, (void *) i, 0, 0, 0x150);
+                }
+                if (func_ovl0F_04_80047B40(D_ovl0F_04_80048C90.unk0, (*D_ovl0F_04_800485C4[i].unk0)) != 0) {
+                    D_ovl0F_04_80048C90.unk16 = i;
+                }
+                D_ovl0F_04_80048534[i].unk4 += D_ovl0F_04_80048534[i].unk8;
+            } else if (D_ovl0F_04_80048534[i].unk11 == 2) {
+                if ((*D_ovl0F_04_800485C4[i].unk0)->unk68 == 0.0f && (*D_ovl0F_04_800485C4[i].unk0)->unk6C == 0.0f) {
                     D_ovl0F_04_80048C90.unk20(i, 0);
-                } else {
-                    if ((*p->unk0)->unk40->unk1C < 180.0f) {
-                        (*p->unk0)->unk40->unk1C += 5.0f;
-                    }
-                    func_ovl0F_04_800481C0(*p->unk0, m->unk0, m->unk4, func_ovl0F_04_80044D04);
-                    func_ovl0F_04_80047BF8(*p->unk0);
-                    if (func_ovl0F_04_80044D2C(*p->unk0)) {
-                        D_ovl0F_04_80048C90.unk20(i, 0);
-                    }
+                    continue;
+                }
+                if ((*D_ovl0F_04_800485C4[i].unk0)->unk40->unk1C < 180.0f) {
+                    (*D_ovl0F_04_800485C4[i].unk0)->unk40->unk1C += 5.0f;
+                }
+                func_ovl0F_04_800481C0((*D_ovl0F_04_800485C4[i].unk0), D_ovl0F_04_80048534[i].unk0, D_ovl0F_04_80048534[i].unk4, func_ovl0F_04_80044D04);
+                func_ovl0F_04_80047BF8((*D_ovl0F_04_800485C4[i].unk0));
+                if (func_ovl0F_04_80044D2C((*D_ovl0F_04_800485C4[i].unk0))) {
+                    D_ovl0F_04_80048C90.unk20(i, 0);
                 }
             }
         }
         if (D_ovl0F_04_800484A0 == 0) {
-            again = 0;
+            active = FALSE;
             for (i = 0; i < 6; i++) {
                 if (D_ovl0F_04_80048534[i].unk11 != 0) {
-                    again = 1;
+                    active = TRUE;
                 }
             }
         }
         func_ovl0F_04_80047D10();
-    } while (again);
+    } while (active);
     func_ovl0F_04_80043020(6, D_ovl0F_04_800485C4);
     func_ovl0F_04_80047CD8();
 }
@@ -1234,16 +1273,16 @@ void func_ovl0F_04_800438F0(UnkStructA *obj) {
 
 /* the wind pushes a block along x unless it is stopped */
 static void func_ovl0F_04_80043770(UnkStructA *obj, f32 speed) {
-    Vec3f pos;
+    f32 pos[3];
     s32 dir;
     s32 saved;
     s32 hit;
     UnkStructA *other;
     s32 k;
 
-    pos.x = obj->unk40->unk10;
-    pos.y = obj->unk40->unk14;
-    pos.z = obj->unk40->unk18;
+    pos[0] = obj->unk40->unk10;
+    pos[1] = obj->unk40->unk14;
+    pos[2] = obj->unk40->unk18;
     dir = 0x40;
     if (func_ovl0F_04_80047238(obj->unk40) == obj->unk40->unk14) {
         func_ovl0F_04_800481C8(obj, dir, speed);
@@ -1286,9 +1325,9 @@ static void func_ovl0F_04_80043770(UnkStructA *obj, f32 speed) {
     }
     obj->unkC = saved;
     if (hit) {
-        obj->unk40->unk10 = pos.x;
-        obj->unk40->unk14 = pos.y;
-        obj->unk40->unk18 = pos.z;
+        obj->unk40->unk10 = pos[0];
+        obj->unk40->unk14 = pos[1];
+        obj->unk40->unk18 = pos[2];
     }
 }
 
@@ -1321,6 +1360,15 @@ void func_ovl0F_04_800436B0(void) {
     func_ovl0F_04_80047CD8();
 }
 
+static void func_ovl0F_04_80043578(void) {
+}
+
+static void func_ovl0F_04_80043580(void) {
+}
+
+static void func_ovl0F_04_80043588(void) {
+}
+
 /* a block that fell: it sinks into the floor */
 void func_ovl0F_04_80043590(UnkStructA *arg0) {
     f32 dx;
@@ -1328,6 +1376,9 @@ void func_ovl0F_04_80043590(UnkStructA *arg0) {
     f32 dz;
     s32 i;
 
+    func_ovl0F_04_80043578();
+    func_ovl0F_04_80043580();
+    func_ovl0F_04_80043588();
     if (arg0->unk8 & 1) {
         func_ovl0F_04_80047A20(0x10);
     }
@@ -1352,7 +1403,7 @@ void func_ovl0F_04_80043530(f32 arg0) {
     func_ovl0F_04_800479D8(sp1C + arg0, 32768.0f, 32768.0f);
 }
 
-void func_ovl0F_04_80043480(UnkStruct_ovl0F_04_800485C4 *arg0, s32 arg1) {
+static void func_ovl0F_04_80043480(UnkStruct_ovl0F_04_800485C4 *arg0, s32 arg1) {
     s32 i;
 
     for (i = 0; i < arg1; i++) {
@@ -1381,8 +1432,28 @@ void func_ovl0F_04_800433A0(s32 *arg0) {
     }
 }
 
+static void func_ovl0F_04_800432FC(void) {
+}
+
+static void func_ovl0F_04_80043304(void) {
+}
+
+static void func_ovl0F_04_8004330C(void) {
+}
+
+static void func_ovl0F_04_80043314(void) {
+}
+
+static void func_ovl0F_04_8004331C(void) {
+}
+
 /* the switches' cut-scene: a task counts n frames while a message shows */
 static void func_ovl0F_04_80043324(s32 n, char *msg) {
+    func_ovl0F_04_800432FC();
+    func_ovl0F_04_80043304();
+    func_ovl0F_04_8004330C();
+    func_ovl0F_04_80043314();
+    func_ovl0F_04_8004331C();
     func_ovl0F_04_80047418(1);
     func_ovl0F_04_80048158();
     func_ovl0F_04_80047CC8(func_ovl0F_04_80045E14, (void *) n, 0, 0, 0x130);
@@ -1391,11 +1462,15 @@ static void func_ovl0F_04_80043324(s32 n, char *msg) {
     func_ovl0F_04_80047380(D_ovl0F_04_80048950);
 }
 
+static void func_ovl0F_04_80043018(void) {
+}
+
 /* the wind: it blows one way from frame 160 to 460, the other from 540 to
  * 720, and the fog moves with it */
 void func_ovl0F_04_80043028(void) {
     f32 d;
 
+    func_ovl0F_04_80043018();
     if (D_ovl0F_04_80048488 >= 160) {
         if (D_ovl0F_04_80048488 < 460) {
             D_ovl0F_04_80048494 += -30.0f / 300.0f;
