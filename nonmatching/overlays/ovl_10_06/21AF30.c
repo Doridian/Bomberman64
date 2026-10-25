@@ -5,7 +5,7 @@
  * floats in another order). .text is the original's size. Not built into
  * the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 318, jp 1687
+ * differing words: us 268, jp 1687
  *
  * What still differs in us (words, as tools/nonmatching.py counts them; a
  * static's words go to the named function before it):
@@ -18,7 +18,7 @@
  *   (6), 80044A54 (6), 80044AE4 (3), 80044BCC (0), 80044F8C (4), 80045458
  *   (8), 800455EC (3), 8004584C (9), 80045CE4 (38), 80045F9C (0),
  *   800460C8 (2), 800463C0 (0), 80046478 (0), 800465F4 (0), 800466C4
- *   (18), 8004683C (30), 80046A04 (0), 80046BF0 (0), 80046C64 (0),
+ *   (0), 8004683C (0), 80046A04 (0), 80046BF0 (0), 80046C64 (0),
  *   80046D74 (0), 80047110 (2), 800473FC (0), 80047450 (0), 80047634
  *   (0), 80047810 (0), 80047B0C (3), 80047BE0 (0), 80047C98 (0),
  *   80047E10 (0), 80048110 (22), 80048498 (0), 80048944 (0), 800489FC
@@ -29,7 +29,7 @@
  * - 80047308 (41): the angle test (`>= 0.0 && < 22.5`, empty) keeps a
  *   second branch the original doesn't have; the fake keeps the tests at
  *   all.
- * - 80047A50 (10): one nop more after its loop.
+ * - 80047A50 (8): one nop more after its loop.
  * - 800434E0, 8004355C and 800435FC are defined above 8004368C so that it
  *   pulls them (the static between the two globals, as in the original).
  *   The stubs 80043268/80043270 and 80043330 are empty statics called by
@@ -1253,7 +1253,7 @@ void func_ovl10_06_80046A04(void) {
 void func_ovl10_06_8004683C(void) {
     Vec3f pos;
     Vec3f target;
-    f32 ang[2];
+    Vec3f ang;
     f32 diff;
     f32 step;
     f32 a;
@@ -1262,8 +1262,8 @@ void func_ovl10_06_8004683C(void) {
     i = D_ovl10_06_8004B290[D_ovl10_06_8004ACA8];
     func_ovl10_06_8004A068(D_ovl10_06_8004ADC0[i], &pos);
     func_ovl10_06_8004A068(D_ovl10_06_8004ADBC, &target);
-    func_ovl10_06_80049F28(&pos.x, &target.x, ang);
-    diff = ang[0] - D_ovl10_06_8004ADC0[i]->unk40->unk20;
+    func_ovl10_06_80049F28(&pos.x, &target.x, &ang.x);
+    diff = ang.x - D_ovl10_06_8004ADC0[i]->unk40->unk20;
     if (diff >= 180.0f) {
         diff -= 360.0f;
     }
@@ -1287,7 +1287,8 @@ void func_ovl10_06_8004683C(void) {
         D_ovl10_06_8004ADC0[i]->unk40->unk20 += 360.0f;
     }
     if (D_ovl10_06_8004B3A0[i] & 4) {
-        if (--D_ovl10_06_8004B260[i] == 0 || diff == 0.0f) {
+        D_ovl10_06_8004B260[i]--;
+        if (diff == 0.0f || D_ovl10_06_8004B260[i] == 0) {
             D_ovl10_06_8004B3A0[i] &= ~4;
             func_ovl10_06_800466C4();
         }
@@ -1299,8 +1300,8 @@ void func_ovl10_06_800466C4(void) {
     Vec3f from;
     Vec3f to;
     Vec3f pos2;
-    f32 ang[2];
-    f32 ang2[2];
+    Vec3f ang;
+    Vec3f ang2;
     s32 i;
 
     i = D_ovl10_06_8004B290[D_ovl10_06_8004ACA8];
@@ -1309,13 +1310,13 @@ void func_ovl10_06_800466C4(void) {
     func_ovl10_06_80049F70(D_ovl10_06_8004ADE8[i]);
     func_ovl10_06_8004A068(D_ovl10_06_8004ADE8[i], &pos);
     func_ovl10_06_8004A068(D_ovl10_06_8004ADC0[i], &from);
-    func_ovl10_06_80049F28(&from.x, &pos.x, ang);
+    func_ovl10_06_80049F28(&from.x, &pos.x, &ang.x);
     func_ovl10_06_8004A068(D_ovl10_06_8004ADBC, &to);
     to.y = pos.y;
-    func_ovl10_06_80049F28(&pos.x, &to.x, ang2);
-    D_ovl10_06_8004AF78[i] = func_ovl10_06_8004A290(ang[0]);
-    D_ovl10_06_8004AF88[i] = (from.y - pos.y) / ang2[1];
-    D_ovl10_06_8004AF98[i] = func_ovl10_06_8004A298(ang[0]);
+    func_ovl10_06_80049F28(&pos.x, &to.x, &ang2.x);
+    D_ovl10_06_8004AF78[i] = func_ovl10_06_8004A290(ang.x);
+    D_ovl10_06_8004AF88[i] = (from.y - pos.y) / ang2.z;
+    D_ovl10_06_8004AF98[i] = func_ovl10_06_8004A298(ang.x);
     func_ovl10_06_80049F98(D_ovl10_06_8004ADE8[i], 0x40);
     func_ovl10_06_80049FA0(D_ovl10_06_8004ADE8[i], 0x40000);
     D_ovl10_06_8004ADE8[i]->unk30 = 1;
