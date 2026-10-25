@@ -3,8 +3,7 @@
  * (.data 0x490, .rodata 0x70 and .bss 0x60 as the original; .text 0x20C0).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2, eu 3, jp 3 (eu and jp not re-measured since the
- * stores went onto one line; they can only be lower)
+ * differing words: us 2, eu 3, jp 2
  *
  * What still differs in us (words):
  * - func_ovl0E_03_800430A8 (2): ovl_0E_12's 80043164: `sll t4,s3,5` (the
