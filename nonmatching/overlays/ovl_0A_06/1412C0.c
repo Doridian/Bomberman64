@@ -6,7 +6,7 @@
  * differ, and jp lacks ZeroJump 0x250B-0x250D. eu is us.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 264, eu 2862, jp 3804
+ * differing words: us 264, eu 264, jp 1444
  *
  * What still differs in us (words):
  * - func_ovl0A_06_80043010 (30; the statics up to 80043B5C): 8004311C's
