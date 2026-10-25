@@ -1,10 +1,9 @@
 /*
  * NON_MATCHING: ovl_0F_02's game object, complete: every function and its
- * data (.data as the original). A first draft: the layout is only partly
- * IDO's, and most of the count is functions compared against the wrong
- * code. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
+ * data (.data as the original). Not built into the ROM (docs/DECOMPILING.md,
+ * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3139, jp 5736
+ * differing words: us 2996, jp 5736
  *
  * Every function and static comes out in the original's order. The order
  * is ovl_0F_03's: the handler, defined last but for func_ovl0F_02_80043010,
@@ -19,16 +18,38 @@
  * scratch/0F_02/p3/ord.py and hf.sh in the main checkout). What the
  * original's source had instead is open.
  *
+ * The empty statics named for unlabelled addresses (80043304, 800436C0,
+ * ...) stand in for the stubs the original's inlined statics leave before
+ * their callers; which statics they were is open. 80043018 and 80043020
+ * still come out after 80043028 and 80043324, where the original has
+ * stubs before 80043028. The stubs before 80043944 and 80043D6C made the
+ * count worse; the last run's count flips with the object's length mod 16
+ * (80046E80's padding), so try stubs in combinations.
+ *
  * What still differs in us (words):
  * - func_ovl0F_02_800454E8 (620): ovl_0F_03's 80044258, the same register
  *   and frame misses as there.
- * - func_ovl0F_02_800462F8 (606), func_ovl0F_02_80044824 (184): frames
- *   and registers.
+ * - func_ovl0F_02_800462F8 (606): frame and registers.
+ * - func_ovl0F_02_80043FEC (465, 10 words short; ovl_0F_04's 80044084 and
+ *   ovl_0F_01 have it too): the original keeps 0x2C in fp and computes
+ *   &D_ovl0F_02_80048734[i] with multu in each arm, where IDO here shifts;
+ *   no type of i or form of the index found it. 80043D6C takes its flag in
+ *   a3 (three unused parameters), but ours still passes it in a2 with the
+ *   three others stored to the stack.
+ * - func_ovl0F_02_80043944 (278): its run holds the statics 80043B30
+ *   (115, 12 words short) and 80043D6C (144); 80043B28 stays out of line
+ *   (0x3C) where the original inlines it everywhere and leaves a stub.
+ * - func_ovl0F_02_80045EB0 (231): its run holds 80045F24 (139, 23 words
+ *   short) and 80046178 (57).
  * - func_ovl0F_02_80043028 (186): global here; the original is a static
- *   using s0 and fs0-fs2 unsaved (the handler saves them). 80043324 (26)
- *   and 800433A0 (21) likewise: statics taking their arguments in s0/s1.
- *   They are global only to come out first, as the original has them.
- * - the rest (under 110 each): the stubs and statics after them.
+ *   using s0 and fs0-fs2 unsaved (the handler saves them). 80043324 (31)
+ *   and 800433A0 (19) likewise: statics taking their arguments in s0/s1.
+ * - func_ovl0F_02_80044824 (113): tests the floor as an expression; with
+ *   80043B28 called, IDO keeps it out of line (184).
+ * - 80045024 (190), 80044D20 (189, with 80044E9C and 80044F74), 8004533C
+ *   (55, with 800453A4): registers and lengths.
+ * - func_ovl0F_02_80043858 matches: 800436D8 keeps the position as an
+ *   f32[3] on the stack (a Vec3f went into float registers).
  */
 #include "common.h"
 
@@ -516,9 +537,30 @@ void func_ovl0F_02_80046D20(s32 arg0, UnkStructA *arg1) {
 }
 
 /* case 2's: the wind, the particles and the fog */
+static void func_ovl0F_02_80046150(void) {
+}
+
+static void func_ovl0F_02_80046158(void) {
+}
+
+static void func_ovl0F_02_80046160(void) {
+}
+
+static void func_ovl0F_02_80046168(void) {
+}
+
+static void func_ovl0F_02_80046170(void) {
+}
+
 static void func_ovl0F_02_80046178(s32 n1, s32 n2) {
     s32 i;
 
+    func_ovl0F_02_80046150();
+    func_ovl0F_02_80046158();
+    func_ovl0F_02_80046160();
+    func_ovl0F_02_80046168();
+    func_ovl0F_02_80046170();
+    /* fake: first references in descending address order (the header) */
     if (0) {
         func_ovl0F_02_80047E38((void (*)(void)) func_ovl0F_02_80045EB0, NULL, 0, 0, 0);
         func_ovl0F_02_80047E38((void (*)(void)) func_ovl0F_02_800454E8, NULL, 0, 0, 0);
@@ -565,10 +607,22 @@ static void func_ovl0F_02_80046178(s32 n1, s32 n2) {
 }
 
 /* case 2's: the movers, their script and their callbacks */
+static void func_ovl0F_02_80045F0C(void) {
+}
+
+static void func_ovl0F_02_80045F14(void) {
+}
+
+static void func_ovl0F_02_80045F1C(void) {
+}
+
 static void func_ovl0F_02_80045F24(UnkStructA **door) {
     UnkStruct_ovl0F_02_80048734 *rec;
     s32 i;
 
+    func_ovl0F_02_80045F0C();
+    func_ovl0F_02_80045F14();
+    func_ovl0F_02_80045F1C();
     D_ovl0F_02_80048F20.unk0 = func_ovl0F_02_80047528(func_ovl0F_02_800474C8());
     D_ovl0F_02_80048F20.unk4 = door;
     D_ovl0F_02_80048F20.unkC = 0;
@@ -799,10 +853,14 @@ static void func_ovl0F_02_80044E9C(f32 *pos, s32 id, f32 d, f32 h) {
 
 /* the movers' callback (D_ovl0F_02_80048F20.unk20): mover i back to its
  * start, shown (flag set) or hidden */
+static void func_ovl0F_02_80044D18(void) {
+}
+
 void func_ovl0F_02_80044D20(s32 i, s32 flag) {
     UnkStruct_ovl0F_02_80048734 *rec;
     UnkStruct_ovl0F_02_800486A4 *st;
 
+    func_ovl0F_02_80044D18();
     rec = &D_ovl0F_02_80048734[i];
     func_ovl0F_02_80044C94(rec);
     st = &D_ovl0F_02_800486A4[i];
@@ -827,9 +885,13 @@ void func_ovl0F_02_80044D20(s32 i, s32 flag) {
     }
 }
 
+static void func_ovl0F_02_80044C8C(void) {
+}
+
 static void func_ovl0F_02_80044C94(UnkStruct_ovl0F_02_80048734 *arg0) {
     f32 pos[3];
 
+    func_ovl0F_02_80044C8C();
     func_ovl0F_02_80047348(arg0->unkC, arg0->unk10, arg0->unk14, pos, 0);
     (*arg0->unk0)->unk40->unk10 = pos[0];
     (*arg0->unk0)->unk40->unk14 = pos[1];
@@ -1232,6 +1294,15 @@ void func_ovl0F_02_80043858(UnkStructA *obj) {
 }
 
 /* the wind moves an object along x unless something is in its way */
+static void func_ovl0F_02_800436C0(void) {
+}
+
+static void func_ovl0F_02_800436C8(void) {
+}
+
+static void func_ovl0F_02_800436D0(void) {
+}
+
 static void func_ovl0F_02_800436D8(UnkStructA *obj, f32 speed) {
     f32 pos[3];
     s32 saved;
@@ -1239,6 +1310,9 @@ static void func_ovl0F_02_800436D8(UnkStructA *obj, f32 speed) {
     UnkStructA *other;
     s32 k;
 
+    func_ovl0F_02_800436C0();
+    func_ovl0F_02_800436C8();
+    func_ovl0F_02_800436D0();
     pos[0] = obj->unk40->unk10;
     pos[1] = obj->unk40->unk14;
     pos[2] = obj->unk40->unk18;
@@ -1318,7 +1392,19 @@ void func_ovl0F_02_800434F8(UnkStructA *arg0) {
 }
 
 /* a task (case 4): the stage's opening demo */
+static void func_ovl0F_02_800433EC(void) {
+}
+
+static void func_ovl0F_02_800433F4(void) {
+}
+
+static void func_ovl0F_02_800433FC(void) {
+}
+
 void func_ovl0F_02_80043404(void) {
+    func_ovl0F_02_800433EC();
+    func_ovl0F_02_800433F4();
+    func_ovl0F_02_800433FC();
     D_ovl0F_02_80048B08[0] = 0;
     func_ovl0F_02_800474D8(1);
     while (D_ovl0F_02_80048B08[0] == 0) {
@@ -1340,14 +1426,46 @@ void func_ovl0F_02_80043404(void) {
     func_ovl0F_02_80047E48();
 }
 
+static void func_ovl0F_02_80043388(void) {
+}
+
+static void func_ovl0F_02_80043390(void) {
+}
+
+static void func_ovl0F_02_80043398(void) {
+}
+
 void func_ovl0F_02_800433A0(s32 *arg0) {
+    func_ovl0F_02_80043388();
+    func_ovl0F_02_80043390();
+    func_ovl0F_02_80043398();
     if (func_ovl0F_02_800474B0(arg0[0], arg0[1], arg0[2], arg0[3]) != 0) {
         func_ovl0F_02_800473E0(arg0[4], arg0[5], arg0[6]);
     }
 }
 
 /* the cut to the camera at a switch: a task, then a camera script */
+static void func_ovl0F_02_800432FC(void) {
+}
+
+static void func_ovl0F_02_80043304(void) {
+}
+
+static void func_ovl0F_02_8004330C(void) {
+}
+
+static void func_ovl0F_02_80043314(void) {
+}
+
+static void func_ovl0F_02_8004331C(void) {
+}
+
 void func_ovl0F_02_80043324(s32 n, char *script) {
+    func_ovl0F_02_800432FC();
+    func_ovl0F_02_80043304();
+    func_ovl0F_02_8004330C();
+    func_ovl0F_02_80043314();
+    func_ovl0F_02_8004331C();
     func_ovl0F_02_80047588(1);
     func_ovl0F_02_800482C8();
     func_ovl0F_02_80047E38(func_ovl0F_02_80045EB0, (void *) n, 0, 0, 0x130);
