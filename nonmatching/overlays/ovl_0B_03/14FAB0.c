@@ -6,7 +6,7 @@
  * tables, .bss 0x1140, as the original's sizes). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1685, eu 1725, jp 2683
+ * differing words: us 1685, eu 1685, jp 2643
  *
  * jp (`#if VERSION_JP`) has its own strings (80048AF4, 80048B60,
  * 80049144, and D_ovl0B_03_8004901C_jp for us's 80049168, with the
@@ -46,8 +46,9 @@
  * case 1's 0x8000 exit lacks the original's early i = 0, so it runs a word
  * short until its switch; cases 1-3 use $v0 where the original has $v1
  * for D_ovl0B_03_8004A32C/A328 temporaries; state and the 80047908 pointer
- * get $s1 where the original has $s3), 80046510 137 (its frame is 32
- * bytes too small, and the s1/s2 roles in its first loop are swapped).
+ * get $s1 where the original has $s3), 80046510 97 (register roles:
+ * its first loop's i, pointer and column swapped, y0/y1's spill slots,
+ * the tail loop's registers).
  * Everything else matches.
  *
  * jp still builds the second pass's 8004386C (#if VERSION_JP): the
@@ -56,7 +57,7 @@
  *
  * What still differs in jp (words): 8004386C 2542 (its size is the
  * original's; the original keeps 1.0f in $f30 throughout, 0.7f in $f28,
- * and doesn't keep &D_ovl0B_03_8004A324 in a register), 80046510 137,
+ * and doesn't keep &D_ovl0B_03_8004A324 in a register), 80046510 97,
  * 80043010 and 800431FC 2 each, as in us.
  */
 
