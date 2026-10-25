@@ -319,7 +319,15 @@ module's asm blocks, though the draft defines it.
     order) and then its own come out as that list reversed; statics
     nothing uses come out at the very end, in file order
     (`scratch/ovl_0F_03/order.py` lists a draft's functions and stubs at
-    their addresses);
+    their addresses). A function that is address-taken and itself takes
+    addresses (ovl_0F_04's 80044084) emits, at its turn, every
+    address-taken function not yet out, in the reverse of the order their
+    first references appear in the source (statics and unused statics
+    included), then itself; one whose own address nothing takes doesn't.
+    That block can't give every order: ovl_0F_04's original has functions
+    at their own turns that a block would emit reversed, and what stops the
+    block there isn't known (its header; `scratch/ovl_0F_04/ord/` searches
+    definition orders);
   - whether a static is inlined depends on its size and on its caller's:
     ovl_17_10's func_80044464 stays a call (with its `s`-register
     convention) only because its caller writes its x and z steps out
