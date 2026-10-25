@@ -14,6 +14,10 @@
  *   original restores s0 first, as in ovl_0C_04's 80043878 (the same
  *   function) and ovl_0C_08's 80043654.  The loop as an index, a constant
  *   count, a for with the pointer step or a do-while are all worse.
+ *   Also no change: all 24 local declaration orders, s16/u32/s32/f32
+ *   index and pointer types, a while (TRUE) exit, a temp for unk40, the
+ *   record set-up as a static taking its pointer (20 words in all), and
+ *   41 orders of the final nine stores (49 words or more).
  */
 #include "common.h"
 
