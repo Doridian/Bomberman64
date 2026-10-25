@@ -3,24 +3,31 @@
  * data (.data 0x410, .rodata 0xB0 and .bss 0x60 laid out as the original).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 627, jp 627
+ * differing words: us 334, jp 627
  *
  * A first draft: ovl_0C_07's for what the two share (sibling functions
  * translated, constants and data rechecked), the crumbling blocks and their
  * switches from m2c (ovl_0C_01 and ovl_0C_02 have them too, still asm).
+ * Matched since: 80043544 (the loop walks the list parameter itself and a
+ * copy taken first goes to the call), 800430A8 (`dz * 50`, an int, so its
+ * 50.0f isn't shared with the stored one; `!= arg1` returns 0 first),
+ * 80046CF0 and 8004696C (an s16 alpha).
  *
  * What still differs in us (words):
- * - func_ovl0C_06_80043544 (97): the original's frame is 0x18 bytes bigger
- *   and keeps the switch list in a local slot (0x2C) apart from the loop's
- *   pointer; a separate variable, or the loop in an inlined static, doesn't
- *   give it.
  * - func_ovl0C_06_80044340 (84), 80043248 (67), 80044494 (57): the
- *   block/switch loops (`p->unk2 != 0` lists), not yet looked at.
- * - func_ovl0C_06_800458D8 (53), 80045BA0 (39), 800455DC (11): the movers'
- *   cut scenes, from m2c.
- * - func_ovl0C_06_800430A8 (47), 8004696C (30), 80046CF0 (46): from m2c.
+ *   original passes `arg ? 0x01000000 : 0x01000000` without folding it:
+ *   a branch over a second copy of the constant (in the loops, two saved
+ *   registers, one hoisted as the initial value).  Every ternary, if/else,
+ *   cast or type mix tried folds to one `lui`; an inlined static
+ *   `if (a) return K; return K;` keeps a branch but not this one.  The
+ *   rest of each diff is the register allocation that follows.
  * - func_ovl0C_06_80046288 (38): ovl_0C_07's mover, word for word, but the
  *   original keeps obj->unk40 in v1 where this gives v0.
+ * - func_ovl0C_06_800455DC (26): the original's frame is 0x10 bigger (lim
+ *   at 0x54); 80045BA0 (2) has a frame 8 bigger;
+ *   80046200's macro with its flag doesn't give either.
+ * - func_ovl0C_06_800458D8 (2): `li s1, 0x7F` is scheduled after the loop
+ *   test in the original; no placement of `vol = 0x7F` gives it.
  * - func_ovl0C_06_80044F44 (16), 800446FC (15), 8004510C (9),
  *   80045FC8 (8), and five of 2 words each.
  */
@@ -320,6 +327,8 @@ void func_ovl0C_06_80044164(UnkStruct_ovl0C_06_80048F10 *arg0);
 void func_ovl0C_06_80044228(UnkStruct_ovl0C_06_80048F10 *arg0);
 void func_ovl0C_06_80044264(void);
 void func_ovl0C_06_800442BC(UnkStruct_ovl0C_06_80048FD0 *arg0);
+void func_ovl0C_06_800442BC(UnkStruct_ovl0C_06_80048FD0 *arg0);
+void func_ovl0C_06_80044340(UnkStruct_ovl0C_06_800490FC *arg0, s32 arg1);
 void func_ovl0C_06_80044340(UnkStruct_ovl0C_06_800490FC *arg0, s32 arg1);
 void func_ovl0C_06_80044494(UnkStruct_ovl0C_06_80049264 *arg0, UnkStruct_ovl0C_06_8004914C *arg1, s32 arg2);
 void func_ovl0C_06_80044584(f32 arg0);
@@ -678,7 +687,7 @@ void func_ovl0C_06_80046E14(UnkStruct_ovl0C_06_80048F88 *arg0, UnkStructA *arg1,
 /* a switch fading out with its block: its tiles open */
 void func_ovl0C_06_80046CF0(void) {
     UnkStruct_ovl0C_06_800490FC *rec;
-    s32 alpha;
+    s16 alpha;
 
     rec = func_ovl0C_06_80048730();
     alpha = 0xFF;
@@ -725,7 +734,7 @@ void func_ovl0C_06_80046BD8(void) {
 void func_ovl0C_06_8004696C(void) {
     UnkStruct_ovl0C_06_8004914C *rec;
     UnkStructA *obj;
-    s32 alpha;
+    s16 alpha;
 
     rec = func_ovl0C_06_80048730();
     obj = rec->unk4;
@@ -971,9 +980,9 @@ void func_ovl0C_06_80045BA0(void) {
     obj->unk68 = D_ovl0C_06_80049030[0].unk18 * 0.75f;
     obj->unk70 = D_ovl0C_06_80049030[0].unk1C * 0.5f;
     dropped = 0;
-    cz = obj->unk40->unk18 - 600.0f;
-    a = 0.0f;
     cx = obj->unk40->unk10 - 30.0f;
+    a = 0.0f;
+    cz = obj->unk40->unk18 - 600.0f;
     while (TRUE) {
         if (D_ovl0C_06_80049030[0].unk2C <= obj->unk40->unk14 + obj->unk6C - obj->unk68) {
             break;
@@ -1028,7 +1037,7 @@ void func_ovl0C_06_80045BA0(void) {
 void func_ovl0C_06_800458D8(void) {
     UnkStructA *obj;
     s32 snd;
-    s8 vol;
+    s32 vol;
 
     func_ovl0C_06_80047D28(1);
     func_ovl0C_06_80047D20(0);
@@ -1084,13 +1093,11 @@ void func_ovl0C_06_80045874(UnkStructA *arg0) {
 void func_ovl0C_06_800455DC(void) {
     UnkStructA *obj;
     UnkStructA *lim;
-    UnkStructA_40 *pos;
     f32 dy;
     f32 pitch;
 
     obj = D_ovl0C_06_80049030[2].unk4;
-    pos = obj->unk40;
-    func_ovl0C_06_80048CB0(0x48, pos->unk10, pos->unk14, pos->unk18);
+    func_ovl0C_06_80048CB0(0x48, obj->unk40->unk10, obj->unk40->unk14, obj->unk40->unk18);
     obj->unk40->unk20 = -45.0f;
     while (obj->unk40->unk14 > 1400.0f) {
         obj->unk40->unk14 -= 5.0f;
@@ -1107,8 +1114,8 @@ void func_ovl0C_06_800455DC(void) {
     lim->unk50 = -400.0f;
     pitch = 45.0f;
     while (obj->unk40->unk14 < 2000.0f) {
-        dy -= 10.0f;
         obj->unk40->unk14 += 10.0f;
+        dy -= 10.0f;
         func_ovl0C_06_800483F8(4300.0f, 1000.0f - dy, 200.0f);
         func_ovl0C_06_80048418(-45.0f, pitch, 2000.0f);
         func_ovl0C_06_80048750();
@@ -1772,32 +1779,33 @@ void func_ovl0C_06_80043710(UnkStruct_ovl0C_06_80048F10 *arg0) {
 /* bombs on the switches: a switch hit turns, and once none is left the
  * blocks crumble */
 s32 func_ovl0C_06_80043544(UnkStruct_ovl0C_06_80049264 *arg0, UnkStruct_ovl0C_06_8004914C *arg1, UnkStruct_ovl0C_06_800490FC *list, s32 arg3) {
-    UnkStruct_ovl0C_06_800490FC *p;
     UnkStructA_40 *pos;
     s32 hit;
     s32 left;
     s32 ret;
+    UnkStruct_ovl0C_06_800490FC *saved;
 
+    saved = list;
     D_ovl0C_06_800493C4->unk30 = 4;
     D_ovl0C_06_800493C4->unk34 = 90.0f;
     D_ovl0C_06_800493C4->unk38 = 400.0f;
     left = 0;
-    for (p = list; p->unk2 != 0; p++) {
-        if (!func_ovl0C_06_80048990(p->unk24)) {
-            D_ovl0C_06_800493C4->unk40->unk10 = p->unk8;
-            D_ovl0C_06_800493C4->unk40->unk14 = p->unkC;
-            D_ovl0C_06_800493C4->unk40->unk18 = p->unk10;
+    for (; list->unk2 != 0; list++) {
+        if (!func_ovl0C_06_80048990(list->unk24)) {
+            D_ovl0C_06_800493C4->unk40->unk10 = list->unk8;
+            D_ovl0C_06_800493C4->unk40->unk14 = list->unkC;
+            D_ovl0C_06_800493C4->unk40->unk18 = list->unk10;
             hit = func_ovl0C_06_80048568(D_ovl0C_06_800493C4, 0xC0);
             if (hit) {
                 if (hit & 0x6000) {
-                    func_ovl0C_06_80048CB0(0x49, p->unk8, p->unkC, p->unk10);
-                    func_ovl0C_06_800482C8(p->unk4->unk40, 0x2AF, 0, 2);
-                    func_ovl0C_06_800482C8(p->unk4->unk40, 0x2AF, 1, 3);
-                    func_ovl0C_06_80048980(p->unk24);
+                    func_ovl0C_06_80048CB0(0x49, list->unk8, list->unkC, list->unk10);
+                    func_ovl0C_06_800482C8(list->unk4->unk40, 0x2AF, 0, 2);
+                    func_ovl0C_06_800482C8(list->unk4->unk40, 0x2AF, 1, 3);
+                    func_ovl0C_06_80048980(list->unk24);
                 } else {
                     pos = D_ovl0C_06_800493C4->unk40;
-                    left = 1;
                     func_ovl0C_06_80048CB0(0x26, pos->unk10, pos->unk14, pos->unk18);
+                    left = 1;
                 }
             } else {
                 left = 1;
@@ -1808,7 +1816,7 @@ s32 func_ovl0C_06_80043544(UnkStruct_ovl0C_06_80049264 *arg0, UnkStruct_ovl0C_06
     if (!left && !func_ovl0C_06_80048990(arg3)) {
         ret = 1;
         func_ovl0C_06_80048980(arg3);
-        func_ovl0C_06_80043354(arg0, arg1, list, arg3);
+        func_ovl0C_06_80043354(arg0, arg1, saved, arg3);
     }
     return ret;
 }
@@ -1875,9 +1883,8 @@ void func_ovl0C_06_800431B8(void) {
 /* whether the player (arg0) faces arg1: probes 50 units ahead with the
  * shared probe object */
 s32 func_ovl0C_06_800430A8(UnkStructA *arg0, UnkStructA *arg1) {
-    f32 dx;
     f32 dz;
-    s32 ret;
+    f32 dx;
 
     func_ovl0C_06_80043060();
     dx = func_ovl0C_06_800488B0(arg0->unk40->unk20) * 50.0f;
@@ -1887,12 +1894,11 @@ s32 func_ovl0C_06_800430A8(UnkStructA *arg0, UnkStructA *arg1) {
     D_ovl0C_06_800493C4->unk38 = 50.0f;
     D_ovl0C_06_800493C4->unk40->unk10 = arg0->unk40->unk10 + dx;
     D_ovl0C_06_800493C4->unk40->unk14 = arg0->unk40->unk14;
-    D_ovl0C_06_800493C4->unk40->unk18 = arg0->unk40->unk18 + dz * 50.0f;
-    ret = 1;
+    D_ovl0C_06_800493C4->unk40->unk18 = arg0->unk40->unk18 + dz * 50;
     if (func_ovl0C_06_80048648(D_ovl0C_06_800493C4, 0x10) != arg1) {
-        ret = 0;
+        return 0;
     }
-    return ret;
+    return 1;
 }
 
 void func_ovl0C_06_80043060(void) {
