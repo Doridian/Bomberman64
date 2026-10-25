@@ -510,7 +510,8 @@ module's asm blocks, though the draft defines it.
     the s0-s2 restores after a `lw`, `lw`, `sw` chain.
   Matched functions that restore s0 first reach their epilogue as a
   branch target. No C has been found that leaves the label without a
-  branch. The scripts are in `scratch/0C_09/d08_block/` and
+  branch. A flag that is always zero doesn't do it: ugen folds the test
+  and its label together. The scripts are in `scratch/0C_09/d08_block/` and
   `scratch/epi/`.
 
 ## Versions
