@@ -6,7 +6,9 @@
  * floats). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 4335
+ * differing words: us 4335, eu 4335, jp 4563
+ * jp has no `#if VERSION_JP` yet: its strings, text positions and code
+ * changes are not drafted (docs/DECOMPILING.md, "Versions", step 6).
  *
  * A first draft from m2c, with every function rewritten by hand: the logic
  * is the original's, the schedule mostly isn't. Most of the callees are
