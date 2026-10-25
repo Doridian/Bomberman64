@@ -3,17 +3,17 @@
  * .bss. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 6, jp 899
+ * differing words: us 4, jp 899
  *
  * What still differs in us (words, as tools/nonmatching.py counts them):
  * - 800464B0 (4): v1 for v0; a third temporary grows the frame.
- * - 80046E88 (2).
- * - Not counted by nonmatching.py: the statics 80043070 (1503, still m2c's
- *   C), 80044E48 (31) and 8004574C (394: frame and s-register choice),
- *   1928 in all, the cut-scenes the handler and 800474EC-800477E8 run
- *   (scratch/10_13/allf.py counts them from the object's .mdebug). They
- *   save no callee-saved registers (their callers do), so they are
- *   static; they come first in the object.
+ * - Not counted by nonmatching.py: the statics 80043070 (1365, m2c's C
+ *   with its loops' counters merged: the original keeps `slti` only where
+ *   a counter outlives its loop), 80044E48 (31) and 8004574C (394: frame
+ *   and s-register choice), 1790 in all, the cut-scenes the handler and
+ *   800474EC-800477E8 run (scratch/10_13/allf.py counts them from the
+ *   object's .mdebug). They save no callee-saved registers (their callers
+ *   do), so they are static; they come first in the object.
  *
  * The handler's cases 800460E0-800468BC are globals defined above the
  * handler: it pulls them out, with the statics, in the reverse order of
@@ -138,7 +138,7 @@ void func_ovl10_13_8004A350(void);
 void func_ovl10_13_8004A358(Vec3f *);
 void func_ovl10_13_8004A380(s32);
 s32 func_ovl10_13_8004A390(s32);
-s32 *func_ovl10_13_8004A3C0(void);
+s32 *func_ovl10_13_8004A3C0();
 void func_ovl10_13_8004A420(void);
 void func_ovl10_13_8004A428(s32, s32, s32, f32);
 void func_ovl10_13_8004A430(s32, s32, s32, s32);
@@ -838,9 +838,9 @@ void func_ovl10_13_80046E88(void) {
     p->unk10 = pos->x + 50.0f;
     p->unk14 = func_ovl10_13_8004A2E0() * 100.0 + (pos->y - 50.0f) + 50.0;
     p->unk18 = func_ovl10_13_8004A2E0() * 100.0 + (pos->z - 50.0f);
-    p->unk28 = 0.3f;
-    p->unk2C = 0.3f;
     p->unk30 = 0.3f;
+    p->unk2C = 0.3f;
+    p->unk28 = 0.3f;
     for (i = 0; i < 30; i++) {
         p->unk36 += 4.266667f;
         p->unk10 -= 1.0f;
@@ -1687,39 +1687,33 @@ static void func_ovl10_13_80043070(void) {
         }
         func_ovl10_13_8004A710(0x7F);
         func_ovl10_13_8004A6F0(0x7F);
-        var_s0 = 0;
-        do {
+        for (var_s0 = 0; var_s0 < 100; var_s0++) {
             func_ovl10_13_8004A390(var_s0 + 0x2C);
-            var_s0 += 1;
-        } while (var_s0 < 0x64);
-        var_s0_2 = 0;
+        }
         var_s2 = 0;
-        do {
-            var_s0_2 += 1;
-            if (func_ovl10_13_8004A390(var_s0_2 + 0x2C) != 0) {
+        for (var_s0 = 0; var_s0 < 95; var_s0++) {
+            if (func_ovl10_13_8004A390(var_s0 + 0x2C) != 0) {
                 var_s2 += 1;
             }
-        } while (var_s0_2 < 0x5F);
-        var_s0_3 = 0x5F;
+        }
         var_s1 = 0;
-        do {
-            var_s0_3 += 1;
-            if (func_ovl10_13_8004A390(var_s0_3 + 0x2C) != 0) {
+        for (var_s0 = 95; var_s0 < 100; var_s0++) {
+            if (func_ovl10_13_8004A390(var_s0 + 0x2C) != 0) {
                 var_s1 += 1;
             }
-        } while (var_s0_3 < 0x64);
+        }
         temp_s3 = func_ovl10_13_80049728();
-        func_ovl10_13_8004A3C0();
+        func_ovl10_13_8004A3C0(21);
         var_v0 = 0;
         if (temp_s3->unk28 >= temp_s3->unk30) {
             var_v0 = 1;
         }
-        var_s0_4 = var_v0 + temp_s3->unk2C;
-        if (var_s0_4 < var_s1) {
-            var_s0_4 = var_s1;
+        var_s0 = temp_s3->unk2C + var_v0;
+        if (var_s0 < var_s1) {
+            var_s0 = var_s1;
         }
-        if ((D_ovl10_13_8004ADA8 == 0x1F) || ((func_ovl10_13_8004A390(0xA4) == 0) && ((var_s2 + var_s0_4) >= 0x64))) {
-            var_s1_2 = 0;
+        if ((D_ovl10_13_8004ADA8 == 0x1F) || ((func_ovl10_13_8004A390(0xA4) == 0) && ((var_s2 + var_s0) >= 0x64))) {
+            var_s1 = 0;
             temp_v0 = func_ovl10_13_8004A000(0x328, 0x01000000, 0xC0, 0);
             func_ovl10_13_8004A010(temp_v0);
             func_ovl10_13_80049D00(temp_v0->unk40, 0x16, 0);
@@ -1742,8 +1736,8 @@ static void func_ovl10_13_80043070(void) {
                     temp_v1_3 = D_ovl10_13_8004ADC4->unk40;
                     func_ovl10_13_80049E18(temp_v1_3->unk10 + 50.0f, temp_v1_3->unk14, temp_v1_3->unk18);
                     func_ovl10_13_8004A170();
-                    var_s1_2 += 1;
-                } while (var_s1_2 < 0x8C);
+                    var_s1 += 1;
+                } while (var_s1 < 0x8C);
                 func_ovl10_13_8004A6C0(0x2C);
                 func_ovl10_13_8004A6B0(0x257);
                 temp_v1_4 = D_ovl10_13_8004ADC4->unk40;
@@ -1751,7 +1745,7 @@ static void func_ovl10_13_80043070(void) {
                 D_ovl10_13_8004ADC8->unk68 = 0.0f;
                 D_ovl10_13_8004ADC4->unk68 = D_ovl10_13_8004ADC8->unk68;
                 D_ovl10_13_8004ADC8->unk70 = 0.8166667f;
-                var_s1_3 = 0;
+                var_s1 = 0;
                 D_ovl10_13_8004ADC4->unk70 = D_ovl10_13_8004ADC8->unk70;
                 D_ovl10_13_8004ADC8->unk6C = 16.333334f;
                 D_ovl10_13_8004ADC4->unk6C = D_ovl10_13_8004ADC8->unk6C;
@@ -1763,8 +1757,8 @@ static void func_ovl10_13_80043070(void) {
                     func_ovl10_13_8004A058(D_ovl10_13_8004ADC4);
                     func_ovl10_13_8004A058(D_ovl10_13_8004ADC8);
                     func_ovl10_13_8004A170();
-                    var_s1_3 += 1;
-                } while (var_s1_3 != 0x3C);
+                    var_s1 += 1;
+                } while (var_s1 != 0x3C);
                 D_ovl10_13_8004ADC8->unk40->unk10 = 3500.0f;
                 D_ovl10_13_8004ADC8->unk40->unk14 = 900.0f;
                 D_ovl10_13_8004ADC8->unk40->unk18 = 400.0f;
@@ -1772,7 +1766,7 @@ static void func_ovl10_13_80043070(void) {
                 temp_v0_4 = D_ovl10_13_8004ADC8->unk40;
                 func_ovl10_13_80049E18(temp_v0_4->unk10, 0.0f, temp_v0_4->unk18);
                 func_ovl10_13_80049E38(337.0f, 13.0f, 2200.0f);
-                var_s1_2 = 0;
+                var_s1 = 0;
             }
             D_ovl10_13_8004ADC0->unk40->unk10 = 2100.0f;
             D_ovl10_13_8004ADC0->unk40->unk14 = 0.0f;
@@ -1794,10 +1788,10 @@ static void func_ovl10_13_80043070(void) {
                     temp_v0_5 = D_ovl10_13_8004ADC8->unk40;
                     temp_v0_5->unk14 -= 53.333332f;
                     func_ovl10_13_8004A170();
-                    var_s1_2 += 1;
-                } while (var_s1_2 != 0x1E);
+                    var_s1 += 1;
+                } while (var_s1 != 0x1E);
                 func_ovl10_13_8004A148(0x1E);
-                var_s1_2 = 0;
+                var_s1 = 0;
             }
             temp_v1_7 = D_ovl10_13_8004ADC4->unk40;
             func_ovl10_13_80049E18(temp_v1_7->unk10 - 200.0f, 50.0f, temp_v1_7->unk18 + 200.0f);
@@ -1807,8 +1801,8 @@ static void func_ovl10_13_80043070(void) {
                 temp_v1_8 = D_ovl10_13_8004ADC4->unk40;
                 temp_v1_8->unk14 -= 29.0f;
                 func_ovl10_13_8004A170();
-                var_s1_2 += 1;
-            } while (var_s1_2 < 0x1E);
+                var_s1 += 1;
+            } while (var_s1 < 0x1E);
             func_ovl10_13_8004A6B0(0x259);
             func_ovl10_13_8004A6B0(0x25A);
             temp_v1_9 = D_ovl10_13_8004ADC4->unk40;
@@ -1834,7 +1828,7 @@ static void func_ovl10_13_80043070(void) {
             temp_v0_7->unk8 |= 0x60;
             func_ovl10_13_80049D30(D_ovl10_13_8004ADC0->unk40, 4, 4);
             func_ovl10_13_80049D30(D_ovl10_13_8004ADC0->unk40, 5, 5);
-            var_s1_4 = 0;
+            var_s1 = 0;
             do {
                 temp_v0_8 = temp_v0_6->unk40;
                 temp_v0_8->unk10 -= 9.0f;
@@ -1862,25 +1856,25 @@ static void func_ovl10_13_80043070(void) {
                 }
                 func_ovl10_13_8004A058(D_ovl10_13_8004ADC0);
                 func_ovl10_13_8004A170();
-                var_s1_4 += 1;
-            } while (var_s1_4 < 0x14);
+                var_s1 += 1;
+            } while (var_s1 < 0x14);
             func_ovl10_13_8004A148(0x1E);
             temp_v0->unk40->unk10 = 2750.0f;
             temp_v0->unk40->unk14 = 400.0f;
             temp_v0->unk40->unk18 = 650.0f;
             temp_v0->unk40->unk20 = 315.0f;
             func_ovl10_13_8004A6B0(0x213);
-            var_s1_5 = 0;
+            var_s1 = 0;
             do {
                 temp_v1_13 = temp_v0->unk40;
                 temp_v1_13->unk10 -= 16.666666f;
                 temp_v1_14 = temp_v0->unk40;
                 temp_v1_14->unk18 += 16.666666f;
                 func_ovl10_13_8004A170();
-                var_s1_5 += 1;
-            } while (var_s1_5 < 0x1E);
+                var_s1 += 1;
+            } while (var_s1 < 0x1E);
             func_ovl10_13_8004A6B0(0x211);
-            var_s1_6 = 0;
+            var_s1 = 0;
             temp_ft2 = (s32) func_ovl10_13_80049D18(temp_v0->unk40, 0);
             if (temp_ft2 > 0) {
                 temp_fs0 = 200.0f / (f32) temp_ft2;
@@ -1900,9 +1894,9 @@ static void func_ovl10_13_80043070(void) {
                         temp_a0_5->unk4 = 0.0f;
                     }
                     func_ovl10_13_8004A170();
-                    var_s1_6 += 1;
-                } while (var_s1_6 < temp_ft2);
-                var_s1_6 = 0;
+                    var_s1 += 1;
+                } while (var_s1 < temp_ft2);
+                var_s1 = 0;
             }
             func_ovl10_13_80049D00(temp_v0->unk40, 7, 0);
             func_ovl10_13_80049FD8(temp_v0, 0x04000000);
@@ -1917,9 +1911,9 @@ static void func_ovl10_13_80043070(void) {
                     temp_v0_13 = temp_v0_6->unk40;
                     temp_v0_13->unk18 -= temp_fs0_2;
                     func_ovl10_13_8004A170();
-                    var_s1_6 += 1;
-                } while (var_s1_6 < temp_ft2_2);
-                var_s1_6 = 0;
+                    var_s1 += 1;
+                } while (var_s1 < temp_ft2_2);
+                var_s1 = 0;
             }
             func_ovl10_13_8004A6B0(0x265);
             temp_s0 = func_ovl10_13_8004A128(func_ovl10_13_80047298, temp_v0_6, 0, 0, 0x130);
@@ -1957,16 +1951,16 @@ static void func_ovl10_13_80043070(void) {
                         temp_a0_8->unk4 = 0.0f;
                     }
                     func_ovl10_13_8004A170();
-                    var_s1_6 += 1;
-                } while (var_s1_6 < temp_ft2_3);
-                var_s1_6 = 0;
+                    var_s1 += 1;
+                } while (var_s1 < temp_ft2_3);
+                var_s1 = 0;
             }
             do {
                 temp_v1_19 = temp_v0->unk40;
                 temp_v1_19->unk20 += 3.0f;
                 func_ovl10_13_8004A170();
-                var_s1_6 += 1;
-            } while (var_s1_6 < 0x1E);
+                var_s1 += 1;
+            } while (var_s1 < 0x1E);
             if (D_ovl10_13_8004ADA8 != 0x1F) {
                 func_ovl10_13_80049D40(0x335, 1);
             }
@@ -1979,7 +1973,7 @@ static void func_ovl10_13_80043070(void) {
             func_ovl10_13_80049E18(temp_v1_20->unk10, 100.0f, temp_v1_20->unk18);
             func_ovl10_13_80049E38(temp_v0->unk40->unk20, 5.0f, 800.0f);
             temp_fs2 = func_ovl10_13_8004A2D0(temp_v0->unk40->unk20);
-            var_s1_7 = 0;
+            var_s1 = 0;
             temp_fs3 = func_ovl10_13_8004A2D8(temp_v0->unk40->unk20) * 12.0f;
             do {
                 temp_v1_21 = temp_v0->unk40;
@@ -1989,25 +1983,25 @@ static void func_ovl10_13_80043070(void) {
                 temp_v1_23 = temp_v0->unk40;
                 func_ovl10_13_80049E18(temp_v1_23->unk10, 100.0f, temp_v1_23->unk18);
                 func_ovl10_13_8004A170();
-                var_s1_7 += 1;
-            } while (var_s1_7 < 0xA);
+                var_s1 += 1;
+            } while (var_s1 < 0xA);
             func_ovl10_13_8004A6B0(0x25B);
             temp_v1_24 = D_ovl10_13_8004ADC4->unk40;
             func_ovl10_13_8004A578(0, temp_v1_24->unk10, temp_v1_24->unk14, temp_v1_24->unk18, 0);
-            var_s1_8 = 0;
+            var_s1 = 0;
             do {
                 temp_v1_25 = D_ovl10_13_8004ADC4->unk40;
                 temp_v1_25->unk14 += 6.6666665f;
                 func_ovl10_13_8004A170();
-                var_s1_8 += 1;
-            } while (var_s1_8 < 0x1E);
+                var_s1 += 1;
+            } while (var_s1 < 0x1E);
             func_ovl10_13_80049E18(2168.0f, 278.0f, 1174.0f);
             func_ovl10_13_80049E38(48.0f, 5.0f, 1652.0f);
             func_ovl10_13_80049D00(D_ovl10_13_8004ADC4->unk40, 0, 0);
             func_ovl10_13_80049FE0(D_ovl10_13_8004ADC4, 0x04000000);
             var_fs0 = -500.0f;
             D_ovl10_13_8004ADC4->unk40->unk1C = 270.0f;
-            var_s1_9 = 0;
+            var_s1 = 0;
             var_at = 0 < 0x14;
             do {
                 if (var_at == 0) {
@@ -2032,9 +2026,9 @@ static void func_ovl10_13_80043070(void) {
                 }
                 var_fs0 += 10.0f;
                 func_ovl10_13_8004A170();
-                var_s1_9 += 1;
-                var_at = var_s1_9 < 0x14;
-            } while (var_s1_9 < 0x32);
+                var_s1 += 1;
+                var_at = var_s1 < 0x14;
+            } while (var_s1 < 0x32);
             temp_v1_29 = temp_v0->unk40;
             func_ovl10_13_80049E18(temp_v1_29->unk10, 100.0f, temp_v1_29->unk18);
             func_ovl10_13_80049E38(32768.0f, 16.0f, 900.0f);
@@ -2048,12 +2042,12 @@ static void func_ovl10_13_80043070(void) {
             sp6C = temp_v0->unk40->unk14 + 50.0f;
             sp70 = temp_v0->unk40->unk18 - 50.0f;
             func_ovl10_13_8004A6B0(0x25E);
-            var_s1_10 = 0;
+            var_s1 = 0;
             do {
                 func_ovl10_13_8004A128((void (*)(UnkStructA *)) func_ovl10_13_80046E88, &sp74, 0, 0, 0x130);
                 func_ovl10_13_8004A128((void (*)(UnkStructA *)) func_ovl10_13_80046E88, &sp68, 0, 0, 0x130);
-                var_s1_10 += 1;
-            } while (var_s1_10 < 4);
+                var_s1 += 1;
+            } while (var_s1 < 4);
             temp_v0_18 = func_ovl10_13_80049CB8(0x2C7, 0);
             temp_v0_18->unkC |= 0x80;
             temp_v0_18->unk36 = 0x80;
@@ -2070,7 +2064,7 @@ static void func_ovl10_13_80043070(void) {
             D_ovl10_13_8004ADA4->unk36 = 0x80;
             var_fs2 = 0.5f;
             D_ovl10_13_8004ADA4->unk10 = sp68;
-            var_s1_11 = 0;
+            var_s1 = 0;
             D_ovl10_13_8004ADA4->unk14 = sp6C;
             D_ovl10_13_8004ADA4->unk18 = sp70;
             D_ovl10_13_8004ADA4->unk30 = 0.5f;
@@ -2099,8 +2093,8 @@ static void func_ovl10_13_80043070(void) {
                 }
                 var_fs2 += 0.0033333334f;
                 func_ovl10_13_8004A170();
-                var_s1_11 += 1;
-            } while (var_s1_11 < 0x96);
+                var_s1 += 1;
+            } while (var_s1 < 0x96);
             func_ovl10_13_8004A148(0x3C);
             func_ovl10_13_8004A6B0(0x260);
             func_ovl10_13_8004A430(0xFF, 0xFF, 0xFF, 0x14);
@@ -2129,7 +2123,7 @@ static void func_ovl10_13_80043070(void) {
             D_ovl10_13_8004ADA4->unk28 = 3.0f;
             func_ovl10_13_80049E18(2520.0f, 249.0f, 1392.0f);
             func_ovl10_13_80049E38(0.0f, 18.0f, 2353.0f);
-            var_s1_12 = 0;
+            var_s1 = 0;
             do {
                 temp_fv0_2 = temp_v0_20->unk20 + 15.0f;
                 if (temp_fv0_2 >= 360.0f) {
@@ -2154,8 +2148,8 @@ static void func_ovl10_13_80043070(void) {
                     D_ovl10_13_8004ADA4->unk20 = var_fv1_4;
                 }
                 func_ovl10_13_8004A170();
-                var_s1_12 += 1;
-            } while (var_s1_12 < 0x78);
+                var_s1 += 1;
+            } while (var_s1 < 0x78);
             temp_v1_30 = D_ovl10_13_8004ADC4->unk40;
             func_ovl10_13_80049E18(temp_v1_30->unk10, temp_v1_30->unk14, temp_v1_30->unk18);
             func_ovl10_13_80049E38(0.0f, 18.0f, 900.0f);
@@ -2171,7 +2165,7 @@ static void func_ovl10_13_80043070(void) {
             temp_v1_31 = temp_v0_22->unk40;
             temp_v1_31->unkC |= 0x40000;
             func_ovl10_13_8004A6B0(0x262);
-            var_s1_13 = 0;
+            var_s1 = 0;
 loop_104:
             temp_fv0_4 = temp_v0_20->unk20 + 15.0f;
             if (temp_fv0_4 >= 360.0f) {
@@ -2203,20 +2197,20 @@ loop_104:
             }
             func_ovl10_13_8004A170();
             if (D_ovl10_13_8004ADA8 == 0x1F) {
-                var_s1_13 += 1;
-                if (var_s1_13 == 0x32) {
+                var_s1 += 1;
+                if (var_s1 == 0x32) {
 
                 } else {
                     goto block_122;
                 }
             } else {
-                var_s1_13 += 1;
+                var_s1 += 1;
 block_122:
-                if (var_s1_13 < 0x78) {
+                if (var_s1 < 0x78) {
                     goto loop_104;
                 }
             }
-            var_s1_14 = 0;
+            var_s1 = 0;
             if (D_ovl10_13_8004ADA8 == 0x1F) {
                 func_ovl10_13_8004A828();
                 func_ovl10_13_80049CC0(temp_v0_20);
@@ -2253,15 +2247,15 @@ block_122:
                 D_ovl10_13_8004ADA4->unk28 -= 0.025f;
                 D_ovl10_13_8004ADA4->unk30 -= 0.025f;
                 func_ovl10_13_8004A170();
-                var_s1_14 += 1;
-            } while (var_s1_14 < 0x78);
+                var_s1 += 1;
+            } while (var_s1 < 0x78);
             func_ovl10_13_80049CC0(temp_v0_20);
             func_ovl10_13_80049CC0(D_ovl10_13_8004ADA4);
             temp_v0_25 = temp_v0_6->unk40;
             func_ovl10_13_80049E18(temp_v0_25->unk10, 100.0f, temp_v0_25->unk18);
             func_ovl10_13_80049E38(42.0f, 26.0f, 1360.0f);
             temp_v0->unk40->unk10 = 2210.0f;
-            var_s1_15 = 0;
+            var_s1 = 0;
             temp_v0->unk40->unk18 = 1390.0f;
             do {
                 temp_v1_32 = temp_v0->unk40;
@@ -2278,12 +2272,12 @@ block_122:
                     temp_v1_32->unk20 = var_fv1_9;
                 }
                 func_ovl10_13_8004A170();
-                var_s1_15 += 1;
-            } while (var_s1_15 < 0x1E);
+                var_s1 += 1;
+            } while (var_s1 < 0x1E);
             func_ovl10_13_80049D40(0x336, 3);
             func_ovl10_13_80049D00(temp_v0->unk40, 7, 0);
             func_ovl10_13_80049FD8(temp_v0, 0x04000000);
-            var_s1_16 = 0;
+            var_s1 = 0;
             temp_ft2_4 = (s32) func_ovl10_13_80049D18(temp_v0->unk40, 0);
             if (temp_ft2_4 > 0) {
                 temp_fs0_6 = 10.0f / (f32) temp_ft2_4;
@@ -2295,9 +2289,9 @@ block_122:
                     temp_v0_28 = temp_v0_6->unk40;
                     temp_v0_28->unk18 -= temp_fs0_6;
                     func_ovl10_13_8004A170();
-                    var_s1_16 += 1;
-                } while (var_s1_16 < temp_ft2_4);
-                var_s1_16 = 0;
+                    var_s1 += 1;
+                } while (var_s1 < temp_ft2_4);
+                var_s1 = 0;
             }
             func_ovl10_13_80049868(0, 4);
             temp_v0_29 = D_ovl10_13_8004ADC0->unk40->unk48->unk4;
@@ -2309,8 +2303,8 @@ block_122:
                 temp_v0_30 = temp_v0_6->unk40;
                 temp_v0_30->unk14 += 33.333332f;
                 func_ovl10_13_8004A170();
-                var_s1_16 += 1;
-            } while (var_s1_16 != 0x1E);
+                var_s1 += 1;
+            } while (var_s1 != 0x1E);
             if (D_ovl10_13_8004ADA8 != 0x1F) {
                 func_ovl10_13_8004A380(0xA4);
             }
