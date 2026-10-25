@@ -2,7 +2,7 @@
  * NON_MATCHING: ovl_12_05's game object, complete: every function and its data.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1811, jp 1811
+ * differing words: us 1813, jp 1813
  *
  * Most of the small functions are still m2c's C, cleaned up only where it
  * didn't compile; the functions with twins elsewhere are their C, renamed
@@ -15,8 +15,8 @@
  *
  * 80043018, 800434C8 and 80044534 are statics: their caller, the handler
  * (and 80047DA4 and 80047E90), saves every callee-saved register for them.
- * 80043018 and 800434C8 come before the file's first global, so
- * tools/nonmatching.py doesn't count them (scratch/12_05/allf.py does).
+ * 80043018 and 800434C8 come before the file's first global, and
+ * tools/nonmatching.py compares them as one run.
  * The handler's cases (80043018-80045B00) are defined above the handler,
  * so that IDO emits them, with the statics, in the reverse order of the
  * handler's calls, as in the original. The empty statics leave the

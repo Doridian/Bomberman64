@@ -16,7 +16,7 @@ whose lines give its flags and how many words still differ per version:
 
 Per draft it prints the functions that match and those that differ, with
 their word counts (tools/fcmp.py's comparison: relocated bits masked, a
-static function counted with the one before it). --check fails if a
+static function found by its .mdebug procedure). --check fails if a
 draft doesn't compile, has no flags line, or differs in more words than
 its header records for the version (a version not recorded is only
 reported). Functions already C in src/ are found in the linked build's

@@ -363,8 +363,10 @@ module's asm blocks, though the draft defines it.
     above the handler: they stay calls and come out between the
     cut-scene statics and the handler, as in the original (as statics
     they were inlined; defined below, they came out ahead of the
-    statics). `scratch/10_13/allf.py` counts statics too, from the
-    object's `.mdebug`;
+    statics). tools/fcmp.py compares statics with the function before
+    them, and those emitted first (no symbol before them) from the
+    object's start, named by its `.mdebug`; `scratch/10_13/allf.py`
+    counts every static on its own;
   - a big global that the original both inlines into a caller and emits
     whole is too big to inline as one global, and as a static it isn't
     emitted on its own: a global one-call wrapper around a static holding

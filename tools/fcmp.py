@@ -17,7 +17,7 @@ without their relocated bits.
 
 tools/nonmatching.py imports compare() for the drafts in nonmatching/.
 """
-import difflib, json, os, re, shutil, subprocess, sys, tempfile
+import difflib, json, os, re, shutil, struct, subprocess, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -80,6 +80,31 @@ def build_index(root):
     return idx
 
 
+def mdebug_procs(obj):
+    """[(text offset, name)] of every procedure in IDO's .mdebug, statics
+    included (stProc and stStaticProc local symbols)."""
+    data = open(obj, "rb").read()
+    shoff = struct.unpack(">I", data[0x20:0x24])[0]
+    shentsize, shnum, shstrndx = struct.unpack(">HHH", data[0x2E:0x34])
+    secs = [struct.unpack(">10I", data[shoff + i * shentsize:shoff + i * shentsize + 40]) for i in range(shnum)]
+    strtab = secs[shstrndx][4]
+    def name(o):
+        return data[o:data.index(b"\0", o)].decode()
+    md = next((h for h in secs if name(strtab + h[0]) == ".mdebug"), None)
+    if md is None:
+        return []
+    hdr = struct.unpack(">HH23I", data[md[4]:md[4] + 0x60])
+    cbSymOffset, cbSsOffset, ifdMax, cbFdOffset = hdr[10], hdr[16], hdr[19], hdr[20]
+    out = set()
+    for f in range(ifdMax):
+        _, _, issBase, _, isymBase, csym = struct.unpack(">6I", data[cbFdOffset + f * 72:cbFdOffset + f * 72 + 24])
+        for i in range(isymBase, isymBase + csym):
+            iss, value, bits = struct.unpack(">3I", data[cbSymOffset + i * 12:cbSymOffset + i * 12 + 12])
+            if bits >> 26 in (6, 14):
+                out.add((value, name(cbSsOffset + issBase + iss)))
+    return sorted(out)
+
+
 def map_path(root):
     v = version(root)
     return os.path.join(root, "build", v, f"bm64.{v}.map")
@@ -134,6 +159,11 @@ def compare(cfile, opt="-O2", isa="-mips1", extra=(), verbose=None, root=ROOT, o
         for line in res.splitlines():
             p = line.split()
             if len(p) == 3 and p[1] in "tT": syms.append((int(p[0], 16), p[2]))
+        # static functions have no ELF symbol, so statics emitted first would
+        # go uncounted: .mdebug names the first, and what follows it up to
+        # our first symbol is compared as one run, as below
+        if not syms or syms[0][0] > 0:
+            syms[:0] = [(a, s) for a, s in mdebug_procs(obj) if a == 0]
         hd = subprocess.run(["mips-linux-gnu-objdump", "-h", obj], capture_output=True, text=True).stdout
         secs = {l.split()[1]: int(l.split()[2], 16) for l in hd.splitlines() if re.match(r"\s+\d+ \.", l)}
         secs = {k: v for k, v in secs.items() if k in (".text", ".data", ".rodata", ".bss")}

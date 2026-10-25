@@ -3,7 +3,7 @@
  * .bss. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 899, jp 899
+ * differing words: us 3495, jp 3495
  *
  * What still differs in us (words, as tools/nonmatching.py counts them):
  * - 80047A0C (429): rewritten; 74 words by instruction (scratch/10_13's
@@ -14,10 +14,11 @@
  *   80048BBC (76), 800486A8 (55), 80047418 (8), 80048EA8 (7),
  *   80046E88 (2): m2c's C, cleaned up only where it didn't compile.
  * - 800464B0 (4): v1 for v0; a third temporary grows the frame.
- * - Not counted by nonmatching.py: the statics 80043070 (1507, still m2c's
- *   C), 80044E48 (31) and 8004574C (394: frame and s-register choice), the
- *   cut-scenes the handler and 800474EC-800477E8 run
- *   (scratch/10_13/allf.py counts them from the object's .mdebug). They
+ * - The statics 80043070 (1507, still m2c's C), 80044E48 (31) and
+ *   8004574C (394: frame and s-register choice), the cut-scenes the
+ *   handler and 800474EC-800477E8 run, by scratch/10_13/allf.py, which
+ *   counts each on its own. nonmatching.py compares them with 80043010 as
+ *   one run, so 80043070's length shifts the rest (2596 words). They
  *   save no callee-saved registers (their callers do), so they are
  *   static; they come first in the object.
  *

@@ -2,7 +2,7 @@
  * NON_MATCHING: ovl_0D_07's stage object, complete: every function and its data.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 144, eu 144, jp 144
+ * differing words: us 2148, eu 2148, jp 2148
  *
  * Its .data and .rodata match (scratch/tools/datacmp.py), and the .bss has
  * the original's layout. What still differs in us (words):
