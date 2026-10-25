@@ -3,7 +3,12 @@
  * and .bss 0x60 as the original, and the stubs' places.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 684, eu 684, jp 684
+ * differing words: us 512, eu 684, jp 684 (eu and jp not re-measured)
+ *
+ * The gate 80044318 matches in us: its loop calls the per-gate static
+ * 80044300 (Ent, flag), as ovl_0D_02's 800434F8 does, with a fake that
+ * reads D_ovl0D_04_80047044 (ovl_0D_02's 80043510 reads 47A40); its locals
+ * are dir, pos, r with dir.x set first.
  *
  * What still differs in us (words):
  * - func_ovl0D_04_80043700 (179): the original builds &CCC[1] at run time
@@ -14,8 +19,6 @@
  * - func_ovl0D_04_80043E70 (67; the static 80043F24 with it): s register
  *   numbering of the case temporaries (original x0 s0, x1 s1, z1 s2, z0 s3)
  *   and the float compares' operand order (`c.eq.s const, a`).
- * - func_ovl0D_04_80044318 (172): frame 0xB0, not 0xA8; dir/pos 4 bytes
- *   lower; s register numbering.
  * - func_ovl0D_04_80044D98 (174): &C24 kept in s4 between the 0x18 branch
  *   and the first loop (the original recomputes it); the camera's 1600.0f
  *   in $f16 as in ovl_0D_05.
@@ -222,7 +225,7 @@ static void func_ovl0D_04_800446C8(void);
 static void func_ovl0D_04_800446D0(void);
 static void func_ovl0D_04_800446D8(void);
 static void func_ovl0D_04_800446E0(void);
-static void func_ovl0D_04_80044300(void);
+static void func_ovl0D_04_80044300(Ent_0D04 *, s32);
 static void func_ovl0D_04_80044308(void);
 static void func_ovl0D_04_80044310(void);
 static void func_ovl0D_04_80043AD0(void);
@@ -754,9 +757,16 @@ static s32 func_ovl0D_04_80043F1C(f32 a) {
 }
 
 void func_ovl0D_04_80044318(void) {
+    s32 i;
+
+    /* a fake (as in ovl_0D_02's 80043510): keeps the first call out of the prologue */
+    if (!D_ovl0D_04_80047044 && !D_ovl0D_04_80047044 && !D_ovl0D_04_80047044) {
+    }
     func_ovl0D_04_80044310();
     func_ovl0D_04_80044308();
-    func_ovl0D_04_80044300();
+    for (i = 0; i < 1; i++) {
+        func_ovl0D_04_80044300(&D_ovl0D_04_80046D74[i], D_ovl0D_04_80046DAC[i]);
+    }
 }
 
 static void func_ovl0D_04_80044310(void) {
@@ -767,42 +777,37 @@ static void func_ovl0D_04_80044308(void) {
     func_ovl0D_04_800466D0(0x424);
 }
 
-static void func_ovl0D_04_80044300(void) {
-    s32 i;
-    s32 flag;
-    s32 r;
+static void func_ovl0D_04_80044300(Ent_0D04 *e, s32 flag) {
     Vec3f dir;
     Vec3f pos;
+    s32 r;
 
-    for (i = 0; i < 1; i++) {
-        flag = D_ovl0D_04_80046DAC[i];
-        if (!(D_ovl0D_04_80046D74[i].obj->unk8 & 0x04000000)) {
-            D_ovl0D_04_8004705C->unk30 = 1;
-            D_ovl0D_04_8004705C->unk34 = 75.0f;
-            D_ovl0D_04_8004705C->unk38 = 50.0f;
-            dir.y = 0.0f;
-            dir.z = 100.0f;
-            dir.x = D_ovl0D_04_80046D74[i].obj->unk40->unk20 + 90.0f;
-            func_ovl0D_04_800462A0(&dir.x, &pos.x);
-            D_ovl0D_04_8004705C->unk40->unk10 = D_ovl0D_04_80046D74[i].obj->unk40->unk10 + pos.x;
-            D_ovl0D_04_8004705C->unk40->unk14 = D_ovl0D_04_80046D74[i].obj->unk40->unk14 + pos.y;
-            D_ovl0D_04_8004705C->unk40->unk18 = D_ovl0D_04_80046D74[i].obj->unk40->unk18 + pos.z;
-            r = func_ovl0D_04_800462B8(D_ovl0D_04_8004705C, 0x40);
-            if (r != 0) {
-                if ((r & 0x6000) && func_ovl0D_04_800466E0(flag) == 0 &&
-                    !(D_ovl0D_04_80046D74[i].obj->unk8 & 0x04000000)) {
-                    func_ovl0D_04_80046308(D_ovl0D_04_80046D74[i].obj, 0x04000000);
-                    func_ovl0D_04_80046310(D_ovl0D_04_80046D74[i].obj, 0x02000000);
-                    func_ovl0D_04_80046A00(0x60, D_ovl0D_04_8004705C->unk40->unk10, D_ovl0D_04_8004705C->unk40->unk14, D_ovl0D_04_8004705C->unk40->unk18);
-                } else if (func_ovl0D_04_800466E0(flag) == 0) {
-                    func_ovl0D_04_80046A00(0x26, D_ovl0D_04_8004705C->unk40->unk10, D_ovl0D_04_8004705C->unk40->unk14, D_ovl0D_04_8004705C->unk40->unk18);
-                }
+    if (!(e->obj->unk8 & 0x04000000)) {
+        D_ovl0D_04_8004705C->unk30 = 1;
+        D_ovl0D_04_8004705C->unk34 = 75.0f;
+        D_ovl0D_04_8004705C->unk38 = 50.0f;
+        dir.x = e->obj->unk40->unk20 + 90.0f;
+        dir.y = 0.0f;
+        dir.z = 100.0f;
+        func_ovl0D_04_800462A0(&dir.x, &pos.x);
+        D_ovl0D_04_8004705C->unk40->unk10 = e->obj->unk40->unk10 + pos.x;
+        D_ovl0D_04_8004705C->unk40->unk14 = e->obj->unk40->unk14 + pos.y;
+        D_ovl0D_04_8004705C->unk40->unk18 = e->obj->unk40->unk18 + pos.z;
+        r = func_ovl0D_04_800462B8(D_ovl0D_04_8004705C, 0x40);
+        if (r != 0) {
+            if ((r & 0x6000) && func_ovl0D_04_800466E0(flag) == 0 &&
+                !(e->obj->unk8 & 0x04000000)) {
+                func_ovl0D_04_80046308(e->obj, 0x04000000);
+                func_ovl0D_04_80046310(e->obj, 0x02000000);
+                func_ovl0D_04_80046A00(0x60, D_ovl0D_04_8004705C->unk40->unk10, D_ovl0D_04_8004705C->unk40->unk14, D_ovl0D_04_8004705C->unk40->unk18);
+            } else if (func_ovl0D_04_800466E0(flag) == 0) {
+                func_ovl0D_04_80046A00(0x26, D_ovl0D_04_8004705C->unk40->unk10, D_ovl0D_04_8004705C->unk40->unk14, D_ovl0D_04_8004705C->unk40->unk18);
             }
-        } else if ((D_ovl0D_04_80046D74[i].obj->unk40->unkC & 0x40) && func_ovl0D_04_800466E0(flag) == 0) {
-            func_ovl0D_04_80043F24(&D_ovl0D_04_80046D74[i]);
-            func_ovl0D_04_800466D0(flag);
-            func_ovl0D_04_800469E0(0x68);
         }
+    } else if ((e->obj->unk40->unkC & 0x40) && func_ovl0D_04_800466E0(flag) == 0) {
+        func_ovl0D_04_80043F24(e);
+        func_ovl0D_04_800466D0(flag);
+        func_ovl0D_04_800469E0(0x68);
     }
 }
 

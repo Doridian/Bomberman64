@@ -4,18 +4,20 @@
  * 0x70 and .bss 0x60 as the original (sizes; .text 0x2A00 of 0x2A30).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 723, eu 723, jp 723
+ * differing words: us 552, eu 723, jp 723 (eu and jp not re-measured)
  *
  * The sibling of ovl_0D_04 (nonmatching/overlays/ovl_0D_04): its gate code
  * (80044414, 80044808, 800440AC) and model tables are the same. What still
- * differs in us (fcmp counts a static with the function before it):
+ * differs in us (fcmp counts a static with the function before it). The
+ * gate 80044808 matches in us: as ovl_0D_04's 80044318, its loop calls the
+ * per-gate static 800447F0 (Ent, flag), with a fake that reads
+ * D_ovl0D_06_80047080 (not 800475EC: the compiler then hoists that
+ * address into s6 and the prologue differs).
  * - func_ovl0D_06_8004305C (77; 11 words short): the original keeps the
  *   index of D_ovl0D_06_800470BC/80047164 in s0 and multiplies it at run
  *   time (&D[2] as i*56), computes 180.0f*10.0f at run time and spills
  *   200.0f to the stack (frame 0x48, ours 0x30); ovl_0D_04's 80043700 has
  *   the same problem.
- * - func_ovl0D_06_80044808 (172): as ovl_0D_04's 80044318 (frame, s
- *   register numbering).
  * - func_ovl0D_06_8004401C (127; 2 words long, 800440AC with it): the
  *   loop over D_ovl0D_06_8004739C ends at the symbol 8004740C in the
  *   original; ours adds 0x70 to a saved base (an extra s register).
@@ -270,7 +272,7 @@ static void func_ovl0D_06_80044D30(void);
 static void func_ovl0D_06_80044D38(void);
 static void func_ovl0D_06_80044D40(void);
 static void func_ovl0D_06_80044D48(void);
-static void func_ovl0D_06_800447F0(void);
+static void func_ovl0D_06_800447F0(Ent_0D06 *, s32);
 static void func_ovl0D_06_800447F8(void);
 static void func_ovl0D_06_80044800(void);
 static void func_ovl0D_06_80045154(void);
@@ -768,9 +770,16 @@ void func_ovl0D_06_80044B14(void) {
 
 /* the gates: each opens when something hits it */
 void func_ovl0D_06_80044808(void) {
+    s32 i;
+
+    /* a fake (as in ovl_0D_02's 80043510): keeps the first call out of the prologue */
+    if (!D_ovl0D_06_80047080 && !D_ovl0D_06_80047080 && !D_ovl0D_06_80047080) {
+    }
     func_ovl0D_06_80044800();
     func_ovl0D_06_800447F8();
-    func_ovl0D_06_800447F0();
+    for (i = 0; i < 2; i++) {
+        func_ovl0D_06_800447F0(&D_ovl0D_06_80047244[i], D_ovl0D_06_800472B4[i]);
+    }
 }
 
 static void func_ovl0D_06_80044800(void) {
@@ -781,42 +790,37 @@ static void func_ovl0D_06_800447F8(void) {
     func_ovl0D_06_80046B50(0x424);
 }
 
-static void func_ovl0D_06_800447F0(void) {
-    s32 i;
-    s32 flag;
-    s32 r;
+static void func_ovl0D_06_800447F0(Ent_0D06 *e, s32 flag) {
     Vec3f dir;
     Vec3f pos;
+    s32 r;
 
-    for (i = 0; i < 2; i++) {
-        flag = D_ovl0D_06_800472B4[i];
-        if (!(D_ovl0D_06_80047244[i].obj->unk8 & 0x04000000)) {
-            D_ovl0D_06_800475EC->unk30 = 1;
-            D_ovl0D_06_800475EC->unk34 = 75.0f;
-            D_ovl0D_06_800475EC->unk38 = 50.0f;
-            dir.y = 0.0f;
-            dir.z = 100.0f;
-            dir.x = D_ovl0D_06_80047244[i].obj->unk40->unk20 + 90.0f;
-            func_ovl0D_06_80046720(&dir.x, &pos.x);
-            D_ovl0D_06_800475EC->unk40->unk10 = D_ovl0D_06_80047244[i].obj->unk40->unk10 + pos.x;
-            D_ovl0D_06_800475EC->unk40->unk14 = D_ovl0D_06_80047244[i].obj->unk40->unk14 + pos.y;
-            D_ovl0D_06_800475EC->unk40->unk18 = D_ovl0D_06_80047244[i].obj->unk40->unk18 + pos.z;
-            r = func_ovl0D_06_80046738(D_ovl0D_06_800475EC, 0x40);
-            if (r != 0) {
-                if ((r & 0x6000) && func_ovl0D_06_80046B60(flag) == 0 &&
-                    !(D_ovl0D_06_80047244[i].obj->unk8 & 0x04000000)) {
-                    func_ovl0D_06_80046788(D_ovl0D_06_80047244[i].obj, 0x04000000);
-                    func_ovl0D_06_80046790(D_ovl0D_06_80047244[i].obj, 0x02000000);
-                    func_ovl0D_06_80046E80(0x60, D_ovl0D_06_800475EC->unk40->unk10, D_ovl0D_06_800475EC->unk40->unk14, D_ovl0D_06_800475EC->unk40->unk18);
-                } else if (func_ovl0D_06_80046B60(flag) == 0) {
-                    func_ovl0D_06_80046E80(0x26, D_ovl0D_06_800475EC->unk40->unk10, D_ovl0D_06_800475EC->unk40->unk14, D_ovl0D_06_800475EC->unk40->unk18);
-                }
+    if (!(e->obj->unk8 & 0x04000000)) {
+        D_ovl0D_06_800475EC->unk30 = 1;
+        D_ovl0D_06_800475EC->unk34 = 75.0f;
+        D_ovl0D_06_800475EC->unk38 = 50.0f;
+        dir.x = e->obj->unk40->unk20 + 90.0f;
+        dir.y = 0.0f;
+        dir.z = 100.0f;
+        func_ovl0D_06_80046720(&dir.x, &pos.x);
+        D_ovl0D_06_800475EC->unk40->unk10 = e->obj->unk40->unk10 + pos.x;
+        D_ovl0D_06_800475EC->unk40->unk14 = e->obj->unk40->unk14 + pos.y;
+        D_ovl0D_06_800475EC->unk40->unk18 = e->obj->unk40->unk18 + pos.z;
+        r = func_ovl0D_06_80046738(D_ovl0D_06_800475EC, 0x40);
+        if (r != 0) {
+            if ((r & 0x6000) && func_ovl0D_06_80046B60(flag) == 0 &&
+                !(e->obj->unk8 & 0x04000000)) {
+                func_ovl0D_06_80046788(e->obj, 0x04000000);
+                func_ovl0D_06_80046790(e->obj, 0x02000000);
+                func_ovl0D_06_80046E80(0x60, D_ovl0D_06_800475EC->unk40->unk10, D_ovl0D_06_800475EC->unk40->unk14, D_ovl0D_06_800475EC->unk40->unk18);
+            } else if (func_ovl0D_06_80046B60(flag) == 0) {
+                func_ovl0D_06_80046E80(0x26, D_ovl0D_06_800475EC->unk40->unk10, D_ovl0D_06_800475EC->unk40->unk14, D_ovl0D_06_800475EC->unk40->unk18);
             }
-        } else if ((D_ovl0D_06_80047244[i].obj->unk40->unkC & 0x40) && func_ovl0D_06_80046B60(flag) == 0) {
-            func_ovl0D_06_80044414(&D_ovl0D_06_80047244[i]);
-            func_ovl0D_06_80046B50(flag);
-            func_ovl0D_06_80046E60(0x68);
         }
+    } else if ((e->obj->unk40->unkC & 0x40) && func_ovl0D_06_80046B60(flag) == 0) {
+        func_ovl0D_06_80044414(e);
+        func_ovl0D_06_80046B50(flag);
+        func_ovl0D_06_80046E60(0x68);
     }
 }
 
