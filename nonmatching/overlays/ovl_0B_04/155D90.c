@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3565, jp 4192
+ * differing words: us 3298, jp 4192
  *
  * Order (scratch/ord/search.py, hill-climb over definition order, scored by
  * the emitted sequence's edit distance from the original's address order):
@@ -1825,7 +1825,8 @@ static void func_ovl0B_04_80044394(s32 a, s32 b) {
     while (D_ovl0B_04_80048A20[n] != 0) {
         n++;
     }
-    if (n - 1 != -1) {
+    n--;
+    if (n != -1) {
         x = -func_ovl0B_04_80048680(D_ovl0B_04_80048A20) * 0.65f / 2.0f;
         func_ovl0B_04_80048650(a, x, 0);
         if (b != -1) {
@@ -1851,6 +1852,8 @@ static void func_ovl0B_04_8004430C(u8 item) {
 /* A character set's character. */
 static u8 func_ovl0B_04_8004426C(u8 set, u8 idx) {
     switch (set) {
+        default:
+            return 0;
         case 1:
             return D_ovl0B_04_8004915C[idx];
         case 2:
@@ -1859,17 +1862,13 @@ static u8 func_ovl0B_04_8004426C(u8 set, u8 idx) {
             return D_ovl0B_04_800491C4[idx];
         case 4:
             return D_ovl0B_04_800491F8[idx];
-        default:
-            return 0;
     }
 }
 
 /* The character at the cursor written. */
 static void func_ovl0B_04_80044210(void) {
-    u8 *p = D_ovl0B_04_8004A290[D_ovl0B_04_8004A490.unk0];
-
-    p[0] = D_ovl0B_04_8004A490.unk1;
-    func_ovl0B_04_80048640(D_ovl0B_04_8004A448[D_ovl0B_04_8004A490.unk0], p, 2);
+    D_ovl0B_04_8004A290[D_ovl0B_04_8004A490.unk0][0] = D_ovl0B_04_8004A490.unk1;
+    func_ovl0B_04_80048640(D_ovl0B_04_8004A448[D_ovl0B_04_8004A490.unk0], D_ovl0B_04_8004A290[D_ovl0B_04_8004A490.unk0], 2);
 }
 
 /* The set and item of the character at the cursor. */
@@ -1887,7 +1886,7 @@ static void func_ovl0B_04_800441C4(void) {
 
 /* The cursor at the end of the name. */
 static void func_ovl0B_04_80044154(void) {
-    u8 n = 0;
+    s32 n = 0;
 
     D_ovl0B_04_8004A290[8][0] = 0;
     while (D_ovl0B_04_8004A290[n][0] != 0) {
