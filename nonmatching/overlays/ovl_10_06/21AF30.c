@@ -964,27 +964,21 @@ void func_ovl10_06_80047B0C(void) {
 }
 
 void func_ovl10_06_80047A50(void) {
-    Vec3f sp2C;
-    UnkStructA **var_s1;
-    s32 var_s0;
+    s32 i;
+    s32 pad;
+    Vec3f pos;
 
-loop_1:
-    if (func_ovl10_06_8004A640() != 0) {
-        var_s0 = 0;
-        if (D_ovl10_06_8004B7F0 > 0) {
-            var_s1 = D_ovl10_06_8004BAB0;
-            do {
-                func_ovl10_06_8004A068(*var_s1, &sp2C);
-                func_ovl10_06_8004A668(&sp2C.x);
-                var_s0 += 1;
-                var_s1 += 1;
-            } while (var_s0 < D_ovl10_06_8004B7F0);
+    while (TRUE) {
+        if (func_ovl10_06_8004A640() != 0) {
+            for (i = 0; i < D_ovl10_06_8004B7F0; i++) {
+                func_ovl10_06_8004A068(D_ovl10_06_8004BAB0[i], &pos);
+                func_ovl10_06_8004A668(&pos.x);
+            }
+        } else {
+            func_ovl10_06_8004A0F8();
         }
-    } else {
-        func_ovl10_06_8004A0F8();
+        func_ovl10_06_8004A130();
     }
-    func_ovl10_06_8004A130();
-    goto loop_1;
 }
 
 void func_ovl10_06_800479B8(void) {
