@@ -4,22 +4,26 @@
  * 0xF0 where the original's is 0xD0).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2382, jp 2382
+ * differing words: us 2136, jp 2382
  *
  * A first complete draft: the functions shared with bank 0x0C's and
  * 0x12/0x17's drafts are theirs (scratch/0C_02/sib.py), the rest m2c's
- * output with its types fixed, so most of the rest still differs.  62 of
+ * output with its types fixed, so most of the rest still differs.  65 of
  * the 96 functions match.  ovl_0C_01 and ovl_0C_06 have most of the same
  * functions (80043338, 80043544-80043840, 80044914, 80044A68, 80045538,
- * 800475BC-80047E90 at ratio 1.00) and no C yet.
+ * 800475BC-80047E90 at ratio 1.00); 80043650, 80043840 and 80047E90 are
+ * ovl_0C_06's 80043354, 80043544 and 80046CF0 ported (ovl_0C_06 has C for
+ * them and they match there), and 80043544, 80044914 and 80044A68 still
+ * wait on their ovl_0C_06 twins (80043248, 80044340, 80044494), which
+ * don't match there yet.
  *
  * What still differs in us (words):
  * - func_ovl0C_02_80046DD0 (351), 800460B0 (171, the object set-up),
  *   8004639C (153, the handler), 80046B68 (152), 80043338 (129),
  *   80046924 (112), 80045B50 (110), 80044CD0 (101), 80043E0C (98),
- *   80043840 (96), 80045898 (91), 80044914 (84), 80043650 (78),
- *   80045538 (76), 800475BC, 800477B0 and 80047E90 (72 each), 80047410
- *   (69), 80043544 (66), 80044A68 (55), 800430D0 (50), 8004797C (24),
+ *   80045898 (91), 80044914 (84), 80045538 (76), 800475BC and
+ *   800477B0 (72 each), 80047410 (69), 80043544 (66), 80044A68 (55),
+ *   800430D0 (50), 8004797C (24),
  *   800431D4 and 80045A7C (17 each), 80045448 (15), 8004460C (14),
  *   800467D8 (12), 800454B4 (11), 80043B64 (4), 80043A98, 80043C54,
  *   80043FD8, 80045668 and 80045780 (2 each): m2c's register use and
@@ -586,35 +590,28 @@ void func_ovl0C_02_80047FB4(UnkStructA *arg0) {
     func_ovl0C_02_80049238(60);
 }
 
+/* a switch fading out with its block: its tiles open */
 void func_ovl0C_02_80047E90(void) {
-    s16 temp_s1;
-    s16 temp_s1_2;
-    s16 temp_s2;
-    s16 temp_s2_2;
-    s16 var_s3;
-    UnkStruct_ovl0C_02_80049B84 *temp_s0;
+    UnkStruct_ovl0C_02_80049B84 *rec;
+    s16 alpha;
 
-    temp_s0 = func_ovl0C_02_80049240();
-    var_s3 = 0xFF;
-loop_1:
-    var_s3 -= 0xA;
-    func_ovl0C_02_800490C8(temp_s0->unk4, 0x80000);
-    if (var_s3 < 0) {
-        var_s3 = 0;
-        func_ovl0C_02_800490D0(temp_s0->unk4, 0x01000000);
-        temp_s1 = temp_s0->unk18;
-        temp_s2 = temp_s0->unk1C;
-        func_ovl0C_02_80048710((s32) temp_s1, (s32) temp_s0->unk1A, (s32) temp_s2, temp_s1 + 1, temp_s0->unk1E + 1, temp_s2 + 1, 0x10);
-        temp_s1_2 = temp_s0->unk18;
-        temp_s2_2 = temp_s0->unk1C;
-        func_ovl0C_02_80048708((s32) temp_s1_2, (s32) temp_s0->unk1E, (s32) temp_s2_2, temp_s1_2 + 1, temp_s2_2 + 1, 0x11);
-        temp_s0->unk22 = 0;
-        func_ovl0C_02_800490E0(temp_s0->unk4);
-        func_ovl0C_02_80049228();
+    rec = func_ovl0C_02_80049240();
+    alpha = 0xFF;
+    while (TRUE) {
+        alpha -= 0xA;
+        func_ovl0C_02_800490C8(rec->unk4, 0x80000);
+        if (alpha < 0) {
+            alpha = 0;
+            func_ovl0C_02_800490D0(rec->unk4, 0x01000000);
+            func_ovl0C_02_80048710(rec->unk18, rec->unk1A, rec->unk1C, rec->unk18 + 1, rec->unk1E + 1, rec->unk1C + 1, 0x10);
+            func_ovl0C_02_80048708(rec->unk18, rec->unk1E, rec->unk1C, rec->unk18 + 1, rec->unk1C + 1, 0x11);
+            rec->unk22 = 0;
+            func_ovl0C_02_800490E0(rec->unk4);
+            func_ovl0C_02_80049228();
+        }
+        rec->unk4->unk40->unk36 = alpha;
+        func_ovl0C_02_80049260();
     }
-    temp_s0->unk4->unk40->unk36 = var_s3;
-    func_ovl0C_02_80049260();
-    goto loop_1;
 }
 
 void func_ovl0C_02_80047D78(void) {
@@ -2268,93 +2265,78 @@ void func_ovl0C_02_80043A0C(UnkStruct_ovl0C_02_80049A38 *arg0) {
     func_ovl0C_02_80048700(arg0->unk64, arg0->unk68, arg0->unk6C, arg0->unk70);
 }
 
-s32 func_ovl0C_02_80043840(UnkStructA **arg0, UnkStruct_ovl0C_02_80049C24 *arg1, UnkStruct_ovl0C_02_80049B84 *arg2, s32 arg3) {
-    UnkStruct_ovl0C_02_80049B84 *sp2C;
-    UnkStructA_40 *temp_v0_2;
-    UnkStruct_ovl0C_02_80049B84 *var_s0_2;
-    s16 temp_t1;
-    s32 temp_v0;
-    s32 var_s0;
-    s32 var_s2;
+/* bombs on the switches: a switch hit turns, and once none is left the
+ * blocks crumble */
+s32 func_ovl0C_02_80043840(UnkStructA **arg0, UnkStruct_ovl0C_02_80049C24 *arg1, UnkStruct_ovl0C_02_80049B84 *list, s32 arg3) {
+    UnkStructA_40 *pos;
+    s32 hit;
+    s32 left;
+    s32 ret;
+    UnkStruct_ovl0C_02_80049B84 *saved;
 
-    sp2C = arg2;
+    saved = list;
     D_ovl0C_02_8004A124->unk30 = 4;
     D_ovl0C_02_8004A124->unk34 = 90.0f;
-    var_s0_2 = arg2;
     D_ovl0C_02_8004A124->unk38 = 400.0f;
-    var_s2 = 0;
-    if (arg2->unk2 != 0) {
-        do {
-            if (func_ovl0C_02_800494A0(var_s0_2->unk24) == 0) {
-                D_ovl0C_02_8004A124->unk40->unk10 = var_s0_2->unk8;
-                D_ovl0C_02_8004A124->unk40->unk14 = var_s0_2->unkC;
-                D_ovl0C_02_8004A124->unk40->unk18 = var_s0_2->unk10;
-                temp_v0 = func_ovl0C_02_80049078(D_ovl0C_02_8004A124, 0xC0);
-                if (temp_v0 != 0) {
-                    if (temp_v0 & 0x6000) {
-                        func_ovl0C_02_800497C0(0x49, var_s0_2->unk8, var_s0_2->unkC, var_s0_2->unk10);
-                        func_ovl0C_02_80048DD8(var_s0_2->unk4->unk40, 0x2AF, 0, 2);
-                        func_ovl0C_02_80048DD8(var_s0_2->unk4->unk40, 0x2AF, 1, 3);
-                        func_ovl0C_02_80049490(var_s0_2->unk24);
-                    } else {
-                        temp_v0_2 = D_ovl0C_02_8004A124->unk40;
-                        var_s2 = 1;
-                        func_ovl0C_02_800497C0(0x26, temp_v0_2->unk10, temp_v0_2->unk14, temp_v0_2->unk18);
-                    }
+    left = 0;
+    for (; list->unk2 != 0; list++) {
+        if (!func_ovl0C_02_800494A0(list->unk24)) {
+            D_ovl0C_02_8004A124->unk40->unk10 = list->unk8;
+            D_ovl0C_02_8004A124->unk40->unk14 = list->unkC;
+            D_ovl0C_02_8004A124->unk40->unk18 = list->unk10;
+            hit = func_ovl0C_02_80049078(D_ovl0C_02_8004A124, 0xC0);
+            if (hit) {
+                if (hit & 0x6000) {
+                    func_ovl0C_02_800497C0(0x49, list->unk8, list->unkC, list->unk10);
+                    func_ovl0C_02_80048DD8(list->unk4->unk40, 0x2AF, 0, 2);
+                    func_ovl0C_02_80048DD8(list->unk4->unk40, 0x2AF, 1, 3);
+                    func_ovl0C_02_80049490(list->unk24);
                 } else {
-                    var_s2 = 1;
+                    pos = D_ovl0C_02_8004A124->unk40;
+                    func_ovl0C_02_800497C0(0x26, pos->unk10, pos->unk14, pos->unk18);
+                    left = 1;
                 }
+            } else {
+                left = 1;
             }
-            var_s0_2 += 1;
-        } while (var_s0_2->unk2 != 0);
-    }
-    var_s0 = 0;
-    if (var_s2 == 0) {
-        if (func_ovl0C_02_800494A0(arg3) == 0) {
-            var_s0 = 1;
-            func_ovl0C_02_80049490(arg3);
-            func_ovl0C_02_80043650(arg0, arg1, sp2C, arg3);
         }
     }
-    return var_s0;
+    ret = 0;
+    if (!left && !func_ovl0C_02_800494A0(arg3)) {
+        ret = 1;
+        func_ovl0C_02_80049490(arg3);
+        func_ovl0C_02_80043650(arg0, arg1, saved, arg3);
+    }
+    return ret;
 }
 
+/* the blocks crumble (a cut scene) */
 void func_ovl0C_02_80043650(UnkStructA **arg0, UnkStruct_ovl0C_02_80049C24 *arg1, UnkStruct_ovl0C_02_80049B84 *arg2, s32 arg3) {
-    s32 sp3C;
-    UnkStruct_ovl0C_02_80049C24 *var_s0;
-    s16 temp_t0;
-    s16 temp_t3;
-    s32 temp_s0;
+    s32 sparks;
+    s32 task;
+    UnkStruct_ovl0C_02_80049C24 *p;
 
     func_ovl0C_02_80048978();
     func_ovl0C_02_800488B8(1);
-    temp_s0 = func_ovl0C_02_80049218(func_ovl0C_02_8004661C, arg1, 0, 0, 0x110);
+    task = func_ovl0C_02_80049218(func_ovl0C_02_8004661C, arg1, 0, 0, 0x110);
     func_ovl0C_02_800490E0(*arg0);
     func_ovl0C_02_80043544(arg1, 0x40C);
-    sp3C = func_ovl0C_02_80049218(func_ovl0C_02_80047D78, arg2, 0, 0, 0x110);
+    sparks = func_ovl0C_02_80049218(func_ovl0C_02_80047D78, arg2, 0, 0, 0x110);
     func_ovl0C_02_80048838(1);
-    func_ovl0C_02_80049278(temp_s0 & 0xFFFF);
-    func_ovl0C_02_80049278(sp3C);
+    func_ovl0C_02_80049278(task);
+    func_ovl0C_02_80049278(sparks);
     func_ovl0C_02_80049290(0xB0, 0xB0);
-    var_s0 = arg1;
-    if (arg1->unk2 != 0) {
-        do {
-            func_ovl0C_02_80049668(0x10, var_s0->unk8 - 300.0f, var_s0->unkC + 200.0f, var_s0->unk10, 0);
-            func_ovl0C_02_80049238(0x1E);
-            var_s0 += 1;
-        } while (var_s0->unk2 != 0);
-        var_s0 = arg1;
+    for (p = arg1; p->unk2 != 0; p++) {
+        func_ovl0C_02_80049668(0x10, p->unk8 - 300.0f, p->unkC + 200.0f, p->unk10, 0);
+        func_ovl0C_02_80049238(0x1E);
     }
     func_ovl0C_02_800497C0(0x42, arg1->unk8, arg1->unkC, arg1->unk10);
-    if (arg1->unk2 != 0) {
-        do {
-            func_ovl0C_02_80049218(func_ovl0C_02_80047B20, var_s0, 0, 0, 0x110);
-            func_ovl0C_02_80049238(0xF);
-            var_s0 += 1;
-        } while (var_s0->unk2 != 0);
+    for (p = arg1; p->unk2 != 0; p++) {
+        func_ovl0C_02_80049218(func_ovl0C_02_80047B20, p, 0, 0, 0x110);
+        func_ovl0C_02_80049238(0xF);
     }
     func_ovl0C_02_80049238(0x3C);
-    func_ovl0C_02_80049220(sp3C);
+    func_ovl0C_02_80049220(sparks);
     func_ovl0C_02_80049238(0x3C);
     func_ovl0C_02_80048838(0);
     if (*func_ovl0C_02_80048818() & 2) {
