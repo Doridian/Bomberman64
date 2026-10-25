@@ -18,6 +18,10 @@
  *   index and pointer types, a while (TRUE) exit, a temp for unk40, the
  *   record set-up as a static taking its pointer (20 words in all), and
  *   41 orders of the final nine stores (49 words or more).
+ *   ugen (cc -S) lists the restores s0, s1, s2; as1 reverses them when the
+ *   last block ends in a lw, lw, store chain.  A block boundary before the
+ *   epilogue (a label, .align or a section switch) or ugen's restores
+ *   reversed give the original; no C found does (scratch/epi/).
  */
 #include "common.h"
 
