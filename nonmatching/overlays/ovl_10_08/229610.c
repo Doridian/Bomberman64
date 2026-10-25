@@ -10,6 +10,9 @@
  *   (62), 8004675C (9), 80046A70 (9) and 80047264 (2): ovl_10_12's
  *   800432B0, 80043F14, 80044C68, 80044FEC, 80046048, 8004635C and
  *   80046908, with the same differences (its header).
+ * - .data order (not counted above): ovl_10_09 found that the original puts
+ *   the functions' local array initialisers before the tables; this draft's
+ *   order is unchecked against the ROM.
  * - func_ovl10_08_80044238 (1): pos sits a word higher than the
  *   original's (a pad word above it; `s32 pad[2]` puts pos right but the
  *   three spill slots a word low).
