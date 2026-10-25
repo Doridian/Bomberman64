@@ -2,7 +2,7 @@
  * NON_MATCHING: ovl_12_05's game object, complete: every function and its data.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4009
+ * differing words: us 4009, jp 4009
  *
  * A first draft: most of it is m2c's C, cleaned up only where it didn't
  * compile; the functions with twins elsewhere are their C, renamed

@@ -3,7 +3,7 @@
  * (an entry in src/ alone would be fine, but it goes with the object).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O2
- * differing words: us 0
+ * differing words: us 0, jp 0
  *
  * What still differs in us (words):
  * Nothing.
