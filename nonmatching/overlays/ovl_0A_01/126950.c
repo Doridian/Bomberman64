@@ -3,7 +3,7 @@
  * function and its .data/.bss; .text 0x40C0 as the original.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 776, eu 4920, jp 4920
+ * differing words: us 427, eu 4920, jp 4920
  *
  * What still differs in us (words):
  * - func_ovl0A_01_80043028 (6): `beq a0,s0` where the original has
@@ -19,10 +19,10 @@
  *   the inlined static's base); one word long, so the rest is shifted.
  * - func_ovl0A_01_80044F3C (37): constant loads scheduled differently;
  *   4 words long.
- * - func_ovl0A_01_8004609C (382): $f24 where the original uses $f22, and a
- *   loop test `bne` where it has `slt; bnez`; one word short, so the rest
- *   is shifted.
- * - func_ovl0A_01_8004694C (15): 7 words short.
+ * - func_ovl0A_01_8004609C (48): $f24 where the original uses $f22, and
+ *   the frame 8 bytes too big: 8004607C's count parameter gives the
+ *   original's `slt` (with a constant 1 it was `bne`) but takes a slot the
+ *   original doesn't have.
  */
 #include "common.h"
 
@@ -301,7 +301,7 @@ static void func_ovl0A_01_80045278(void);
 static void func_ovl0A_01_80045270(void);
 static void func_ovl0A_01_80046094(void);
 static void func_ovl0A_01_8004608C(void);
-static void func_ovl0A_01_8004607C(Entry2 *tbl);
+static void func_ovl0A_01_8004607C(s32 n, Entry2 *tbl);
 static void func_ovl0A_01_80046084(void);
 void func_ovl0A_01_80046C88(s32 arg0);
 void func_ovl0A_01_80046DB8(s32 arg0, UnkStruct_ovl0A_01_B04 *arg1);
@@ -360,7 +360,7 @@ static void func_ovl0A_01_80045278(void);
 static void func_ovl0A_01_80045270(void);
 static void func_ovl0A_01_80046094(void);
 static void func_ovl0A_01_8004608C(void);
-static void func_ovl0A_01_8004607C(Entry2 *tbl);
+static void func_ovl0A_01_8004607C(s32 n, Entry2 *tbl);
 static void func_ovl0A_01_80046084(void);
 void func_ovl0A_01_80046C88(s32 arg0);
 void func_ovl0A_01_80046DB8(s32 arg0, UnkStruct_ovl0A_01_B04 *arg1);
@@ -419,7 +419,7 @@ static void func_ovl0A_01_80045278(void);
 static void func_ovl0A_01_80045270(void);
 static void func_ovl0A_01_80046094(void);
 static void func_ovl0A_01_8004608C(void);
-static void func_ovl0A_01_8004607C(Entry2 *tbl);
+static void func_ovl0A_01_8004607C(s32 n, Entry2 *tbl);
 static void func_ovl0A_01_80046084(void);
 void func_ovl0A_01_80046C88(s32 arg0);
 void func_ovl0A_01_80046DB8(s32 arg0, UnkStruct_ovl0A_01_B04 *arg1);
@@ -478,7 +478,7 @@ static void func_ovl0A_01_80045278(void);
 static void func_ovl0A_01_80045270(void);
 static void func_ovl0A_01_80046094(void);
 static void func_ovl0A_01_8004608C(void);
-static void func_ovl0A_01_8004607C(Entry2 *tbl);
+static void func_ovl0A_01_8004607C(s32 n, Entry2 *tbl);
 static void func_ovl0A_01_80046084(void);
 void func_ovl0A_01_80046C88(s32 arg0);
 void func_ovl0A_01_80046DB8(s32 arg0, UnkStruct_ovl0A_01_B04 *arg1);
@@ -707,7 +707,7 @@ static void func_ovl0A_01_80046084(void) {
     a = 0.0f;
     D_ovl0A_01_80048A38[3] = 0;
     b = 0.0f;
-    func_ovl0A_01_8004607C(LIGHTS);
+    func_ovl0A_01_8004607C(1, LIGHTS);
     LIGHTS[0].unk0->unk10 = 2300.0f;
     LIGHTS[0].unk0->unk14 = 60.0f;
     LIGHTS[0].unk0->unk18 = 800.0f;
@@ -780,10 +780,10 @@ static void func_ovl0A_01_80046084(void) {
     }
 }
 
-static void func_ovl0A_01_8004607C(Entry2 *tbl) {
+static void func_ovl0A_01_8004607C(s32 n, Entry2 *tbl) {
     s32 i;
 
-    for (i = 0; i < 1; i++, tbl++) {
+    for (i = 0; i < n; i++, tbl++) {
         tbl->unk0 = func_ovl0A_01_80047B98(tbl->unk18, 0);
         tbl->unk0->unkC |= tbl->unk14;
     }
