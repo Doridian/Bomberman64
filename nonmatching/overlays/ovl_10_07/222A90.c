@@ -3,17 +3,20 @@
  * .bss and its .data tables. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 210, jp 210
+ * differing words: us 126, jp 210
  *
  * What still differs in us (words):
- * - func_ovl10_07_80043944 (95), 80043B98 (1), 80044FD8 (12), 800452A8
- *   (14), 80045758 (62), 80046E28 (9), 8004713C (9) and 800479D4 (2):
- *   ovl_10_09's 80043924, 80043B78, 80044FEC, 800452BC, 8004576C,
- *   800468FC, 80046C10 and 800474A8, with the same differences (its
+ * - func_ovl10_07_80043B98 (1), 80044FD8 (12), 800452A8 (14), 80045758
+ *   (62), 80046E28 (9), 8004713C (9) and 800479D4 (2): ovl_10_09's
+ *   80043B78, 80044FEC, 800452BC, 8004576C, 800468FC, 80046C10 and
+ *   800474A8, with the same differences (its
  *   header).
  * - func_ovl10_07_80043254 (6): ovl_10_08's 800432B0 (the same code; the
  *   same C as ovl_10_09's 80043238, which misses by 2), with the same
  *   differences.
+ * - func_ovl10_07_8004809C (11): the same code; the padding IDO puts after its
+ *   endless loop (to a 16-byte boundary) is a word longer
+ *   because 80045758 is a word short (as in ovl_10_11's 80044C24).
  *
  * ovl_10_07's game object, IDO -O3: the functions are written last to first
  * (IDO -O3 emits a file's functions in reverse). Most of it is ovl_10_09's
@@ -1710,6 +1713,9 @@ void func_ovl10_07_80043944(s32 arg0, s32 arg1) {
                 func_ovl10_07_8004389C(arg0);
                 v = 1;
                 func_ovl10_07_800437EC(arg0);
+            }
+            /* Nothing, but it keeps arg0 in v1 for the loops. */
+            if (arg0) {
             }
             if (D_ovl10_07_80049C78[arg0] & 1) {
                 for (j = 0; j < D_ovl10_07_80049E70[arg0]; j++) {

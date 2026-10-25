@@ -3,19 +3,15 @@
  * .bss and its .data tables; .text one word long. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 195, eu 195, jp 195
+ * differing words: us 111, eu 195, jp 195
  *
  * What still differs in us (words; eu and jp the same):
  * - func_ovl10_12_800432B0 (6), func_ovl10_12_80044FEC (62) and
  *   func_ovl10_12_80046908 (2): ovl_10_11's 800431AC, 80043C2C and
  *   80044150, with the same differences (its header).
- * - func_ovl10_12_80043F14 (95): a word long. The original loads arg0
- *   into v1 at the end of both arms of `if (arg1 != 0)` and indexes
- *   80048CA0 with it in the loops; ours reloads it in each loop's
- *   preheader, and the blocks come out in another order. Its frame needs
- *   two unused words (an inlined call's parameters?); a static helper for
- *   the loops leaves a stub and is worse, and 80043E9C's body is written
- *   out (a call to it isn't inlined, the original's is).
+ * - func_ovl10_12_80047008 (11): the same code; the padding IDO puts after its
+ *   endless loop (to a 16-byte boundary) is a word longer
+ *   because 80044FEC is a word short (as in ovl_10_11's 80044C24).
  * - func_ovl10_12_80044C68 (12): s4 and s5 swap (arg0 and &80048D28[i]).
  * - func_ovl10_12_80046048 (9): pos and pos2 sit a word lower in the
  *   original, in the same frame.
@@ -26,6 +22,12 @@
  * (its draft's spelling, renamed); 80043018-80043F14, 80044168-800446B0,
  * 80044A58-80044C68 and 80045158-80046828 are its own (as ovl_10_08,
  * ovl_10_09 and ovl_10_13 have them, none of which is C yet).
+ *
+ * func_ovl10_12_80043F14's loops: the original keeps arg0 in v1
+ * from the ends of both arms of `if (arg1 != 0)` into the loops. An empty `if (arg0) {}` where the arms
+ * meet does it (found by the permuter; 95 words to 0). `arg0 * 0` in a
+ * loop's indices gets most of the way (72 words): what matters is a use of
+ * arg0 that IDO removes late.
  */
 
 #include "common.h"
@@ -1329,6 +1331,9 @@ void func_ovl10_12_80043F14(s32 arg0, s32 arg1) {
                 func_ovl10_12_80043E6C(arg0);
                 v = 1;
                 func_ovl10_12_80043DBC(arg0);
+            }
+            /* Nothing, but it keeps arg0 in v1 for the loops. */
+            if (arg0) {
             }
             if (D_ovl10_12_80048D28[arg0] & 1) {
                 for (j = 0; j < D_ovl10_12_80048F20[arg0]; j++) {

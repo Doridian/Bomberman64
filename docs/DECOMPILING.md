@@ -570,6 +570,14 @@ module's asm blocks, though the draft defines it.
   loops, 10 with one).
   In -O3 objects the other source is a static callee: the caller saves
   what the callee uses unsaved (86680's func_8026C0A8).
+- **An empty `if` can keep a parameter in a register.** Bank 0x10's
+  80043924 (ovl_10_09; 10_07, 10_08 and 10_12 have it) loads arg0 into
+  `v1` at the end of both arms of an `if` and keeps it for the loops
+  after them; without help IDO reloads it in each loop's preheader and
+  lays the blocks out differently. `if (arg0) {}` where the arms meet
+  reproduces it (95 words to 0 in each, found by the permuter): a use of
+  the parameter that IDO removes only after register allocation.
+  `arg0 * 0` in a loop's indices does much the same, less cleanly.
 - **Unsolved: a block boundary with no branch.** Two misses come from
   how as1 schedules a block, not from ugen, so `cc -c -S` (ugen's
   `u.out.s`, before as1) shows them. In each, adding a single label to

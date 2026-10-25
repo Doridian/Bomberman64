@@ -3,13 +3,16 @@
  * .bss and its .data tables. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 206, jp 206
+ * differing words: us 128, jp 206
  *
  * What still differs in us (words):
- * - func_ovl10_09_80043924 (95), 80044FEC (12), 8004576C (62), 800468FC
- *   (9), 80046C10 (9) and 800474A8 (2): ovl_10_08's 80043F34, 80044F98,
- *   800455FC, 8004675C, 80046A70 and 80047264 (ovl_10_12's), with the
- *   same differences (their headers).
+ * - func_ovl10_09_80044FEC (12), 8004576C (62), 800468FC (9), 80046C10
+ *   (9) and 800474A8 (2): ovl_10_08's 80044F98, 800455FC, 8004675C,
+ *   80046A70 and 80047264 (ovl_10_12's), with the same differences
+ *   (their headers).
+ * - func_ovl10_09_80047B70 (17): the same code; the padding IDO puts after its
+ *   endless loop (to a 16-byte boundary) is a word longer
+ *   because 8004576C is a word short (as in ovl_10_11's 80044C24).
  * - func_ovl10_09_80043238 (2): a `lui at` scheduled one place early, as
  *   in ovl_10_08's 800432B0.
  * - func_ovl10_09_80043B78 (1): pos a word high, as in ovl_10_08's
@@ -1627,6 +1630,9 @@ void func_ovl10_09_80043924(s32 arg0, s32 arg1) {
                 func_ovl10_09_8004387C(arg0);
                 v = 1;
                 func_ovl10_09_800437CC(arg0);
+            }
+            /* Nothing, but it keeps arg0 in v1 for the loops. */
+            if (arg0) {
             }
             if (D_ovl10_09_80049AA8[arg0] & 1) {
                 for (j = 0; j < D_ovl10_09_80049CA0[arg0]; j++) {
