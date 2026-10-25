@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4362
+ * differing words: us 4362, jp 4292
  *
  * A first draft from m2c: the logic is the original's, the layout isn't.
  * The pages are a table (D_ovl0B_04_800499B8: texts, handler, cursor
