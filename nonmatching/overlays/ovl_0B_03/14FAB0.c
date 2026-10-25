@@ -6,7 +6,7 @@
  * tables, .bss 0x1140, as the original's sizes). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4076
+ * differing words: us 4076, jp 4082
  *
  * A first draft from m2c (wk/ in scratch/0B_03/ of the main checkout has
  * the scripts): functions written last to first. The statics the original
