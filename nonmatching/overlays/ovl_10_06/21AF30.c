@@ -2199,33 +2199,20 @@ void func_ovl10_06_800446D0(void) {
 }
 
 void func_ovl10_06_800445DC(void) {
-    f32 sp4C;
-    f32 sp48;
-    f32 sp44;
-    f32 sp40;
-    f32 sp3C;
-    f32 sp38;
-    UnkStructA **var_s1;
-    s32 temp_v0;
-    s32 var_s0;
+    Vec3f a;
+    Vec3f b;
+    s32 i;
 
-    sp44 = 2000.0f;
-    sp4C = 800.0f;
-    sp48 = 0.0f;
-    sp38 = 3900.0f;
-    sp3C = D_ovl10_06_8004ADB8->unk40->unk14 + 200.0f;
-    sp40 = 2200.0f;
-    temp_v0 = func_ovl10_06_8004A0C0(4, &sp44, &sp38, D_ovl10_06_8004BAB0, 0x48);
-    D_ovl10_06_8004B7F0 = temp_v0;
-    var_s0 = 0;
-    if (temp_v0 > 0) {
-        var_s1 = D_ovl10_06_8004BAB0;
-        do {
-            func_ovl10_06_8004A068(*var_s1, (Vec3f *) &sp44);
-            func_ovl10_06_8004A668(&sp44);
-            var_s0 += 1;
-            var_s1 += 1;
-        } while (var_s0 < D_ovl10_06_8004B7F0);
+    a.x = 2000.0f;
+    a.z = 800.0f;
+    a.y = 0.0f;
+    b.x = 3900.0f;
+    b.y = D_ovl10_06_8004ADB8->unk40->unk14 + 200.0f;
+    b.z = 2200.0f;
+    D_ovl10_06_8004B7F0 = func_ovl10_06_8004A0C0(4, &a, &b, D_ovl10_06_8004BAB0, 0x48);
+    for (i = 0; i < D_ovl10_06_8004B7F0; i++) {
+        func_ovl10_06_8004A068(D_ovl10_06_8004BAB0[i], &a);
+        func_ovl10_06_8004A668(&a);
     }
 }
 
