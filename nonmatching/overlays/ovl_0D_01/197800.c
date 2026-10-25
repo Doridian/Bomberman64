@@ -5,7 +5,7 @@
  * few words), .data 0x3E0 and .bss 0x70 as the original.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1089
+ * differing words: us 1089, jp 1089
  *
  * The sibling of ovl_0D_04 and ovl_0D_06 (nonmatching/overlays): the gate
  * code (800444E0, 800448D4), the model tables, the setup's loops and the
