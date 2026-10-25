@@ -201,6 +201,7 @@ void func_ovl0F_04_80047AD0(f32 *);
 void func_ovl0F_04_80047AD8(void);
 void func_ovl0F_04_80047AE0(void);
 void func_ovl0F_04_80047B78(UnkStructA *, s32);
+UnkStructA *func_ovl0F_04_80047BB0(UnkStructA *);
 void func_ovl0F_04_80047B80(UnkStructA *, s32);
 void func_ovl0F_04_80047B90(UnkStructA *);
 void func_ovl0F_04_80047BF8(UnkStructA *);
