@@ -14,7 +14,12 @@
  *   order exactly, so the original has a block boundary there; the folded
  *   fake that fixed 80043A64 leaves its branch in here (a store fills its
  *   delay slot), and do/while(0), goto, labels, inlined statics, other
- *   fake tests and the permuter didn't give one.
+ *   fake tests and the permuter didn't give one. A grid of 19278 variants
+ *   of the store/call region (6 store forms, pointer and temp stores, 3
+ *   prelude forms, 17 empty or branch statements at 3 places, 7 call forms,
+ *   3 line joins) reached 2 words at best, never 0 or 1. ovl_0E_03's
+ *   func_ovl0E_03_800430A8 is the same region and went from 3 to 2 with
+ *   its stores on one line, as here.
  */
 #include "common.h"
 

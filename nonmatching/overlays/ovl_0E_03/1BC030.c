@@ -3,14 +3,15 @@
  * (.data 0x490, .rodata 0x70 and .bss 0x60 as the original; .text 0x20C0).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3, eu 3, jp 3
+ * differing words: us 2, eu 3, jp 3 (eu and jp not re-measured since the
+ * stores went onto one line; they can only be lower)
  *
  * What still differs in us (words):
- * - func_ovl0E_03_800430A8 (3): ovl_0E_12's 80043164: `sll t4,s3,5` (the
- *   next call's &D_80046B78[i]) is scheduled before the stores to unk0 and
- *   unk4; the original has it after them. Store order, one line or two, and
- *   the call on their line don't move it; the original seems to have a
- *   block boundary before the call (ovl_0E_12's header).
+ * - func_ovl0E_03_800430A8 (2): ovl_0E_12's 80043164: `sll t4,s3,5` (the
+ *   next call's &D_80046B78[i]) is scheduled before the store to unk4; the
+ *   original has it after the stores. The two stores on one line gave 2
+ *   (on separate lines, 3); no other form of the region reached less than
+ *   2 (ovl_0E_12's header, the 19k-variant grid).
  */
 #include "common.h"
 
@@ -951,8 +952,8 @@ void func_ovl0E_03_800430A8(void) {
                         D_ovl0E_03_80046B40[i].unk10 != 0xFFFF && D_ovl0E_03_80046B40[i].unk12 != 0xFFFF) {
                         func_ovl0E_03_80045B68(D_ovl0E_03_80046B40[i].unk4);
                     }
-                    D_ovl0E_03_80046B40[i].unk0 = NULL;
-                    D_ovl0E_03_80046B40[i].unk4 = -1;
+                    /* one line: see the header */
+                    D_ovl0E_03_80046B40[i].unk0 = NULL; D_ovl0E_03_80046B40[i].unk4 = -1;
                     func_ovl0E_03_80043060(&D_ovl0E_03_80046B78[i]);
                     func_ovl0E_03_800461E0(p->unk0);
                 } else {
