@@ -491,6 +491,16 @@ module's asm blocks, though the draft defines it.
 - **Check the delay slot of every `jal`.** m2c gave
   `func_ovl0C_01_80049BA0(void)`, but its callers load `a0 = 0x15` in the
   delay slot; with `(s32)` and the argument, several functions matched.
+- **A twin's C carries the twin's constants.** `scratch/tools/simil_all.py`
+  compares mnemonics, so a function that scores 1.00 may pass other
+  immediates (ovl_10_10's 800442B8 passes `0x28, 0x2E, 2, 0x10` where
+  ovl_10_06's needs `0x28, 0x2C, 1, 0xF`) or call another function
+  (ovl_10_13's 800477E8 against ovl_12_05's 80047DA4). Diff a copied
+  function after compiling.
+- **Strings come out in definition order.** An object's `.rodata` strings
+  follow the order their functions are defined, not emitted: ovl_10_06's
+  came out right only with 800430A8 defined above 80048FE8, and
+  ovl_10_13's with 80046DD8 above 80046E50.
 - **A ternary with equal arms keeps a constant out of a saved register.**
   An infinite loop's `0x01000000` was hoisted into `s3` (a bigger frame);
   `p->unk28 ? 0x01000000 : 0x01000000` leaves it a `lui` in a delay slot
