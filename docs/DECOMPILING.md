@@ -358,7 +358,12 @@ module's asm blocks, though the draft defines it.
     statics, defined below it comes out at its own turn (ovl_0D_04's
     func_80043F1C between 80043EA8 and 80043F24). The same holds for a
     non-empty global: ovl_0D_04's func_80043478 comes out after
-    800433F0 (pulled by 800435AC) only when defined above 800435AC.
+    800433F0 (pulled by 800435AC) only when defined above 800435AC;
+  - a big global that the original both inlines into a caller and emits
+    whole is too big to inline as one global, and as a static it isn't
+    emitted on its own: a global one-call wrapper around a static holding
+    the code does both (ovl_0D_03's 80043770, inlined into its handler's
+    case 3, 1025 to 791 words).
   Bank 0x0D's stage overlays (drafts of 0D_04 and 0D_05 in
   nonmatching/, not matching yet) add: ZeroJump 0xD08 (a position to its tile)
   fills 6 words, so its buffer is `s32 pos[6]` (that fixed two frames);
