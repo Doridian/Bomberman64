@@ -3,13 +3,15 @@
  * .bss. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 1366, jp 2496
+ * differing words: us 1335, jp 2496
  *
  * What still differs in us (words, as tools/nonmatching.py counts them):
  * - 800464B0 (4): v1 for v0; a third temporary grows the frame.
- * - The statics, compared with 80043010 as one run (1362). Each on its
- *   own (scratch/10_13/allf.py): 80043070 936, 80044E48 31 and 8004574C
- *   395 (frame and s-register choice): the cut-scenes the handler and
+ * - The statics, compared with 80043010 as one run (1331). Each on its
+ *   own (scratch/10_13/allf.py): 80043070 936 and 8004574C 395 (frame
+ *   and s-register choice); 80044E48 matches (its two unused pads give
+ *   the original's frame, with i and a between the vectors and angle).
+ *   They are the cut-scenes the handler and
  *   800474EC-800477E8 run. They save no callee-saved registers (their
  *   callers do), so they are static; they come first in the object.
  * - 80043070 is Hudson's loops with the original's frame (0xA0: two
@@ -1408,9 +1410,11 @@ loop_32:
 static void func_ovl10_13_80044E48(void) {
     Vec3f from;
     Vec3f to;
-    f32 angle;
     s32 i;
     f32 a;
+    f32 angle;
+    s32 pad1;
+    s32 pad2;
 
     func_ovl10_13_800497C8(1);
     if (D_ovl10_13_8004ADA8 != 0x1E) {
@@ -1431,10 +1435,10 @@ static void func_ovl10_13_80044E48(void) {
         D_ovl10_13_8004ADC4->unk40->unk48->unk4->unk4 = func_ovl10_13_80049D18(D_ovl10_13_8004ADC4->unk40, 0) - 0.01f;
         from.x = D_ovl10_13_8004ADC0->unk40->unk10;
         from.y = D_ovl10_13_8004ADC0->unk40->unk14;
-        to.y = 0.0f;
-        to.x = 2350.0f;
-        to.z = 1550.0f;
         from.z = D_ovl10_13_8004ADC0->unk40->unk18;
+        to.x = 2350.0f;
+        to.y = 0.0f;
+        to.z = 1550.0f;
         func_ovl10_13_80049F68(&from, &to, &angle);
         to.x = func_ovl10_13_8004A2D0(angle) * 800.0f + from.x;
         to.y = from.y;
