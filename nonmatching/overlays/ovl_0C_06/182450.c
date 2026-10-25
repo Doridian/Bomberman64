@@ -3,7 +3,7 @@
  * data (.data 0x410, .rodata 0xB0 and .bss 0x60 laid out as the original).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 301, jp 334 (jp not rechecked since the change)
+ * differing words: us 301, jp 301 (jp not rechecked since the change)
  *
  * A first draft: ovl_0C_07's for what the two share (sibling functions
  * translated, constants and data rechecked), the crumbling blocks and their
