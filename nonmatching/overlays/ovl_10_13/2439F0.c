@@ -3,17 +3,18 @@
  * .bss. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 4, jp 899
+ * differing words: us 2496, jp 2496
  *
  * What still differs in us (words, as tools/nonmatching.py counts them):
  * - 800464B0 (4): v1 for v0; a third temporary grows the frame.
- * - Not counted by nonmatching.py: the statics 80043070 (1365, m2c's C
- *   with its loops' counters merged: the original keeps `slti` only where
- *   a counter outlives its loop), 80044E48 (31) and 8004574C (394: frame
- *   and s-register choice), 1790 in all, the cut-scenes the handler and
- *   800474EC-800477E8 run (scratch/10_13/allf.py counts them from the
- *   object's .mdebug). They save no callee-saved registers (their callers
- *   do), so they are static; they come first in the object.
+ * - The statics, compared with 80043010 as one run (2492; the run is 0x20
+ *   short, so what follows a short static shifts). Each on its own
+ *   (scratch/10_13/allf.py): 80043070 1365 (m2c's C with its loops'
+ *   counters merged: the original keeps `slti` only where a counter
+ *   outlives its loop), 80044E48 31 and 8004574C 394 (frame and
+ *   s-register choice), 1790 in all: the cut-scenes the handler and
+ *   800474EC-800477E8 run. They save no callee-saved registers (their
+ *   callers do), so they are static; they come first in the object.
  *
  * The handler's cases 800460E0-800468BC are globals defined above the
  * handler: it pulls them out, with the statics, in the reverse order of
