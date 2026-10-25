@@ -3,7 +3,7 @@
  * data (.data and .bss as the original's sizes).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 8713
+ * differing words: us 8713, jp 8713
  *
  * A first complete draft: the functions are right, the layout is not yet.
  * ovl_0F_04's movers (8004464C and what it calls), ovl_0F_03's particles
