@@ -657,6 +657,26 @@ module's asm blocks, though the draft defines it.
   declared and first assigned. A file of small functions compiles in
   about 0.1 s, so trying every order (with pads) is cheap:
   `scratch/0C_01b/perm.py` (ovl_0C_01's 80043C20 and the eased moves).
+- **A float constant gets a saved register only if one is left over for
+  its whole life.** Every use of the same literal is one value, live from
+  its first use to its last; across calls IDO keeps it in a `$f2x` only
+  when the variables leave one free (and saving it pays, usually because
+  something else saves it anyway). Otherwise each use loads it again
+  (`lui`/`mtc1`, `lui`/`ori` into `a2`, or `lwc1`). In a test,
+  `g3(.., 1150.0f)` before and after a loop with a call was `lui/ori`
+  both times; with six floats live in a later loop it came from a saved
+  register (`mfc1 a2`); with four more floats live across its range,
+  `lui/ori` again. Two levers: `3`, `3.0` and `3.0f` are different
+  values (only mixed forms split; all ints act like all floats), so a
+  far use written as an int ends the range. ovl_10_13's 80043070 keeps
+  3.0f in `$f28` through two loops once the 0x2D5 block's stores are
+  `= 3` (936 words to 721), and 10.0f in its loop once `a.x = ... + 10`
+  (to 13). And more float locals: 8004574C's moves take the differences
+  into locals first (`a = 2000.0f - x; ... dx = a / 300.0f`), which
+  fills the registers and leaves 1150.0f and 1438.0f immediates (395 to
+  42 with the divisions' order). The other way, an extra live range
+  that m2c merged (one `x` for a sine and for a parabola) shows up as a
+  constant losing its register.
 - **Check m2c's local types.** Counters it gives as `s32` may be `s16`
   (an `sll`/`sra` pair after each change), and a volume it gives as `s8`
   may be `s32`, narrowed only by the callee's prototype (ovl_0C_06's
