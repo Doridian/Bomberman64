@@ -4,8 +4,12 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4362, jp 4292
+ * differing words: us 4204, jp 4292 (jp not re-measured after the order search)
  *
+ * Order (scratch/ord/search.py, hill-climb over definition order, scored by
+ * the emitted sequence's edit distance from the original's address order):
+ * distance 31 of 56 functions out of place, from 4362 words; the search
+ * stopped at its kick limit, so it is a local best. No static/global changes.
  * A first draft from m2c: the logic is the original's, the layout isn't.
  * The pages are a table (D_ovl0B_04_800499B8: texts, handler, cursor
  * table, set-up) that func_ovl0B_04_80043ADC runs in turn; pages 1-4 are
@@ -1717,18 +1721,6 @@ void func_ovl0B_04_80043E4C(s32 arg0, UnkStructA *arg1) {
     func_ovl0B_04_800487F0(arg0, p->unk10, p->unk14, p->unk18);
 }
 
-/* The fade's display list (ovl_0B_05's 80044DD8). */
-void func_ovl0B_04_80043CD0(s32 arg0, Gfx0B04 **arg1) {
-    Fade *fade = D_ovl0B_04_8004A3E4;
-    Gfx0B04 *gfx = *arg1;
-
-    { Gfx0B04 *g = gfx++; g->w0 = 0xFA000000; g->w1 = ((fade->unk4 & 0xFF) << 24) | ((fade->unk8 & 0xFF) << 16) | ((fade->unkC & 0xFF) << 8) | (fade->unk10 & 0xFF); }
-    { Gfx0B04 *g = gfx++; g->w0 = 0xFCFFFFFF; g->w1 = 0xFFFDF6FB; }
-    { Gfx0B04 *g = gfx++; g->w0 = 0xF7000000; g->w1 = 0x10001; }
-    { Gfx0B04 *g = gfx++; g->w0 = 0xF6000000 | (((fade->unk2C + (s32) fade->unk34) & 0x3FF) << 14) | (((fade->unk30 + (s32) (fade->unk34 * fade->unk20)) & 0x3FF) << 2); g->w1 = (((fade->unk2C - (s32) fade->unk34) & 0x3FF) << 14) | (((fade->unk30 - (s32) (fade->unk34 * fade->unk20)) & 0x3FF) << 2); }
-    *arg1 = gfx;
-}
-
 /* The menu task: each page in turn until one leaves with 0xFF. */
 void func_ovl0B_04_80043ADC(void) {
     Page *p;
@@ -1964,6 +1956,18 @@ void func_ovl0B_04_80043110(s32 arg0) {
             func_ovl0B_04_80047DE0(D_ovl0B_04_8004A060[12].unk0);
             break;
     }
+}
+
+/* The fade's display list (ovl_0B_05's 80044DD8). */
+void func_ovl0B_04_80043CD0(s32 arg0, Gfx0B04 **arg1) {
+    Fade *fade = D_ovl0B_04_8004A3E4;
+    Gfx0B04 *gfx = *arg1;
+
+    { Gfx0B04 *g = gfx++; g->w0 = 0xFA000000; g->w1 = ((fade->unk4 & 0xFF) << 24) | ((fade->unk8 & 0xFF) << 16) | ((fade->unkC & 0xFF) << 8) | (fade->unk10 & 0xFF); }
+    { Gfx0B04 *g = gfx++; g->w0 = 0xFCFFFFFF; g->w1 = 0xFFFDF6FB; }
+    { Gfx0B04 *g = gfx++; g->w0 = 0xF7000000; g->w1 = 0x10001; }
+    { Gfx0B04 *g = gfx++; g->w0 = 0xF6000000 | (((fade->unk2C + (s32) fade->unk34) & 0x3FF) << 14) | (((fade->unk30 + (s32) (fade->unk34 * fade->unk20)) & 0x3FF) << 2); g->w1 = (((fade->unk2C - (s32) fade->unk34) & 0x3FF) << 14) | (((fade->unk30 - (s32) (fade->unk34 * fade->unk20)) & 0x3FF) << 2); }
+    *arg1 = gfx;
 }
 
 /* An entry's object made as its Desc says. */
