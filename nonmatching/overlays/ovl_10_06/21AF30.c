@@ -1889,14 +1889,12 @@ void func_ovl10_06_80045598(void) {
 }
 
 void func_ovl10_06_80045518(void) {
-    s32 *var_v0;
+    s32 i;
 
     D_ovl10_06_8004B21C = 0;
-    var_v0 = D_ovl10_06_8004B240;
-    do {
-        var_v0 += 1;
-        (*(s32 *)((u8 *)(var_v0) + -4)) = 0;
-    } while (var_v0 != D_ovl10_06_8004B24C);
+    for (i = 0; i < 3; i++) {
+        D_ovl10_06_8004B240[i] = 0;
+    }
     func_ovl10_06_80045458(0);
     func_ovl10_06_80045458(1);
     func_ovl10_06_80045458(2);
