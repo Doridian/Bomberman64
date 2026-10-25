@@ -5,7 +5,7 @@
  * floats in another order). .text is the original's size. Not built into
  * the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 187, jp 1687
+ * differing words: us 187, jp 187
  *
  * What still differs in us (words, as tools/nonmatching.py counts them; a
  * static's words go to the named function before it):
