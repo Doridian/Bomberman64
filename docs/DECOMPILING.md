@@ -567,6 +567,18 @@ module's asm blocks, though the draft defines it.
 - **A count passed to a static** gives the original's `slt`/`bnez` where
   a constant limit gives `bne` (ovl_0A_01's 8004607C, called as
   `(1, LIGHTS)`).
+- **Fix a static's size before its code.** fcmp counts a run of statics
+  as one, so a static one word long or short shifts the rest of its run:
+  a `u16` local that fixed 8004311C's length took ovl_0A_06's first run
+  from 619 words to 30.
+- **`sw a0,0(sp)` with no argument set up** at a call to an inlined
+  static means the static has an unused first parameter the caller passes
+  its own `arg0` to (ovl_0A_06's 800452B8, which fixed its ten callers).
+- **A `move` per item in straight-line code can be an unrolled loop.**
+  ovl_0A_06's four colour commands came out right only as `for (i = 0; i
+  < 4; i++)` with `0xB2100000 | (i * 2)`.
+- **`bne` against the end where ours has `sltu`:** write the test as
+  `i != 4` (ovl_0A_06's 800436BC, 165 words to 12).
 - **Source order picks the order of constant loads.** Setting a float
   after a call instead of before it changed which `lui at` came first
   (ovl_0A_01's 80044A2C, 156 words to 11).
