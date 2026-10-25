@@ -491,6 +491,18 @@ module's asm blocks, though the draft defines it.
 - **Check the delay slot of every `jal`.** m2c gave
   `func_ovl0C_01_80049BA0(void)`, but its callers load `a0 = 0x15` in the
   delay slot; with `(s32)` and the argument, several functions matched.
+- **A function far too big with nothing inlined: check the `.bss` types.**
+  A generated `.bss` that split two `f32[10]` arrays into scalars and
+  `s32[6]` pieces turned ovl_10_06's 80047D14 into a pointer walk (0x2CC
+  bytes against 0xFC); with the arrays, `for (i = 0; i < 10; i++)`
+  matched.
+- **A callee's prototype can decide inlining.** ovl_10_06's 8004322C
+  stayed a call only once `func_ovl10_06_8004A380` was declared taking
+  its `s32` argument.
+- **Arguments moved from float registers held across a branch** (`mfc1`
+  after a `beqz`) were read into float locals before the `if`, not in its
+  condition (ovl_10_06's 80044D00, 119 words to 0, with an
+  `(f32, f32, f32)` prototype).
 - **A twin's C carries the twin's constants.** `scratch/tools/simil_all.py`
   compares mnemonics, so a function that scores 1.00 may pass other
   immediates (ovl_10_10's 800442B8 passes `0x28, 0x2E, 2, 0x10` where
