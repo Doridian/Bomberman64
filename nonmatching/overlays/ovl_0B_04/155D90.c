@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4120, jp 4193
+ * differing words: us 4119, jp 4193
  *
  * Order (scratch/ord/search.py, hill-climb over definition order, scored by
  * the emitted sequence's edit distance from the original's address order):
@@ -30,7 +30,8 @@
  * - 80043110 350, 800436C8 368, 80043CD0 211, 80043ADC 207,
  *   80043F24 362, 800444E8 579, 80044BE8 205, 800450C0 105,
  *   80045214 431, 800459C4 233, 80046180 544 (the statics after them);
- * - 80045AF0/80045D20/80045F50 25 each, 80045BF4/80045E24/80046054 73
+ * - 80045AF0/80045D20 25 each, 80045F50 24 (it passes D[0]'s value to
+ *   800458F4 by a cast, as the original does; its D[1] in $s1 isn't in C), 80045BF4/80045E24/80046054 73
  *   each, 80046B28 109, 80046FA8 79, 80046D74 73, 800471F4 77,
  *   80046AA0 42, 80046CEC/80046F20/8004716C 3 each;
  *   80046D74, 80046FA8 and 800471F4 have their 0x30-byte pad (the frame
@@ -1029,7 +1030,7 @@ u8 func_ovl0B_04_80045F50(u8 arg0, u16 arg1) {
         func_ovl0B_04_80045540(arg0, arg1, &ret);
     }
     if (ret == 0) {
-        func_ovl0B_04_800458F4(D_ovl0B_04_8004A2E0);
+        func_ovl0B_04_800458F4((s32 *) D_ovl0B_04_8004A2E0[0]);
         func_ovl0B_04_800440C8(&D_ovl0B_04_80049B20[2]);
     }
     return ret;
