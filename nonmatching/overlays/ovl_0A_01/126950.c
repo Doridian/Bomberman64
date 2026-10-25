@@ -3,7 +3,7 @@
  * function and its .data/.bss; .text 0x40C0 as the original.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 427, eu 4920, jp 4920
+ * differing words: us 286, eu 4920, jp 4920
  *
  * What still differs in us (words):
  * - func_ovl0A_01_80043028 (6): `beq a0,s0` where the original has
@@ -15,10 +15,13 @@
  * - func_ovl0A_01_800442B4 (144): frame 0x58, not 0x60: the original keeps
  *   a counter on the stack (sp+92), ours in s1, which renumbers the
  *   s registers after it; 5 words short.
- * - func_ovl0A_01_80044584 (170): s1 and s2 swapped (a table pointer and
- *   the inlined static's base); one word long, so the rest is shifted.
- * - func_ovl0A_01_80044F3C (37): constant loads scheduled differently;
- *   4 words long.
+ * - func_ovl0A_01_80044584 (25), in its static 80044A2C: the call to
+ *   80047DC8 (inlined from 80044A24) gets its stores scheduled before its
+ *   arguments, and `&fall` in s2 where the original has s1.
+ * - func_ovl0A_01_80044F3C (41): constant loads scheduled differently,
+ *   and the epilogue after its closing `while (1)` comes after 7 nops where
+ *   the original has 2 (the code before is the same length; the padding
+ *   keeps our epilogue at the object's offset 0x2200 whatever comes before).
  * - func_ovl0A_01_8004609C (48): $f24 where the original uses $f22, and
  *   the frame 8 bytes too big: 8004607C's count parameter gives the
  *   original's `slt` (with a constant 1 it was `bne`) but takes a slot the
@@ -1161,8 +1164,8 @@ static void func_ovl0A_01_80044A2C(void) {
             D_ovl0A_01_80048A84[1].obj->unk40->unk30 += 2.0f;
             D_ovl0A_01_80048A84[2].obj->unk40->unk28 += 3.0f;
             D_ovl0A_01_80048A84[2].obj->unk40->unk30 += 3.0f;
-            push = 3.8f;
             func_ovl0A_01_80044968(0xC9, speed, 4.0f);
+            push = 3.8f;
             D_ovl0A_01_800488D8[5].obj->unk40->unk1C -= 1.3f;
             fall = 3;
             if (i & 1) {
