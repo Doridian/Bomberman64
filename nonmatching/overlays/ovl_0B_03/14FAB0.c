@@ -6,7 +6,7 @@
  * tables, .bss 0x1140, as the original's sizes). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1725, eu 1725, jp 2683
+ * differing words: us 1685, eu 1725, jp 2683
  *
  * jp (`#if VERSION_JP`) has its own strings (80048AF4, 80048B60,
  * 80049144, and D_ovl0B_03_8004901C_jp for us's 80049168, with the
@@ -648,6 +648,9 @@ s32 func_ovl0B_03_80046850(u8 arg0, u16 arg1) {
 }
 
 void func_ovl0B_03_80046510(void) {
+    /* the original's frame has 32 bytes more than its locals: no stack
+     * address is taken, so this only keeps the frame the same size */
+    f32 pad[8];
     s32 i;
     s32 j;
     s32 k;
@@ -678,7 +681,7 @@ void func_ovl0B_03_80046510(void) {
     y0 = 0x18;
     for (i = 0; i < 3; i++) {
         k = i;
-        for (j = 0, x = 0; j < 5; j++, x += 0x40) {
+        for (j = 0, x = 0; x != 0x140; j++, x += 0x40) {
             a = &D_ovl0B_03_8004A340[i][j];
             obj = func_ovl0B_03_80047E98(0x30, 0);
             a->unk0 = obj;
@@ -712,6 +715,7 @@ void func_ovl0B_03_80046510(void) {
         func_ovl0B_03_80048350();
     }
 }
+
 
 /* The original passes n in $s2 (its callers' register). */
 static void func_ovl0B_03_800464B0(Model_ovl0B_03 *models, s32 n) {
