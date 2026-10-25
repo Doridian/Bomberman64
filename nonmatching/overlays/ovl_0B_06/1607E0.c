@@ -6,7 +6,7 @@
  * floats). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 3675, eu 4335, jp 4563
+ * differing words: us 3675, eu 3675, jp 3936
  * jp has no `#if VERSION_JP` yet: its strings, text positions and code
  * changes are not drafted (docs/DECOMPILING.md, "Versions", step 6).
  *
