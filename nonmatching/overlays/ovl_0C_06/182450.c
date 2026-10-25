@@ -3,7 +3,7 @@
  * data (.data 0x410, .rodata 0xB0 and .bss 0x60 laid out as the original).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 334, jp 334
+ * differing words: us 301, jp 334 (jp not rechecked since the change)
  *
  * A first draft: ovl_0C_07's for what the two share (sibling functions
  * translated, constants and data rechecked), the crumbling blocks and their
@@ -14,13 +14,18 @@
  * 80046CF0 and 8004696C (an s16 alpha).
  *
  * What still differs in us (words):
- * - func_ovl0C_06_80044340 (84), 80043248 (67), 80044494 (57): the
- *   original passes `arg ? 0x01000000 : 0x01000000` without folding it:
- *   a branch over a second copy of the constant (in the loops, two saved
- *   registers, one hoisted as the initial value).  Every ternary, if/else,
- *   cast or type mix tried folds to one `lui`; an inlined static
- *   `if (a) return K; return K;` keeps a branch but not this one.  The
- *   rest of each diff is the register allocation that follows.
+ * - 80043248 (55, its size 0x120 against 0x10C): the blocks' loop passes
+ *   `arg1 ? 0x01000000 : 0x01000000`, and the original keeps two constants
+ *   in saved registers.  `if (arg1) flag = K; else if (arg1 == 0) flag = K;`
+ *   with `s32 flag` declared at the top gives the branch and the second
+ *   copy, and it also fixed 800455DC (26 to 5).  The same form on 80044340
+ *   (84 to 88) and 80044494 (57 to 65) is worse, so only 3248 takes it.
+ * - func_ovl0C_06_80044340 (84), 80044494 (57): the original passes
+ *   `arg ? 0x01000000 : 0x01000000` without folding it: a branch over a
+ *   second copy of the constant.  Every ternary, if/else, cast, type mix,
+ *   identity op (`* 1`, `^ 0`, `>> 0`), macro with a parameter, nested
+ *   ternary, enum or two-local variant folds to one `lui`; a static const
+ *   gives an `lw` instead.  The rest of each diff is the register allocation.
  * - func_ovl0C_06_80046288 (38): ovl_0C_07's mover, word for word, but the
  *   original keeps obj->unk40 in v1 where this gives v0.
  * - func_ovl0C_06_800455DC (26): the original's frame is 0x10 bigger (lim
@@ -1859,10 +1864,16 @@ void func_ovl0C_06_80043354(UnkStruct_ovl0C_06_80049264 *arg0, UnkStruct_ovl0C_0
 void func_ovl0C_06_80043248(UnkStruct_ovl0C_06_8004914C *arg0, s32 arg1) {
     UnkStruct_ovl0C_06_8004914C *p;
     UnkStructA *obj;
+    s32 flag;
 
     for (p = arg0; p->unk2 != 0; p++) {
         obj = func_ovl0C_06_80048600(0x2B0, 0xD0, p->unk8, p->unk14, p->unk10);
-        func_ovl0C_06_800485B8(obj, arg1 ? 0x01000000 : 0x01000000);
+        if (arg1) {
+            flag = 0x01000000;
+        } else if (arg1 == 0) {
+            flag = 0x01000000;
+        }
+        func_ovl0C_06_800485B8(obj, flag);
         p->unk4 = obj;
         p->unkC = p->unk14;
         func_ovl0C_06_80047BF8(p->unk18, p->unk1A, p->unk1C, p->unk18 + 3, p->unk1C + 2, 0x11);
