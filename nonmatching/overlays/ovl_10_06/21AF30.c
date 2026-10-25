@@ -2,35 +2,39 @@
  * NON_MATCHING: ovl_10_06's game object, complete: every function, its
  * .data, .rodata and .bss (sizes 0x170/0x160/0x1080 as the original; .data
  * byte for byte, .rodata's strings and first floats in place, the later
- * floats in another order). .text is 0x120 bytes long. Not built into the
- * ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
+ * floats in another order). .text is the original's size. Not built into
+ * the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2563, jp 2563
+ * differing words: us 1687, jp 2563
  *
  * What still differs in us (words, as tools/nonmatching.py counts them; a
  * static's words go to the named function before it):
- * - first pass, m2c's C cleaned up only where it didn't compile, or
- *   rewritten where m2c's was wrong (80044EFC, 80044F8C, 80045888,
- *   800460C8, 800466C4, 8004683C, 80046B58, 80046D74, 80047810,
- *   800479B8, 80048110): 8004322C (5), 80043278 (18), 800434E0 (40),
- *   800435FC (40), 8004368C (8), 80043820 (25), 80043A68 (16), 80043B94
- *   (48), 80043CB0 (56), 80043F50 (19), 80043FF8 (57), 8004411C (55),
- *   800442D4 (2), 800443DC (7), 800445DC (58), 80044804 (6), 80044A54 (6),
- *   80044AE4 (3), 80044BCC (15), 80044D00 (119), 80044F8C (4), 800453A0
- *   (20), 80045458 (20), 80045518 (44), 800455EC (3), 8004584C (9),
- *   80045888 (214), 80045CE4 (152), 80045F9C (34), 800460C8 (2), 800463C0
- *   (24), 80046478 (91), 800465F4 (39), 800466C4 (18), 8004683C (30),
- *   80046A04 (60), 80046BF0 (19), 80046C64 (21), 80046D74 (223), 80047110
- *   (22), 80047308 (53), 800473FC (14), 80047450 (89), 80047634 (108),
- *   80047810 (15), 80047A50 (44), 80047B0C (3), 80047BE0 (18), 80047C98
- *   (16), 80047D14 (165: something is inlined into it, 0x2CC bytes against
- *   0xFC), 80047E10 (184), 80048110 (57), 80048498 (38), 80048944 (10),
- *   800489FC (84), 80049020 (13).
- * - 800434E0 and 800435FC are ovl_10_13's code and match; their words
- *   are the static 8004355C (ovl_10_10's 80043A0C, arguments in s2-s4),
- *   which comes out after 800435FC, not after 800434E0.
- * - Not drafted: the two empty stubs after 8004322C (0x80043268 and
- *   0x80043270, statics inlined somewhere).
+ * - m2c's C cleaned up only where it didn't compile, or rewritten where
+ *   m2c's was wrong (80044EFC, 80044F8C, 80045888, 800460C8, 800466C4,
+ *   8004683C, 80046B58, 80046D74, 80047810, 800479B8, 80048110) or where
+ *   a second pass matched it (8004322C-80043338's stubs, 800445DC,
+ *   80044D00, 80045518, 80047D14): 80043A68 (16), 80043CB0 (29),
+ *   80043FF8 (32), 8004411C (55), 800442D4 (2), 800443DC (7), 80044804
+ *   (6), 80044A54 (6), 80044AE4 (3), 80044BCC (15), 80044F8C (4), 80045458
+ *   (12), 800455EC (3), 8004584C (9), 80045CE4 (155), 80045F9C (34),
+ *   800460C8 (2), 800463C0 (24), 80046478 (91), 800465F4 (39), 800466C4
+ *   (18), 8004683C (30), 80046A04 (60), 80046BF0 (19), 80046C64 (21),
+ *   80046D74 (223), 80047110 (22), 800473FC (14), 80047450 (89), 80047634
+ *   (108), 80047810 (15), 80047B0C (3), 80047BE0 (6), 80047C98 (16),
+ *   80047E10 (141), 80048110 (57), 80048498 (38), 80048944 (10), 800489FC
+ *   (84), 80049020 (14).
+ * - 80045888 (104): its frame is right (pad2 fills what is probably an
+ *   inlined static's slots), but its t registers are one off from the
+ *   start and 8004AFF8's address is loaded late.
+ * - 80047308 (41): the angle test (`>= 0.0 && < 22.5`, empty) keeps a
+ *   second branch the original doesn't have; the fake keeps the tests at
+ *   all.
+ * - 80047A50 (10): one nop more after its loop.
+ * - 800434E0, 8004355C and 800435FC are defined above 8004368C so that it
+ *   pulls them (the static between the two globals, as in the original).
+ *   The stubs 80043268/80043270 and 80043330 are empty statics called by
+ *   80043278 and 80043338; 8004322C stays a call only with
+ *   func_ovl10_06_8004A380 taking its argument.
  *
  * ovl_10_06's game object, IDO -O3: the functions are written last to first
  * (IDO -O3 emits a file's functions in reverse). The task functions
@@ -38,7 +42,8 @@
  * 80043060, 80043338, 800433C8, 80044CAC and 80045598 are ovl_10_10's,
  * ovl_10_12's and ovl_10_13's, 80049118-800491F0 ovl_17_09's (renamed by
  * their asm); the rest is m2c's output (scratch/10_06/ in the checkout has
- * the scripts). 800430A8 is defined above 80048FE8, as in ovl_10_10, so
+ * the scripts; since the second pass the draft is edited directly, and
+ * scratch/10_06/p2/ has that pass's helpers). 800430A8 is defined above 80048FE8, as in ovl_10_10, so
  * the strings come out in the original's order. The tables 8004A998-
  * 8004A9C8 and 8004A9D4 are 800460C8's and 80045888's local initializers.
  * 80049208's fake keeps the .bss's unread words in place.
@@ -1169,26 +1174,24 @@ void func_ovl10_06_800473FC(void) {
 }
 
 void func_ovl10_06_80047308(void) {
-    f32 sp24;
-    f32 sp20;
-    f32 sp1C;
-    s32 *temp_v1;
-    s32 temp_t8;
-    void *temp_v0;
+    UnkStructA_40 *v;
+    f32 a;
+    f32 x;
+    f32 y;
+    f32 z;
 
-    temp_v0 = (*(void **)((u8 *)(D_ovl10_06_8004B9B0[D_ovl10_06_8004ACA8]) + 64));
-    if ((f64) (*(f32 *)((u8 *)(temp_v0) + 32)) >= 0.0) {
-
+    v = D_ovl10_06_8004B9B0[D_ovl10_06_8004ACA8]->unk40;
+    a = v->unk20;
+    if (a >= 0.0 && a < 22.5) {
+        if (v && v && v) {} /* fake */
     }
-    sp24 = (*(f32 *)((u8 *)(temp_v0) + 16)) - 20.0f;
-    sp20 = (*(f32 *)((u8 *)(temp_v0) + 20)) + 100.0f;
-    sp1C = (*(f32 *)((u8 *)(temp_v0) + 24)) + 40.0f;
+    x = v->unk10 - 20.0f;
+    y = v->unk14 + 100.0f;
+    z = v->unk18 + 40.0f;
     func_ovl10_06_80047110(D_ovl10_06_8004ACA8);
-    temp_t8 = D_ovl10_06_8004ACA8 * 4;
-    *(s32 *)((u8 *)D_ovl10_06_8004B4D0 + temp_t8) = 0;
-    temp_v1 = (s32 *)((u8 *)D_ovl10_06_8004B5D0 + temp_t8);
-    *temp_v1 &= ~4;
-    func_ovl10_06_8004A690(0x94, sp24, sp20, sp1C);
+    D_ovl10_06_8004B4D0[D_ovl10_06_8004ACA8] = 0;
+    D_ovl10_06_8004B5D0[D_ovl10_06_8004ACA8] &= ~4;
+    func_ovl10_06_8004A690(0x94, x, y, z);
 }
 
 void func_ovl10_06_80047110(s32 arg0) {
