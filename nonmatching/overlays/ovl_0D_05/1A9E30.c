@@ -2,12 +2,13 @@
  * NON_MATCHING: ovl_0D_05's stage object, complete: every function and its data.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 120, eu 124, jp 124
+ * differing words: us 120, eu 120, jp 120
  *
  * What still differs in us (words):
- * - func_ovl0D_05_80043018 (10): the original computes &D_80046170
- *   before the store to D_8004617C and loads [0]/[2] after it (as if they
- *   might alias); ours hoists the loads above the store.
+ * - func_ovl0D_05_80043018 (6): a fake `if (!D_ovl0D_05_8004614C) {}`
+ *   after the store to D_8004617C keeps the loads of D_80046170[0]/[2]
+ *   after it, as in the original, but the call's argument is reloaded
+ *   (`lw a0,0(v1)`) where the original moves it from v0.
  * - func_ovl0D_05_80043790 (109): the camera (ZeroJump 0x171A): the
  *   original puts 1600.0f in $f16 and copies it to $f14 and a3; ours loads
  *   it into $f14. One word long, so the rest is shifted.
