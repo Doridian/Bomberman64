@@ -499,6 +499,19 @@ module's asm blocks, though the draft defines it.
   go too early. Such a flag takes a stack slot like any local.
   In -O3 objects the other source is a static callee: the caller saves
   what the callee uses unsaved (86680's func_8026C0A8).
+- **Unsolved: a block boundary with no branch.** Two misses come from
+  how as1 schedules a block, not from ugen, so `cc -c -S` (ugen's
+  `u.out.s`, before as1) shows them. In each, adding a single label to
+  `u.out.s` reproduces the original:
+  - The camera set-up (ovl_0C_09's 80043D08, and ovl_0E_04, 12_01 and
+    12_03) needs a label after its hoisted invariants.
+  - The object set-up's epilogue (ovl_0C_07's 80044178, ovl_0C_08,
+    ovl_0C_04 and ovl_0E_13) needs a label before it, or as1 reverses
+    the s0-s2 restores after a `lw`, `lw`, `sw` chain.
+  Matched functions that restore s0 first reach their epilogue as a
+  branch target. No C has been found that leaves the label without a
+  branch. The scripts are in `scratch/0C_09/d08_block/` and
+  `scratch/epi/`.
 
 ## Versions
 
