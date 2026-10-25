@@ -513,6 +513,21 @@ module's asm blocks, though the draft defines it.
   rather than `j` in one loop. Three `f32` locals m2c passes as
   `(Vec3f *)&spXX` are one `Vec3f`. `li v0,5000; bnez; nop; b; li
   v0,8000` is `s->unk10 == 0 ? 8000 : 5000`.
+- **A callee's return type picks `v0` or `v1`.** After a call to a
+  function that returns a value, used or not, the next temporary goes in
+  `v1`. Declaring the ZeroJump stub 8004A148 `s32 (s32)` fixed ovl_10_13's
+  80047418 and four loads in 80047A0C.
+- **`slti` or `bne` in a counted loop follows the counter's life.** IDO
+  turns `i < N` into `!= N` (with N in a saved register) only when the
+  counter lives in that loop alone. m2c gives each loop its own counter;
+  one `i` shared by the loops, as the original had, restores `slti`
+  (ovl_10_13's 80048BBC, and 80043070 where the counter is also reused
+  for a count).
+- **The order of a call and an increment** is in the delay slots: `a0 =
+  i + 44` in the `jal`'s and `i++` in the next branch's means the call
+  comes first, whatever m2c wrote. An angle macro's step as an int
+  (`ANGLE_SUB(p->unk1C, 5)`) moves the constant's reload to the loop's
+  tail (80047A0C).
 - **A twin's C carries the twin's constants.** `scratch/tools/simil_all.py`
   compares mnemonics, so a function that scores 1.00 may pass other
   immediates (ovl_10_10's 800442B8 passes `0x28, 0x2E, 2, 0x10` where
