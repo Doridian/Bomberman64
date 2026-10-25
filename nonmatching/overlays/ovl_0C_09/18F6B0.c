@@ -3,7 +3,7 @@
  * data (.data 0x270, .rodata 0xA0 and .bss 0x60 laid out as the original).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 23, jp 23
+ * differing words: us 21 (jp 23 as last recorded; not rebuilt for jp here)
  *
  * Float zeros come in two kinds: the original keeps the zero it compares
  * with (written `0`) in one register and the zero it stores (`0.0f`) in
@@ -17,8 +17,13 @@
  *   and the D_ovl0C_09_80047B10 address come out in another order) and the
  *   store of D_ovl0C_09_80047B00 is one slot later.  ovl_12_03's 8004316C
  *   spelling (macro, fake, static defined above) doesn't give it here.
- * - func_ovl0C_09_80044BA4 (2): `hit = FALSE` is scheduled two words
- *   early.
+ *   Tried, none below 21: the macro's statements in any order (y=0 first,
+ *   z first, the store before the y+=100), the fake dropped or moved to the
+ *   top, all on one line, 100.0f * x, y = y + 100.0f, an f32 local copy of
+ *   x, s16 z, and a while loop for the count.  Moving the store earlier
+ *   or the z store first is worse (36, 59).
+ * - func_ovl0C_09_80044BA4: 0 (`hit = FALSE` shares its line with the
+ *   while, which keeps it after the lw of obj->unk40).
  */
 #include "common.h"
 
@@ -726,8 +731,7 @@ void func_ovl0C_09_80044BA4(void) {
     snd.unk8 = 60;
     func_ovl0C_09_80047020(&snd);
     p->unk48->unk4->unk4 = func_ovl0C_09_80046C18(p, 0) - 0.01f;
-    hit = FALSE;
-    while (obj->unk40->unk18 > 800.0f) {
+    hit = FALSE; while (obj->unk40->unk18 > 800.0f) {
         if (obj->unk40->unk18 < 1500.0f && hit == FALSE) {
             func_ovl0C_09_800475B0(0x168);
             hit = TRUE;
