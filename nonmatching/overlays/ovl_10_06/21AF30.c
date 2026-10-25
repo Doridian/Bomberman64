@@ -5,7 +5,7 @@
  * floats in another order). .text is the original's size. Not built into
  * the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 268, jp 1687
+ * differing words: us 219, jp 1687
  *
  * What still differs in us (words, as tools/nonmatching.py counts them; a
  * static's words go to the named function before it):
@@ -26,10 +26,10 @@
  * - 80045888 (104): its frame is right (pad2 fills what is probably an
  *   inlined static's slots), but its t registers are one off from the
  *   start and 8004AFF8's address is loaded late.
- * - 80047308 (41): the angle test (`>= 0.0 && < 22.5`, empty) keeps a
+ * - 80047308 (0): the angle test (`>= 0.0 && < 22.5`, empty) keeps a
  *   second branch the original doesn't have; the fake keeps the tests at
  *   all.
- * - 80047A50 (8): one nop more after its loop.
+ * - 80047A50 (0): one nop more after its loop.
  * - 800434E0, 8004355C and 800435FC are defined above 8004368C so that it
  *   pulls them (the static between the two globals, as in the original).
  *   The stubs 80043268/80043270 and 80043330 are empty statics called by
@@ -1068,8 +1068,10 @@ void func_ovl10_06_80047308(void) {
 
     v = D_ovl10_06_8004B9B0[D_ovl10_06_8004ACA8]->unk40;
     a = v->unk20;
+    /* An empty chain of angle tests; IDO keeps the first's compares. The
+       second test's bounds are a guess: no constant of it survives. */
     if (a >= 0.0 && a < 22.5) {
-        if (v && v && v) {} /* fake */
+    } else if (a >= 22.5 && a < 67.5) {
     }
     x = v->unk10 - 20.0f;
     y = v->unk14 + 100.0f;
