@@ -3,32 +3,33 @@
  * data (.data and .bss as the original's sizes).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 8713, jp 8713
+ * differing words: us 3482
  *
- * A first complete draft: the functions are right, the layout is not yet.
- * ovl_0F_04's movers (8004464C and what it calls), ovl_0F_03's particles
- * (8004540C, 80043100) and ovl_17_09's small globals are copied with their
- * spelling. What still differs in us (words, by tools/nonmatching.py's
- * ranges, which take in the statics after each global):
- * - The order, most of the count (80043298 2097, 80043628 2513, 800452CC
- *   804, 8004529C 278, 80043348 419, 80044E54 277). Emitted here:
- *   3010 +3030 +3094 +3100 324C 3298 540C 3348 +38C0 +(80043018, the count
- *   loop, not inlined) +3504 +3588 3B0C 413C +3468 3628 5DD4 5158 529C +41CC
- *   +435C +4408 464C 4E54 52CC 5FB8; the original: 3010 +3030 +3094 +3100
- *   324C 3298 3348 +3468 +3504 +3588 3628 +38C0 3B0C 413C +41CC +435C +4408
- *   464C 4E54 5158 529C 52CC 540C 5DD4 +5E40 5FB8. Two things are known to
- *   be wrong: func_ovl0F_01_80045E40 (case 2's movers, a static taking its
- *   argument in s0) is inlined into the handler here (defined after the
- *   handler it is inlined too), and func_ovl0F_01_80043018 is not inlined.
- *   The original leaves 51 stubs (3 after 80043010, 4 after 80043094, 2
- *   after 80043100, 8 before 80043B0C, 5 after 8004435C, 14 at the end, ...):
- *   its handler is split into inlined statics as ovl_0F_03's is, which is
- *   probably also what keeps 80045E40 a call (the inliner's size limit).
- * - func_ovl0F_01_8004435C is case 2's tables (ovl_0F_04's 800460C4), the
- *   one handler static that stays a call.
- * - 8004540C (620), 8004464C (477), 80043B0C (363) and the handler (696,
- *   with 80045E40 inside) also differ in registers and frames.
- * - 80045DD4, 80045158, 80046988, 800469BC, 80046A04 and 80046A60 match.
+ * The definition order is a hill-climb's (scratch/ovl_0F_01/search.py, from
+ * the committed order, scored by distance from the original's emitted order,
+ * words as the tie-break): 8713 -> 3482 words, emitted distance 14. The
+ * address-taken functions (8004529C, 80045158, 80045DD4, 800452CC, 80044E54,
+ * 8004464C, 80043628, 8004413C, 80043B0C, 80043348, 8004540C, 80043298, ...)
+ * stay below 80043010 in emission, which stays first; no static was made
+ * static for the count. Five statics are global here (80043094, 80043468,
+ * 80043588, 800438C0, 80045E40); those are the search's flips, and the
+ * original's linkage for them is not known from the asm.
+ *
+ * Emitted here: 3010 3094 324C 3298 3348 3468 +3504 3588 3628 38C0 +324C
+ * 3B0C 413C +41CC +435C +4408 464C 4E54 52CC 5158 529C +3100 540C 5DD4
+ * 5E40 +3030 5FB8 6988 69BC 6A04 6A60; the original: 3010 +3030 +3094 +3100
+ * 324C 3298 3348 +3468 +3504 +3588 3628 +38C0 3B0C 413C +41CC +435C +4408
+ * 464C 4E54 5158 529C 52CC 540C 5DD4 +5E40 5FB8. What still differs:
+ * - func_ovl0F_01_80043B0C (355), 80044E54 (277), 8004413C (289),
+ *   8004464C (477), 80043094 (106), 80045E40 (123): frames and registers.
+ * - func_ovl0F_01_8004540C (620), 80045FB8 (610), 80043628 (152),
+ *   800438C0 (178), 80043588 (49), 80043468 (70): the same, and the
+ *   handler's inlined statics.
+ * - func_ovl0F_01_80043010 (31 words; its size here is 0x8 against 0x84):
+ *   the entry is empty in this draft, and its original is larger.
+ * - 80045DD4 (4), 8004324C (2), 800452CC (56), 8004529C (83) are close.
+ * - 80043298, 80043348, 80045158, 80046988, 800469BC, 80046A04 and 80046A60
+ *   match.
  */
 #include "common.h"
 
@@ -243,11 +244,13 @@ void func_ovl0F_01_800480F0(void);
 void func_ovl0F_01_800480F8(void);
 
 /* this file's */
+static void func_ovl0F_01_8004435C(void);
+static void func_ovl0F_01_80043030(s32 n, char *msg);
 void func_ovl0F_01_80046A60(void);
 void func_ovl0F_01_80046A04(f32 arg0, f32 arg1, f32 arg2);
 void func_ovl0F_01_800469BC(f32 arg0);
 void func_ovl0F_01_80046988(s32 arg0, UnkStructA *arg1);
-static void func_ovl0F_01_80045E40(UnkStructA **arg0);
+void func_ovl0F_01_80045FB8(s32 arg0);
 void func_ovl0F_01_80045DD4(void);
 void func_ovl0F_01_8004540C(s32 arg0, UnkStruct_ovl0F_01_Gfx **arg1);
 static f32 func_ovl0F_01_80045404(f32 v);
@@ -257,24 +260,22 @@ s32 func_ovl0F_01_8004529C(s32 arg0);
 void func_ovl0F_01_80045158(void);
 void func_ovl0F_01_80044E54(UnkStructA *arg0);
 void func_ovl0F_01_8004464C(void);
+void func_ovl0F_01_80045E40(UnkStructA **arg0);
 static void func_ovl0F_01_80044408(s32 arg0, s32 arg1, s32 arg2, s32 flag);
 static void func_ovl0F_01_800441CC(s16 i);
 void func_ovl0F_01_8004413C(UnkStructA *obj);
 void func_ovl0F_01_80043B0C(void);
-static s32 func_ovl0F_01_800438C0(f32 *x);
+static void func_ovl0F_01_80043018(s32 count, UnkStruct_ovl0F_01_80048264 *p);
+s32 func_ovl0F_01_800438C0(f32 *x);
 void func_ovl0F_01_80043628(void);
-static void func_ovl0F_01_80043588(UnkStruct_ovl0F_01_80048264 *p, s32 count);
-static void func_ovl0F_01_80043504(UnkStruct_ovl0F_01_80048264 *arg0);
-static void func_ovl0F_01_80043468(UnkStructA *obj);
+void func_ovl0F_01_80043588(UnkStruct_ovl0F_01_80048264 *p, s32 count);
+void func_ovl0F_01_80043468(UnkStructA *obj);
 void func_ovl0F_01_80043348(UnkStructA *arg0);
 void func_ovl0F_01_80043298(void);
 void func_ovl0F_01_8004324C(void);
 static void func_ovl0F_01_80043100(UnkStruct_ovl0F_01_80048798 *p);
-static void func_ovl0F_01_80043094(s32 *arg0);
-static void func_ovl0F_01_80043030(s32 n, char *msg);
-static void func_ovl0F_01_80043018(s32 count, UnkStruct_ovl0F_01_80048264 *p);
-static void func_ovl0F_01_8004435C(void);
-void func_ovl0F_01_80045FB8(s32 arg0);
+static void func_ovl0F_01_80043504(UnkStruct_ovl0F_01_80048264 *arg0);
+void func_ovl0F_01_80043094(s32 *arg0);
 void func_ovl0F_01_80043010(void);
 
 /* .bss */
@@ -396,6 +397,31 @@ char D_ovl0F_01_80048584[] = "WAP WM1 WG1 WSH WDN WB1 ST1 WDNW WB9 ST1";
 char D_ovl0F_01_800485B0[] = "WM1 WG1 WSH WAP WDS WB2 ST30";
 char D_ovl0F_01_800485D0[] = "WM1 WG1 WSH WAP WDE WB1 ST30";
 
+/* case 2's: the stage's tables */
+static void func_ovl0F_01_8004435C(void) {
+    s32 count;
+    u32 (*p)[3];
+    s32 i;
+
+    func_ovl0F_01_80047CF0(D_ovl0F_01_80048438);
+    p = D_ovl0F_01_80048488;
+    count = 6;
+    for (i = 0; i < count; i++) {
+        func_ovl0F_01_80047E98((*p)[0], (*p)[1], (*p)[2]);
+        p++;
+    }
+}
+
+/* the cut-scene: a task counts n frames while a message shows */
+static void func_ovl0F_01_80043030(s32 n, char *msg) {
+    func_ovl0F_01_800470D8(1);
+    func_ovl0F_01_80047E18();
+    func_ovl0F_01_80047988(func_ovl0F_01_80045DD4, (void *) n, 0, 0, 0x130);
+    func_ovl0F_01_80047040(msg);
+    func_ovl0F_01_800470D8(0);
+    func_ovl0F_01_80047040(D_ovl0F_01_80048580);
+}
+
 void func_ovl0F_01_80046A60(void) {
     D_ovl0F_01_80048774 = -1;
     D_ovl0F_01_80048778 = -1;
@@ -421,37 +447,211 @@ void func_ovl0F_01_80046988(s32 arg0, UnkStructA *arg1) {
     func_ovl0F_01_80047F30(arg0, p->unk10, p->unk14, p->unk18);
 }
 
-/* case 2's: the movers and their script */
-static void func_ovl0F_01_80045E40(UnkStructA **arg0) {
+/* The overlay's handler: the entry returns it to the loader. */
+void func_ovl0F_01_80045FB8(s32 arg0) {
+    UnkStruct_ovl0F_01_800480D8 *q;
+    f32 y;
     s32 i;
 
-    D_ovl0F_01_80048938.unk0 = func_ovl0F_01_80047078(func_ovl0F_01_80047018());
-    D_ovl0F_01_80048938.unk4 = arg0;
-    D_ovl0F_01_80048938.unkC = 0;
-    D_ovl0F_01_80048938.unk10 = 0;
-    D_ovl0F_01_80048938.unk14 = 0;
-    D_ovl0F_01_80048938.unk16 = -1;
-    D_ovl0F_01_80048938.unk8 = 0.0f;
-    D_ovl0F_01_80048148 = 1;
-    D_ovl0F_01_80048938.unk18 = D_ovl0F_01_8004814C;
-    D_ovl0F_01_80048938.unk20 = func_ovl0F_01_800452CC;
-    D_ovl0F_01_80048264[0].unkC = 0.0f;
-    D_ovl0F_01_80048264[0].unk14 = 6.0f;
-    D_ovl0F_01_80048264[0].unk1C = 90.0f;
-    D_ovl0F_01_80048264[1].unkC = 0.0f;
-    D_ovl0F_01_80048264[1].unk14 = 11.0f;
-    D_ovl0F_01_80048264[1].unk1C = 90.0f;
-    D_ovl0F_01_80048264[2].unkC = 0.0f;
-    D_ovl0F_01_80048264[2].unk14 = 17.0f;
-    D_ovl0F_01_80048264[2].unk1C = 90.0f;
-    func_ovl0F_01_80043588(D_ovl0F_01_80048264, 6);
-    for (i = 0; i < 6; i++) {
-        func_ovl0F_01_80047838(func_ovl0F_01_80047870(*D_ovl0F_01_80048264[i].unk0), 0x02100000);
-        D_ovl0F_01_800481D4[i].unk11 = 0;
-        D_ovl0F_01_80048938.unk20(i, 0);
+    switch (arg0) {
+        case 2:
+            D_ovl0F_01_80048434 = 0;
+            D_ovl0F_01_80048790 = func_ovl0F_01_80046F88();
+            func_ovl0F_01_8004435C();
+            func_ovl0F_01_80046E38(0x223);
+            func_ovl0F_01_80046E50(0x237);
+            D_ovl0F_01_8004842C = 0;
+            D_ovl0F_01_80048430 = func_ovl0F_01_80047988(func_ovl0F_01_80043628, NULL, 0, 0, 0x110);
+            func_ovl0F_01_80046FE8();
+            func_ovl0F_01_80045E40(&D_ovl0F_01_80048428);
+            func_ovl0F_01_80046F18(func_ovl0F_01_8004413C, 5);
+            D_ovl0F_01_8004841C = func_ovl0F_01_80047988(func_ovl0F_01_80043B0C, NULL, 0, 0, 0x110);
+            break;
+        case 16:
+            func_ovl0F_01_80046FF0(0x18, 3, 0x10);
+            break;
+        case 17:
+            func_ovl0F_01_80046FF0(0xD, 0, 8);
+            break;
+        case 18:
+            func_ovl0F_01_80047030(0x40);
+            func_ovl0F_01_80046FF0(6, 1, 0x1A);
+            break;
+        case 20:
+            func_ovl0F_01_80047698(315.0f, 32768.0f, 32768.0f);
+            func_ovl0F_01_80047030(0xC0);
+            func_ovl0F_01_80046FF0(0x2D, 1, 0x18);
+            break;
+        case 21:
+            func_ovl0F_01_80047C68(1);
+            func_ovl0F_01_80047030(0x40);
+            func_ovl0F_01_80046FF0(1, 4, 0xC);
+            func_ovl0F_01_8004324C();
+            func_ovl0F_01_80046FC0(0x58, 0x17);
+            break;
+        case 22:
+            func_ovl0F_01_80047C68(1);
+            func_ovl0F_01_80047030(0xC0);
+            func_ovl0F_01_80046FF0(0x2E, 4, 0xB);
+            func_ovl0F_01_8004324C();
+            func_ovl0F_01_80046FC0(0x58, 0x18);
+            break;
+        case 23:
+            func_ovl0F_01_80046FF0(0xE, 0, 0xC);
+            break;
+        case 24:
+            func_ovl0F_01_80046FF0(0x21, 0, 0xB);
+            break;
+        case 25:
+            func_ovl0F_01_80047030(0);
+            func_ovl0F_01_80046FF0(0x1B, 0, 0xE);
+            break;
+        case 4:
+            func_ovl0F_01_80047048();
+            func_ovl0F_01_80046F20(func_ovl0F_01_80043348);
+            func_ovl0F_01_800476D8(0x5F);
+            func_ovl0F_01_80047728(2200.0f, 1600.0f, 800.0f, 2000.0f);
+            func_ovl0F_01_800477A8(800.0f, 1200.0f);
+            func_ovl0F_01_80047738(2400.0f, 1600.0f, 2400.0f, 1600.0f);
+            func_ovl0F_01_80047730(70.0f, 55.0f);
+            func_ovl0F_01_80047CD8(0xE6, 0xF0, 0xFF);
+            func_ovl0F_01_80047CC8(0x3B1, 0x3CA, 0xE6, 0xF0, 0xFF);
+            D_ovl0F_01_80048130 = func_ovl0F_01_80047508(0x258);
+            D_ovl0F_01_8004878C = func_ovl0F_01_80047598(func_ovl0F_01_8004540C, -60);
+            D_ovl0F_01_8004878C->unkC |= 0x210;
+            for (i = 0; i < 20; i++) {
+                func_ovl0F_01_80043100(&D_ovl0F_01_80048798[i]);
+                D_ovl0F_01_80048798[i].unk4 = func_ovl0F_01_80047B48(240);
+            }
+            func_ovl0F_01_80047780(&D_ovl0F_01_80048928);
+            D_ovl0F_01_8004813C = 0.0f;
+            D_ovl0F_01_80048140 = 0.0f;
+            D_ovl0F_01_80048144 = 1.0f;
+            func_ovl0F_01_80047C00(0x407);
+            func_ovl0F_01_80047918(40.0f);
+            func_ovl0F_01_80047920(30);
+            if (*D_ovl0F_01_80048790 & 4) {
+                func_ovl0F_01_80047698(135.0f, 32768.0f, 32768.0f);
+                func_ovl0F_01_80047988(func_ovl0F_01_80043298, NULL, 0, 0, 0x130);
+                func_ovl0F_01_800476E0(0xF);
+                func_ovl0F_01_800476F0(1);
+            }
+            break;
+        case 5:
+            switch (func_ovl0F_01_80046F38()) {
+                case 18:
+                    func_ovl0F_01_80047038(D_ovl0F_01_80048508[0].unk0, D_ovl0F_01_80048508[0].unk4,
+                                           D_ovl0F_01_80048508[0].unk8, D_ovl0F_01_80048508[0].unkC,
+                                           D_ovl0F_01_80048508[0].unk10, D_ovl0F_01_80048508[0].unk14,
+                                           D_ovl0F_01_80048508[0].unk18);
+                    break;
+                case 20:
+                    func_ovl0F_01_80047038(D_ovl0F_01_80048508[1].unk0, D_ovl0F_01_80048508[1].unk4,
+                                           D_ovl0F_01_80048508[1].unk8, D_ovl0F_01_80048508[1].unkC,
+                                           D_ovl0F_01_80048508[1].unk10, D_ovl0F_01_80048508[1].unk14,
+                                           D_ovl0F_01_80048508[1].unk18);
+                    break;
+                case 21:
+                    func_ovl0F_01_80047038(D_ovl0F_01_80048508[2].unk0, D_ovl0F_01_80048508[2].unk4,
+                                           D_ovl0F_01_80048508[2].unk8, D_ovl0F_01_80048508[2].unkC,
+                                           D_ovl0F_01_80048508[2].unk10, D_ovl0F_01_80048508[2].unk14,
+                                           D_ovl0F_01_80048508[2].unk18);
+                    break;
+                case 22:
+                    func_ovl0F_01_80047038(D_ovl0F_01_80048508[3].unk0, D_ovl0F_01_80048508[3].unk4,
+                                           D_ovl0F_01_80048508[3].unk8, D_ovl0F_01_80048508[3].unkC,
+                                           D_ovl0F_01_80048508[3].unk10, D_ovl0F_01_80048508[3].unk14,
+                                           D_ovl0F_01_80048508[3].unk18);
+                    break;
+            }
+            break;
+        case 0x50:
+            func_ovl0F_01_80043094(D_ovl0F_01_800484D0);
+            func_ovl0F_01_80043094(D_ovl0F_01_800484EC);
+            break;
+        case 0x52:
+            if (func_ovl0F_01_80047000(1, 0x15, 1, 0x15) != 0 && func_ovl0F_01_80047C10(0x406) == 0) {
+                func_ovl0F_01_80047C00(0x406);
+                if (func_ovl0F_01_800476C8() == 1) {
+                    func_ovl0F_01_800476D0();
+                }
+                func_ovl0F_01_80047798();
+                func_ovl0F_01_800476E0(0x1F);
+                func_ovl0F_01_80047698(271.0f, 50.4f, 1728.0f);
+                func_ovl0F_01_80047688(-627.4f, 2685.0f, 3200.3f);
+                func_ovl0F_01_80047678(447.4f, 1425.9f, 2032.76f);
+                func_ovl0F_01_80043030(30, D_ovl0F_01_800485B0);
+            }
+            break;
+        case 0x53:
+            if (func_ovl0F_01_80047000(2, 0x15, 2, 0x15) != 0 && func_ovl0F_01_80047C10(0x406) != 0) {
+                func_ovl0F_01_80047C08(0x406);
+                func_ovl0F_01_800476D8(0x1F);
+                func_ovl0F_01_80047668(1);
+                func_ovl0F_01_800477A0();
+                func_ovl0F_01_80047768(D_ovl0F_01_80048750);
+                func_ovl0F_01_80043030(30, D_ovl0F_01_800485D0);
+            }
+            break;
+        case 15:
+            if (func_ovl0F_01_80047008(0xD, 0, 3, 0xD, 3) != 0) {
+                y = func_ovl0F_01_80047078(func_ovl0F_01_80047018())->unk40->unk20;
+                if (135.0f <= y && y <= 225.0f) {
+                    switch (D_ovl0F_01_8004842C) {
+                        case 0:
+                            func_ovl0F_01_800475A0(0x275, 1);
+                            break;
+                        case 1:
+                            func_ovl0F_01_800475A0(0x276, 1);
+                            break;
+                    }
+                }
+            }
+            break;
+        case 1:
+            func_ovl0F_01_80043018(3, D_ovl0F_01_8004836C);
+            if (D_ovl0F_01_8004841C != -1) {
+                func_ovl0F_01_80047990(D_ovl0F_01_8004841C);
+            }
+            func_ovl0F_01_80047528(D_ovl0F_01_8004878C);
+            func_ovl0F_01_80043018(1, &D_ovl0F_01_8004845C);
+            func_ovl0F_01_80047510(0x258);
+            if (D_ovl0F_01_80048430 != -1) {
+                func_ovl0F_01_80047990(D_ovl0F_01_80048430);
+                D_ovl0F_01_80048430 = -1;
+            }
+            if (*D_ovl0F_01_80048790 & 4) {
+                func_ovl0F_01_800480D8(2)->unkC->unkC |= 1;
+                func_ovl0F_01_80047CD8(0, 0, 0);
+                func_ovl0F_01_800480C8();
+                q = func_ovl0F_01_800480D8(4);
+                if (q->unkC != NULL) {
+                    func_ovl0F_01_80047520(q->unkC);
+                }
+                q->unkC = NULL;
+                func_ovl0F_01_800480F8();
+            }
+            break;
+        case 12:
+            func_ovl0F_01_80047080(1);
+            break;
+        case 3:
+            D_ovl0F_01_80048434 = 1;
+            D_ovl0F_01_8004876C = func_ovl0F_01_80047018();
+            func_ovl0F_01_80046FF8(&D_ovl0F_01_80048760);
+            func_ovl0F_01_80047020(D_ovl0F_01_8004876C, D_ovl0F_01_80048750);
+            break;
+        case 6:
+        case 7:
+        case 8:
+        case 9:
+        case 10:
+        case 11:
+        case 13:
+        case 14:
+        case 19:
+            break;
     }
-    func_ovl0F_01_80046F70(func_ovl0F_01_80044E54);
-    func_ovl0F_01_80047988(func_ovl0F_01_8004464C, NULL, 0, 0, 0x110);
 }
 
 void func_ovl0F_01_80045DD4(void) {
@@ -785,6 +985,39 @@ void func_ovl0F_01_8004464C(void) {
     func_ovl0F_01_80047998();
 }
 
+/* case 2's: the movers and their script */
+void func_ovl0F_01_80045E40(UnkStructA **arg0) {
+    s32 i;
+
+    D_ovl0F_01_80048938.unk0 = func_ovl0F_01_80047078(func_ovl0F_01_80047018());
+    D_ovl0F_01_80048938.unk4 = arg0;
+    D_ovl0F_01_80048938.unkC = 0;
+    D_ovl0F_01_80048938.unk10 = 0;
+    D_ovl0F_01_80048938.unk14 = 0;
+    D_ovl0F_01_80048938.unk16 = -1;
+    D_ovl0F_01_80048938.unk8 = 0.0f;
+    D_ovl0F_01_80048148 = 1;
+    D_ovl0F_01_80048938.unk18 = D_ovl0F_01_8004814C;
+    D_ovl0F_01_80048938.unk20 = func_ovl0F_01_800452CC;
+    D_ovl0F_01_80048264[0].unkC = 0.0f;
+    D_ovl0F_01_80048264[0].unk14 = 6.0f;
+    D_ovl0F_01_80048264[0].unk1C = 90.0f;
+    D_ovl0F_01_80048264[1].unkC = 0.0f;
+    D_ovl0F_01_80048264[1].unk14 = 11.0f;
+    D_ovl0F_01_80048264[1].unk1C = 90.0f;
+    D_ovl0F_01_80048264[2].unkC = 0.0f;
+    D_ovl0F_01_80048264[2].unk14 = 17.0f;
+    D_ovl0F_01_80048264[2].unk1C = 90.0f;
+    func_ovl0F_01_80043588(D_ovl0F_01_80048264, 6);
+    for (i = 0; i < 6; i++) {
+        func_ovl0F_01_80047838(func_ovl0F_01_80047870(*D_ovl0F_01_80048264[i].unk0), 0x02100000);
+        D_ovl0F_01_800481D4[i].unk11 = 0;
+        D_ovl0F_01_80048938.unk20(i, 0);
+    }
+    func_ovl0F_01_80046F70(func_ovl0F_01_80044E54);
+    func_ovl0F_01_80047988(func_ovl0F_01_8004464C, NULL, 0, 0, 0x110);
+}
+
 /* one step of the movers' script */
 static void func_ovl0F_01_80044408(s32 arg0, s32 arg1, s32 arg2, s32 flag) {
     u16 *e;
@@ -1009,9 +1242,18 @@ void func_ovl0F_01_80043B0C(void) {
     func_ovl0F_01_80047998();
 }
 
+static void func_ovl0F_01_80043018(s32 count, UnkStruct_ovl0F_01_80048264 *p) {
+    s32 i;
+
+    for (i = 0; i < count; i++) {
+        func_ovl0F_01_80047850(*p->unk0);
+        p++;
+    }
+}
+
 /* the platforms rise, wobble and settle; 1 while one still sinks, 2 once all
  * are down */
-static s32 func_ovl0F_01_800438C0(f32 *x) {
+s32 func_ovl0F_01_800438C0(f32 *x) {
     s32 state;
     f32 d;
     s32 i;
@@ -1083,7 +1325,7 @@ void func_ovl0F_01_80043628(void) {
 }
 
 /* places count models, each made with its flags */
-static void func_ovl0F_01_80043588(UnkStruct_ovl0F_01_80048264 *p, s32 count) {
+void func_ovl0F_01_80043588(UnkStruct_ovl0F_01_80048264 *p, s32 count) {
     s32 i;
 
     for (i = 0; i < count; i++) {
@@ -1096,17 +1338,8 @@ static void func_ovl0F_01_80043588(UnkStruct_ovl0F_01_80048264 *p, s32 count) {
     }
 }
 
-static void func_ovl0F_01_80043504(UnkStruct_ovl0F_01_80048264 *arg0) {
-    f32 pos[3];
-
-    func_ovl0F_01_80046E98(arg0->unkC, arg0->unk10, arg0->unk14, pos, 0);
-    (*arg0->unk0)->unk40->unk10 = pos[0];
-    (*arg0->unk0)->unk40->unk14 = pos[1];
-    (*arg0->unk0)->unk40->unk18 = pos[2];
-}
-
 /* the switch's two looks, by its state */
-static void func_ovl0F_01_80043468(UnkStructA *obj) {
+void func_ovl0F_01_80043468(UnkStructA *obj) {
     switch (D_ovl0F_01_8004842C) {
         case 0:
             func_ovl0F_01_80047548(obj->unk40, 0x26B, 0, 0);
@@ -1183,250 +1416,18 @@ static void func_ovl0F_01_80043100(UnkStruct_ovl0F_01_80048798 *p) {
     p->unkC = r * r * 5.0f + 0.5f;
 }
 
-static void func_ovl0F_01_80043094(s32 *arg0) {
+static void func_ovl0F_01_80043504(UnkStruct_ovl0F_01_80048264 *arg0) {
+    f32 pos[3];
+
+    func_ovl0F_01_80046E98(arg0->unkC, arg0->unk10, arg0->unk14, pos, 0);
+    (*arg0->unk0)->unk40->unk10 = pos[0];
+    (*arg0->unk0)->unk40->unk14 = pos[1];
+    (*arg0->unk0)->unk40->unk18 = pos[2];
+}
+
+void func_ovl0F_01_80043094(s32 *arg0) {
     if (func_ovl0F_01_80047000(arg0[0], arg0[1], arg0[2], arg0[3]) != 0) {
         func_ovl0F_01_80046F30(arg0[4], arg0[5], arg0[6]);
-    }
-}
-
-/* the cut-scene: a task counts n frames while a message shows */
-static void func_ovl0F_01_80043030(s32 n, char *msg) {
-    func_ovl0F_01_800470D8(1);
-    func_ovl0F_01_80047E18();
-    func_ovl0F_01_80047988(func_ovl0F_01_80045DD4, (void *) n, 0, 0, 0x130);
-    func_ovl0F_01_80047040(msg);
-    func_ovl0F_01_800470D8(0);
-    func_ovl0F_01_80047040(D_ovl0F_01_80048580);
-}
-
-static void func_ovl0F_01_80043018(s32 count, UnkStruct_ovl0F_01_80048264 *p) {
-    s32 i;
-
-    for (i = 0; i < count; i++) {
-        func_ovl0F_01_80047850(*p->unk0);
-        p++;
-    }
-}
-
-/* case 2's: the stage's tables */
-static void func_ovl0F_01_8004435C(void) {
-    s32 count;
-    u32 (*p)[3];
-    s32 i;
-
-    func_ovl0F_01_80047CF0(D_ovl0F_01_80048438);
-    p = D_ovl0F_01_80048488;
-    count = 6;
-    for (i = 0; i < count; i++) {
-        func_ovl0F_01_80047E98((*p)[0], (*p)[1], (*p)[2]);
-        p++;
-    }
-}
-
-/* The overlay's handler: the entry returns it to the loader. */
-void func_ovl0F_01_80045FB8(s32 arg0) {
-    UnkStruct_ovl0F_01_800480D8 *q;
-    f32 y;
-    s32 i;
-
-    switch (arg0) {
-        case 2:
-            D_ovl0F_01_80048434 = 0;
-            D_ovl0F_01_80048790 = func_ovl0F_01_80046F88();
-            func_ovl0F_01_8004435C();
-            func_ovl0F_01_80046E38(0x223);
-            func_ovl0F_01_80046E50(0x237);
-            D_ovl0F_01_8004842C = 0;
-            D_ovl0F_01_80048430 = func_ovl0F_01_80047988(func_ovl0F_01_80043628, NULL, 0, 0, 0x110);
-            func_ovl0F_01_80046FE8();
-            func_ovl0F_01_80045E40(&D_ovl0F_01_80048428);
-            func_ovl0F_01_80046F18(func_ovl0F_01_8004413C, 5);
-            D_ovl0F_01_8004841C = func_ovl0F_01_80047988(func_ovl0F_01_80043B0C, NULL, 0, 0, 0x110);
-            break;
-        case 16:
-            func_ovl0F_01_80046FF0(0x18, 3, 0x10);
-            break;
-        case 17:
-            func_ovl0F_01_80046FF0(0xD, 0, 8);
-            break;
-        case 18:
-            func_ovl0F_01_80047030(0x40);
-            func_ovl0F_01_80046FF0(6, 1, 0x1A);
-            break;
-        case 20:
-            func_ovl0F_01_80047698(315.0f, 32768.0f, 32768.0f);
-            func_ovl0F_01_80047030(0xC0);
-            func_ovl0F_01_80046FF0(0x2D, 1, 0x18);
-            break;
-        case 21:
-            func_ovl0F_01_80047C68(1);
-            func_ovl0F_01_80047030(0x40);
-            func_ovl0F_01_80046FF0(1, 4, 0xC);
-            func_ovl0F_01_8004324C();
-            func_ovl0F_01_80046FC0(0x58, 0x17);
-            break;
-        case 22:
-            func_ovl0F_01_80047C68(1);
-            func_ovl0F_01_80047030(0xC0);
-            func_ovl0F_01_80046FF0(0x2E, 4, 0xB);
-            func_ovl0F_01_8004324C();
-            func_ovl0F_01_80046FC0(0x58, 0x18);
-            break;
-        case 23:
-            func_ovl0F_01_80046FF0(0xE, 0, 0xC);
-            break;
-        case 24:
-            func_ovl0F_01_80046FF0(0x21, 0, 0xB);
-            break;
-        case 25:
-            func_ovl0F_01_80047030(0);
-            func_ovl0F_01_80046FF0(0x1B, 0, 0xE);
-            break;
-        case 4:
-            func_ovl0F_01_80047048();
-            func_ovl0F_01_80046F20(func_ovl0F_01_80043348);
-            func_ovl0F_01_800476D8(0x5F);
-            func_ovl0F_01_80047728(2200.0f, 1600.0f, 800.0f, 2000.0f);
-            func_ovl0F_01_800477A8(800.0f, 1200.0f);
-            func_ovl0F_01_80047738(2400.0f, 1600.0f, 2400.0f, 1600.0f);
-            func_ovl0F_01_80047730(70.0f, 55.0f);
-            func_ovl0F_01_80047CD8(0xE6, 0xF0, 0xFF);
-            func_ovl0F_01_80047CC8(0x3B1, 0x3CA, 0xE6, 0xF0, 0xFF);
-            D_ovl0F_01_80048130 = func_ovl0F_01_80047508(0x258);
-            D_ovl0F_01_8004878C = func_ovl0F_01_80047598(func_ovl0F_01_8004540C, -60);
-            D_ovl0F_01_8004878C->unkC |= 0x210;
-            for (i = 0; i < 20; i++) {
-                func_ovl0F_01_80043100(&D_ovl0F_01_80048798[i]);
-                D_ovl0F_01_80048798[i].unk4 = func_ovl0F_01_80047B48(240);
-            }
-            func_ovl0F_01_80047780(&D_ovl0F_01_80048928);
-            D_ovl0F_01_8004813C = 0.0f;
-            D_ovl0F_01_80048140 = 0.0f;
-            D_ovl0F_01_80048144 = 1.0f;
-            func_ovl0F_01_80047C00(0x407);
-            func_ovl0F_01_80047918(40.0f);
-            func_ovl0F_01_80047920(30);
-            if (*D_ovl0F_01_80048790 & 4) {
-                func_ovl0F_01_80047698(135.0f, 32768.0f, 32768.0f);
-                func_ovl0F_01_80047988(func_ovl0F_01_80043298, NULL, 0, 0, 0x130);
-                func_ovl0F_01_800476E0(0xF);
-                func_ovl0F_01_800476F0(1);
-            }
-            break;
-        case 5:
-            switch (func_ovl0F_01_80046F38()) {
-                case 18:
-                    func_ovl0F_01_80047038(D_ovl0F_01_80048508[0].unk0, D_ovl0F_01_80048508[0].unk4,
-                                           D_ovl0F_01_80048508[0].unk8, D_ovl0F_01_80048508[0].unkC,
-                                           D_ovl0F_01_80048508[0].unk10, D_ovl0F_01_80048508[0].unk14,
-                                           D_ovl0F_01_80048508[0].unk18);
-                    break;
-                case 20:
-                    func_ovl0F_01_80047038(D_ovl0F_01_80048508[1].unk0, D_ovl0F_01_80048508[1].unk4,
-                                           D_ovl0F_01_80048508[1].unk8, D_ovl0F_01_80048508[1].unkC,
-                                           D_ovl0F_01_80048508[1].unk10, D_ovl0F_01_80048508[1].unk14,
-                                           D_ovl0F_01_80048508[1].unk18);
-                    break;
-                case 21:
-                    func_ovl0F_01_80047038(D_ovl0F_01_80048508[2].unk0, D_ovl0F_01_80048508[2].unk4,
-                                           D_ovl0F_01_80048508[2].unk8, D_ovl0F_01_80048508[2].unkC,
-                                           D_ovl0F_01_80048508[2].unk10, D_ovl0F_01_80048508[2].unk14,
-                                           D_ovl0F_01_80048508[2].unk18);
-                    break;
-                case 22:
-                    func_ovl0F_01_80047038(D_ovl0F_01_80048508[3].unk0, D_ovl0F_01_80048508[3].unk4,
-                                           D_ovl0F_01_80048508[3].unk8, D_ovl0F_01_80048508[3].unkC,
-                                           D_ovl0F_01_80048508[3].unk10, D_ovl0F_01_80048508[3].unk14,
-                                           D_ovl0F_01_80048508[3].unk18);
-                    break;
-            }
-            break;
-        case 0x50:
-            func_ovl0F_01_80043094(D_ovl0F_01_800484D0);
-            func_ovl0F_01_80043094(D_ovl0F_01_800484EC);
-            break;
-        case 0x52:
-            if (func_ovl0F_01_80047000(1, 0x15, 1, 0x15) != 0 && func_ovl0F_01_80047C10(0x406) == 0) {
-                func_ovl0F_01_80047C00(0x406);
-                if (func_ovl0F_01_800476C8() == 1) {
-                    func_ovl0F_01_800476D0();
-                }
-                func_ovl0F_01_80047798();
-                func_ovl0F_01_800476E0(0x1F);
-                func_ovl0F_01_80047698(271.0f, 50.4f, 1728.0f);
-                func_ovl0F_01_80047688(-627.4f, 2685.0f, 3200.3f);
-                func_ovl0F_01_80047678(447.4f, 1425.9f, 2032.76f);
-                func_ovl0F_01_80043030(30, D_ovl0F_01_800485B0);
-            }
-            break;
-        case 0x53:
-            if (func_ovl0F_01_80047000(2, 0x15, 2, 0x15) != 0 && func_ovl0F_01_80047C10(0x406) != 0) {
-                func_ovl0F_01_80047C08(0x406);
-                func_ovl0F_01_800476D8(0x1F);
-                func_ovl0F_01_80047668(1);
-                func_ovl0F_01_800477A0();
-                func_ovl0F_01_80047768(D_ovl0F_01_80048750);
-                func_ovl0F_01_80043030(30, D_ovl0F_01_800485D0);
-            }
-            break;
-        case 15:
-            if (func_ovl0F_01_80047008(0xD, 0, 3, 0xD, 3) != 0) {
-                y = func_ovl0F_01_80047078(func_ovl0F_01_80047018())->unk40->unk20;
-                if (135.0f <= y && y <= 225.0f) {
-                    switch (D_ovl0F_01_8004842C) {
-                        case 0:
-                            func_ovl0F_01_800475A0(0x275, 1);
-                            break;
-                        case 1:
-                            func_ovl0F_01_800475A0(0x276, 1);
-                            break;
-                    }
-                }
-            }
-            break;
-        case 1:
-            func_ovl0F_01_80043018(3, D_ovl0F_01_8004836C);
-            if (D_ovl0F_01_8004841C != -1) {
-                func_ovl0F_01_80047990(D_ovl0F_01_8004841C);
-            }
-            func_ovl0F_01_80047528(D_ovl0F_01_8004878C);
-            func_ovl0F_01_80043018(1, &D_ovl0F_01_8004845C);
-            func_ovl0F_01_80047510(0x258);
-            if (D_ovl0F_01_80048430 != -1) {
-                func_ovl0F_01_80047990(D_ovl0F_01_80048430);
-                D_ovl0F_01_80048430 = -1;
-            }
-            if (*D_ovl0F_01_80048790 & 4) {
-                func_ovl0F_01_800480D8(2)->unkC->unkC |= 1;
-                func_ovl0F_01_80047CD8(0, 0, 0);
-                func_ovl0F_01_800480C8();
-                q = func_ovl0F_01_800480D8(4);
-                if (q->unkC != NULL) {
-                    func_ovl0F_01_80047520(q->unkC);
-                }
-                q->unkC = NULL;
-                func_ovl0F_01_800480F8();
-            }
-            break;
-        case 12:
-            func_ovl0F_01_80047080(1);
-            break;
-        case 3:
-            D_ovl0F_01_80048434 = 1;
-            D_ovl0F_01_8004876C = func_ovl0F_01_80047018();
-            func_ovl0F_01_80046FF8(&D_ovl0F_01_80048760);
-            func_ovl0F_01_80047020(D_ovl0F_01_8004876C, D_ovl0F_01_80048750);
-            break;
-        case 6:
-        case 7:
-        case 8:
-        case 9:
-        case 10:
-        case 11:
-        case 13:
-        case 14:
-        case 19:
-            break;
     }
 }
 
