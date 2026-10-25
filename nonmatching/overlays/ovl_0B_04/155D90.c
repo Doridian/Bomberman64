@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4119, jp 4192
+ * differing words: us 3565, jp 4192
  *
  * Order (scratch/ord/search.py, hill-climb over definition order, scored by
  * the emitted sequence's edit distance from the original's address order):
@@ -19,7 +19,20 @@
  * 80045540, 800458F4/80045958, 800468F0) are statics here with ordinary
  * parameters; MakeEntries/FreeEntries, PageItem, SetText and Mark27 are
  * statics the original inlines (their parameter slots show in the frames).
- * The empty stubs (80043010, 80043F3C, 800438F4, ...) aren't written yet.
+ * Emission order: IDO -O3 takes the globals in reverse definition order
+ * and puts each one's static callees just before it, in the reverse order
+ * of its calls (each after its own callees); an indirect call also pulls
+ * every function whose address the code takes (why 80043CD0 comes out
+ * first: 80043110's or 80043ADC's call through the page table pulls it).
+ * The original's statics come out before callers that don't call them
+ * (80043FA4-8004447C before 800444E8, 80045540 before 800459C4, 80046294-
+ * 80046734 before 80046AA0), so its callers probably inlined statics whose
+ * dead branches called them. Here a dead `if (0) { ... }` at the end of
+ * the global lists the run in reverse (scratch/0B_04/p4/pull.py and
+ * spec2.txt in the main checkout); the empty stubs it calls are named for
+ * the original's stub addresses. The `if (0)` calls to 8004471C keep it out
+ * of line, as in the original. 80046734 writes PageItem out twice (no
+ * stubs before it in the original); PageItem itself is 80046294's.
  * Data: .data 800489F0-8004A1F0 typed from data_c.py's words
  * (scratch/0B_04/gendata.py in the main checkout); the .bss in address
  * order without the unreferenced gaps.
@@ -727,6 +740,127 @@ static void func_ovl0B_04_800458F4(s32 *ids);
 static void func_ovl0B_04_80045958(s32 *ids);
 static void func_ovl0B_04_80045850(void);
 static void func_ovl0B_04_80043640(f32 d);
+static u8 func_ovl0B_04_Mark27(u8 set, u8 c);
+
+static void func_ovl0B_04_800436C0(void) {
+}
+
+static void func_ovl0B_04_800438F4(void) {
+}
+
+static void func_ovl0B_04_80043AD4(void) {
+}
+
+static void func_ovl0B_04_80043F3C(void) {
+}
+
+static void func_ovl0B_04_80043F44(void) {
+}
+
+static void func_ovl0B_04_80043F4C(void) {
+}
+
+static void func_ovl0B_04_80043F54(void) {
+}
+
+static void func_ovl0B_04_80043F5C(void) {
+}
+
+static void func_ovl0B_04_80043F64(void) {
+}
+
+static void func_ovl0B_04_80043F6C(void) {
+}
+
+static void func_ovl0B_04_80043F74(void) {
+}
+
+static void func_ovl0B_04_80043F7C(void) {
+}
+
+static void func_ovl0B_04_80043F84(void) {
+}
+
+static void func_ovl0B_04_80043F8C(void) {
+}
+
+static void func_ovl0B_04_80043F94(void) {
+}
+
+static void func_ovl0B_04_80043F9C(void) {
+}
+
+static void func_ovl0B_04_800441BC(void) {
+}
+
+static void func_ovl0B_04_80044264(void) {
+}
+
+static void func_ovl0B_04_800442FC(void) {
+}
+
+static void func_ovl0B_04_80044304(void) {
+}
+
+static void func_ovl0B_04_80044384(void) {
+}
+
+static void func_ovl0B_04_8004438C(void) {
+}
+
+static void func_ovl0B_04_800444D0(void) {
+}
+
+static void func_ovl0B_04_800444D8(void) {
+}
+
+static void func_ovl0B_04_800444E0(void) {
+}
+
+static void func_ovl0B_04_800445BC(void) {
+}
+
+static void func_ovl0B_04_8004461C(void) {
+}
+
+static void func_ovl0B_04_80044624(void) {
+}
+
+static void func_ovl0B_04_80044714(void) {
+}
+
+static void func_ovl0B_04_800450B8(void) {
+}
+
+static void func_ovl0B_04_80045530(void) {
+}
+
+static void func_ovl0B_04_80045538(void) {
+}
+
+static void func_ovl0B_04_80045848(void) {
+}
+
+static void func_ovl0B_04_80046284(void) {
+}
+
+static void func_ovl0B_04_8004628C(void) {
+}
+
+static void func_ovl0B_04_800468E0(void) {
+}
+
+static void func_ovl0B_04_800468E8(void) {
+}
+
+static void func_ovl0B_04_80046CE4(void) {
+}
+
+static void func_ovl0B_04_80046F18(void) {
+}
+
+static void func_ovl0B_04_80047164(void) {
+}
 
 /* The objects of a run of entries, and their removal (inlined). */
 static void func_ovl0B_04_MakeEntries(Entry *e, s32 n, Desc *d) {
@@ -797,6 +931,9 @@ u8 func_ovl0B_04_800471F4(u8 arg0, u16 arg1) {
 
 void func_ovl0B_04_8004716C(Obj *arg0) {
     func_ovl0B_04_800468F0(33);
+    if (0) {
+        func_ovl0B_04_80047164();
+    }
 }
 
 u8 func_ovl0B_04_80046FA8(u8 arg0, u16 arg1) {
@@ -831,6 +968,9 @@ u8 func_ovl0B_04_80046FA8(u8 arg0, u16 arg1) {
 
 void func_ovl0B_04_80046F20(Obj *arg0) {
     func_ovl0B_04_800468F0(22);
+    if (0) {
+        func_ovl0B_04_80046F18();
+    }
 }
 
 u8 func_ovl0B_04_80046D74(u8 arg0, u16 arg1) {
@@ -864,6 +1004,9 @@ u8 func_ovl0B_04_80046D74(u8 arg0, u16 arg1) {
 
 void func_ovl0B_04_80046CEC(Obj *arg0) {
     func_ovl0B_04_800468F0(11);
+    if (0) {
+        func_ovl0B_04_80046CE4();
+    }
 }
 
 u8 func_ovl0B_04_80046B28(u8 arg0, u16 arg1) {
@@ -892,6 +1035,16 @@ u8 func_ovl0B_04_80046B28(u8 arg0, u16 arg1) {
 
 void func_ovl0B_04_80046AA0(Obj *arg0) {
     func_ovl0B_04_800468F0(0);
+    if (0) {
+        func_ovl0B_04_800468E8();
+        func_ovl0B_04_800468F0(0);
+        func_ovl0B_04_800468E0();
+        func_ovl0B_04_8004628C();
+        func_ovl0B_04_80046734(0, 0);
+        func_ovl0B_04_80046600(0, 0);
+        func_ovl0B_04_80046294(0);
+        func_ovl0B_04_80046284();
+    }
 }
 
 /* Pages 5-8's set-up: which of the ten choices from base + 1 are open. */
@@ -929,9 +1082,21 @@ static void func_ovl0B_04_800468F0(s32 base) {
 
 /* Pages 5-8's cursor. */
 static void func_ovl0B_04_80046734(u16 buttons, u8 item) {
+    s32 i;
+
     if ((buttons & 0x20) || (buttons & 0x40)) {
-        func_ovl0B_04_PageItem(0, D_ovl0B_04_8004A174, D_ovl0B_04_8004A1A4);
-        func_ovl0B_04_PageItem(1, item, D_ovl0B_04_8004A1A8);
+        if (D_ovl0B_04_8004A174 < 11) {
+            i = D_ovl0B_04_8004A174 - D_ovl0B_04_8004A1A4 * 5;
+        } else {
+            i = 6;
+        }
+        func_ovl0B_04_800438FC(0, &D_ovl0B_04_8004A404->unk8[i], D_ovl0B_04_8004A404->unk4[i]);
+        if (item < 11) {
+            i = item - D_ovl0B_04_8004A1A8 * 5;
+        } else {
+            i = 6;
+        }
+        func_ovl0B_04_800438FC(1, &D_ovl0B_04_8004A404->unk8[i], D_ovl0B_04_8004A404->unk4[i]);
     }
     if ((buttons & 0x80) || (buttons & 0x100)) {
         func_ovl0B_04_80046600(buttons, item);
@@ -1098,6 +1263,15 @@ void func_ovl0B_04_800459C4(Obj *arg0) {
     func_ovl0B_04_80045958(D_ovl0B_04_8004A2D0);
     func_ovl0B_04_SetText(D_ovl0B_04_8004A468[1], D_ovl0B_04_80048A78, 5, 0.7f);
     func_ovl0B_04_SetText(D_ovl0B_04_8004A468[4], D_ovl0B_04_80048A84, 6, 0.5f);
+    if (0) {
+        func_ovl0B_04_80045958(0);
+        func_ovl0B_04_800458F4(0);
+        func_ovl0B_04_80045850();
+        func_ovl0B_04_80045848();
+        func_ovl0B_04_80045540(0, 0, 0);
+        func_ovl0B_04_80045538();
+        func_ovl0B_04_80045530();
+    }
 }
 
 /* A page's two texts and the menu's cursor shown, and hidden. */
@@ -1272,6 +1446,9 @@ void func_ovl0B_04_800450C0(Obj *arg0) {
         func_ovl0B_04_80048290();
     }
     func_ovl0B_04_80048290();
+    if (0) {
+        func_ovl0B_04_800450B8();
+    }
 }
 
 /* Page 0: the name, the four slots (pages 5-8), and B to leave (through
@@ -1349,6 +1526,16 @@ u8 func_ovl0B_04_80044BE8(u8 arg0, u16 arg1) {
                 func_ovl0B_04_80043FA4(&ret, 8, 1, 0);
                 break;
         }
+    }
+    if (0) {
+        func_ovl0B_04_8004471C(0, 0);
+        func_ovl0B_04_80044714();
+        func_ovl0B_04_800447DC(0, 0);
+        func_ovl0B_04_80044624();
+        func_ovl0B_04_8004461C();
+        func_ovl0B_04_800445C4();
+        func_ovl0B_04_800445BC();
+        func_ovl0B_04_8004456C();
     }
     return ret;
 }
@@ -1580,6 +1767,40 @@ void func_ovl0B_04_800444E8(Obj *arg0) {
     o = func_ovl0B_04_80048608();
     o->unk36 = 0;
     o->unkC |= 0x80;
+    if (0) {
+        func_ovl0B_04_800444E0();
+        func_ovl0B_04_800444D8();
+        func_ovl0B_04_800444D0();
+        func_ovl0B_04_8004447C(0, 0);
+        func_ovl0B_04_80044394(0, 0);
+        func_ovl0B_04_8004438C();
+        func_ovl0B_04_80044384();
+        func_ovl0B_04_8004430C(0);
+        func_ovl0B_04_80044304();
+        func_ovl0B_04_800442FC();
+        func_ovl0B_04_8004426C(0, 0);
+        func_ovl0B_04_80044264();
+        func_ovl0B_04_80044210();
+        func_ovl0B_04_800441C4();
+        func_ovl0B_04_800441BC();
+        func_ovl0B_04_80044154();
+        func_ovl0B_04_800440C8(0);
+        func_ovl0B_04_8004401C(0);
+        func_ovl0B_04_80043FA4(0, 0, 0, 0);
+        func_ovl0B_04_80043F9C();
+        func_ovl0B_04_80043F94();
+        func_ovl0B_04_80043F8C();
+        func_ovl0B_04_80043F84();
+        func_ovl0B_04_80043F7C();
+        func_ovl0B_04_80043F74();
+        func_ovl0B_04_80043F6C();
+        func_ovl0B_04_80043F64();
+        func_ovl0B_04_80043F5C();
+        func_ovl0B_04_80043F54();
+        func_ovl0B_04_80043F4C();
+        func_ovl0B_04_80043F44();
+        func_ovl0B_04_80043F3C();
+    }
 }
 
 static void func_ovl0B_04_8004447C(s32 id, s32 alpha) {
@@ -1777,6 +1998,13 @@ void func_ovl0B_04_80043ADC(void) {
     }
     func_ovl0B_04_800477F0(0x1F, 0x11, 0);
     func_ovl0B_04_80048258();
+    if (0) {
+        func_ovl0B_04_80043AD4();
+        func_ovl0B_04_80043A7C(0, 0, 0);
+        func_ovl0B_04_80043A24(0, 0, 0);
+        func_ovl0B_04_800438FC(0, 0, 0);
+        func_ovl0B_04_800438F4();
+    }
 }
 
 /* A page's texts written (0x2501 for pages 3 and 4, 0x250C otherwise). */
@@ -1882,6 +2110,10 @@ void func_ovl0B_04_800436C8(void) {
             func_ovl0B_04_80043640(-2.0f);
         }
         func_ovl0B_04_80048290();
+    }
+    if (0) {
+        func_ovl0B_04_800436C0();
+        func_ovl0B_04_80043640(0);
     }
 }
 
