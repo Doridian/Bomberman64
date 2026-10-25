@@ -25,6 +25,15 @@
  *   (20; 1 word short), 80043824 (16), 80044D50 (47; 1 word long),
  *   8004435C (67; 80044398 and 80044414 with it): register allocation and
  *   scheduling, s register parameters of the statics.
+ *   Tried without gain: n's temporary in 80043824 (split statement, float
+ *   temporary, decrement) and the order of its locals (16 as drafted, 20-22
+ *   with the other orders); 80043D60's switch as
+ *   an if chain, with case 0 dropped or as default, and with the case
+ *   blocks reordered (all 140+ words). The 80043500 diff is the temporaries'
+ *   numbers in 800435FC's twelve 7-argument calls (original t0-t5, ours
+ *   reuses t6-t9). 80044D50's extra s3 comes from the loops over
+ *   D_800470BC and D_8004739C; the pointer-to-index rewrites of those
+ *   loops were not scored (their anchor text occurs twice).
  * - func_ovl0D_06_800458F8 (3): the padding after the last function.
  */
 #include "common.h"
