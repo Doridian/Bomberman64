@@ -480,6 +480,25 @@ module's asm blocks, though the draft defines it.
   (an `sll`/`sra` pair after each change), and a volume it gives as `s8`
   may be `s32`, narrowed only by the callee's prototype (ovl_0C_06's
   80046CF0, 8004696C and 800458D8).
+- **m2c can get behaviour wrong, not just style.** It wrote
+  `var_s0 += 0x30` on a struct pointer (steps 0x30 records; `p++` is
+  right and matched ovl_0C_02's 80043338), and `+= 1; if (>= 6)` where
+  the `slti` sits before the increment in its delay slot
+  (`if (wait++ >= 6)`, 80046924).
+- **A constant computed at run time was a variable.** Where the original
+  multiplies `22.0f * 100.0f` at run time or converts an int 14 with
+  `cvt`, the source had `tx = 22.0f; tz = 14; n = 5;` just before use. A
+  variable loop limit also keeps `slt` rather than `bne` and stops the
+  limit being hoisted into a saved register (ovl_0C_02's 80046DD0, 343
+  words to 180).
+- **A call after a loop that sits before the loop body** belongs inside
+  it, as `if (...) { call; break; }` (80046DD0, 180 to 29).
+- **A `beq` chain over consecutive values** is an `if (x != 7 && ... &&
+  x != 12)` chain, not a switch, which would become a jump table.
+  Branch order also follows the test's polarity: `== 0 || ...` and
+  `!= 0 && ...` lay the blocks out differently (80045898).
+- **Locals placed between pads.** Some frames need padding on both sides
+  of a local: `s32 pad; s32 moved; s32 pad2;` (800477B0, 800475BC).
 - **Walking the parameter.** A list kept in its own stack slot apart
   from the loop pointer means the loop advances the parameter itself, and
   a copy taken at the top is what's kept for later (ovl_0C_06's
@@ -506,7 +525,10 @@ module's asm blocks, though the draft defines it.
   Constant propagation removes the branch only after the loop's
   invariants (the constants) were given registers. Dead code after an
   infinite loop, unused locals and `if (0)` don't do it, because they
-  go too early. Such a flag takes a stack slot like any local.
+  go too early. Such a flag takes a stack slot like any local. Where
+  several loops share the saved floats, each loop needs its own dead
+  `if (flag)` (ovl_0C_02's 80046B68: 152 words to 4 with all three
+  loops, 10 with one).
   In -O3 objects the other source is a static callee: the caller saves
   what the callee uses unsaved (86680's func_8026C0A8).
 - **Unsolved: a block boundary with no branch.** Two misses come from
