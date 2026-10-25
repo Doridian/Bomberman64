@@ -3,7 +3,7 @@
  * function and its .data/.bss; .text 0x40C0 as the original.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4920, eu 4920, jp 4920
+ * differing words: us 776, eu 4920, jp 4920
  *
  * What still differs in us (words):
  * - func_ovl0A_01_80043028 (6): `beq a0,s0` where the original has
@@ -263,9 +263,9 @@ void func_ovl0A_01_8004609C(void);
 void func_ovl0A_01_8004694C(void);
 void func_ovl0A_01_80046A50(void);
 
-static void func_ovl0A_01_80043010(s32 n, Entry *tbl);
-static void func_ovl0A_01_80043018(s32 n, Entry2 *tbl);
-static void func_ovl0A_01_80043020(s32 task);
+static void func_ovl0A_01_80043018(s32 n, Entry *tbl);
+static void func_ovl0A_01_80043020(s32 n, Entry2 *tbl);
+static void func_ovl0A_01_80043010(s32 task);
 void func_ovl0A_01_80043028(void);
 static void func_ovl0A_01_80043274(void);
 static void func_ovl0A_01_8004327C(void);
@@ -274,8 +274,8 @@ void func_ovl0A_01_8004328C(void);
 void func_ovl0A_01_800432C8(void);
 void func_ovl0A_01_80043300(void);
 void func_ovl0A_01_80043338(void);
-static void func_ovl0A_01_80043370(Entry *e);
 static void func_ovl0A_01_80043378(Entry *e);
+static void func_ovl0A_01_80043370(Entry *e);
 static void func_ovl0A_01_80043380(Entry *tbl, s32 n);
 static void func_ovl0A_01_80043500(s32 id);
 static void func_ovl0A_01_800435E4(void);
@@ -285,24 +285,24 @@ static void func_ovl0A_01_80043DE0(void);
 static void func_ovl0A_01_80043FF8(s32 frame);
 static void func_ovl0A_01_800440F4(void);
 static void func_ovl0A_01_800441F8(void);
-static void func_ovl0A_01_8004428C(void);
-static void func_ovl0A_01_80044294(void);
-static void func_ovl0A_01_8004429C(void);
-static void func_ovl0A_01_800442A4(void);
 static void func_ovl0A_01_800442AC(void);
+static void func_ovl0A_01_800442A4(void);
+static void func_ovl0A_01_8004429C(void);
+static void func_ovl0A_01_80044294(void);
+static void func_ovl0A_01_8004428C(void);
 static void func_ovl0A_01_8004457C(void);
 static void func_ovl0A_01_80044790(void);
 static void func_ovl0A_01_80044798(f32 speed, f32 *fall);
 static void func_ovl0A_01_80044968(s32 frame, f32 dx, f32 dy);
 static void func_ovl0A_01_80044A24(Obj *obj, f32 *pos, f32 *tgt);
 static void func_ovl0A_01_80044A2C(void);
-static void func_ovl0A_01_80045270(void);
-static void func_ovl0A_01_80045278(void);
 static void func_ovl0A_01_80045280(void);
+static void func_ovl0A_01_80045278(void);
+static void func_ovl0A_01_80045270(void);
+static void func_ovl0A_01_80046094(void);
 static void func_ovl0A_01_8004608C(void);
+static void func_ovl0A_01_8004607C(Entry2 *tbl);
 static void func_ovl0A_01_80046084(void);
-static void func_ovl0A_01_80046094(Entry2 *tbl);
-static void func_ovl0A_01_8004607C(void);
 void func_ovl0A_01_80046C88(s32 arg0);
 void func_ovl0A_01_80046DB8(s32 arg0, UnkStruct_ovl0A_01_B04 *arg1);
 void func_ovl0A_01_80046DEC(f32 arg0);
@@ -322,9 +322,9 @@ static void func_ovl0A_01_80046EF8(void);
 static void func_ovl0A_01_80046F00(void);
 static void func_ovl0A_01_80046F08(void);
 
-static void func_ovl0A_01_80043010(s32 n, Entry *tbl);
-static void func_ovl0A_01_80043018(s32 n, Entry2 *tbl);
-static void func_ovl0A_01_80043020(s32 task);
+static void func_ovl0A_01_80043018(s32 n, Entry *tbl);
+static void func_ovl0A_01_80043020(s32 n, Entry2 *tbl);
+static void func_ovl0A_01_80043010(s32 task);
 void func_ovl0A_01_80043028(void);
 static void func_ovl0A_01_80043274(void);
 static void func_ovl0A_01_8004327C(void);
@@ -333,8 +333,8 @@ void func_ovl0A_01_8004328C(void);
 void func_ovl0A_01_800432C8(void);
 void func_ovl0A_01_80043300(void);
 void func_ovl0A_01_80043338(void);
-static void func_ovl0A_01_80043370(Entry *e);
 static void func_ovl0A_01_80043378(Entry *e);
+static void func_ovl0A_01_80043370(Entry *e);
 static void func_ovl0A_01_80043380(Entry *tbl, s32 n);
 static void func_ovl0A_01_80043500(s32 id);
 static void func_ovl0A_01_800435E4(void);
@@ -344,24 +344,24 @@ static void func_ovl0A_01_80043DE0(void);
 static void func_ovl0A_01_80043FF8(s32 frame);
 static void func_ovl0A_01_800440F4(void);
 static void func_ovl0A_01_800441F8(void);
-static void func_ovl0A_01_8004428C(void);
-static void func_ovl0A_01_80044294(void);
-static void func_ovl0A_01_8004429C(void);
-static void func_ovl0A_01_800442A4(void);
 static void func_ovl0A_01_800442AC(void);
+static void func_ovl0A_01_800442A4(void);
+static void func_ovl0A_01_8004429C(void);
+static void func_ovl0A_01_80044294(void);
+static void func_ovl0A_01_8004428C(void);
 static void func_ovl0A_01_8004457C(void);
 static void func_ovl0A_01_80044790(void);
 static void func_ovl0A_01_80044798(f32 speed, f32 *fall);
 static void func_ovl0A_01_80044968(s32 frame, f32 dx, f32 dy);
 static void func_ovl0A_01_80044A24(Obj *obj, f32 *pos, f32 *tgt);
 static void func_ovl0A_01_80044A2C(void);
-static void func_ovl0A_01_80045270(void);
-static void func_ovl0A_01_80045278(void);
 static void func_ovl0A_01_80045280(void);
+static void func_ovl0A_01_80045278(void);
+static void func_ovl0A_01_80045270(void);
+static void func_ovl0A_01_80046094(void);
 static void func_ovl0A_01_8004608C(void);
+static void func_ovl0A_01_8004607C(Entry2 *tbl);
 static void func_ovl0A_01_80046084(void);
-static void func_ovl0A_01_80046094(Entry2 *tbl);
-static void func_ovl0A_01_8004607C(void);
 void func_ovl0A_01_80046C88(s32 arg0);
 void func_ovl0A_01_80046DB8(s32 arg0, UnkStruct_ovl0A_01_B04 *arg1);
 void func_ovl0A_01_80046DEC(f32 arg0);
@@ -381,9 +381,9 @@ static void func_ovl0A_01_80046EF8(void);
 static void func_ovl0A_01_80046F00(void);
 static void func_ovl0A_01_80046F08(void);
 
-static void func_ovl0A_01_80043010(s32 n, Entry *tbl);
-static void func_ovl0A_01_80043018(s32 n, Entry2 *tbl);
-static void func_ovl0A_01_80043020(s32 task);
+static void func_ovl0A_01_80043018(s32 n, Entry *tbl);
+static void func_ovl0A_01_80043020(s32 n, Entry2 *tbl);
+static void func_ovl0A_01_80043010(s32 task);
 void func_ovl0A_01_80043028(void);
 static void func_ovl0A_01_80043274(void);
 static void func_ovl0A_01_8004327C(void);
@@ -392,8 +392,8 @@ void func_ovl0A_01_8004328C(void);
 void func_ovl0A_01_800432C8(void);
 void func_ovl0A_01_80043300(void);
 void func_ovl0A_01_80043338(void);
-static void func_ovl0A_01_80043370(Entry *e);
 static void func_ovl0A_01_80043378(Entry *e);
+static void func_ovl0A_01_80043370(Entry *e);
 static void func_ovl0A_01_80043380(Entry *tbl, s32 n);
 static void func_ovl0A_01_80043500(s32 id);
 static void func_ovl0A_01_800435E4(void);
@@ -403,24 +403,24 @@ static void func_ovl0A_01_80043DE0(void);
 static void func_ovl0A_01_80043FF8(s32 frame);
 static void func_ovl0A_01_800440F4(void);
 static void func_ovl0A_01_800441F8(void);
-static void func_ovl0A_01_8004428C(void);
-static void func_ovl0A_01_80044294(void);
-static void func_ovl0A_01_8004429C(void);
-static void func_ovl0A_01_800442A4(void);
 static void func_ovl0A_01_800442AC(void);
+static void func_ovl0A_01_800442A4(void);
+static void func_ovl0A_01_8004429C(void);
+static void func_ovl0A_01_80044294(void);
+static void func_ovl0A_01_8004428C(void);
 static void func_ovl0A_01_8004457C(void);
 static void func_ovl0A_01_80044790(void);
 static void func_ovl0A_01_80044798(f32 speed, f32 *fall);
 static void func_ovl0A_01_80044968(s32 frame, f32 dx, f32 dy);
 static void func_ovl0A_01_80044A24(Obj *obj, f32 *pos, f32 *tgt);
 static void func_ovl0A_01_80044A2C(void);
-static void func_ovl0A_01_80045270(void);
-static void func_ovl0A_01_80045278(void);
 static void func_ovl0A_01_80045280(void);
+static void func_ovl0A_01_80045278(void);
+static void func_ovl0A_01_80045270(void);
+static void func_ovl0A_01_80046094(void);
 static void func_ovl0A_01_8004608C(void);
+static void func_ovl0A_01_8004607C(Entry2 *tbl);
 static void func_ovl0A_01_80046084(void);
-static void func_ovl0A_01_80046094(Entry2 *tbl);
-static void func_ovl0A_01_8004607C(void);
 void func_ovl0A_01_80046C88(s32 arg0);
 void func_ovl0A_01_80046DB8(s32 arg0, UnkStruct_ovl0A_01_B04 *arg1);
 void func_ovl0A_01_80046DEC(f32 arg0);
@@ -440,9 +440,9 @@ static void func_ovl0A_01_80046EF8(void);
 static void func_ovl0A_01_80046F00(void);
 static void func_ovl0A_01_80046F08(void);
 
-static void func_ovl0A_01_80043010(s32 n, Entry *tbl);
-static void func_ovl0A_01_80043018(s32 n, Entry2 *tbl);
-static void func_ovl0A_01_80043020(s32 task);
+static void func_ovl0A_01_80043018(s32 n, Entry *tbl);
+static void func_ovl0A_01_80043020(s32 n, Entry2 *tbl);
+static void func_ovl0A_01_80043010(s32 task);
 void func_ovl0A_01_80043028(void);
 static void func_ovl0A_01_80043274(void);
 static void func_ovl0A_01_8004327C(void);
@@ -451,8 +451,8 @@ void func_ovl0A_01_8004328C(void);
 void func_ovl0A_01_800432C8(void);
 void func_ovl0A_01_80043300(void);
 void func_ovl0A_01_80043338(void);
-static void func_ovl0A_01_80043370(Entry *e);
 static void func_ovl0A_01_80043378(Entry *e);
+static void func_ovl0A_01_80043370(Entry *e);
 static void func_ovl0A_01_80043380(Entry *tbl, s32 n);
 static void func_ovl0A_01_80043500(s32 id);
 static void func_ovl0A_01_800435E4(void);
@@ -462,24 +462,24 @@ static void func_ovl0A_01_80043DE0(void);
 static void func_ovl0A_01_80043FF8(s32 frame);
 static void func_ovl0A_01_800440F4(void);
 static void func_ovl0A_01_800441F8(void);
-static void func_ovl0A_01_8004428C(void);
-static void func_ovl0A_01_80044294(void);
-static void func_ovl0A_01_8004429C(void);
-static void func_ovl0A_01_800442A4(void);
 static void func_ovl0A_01_800442AC(void);
+static void func_ovl0A_01_800442A4(void);
+static void func_ovl0A_01_8004429C(void);
+static void func_ovl0A_01_80044294(void);
+static void func_ovl0A_01_8004428C(void);
 static void func_ovl0A_01_8004457C(void);
 static void func_ovl0A_01_80044790(void);
 static void func_ovl0A_01_80044798(f32 speed, f32 *fall);
 static void func_ovl0A_01_80044968(s32 frame, f32 dx, f32 dy);
 static void func_ovl0A_01_80044A24(Obj *obj, f32 *pos, f32 *tgt);
 static void func_ovl0A_01_80044A2C(void);
-static void func_ovl0A_01_80045270(void);
-static void func_ovl0A_01_80045278(void);
 static void func_ovl0A_01_80045280(void);
+static void func_ovl0A_01_80045278(void);
+static void func_ovl0A_01_80045270(void);
+static void func_ovl0A_01_80046094(void);
 static void func_ovl0A_01_8004608C(void);
+static void func_ovl0A_01_8004607C(Entry2 *tbl);
 static void func_ovl0A_01_80046084(void);
-static void func_ovl0A_01_80046094(Entry2 *tbl);
-static void func_ovl0A_01_8004607C(void);
 void func_ovl0A_01_80046C88(s32 arg0);
 void func_ovl0A_01_80046DB8(s32 arg0, UnkStruct_ovl0A_01_B04 *arg1);
 void func_ovl0A_01_80046DEC(f32 arg0);
@@ -691,12 +691,12 @@ void func_ovl0A_01_8004694C(void) {
 }
 
 void func_ovl0A_01_8004609C(void) {
+    func_ovl0A_01_80046094();
     func_ovl0A_01_8004608C();
     func_ovl0A_01_80046084();
-    func_ovl0A_01_8004607C();
 }
 
-static void func_ovl0A_01_8004607C(void) {
+static void func_ovl0A_01_80046084(void) {
     s32 i;
     f32 a;
     f32 b;
@@ -707,7 +707,7 @@ static void func_ovl0A_01_8004607C(void) {
     a = 0.0f;
     D_ovl0A_01_80048A38[3] = 0;
     b = 0.0f;
-    func_ovl0A_01_80046094(LIGHTS);
+    func_ovl0A_01_8004607C(LIGHTS);
     LIGHTS[0].unk0->unk10 = 2300.0f;
     LIGHTS[0].unk0->unk14 = 60.0f;
     LIGHTS[0].unk0->unk18 = 800.0f;
@@ -780,7 +780,7 @@ static void func_ovl0A_01_8004607C(void) {
     }
 }
 
-static void func_ovl0A_01_80046094(Entry2 *tbl) {
+static void func_ovl0A_01_8004607C(Entry2 *tbl) {
     s32 i;
 
     for (i = 0; i < 1; i++, tbl++) {
@@ -789,7 +789,7 @@ static void func_ovl0A_01_80046094(Entry2 *tbl) {
     }
 }
 
-static void func_ovl0A_01_80046084(void) {
+static void func_ovl0A_01_8004608C(void) {
     s32 i;
     f32 cz;
     f32 cy;
@@ -835,7 +835,7 @@ static void func_ovl0A_01_80046084(void) {
     }
 }
 
-static void func_ovl0A_01_8004608C(void) {
+static void func_ovl0A_01_80046094(void) {
     while (D_ovl0A_01_80048770[2].obj->unk40->unk20 > 180.0f) {
         D_ovl0A_01_80048770[2].obj->unk40->unk20 -= 2.0f;
         D_ovl0A_01_80048770[2].obj->unk40->unk18 -= 2.0f;
@@ -981,9 +981,9 @@ void func_ovl0A_01_80045288(void) {
     static f32 D_ovl0A_01_80048A80 = 0.0f;
     s32 i;
 
-    func_ovl0A_01_80045270();
-    func_ovl0A_01_80045278();
     func_ovl0A_01_80045280();
+    func_ovl0A_01_80045278();
+    func_ovl0A_01_80045270();
     for (i = 0;; i++) {
         if (i < 180) {
             D_ovl0A_01_800488D8[2].obj->unk40->unk10 += 7.111111f;
@@ -1033,13 +1033,13 @@ void func_ovl0A_01_80045288(void) {
     }
 }
 
-static void func_ovl0A_01_80045280(void) {
+static void func_ovl0A_01_80045270(void) {
 }
 
 static void func_ovl0A_01_80045278(void) {
 }
 
-static void func_ovl0A_01_80045270(void) {
+static void func_ovl0A_01_80045280(void) {
 }
 
 Entry D_ovl0A_01_80048A84[3] = {
@@ -1185,7 +1185,7 @@ static void func_ovl0A_01_80044A2C(void) {
         D_ovl0A_01_80048A84[0].obj->unk40->unk36 = a0;
         func_ovl0A_01_80047FD0();
     }
-    func_ovl0A_01_80043010(3, D_ovl0A_01_80048A84);
+    func_ovl0A_01_80043018(3, D_ovl0A_01_80048A84);
 }
 
 static void func_ovl0A_01_80044A24(Obj *obj, f32 *pos, f32 *tgt) {
@@ -1291,12 +1291,12 @@ static void func_ovl0A_01_8004457C(void) {
 void func_ovl0A_01_800442B4(void) {
     s32 i;
 
-    func_ovl0A_01_8004428C();
-    i = 0;
-    func_ovl0A_01_80044294();
-    func_ovl0A_01_8004429C();
-    func_ovl0A_01_800442A4();
     func_ovl0A_01_800442AC();
+    i = 0;
+    func_ovl0A_01_800442A4();
+    func_ovl0A_01_8004429C();
+    func_ovl0A_01_80044294();
+    func_ovl0A_01_8004428C();
     for (; i < 670; i++) {
         func_ovl0A_01_800441F8();
         func_ovl0A_01_800440F4();
@@ -1338,12 +1338,12 @@ void func_ovl0A_01_800442B4(void) {
     func_ovl0A_01_80047F98();
 }
 
-static void func_ovl0A_01_800442AC(void) {
+static void func_ovl0A_01_8004428C(void) {
     D_ovl0A_01_80048A70 = 0;
     D_ovl0A_01_80048A64 = func_ovl0A_01_80047F88(func_ovl0A_01_80045EA0, NULL, 0, 0, 0x130);
 }
 
-static void func_ovl0A_01_800442A4(void) {
+static void func_ovl0A_01_80044294(void) {
     func_ovl0A_01_80047E40(D_ovl0A_01_80048890[1].obj, 0x01000000);
 }
 
@@ -1351,11 +1351,11 @@ static void func_ovl0A_01_8004429C(void) {
     func_ovl0A_01_80047E40(D_ovl0A_01_80048890[0].obj, 0x01000000);
 }
 
-static void func_ovl0A_01_80044294(void) {
+static void func_ovl0A_01_800442A4(void) {
     func_ovl0A_01_80047E38(D_ovl0A_01_80048770[4].obj, 0x80000);
 }
 
-static void func_ovl0A_01_8004428C(void) {
+static void func_ovl0A_01_800442AC(void) {
     D_ovl0A_01_80048A1C = 0.0f;
     D_ovl0A_01_80048A20 = 0.0f;
     D_ovl0A_01_80048A24 = 0.0f;
@@ -1386,7 +1386,7 @@ static void func_ovl0A_01_800440F4(void) {
 static void func_ovl0A_01_80043FF8(s32 frame) {
     switch (frame) {
         case 160:
-            func_ovl0A_01_80043020(D_ovl0A_01_80048A64);
+            func_ovl0A_01_80043010(D_ovl0A_01_80048A64);
             break;
         case 425:
             D_ovl0A_01_80048A68 = func_ovl0A_01_80047F88(func_ovl0A_01_8004694C, NULL, 0, 0, 0x130);
@@ -1397,7 +1397,7 @@ static void func_ovl0A_01_80043FF8(s32 frame) {
             break;
         case 670:
             D_ovl0A_01_80048A70 = 3;
-            func_ovl0A_01_80043020(D_ovl0A_01_80048A68);
+            func_ovl0A_01_80043010(D_ovl0A_01_80048A68);
             D_ovl0A_01_80048A6C = func_ovl0A_01_80047F88(func_ovl0A_01_8004609C, NULL, 0, 0, 0x130);
             break;
     }
@@ -1609,7 +1609,7 @@ static void func_ovl0A_01_80043380(Entry *tbl, s32 n) {
         e = tbl;
         tbl->obj = func_ovl0A_01_80047E60(tbl->unk4 == 0 ? tbl->unk8 : 0x320, 0x0D000000, 0xD0, NULL);
         if (tbl->unk4 != 0) {
-            func_ovl0A_01_80043370(tbl);
+            func_ovl0A_01_80043378(tbl);
         }
         func_ovl0A_01_80047E70(tbl->obj);
         if (tbl->unk18 != -1 || tbl->unk1C != -1) {
@@ -1619,18 +1619,18 @@ static void func_ovl0A_01_80043380(Entry *tbl, s32 n) {
             tbl->obj->unk40->unkC |= 0x4000;
         }
         tbl++;
-        func_ovl0A_01_80043378(e);
+        func_ovl0A_01_80043370(e);
     }
 }
 
-static void func_ovl0A_01_80043378(Entry *e) {
+static void func_ovl0A_01_80043370(Entry *e) {
     e->obj->unk40->unk10 = e->unkC;
     e->obj->unk40->unk14 = e->unk10;
     e->obj->unk40->unk18 = e->unk14;
     e->obj->unk40->unk20 = e->unk20;
 }
 
-static void func_ovl0A_01_80043370(Entry *e) {
+static void func_ovl0A_01_80043378(Entry *e) {
     s32 j;
     s32 m;
 
@@ -1674,20 +1674,20 @@ static void func_ovl0A_01_80043274(void) {
 void func_ovl0A_01_80043028(void) {
     switch (D_ovl0A_01_80048D1C) {
         case 16:
-            func_ovl0A_01_80043010(8, &D_ovl0A_01_80048770[0]);
+            func_ovl0A_01_80043018(8, &D_ovl0A_01_80048770[0]);
             break;
         case 17:
-            func_ovl0A_01_80043010(8, &D_ovl0A_01_80048770[0]);
-            func_ovl0A_01_80043010(2, &D_ovl0A_01_80048890[0]);
-            func_ovl0A_01_80043018(1, LIGHTS);
+            func_ovl0A_01_80043018(8, &D_ovl0A_01_80048770[0]);
+            func_ovl0A_01_80043018(2, &D_ovl0A_01_80048890[0]);
+            func_ovl0A_01_80043020(1, LIGHTS);
             func_ovl0A_01_80048288(0, 0, 0, 0.0f);
-            func_ovl0A_01_80043020(D_ovl0A_01_80048A6C);
+            func_ovl0A_01_80043010(D_ovl0A_01_80048A6C);
             break;
         case 18:
         case 19:
-            func_ovl0A_01_80043010(9, &D_ovl0A_01_800488D8[0]);
-            func_ovl0A_01_80043020(D_ovl0A_01_80048AF0);
-            func_ovl0A_01_80043020(D_ovl0A_01_80048AF4);
+            func_ovl0A_01_80043018(9, &D_ovl0A_01_800488D8[0]);
+            func_ovl0A_01_80043010(D_ovl0A_01_80048AF0);
+            func_ovl0A_01_80043010(D_ovl0A_01_80048AF4);
             if (D_ovl0A_01_80048D1C == 19) {
                 func_ovl0A_01_80048690();
             } else {
@@ -1700,13 +1700,13 @@ void func_ovl0A_01_80043028(void) {
     }
 }
 
-static void func_ovl0A_01_80043020(s32 task) {
+static void func_ovl0A_01_80043010(s32 task) {
     if (task != -1) {
         func_ovl0A_01_80047F90(task);
     }
 }
 
-static void func_ovl0A_01_80043018(s32 n, Entry2 *tbl) {
+static void func_ovl0A_01_80043020(s32 n, Entry2 *tbl) {
     s32 i;
 
     for (i = 0; i < n; i++) {
@@ -1717,7 +1717,7 @@ static void func_ovl0A_01_80043018(s32 n, Entry2 *tbl) {
     }
 }
 
-static void func_ovl0A_01_80043010(s32 n, Entry *tbl) {
+static void func_ovl0A_01_80043018(s32 n, Entry *tbl) {
     s32 i;
 
     for (i = 0; i < n; i++) {
