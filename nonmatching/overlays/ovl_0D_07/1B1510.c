@@ -2,7 +2,7 @@
  * NON_MATCHING: ovl_0D_07's stage object, complete: every function and its data.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2148, eu 2148, jp 2148
+ * differing words: us 98, eu 2148, jp 2148
  *
  * Its .data and .rodata match (scratch/tools/datacmp.py), and the .bss has
  * the original's layout. What still differs in us (words):
@@ -11,17 +11,11 @@
  *   (t2 where the original has t0), and every later t and f register of
  *   the function is shifted. The frame (`pad`, `obj[2]`, the static's
  *   locals below the spill) is the original's; the obj array is what keeps
- *   both players on the stack.
- * - func_ovl0D_07_800432F8 (22): the original stores D_800465A0.unk0/unk4
- *   before loading D_8004673C and leaves the call's delay slot empty (as if
- *   the stores might alias it); ours hoists the load, a word shorter.
- *   ovl_0D_05's func_ovl0D_05_80043018 has the same problem.
- * - func_ovl0D_07_8004342C (9): its first call's `lui`/`lw a0` and
- *   `mtc1` are scheduled into the prologue (and one delay slot differs);
- *   plus func_ovl0D_07_80043028's stub, which comes out before 80043660
- *   here but with the three others before 80043030 in the original.
- * - func_ovl0D_07_80044AF0 (17): only the padding after its endless loop
- *   (a nop), from the sizes above.
+ *   both players on the stack. Written out in the case instead of the
+ *   static, event 4 gets t0, but the frame loses the static's argument
+ *   slots, the angle isn't loaded into f0 and 80043028's stub disappears.
+ * - func_ovl0D_07_8004342C (2): `mtc1 $zero` comes after `sw $ra` in the
+ *   prologue, not before it (no fake moves it).
  */
 #include "common.h"
 
@@ -134,6 +128,8 @@ static void func_ovl0D_07_80043010(void);
 static void func_ovl0D_07_80043018(void);
 static void func_ovl0D_07_80043020(void);
 static f32 func_ovl0D_07_80043028(UnkStructA *obj0, UnkStructA *obj1);
+static void func_ovl0D_07_80043424(UnkStruct_ovl0D_07_800465A0 *e);
+static void func_ovl0D_07_800432F0(UnkStruct_ovl0D_07_800465A0 *e);
 void func_ovl0D_07_80044628(void);
 void func_ovl0D_07_80044798(void);
 void func_ovl0D_07_80044918(void);
@@ -341,6 +337,29 @@ void func_ovl0D_07_80044798(void) {
     func_ovl0D_07_80045E08();
 }
 
+/* above its callback 80044754 in the source: defined with the other helpers,
+ * the callbacks come out out of order */
+void func_ovl0D_07_8004342C(void) {
+    /* fakes: the first keeps the call's argument out of the prologue, the
+     * second keeps the static's last stores ahead of the next call */
+    if (!D_ovl0D_07_80046704 && !D_ovl0D_07_80046704 && !D_ovl0D_07_80046704) {
+    }
+    func_ovl0D_07_80043424(&D_ovl0D_07_800465A0);
+    if (!D_ovl0D_07_80046704 && !D_ovl0D_07_80046704 && !D_ovl0D_07_80046704) {
+    }
+    func_ovl0D_07_80045CB0(D_ovl0D_07_800465A0.unk0, 0x80000);
+    D_ovl0D_07_8004673C = func_ovl0D_07_80045988(0x207, 0);
+    D_ovl0D_07_8004673C->unkC |= 0x80;
+    func_ovl0D_07_800452C0(0x170, &D_ovl0D_07_8004673C);
+    func_ovl0D_07_80045458();
+    func_ovl0D_07_80045390(func_ovl0D_07_80044754);
+    func_ovl0D_07_800452D8(-100.0f);
+    func_ovl0D_07_80046148(0, 0x28, 0x46);
+    D_ovl0D_07_80046734 = 1;
+    D_ovl0D_07_80046738 = 0;
+    func_ovl0D_07_80046018();
+}
+
 /* the stage's callback (func_ovl0D_07_8004342C) */
 void func_ovl0D_07_80044754(UnkStructA *arg0) {
     func_ovl0D_07_80045CB0(arg0, 0x01000000);
@@ -518,9 +537,149 @@ void func_ovl0D_07_80043D80(void) {
     func_ovl0D_07_80045E08();
 }
 
+
+/* the stage's model (D_ovl0D_07_800465A0) placed */
+static void func_ovl0D_07_80043424(UnkStruct_ovl0D_07_800465A0 *e) {
+    e->unk0 = func_ovl0D_07_80045CF0(e->unk8, 0xD0, 0.0f, 0.0f, 0.0f);
+    func_ovl0D_07_80045CA8(e->unk0, 0x01080000);
+    func_ovl0D_07_80045CB0(e->unk0, 0x02000000);
+    if (e->unkC != -1 && e->unkE != -1 && e->unk10 != -1 && e->unk12 != -1) {
+        e->unk4 = func_ovl0D_07_800459F0(e->unk0->unk40, 0, e->unkC, e->unkE, e->unk10, e->unk12);
+        if (e->unk4 == -1) {
+            while (TRUE) {
+            }
+        }
+    }
+    e->unk0->unk40->unk10 = e->unk14 * 10.0f;
+    e->unk0->unk40->unk14 = e->unk18 * 10.0f;
+    e->unk0->unk40->unk18 = e->unk1C * 10.0f;
+    e->unk0->unk40->unk1C = e->unk20;
+    e->unk0->unk40->unk20 = e->unk24;
+    e->unk0->unk40->unk24 = e->unk28;
+    e->unk0->unk40->unk28 = e->unk2C;
+    e->unk0->unk40->unk2C = e->unk30;
+    e->unk0->unk40->unk30 = e->unk34;
+}
+
+/* the stage's model removed */
+static void func_ovl0D_07_800432F0(UnkStruct_ovl0D_07_800465A0 *e) {
+    func_ovl0D_07_80045CC0(e->unk0);
+    if (e->unkC != 0xFFFF && e->unkE != 0xFFFF && e->unk10 != 0xFFFF && e->unk12 != 0xFFFF) {
+        func_ovl0D_07_800459F8(e->unk4);
+    }
+    e->unk0 = NULL;
+    e->unk4 = -1;
+}
+
+
+void func_ovl0D_07_800432F8(void) {
+    s32 i;
+
+    if (D_ovl0D_07_8004671C == 0x1A || D_ovl0D_07_8004671C == 0x1B) {
+        func_ovl0D_07_80046500();
+    }
+    if (D_ovl0D_07_8004671C == 0x10 || D_ovl0D_07_8004671C == 0x1A || D_ovl0D_07_8004671C == 0x1B) {
+        for (i = 0; i < 5; i++) {
+            func_ovl0D_07_80045990(D_ovl0D_07_80046720[i]);
+        }
+    }
+    func_ovl0D_07_800432F0(&D_ovl0D_07_800465A0);
+    /* a fake: keeps the static's stores ahead of the next call's argument */
+    if (!D_ovl0D_07_80046704 && !D_ovl0D_07_80046704 && !D_ovl0D_07_80046704) {
+    }
+    func_ovl0D_07_80045990(D_ovl0D_07_8004673C);
+    if (D_ovl0D_07_80046738 == 0) {
+        func_ovl0D_07_80046020();
+    }
+}
+
+void func_ovl0D_07_80043108(void) {
+    s32 i;
+    UnkStructA *obj;
+
+    func_ovl0D_07_80046380(0x224);
+    func_ovl0D_07_80045460(0x17, 0, 0x17);
+    func_ovl0D_07_800454A0(0);
+    func_ovl0D_07_80046428(1, 1, 0x17, 2, 10);
+    func_ovl0D_07_80046448(0);
+    func_ovl0D_07_80045518(1);
+    func_ovl0D_07_80045498(1);
+    func_ovl0D_07_80045518(0);
+    func_ovl0D_07_800454E8(0)->unk40->unk10 += 50.0f;
+    obj = func_ovl0D_07_800454E8(1);
+    obj->unk40->unk10 += 50.0f;
+    obj->unk40->unk14 += 200.0f;
+    func_ovl0D_07_80045E10(func_ovl0D_07_80046440(1)->unkA2, 0);
+    for (i = 0; i != 5; i++) {
+        D_ovl0D_07_80046720[i] = func_ovl0D_07_80045988(0x171, 0);
+        D_ovl0D_07_80046720[i]->unk10 = 2350.0f;
+        D_ovl0D_07_80046720[i]->unk14 = 0.0f;
+        D_ovl0D_07_80046720[i]->unk18 = i * 600.0f + 350.0f;
+    }
+    func_ovl0D_07_800454B8();
+    func_ovl0D_07_80045B50(0x1F);
+    func_ovl0D_07_80045AE8(2350.0f, 138.0f, 1694.0f);
+    func_ovl0D_07_80045B08(0.0f, 10.0f, 1500.0f);
+    func_ovl0D_07_80045498(1);
+}
+
+void func_ovl0D_07_80043030(void) {
+    UnkStructA_40 *p;
+
+    func_ovl0D_07_80043010(); /* the stubs' placement (above) */
+    func_ovl0D_07_80043018();
+    func_ovl0D_07_80043020();
+    func_ovl0D_07_80045460(0x17, 0, 0x17);
+    func_ovl0D_07_800454A0(0);
+    D_ovl0D_07_800465A0.unk0->unk40->unk48->unk4->unk4 =
+        func_ovl0D_07_800459E8(D_ovl0D_07_800465A0.unk0->unk40, 0) - 0.01f;
+    func_ovl0D_07_80046428(1, 1, 0x17, 0, 0x11);
+    p = func_ovl0D_07_800454E8(0)->unk40;
+    p->unk10 += 50.0f;
+    p = func_ovl0D_07_800454E8(1)->unk40;
+    p->unk10 += 50.0f;
+    func_ovl0D_07_800454B8();
+    func_ovl0D_07_80045B50(0xF);
+}
+
+/* the two players face each other (event 11): the angle for player 1. A
+ * static: its locals sit below the caller's and the spill, as in the original */
+static f32 func_ovl0D_07_80043028(UnkStructA *obj0, UnkStructA *obj1) {
+    UnkStructA_40 *p0;
+    UnkStructA_40 *p1;
+    Vec3f pos0;
+    Vec3f pos1;
+    Vec3f angle;
+
+    p0 = obj0->unk40;
+    p1 = obj1->unk40;
+    pos0.x = p0->unk10;
+    pos0.y = p0->unk14;
+    pos0.z = p0->unk18;
+    pos1.x = p1->unk10;
+    pos1.y = p1->unk14;
+    pos1.z = p1->unk18;
+    func_ovl0D_07_80045C38(&pos0.x, &pos1.x, &angle.x);
+    return angle.x;
+}
+
+/* three of the four stubs before func_ovl0D_07_80043030: statics inlined
+ * everywhere. Called from 80043030 they come out there; which statics they
+ * were, and who called them, isn't known (the fourth is 80043028's) */
+static void func_ovl0D_07_80043020(void) {
+}
+
+static void func_ovl0D_07_80043018(void) {
+}
+
+static void func_ovl0D_07_80043010(void) {
+}
+
+
 /* the stage object's callback (the entry returns it): what each event does.
- * Above the stage helpers in the source, so that the tasks come out in the
- * original's order */
+ * Last in the source, so it is processed first: it pulls out its callees
+ * 80043030-8004342C ahead of itself, in the reverse order of their last calls,
+ * which puts 80043028's stub (case 11 calls it last) with 80043030's three */
 void func_ovl0D_07_80043660(s32 arg0) {
     UnkStructA *o;
     s32 pad[3]; /* a guess: the frame has three more words here */
@@ -643,153 +802,4 @@ void func_ovl0D_07_80043660(s32 arg0) {
             D_ovl0D_07_80046738 = 1;
             break;
     }
-}
-
-/* the stage's model (D_ovl0D_07_800465A0) placed */
-static void func_ovl0D_07_80043424(UnkStruct_ovl0D_07_800465A0 *e) {
-    e->unk0 = func_ovl0D_07_80045CF0(e->unk8, 0xD0, 0.0f, 0.0f, 0.0f);
-    func_ovl0D_07_80045CA8(e->unk0, 0x01080000);
-    func_ovl0D_07_80045CB0(e->unk0, 0x02000000);
-    if (e->unkC != -1 && e->unkE != -1 && e->unk10 != -1 && e->unk12 != -1) {
-        e->unk4 = func_ovl0D_07_800459F0(e->unk0->unk40, 0, e->unkC, e->unkE, e->unk10, e->unk12);
-        if (e->unk4 == -1) {
-            while (TRUE) {
-            }
-        }
-    }
-    e->unk0->unk40->unk10 = e->unk14 * 10.0f;
-    e->unk0->unk40->unk14 = e->unk18 * 10.0f;
-    e->unk0->unk40->unk18 = e->unk1C * 10.0f;
-    e->unk0->unk40->unk1C = e->unk20;
-    e->unk0->unk40->unk20 = e->unk24;
-    e->unk0->unk40->unk24 = e->unk28;
-    e->unk0->unk40->unk28 = e->unk2C;
-    e->unk0->unk40->unk2C = e->unk30;
-    e->unk0->unk40->unk30 = e->unk34;
-}
-
-/* the stage's model removed */
-static void func_ovl0D_07_800432F0(UnkStruct_ovl0D_07_800465A0 *e) {
-    func_ovl0D_07_80045CC0(e->unk0);
-    if (e->unkC != 0xFFFF && e->unkE != 0xFFFF && e->unk10 != 0xFFFF && e->unk12 != 0xFFFF) {
-        func_ovl0D_07_800459F8(e->unk4);
-    }
-    e->unk0 = NULL;
-    e->unk4 = -1;
-}
-
-void func_ovl0D_07_8004342C(void) {
-    func_ovl0D_07_80043424(&D_ovl0D_07_800465A0);
-    func_ovl0D_07_80045CB0(D_ovl0D_07_800465A0.unk0, 0x80000);
-    D_ovl0D_07_8004673C = func_ovl0D_07_80045988(0x207, 0);
-    D_ovl0D_07_8004673C->unkC |= 0x80;
-    func_ovl0D_07_800452C0(0x170, &D_ovl0D_07_8004673C);
-    func_ovl0D_07_80045458();
-    func_ovl0D_07_80045390(func_ovl0D_07_80044754);
-    func_ovl0D_07_800452D8(-100.0f);
-    func_ovl0D_07_80046148(0, 0x28, 0x46);
-    D_ovl0D_07_80046734 = 1;
-    D_ovl0D_07_80046738 = 0;
-    func_ovl0D_07_80046018();
-}
-
-void func_ovl0D_07_800432F8(void) {
-    s32 i;
-
-    if (D_ovl0D_07_8004671C == 0x1A || D_ovl0D_07_8004671C == 0x1B) {
-        func_ovl0D_07_80046500();
-    }
-    if (D_ovl0D_07_8004671C == 0x10 || D_ovl0D_07_8004671C == 0x1A || D_ovl0D_07_8004671C == 0x1B) {
-        for (i = 0; i < 5; i++) {
-            func_ovl0D_07_80045990(D_ovl0D_07_80046720[i]);
-        }
-    }
-    func_ovl0D_07_800432F0(&D_ovl0D_07_800465A0);
-    func_ovl0D_07_80045990(D_ovl0D_07_8004673C);
-    if (D_ovl0D_07_80046738 == 0) {
-        func_ovl0D_07_80046020();
-    }
-}
-
-void func_ovl0D_07_80043108(void) {
-    s32 i;
-    UnkStructA *obj;
-
-    func_ovl0D_07_80046380(0x224);
-    func_ovl0D_07_80045460(0x17, 0, 0x17);
-    func_ovl0D_07_800454A0(0);
-    func_ovl0D_07_80046428(1, 1, 0x17, 2, 10);
-    func_ovl0D_07_80046448(0);
-    func_ovl0D_07_80045518(1);
-    func_ovl0D_07_80045498(1);
-    func_ovl0D_07_80045518(0);
-    func_ovl0D_07_800454E8(0)->unk40->unk10 += 50.0f;
-    obj = func_ovl0D_07_800454E8(1);
-    obj->unk40->unk10 += 50.0f;
-    obj->unk40->unk14 += 200.0f;
-    func_ovl0D_07_80045E10(func_ovl0D_07_80046440(1)->unkA2, 0);
-    for (i = 0; i != 5; i++) {
-        D_ovl0D_07_80046720[i] = func_ovl0D_07_80045988(0x171, 0);
-        D_ovl0D_07_80046720[i]->unk10 = 2350.0f;
-        D_ovl0D_07_80046720[i]->unk14 = 0.0f;
-        D_ovl0D_07_80046720[i]->unk18 = i * 600.0f + 350.0f;
-    }
-    func_ovl0D_07_800454B8();
-    func_ovl0D_07_80045B50(0x1F);
-    func_ovl0D_07_80045AE8(2350.0f, 138.0f, 1694.0f);
-    func_ovl0D_07_80045B08(0.0f, 10.0f, 1500.0f);
-    func_ovl0D_07_80045498(1);
-}
-
-void func_ovl0D_07_80043030(void) {
-    UnkStructA_40 *p;
-
-    func_ovl0D_07_80043010(); /* the stubs' placement (above) */
-    func_ovl0D_07_80043018();
-    func_ovl0D_07_80043020();
-    func_ovl0D_07_80045460(0x17, 0, 0x17);
-    func_ovl0D_07_800454A0(0);
-    D_ovl0D_07_800465A0.unk0->unk40->unk48->unk4->unk4 =
-        func_ovl0D_07_800459E8(D_ovl0D_07_800465A0.unk0->unk40, 0) - 0.01f;
-    func_ovl0D_07_80046428(1, 1, 0x17, 0, 0x11);
-    p = func_ovl0D_07_800454E8(0)->unk40;
-    p->unk10 += 50.0f;
-    p = func_ovl0D_07_800454E8(1)->unk40;
-    p->unk10 += 50.0f;
-    func_ovl0D_07_800454B8();
-    func_ovl0D_07_80045B50(0xF);
-}
-
-/* the two players face each other (event 11): the angle for player 1. A
- * static: its locals sit below the caller's and the spill, as in the original */
-static f32 func_ovl0D_07_80043028(UnkStructA *obj0, UnkStructA *obj1) {
-    UnkStructA_40 *p0;
-    UnkStructA_40 *p1;
-    Vec3f pos0;
-    Vec3f pos1;
-    Vec3f angle;
-
-    p0 = obj0->unk40;
-    p1 = obj1->unk40;
-    pos0.x = p0->unk10;
-    pos0.y = p0->unk14;
-    pos0.z = p0->unk18;
-    pos1.x = p1->unk10;
-    pos1.y = p1->unk14;
-    pos1.z = p1->unk18;
-    func_ovl0D_07_80045C38(&pos0.x, &pos1.x, &angle.x);
-    return angle.x;
-}
-
-/* three of the four stubs before func_ovl0D_07_80043030: statics inlined
- * everywhere. Called from 80043030 they come out there; which statics they
- * were, and who called them, isn't known (the fourth is 80043028, but in the
- * original it comes out with these, not before 80043660) */
-static void func_ovl0D_07_80043020(void) {
-}
-
-static void func_ovl0D_07_80043018(void) {
-}
-
-static void func_ovl0D_07_80043010(void) {
 }
