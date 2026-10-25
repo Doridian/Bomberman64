@@ -3,7 +3,7 @@
  * data (.data and .bss as the original's sizes).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3478, jp 3482
+ * differing words: us 3478, jp 3478
  *
  * The count loop (80043018) is written out at its three call sites (the
  * handler's two, 80045E40's end), with its empty stub kept as a static and
