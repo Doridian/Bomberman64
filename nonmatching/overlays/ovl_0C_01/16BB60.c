@@ -4,25 +4,27 @@
  * words are the original's, though IDO puts the scripts' strings in .rodata).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2028, jp 2028
+ * differing words: us 1757, jp 2028
  *
  * A first complete draft: the functions with a ratio-1.00 sibling are that
  * sibling's C translated (scratch/0C_01/sib.py: ovl_0C_06 first, then
  * ovl_0C_07, 0C_09, 0C_04, 0C_02), the rest m2c's output with its types
  * fixed, and the tasks 80047338, 80047454 and 80047A60 and the stage's
  * place helpers 800450B0, 80045920 and 800459FC by hand.  68 of the 103
- * functions match.
+ * functions match.  Then 80043E74, 80047CA8 and 80047E9C became ovl_0C_02's
+ * 80043338, 800475BC and 800477B0 translated (they match there); 80043E74's
+ * loop is `i < 8` where its twin has `i < 4`.  71 of the 103 match.
  *
  * What still differs in us (words):
- * - From ovl_0C_02's draft, its open problems too: 80043E74 (129, its
- *   80043338), 800452F4 (98), 800464F8 (76), 80047CA8 and 80047E9C (72
- *   each).
+ * - From ovl_0C_02's draft, its open problems too: 800452F4 (98), whose
+ *   twin 80043E0C is 5 words off there, so not ported; 800464F8 (76), whose
+ *   twin 80045538 doesn't match there yet.
  * - From ovl_0C_06's, its known unsolved `arg ? 0x01000000 : 0x01000000`:
  *   80045E68 (84), 80045FBC (57), 8004476C (55).
  * - m2c's register use and loop shapes, not yet worked on: 80044D3C (160),
  *   800468EC (152, the object set-up), 80043C20 (92), 80044080 (83),
  *   800444DC (75), 800443A4 (72), 800439C0 (70), 80047074 (69, the
- *   handler), 800441D4 (62), 800435C4 (52), 80046224 (51), 80043248 (50),
+ *   handler; not ovl_0C_02's 8004639C, which is 0.78 by ratio), 800441D4 (62), 800435C4 (52), 80046224 (51), 80043248 (50),
  *   800438E8 (49), 800436A0 (26), 80048068 (25), 8004333C (24), 80043058
  *   (17), 800477EC (15), 800474FC (12), 80047054 (10), 800463E0 and
  *   800459FC (7 each), 80045194 (5), 8004514C and 800450B0 (2 each).
@@ -710,165 +712,115 @@ void func_ovl0C_01_80048068(void) {
 }
 
 void func_ovl0C_01_80047E9C(UnkStructA *arg0) {
-    s32 sp38;
-    f32 sp30;
-    f32 sp2C;
-    f32 sp28;
-    UnkStructA *var_a2;
-    UnkStructA_40 *temp_v0;
-    s32 temp_s0;
-    s32 temp_v0_2;
-    s32 var_at;
-    s32 var_at_2;
-    s32 var_s0;
-    s32 var_s0_2;
+    s32 pad;
+    s32 moved;
+    s32 pad2; /* unused: pad and pad2 place the original's locals */
+    f32 x;
+    f32 y;
+    f32 z;
+    UnkStructA *other;
+    s32 saved;
+    s32 i;
 
-    if ((func_ovl0C_01_80049B90(0x41A) == 0) && (arg0->unk6C == 0.0f) && (arg0->unk68 == 0.0f)) {
-        temp_v0 = arg0->unk40;
-        sp30 = temp_v0->unk10;
-        sp2C = temp_v0->unk14;
-        sp28 = temp_v0->unk18;
+    if (func_ovl0C_01_80049B90(0x41A) == 0 && arg0->unk6C == 0.0f && arg0->unk68 == 0.0f) {
+        x = arg0->unk40->unk10;
+        y = arg0->unk40->unk14;
+        z = arg0->unk40->unk18;
         func_ovl0C_01_80049E08(arg0, 0xC0, 12.0f);
-        sp38 = 0;
-        temp_v0_2 = arg0->unk8;
-        var_a2 = NULL;
-        if (temp_v0_2 & 3) {
-            var_s0 = 0;
-            if (temp_v0_2 & 2) {
-                var_s0_2 = 0;
-loop_6:
-                var_at = var_s0_2 < 5;
-                if (func_ovl0C_01_80049038(var_s0_2) != arg0) {
-                    var_s0_2 += 1;
-                    if (var_s0_2 == 5) {
-                        var_at = var_s0_2 < 5;
-                    } else {
-                        goto loop_6;
+        moved = 0;
+        if (arg0->unk8 & 3) {
+            if (arg0->unk8 & 2) {
+                for (i = 0; i < 5; i++) {
+                    if (func_ovl0C_01_80049038(i) == arg0) {
+                        break;
                     }
                 }
-                if (var_at != 0) {
-                    var_a2 = func_ovl0C_01_80048FF8(var_s0_2);
-                } else {
-                    var_a2 = NULL;
-                }
+                other = i < 5 ? func_ovl0C_01_80048FF8(i) : NULL;
             } else {
-loop_13:
-                var_at_2 = var_s0 < 5;
-                if (func_ovl0C_01_80048FF8(var_s0) != arg0) {
-                    var_s0 += 1;
-                    if (var_s0 == 5) {
-                        var_at_2 = var_s0 < 5;
-                    } else {
-                        goto loop_13;
+                for (i = 0; i < 5; i++) {
+                    if (func_ovl0C_01_80048FF8(i) == arg0) {
+                        break;
                     }
                 }
-                if (var_at_2 != 0) {
-                    var_a2 = func_ovl0C_01_80049038(var_s0);
-                } else {
-                    var_a2 = NULL;
-                }
+                other = i < 5 ? func_ovl0C_01_80049038(i) : NULL;
             }
+        } else {
+            other = NULL;
         }
-        temp_s0 = arg0->unkC;
+        saved = arg0->unkC;
         arg0->unkC = 0;
-        if (var_a2 != NULL) {
-            if (func_ovl0C_01_800498D8(arg0, 0x10, var_a2) != 0) {
-                sp38 = 1;
+        if (other != NULL) {
+            if (func_ovl0C_01_800498D8(arg0, 0x10, other) != 0) {
+                moved = 1;
             }
         } else if (func_ovl0C_01_80049768(arg0, 0x10) != 0) {
-            sp38 = 1;
+            moved = 1;
         }
-        arg0->unkC = temp_s0;
-        if (sp38 != 0) {
-            arg0->unk40->unk10 = sp30;
-            arg0->unk40->unk14 = sp2C;
-            arg0->unk40->unk18 = sp28;
+        arg0->unkC = saved;
+        if (moved != 0) {
+            arg0->unk40->unk10 = x;
+            arg0->unk40->unk14 = y;
+            arg0->unk40->unk18 = z;
         }
     }
 }
 
 void func_ovl0C_01_80047CA8(UnkStructA *arg0) {
-    s32 sp38;
-    f32 sp30;
-    f32 sp2C;
-    f32 sp28;
-    UnkStructA *var_a2;
-    UnkStructA_40 *temp_v0;
-    f32 temp_fv0;
-    s32 temp_s0;
-    s32 temp_v0_2;
-    s32 var_at;
-    s32 var_at_2;
-    s32 var_s0;
-    s32 var_s0_2;
+    s32 pad;
+    s32 moved;
+    s32 pad2; /* unused: pad and pad2 place the original's locals */
+    f32 x;
+    f32 y;
+    f32 z;
+    UnkStructA *other;
+    s32 saved;
+    s32 i;
 
     if (func_ovl0C_01_80049B90(0x41A) == 0) {
-        temp_v0 = arg0->unk40;
-        sp30 = temp_v0->unk10;
-        sp2C = temp_v0->unk14;
-        sp28 = temp_v0->unk18;
-        temp_fv0 = arg0->unk6C;
-        if ((temp_fv0 == 0.0f) && (arg0->unk68 == 0.0f)) {
+        x = arg0->unk40->unk10;
+        y = arg0->unk40->unk14;
+        z = arg0->unk40->unk18;
+        if (arg0->unk6C == 0.0f && arg0->unk68 == 0.0f) {
             func_ovl0C_01_80049E08(arg0, 0xC0, 12.0f);
         } else {
             arg0->unk68 = 0.0f;
-            arg0->unk6C = temp_fv0 + 2.0f;
+            arg0->unk6C += 2.0f;
             func_ovl0C_01_80049E08(arg0, 0xC0, 3.0f);
         }
-        sp38 = 0;
-        temp_v0_2 = arg0->unk8;
-        var_a2 = NULL;
-        if (temp_v0_2 & 3) {
-            var_s0 = 0;
-            if (temp_v0_2 & 2) {
-                var_s0_2 = 0;
-loop_8:
-                var_at = var_s0_2 < 5;
-                if (func_ovl0C_01_80049038(var_s0_2) != arg0) {
-                    var_s0_2 += 1;
-                    if (var_s0_2 == 5) {
-                        var_at = var_s0_2 < 5;
-                    } else {
-                        goto loop_8;
+        moved = 0;
+        if (arg0->unk8 & 3) {
+            if (arg0->unk8 & 2) {
+                for (i = 0; i < 5; i++) {
+                    if (func_ovl0C_01_80049038(i) == arg0) {
+                        break;
                     }
                 }
-                if (var_at != 0) {
-                    var_a2 = func_ovl0C_01_80048FF8(var_s0_2);
-                } else {
-                    var_a2 = NULL;
-                }
+                other = i < 5 ? func_ovl0C_01_80048FF8(i) : NULL;
             } else {
-loop_15:
-                var_at_2 = var_s0 < 5;
-                if (func_ovl0C_01_80048FF8(var_s0) != arg0) {
-                    var_s0 += 1;
-                    if (var_s0 == 5) {
-                        var_at_2 = var_s0 < 5;
-                    } else {
-                        goto loop_15;
+                for (i = 0; i < 5; i++) {
+                    if (func_ovl0C_01_80048FF8(i) == arg0) {
+                        break;
                     }
                 }
-                if (var_at_2 != 0) {
-                    var_a2 = func_ovl0C_01_80049038(var_s0);
-                } else {
-                    var_a2 = NULL;
-                }
+                other = i < 5 ? func_ovl0C_01_80049038(i) : NULL;
             }
+        } else {
+            other = NULL;
         }
-        temp_s0 = arg0->unkC;
+        saved = arg0->unkC;
         arg0->unkC = 0;
-        if (var_a2 != NULL) {
-            if (func_ovl0C_01_800498D8(arg0, 0x10, var_a2) != 0) {
-                sp38 = 1;
+        if (other != NULL) {
+            if (func_ovl0C_01_800498D8(arg0, 0x10, other) != 0) {
+                moved = 1;
             }
         } else if (func_ovl0C_01_80049768(arg0, 0x10) != 0) {
-            sp38 = 1;
+            moved = 1;
         }
-        arg0->unkC = temp_s0;
-        if (sp38 != 0) {
-            arg0->unk40->unk10 = sp30;
-            arg0->unk40->unk14 = sp2C;
-            arg0->unk40->unk18 = sp28;
+        arg0->unkC = saved;
+        if (moved != 0) {
+            arg0->unk40->unk10 = x;
+            arg0->unk40->unk14 = y;
+            arg0->unk40->unk18 = z;
         }
     }
 }
@@ -2230,48 +2182,34 @@ void func_ovl0C_01_80044080(f32 *arg0, f32 arg1, f32 *arg2, f32 arg3, s32 arg4) 
 }
 
 void func_ovl0C_01_80043E74(void) {
-    UnkStructA_40 *temp_v0_2;
-    UnkStruct_ovl0C_01_8004A3CC *var_s0;
-    s16 var_s4;
-    s32 temp_s1;
-    s32 temp_s1_2;
-    s32 temp_s2;
-    s32 temp_s2_2;
-    s32 temp_v0;
+    UnkStruct_ovl0C_01_8004A3CC *p;
+    s16 i;
+    s32 hit;
 
     D_ovl0C_01_8004A9DC->unk30 = 4;
     D_ovl0C_01_8004A9DC->unk34 = 95.0f;
-    var_s0 = D_ovl0C_01_8004A3CC;
-    var_s4 = 0;
     D_ovl0C_01_8004A9DC->unk38 = 500.0f;
-    do {
-        if (func_ovl0C_01_80049B90(var_s0->unk28) == 0) {
-            D_ovl0C_01_8004A9DC->unk40->unk10 = var_s0->unk8;
-            D_ovl0C_01_8004A9DC->unk40->unk14 = var_s0->unkC;
-            D_ovl0C_01_8004A9DC->unk40->unk18 = var_s0->unk10;
-            temp_v0 = func_ovl0C_01_80049768(D_ovl0C_01_8004A9DC, 0xC0);
-            if (temp_v0 != 0) {
-                if (temp_v0 & 0x4000) {
-                    func_ovl0C_01_80049DD8((s32) var_s0->unk2E, var_s0->unk8, var_s0->unkC, var_s0->unk10);
-                    func_ovl0C_01_80049D58(0xF, var_s0->unk8, var_s0->unkC + 100.0f, var_s0->unk10, 0);
-                    func_ovl0C_01_800497C0(var_s0->unk0, 0x01000000);
-                    func_ovl0C_01_800497D0(var_s0->unk0);
-                    temp_s1 = var_s0->unk14;
-                    temp_s2 = var_s0->unk1C;
-                    func_ovl0C_01_80048E00(temp_s1, var_s0->unk20, temp_s2, temp_s1 + 1, var_s0->unk18, temp_s2 + 1, 0x10);
-                    temp_s1_2 = var_s0->unk14;
-                    temp_s2_2 = var_s0->unk1C;
-                    func_ovl0C_01_80048DF8(temp_s1_2, var_s0->unk18, temp_s2_2, temp_s1_2 + 1, temp_s2_2 + 1, 0x11);
-                    func_ovl0C_01_80049B80(var_s0->unk28);
+    for (i = 0, p = D_ovl0C_01_8004A3CC; i < 8; i++, p++) {
+        if (func_ovl0C_01_80049B90(p->unk28) == 0) {
+            D_ovl0C_01_8004A9DC->unk40->unk10 = p->unk8;
+            D_ovl0C_01_8004A9DC->unk40->unk14 = p->unkC;
+            D_ovl0C_01_8004A9DC->unk40->unk18 = p->unk10;
+            hit = func_ovl0C_01_80049768(D_ovl0C_01_8004A9DC, 0xC0);
+            if (hit != 0) {
+                if (hit & 0x4000) {
+                    func_ovl0C_01_80049DD8(p->unk2E, p->unk8, p->unkC, p->unk10);
+                    func_ovl0C_01_80049D58(0xF, p->unk8, p->unkC + 100.0f, p->unk10, 0);
+                    func_ovl0C_01_800497C0(p->unk0, 0x01000000);
+                    func_ovl0C_01_800497D0(p->unk0);
+                    func_ovl0C_01_80048E00(p->unk14, p->unk20, p->unk1C, p->unk14 + 1, p->unk18, p->unk1C + 1, 0x10);
+                    func_ovl0C_01_80048DF8(p->unk14, p->unk18, p->unk1C, p->unk14 + 1, p->unk1C + 1, 0x11);
+                    func_ovl0C_01_80049B80(p->unk28);
                 } else {
-                    temp_v0_2 = D_ovl0C_01_8004A9DC->unk40;
-                    func_ovl0C_01_80049EB0(0x26, temp_v0_2->unk10, temp_v0_2->unk14, temp_v0_2->unk18);
+                    func_ovl0C_01_80049EB0(0x26, D_ovl0C_01_8004A9DC->unk40->unk10, D_ovl0C_01_8004A9DC->unk40->unk14, D_ovl0C_01_8004A9DC->unk40->unk18);
                 }
             }
         }
-        var_s4 += 1;
-        var_s0 += 0x30;
-    } while (var_s4 < 4);
+    }
 }
 
 void func_ovl0C_01_80043C20(void) {
