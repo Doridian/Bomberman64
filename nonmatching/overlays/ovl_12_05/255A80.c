@@ -2,7 +2,7 @@
  * NON_MATCHING: ovl_12_05's game object, complete: every function and its data.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4009, jp 4009
+ * differing words: us 2439, jp 4009
  *
  * A first draft: most of it is m2c's C, cleaned up only where it didn't
  * compile; the functions with twins elsewhere are their C, renamed
@@ -11,8 +11,10 @@
  * (0x240, the original's bytes but for the jump tables' relocations) and
  * .bss (0xA0) build to the original's sizes.
  *
- * 800434C8 and 80044534 are statics: their callers 80047DA4 and 80047E90
- * save every callee-saved register for them. The handler's cases
+ * 80043018, 800434C8 and 80044534 are statics: their caller, the handler
+ * (and 80047DA4 and 80047E90), saves every callee-saved register for them.
+ * 80043018 and 800434C8 come before the file's first global, so
+ * tools/nonmatching.py doesn't count them (scratch/12_05/allf.py does). The handler's cases
  * (80043018-80045B00) are defined above the handler, so that IDO emits
  * them, with the statics, in the reverse order of the handler's calls, as
  * in the original. The empty statics leave the `jr ra; nop` stubs at
@@ -170,7 +172,7 @@ void func_ovl12_05_8004A8F8(void);
 void func_ovl12_05_8004A900(void);
 
 static void func_ovl12_05_80043010(void);
-void func_ovl12_05_80043018(void);
+static void func_ovl12_05_80043018(void);
 static void func_ovl12_05_800434C8(void);
 static void func_ovl12_05_80044480(void);
 void func_ovl12_05_80044488(void);
@@ -1572,9 +1574,7 @@ static void func_ovl12_05_80044534(void) {
     f32 sp7C;
     f32 sp78;
     f32 sp74;
-    f32 sp70;
-    f32 sp6C;
-    f32 sp68;
+    Vec3f sp68;
     s32 sp38[4] = { 0x290, 0x291, 0x292, 0x293 };
     UnkStructA_40 *sp48[8];
     UnkStructA *temp_s4;
@@ -1668,15 +1668,12 @@ static void func_ovl12_05_80044534(void) {
     }
     if ((D_ovl12_05_8004AC4C != 0x1C) && !(var_s0->unk124 & 8)) {
         temp_s0 = func_ovl12_05_8004A840(1);
-        var_v0 = 0x1388;
-        if (temp_v0->unk10 == 0) {
-            var_v0 = 0x1F40;
-        }
+        var_v0 = temp_v0->unk10 ? 5000 : 8000;
         if (var_v0 >= D_ovl12_05_8004AC74) {
-            sp68 = temp_s0->unk1C->unk40->unk10;
-            sp6C = temp_s0->unk1C->unk40->unk14;
-            sp70 = temp_s0->unk1C->unk40->unk18;
-            func_ovl12_05_8004A428((Vec3f *) &sp68);
+            sp68.x = temp_s0->unk1C->unk40->unk10;
+            sp68.y = temp_s0->unk1C->unk40->unk14;
+            sp68.z = temp_s0->unk1C->unk40->unk18;
+            func_ovl12_05_8004A428(&sp68);
             temp_s0->unk124 |= 8;
             temp_v0->unk2C += 1;
         }
@@ -2025,9 +2022,7 @@ static void func_ovl12_05_80044480(void) {
 static void func_ovl12_05_800434C8(void) {
     UnkStructA_40 *sp7C[6];
     s32 sp64;
-    f32 sp5C;
-    f32 sp58;
-    f32 sp54;
+    Vec3f sp54;
     UnkStructA *temp_fp;
     UnkStructA *temp_s3;
     UnkStructA *temp_s6;
@@ -2129,10 +2124,10 @@ static void func_ovl12_05_800434C8(void) {
         temp_v0 = func_ovl12_05_8004A840(2);
         temp_s1 = temp_v0;
         if ((D_ovl12_05_8004AC4C != 0x1E) && !(temp_v0->unk124 & 4) && (func_ovl12_05_80049970(2) > 0)) {
-            sp54 = temp_s6->unk40->unk10;
-            sp58 = temp_s6->unk40->unk14;
-            sp5C = temp_s6->unk40->unk18;
-            func_ovl12_05_8004A428((Vec3f *) &sp54);
+            sp54.x = temp_s6->unk40->unk10;
+            sp54.y = temp_s6->unk40->unk14;
+            sp54.z = temp_s6->unk40->unk18;
+            func_ovl12_05_8004A428(&sp54);
             temp_s1->unk124 |= 4;
             temp_s0->unk2C += 1;
         }
@@ -2371,7 +2366,7 @@ static void func_ovl12_05_800434C8(void) {
     }
 }
 
-void func_ovl12_05_80043018(void) {
+static void func_ovl12_05_80043018(void) {
     UnkStructA *temp_s1;
     UnkStructA *temp_s3;
     UnkStructA_40 *temp_v0_10;
@@ -2509,24 +2504,22 @@ void func_ovl12_05_80043018(void) {
 }
 
 void func_ovl12_05_80045D3C(s32 arg0) {
+    s32 pad0;
+    s32 pad1;
+    s32 pad2;
     UnkStruct_ovl12_05_8004A840 *spC0;
     UnkStruct_ovl12_05_800497F8 *spBC;
-    f32 spB8;
-    f32 spB4;
-    f32 spB0;
+    Vec3f spB0;
+    s32 pad3;
+    s32 pad4;
+    s32 pad5;
     UnkStruct_ovl12_05_8004A840 *spA0;
     UnkStruct_ovl12_05_800497F8 *sp9C;
-    f32 sp98;
-    f32 sp94;
-    f32 sp90;
+    Vec3f sp90;
+    s32 pad6;
+    s32 pad7;
     UnkStructA_40 *temp_v1;
     UnkStructA_40 *temp_v1_3;
-    UnkStruct_ovl12_05_8004A840 *temp_v0;
-    UnkStruct_ovl12_05_8004A840 *temp_v0_2;
-    UnkStruct_ovl12_05_8004A840 *temp_v1_2;
-    UnkStruct_ovl12_05_8004A840 *temp_v1_4;
-    s32 var_v0;
-    s32 var_v0_2;
 
     switch (arg0) {
     case 2:
@@ -2556,19 +2549,13 @@ void func_ovl12_05_80045D3C(s32 arg0) {
         func_ovl12_05_80049830(0x7E, 0x13);
         func_ovl12_05_800498B8();
         func_ovl12_05_80049F50(0xF);
-        temp_v0 = func_ovl12_05_8004A840(1);
-        temp_v1_2 = temp_v0;
-        if ((D_ovl12_05_8004AC4C == 0x12) && !(temp_v0->unk124 & 8)) {
-            var_v0 = 0x1388;
-            if (spBC->unk10 == 0) {
-                var_v0 = 0x1F40;
-            }
-            if (var_v0 >= D_ovl12_05_8004AC74) {
-                spB0 = temp_v1_2->unk1C->unk40->unk10;
-                spB4 = temp_v1_2->unk1C->unk40->unk14;
-                spC0 = temp_v1_2;
-                spB8 = temp_v1_2->unk1C->unk40->unk18;
-                func_ovl12_05_8004A428((Vec3f *) &spB0);
+        spC0 = func_ovl12_05_8004A840(1);
+        if ((D_ovl12_05_8004AC4C == 0x12) && !(spC0->unk124 & 8)) {
+            if ((spBC->unk10 == 0 ? 8000 : 5000) >= D_ovl12_05_8004AC74) {
+                spB0.x = spC0->unk1C->unk40->unk10;
+                spB0.y = spC0->unk1C->unk40->unk14;
+                spB0.z = spC0->unk1C->unk40->unk18;
+                func_ovl12_05_8004A428(&spB0);
                 spC0->unk124 |= 8;
                 spBC->unk2C += 1;
             }
@@ -2588,19 +2575,13 @@ void func_ovl12_05_80045D3C(s32 arg0) {
         temp_v1_3->unk10 += 50.0f;
         func_ovl12_05_800498B8();
         func_ovl12_05_80049F50(0xF);
-        temp_v0_2 = func_ovl12_05_8004A840(1);
-        temp_v1_4 = temp_v0_2;
-        if ((D_ovl12_05_8004AC4C == 0x13) && !(temp_v0_2->unk124 & 8)) {
-            var_v0_2 = 0x1388;
-            if (sp9C->unk10 == 0) {
-                var_v0_2 = 0x1F40;
-            }
-            if (var_v0_2 >= D_ovl12_05_8004AC74) {
-                sp90 = temp_v1_4->unk1C->unk40->unk10;
-                sp94 = temp_v1_4->unk1C->unk40->unk14;
-                spA0 = temp_v1_4;
-                sp98 = temp_v1_4->unk1C->unk40->unk18;
-                func_ovl12_05_8004A428((Vec3f *) &sp90);
+        spA0 = func_ovl12_05_8004A840(1);
+        if ((D_ovl12_05_8004AC4C == 0x13) && !(spA0->unk124 & 8)) {
+            if ((sp9C->unk10 == 0 ? 8000 : 5000) >= D_ovl12_05_8004AC74) {
+                sp90.x = spA0->unk1C->unk40->unk10;
+                sp90.y = spA0->unk1C->unk40->unk14;
+                sp90.z = spA0->unk1C->unk40->unk18;
+                func_ovl12_05_8004A428(&sp90);
                 spA0->unk124 |= 8;
                 sp9C->unk2C += 1;
             }
