@@ -2,7 +2,7 @@
  * NON_MATCHING: ovl_12_05's game object, complete: every function and its data.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 100, jp 1813
+ * differing words: us 100, jp 100
  *
  * The functions with twins elsewhere are their C, renamed (ovl_12_03,
  * 12_04, 12_06, 10_13, 0C_10, 0E_15, 17_09, 17_10), with this object's
