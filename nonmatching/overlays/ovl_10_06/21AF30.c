@@ -1771,20 +1771,22 @@ s32 func_ovl10_06_80045C20(void (*arg0)()) {
 }
 
 void func_ovl10_06_80045888(void) {
+    s32 i;
+    s32 r;
+    s32 pad;
     s32 effects[10] = { 12, 13, 14, 15, 16, 19, 20, 22, 23, 24 };
     Vec3f ang;
     Vec3f pos;
-    s32 r;
-    s32 i;
+    s32 pad2[7];
 
     i = D_ovl10_06_8004B290[D_ovl10_06_8004ACA8];
     D_ovl10_06_8004B7D8[i]--;
     D_ovl10_06_8004AFF8[i] -= D_ovl10_06_8004AFA4;
     D_ovl10_06_8004ADC0[i]->unk40->unk36 = D_ovl10_06_8004AFF8[i];
     D_ovl10_06_8004ADD0[i]->unk40->unk36 = D_ovl10_06_8004AFF8[i];
-    ang.z = func_ovl10_06_8004A2A0() * 250.0f;
-    ang.x = func_ovl10_06_8004A2A0() * 360.0f;
-    ang.y = func_ovl10_06_8004A2A0() * 360.0f;
+    ang.z = (f32)func_ovl10_06_8004A2A0() * 250.0f;
+    ang.x = (f32)func_ovl10_06_8004A2A0() * 360.0f;
+    ang.y = (f32)func_ovl10_06_8004A2A0() * 360.0f;
     r = func_ovl10_06_8004A2A8(9);
     func_ovl10_06_80049F30(&ang.x, &pos.x);
     pos.x += D_ovl10_06_8004ADC0[i]->unk40->unk10;
