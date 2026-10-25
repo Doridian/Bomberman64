@@ -3,7 +3,16 @@
  * data (.data and .bss as the original's sizes).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3482, jp 3482
+ * differing words: us 3478, jp 3482
+ *
+ * The count loop (80043018) is written out at its three call sites (the
+ * handler's two, 80045E40's end), with its empty stub kept as a static and
+ * called before each loop: 3482 -> 3478 words, the handler 610 -> 611 words
+ * (0x970 against 0x9D0; the original's frame is 256 bytes, ours 128). Its
+ * calls match the original's by name. The stub's place (above the handler or
+ * at 80043018) doesn't change the score. The handler's case 2 is a call in
+ * both (80045E40 is not inlined into it here), so that fault is not present
+ * in this draft.
  *
  * The definition order is a hill-climb's (scratch/ovl_0F_01/search.py, from
  * the committed order, scored by distance from the original's emitted order,
@@ -265,7 +274,7 @@ static void func_ovl0F_01_80044408(s32 arg0, s32 arg1, s32 arg2, s32 flag);
 static void func_ovl0F_01_800441CC(s16 i);
 void func_ovl0F_01_8004413C(UnkStructA *obj);
 void func_ovl0F_01_80043B0C(void);
-static void func_ovl0F_01_80043018(s32 count, UnkStruct_ovl0F_01_80048264 *p);
+static void func_ovl0F_01_80043018(void);
 s32 func_ovl0F_01_800438C0(f32 *x);
 void func_ovl0F_01_80043628(void);
 void func_ovl0F_01_80043588(UnkStruct_ovl0F_01_80048264 *p, s32 count);
@@ -609,12 +618,16 @@ void func_ovl0F_01_80045FB8(s32 arg0) {
             }
             break;
         case 1:
-            func_ovl0F_01_80043018(3, D_ovl0F_01_8004836C);
+            func_ovl0F_01_80043018();
+            for (i = 0; i < 3; i++) {
+                func_ovl0F_01_80047850(*D_ovl0F_01_8004836C[i].unk0);
+            }
             if (D_ovl0F_01_8004841C != -1) {
                 func_ovl0F_01_80047990(D_ovl0F_01_8004841C);
             }
             func_ovl0F_01_80047528(D_ovl0F_01_8004878C);
-            func_ovl0F_01_80043018(1, &D_ovl0F_01_8004845C);
+            func_ovl0F_01_80043018();
+            func_ovl0F_01_80047850(*D_ovl0F_01_8004845C.unk0);
             func_ovl0F_01_80047510(0x258);
             if (D_ovl0F_01_80048430 != -1) {
                 func_ovl0F_01_80047990(D_ovl0F_01_80048430);
@@ -981,7 +994,10 @@ void func_ovl0F_01_8004464C(void) {
         }
         func_ovl0F_01_800479D0();
     } while (again);
-    func_ovl0F_01_80043018(6, D_ovl0F_01_80048264);
+    func_ovl0F_01_80043018();
+    for (i = 0; i < 6; i++) {
+        func_ovl0F_01_80047850(*D_ovl0F_01_80048264[i].unk0);
+    }
     func_ovl0F_01_80047998();
 }
 
@@ -1242,13 +1258,7 @@ void func_ovl0F_01_80043B0C(void) {
     func_ovl0F_01_80047998();
 }
 
-static void func_ovl0F_01_80043018(s32 count, UnkStruct_ovl0F_01_80048264 *p) {
-    s32 i;
-
-    for (i = 0; i < count; i++) {
-        func_ovl0F_01_80047850(*p->unk0);
-        p++;
-    }
+static void func_ovl0F_01_80043018(void) {
 }
 
 /* the platforms rise, wobble and settle; 1 while one still sinks, 2 once all
