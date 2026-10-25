@@ -803,6 +803,14 @@ module's asm blocks, though the draft defines it.
   - a static called from two functions is not inlined, while one called
     several times from one function is; a dead second call also keeps
     it out of line.
+- **When no order model fits, climb.** In ovl_13_01 no model of the
+  emission order predicted the draft; `scratch/13_01/climb.py` moves one
+  definition at a time and keeps what improves the emitted order (9232
+  to 5895 words, under a second per compile). Also there: ZeroJump
+  functions declared `()` widen float arguments to doubles, so give them
+  prototypes (`scratch/13_01/protofix2.py`); a jump table needs its last
+  empty `case`; and a dead `if (d > 10.0f || d < -10.0f) {}` can be in
+  the original.
 - **Unsolved: a block boundary with no branch.** Two misses come from
   how as1 schedules a block, not from ugen, so `cc -c -S` (ugen's
   `u.out.s`, before as1) shows them. In each, adding a single label to
