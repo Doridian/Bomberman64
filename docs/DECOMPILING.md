@@ -790,6 +790,19 @@ module's asm blocks, though the draft defines it.
   words with the object's length mod 16. A position kept as a Vec3f
   across calls takes float saved registers in every caller; the original
   used an `f32[3]` on the stack (80043858).
+- **What pulls a static out, and when** (ovl_0B_04, small tests in
+  `scratch/0B_04/p4/t/`; 4119 to 3294 words):
+  - a call through a function pointer pulls out every function whose
+    address the code takes, statics and globals alike;
+  - dead calls count: a call in `if (0) {}`, or in a branch an inlined
+    static folds away, decides the order and leaves no code, so a dead
+    block at the end of a global listing a run in reverse gives any
+    order (`scratch/0B_04/p4/pull.py`); the original's runs of statics
+    ahead of callers that don't call them suggest inlined statics with
+    dead branches;
+  - a static called from two functions is not inlined, while one called
+    several times from one function is; a dead second call also keeps
+    it out of line.
 - **Unsolved: a block boundary with no branch.** Two misses come from
   how as1 schedules a block, not from ugen, so `cc -c -S` (ugen's
   `u.out.s`, before as1) shows them. In each, adding a single label to
