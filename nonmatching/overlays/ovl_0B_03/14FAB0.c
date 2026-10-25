@@ -6,7 +6,7 @@
  * tables, .bss 0x1140, as the original's sizes). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1725, eu 2899, jp 2683
+ * differing words: us 1725, eu 1725, jp 2683
  *
  * jp (`#if VERSION_JP`) has its own strings (80048AF4, 80048B60,
  * 80049144, and D_ovl0B_03_8004901C_jp for us's 80049168, with the
