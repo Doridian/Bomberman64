@@ -779,6 +779,17 @@ module's asm blocks, though the draft defines it.
     the first test's compares (80047308);
   - switch on the global itself, not a `state` copy (80046D74), and write
     `&= ~2; |= 4` as two statements so the stores aren't merged.
+- **The handler-first order can be steered with fake references.** With
+  the handler defined last (compiled first), the functions it only takes
+  the address of come out in the reverse order of their first references,
+  the statics' (in definition order) before the handler's. An `if (0)`
+  block of references at the top of the first-defined static, commented
+  as a fake, puts them in any order (ovl_0F_02, 5736 to 3348 words;
+  `scratch/0F_02/p3/mkfake.py`). What Hudson's source had is open.
+  Score stubs in combination: the last run's count swings by about 65
+  words with the object's length mod 16. A position kept as a Vec3f
+  across calls takes float saved registers in every caller; the original
+  used an `f32[3]` on the stack (80043858).
 - **Unsolved: a block boundary with no branch.** Two misses come from
   how as1 schedules a block, not from ugen, so `cc -c -S` (ugen's
   `u.out.s`, before as1) shows them. In each, adding a single label to
