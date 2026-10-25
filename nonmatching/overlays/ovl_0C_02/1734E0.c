@@ -4,7 +4,7 @@
  * 0xF0 where the original's is 0xD0).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 538, jp 538
+ * differing words: us 526, jp 538
  *
  * A first complete draft: the functions shared with bank 0x0C's and
  * 0x12/0x17's drafts are theirs (scratch/0C_02/sib.py), the rest m2c's
@@ -2199,32 +2199,22 @@ void func_ovl0C_02_80043650(UnkStructA **arg0, UnkStruct_ovl0C_02_80049C24 *arg1
 }
 
 void func_ovl0C_02_80043544(UnkStruct_ovl0C_02_80049C24 *arg0, s32 arg1) {
-    UnkStructA *temp_s3;
-    UnkStruct_ovl0C_02_80049C24 *var_s0;
-    s16 temp_s1;
-    s16 temp_s1_2;
-    s16 temp_s2;
-    s16 temp_s2_2;
-    s16 temp_t1;
+    UnkStruct_ovl0C_02_80049C24 *p;
+    UnkStructA *obj;
+    s32 flag;
 
-    var_s0 = arg0;
-    if (arg0->unk2 != 0) {
-        do {
-            temp_s3 = func_ovl0C_02_80049110(0x2B0, 0xD0, var_s0->unk8, var_s0->unk14, var_s0->unk10);
-            if (arg1 == 0) {
-
-            }
-            func_ovl0C_02_800490C8(temp_s3, 0x01000000);
-            temp_s1 = var_s0->unk18;
-            temp_s2 = var_s0->unk1C;
-            var_s0->unk4 = temp_s3;
-            var_s0->unkC = var_s0->unk14;
-            func_ovl0C_02_80048708((s32) temp_s1, (s32) var_s0->unk1A, (s32) temp_s2, temp_s1 + 3, temp_s2 + 2, 0x11);
-            temp_s1_2 = var_s0->unk18;
-            temp_s2_2 = var_s0->unk1C;
-            func_ovl0C_02_80048708((s32) temp_s1_2, (s32) var_s0->unk1E, (s32) temp_s2_2, temp_s1_2 + 3, temp_s2_2 + 2, 0x1F);
-            var_s0 += 1;
-        } while (var_s0->unk2 != 0);
+    for (p = arg0; p->unk2 != 0; p++) {
+        obj = func_ovl0C_02_80049110(0x2B0, 0xD0, p->unk8, p->unk14, p->unk10);
+        if (arg1) {
+            flag = 0x01000000;
+        } else if (arg1 == 0) {
+            flag = 0x01000000;
+        }
+        func_ovl0C_02_800490C8(obj, flag);
+        p->unk4 = obj;
+        p->unkC = p->unk14;
+        func_ovl0C_02_80048708(p->unk18, p->unk1A, p->unk1C, p->unk18 + 3, p->unk1C + 2, 0x11);
+        func_ovl0C_02_80048708(p->unk18, p->unk1E, p->unk1C, p->unk18 + 3, p->unk1C + 2, 0x1F);
     }
 }
 
