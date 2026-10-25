@@ -5,31 +5,30 @@
  * floats in another order). .text is the original's size. Not built into
  * the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 198, jp 1687
+ * differing words: us 187, jp 1687
  *
  * What still differs in us (words, as tools/nonmatching.py counts them; a
  * static's words go to the named function before it):
- * - m2c's C cleaned up only where it didn't compile, or rewritten where
- *   m2c's was wrong (80044EFC, 80044F8C, 80045888, 800460C8, 800466C4,
- *   8004683C, 80046B58, 80046D74, 80047810, 800479B8, 80048110) or where
- *   a second pass matched it (8004322C-80043338's stubs, 800445DC,
- *   80044D00, 80045518, 80047D14): 80043A68 (0), 80043CB0 (0),
- *   80043FF8 (0), 8004411C (0), 800442D4 (2), 800443DC (7), 80044804
- *   (0), 80044A54 (0), 80044AE4 (0), 80044BCC (0), 80044F8C (4), 80045458
- *   (8), 800455EC (0), 8004584C (9), 80045CE4 (38), 80045F9C (0),
- *   800460C8 (2), 800463C0 (0), 80046478 (0), 800465F4 (0), 800466C4
- *   (0), 8004683C (0), 80046A04 (0), 80046BF0 (0), 80046C64 (0),
- *   80046D74 (0), 80047110 (2), 800473FC (0), 80047450 (0), 80047634
- *   (0), 80047810 (0), 80047B0C (0), 80047BE0 (0), 80047C98 (0),
- *   80047E10 (0), 80048110 (22), 80048498 (0), 80048944 (0), 800489FC
- *   (0), 80049020 (0).
- * - 80045888 (104): its frame is right (pad2 fills what is probably an
- *   inlined static's slots), but its t registers are one off from the
- *   start and 8004AFF8's address is loaded late.
- * - 80047308 (0): the angle test (`>= 0.0 && < 22.5`, empty) keeps a
- *   second branch the original doesn't have; the fake keeps the tests at
- *   all.
- * - 80047A50 (0): one nop more after its loop.
+ * - 80045888 (102): its frame is right (pad2 fills the slots of what it
+ *   inlines: 8004584C, 800448EC), but its t registers are one off from
+ *   the local initializer's copy on, and its a registers differ late.
+ * - 80045CE4 (38), 80045458 (8), 80048110 (22): the same kind of miss:
+ *   one value in another register from the start (80045CE4 keeps
+ *   8004B3A0[i] in a2 and its address in v1; 80045458 the result's field
+ *   in a1; 80048110 the switch value in a1), the rest following it.
+ * - 800443DC (7), 80044F8C (4), 800442D4 (2), 800460C8 (2), 80047110
+ *   (2, a spill slot 4 bytes low).
+ * - The third pass rewrote m2c's pointer arithmetic as Hudson's indexed
+ *   globals (`D[i]->unk40->x` re-read at each use, `for` loops), which
+ *   matched most of the object; the rest came from: a Vec3f for what
+ *   80049F28 fills (800466C4 divides by its z, which m2c read as [1]);
+ *   8004B900-8004B98C as structs, not f32[4] (IDO keeps one field across
+ *   a store to another); 80046D74 calling 80046C34 and 80046BC4 (which
+ *   returns its slot) and 80045888 calling 8004584C and 800448EC, all
+ *   inlined (each inlined callee's locals take the caller's frame slots);
+ *   statement order (80043CB0, 8004411C, 80046BF0, 80046C64, 80044BCC);
+ *   80047308's empty `if`/`else if` chain on the angle (the second test's
+ *   bounds are a guess; IDO drops them).
  * - 800434E0, 8004355C and 800435FC are defined above 8004368C so that it
  *   pulls them (the static between the two globals, as in the original).
  *   The stubs 80043268/80043270 and 80043330 are empty statics called by
@@ -43,7 +42,8 @@
  * ovl_10_12's and ovl_10_13's, 80049118-800491F0 ovl_17_09's (renamed by
  * their asm); the rest is m2c's output (scratch/10_06/ in the checkout has
  * the scripts; since the second pass the draft is edited directly, and
- * scratch/10_06/p2/ has that pass's helpers). 800430A8 is defined above 80048FE8, as in ovl_10_10, so
+ * scratch/10_06/p2/ and p3/ have the second and third passes' helpers).
+ * 800430A8 is defined above 80048FE8, as in ovl_10_10, so
  * the strings come out in the original's order. The tables 8004A998-
  * 8004A9C8 and 8004A9D4 are 800460C8's and 80045888's local initializers.
  * 80049208's fake keeps the .bss's unread words in place.
@@ -1537,7 +1537,7 @@ void func_ovl10_06_80045888(void) {
     s32 effects[10] = { 12, 13, 14, 15, 16, 19, 20, 22, 23, 24 };
     Vec3f ang;
     Vec3f pos;
-    s32 pad2[3];
+    s32 pad2[1];
 
     i = D_ovl10_06_8004B290[D_ovl10_06_8004ACA8];
     D_ovl10_06_8004B7D8[i]--;
@@ -1580,7 +1580,12 @@ void func_ovl10_06_80045888(void) {
 }
 
 void func_ovl10_06_8004584C(void) {
-    D_ovl10_06_8004ACB0[D_ovl10_06_8004B3C0[D_ovl10_06_8004B290[D_ovl10_06_8004ACA8]]] = NULL;
+    s32 i;
+    s32 slot;
+
+    i = D_ovl10_06_8004B290[D_ovl10_06_8004ACA8];
+    slot = D_ovl10_06_8004B3C0[i];
+    D_ovl10_06_8004ACB0[slot] = NULL;
 }
 
 /* ovl_10_13's 80046D38 */
