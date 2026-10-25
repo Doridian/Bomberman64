@@ -358,7 +358,13 @@ module's asm blocks, though the draft defines it.
     statics, defined below it comes out at its own turn (ovl_0D_04's
     func_80043F1C between 80043EA8 and 80043F24). The same holds for a
     non-empty global: ovl_0D_04's func_80043478 comes out after
-    800433F0 (pulled by 800435AC) only when defined above 800435AC;
+    800433F0 (pulled by 800435AC) only when defined above 800435AC.
+    ovl_10_13's handler cases 800460E0-800468BC are globals defined
+    above the handler: they stay calls and come out between the
+    cut-scene statics and the handler, as in the original (as statics
+    they were inlined; defined below, they came out ahead of the
+    statics). `scratch/10_13/allf.py` counts statics too, from the
+    object's `.mdebug`;
   - a big global that the original both inlines into a caller and emits
     whole is too big to inline as one global, and as a static it isn't
     emitted on its own: a global one-call wrapper around a static holding
@@ -491,6 +497,9 @@ module's asm blocks, though the draft defines it.
   (ovl_0C_01's 80047A60, 136 words to 36).
 - **Re-read a global after each call** where m2c keeps it in a temporary
   and the original reloads it (ovl_0C_01's 80046224, 51 words to 0).
+  `D = f(); D->x |= 0x80;` keeps `&D` in a register (`lui/addiu a1;
+  sw v0, 0(a1)`), where a local copy gives `lui at; sw` (ovl_10_13's
+  800468BC).
 - **Declaration order picks the saved float registers.** Which value gets
   which `$f2x`, and which is spilled, follows the order the locals are
   declared and first assigned. A file of small functions compiles in
