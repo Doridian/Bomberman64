@@ -3,7 +3,7 @@
  * .bss and its .data tables. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 126, jp 210
+ * differing words: us 126, jp 126
  *
  * What still differs in us (words):
  * - func_ovl10_08_800432B0 (6), 80044F98 (12), 800455FC (62), 8004675C

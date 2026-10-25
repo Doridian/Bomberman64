@@ -3,7 +3,7 @@
  * .bss and its .data tables; .text one word long. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 111, eu 195, jp 195
+ * differing words: us 111, eu 195, jp 111
  *
  * What still differs in us (words; eu and jp the same):
  * - func_ovl10_12_800432B0 (6), func_ovl10_12_80044FEC (62) and
