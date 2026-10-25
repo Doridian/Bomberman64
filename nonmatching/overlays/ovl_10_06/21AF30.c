@@ -158,7 +158,7 @@ s32 func_ovl10_06_8004A2A8(s32);
 s32 func_ovl10_06_8004A350(s32);
 void func_ovl10_06_8004A360(s32);
 s32 func_ovl10_06_8004A370(s32);
-s32 *func_ovl10_06_8004A380(void);
+s32 *func_ovl10_06_8004A380(s32);
 void func_ovl10_06_8004A3E8(s32, s32, s32, f32);
 void func_ovl10_06_8004A450(u32 (*)[3]);
 UnkStruct_ovl10_06_8004A460 *func_ovl10_06_8004A460(void);
@@ -2548,37 +2548,6 @@ void func_ovl10_06_80043820(s32 arg0) {
     }
 }
 
-void func_ovl10_06_8004368C(void) {
-    UnkStructA *temp_v0;
-
-    func_ovl10_06_8004A450((u32 (*)[3]) D_ovl10_06_8004A918);
-    func_ovl10_06_8004A5F8(0, 0, 0xDE);
-    func_ovl10_06_8004A5F8(1, 0x11, 0xEF);
-    func_ovl10_06_8004A5F8(2, 0x1A, 0xF8);
-    func_ovl10_06_8004A5F8(3, 0x1B, 0xF9);
-    func_ovl10_06_8004A5F8(4, 0xC, 0xEA);
-    func_ovl10_06_8004A5F8(5, 0xC, 0xE0);
-    func_ovl10_06_80049598(0x1E0);
-    temp_v0 = func_ovl10_06_80049FC0(0xBC, 0x01000000, 0xD0, 0);
-    D_ovl10_06_8004ADB8 = temp_v0;
-    temp_v0->unk40->unk10 = 0.0f;
-    D_ovl10_06_8004ADB8->unk40->unk14 = 0.0f;
-    D_ovl10_06_8004ADB8->unk40->unk18 = 0.0f;
-    func_ovl10_06_800435FC(0x1FD);
-    func_ovl10_06_800495B0(0x1E6);
-    func_ovl10_06_80049660(0xF);
-    D_ovl10_06_8004B284 = func_ovl10_06_80049668(0x1E7);
-    D_ovl10_06_8004B288 = func_ovl10_06_80049668(0x1E8);
-    func_ovl10_06_80049748();
-    func_ovl10_06_800496D0(func_ovl10_06_8004396C);
-    if (func_ovl10_06_8004A370(0x401) != 0) {
-        func_ovl10_06_8004355C(0x28, 0x2C, 1, 0xF);
-    }
-    func_ovl10_06_80049680(func_ovl10_06_80048F7C);
-    func_ovl10_06_800434E0();
-    D_ovl10_06_8004B8FC = 0;
-}
-
 /* ovl_10_13's 80046C70 */
 void func_ovl10_06_800435FC(s32 arg0) {
     D_ovl10_06_8004ADB0 = func_ovl10_06_8004A170(arg0);
@@ -2614,6 +2583,37 @@ void func_ovl10_06_800434E0(void) {
     func_ovl10_06_8004A0E8(func_ovl10_06_80049020, 0, 0, 0, 0x110);
 }
 
+void func_ovl10_06_8004368C(void) {
+    UnkStructA *temp_v0;
+
+    func_ovl10_06_8004A450((u32 (*)[3]) D_ovl10_06_8004A918);
+    func_ovl10_06_8004A5F8(0, 0, 0xDE);
+    func_ovl10_06_8004A5F8(1, 0x11, 0xEF);
+    func_ovl10_06_8004A5F8(2, 0x1A, 0xF8);
+    func_ovl10_06_8004A5F8(3, 0x1B, 0xF9);
+    func_ovl10_06_8004A5F8(4, 0xC, 0xEA);
+    func_ovl10_06_8004A5F8(5, 0xC, 0xE0);
+    func_ovl10_06_80049598(0x1E0);
+    temp_v0 = func_ovl10_06_80049FC0(0xBC, 0x01000000, 0xD0, 0);
+    D_ovl10_06_8004ADB8 = temp_v0;
+    temp_v0->unk40->unk10 = 0.0f;
+    D_ovl10_06_8004ADB8->unk40->unk14 = 0.0f;
+    D_ovl10_06_8004ADB8->unk40->unk18 = 0.0f;
+    func_ovl10_06_800435FC(0x1FD);
+    func_ovl10_06_800495B0(0x1E6);
+    func_ovl10_06_80049660(0xF);
+    D_ovl10_06_8004B284 = func_ovl10_06_80049668(0x1E7);
+    D_ovl10_06_8004B288 = func_ovl10_06_80049668(0x1E8);
+    func_ovl10_06_80049748();
+    func_ovl10_06_800496D0(func_ovl10_06_8004396C);
+    if (func_ovl10_06_8004A370(0x401) != 0) {
+        func_ovl10_06_8004355C(0x28, 0x2C, 1, 0xF);
+    }
+    func_ovl10_06_80049680(func_ovl10_06_80048F7C);
+    func_ovl10_06_800434E0();
+    D_ovl10_06_8004B8FC = 0;
+}
+
 void func_ovl10_06_800434D8(void) {
 
 }
@@ -2644,7 +2644,11 @@ void func_ovl10_06_800433C8(void) {
 }
 
 /* ovl_10_12's 800446B0 */
+static void func_ovl10_06_80043330(void) {
+}
+
 void func_ovl10_06_80043338(void) {
+    func_ovl10_06_80043330();
     D_ovl10_06_8004ADB4 = func_ovl10_06_800496E8();
     if (*D_ovl10_06_8004ADB4 & 2) {
         func_ovl10_06_8004A0E8(func_ovl10_06_80048EA0, 0, 0, 0, 0x130);
@@ -2655,7 +2659,15 @@ void func_ovl10_06_80043338(void) {
     }
 }
 
+static void func_ovl10_06_80043270(void) {
+}
+
+static void func_ovl10_06_80043268(void) {
+}
+
 void func_ovl10_06_80043278(void) {
+    func_ovl10_06_80043268();
+    func_ovl10_06_80043270();
     func_ovl10_06_800497E0(1);
     if (func_ovl10_06_80049760(3, 0xE, 5, 0x10) != 0) {
         D_ovl10_06_8004AB84 = 0x6C;
@@ -2674,13 +2686,11 @@ void func_ovl10_06_80043278(void) {
 }
 
 void func_ovl10_06_8004322C(s32 arg0) {
-    s32 *temp_v0;
-    s32 temp_v1;
+    s32 *p;
 
-    temp_v0 = func_ovl10_06_8004A380();
-    temp_v1 = *temp_v0;
-    if ((temp_v1 <= 0) || (temp_v1 == 0)) {
-        *temp_v0 = 1;
+    p = func_ovl10_06_8004A380(arg0);
+    if (*p <= 0 || *p == 0) {
+        *p = 1;
     }
 }
 
