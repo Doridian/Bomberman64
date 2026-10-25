@@ -580,6 +580,33 @@ module's asm blocks, though the draft defines it.
   follow the order their functions are defined, not emitted: ovl_10_06's
   came out right only with 800430A8 defined above 80048FE8, and
   ovl_10_13's with 80046DD8 above 80046E50.
+- **A handler defined last pulls its callees' stubs forward.** A stub
+  that comes out before the function inlining it, where the original has
+  it with the stubs at the object's start, means the caller was processed
+  first: ovl_0D_07's handler 80043660 defined last in the source pulls
+  80043030-8004342C (and their statics) out ahead of itself in the reverse
+  order of their last calls, and the stub of the static its last case
+  inlines comes out first (us 146 to 137, with 8004342C moved above its
+  callback 80044754 to keep the callbacks in order).
+- **An inlined static's arguments can each take a register for the whole
+  caller.** Called with `(obj[0], obj[1])`, ovl_0D_07's angle static
+  had both arguments in `t0`/`t1`, which every other block then skipped
+  (event 4's `t0` came out `t2`); passing player 0 through the local the
+  call's result was assigned to (`obj[0] = o = f(0)`) and player 1 as
+  `obj[1]->unk40` left one, as in the original (98 to 70).
+- **A product added last.** `(p->x - 80.0f) + rand() * 160.0`, not m2c's
+  `rand() * 160.0 + (p->x - 80.0f)`: the operand order of the `add.d`
+  and the whole schedule of the argument list follow it (ovl_0D_07's
+  80043660, 53 words).
+- **A fake after a static's stores.** ovl_0D_07's 800432F8 and 8004342C
+  each inline a static that ends in stores to a global struct; IDO
+  hoisted the next call's argument load above them and filled the
+  call's delay slot. `if (!D && !D && !D) {}` right after the static's
+  call (D a variable the function doesn't use) puts the stores first and
+  leaves the slot empty, as in the original (22 words to 0; ovl_0D_05's
+  80043018 has the same problem). A function a word short also shifts
+  the next functions' `.align`-ed blocks: 80044AF0's extra `nop` before
+  its epilogue went with 800432F8's size.
 - **A ternary with equal arms keeps a constant out of a saved register.**
   An infinite loop's `0x01000000` was hoisted into `s3` (a bigger frame);
   `p->unk28 ? 0x01000000 : 0x01000000` leaves it a `lui` in a delay slot
