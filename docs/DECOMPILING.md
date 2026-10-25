@@ -542,6 +542,33 @@ module's asm blocks, though the draft defines it.
   pointer as `base + size` with `sltu` came from a static inlined at two
   call sites; `temp + 8` on a `Gfx *` steps 64 bytes, so write display
   lists one macro per command.
+- **Name static stubs for where they're emitted.** A group of empty
+  static stubs comes out in IDO's order (often reversed), and fcmp finds
+  statics by their `.mdebug` names, so a stub named for another stub's
+  address makes "not in the original" count the whole object against it.
+  ovl_0A_01's stubs, renamed to the addresses they land at, took it from
+  4920 words to 776 (`scratch/0A_01/procs.py` lists the draft's procedures
+  next to the original's).
+- **Check m2c's calls, globals and constants before tuning.** Diff every
+  `jal` target, global and `lui` immediate against the asm first: two of
+  ovl_12_05's functions had another function's body or a twin's
+  constants, about 200 words between them.
+- **Every declared scalar takes a frame slot in a big -O3 function,** even
+  one kept in a register, laid out from the top of the frame down in
+  declaration order. A frame too big means too many locals: merge ones
+  whose lives don't overlap (ovl_12_05's 80044534), or move them into
+  the pad slots below an array (800434C8). An extra parameter on a static
+  inlined into it costs the caller 8 bytes the same way (ovl_0A_01).
+- **Nops before an epilogue after an infinite loop are alignment.** IDO
+  puts that unreachable epilogue on a 32-byte boundary in the object, so
+  more nops than the original means the code before it has a different
+  length; it fixes itself once that matches.
+- **A count passed to a static** gives the original's `slt`/`bnez` where
+  a constant limit gives `bne` (ovl_0A_01's 8004607C, called as
+  `(1, LIGHTS)`).
+- **Source order picks the order of constant loads.** Setting a float
+  after a call instead of before it changed which `lui at` came first
+  (ovl_0A_01's 80044A2C, 156 words to 11).
 - **A twin's C carries the twin's constants.** `scratch/tools/simil_all.py`
   compares mnemonics, so a function that scores 1.00 may pass other
   immediates (ovl_10_10's 800442B8 passes `0x28, 0x2E, 2, 0x10` where
