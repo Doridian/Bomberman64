@@ -503,6 +503,14 @@ module's asm blocks, though the draft defines it.
   after a `beqz`) were read into float locals before the `if`, not in its
   condition (ovl_10_06's 80044D00, 119 words to 0, with an
   `(f32, f32, f32)` prototype).
+- **Rewrite a cut-scene as Hudson wrote loops** rather than tuning m2c's
+  C: `for` loops, `obj->unk40->x` re-read at every use, no temporaries,
+  and one variable where m2c split two values whose lives don't overlap
+  (that also gives the original's saved register). ovl_12_05's 800434C8
+  went from 866 words to 2 this way; the last big step was using `i`
+  rather than `j` in one loop. Three `f32` locals m2c passes as
+  `(Vec3f *)&spXX` are one `Vec3f`. `li v0,5000; bnez; nop; b; li
+  v0,8000` is `s->unk10 == 0 ? 8000 : 5000`.
 - **A twin's C carries the twin's constants.** `scratch/tools/simil_all.py`
   compares mnemonics, so a function that scores 1.00 may pass other
   immediates (ovl_10_10's 800442B8 passes `0x28, 0x2E, 2, 0x10` where
@@ -583,7 +591,10 @@ module's asm blocks, though the draft defines it.
   `if (flag)` (ovl_0C_02's 80046B68: 152 words to 4 with all three
   loops, 10 with one).
   In -O3 objects the other source is a static callee: the caller saves
-  what the callee uses unsaved (86680's func_8026C0A8).
+  what the callee uses unsaved (86680's func_8026C0A8). So a function
+  that uses callee-saved registers without saving them is a static
+  (`scratch/12_05/p2/sav.py` lists them); making ovl_12_05's 80043018
+  static fixed its handler's prologue.
 - **An empty `if` can keep a parameter in a register.** Bank 0x10's
   80043924 (ovl_10_09; 10_07, 10_08 and 10_12 have it) loads arg0 into
   `v1` at the end of both arms of an `if` and keeps it for the loops
