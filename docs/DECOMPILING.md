@@ -588,6 +588,12 @@ module's asm blocks, though the draft defines it.
   the wrong size makes fcmp count the rest of its run as different. A
   stub may have a body after all (ovl_0B_06's 8004382C is 80043834's
   first loop, `f(p, 6)`).
+- **Statics only .data points to come out last, in definition order.**
+  They follow the object's unused stubs, not reversed (ovl_0B_02's four
+  group tasks in its table at 8004A150, 3735 to about 3480 words).
+  ZeroJump calls take their prototypes from the other drafts' `/* 0xNNN */`
+  comments, since every overlay's table is laid out alike
+  (`scratch/0B_02/protos.py`).
 - **Statics take arguments in the caller's registers.** IDO passes an
   inlined-once static's arguments in whatever `$s`/`$t`/`$fp` register or
   stack slot the caller holds them in, which m2c can't follow; the setup
