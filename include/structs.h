@@ -15,7 +15,8 @@ typedef struct {
 
 /* The structure at UnkStructA's 0x40. */
 typedef struct {
-    /* 0x00 */ u8 unk0[0xC];
+    /* 0x00 */ u8 unk0[8];
+    /* 0x08 */ s32 unk8;
     /* 0x0C */ s32 unkC;
     /* 0x10 */ f32 unk10;
     /* 0x14 */ f32 unk14;
@@ -68,7 +69,7 @@ typedef struct {
     /* 0x40 */ UnkStructA_40 *unk40;
     /* 0x44 */ u8 unk44[8];
     /* 0x4C */ f32 unk4C;
-    /* 0x50 */ u8 unk50[4];
+    /* 0x50 */ f32 unk50;
     /* 0x54 */ f32 unk54;
     /* 0x58 */ f32 unk58;
     /* 0x5C */ f32 unk5C;
