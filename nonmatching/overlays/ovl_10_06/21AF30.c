@@ -5,7 +5,7 @@
  * floats in another order). .text is the original's size. Not built into
  * the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 494, jp 1687
+ * differing words: us 423, jp 1687
  *
  * What still differs in us (words, as tools/nonmatching.py counts them; a
  * static's words go to the named function before it):
@@ -13,12 +13,12 @@
  *   m2c's was wrong (80044EFC, 80044F8C, 80045888, 800460C8, 800466C4,
  *   8004683C, 80046B58, 80046D74, 80047810, 800479B8, 80048110) or where
  *   a second pass matched it (8004322C-80043338's stubs, 800445DC,
- *   80044D00, 80045518, 80047D14): 80043A68 (16), 80043CB0 (29),
- *   80043FF8 (32), 8004411C (2), 800442D4 (2), 800443DC (7), 80044804
+ *   80044D00, 80045518, 80047D14): 80043A68 (16), 80043CB0 (0),
+ *   80043FF8 (32), 8004411C (0), 800442D4 (2), 800443DC (7), 80044804
  *   (6), 80044A54 (6), 80044AE4 (3), 80044BCC (15), 80044F8C (4), 80045458
  *   (8), 800455EC (3), 8004584C (9), 80045CE4 (38), 80045F9C (0),
  *   800460C8 (2), 800463C0 (0), 80046478 (0), 800465F4 (0), 800466C4
- *   (18), 8004683C (30), 80046A04 (0), 80046BF0 (19), 80046C64 (21),
+ *   (18), 8004683C (30), 80046A04 (0), 80046BF0 (0), 80046C64 (0),
  *   80046D74 (0), 80047110 (2), 800473FC (0), 80047450 (0), 80047634
  *   (0), 80047810 (15), 80047B0C (3), 80047BE0 (0), 80047C98 (16),
  *   80047E10 (0), 80048110 (22), 80048498 (0), 80048944 (0), 800489FC
@@ -1174,9 +1174,9 @@ void func_ovl10_06_80046D74(void) {
 void func_ovl10_06_80046C64(void) {
     D_ovl10_06_8004B900.x = 4000.0f;
     D_ovl10_06_8004B900.y = 400.0f;
+    D_ovl10_06_8004B900.z = 1500.0f;
     D_ovl10_06_8004B910.x = 3200.0f;
     D_ovl10_06_8004B910.y = 0.0f;
-    D_ovl10_06_8004B900.z = 1500.0f;
     D_ovl10_06_8004B920.x = (f32) ((D_ovl10_06_8004B910.x - D_ovl10_06_8004B900.x) / 150.0f);
     D_ovl10_06_8004B920.y = (f32) ((D_ovl10_06_8004B910.y - D_ovl10_06_8004B900.y) / 150.0f);
     func_ovl10_06_80049EF0(&D_ovl10_06_8004B940.x);
@@ -1194,9 +1194,9 @@ void func_ovl10_06_80046C34(void) {
 }
 
 void func_ovl10_06_80046BF0(void) {
+    D_ovl10_06_8004B930.x = D_ovl10_06_8004ADD0[0]->unk40->unk10;
     D_ovl10_06_8004B930.y = 10.0f;
-    D_ovl10_06_8004B930.x = (f32) D_ovl10_06_8004ADD0[0]->unk40->unk10;
-    D_ovl10_06_8004B930.z = (f32) D_ovl10_06_8004ADD0[0]->unk40->unk18;
+    D_ovl10_06_8004B930.z = D_ovl10_06_8004ADD0[0]->unk40->unk18;
     D_ovl10_06_8004B9A4 = NULL;
 }
 
@@ -2031,9 +2031,9 @@ void func_ovl10_06_8004411C(void) {
         D_ovl10_06_8004B970.z = 0.0f;
         D_ovl10_06_8004ACB0[D_ovl10_06_8004ACA8] = NULL;
     }
+    ang.z = D_ovl10_06_8004B970.z;
     ang.x = D_ovl10_06_8004B970.x;
     ang.y = D_ovl10_06_8004B970.y;
-    ang.z = D_ovl10_06_8004B970.z;
     func_ovl10_06_80049F30(&ang.x, &pos.x);
     func_ovl10_06_80049780(func_ovl10_06_80049778(), &base.x);
     D_ovl10_06_8004AF18->unk40->unk10 = pos.x + base.x + 200.0f;
@@ -2102,41 +2102,36 @@ void func_ovl10_06_80043EA8(void) {
 }
 
 void func_ovl10_06_80043CB0(void) {
-    Vec3f sp3C;
-    Vec3f sp30;
-    Vec3f sp24;
-    UnkStructA *temp_v0;
-    UnkStructA_40 *temp_v0_2;
-    UnkStructA_40 *temp_v0_3;
+    Vec3f ang;
+    Vec3f pos;
+    Vec3f base;
 
     D_ovl10_06_8004B970.z = 1000.0f;
     D_ovl10_06_8004B970.x = 315.0f;
     D_ovl10_06_8004B970.y = 180.0f;
     D_ovl10_06_8004B980.x = -1.0f;
     D_ovl10_06_8004B980.y = -1.0f;
-    sp3C.z = D_ovl10_06_8004B970.z;
-    sp3C.x = D_ovl10_06_8004B970.x;
-    sp3C.y = D_ovl10_06_8004B970.y;
+    ang.z = D_ovl10_06_8004B970.z;
+    ang.x = D_ovl10_06_8004B970.x;
+    ang.y = D_ovl10_06_8004B970.y;
     D_ovl10_06_8004B980.z = -19.0f;
-    func_ovl10_06_80049F30(&sp3C.x, &sp30.x);
-    func_ovl10_06_80049780(func_ovl10_06_80049778(), &sp24.x);
+    func_ovl10_06_80049F30(&ang.x, &pos.x);
+    func_ovl10_06_80049780(func_ovl10_06_80049778(), &base.x);
     func_ovl10_06_800430A8(func_ovl10_06_8004411C);
     D_ovl10_06_8004AF18 = func_ovl10_06_80049FC0(0x328, 0x01000000, 0xC0, 0);
-    D_ovl10_06_8004AF18->unk40->unk10 = sp30.x + sp24.x + 200.0f;
-    D_ovl10_06_8004AF18->unk40->unk14 = sp30.y + sp24.y + 500.0f;
-    D_ovl10_06_8004AF18->unk40->unk18 = sp30.z + sp24.z;
+    D_ovl10_06_8004AF18->unk40->unk10 = pos.x + base.x + 200.0f;
+    D_ovl10_06_8004AF18->unk40->unk14 = pos.y + base.y + 500.0f;
+    D_ovl10_06_8004AF18->unk40->unk18 = pos.z + base.z;
     D_ovl10_06_8004AF18->unk40->unk20 = 0.0f;
     func_ovl10_06_80049FD0(D_ovl10_06_8004AF18);
     func_ovl10_06_80049CB8(D_ovl10_06_8004AF18->unk40, 1);
     func_ovl10_06_80049CC0(D_ovl10_06_8004AF18->unk40, 0x16, 0);
-    temp_v0_2 = D_ovl10_06_8004AF18->unk40;
-    temp_v0_2->unkC &= ~0x20;
-    temp_v0_3 = D_ovl10_06_8004AF18->unk40;
-    temp_v0_3->unkC |= 0x40;
+    D_ovl10_06_8004AF18->unk40->unkC &= ~0x20;
+    D_ovl10_06_8004AF18->unk40->unkC |= 0x40;
     D_ovl10_06_8004AF18->unk40->unk48->unk4->unk4 = 41.0f;
-    (*(s32 *)((u8 *)&D_ovl10_06_8004AF20 + 4)) = 0x213;
-    (*(s32 *)((u8 *)&D_ovl10_06_8004AF20 + 8)) = 0x3F;
-    (*(UnkStructA_40 **)((u8 *)&D_ovl10_06_8004AF20 + 0)) = (UnkStructA_40 *) D_ovl10_06_8004AF18->unk40;
+    D_ovl10_06_8004AF20.unk0 = D_ovl10_06_8004AF18->unk40;
+    D_ovl10_06_8004AF20.unk4 = 0x213;
+    D_ovl10_06_8004AF20.unk8 = 0x3F;
     func_ovl10_06_8004A0E0(&D_ovl10_06_8004AF20);
 }
 
@@ -2191,9 +2186,9 @@ void func_ovl10_06_80043A68(void) {
     func_ovl10_06_800430A8(func_ovl10_06_80043FF8);
     D_ovl10_06_8004B7E4 = 0x78;
     D_ovl10_06_8004B00C = -10.0f;
-    (*(s32 *)((u8 *)&D_ovl10_06_8004AF20 + 4)) = 0x20F;
-    (*(UnkStructA_40 **)((u8 *)&D_ovl10_06_8004AF20 + 0)) = (UnkStructA_40 *) D_ovl10_06_8004AF18->unk40;
-    (*(s32 *)((u8 *)&D_ovl10_06_8004AF20 + 8)) = (s32) D_ovl10_06_8004B7E4;
+    D_ovl10_06_8004AF20.unk4 = 0x20F;
+    D_ovl10_06_8004AF20.unk0 = D_ovl10_06_8004AF18->unk40;
+    D_ovl10_06_8004AF20.unk8 = D_ovl10_06_8004B7E4;
     func_ovl10_06_8004A0E0(&D_ovl10_06_8004AF20);
 }
 
