@@ -2,15 +2,14 @@
  * NON_MATCHING: ovl_0D_07's stage object, complete: every function and its data.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 70, eu 2148, jp 2148
+ * differing words: us 15, eu 2148, jp 2148
  *
  * Its .data and .rodata match (scratch/tools/datacmp.py), and the .bss has
  * the original's layout. What still differs in us (words):
- * - func_ovl0D_07_80043660 (68): registers only. Event 5 keeps
+ * - func_ovl0D_07_80043660 (13): registers only. Event 5 keeps
  *   D_8004671C in v1 where the original has v0; in event 11 the inlined
  *   func_ovl0D_07_80043028 has p0 and p1 in a3 and v1 (the original: v1
- *   and a3), and the loop's float arguments to 0x2600 are scheduled
- *   differently. How 80043028 is called decides event 4's register:
+ *   and a3). How 80043028 is called decides event 4's register:
  *   with (obj[0], obj[1]) both arguments take a t register for the whole
  *   function and event 4 gets t2 for the original's t0; passing player 0
  *   through `o` and player 1's unk40 leaves only one, as in the original.
@@ -758,9 +757,9 @@ void func_ovl0D_07_80043660(s32 arg0) {
             for (i = 0; i < 32; i++) {
                 func_ovl0D_07_80045FB8(0x100);
                 kind = (func_ovl0D_07_80045FB8(0x100) & 1) ? 0xC : 0x18;
-                func_ovl0D_07_80046248(kind, func_ovl0D_07_80045FB0() * 160.0 + (obj[1]->unk40->unk10 - 80.0f),
-                                       func_ovl0D_07_80045FB0() * 50.0 + obj[1]->unk40->unk14 + 50.0,
-                                       func_ovl0D_07_80045FB0() * 160.0 + (obj[1]->unk40->unk18 - 80.0f), 0);
+                func_ovl0D_07_80046248(kind, (obj[1]->unk40->unk10 - 80.0f) + func_ovl0D_07_80045FB0() * 160.0,
+                                       obj[1]->unk40->unk14 + func_ovl0D_07_80045FB0() * 50.0 + 50.0,
+                                       (obj[1]->unk40->unk18 - 80.0f) + func_ovl0D_07_80045FB0() * 160.0, 0);
                 func_ovl0D_07_80045E18(4);
             }
             func_ovl0D_07_80046248(0x14, obj[1]->unk40->unk10, obj[1]->unk40->unk14 + 100.0f, obj[1]->unk40->unk18, 0);
