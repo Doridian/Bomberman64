@@ -811,6 +811,14 @@ module's asm blocks, though the draft defines it.
   prototypes (`scratch/13_01/protofix2.py`); a jump table needs its last
   empty `case`; and a dead `if (d > 10.0f || d < -10.0f) {}` can be in
   the original.
+- **Before tuning, look for implicit declarations.** ovl_0F_04 called
+  ten library functions undeclared, two of them with float returns or
+  arguments (`scratch/0F_04/p3/undecl.py` lists them). Also there: a
+  division the original does at run time (`div.s` of `-30.0f / 300.0f`)
+  needs its operands in float locals, or IDO folds it; `return a <= b;`
+  is inlined at every call site where `below = 0; if (...) below = 1;`
+  isn't; and a `jal`'s delay slot can carry a constant argument (`li
+  s1,6`), so read it before deciding a parameter is unset.
 - **Unsolved: a block boundary with no branch.** Two misses come from
   how as1 schedules a block, not from ugen, so `cc -c -S` (ugen's
   `u.out.s`, before as1) shows them. In each, adding a single label to
