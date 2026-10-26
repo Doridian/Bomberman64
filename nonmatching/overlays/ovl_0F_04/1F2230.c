@@ -5,37 +5,57 @@
  * flags: -O3
  * differing words: us 2844, jp 4362
  *
- * Every function comes out in the original's order; most of the stubs
- * don't yet. The order is ovl_0F_02's (and ovl_0F_03's): the functions
- * are defined in reverse address order, but the handler
- * (func_ovl0F_04_8004624C) is defined last but for func_ovl0F_04_80043010
- * and so compiled first. Its direct callees come out first, then what it
- * only takes the address of, in the reverse of the order of their first
- * references, the statics' (in definition order) before the handler's
- * own. 80046244 and 8004623C (inlined into the handler) reference
- * 80044F88 and 8004394C ahead of 800460CC's references, so the fake is in
- * an empty static defined first, func_ovl0F_04_800460B4, the handler's
- * first call (the original has a stub there): its `if (0)` lists every
- * address-taken function in descending address order, so they come out
- * ascending (4362 words to 3417; scratch/0F_04/p3/fk.sh and rev.py in the
- * main checkout). What the original's source had instead is open.
+ * Every function comes out in the original's order, and most stubs. The
+ * order is ovl_0F_02's (and ovl_0F_03's): the functions are defined in
+ * reverse address order, but the handler (func_ovl0F_04_8004624C) is
+ * defined last but for func_ovl0F_04_80043010 and so compiled first. Its
+ * direct callees come out first, then what it only takes the address of,
+ * in the reverse of the order of their first references, the statics' (in
+ * definition order) before the handler's own. 80046244 and 8004623C
+ * (inlined into the handler) reference 80044F88 and 8004394C ahead of
+ * 800460CC's references, so the fake is in an empty static defined first,
+ * func_ovl0F_04_800460B4 (one of the three stubs 800460CC inlines): its
+ * `if (0)` lists every address-taken function in descending address
+ * order, so they come out ascending (4362 words to 3417;
+ * scratch/0F_04/p3/fk.sh and rev.py in the main checkout). What the
+ * original's source had instead is open.
  *
- * What still differs in us (words, by tools/nonmatching.py's ranges, which
- * take in the statics after each global):
- * - Stubs: 80043BC0's comes out after 80043324 and 8004623C's after
- *   80043530 (the handler's inlined statics come out in about the reverse
- *   of its calls), 80044D2C is not inlined (0x40), and the original's
- *   other stubs (80043018, 800432FC-8004331C, 80043388-80043398, ...) are
- *   missing.
- * - func_ovl0F_04_80043028 (the wind): 161 words, the original 181 (it
- *   keeps &D_ovl0F_04_80048488 in s0, which the handler saves).
- * - func_ovl0F_04_80043770 (the pushed blocks): 82 words, the original 96.
- * - func_ovl0F_04_800460CC's second argument: the handler passes an `s1`
- *   it never sets (the count func_ovl0F_04_80047258 gets for
- *   func_ovl0F_04_800452A0); here both are 5.
- * - func_ovl0F_04_80043E04 takes its flag in a3 in the original: three
- *   unused parameters before it (here the script and two zeros).
- * - 80046BC8, 80046BFC, 80045E14 and 800436B0 match.
+ * The empty statics named for unlabelled addresses stand in for the stubs
+ * the original's inlined statics leave before their callers, as in
+ * ovl_0F_02; which statics they were is open. A stub comes out just before
+ * the function that inlines it, its caller's stubs in the reverse of the
+ * calls, so 800460CC takes the three before it (the handler does the
+ * tables itself) and 80045E88's two loops are statics (the first unrolls
+ * only so). Two stubs are still out of place: 80043020's (the handler's
+ * case 1) after 80043028, and 8004623C's after 80043530.
+ * func_ovl0F_04_80043BC0 (the panel search) and the floor test
+ * func_ovl0F_04_80044D2C are inlined, but their stubs come out after
+ * 80043324 and before 80043BB8; the original has a stub at 80043BC0 before
+ * 80043BC8 and two (80044D24, 80044D2C) before 80044D34. Writing the
+ * search in the handler and naming the floor test 80043BB8 puts every stub
+ * from 800439D4 to 80044D34 in place, but costs 88 words until 800439DC,
+ * 80043BC8 and 80043E04 have their lengths (1 short, 2 short and 1 short
+ * there; scratch/0F_04/p3/ren.py).
+ *
+ * What still differs in us (words, by scratch/0F_04/p3/allf.py's procedures):
+ * - func_ovl0F_04_8004544C (620) and the handler (500): ovl_0F_02's
+ *   800454E8 and 800462F8, the same misses. The handler's frame is 0x158,
+ *   ours 0x100: the original's inlined statics have locals of their own.
+ * - func_ovl0F_04_80044084 (459, 9 words long): ovl_0F_02's 80043FEC (the
+ *   multu per arm); 80043E04 (159) takes its flag in a3 (three unused
+ *   parameters, as there). 80043BC8 (144) is 105 with an s32 index, but
+ *   the run then loses more than it gains.
+ * - func_ovl0F_04_80043028 (183): static, its divisions by 300 and 180 at
+ *   run time from fs0/fs1 (float locals, so IDO can't fold them), which
+ *   the handler saves; what is left is register choice and the
+ *   increment's else branch.
+ * - 80044F88 (190), 800448BC (113, the loop's test is a value in v0 in
+ *   the original), 80044D34 (91), 80045308 (55), 80045E88 (128, 3 words
+ *   short), 800460CC (54; `obj = ...; D_ovl0F_04_80048C8C = obj;` matches
+ *   it but loses 116 in the run until 80045E88 has its length).
+ * - 800438F0, 8004394C, 80043590, 80044BC0, 80046BC8 and 80046BFC match;
+ *   80043770 (2) and 80043480 (static, its arguments in the caller's
+ *   registers) nearly.
  */
 #include "common.h"
 static void func_ovl0F_04_800439D4(void);
