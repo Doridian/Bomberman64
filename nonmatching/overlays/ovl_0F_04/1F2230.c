@@ -3,7 +3,7 @@
  * data (.data and .bss as the original's sizes).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2988, jp 4362
+ * differing words: us 2899, jp 4362
  *
  * Every function comes out in the original's order; most of the stubs
  * don't yet. The order is ovl_0F_02's (and ovl_0F_03's): the functions
@@ -317,7 +317,7 @@ static void func_ovl0F_04_80043480(UnkStruct_ovl0F_04_800485C4 *arg0, s32 arg1);
 static void func_ovl0F_04_800433FC(UnkStruct_ovl0F_04_800485C4 *arg0);
 void func_ovl0F_04_800433A0(s32 *arg0);
 static void func_ovl0F_04_80045E88(UnkStructA **arg0);
-void func_ovl0F_04_80043028(void);
+static void func_ovl0F_04_80043028(void);
 static void func_ovl0F_04_80043020(s32 count, UnkStruct_ovl0F_04_800485C4 *p);
 void func_ovl0F_04_80043010(void);
 
@@ -1496,18 +1496,23 @@ static void func_ovl0F_04_80043018(void) {
 
 /* the wind: it blows one way from frame 160 to 460, the other from 540 to
  * 720, and the fog moves with it */
-void func_ovl0F_04_80043028(void) {
+static void func_ovl0F_04_80043028(void) {
     f32 d;
+    f32 a;
+    f32 b;
+
+    a = 300.0f;
+    b = 180.0f;
 
     func_ovl0F_04_80043018();
     if (D_ovl0F_04_80048488 >= 160) {
         if (D_ovl0F_04_80048488 < 460) {
-            D_ovl0F_04_80048494 += -30.0f / 300.0f;
-            D_ovl0F_04_80048498 += -15.0f / 300.0f;
+            D_ovl0F_04_80048494 += -30.0f / a;
+            D_ovl0F_04_80048498 += -15.0f / a;
             func_ovl0F_04_80048008(D_ovl0F_04_80048494, D_ovl0F_04_80048498, 0xE6, 0xF0, 0xFF);
         } else if (D_ovl0F_04_80048488 >= 540 && D_ovl0F_04_80048488 < 720) {
-            D_ovl0F_04_80048494 -= -30.0f / 180.0f;
-            D_ovl0F_04_80048498 -= -15.0f / 180.0f;
+            D_ovl0F_04_80048494 -= -30.0f / b;
+            D_ovl0F_04_80048498 -= -15.0f / b;
             func_ovl0F_04_80048008(D_ovl0F_04_80048494, D_ovl0F_04_80048498, 0xE6, 0xF0, 0xFF);
         }
     }
@@ -1518,9 +1523,9 @@ void func_ovl0F_04_80043028(void) {
     d = 0.0f;
     if (D_ovl0F_04_80048488 >= 160) {
         if (D_ovl0F_04_80048488 < 460) {
-            d = D_ovl0F_04_80048490 / 300.0f;
+            d = D_ovl0F_04_80048490 / a;
         } else if (D_ovl0F_04_80048488 >= 540 && D_ovl0F_04_80048488 < 720) {
-            d = -(D_ovl0F_04_80048490 / 180.0f);
+            d = -(D_ovl0F_04_80048490 / b);
         }
     }
     D_ovl0F_04_8004848C += d;
