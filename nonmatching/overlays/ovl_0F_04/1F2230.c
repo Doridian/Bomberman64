@@ -3,7 +3,7 @@
  * data (.data and .bss as the original's sizes).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2844, jp 4362
+ * differing words: us 2844, jp 2844
  *
  * Every function comes out in the original's order, and most stubs. The
  * order is ovl_0F_02's (and ovl_0F_03's): the functions are defined in
