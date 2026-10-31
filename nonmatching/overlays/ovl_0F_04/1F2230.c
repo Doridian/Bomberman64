@@ -3,7 +3,7 @@
  * data (.data and .bss as the original's sizes).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1115, jp 1115
+ * differing words: us 929, jp 929
  *
  * Every function comes out in the original's order, and most stubs. The
  * order is ovl_0F_02's (and ovl_0F_03's): the functions are defined in
@@ -72,14 +72,21 @@
  * - func_ovl0F_04_80044D34 (72): the frame is 0x48 (0x40 in the
  *   original; the getter _inl0's parameter takes a slot), flag in a2 where
  *   the original has v1, obj in a0 (a2).
- * - 800439DC (72), 80045308 (55), 80045E88 (128, 3 words short),
- *   800460CC (56).
+ * - 800439DC (11): its prologue's schedule (7) and the two stubs that
+ *   follow it (4, see above). k's index is cast to u32 (a fake: without
+ *   it IDO forms &D_ovl0F_04_800487A8[i] once for the store and the load,
+ *   the original addresses each from the symbol, 1 word longer).
+ * - 80045E88 (82): its setup of D_ovl0F_04_80048C90 is the stub static
+ *   80045E78 (so unk4 gets its own `lui at`, as in the original); the
+ *   original loads D_ovl0F_04_800485C4's address apart for each loop (t7,
+ *   s1), mine once in s1. 800460CC (56).
  * - 80044F88 (the model pointers in locals; 80044EB0's and 80043480's
  *   parameters in the order of their copies), 800448BC (the floor test
  *   80044D2C a function of its own returning TRUE/FALSE, the loop's test
  *   `i++ <= 200 && ...`), 80043BC8, 80043E04 (its flag a parameter, in
- *   a3), 800438F0, 8004394C, 80043590, 80044BC0, 80044D04, 80046BC8 and
- *   80046BFC match; 80043770 (2) and 80043480 nearly.
+ *   a3), 800438F0, 8004394C, 80043590, 80044BC0, 80044D04, 80046BC8,
+ *   80046BFC and 80045308 (its abs's test against an integer 0)
+ *   match; 80043770 (2) and 80043480 nearly.
  */
 #include "common.h"
 static void func_ovl0F_04_800439D4(void);
@@ -100,7 +107,7 @@ static void func_ovl0F_04_8004330C(void);
 static void func_ovl0F_04_80043314(void);
 static void func_ovl0F_04_8004331C(void);
 static void func_ovl0F_04_80045E70(void);
-static void func_ovl0F_04_80045E78(void);
+static void func_ovl0F_04_80045E78(UnkStructA **arg0);
 
 /*
  * ovl_0F_04's game object, IDO -O3: the functions are written last to first
@@ -676,7 +683,17 @@ static void func_ovl0F_04_80045E70(void) {
     }
 }
 
-static void func_ovl0F_04_80045E78(void) {
+static void func_ovl0F_04_80045E78(UnkStructA **arg0) {
+    D_ovl0F_04_80048C90.unk0 = func_ovl0F_04_800473B8(func_ovl0F_04_80047358());
+    D_ovl0F_04_80048C90.unk4 = arg0;
+    D_ovl0F_04_80048C90.unkC = 0;
+    D_ovl0F_04_80048C90.unk10 = 0;
+    D_ovl0F_04_80048C90.unk14 = 0;
+    D_ovl0F_04_80048C90.unk16 = -1;
+    D_ovl0F_04_80048C90.unk8 = 0.0f;
+    D_ovl0F_04_800484A0 = 1;
+    D_ovl0F_04_80048C90.unk18 = D_ovl0F_04_800484A4;
+    D_ovl0F_04_80048C90.unk20 = func_ovl0F_04_80044D34;
 }
 
 static void func_ovl0F_04_80045E80(UnkStruct_ovl0F_04_800485C4 *p, s32 n) {
@@ -694,20 +711,9 @@ static void func_ovl0F_04_80045E80(UnkStruct_ovl0F_04_800485C4 *p, s32 n) {
 
 /* case 2's: the movers and their script */
 static void func_ovl0F_04_80045E88(UnkStructA **arg0) {
-    UnkStruct_ovl0F_04_800485C4 *p;
     s32 i;
 
-    func_ovl0F_04_80045E78();
-    D_ovl0F_04_80048C90.unk0 = func_ovl0F_04_800473B8(func_ovl0F_04_80047358());
-    D_ovl0F_04_80048C90.unk4 = arg0;
-    D_ovl0F_04_80048C90.unkC = 0;
-    D_ovl0F_04_80048C90.unk10 = 0;
-    D_ovl0F_04_80048C90.unk14 = 0;
-    D_ovl0F_04_80048C90.unk16 = -1;
-    D_ovl0F_04_80048C90.unk8 = 0.0f;
-    D_ovl0F_04_800484A0 = 1;
-    D_ovl0F_04_80048C90.unk18 = D_ovl0F_04_800484A4;
-    D_ovl0F_04_80048C90.unk20 = func_ovl0F_04_80044D34;
+    func_ovl0F_04_80045E78(arg0);
     func_ovl0F_04_80045E70();
     func_ovl0F_04_80045E80(D_ovl0F_04_800485C4, 6);
     for (i = 0; i < 6; i++) {
@@ -836,7 +842,7 @@ static void func_ovl0F_04_80045308(UnkStruct_ovl0F_04_80048AF0 *p) {
     r = func_ovl0F_04_80047E80();
     p->unk0 = func_ovl0F_04_80047E80() * 370.0 - 50.0;
     t = func_ovl0F_04_80047E80();
-    p->unk4 = (D_ovl0F_04_8004847C < 0.0f ? -D_ovl0F_04_8004847C : D_ovl0F_04_8004847C) * 30.0f * t;
+    p->unk4 = (D_ovl0F_04_8004847C < 0 ? -D_ovl0F_04_8004847C : D_ovl0F_04_8004847C) * 30.0f * t;
     if (D_ovl0F_04_80048478 <= 0.0f) {
         p->unk4 += (1.0f - r) * 40.0f;
     } else {
@@ -1359,8 +1365,8 @@ void func_ovl0F_04_800439DC(void) {
                                (s32) D_ovl0F_04_800486CC[i].unk14, D_ovl0F_04_800487A8[i].unk4);
     }
     D_ovl0F_04_800487A8[i].unk0 = 0;
+    k = D_ovl0F_04_800487A8[(u32) i].unk8;
     obj = D_ovl0F_04_80048A88[i];
-    k = D_ovl0F_04_800487A8[i].unk8;
     do {
         func_ovl0F_04_80047BF8(obj);
         func_ovl0F_04_80047D10();
