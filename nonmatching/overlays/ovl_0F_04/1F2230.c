@@ -3,7 +3,7 @@
  * data (.data and .bss as the original's sizes).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 132, jp 132
+ * differing words: us 81, jp 81
  *
  * Every function comes out in the original's order, and so do the
  * stubs. The order is ovl_0F_02's (and ovl_0F_03's): the functions are defined in
@@ -34,8 +34,11 @@
  * of frame). 800448BC's floor test is written in it as `(... <= ...) ?
  * TRUE : FALSE` (as a static it left a stub before 800448BC; the bare
  * comparison costs 100 words), as are 80044084's two; its statics _inl0
- * (the tilt) and _inl1 (the position) are the stubs 80043BB8/80043BC0,
- * 80044D34's getter and 80044D24 its two.
+ * (the tilt) and _inl1 (the position) are the stubs 80043BB8/80043BC0.
+ * 80044D34 inlines one static, 80044D2C (its 800433FC call); the stub
+ * before it, 80044D24, is an empty static that is only in 800460B4's
+ * `if (0)` list (between 80044D34 and 80044D04), as a second inlined
+ * static costs 80044D34 8 bytes of frame.
  * After 80045E88, three stubs come before 800460CC (the door's and two of
  * 800460CC's) and two before the handler: 800460C4 is written in _inl0 as
  * the empty 8004623C (the door's pad 2 keeps the handler's frame).
@@ -86,15 +89,14 @@
  *   300 and 180 at run time from fs0/fs1 (float locals, so IDO can't fold
  *   them), which the handler saves; the timer in a local, the second
  *   chain an inlined static. It matches.
- * - func_ovl0F_04_80044D34 (51): the frame is 0x48 (0x40 in the
- *   original; every inlined static adds 8 here, and it inlines two, the
- *   stub 80044D24 and the getter _inl0), and the getter's result is
- *   copied v0 to v1, so flag is in a2 where the original has v1, obj in
- *   a0 (a2), m at 0x40 (0x28). Without the getter the frame and registers
- *   are the original's, but 80044D04 loses its stub (2 more); the
- *   original likely inlines only one static here. An empty `if (!idx) {}`
- *   (a fake) starts its temporaries at t6 and reloads idx into a0, as in
- *   the original (72 to 51).
+ * - func_ovl0F_04_80044D34: its 800433FC call is the inlined static
+ *   80044D2C (idx a parameter), so the call's lines come before the
+ *   function's own, which as1's scheduler reads (the prologue's order);
+ *   its object is read as `*D_ovl0F_04_800485C4[idx].unk0`, not through
+ *   a pointer local, so uopt knows it doesn't alias the mover (`.noalias`,
+ *   the load ahead of the mover's stores). An empty `if (!idx) {}` (a
+ *   fake) keeps idx in a0 and spills idx and flag at the call (78 words
+ *   without it). It matches.
  * - 800439DC (7): its prologue's schedule. k's index is cast to u32 (a fake: without
  *   it IDO forms &D_ovl0F_04_800487A8[i] once for the store and the load,
  *   the original addresses each from the symbol, 1 word longer).
@@ -131,6 +133,7 @@ static void func_ovl0F_04_80043DE4(void);
 static void func_ovl0F_04_80043DDC(void);
 static void func_ovl0F_04_80043018(void);
 static void func_ovl0F_04_80044D24(void);
+static void func_ovl0F_04_80044D2C(s32 idx);
 static void func_ovl0F_04_80043588(void);
 static void func_ovl0F_04_8004331C(void);
 static void func_ovl0F_04_80043314(void);
@@ -593,6 +596,7 @@ static void func_ovl0F_04_800460B4(void) {
         func_ovl0F_04_80047258((void (*)(UnkStructA *)) func_ovl0F_04_800452A0, 0);
         func_ovl0F_04_80047258((void (*)(UnkStructA *)) func_ovl0F_04_80044F88, 0);
         func_ovl0F_04_80047258((void (*)(UnkStructA *)) func_ovl0F_04_80044D34, 0);
+        func_ovl0F_04_80047258((void (*)(UnkStructA *)) func_ovl0F_04_80044D24, 0);
         func_ovl0F_04_80047258((void (*)(UnkStructA *)) func_ovl0F_04_80044D04, 0);
         func_ovl0F_04_80047258((void (*)(UnkStructA *)) func_ovl0F_04_80044BC0, 0);
         func_ovl0F_04_80047258((void (*)(UnkStructA *)) func_ovl0F_04_800448BC, 0);
@@ -945,31 +949,29 @@ static void func_ovl0F_04_80044EB0(s32 id, f32 *pos, f32 d, f32 h) {
     func_ovl0F_04_80048118(id, pos[0] - d, pos[1] + h, pos[2] - d, 0);
 }
 
+/* only in 800460B4's address list (a fake): the stub before 80044D2C */
 static void func_ovl0F_04_80044D24(void) {
 }
 
-/* the script's command: a mover (re)starts; with flag 0 it stays stopped */
-static UnkStruct_ovl0F_04_80048534 *func_ovl0F_04_80044D34_inl0(s32 idx) {
-    return &D_ovl0F_04_80048534[idx];
+static void func_ovl0F_04_80044D2C(s32 idx) {
+    func_ovl0F_04_800433FC(&D_ovl0F_04_800485C4[idx]);
 }
 
+/* the script's command: a mover (re)starts; with flag 0 it stays stopped */
 void func_ovl0F_04_80044D34(s32 idx, s32 flag) {
-    UnkStruct_ovl0F_04_800485C4 *p;
     UnkStruct_ovl0F_04_80048534 *m;
     UnkStructA *obj;
 
-    func_ovl0F_04_80044D24();
-    /* fake: an empty test of idx starts the temporaries at t6 and reloads idx into a0 (72 to 51) */
+    /* fake: an empty test of idx keeps it in a0 and spills it and flag at the call (78 to 0) */
     if (!idx) {
     }
-    p = &D_ovl0F_04_800485C4[idx];
-    func_ovl0F_04_800433FC(p);
-    m = func_ovl0F_04_80044D34_inl0(idx);
+    func_ovl0F_04_80044D2C(idx);
+    m = &D_ovl0F_04_80048534[idx];
     m->unkC = 0;
     m->unk12 = 0;
     m->unk14 = 1;
     m->unk11 = flag;
-    obj = *p->unk0;
+    obj = *D_ovl0F_04_800485C4[idx].unk0;
     if (flag == 0) {
         func_ovl0F_04_80047B80(obj, 0x01000070);
     } else {
@@ -978,11 +980,11 @@ void func_ovl0F_04_80044D34(s32 idx, s32 flag) {
     m->unk10 = 0;
     m->unk4 = 1.0f;
     m->unk8 = 0.05f;
-    (*p->unk0)->unk40->unk14 = 200.0f;
+    (*D_ovl0F_04_800485C4[idx].unk0)->unk40->unk14 = 200.0f;
     if (flag != 0) {
-        (*p->unk0)->unk68 = 20.0f;
-        (*p->unk0)->unk6C = 0.0f;
-        func_ovl0F_04_80048118(0xC, (*p->unk0)->unk40->unk10, (*p->unk0)->unk40->unk14, (*p->unk0)->unk40->unk18, 0);
+        (*D_ovl0F_04_800485C4[idx].unk0)->unk68 = 20.0f;
+        (*D_ovl0F_04_800485C4[idx].unk0)->unk6C = 0.0f;
+        func_ovl0F_04_80048118(0xC, (*D_ovl0F_04_800485C4[idx].unk0)->unk40->unk10, (*D_ovl0F_04_800485C4[idx].unk0)->unk40->unk14, (*D_ovl0F_04_800485C4[idx].unk0)->unk40->unk18, 0);
     }
 }
 
