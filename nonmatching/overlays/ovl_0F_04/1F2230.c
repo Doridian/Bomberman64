@@ -128,7 +128,14 @@
  *   Left: the original's `la s1, D_ovl0F_04_800485C4` comes before the
  *   file switch with `li s3, 6` (a hand-edited ugen listing so placed
  *   matches: scratch/0F_04/p4/g2_s_file.s); a statement `p = D...` there
- *   gets merged with 80045E70's la (91 words).
+ *   gets merged with 80045E70's la (91 words). Without a block break the
+ *   best is 14 whatever the `.loc`s; the indexed loop's la is uopt's
+ *   strength reduction, placed after every statement before the loop, so
+ *   no `.file` falls between it and `i = 0`. Every spelling of D tried
+ *   (casts, `&D[0]`, `|0`, a parameter, returned from 80045E70) shares
+ *   80045E70's register; only a nonzero offset (`p = D - 1; p++`, 77
+ *   words) or 80045E70 as a real loop (10 or more trips) does not
+ *   (scratch/0F_04/p4/m1_*).
  * - 800460CC (2): the object is read into a local before it is stored
  *   to D_ovl0F_04_80048C8C (`obj = ...; D_... = obj; obj->unkC |=
  *   0x210;`); its code matches.
