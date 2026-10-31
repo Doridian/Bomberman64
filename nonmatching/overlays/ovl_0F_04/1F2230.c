@@ -3,7 +3,7 @@
  * data (.data and .bss as the original's sizes).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 81, jp 81
+ * differing words: us 59, jp 59
  *
  * Every function comes out in the original's order, and so do the
  * stubs. The order is ovl_0F_02's (and ovl_0F_03's): the functions are defined in
@@ -64,21 +64,27 @@
  * D_ovl0F_04_8004847C store, which keeps the reloaded value live so it
  * gets f2 and the product f12 (20 words without it).
  *
+ * as1 orders the instructions of a block partly by their `.loc` lines,
+ * whatever the file, and a change of file (ugen's `.file`) ends a block.
+ * An inlined static's parameter bindings take its call's line. So
+ * `#line` (into "panels.c" or renumbering "1F2230.c") decides several
+ * schedules below; the original likely #included part of the file, but
+ * the renumberings are fakes.
+ *
  * What still differs (words, by scratch/0F_04/p4/allf.py's procedures):
- * - The handler (8): its statics for the panels (80043578, the search
+ * - The handler matches. Its statics for the panels (80043578, the search
  *   80043BC0, the case-1 loop 80043020, the case-2 loop _inl0), the
  *   wrapper _inl4 (the 80043578 call) and case 1's and case 0x52's code
- *   that calls them are in another
- *   file (`#line 1 "panels.c"`; the original likely #included them). A
- *   change of file ends a basic block for as1 (ugen emits `.file`), and
- *   that is what kept the original's `la a0, D_ovl0F_04_800486CC` /
- *   `move s5, a0` apart: the la is hoisted ahead of the call's statement,
- *   the parameter copies follow the `.file`. The same switch puts case 1's
- *   last store outside the `b`'s slot and case 2's loop's `move v0, zero`
- *   after its count. The search's `p = panels` goes in the for's
- *   initializer (1 word). Left: 80043578's spills (n stored early and
- *   flags late, the original the other way, and `move s5, a0` in the
- *   jal's slot) and the search's `move v1, zero` scheduled late. The pads
+ *   that calls them are in "panels.c". The `.file` keeps the original's
+ *   `la a0, D_ovl0F_04_800486CC` / `move s5, a0` apart (the la hoisted
+ *   ahead of the call's statement, the parameter copies after it), puts
+ *   case 1's last store outside the `b`'s slot and case 2's loop's
+ *   `move v0, zero` after its count. In 80043578 the 80043480 call is at
+ *   panels.c line 1 and its `for` at 8, so the call's line < _inl4's
+ *   binding (line 2) <= `p = panels`'s: n is stored late, the flags early,
+ *   `move s5, a0` in the jal's slot. The search sets `i = 0;` on the line
+ *   before `for (p = panels; i < n; i++)`, and the handler's search call
+ *   is at panels.c line 6, between them (its `move v1, zero`). The pads
  *   are tuned to the frame (door 4, 80043578 1, _inl1 8, _inl2 3; the
  *   handler's own i is the search's). 800460CC has its object in a local
  *   (scratch/0F_04/p4/d2.c), now that the handler has its length.
@@ -97,9 +103,19 @@
  *   the load ahead of the mover's stores). An empty `if (!idx) {}` (a
  *   fake) keeps idx in a0 and spills idx and flag at the call (78 words
  *   without it). It matches.
- * - 800439DC (7): its prologue's schedule. k's index is cast to u32 (a fake: without
- *   it IDO forms &D_ovl0F_04_800487A8[i] once for the store and the load,
- *   the original addresses each from the symbol, 1 word longer).
+ * - 800439DC matches. Its own line (`#line 1376` before it, `#line 1368`
+ *   after, so its body keeps its numbers), which the hoisted
+ *   `li.s $f20, 0.0` and the prologue carry, must be at least 2 past its
+ *   `if`'s: then `swc1 $f20`, `addiu sp`, `addiu t7` and `mtc1` come in
+ *   the original's order. k's index is cast to u32 (a fake: without it
+ *   IDO forms &D_ovl0F_04_800487A8[i] once for the store and the load,
+ *   the original addresses each from the symbol; 66 words).
+ * - 80046D14 matches: its closing `}` is in "panels.c", so the epilogue
+ *   is a block of its own (`lui at; sw zero` before `lw ra`, `jr ra` with
+ *   its nop).
+ * - 80043770 matches: from `pos[0] = ...` to the end of the `dir`
+ *   switch's else it is in "panels.c"; the `.file` at the join label
+ *   keeps as1 from filling the `b`'s slot from its target.
  * - 80045E88 (15): its setup of D_ovl0F_04_80048C90 is the stub static
  *   80045E78 (so unk4 gets its own `lui at`, as in the original). Its
  *   first loop, 80045E80, switches to "panels.c" just before the loop,
@@ -121,7 +137,7 @@
  *   a `? TRUE : FALSE`, the loop's test `i++ <= 200 && ...`), 80043BC8, 80043E04 (its flag a parameter, in
  *   a3), 800438F0, 8004394C, 80043590, 80044BC0, 80044D04, 80046BC8,
  *   80046BFC and 80045308 (its abs's test against an integer 0)
- *   match; 80043770 (2) and 80043480 nearly.
+ *   match; 80043480 nearly.
  */
 #include "common.h"
 #line 108 "1F2230.c"
@@ -581,7 +597,9 @@ static void func_ovl0F_04_80046D14(void) {
     func_ovl0F_04_800471B8(0x22, 0, 0xB, 0x23, 0xF, 0x1416);
     func_ovl0F_04_800471B8(0x24, 0, 0xB, 0x27, 0xF, 0x1411);
     D_ovl0F_04_800484A0 = 0;
+#line 1 "panels.c"
 }
+#line 564 "1F2230.c"
 
 void func_ovl0F_04_80046C58(void) {
     D_ovl0F_04_80048ACC = -1;
@@ -646,7 +664,9 @@ static void func_ovl0F_04_80043578(s32 n, UnkStruct_ovl0F_04_800485C4 *panels, U
     UnkStruct_ovl0F_04_800485C4 *p;
 
     p = panels;
+#line 1 "panels.c"
     func_ovl0F_04_80043480(n, panels);
+#line 8 "panels.c"
     for (i = 0; i < n; i++) {
         if (p->unk1C == 0.0f) {
             func_ovl0F_04_800471B8((s32) p->unkC - 1, (s32) p->unk10,
@@ -1362,7 +1382,8 @@ static s32 func_ovl0F_04_80043BC0(s32 n, UnkStruct_ovl0F_04_800485C4 *panels, Un
     s32 i;
     UnkStruct_ovl0F_04_800485C4 *p;
 
-    for (i = 0, p = panels; i < n; i++) {
+    i = 0;
+    for (p = panels; i < n; i++) {
         if (flags->unk0 != 0 && p->unk1C == 0.0f &&
             func_ovl0F_04_80047340((s32) p->unkC - 1, (s32) p->unk14 - 1,
                                    (s32) p->unkC, (s32) p->unk14) != 0) {
@@ -1379,7 +1400,9 @@ static void func_ovl0F_04_800439D4(void) {
 }
 
 /* a task: a panel is stepped on and its block drops */
+#line 1376 "1F2230.c"
 void func_ovl0F_04_800439DC(void) {
+#line 1368 "1F2230.c"
     s32 i;
     UnkStructA *obj;
     s32 k;
@@ -1428,6 +1451,7 @@ static void func_ovl0F_04_80043770(UnkStructA *obj, f32 speed) {
     UnkStructA *other;
     s32 k;
 
+#line 1 "panels.c"
     pos[0] = obj->unk40->unk10;
     pos[1] = obj->unk40->unk14;
     pos[2] = obj->unk40->unk18;
@@ -1450,6 +1474,7 @@ static void func_ovl0F_04_80043770(UnkStructA *obj, f32 speed) {
                 break;
         }
     }
+#line 1434 "1F2230.c"
     saved = obj->unkC;
     hit = FALSE;
     other = NULL;
@@ -1796,7 +1821,7 @@ void func_ovl0F_04_8004624C(s32 arg0) {
             if (func_ovl0F_04_80047340(0x12, 0xA, 0x12, 0xA) != 0) {
                 func_ovl0F_04_8004624C_inl1();
             } else {
-#line 1 "panels.c"
+#line 6 "panels.c"
                 i = func_ovl0F_04_80043BC0(5, D_ovl0F_04_800486CC, D_ovl0F_04_800487A8);
                 if (i != -1) {
                     D_ovl0F_04_80048AE4 = i;
