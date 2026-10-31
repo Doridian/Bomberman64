@@ -3,7 +3,7 @@
  * data (.data and .bss as the original's sizes).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 203, jp 203
+ * differing words: us 189, jp 189
  *
  * Every function comes out in the original's order, and so do the
  * stubs. The order is ovl_0F_02's (and ovl_0F_03's): the functions are defined in
@@ -92,16 +92,19 @@
  * - 800439DC (7): its prologue's schedule. k's index is cast to u32 (a fake: without
  *   it IDO forms &D_ovl0F_04_800487A8[i] once for the store and the load,
  *   the original addresses each from the symbol, 1 word longer).
- * - 80045E88 (29): its setup of D_ovl0F_04_80048C90 is the stub static
+ * - 80045E88 (15): its setup of D_ovl0F_04_80048C90 is the stub static
  *   80045E78 (so unk4 gets its own `lui at`, as in the original). Its
- *   first loop, 80045E80, is in "panels.c" too, which puts `li s3, 6`
- *   before the stores and the counter's setup after them, as in the
- *   original; n is a u8 and the loop passes &arr[i] beside p (fakes: with
- *   an s32 n the handler's code moves). Left: the original loads
- *   D_ovl0F_04_800485C4's address apart for each loop (t7, s1), mine once
- *   and copies it (uopt merges them before as1, so a `.file` can't split
- *   them); IDO replaces the loop's counter test with an end pointer; 90.0f
- *   is loaded before t8/t9.
+ *   first loop, 80045E80, switches to "panels.c" just before the loop,
+ *   after `n = 6` (a local, so `li s3, 6` stays ahead of the stores), and
+ *   indexes the array from the symbol, so its address gets a la of its own
+ *   rather than 80045E70's copied. Its counter i and index j are separate
+ *   (a fake: with one, IDO tests an end pointer, 93 words). 80045E78 is
+ *   defined before 80045E70, giving 80045E70 the higher line numbers,
+ *   which as1's scheduler reads (90.0f after t8/t9, as in the original).
+ *   Left: the original's `la s1, D_ovl0F_04_800485C4` comes before the
+ *   file switch with `li s3, 6` (a hand-edited ugen listing so placed
+ *   matches: scratch/0F_04/p4/g2_s_file.s); a statement `p = D...` there
+ *   gets merged with 80045E70's la (91 words).
  * - 800460CC (2): the object is read into a local before it is stored
  *   to D_ovl0F_04_80048C8C (`obj = ...; D_... = obj; obj->unkC |=
  *   0x210;`); its code matches.
@@ -695,16 +698,6 @@ static void func_ovl0F_04_8004623C(void) {
 static void func_ovl0F_04_800460BC(void) {
 }
 
-static void func_ovl0F_04_80045E70(void) {
-    s32 i;
-
-    for (i = 0; i < 6; i++) {
-        D_ovl0F_04_800485C4[i].unkC = 36.0f;
-        D_ovl0F_04_800485C4[i].unk14 = 13.0f;
-        D_ovl0F_04_800485C4[i].unk1C = 90.0f;
-    }
-}
-
 static void func_ovl0F_04_80045E78(UnkStructA **arg0) {
     D_ovl0F_04_80048C90.unk0 = func_ovl0F_04_800473B8(func_ovl0F_04_80047358());
     D_ovl0F_04_80048C90.unk4 = arg0;
@@ -718,18 +711,29 @@ static void func_ovl0F_04_80045E78(UnkStructA **arg0) {
     D_ovl0F_04_80048C90.unk20 = func_ovl0F_04_80044D34;
 }
 
-#line 1 "panels.c"
-static void func_ovl0F_04_80045E80(UnkStruct_ovl0F_04_800485C4 *arr, u8 n) {
+static void func_ovl0F_04_80045E70(void) {
     s32 i;
-    UnkStruct_ovl0F_04_800485C4 *p = arr;
 
-    for (i = 0; i < n; i++) {
-        *p->unk0 = func_ovl0F_04_80047BA0(p->unk4, p->unk24 | 0x01000000, 0x30, p->unk8);
-        func_ovl0F_04_800433FC(&arr[i]);
-        (*p->unk0)->unk40->unk1C = p->unk18;
-        (*p->unk0)->unk40->unk20 = p->unk1C;
-        (*p->unk0)->unk40->unk24 = p->unk20;
-        p++;
+    for (i = 0; i < 6; i++) {
+        D_ovl0F_04_800485C4[i].unkC = 36.0f;
+        D_ovl0F_04_800485C4[i].unk14 = 13.0f;
+        D_ovl0F_04_800485C4[i].unk1C = 90.0f;
+    }
+}
+
+static void func_ovl0F_04_80045E80(void) {
+    s32 i;
+    s32 j;
+    s32 n;
+
+    n = 6;
+#line 1 "panels.c"
+    for (i = 0, j = 0; i < n; i++, j++) {
+        *D_ovl0F_04_800485C4[j].unk0 = func_ovl0F_04_80047BA0(D_ovl0F_04_800485C4[j].unk4, D_ovl0F_04_800485C4[j].unk24 | 0x01000000, 0x30, D_ovl0F_04_800485C4[j].unk8);
+        func_ovl0F_04_800433FC(&D_ovl0F_04_800485C4[j]);
+        (*D_ovl0F_04_800485C4[j].unk0)->unk40->unk1C = D_ovl0F_04_800485C4[j].unk18;
+        (*D_ovl0F_04_800485C4[j].unk0)->unk40->unk20 = D_ovl0F_04_800485C4[j].unk1C;
+        (*D_ovl0F_04_800485C4[j].unk0)->unk40->unk24 = D_ovl0F_04_800485C4[j].unk20;
     }
 }
 #line 700 "1F2230.c"
@@ -740,7 +744,7 @@ static void func_ovl0F_04_80045E88(UnkStructA **arg0) {
 
     func_ovl0F_04_80045E78(arg0);
     func_ovl0F_04_80045E70();
-    func_ovl0F_04_80045E80(D_ovl0F_04_800485C4, 6);
+    func_ovl0F_04_80045E80();
     for (i = 0; i < 6; i++) {
         func_ovl0F_04_80047B78(func_ovl0F_04_80047BB0(*D_ovl0F_04_800485C4[i].unk0), 0x02100000);
         D_ovl0F_04_80048534[i].unk11 = 0;
