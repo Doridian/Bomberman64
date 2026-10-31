@@ -3,7 +3,7 @@
  * data (.data and .bss as the original's sizes).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 928, jp 928
+ * differing words: us 907, jp 907
  *
  * Every function comes out in the original's order, and most stubs. The
  * order is ovl_0F_02's (and ovl_0F_03's): the functions are defined in
@@ -79,9 +79,15 @@
  *   them), which the handler saves; the timer in a local, the second
  *   chain an inlined static. Its code matches; the 10 are 800432FC's
  *   five stubs, which come out after it.
- * - func_ovl0F_04_80044D34 (72): the frame is 0x48 (0x40 in the
- *   original; the getter _inl0's parameter takes a slot), flag in a2 where
- *   the original has v1, obj in a0 (a2).
+ * - func_ovl0F_04_80044D34 (51): the frame is 0x48 (0x40 in the
+ *   original; every inlined static adds 8 here, and it inlines two, the
+ *   stub 80044D24 and the getter _inl0), and the getter's result is
+ *   copied v0 to v1, so flag is in a2 where the original has v1, obj in
+ *   a0 (a2), m at 0x40 (0x28). Without the getter the frame and registers
+ *   are the original's, but 80044D04 loses its stub (2 more); the
+ *   original likely inlines only one static here. An empty `if (!idx) {}`
+ *   (a fake) starts its temporaries at t6 and reloads idx into a0, as in
+ *   the original (72 to 51).
  * - 800439DC (11): its prologue's schedule (7) and the two stubs that
  *   follow it (4, see above). k's index is cast to u32 (a fake: without
  *   it IDO forms &D_ovl0F_04_800487A8[i] once for the store and the load,
@@ -940,6 +946,9 @@ void func_ovl0F_04_80044D34(s32 idx, s32 flag) {
     UnkStructA *obj;
 
     func_ovl0F_04_80044D24();
+    /* fake: an empty test of idx starts the temporaries at t6 and reloads idx into a0 (72 to 51) */
+    if (!idx) {
+    }
     p = &D_ovl0F_04_800485C4[idx];
     func_ovl0F_04_800433FC(p);
     m = func_ovl0F_04_80044D34_inl0(idx);
