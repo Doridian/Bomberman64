@@ -3,7 +3,7 @@
  * data (.data and .bss as the original's sizes).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 929, jp 929
+ * differing words: us 928, jp 928
  *
  * Every function comes out in the original's order, and most stubs. The
  * order is ovl_0F_02's (and ovl_0F_03's): the functions are defined in
@@ -53,12 +53,22 @@
  *
  * What still differs (words, by scratch/0F_04/p4/allf.py's procedures; the
  * object's count is higher because the stubs are still out of place):
- * - The handler (214, 3 words short): its loop pointers are in s5 in the
+ * - The handler (213, 3 words short): its loop pointers are in s5 in the
  *   original, which writing `p = panels;` before 8004623C's 80043480 call
  *   gives, but the original also copies D_ovl0F_04_800486CC's address from
  *   a0 (as ovl_0F_02's handler) and nothing tried gives that; until it
  *   does, the run loses more than it gains (scratch/0F_04/p4/a2_As.c).
- *   800433A0 is likely static (its argument in s0).
+ *   800433A0 is likely static (its argument in s0; as a static its code
+ *   matches, but the handler is then 4 words short from case 0x50 on).
+ *   ugen already emits the copies (`la $4` then `move $21, $4`, -S); as1
+ *   folds them (`addiu s5, a0, %lo`) because both are in one block. With a
+ *   label after each of the three `la $4, D_ovl0F_04_800486CC` and one
+ *   after case 1's last store (which keeps the `sw` out of the `b`'s slot),
+ *   the listing assembles to 10 words in the handler (scratch/0F_04/p4/
+ *   c1_S/r2a.lst, from c1_r2.c: p = panels first, 800433A0 static,
+ *   80047850 and 80047B90 returning s32). What C leaves those labels is
+ *   open. func_ovl0F_04_80047850 returning s32 puts case 1's first loop's
+ *   count and counter in a1/v1 as in the original.
  * - func_ovl0F_04_80044084 (59): i in s3 where the original has s0, and
  *   pos at 0xC8 (0xA8 in the original).
  * - func_ovl0F_04_8004544C (44): the header's scratch registers, s6/s7
@@ -79,7 +89,13 @@
  * - 80045E88 (82): its setup of D_ovl0F_04_80048C90 is the stub static
  *   80045E78 (so unk4 gets its own `lui at`, as in the original); the
  *   original loads D_ovl0F_04_800485C4's address apart for each loop (t7,
- *   s1), mine once in s1. 800460CC (56).
+ *   s1), mine once in s1.
+ * - 800460CC (56): with the object read into a local before it is
+ *   stored to D_ovl0F_04_80048C8C (`obj = ...; D_... = obj;
+ *   obj->unkC |= 0x210;`) its code matches (2: a stub after it), but the
+ *   object is then a word short (the handler's 3), everything after it
+ *   compares a word off and the count is 938; it goes in with the
+ *   handler's words (scratch/0F_04/p4/d2.c).
  * - 80044F88 (the model pointers in locals; 80044EB0's and 80043480's
  *   parameters in the order of their copies), 800448BC (the floor test
  *   80044D2C a function of its own returning TRUE/FALSE, the loop's test
@@ -271,7 +287,7 @@ void func_ovl0F_04_80047380(char *);
 void func_ovl0F_04_80047388(void);
 void func_ovl0F_04_800473C0(s32);
 void func_ovl0F_04_80047418(s32);
-void func_ovl0F_04_80047850(s32);
+s32 func_ovl0F_04_80047850(s32);
 void func_ovl0F_04_80047868(UnkStructA *);
 void func_ovl0F_04_800479A8(s32);
 void func_ovl0F_04_800479B8(f32, f32, f32);
