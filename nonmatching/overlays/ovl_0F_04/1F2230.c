@@ -91,9 +91,14 @@
  * - func_ovl0F_04_8004544C (27): the header's three display-list
  *   commands each have their own block-scoped g, the 80047E70 calls are
  *   written in their expressions (no c), the x drift's -D_ovl0F_04_80048474
- *   twice (no dx), and the 80047E80 result goes through r. Left: the
- *   header's scratch registers (a3/t0/a0, the original's t1/t2/t3) and the
- *   schedule around `move a0, s0`, and s6/s7 swapped.
+ *   twice (no dx), and the 80047E80 result goes through r (the spills at
+ *   the original's 0x78/0x7C/0x80). The unused c is a pad, like view[19];
+ *   which commands were gbi macro blocks is open. Left: the header's
+ *   scratch registers (a3/t0/a0, the original's t1/t2/t3), the schedule
+ *   around `move a0, s0`, and s6/s7 swapped (D_ovl0F_04_80048474/78, 4
+ *   references each, a tie in priority; declaration and statement order
+ *   don't change it). ovl_0F_01, 0F_02, 0F_03 and 17_09 have the same
+ *   function (0F_01's also 0x9C8).
  * - func_ovl0F_04_80043028: static, its first chain's divisions by
  *   300 and 180 at run time from fs0/fs1 (float locals, so IDO can't fold
  *   them), which the handler saves; the timer in a local, the second
