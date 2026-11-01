@@ -1,9 +1,10 @@
 /*
  * NON_MATCHING: ovl_0F_03's game object, complete: every function and its
- * data (.data and .rodata as the original; .bss 0x1F0, the original 0x200).
+ * data (.data, .rodata and .bss as the original; every .bss symbol at its
+ * address).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3, eu 3, jp 3
+ * differing words: us 2, eu 2, jp 2
  *
  * The functions ovl_0F_02's draft (1E84A0.c) shares with this overlay are
  * ported from it: the particles (func_ovl0F_03_80044258 with its loop in
@@ -44,20 +45,38 @@
  * - The door's 2.45 is 2.4500003f: the original's float is 0x401CCCCE,
  *   one ulp above 2.45f (ovl_0F_02's and ovl_0F_04's drafts have 2.45f
  *   against the same 0x401CCCCE).
+ * - D_ovl0F_03_800470C8 is written in the unused static 80045678 (its body
+ *   isn't emitted): -O3 drops an unreferenced global's storage, and the
+ *   original has 4 bytes at 800470C8 that no code reads (.bss 0x1F0 to
+ *   0x200, every symbol after it in place). 800470B4, 800470D4 and
+ *   800470E4 stay unreferenced: their 4 bytes are the 8-byte alignment of
+ *   the next object.
+ * - 800434AC ends with an empty `if (pos) {}`: its label is where the
+ *   original's beqz goes (8004376C, a nop in its delay slot), apart from the
+ *   early returns' (80043770). Any statement there costs a basic block,
+ *   and one more block makes uopt keep arg0 in a3 (a 0x78 frame), so
+ *   80043494's `else { other = NULL; }` (redundant, and ovl_17_09's matched
+ *   copy has none) is gone to make room.
  * - The `if (0)` in 80043434 only puts 80044C20 (which nothing uses)
  *   where the original has it, and the unused static 80045678's call
  *   keeps 80043030 from being inlined.
  *
  * What still differs (jp):
- * - func_ovl0F_03_800434AC (3): the hit flag (80043494's) is loaded into
- *   v0, the original's v1, and the branch over the restore takes `lw ra`
- *   into its delay slot where the original has a nop. Tried: the flag by
- *   pointer, returned through 8004348C, an inline test with 80043494
- *   empty, early returns and nested ifs, the callees' return types, and
- *   the permuter (15 minutes).
+ * - func_ovl0F_03_800434AC (2): the hit flag (80043494's) is loaded into
+ *   v0, the original's v1. ugen loads it twice (`lw $2` for the return,
+ *   a temporary for the test) and as1 folds them into v0; with a .file
+ *   change between them the temporary survives (t0). ovl_0F_10's copy
+ *   (80044074) keeps the flag in v1 for two tests (the restore, then
+ *   bnez v1 over its else), so here v1 likely comes from a second use
+ *   that leaves only 8004376C's label. Tried: a second `if (ret)`/
+ *   `if (!ret)` (empty, a dead store, an empty static's call: t0, or a
+ *   0x88 frame), 80043494's hit address-taken (one register over two
+ *   tests in ovl_0F_10, but v0), the flag through 8004348C's parameter,
+ *   s64/narrow return types, #line around the test, the restore and
+ *   the closing brace.
  *
- * jp only measured; us and eu keep the previous draft's 1649 (there are
- * no VERSION conditionals).
+ * jp only measured; us and eu are recorded equal to it (there are no
+ * VERSION conditionals).
  *
  * The order is IDO's: the handler, last in the file but for
  * func_ovl0F_03_80043010, is compiled first, its callees (and the statics
@@ -309,6 +328,7 @@ extern UnkStruct_ovl0F_03_80046FE4 D_ovl0F_03_80046FE4;
 /* A second caller keeps func_ovl0F_03_80043030 from being inlined. */
 static void func_ovl0F_03_80045678(void) {
     func_ovl0F_03_80043030(D_ovl0F_03_80046EB4);
+    D_ovl0F_03_800470C8[0] = 0;
 }
 
 static void func_ovl0F_03_80045670(void) {
@@ -742,6 +762,8 @@ void func_ovl0F_03_800434AC(UnkStructA *arg0) {
     if (func_ovl0F_03_80043494(arg0)) {
         func_ovl0F_03_8004348C(arg0, pos);
     }
+    if (pos) {
+    }
 }
 
 #line 1 "panels.c"
@@ -768,8 +790,6 @@ static s32 func_ovl0F_03_80043494(UnkStructA *arg0) {
         id = func_ovl0F_03_80045CD8();
         if (func_ovl0F_03_80045D78(id) == arg0) {
             other = func_ovl0F_03_80045D38(id);
-        } else {
-            other = NULL;
         }
     }
     if (other != NULL) {
