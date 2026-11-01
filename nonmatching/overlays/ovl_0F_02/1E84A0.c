@@ -3,7 +3,7 @@
  * data (.data as the original). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 27, jp 27
+ * differing words: us 0, jp 0
  *
  * ovl_0F_04's draft (1F2230.c) ported: the same functions in the same
  * order, its statics, fakes, pads and `#line`s, with this overlay's
@@ -46,13 +46,10 @@
  *   cause looks like a size limit in uopt's allocation. 80046150 has no pad
  *   (ovl_0F_04's 80043578 has pad[1]; with it the frame is 8 bytes bigger).
  *
- * What still differs (words, by scratch/0F_02/q1_allf.py's procedures):
- * - func_ovl0F_02_800454E8 (27): the same as ovl_0F_04's 8004544C, word for
- *   word: the header's scratch registers (a3/t0/a0, the original's
- *   t1/t2/t3), `move a0, s0` in the jal's slot where the original has it
- *   among the display list's stores, and s6/s7 swapped.
- * - Everything else matches, statics included. us and eu were not
- *   measured. There are no VERSION conditionals, as in ovl_0F_04's draft.
+ * Every function matches, statics included (jp; us and eu not yet
+ * built). There are no VERSION conditionals, as in ovl_0F_04's draft.
+ * 800454E8 and its static 800454E0 are ovl_0F_04's 8004544C/80045444
+ * renamed, nothing else changed.
  */
 #include "common.h"
 static void func_ovl0F_02_8004393C(void);
@@ -743,47 +740,14 @@ void func_ovl0F_02_80045EB0(void) {
     func_ovl0F_02_80047E48();
 }
 
-void func_ovl0F_02_800454E8(s32 arg0, UnkStruct_ovl0F_02_Gfx **arg1) {
-    UnkStruct_ovl0F_02_Gfx *gfx;
-
-    gfx = *arg1;
-    func_ovl0F_02_800454E0(&gfx);
-    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xBA001301; g->w1 = 0x00080000; }
-    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xBA000E02; g->w1 = 0; }
-    *arg1 = gfx;
-}
-
 static void func_ovl0F_02_800454E0(UnkStruct_ovl0F_02_Gfx **gdl) {
-    UnkStruct_ovl0F_02_Gfx *g;
-    UnkStruct_ovl0F_02_800485E0 *t;
     UnkStruct_ovl0F_02_Gfx *g2;
     f32 oldx;
     f32 oldz;
     f32 s;
-    f32 c;
-    f32 scale;
     s32 i;
-    f32 view[19];
+    f32 view[3];
 
-    { UnkStruct_ovl0F_02_Gfx *g = (*gdl)++; g->w0 = 0xB900031D; g->w1 = 0x00553048; }
-    g = (*gdl)++; g->w0 = 0xFCFFFFFF; g->w1 = 0xFFFCF279;
-    g = (*gdl)++; g->w0 = 0xBB000001; g->w1 = 0x80008000;
-    g = (*gdl)++; g->w0 = 0xBA001301; g->w1 = 0;
-    g = (*gdl)++; g->w0 = 0xBA000E02; g->w1 = 0x8000;
-    t = D_ovl0F_02_800485E0;
-    g = (*gdl)++; g->w0 = 0xFD100000; g->w1 = t->unk20 + (u32) t;
-    g = (*gdl)++; g->w0 = 0xE8000000; g->w1 = 0;
-    { UnkStruct_ovl0F_02_Gfx *g = (*gdl)++; g->w0 = 0xF5000100; g->w1 = 0x07000000; }
-    g = (*gdl)++; g->w0 = 0xE6000000; g->w1 = 0;
-    g = (*gdl)++; g->w0 = 0xF0000000; g->w1 = 0x0703C000;
-    g = (*gdl)++; g->w0 = 0xE7000000; g->w1 = 0;
-    { UnkStruct_ovl0F_02_Gfx *g = (*gdl)++; g->w0 = 0xFD500000; g->w1 = t->unk14 + (u32) t; }
-    g = (*gdl)++; g->w0 = 0xF5500000; g->w1 = 0x07000000;
-    g = (*gdl)++; g->w0 = 0xE6000000; g->w1 = 0;
-    g = (*gdl)++; g->w0 = 0xF3000000; g->w1 = 0x0703F800;
-    g = (*gdl)++; g->w0 = 0xE7000000; g->w1 = 0;
-    g = (*gdl)++; g->w0 = 0xF5400200; g->w1 = 0;
-    g = (*gdl)++; g->w0 = 0xF2000000; g->w1 = 0x0003C03C;
     g2 = *gdl;
     oldx = D_ovl0F_02_80048F10.x;
     oldz = D_ovl0F_02_80048F10.z;
@@ -793,29 +757,27 @@ static void func_ovl0F_02_800454E0(UnkStruct_ovl0F_02_Gfx **gdl) {
     D_ovl0F_02_800485E4 = ((D_ovl0F_02_80048F10.x - oldx) * s - func_ovl0F_02_80047FE0(view[0]) * (D_ovl0F_02_80048F10.z - oldz)) * 0.5f;
     s = func_ovl0F_02_80047FE8(view[0]);
     D_ovl0F_02_800485E8 = (func_ovl0F_02_80047FE0(view[0]) * (D_ovl0F_02_80048F10.x - oldx) + (D_ovl0F_02_80048F10.z - oldz) * s) * 0.2f;
-    scale = 1500.0f / view[2];
-    D_ovl0F_02_800485E4 *= scale;
-    D_ovl0F_02_800485E8 *= scale;
+    D_ovl0F_02_800485E4 *= 1500.0f / view[2];
+    D_ovl0F_02_800485E8 *= 1500.0f / view[2];
     for (i = 0; i < 20; i++) {
         if (func_ovl0F_02_800480C0(0x407) != 0) {
             UnkStruct_ovl0F_02_80048D80 *p = &D_ovl0F_02_80048D80[i];
 
-            {
-                UnkStruct_ovl0F_02_Gfx *g = g2++;
-
-                g->w0 = _SHIFTL(0xE4, 24, 8) | _SHIFTL((u32) (p->unk8 + p->unk4 - 1) << 2, 0, 12) | _SHIFTL((u32) (p->unk0 + p->unk8 - 1) << 2, 12, 12);
-                g->w1 = _SHIFTL(0, 24, 3) | _SHIFTL((u32) p->unk4 << 2, 0, 12) | _SHIFTL((u32) p->unk0 << 2, 12, 12);
-            }
-            { UnkStruct_ovl0F_02_Gfx *g = g2++; g->w0 = 0xB4000000; g->w1 = 0; }
-            { UnkStruct_ovl0F_02_Gfx *g = g2++; g->w0 = 0xB3000000; g->w1 = _SHIFTL((s32) (16.0f / (p->unk8 - 1) * 1024.0f), 0, 16) | _SHIFTL((s32) (16.0f / (p->unk8 - 1) * 1024.0f), 16, 16); }
+            { UnkStruct_ovl0F_02_Gfx *g = g2++; g->w0 = _SHIFTL(0xE4, 24, 8) | _SHIFTL((u32) (p->unk8 + p->unk4 - 1) << 2, 0, 12) | _SHIFTL((u32) (p->unk0 + p->unk8 - 1) << 2, 12, 12); g->w1 = _SHIFTL(0, 24, 3) | _SHIFTL((u32) p->unk4 << 2, 0, 12) | _SHIFTL((u32) p->unk0 << 2, 12, 12); { UnkStruct_ovl0F_02_Gfx *g = g2++; g->w0 = 0xB4000000; g->w1 = 0; } { UnkStruct_ovl0F_02_Gfx *g = g2++; g->w0 = 0xB3000000; g->w1 = _SHIFTL((s32) (16.0f / (p->unk8 - 1) * 1024.0f), 0, 16) | _SHIFTL((s32) (16.0f / (p->unk8 - 1) * 1024.0f), 16, 16); } }
         }
-        if (D_ovl0F_02_800485F4 != 0.0f) {
+        if (D_ovl0F_02_800485F4 == 0.0f) {
+            continue;
+        }
+        {
             f32 r;
+            f32 dx;
+            f32 dy;
             f64 drift;
 
             s = func_ovl0F_02_80047FE8(view[0]);
             r = func_ovl0F_02_80047FF0();
-            D_ovl0F_02_80048D80[i].unk0 += -D_ovl0F_02_800485E4 - r * (-D_ovl0F_02_800485E4 * 0.25f) + D_ovl0F_02_800485EC * s;
+            dx = -D_ovl0F_02_800485E4;
+            D_ovl0F_02_80048D80[i].unk0 += dx - r * (dx * 0.25f) + D_ovl0F_02_800485EC * s;
             s = (D_ovl0F_02_800485EC != 0.0f ? 1.0f : 0);
             if (func_ovl0F_02_80047FE0(view[0]) * (s * D_ovl0F_02_800485EC) + D_ovl0F_02_800485F0 < 0.0f) {
                 f32 sign = (D_ovl0F_02_800485EC != 0.0f ? 1.0f : 0);
@@ -827,7 +789,8 @@ static void func_ovl0F_02_800454E0(UnkStruct_ovl0F_02_Gfx **gdl) {
                 drift = func_ovl0F_02_80047FE0(view[0]) * (sign * D_ovl0F_02_800485EC) + D_ovl0F_02_800485F0;
             }
             r = func_ovl0F_02_80047FF0();
-            D_ovl0F_02_80048D80[i].unk4 += (D_ovl0F_02_80048D80[i].unkC - D_ovl0F_02_800485E8) - r * ((D_ovl0F_02_80048D80[i].unkC - D_ovl0F_02_800485E8) * 0.6f) + drift;
+            dy = D_ovl0F_02_80048D80[i].unkC - D_ovl0F_02_800485E8;
+            D_ovl0F_02_80048D80[i].unk4 += dy - r * (dy * 0.6f) + drift;
             D_ovl0F_02_80048D80[i].unk8 -= 0.1f * (D_ovl0F_02_80048D80[i].unk8 * 0.0625f);
             if (340.0f <= D_ovl0F_02_80048D80[i].unk0 || 240.0f <= D_ovl0F_02_80048D80[i].unk4 || D_ovl0F_02_80048D80[i].unk8 <= 3.0f ||
                 D_ovl0F_02_80048D80[i].unk10++ >= 240 || D_ovl0F_02_80048D80[i].unk0 < -20.0f || D_ovl0F_02_80048D80[i].unk4 < -10.0f) {
@@ -836,6 +799,36 @@ static void func_ovl0F_02_800454E0(UnkStruct_ovl0F_02_Gfx **gdl) {
         }
     }
     *gdl = g2;
+}
+
+void func_ovl0F_02_800454E8(s32 arg0, UnkStruct_ovl0F_02_Gfx **arg1) {
+    UnkStruct_ovl0F_02_Gfx *gfx;
+    UnkStruct_ovl0F_02_800485E0 *t;
+
+    gfx = *arg1;
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xB900031D; g->w1 = 0x00553048; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xFCFFFFFF; g->w1 = 0xFFFCF279; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xBB000001; g->w1 = 0x80008000; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xBA001301; g->w1 = 0; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xBA000E02; g->w1 = 0x8000; }
+    t = D_ovl0F_02_800485E0;
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xFD100000; g->w1 = t->unk20 + (u32) t; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xE8000000; g->w1 = 0; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xF5000100; g->w1 = 0x07000000; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xE6000000; g->w1 = 0; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xF0000000; g->w1 = 0x0703C000; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xE7000000; g->w1 = 0; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xFD500000; g->w1 = t->unk14 + (u32) t; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xF5500000; g->w1 = 0x07000000; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xE6000000; g->w1 = 0; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xF3000000; g->w1 = 0x0703F800; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xE7000000; g->w1 = 0; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xF5400200; g->w1 = 0; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xF2000000; g->w1 = 0x0003C03C; }
+    func_ovl0F_02_800454E0(&gfx);
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xBA001301; g->w1 = 0x00080000; }
+    { UnkStruct_ovl0F_02_Gfx *g = gfx++; g->w0 = 0xBA000E02; g->w1 = 0; }
+    *arg1 = gfx;
 }
 
 static void func_ovl0F_02_800453A4(UnkStruct_ovl0F_02_80048D80 *p) {
