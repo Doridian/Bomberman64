@@ -3,7 +3,7 @@
  * data (.data and .bss as the original's sizes).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 42, jp 42
+ * differing words: us 27, jp 27
  *
  * Every function comes out in the original's order, and so do the
  * stubs. The order is ovl_0F_02's (and ovl_0F_03's): the functions are defined in
@@ -124,26 +124,20 @@
  * - 80043770 matches: from `pos[0] = ...` to the end of the `dir`
  *   switch's else it is in "panels.c"; the `.file` at the join label
  *   keeps as1 from filling the `b`'s slot from its target.
- * - 80045E88 (15): its setup of D_ovl0F_04_80048C90 is the stub static
- *   80045E78 (so unk4 gets its own `lui at`, as in the original). Its
- *   first loop, 80045E80, switches to "panels.c" just before the loop,
- *   after `n = 6` (a local, so `li s3, 6` stays ahead of the stores), and
- *   indexes the array from the symbol, so its address gets a la of its own
- *   rather than 80045E70's copied. Its counter i and index j are separate
- *   (a fake: with one, IDO tests an end pointer, 93 words). 80045E78 is
- *   defined before 80045E70, giving 80045E70 the higher line numbers,
- *   which as1's scheduler reads (90.0f after t8/t9, as in the original).
- *   Left: the original's `la s1, D_ovl0F_04_800485C4` comes before the
- *   file switch with `li s3, 6` (a hand-edited ugen listing so placed
- *   matches: scratch/0F_04/p4/g2_s_file.s); a statement `p = D...` there
- *   gets merged with 80045E70's la (91 words). Without a block break the
- *   best is 14 whatever the `.loc`s; the indexed loop's la is uopt's
- *   strength reduction, placed after every statement before the loop, so
- *   no `.file` falls between it and `i = 0`. Every spelling of D tried
- *   (casts, `&D[0]`, `|0`, a parameter, returned from 80045E70) shares
- *   80045E70's register; only a nonzero offset (`p = D - 1; p++`, 77
- *   words) or 80045E70 as a real loop (10 or more trips) does not
- *   (scratch/0F_04/p4/m1_*).
+ * - 80045E88 matches. Its statics are named for the stubs they leave
+ *   (they come out in the reverse of its calls): the D_ovl0F_04_80048C90
+ *   setup 80045E80 (so unk4 gets its own `lui at`), the 36/13/90 init
+ *   loop 80045E78 (defined after the setup, for the line numbers as1
+ *   reads: 6 words), and the panel loop 80045E70 (p, count), ovl_0F_01's
+ *   80043588 (not inlined there, with four callers), its body in
+ *   "panels.c" (14 words without). Its arguments are set up in 1F2230.c,
+ *   ahead of the file switch, which is the original's `la s1` / `li s3, 6`.
+ *   The table is passed as `&D_ovl0F_04_80048534[6]`, one past the 0x18-
+ *   byte table before it (a fake): written from D_ovl0F_04_800485C4 (or
+ *   `&D[1] - 1` and the like, which uopt folds back), its la is merged
+ *   with the init loop's (91 words). ovl_0F_01's original does share
+ *   them; what 0F_04's (and 0F_02's) source had is open, perhaps one
+ *   structure holding both tables.
  * - 800460CC (2): the object is read into a local before it is stored
  *   to D_ovl0F_04_80048C8C (`obj = ...; D_... = obj; obj->unkC |=
  *   0x210;`); its code matches.
@@ -170,8 +164,8 @@ static void func_ovl0F_04_8004331C(void);
 static void func_ovl0F_04_80043314(void);
 static void func_ovl0F_04_8004330C(void);
 static void func_ovl0F_04_80043304(void);
-static void func_ovl0F_04_80045E70(void);
-static void func_ovl0F_04_80045E78(UnkStructA **arg0);
+static void func_ovl0F_04_80045E78(void);
+static void func_ovl0F_04_80045E80(UnkStructA **arg0);
 
 /*
  * ovl_0F_04's game object, IDO -O3: the functions are written last to first
@@ -743,7 +737,7 @@ static void func_ovl0F_04_8004623C(void) {
 static void func_ovl0F_04_800460BC(void) {
 }
 
-static void func_ovl0F_04_80045E78(UnkStructA **arg0) {
+static void func_ovl0F_04_80045E80(UnkStructA **arg0) {
     D_ovl0F_04_80048C90.unk0 = func_ovl0F_04_800473B8(func_ovl0F_04_80047358());
     D_ovl0F_04_80048C90.unk4 = arg0;
     D_ovl0F_04_80048C90.unkC = 0;
@@ -756,7 +750,7 @@ static void func_ovl0F_04_80045E78(UnkStructA **arg0) {
     D_ovl0F_04_80048C90.unk20 = func_ovl0F_04_80044D34;
 }
 
-static void func_ovl0F_04_80045E70(void) {
+static void func_ovl0F_04_80045E78(void) {
     s32 i;
 
     for (i = 0; i < 6; i++) {
@@ -766,19 +760,17 @@ static void func_ovl0F_04_80045E70(void) {
     }
 }
 
-static void func_ovl0F_04_80045E80(void) {
+static void func_ovl0F_04_80045E70(UnkStruct_ovl0F_04_800485C4 *p, s32 count) {
     s32 i;
-    s32 j;
-    s32 n;
 
-    n = 6;
 #line 1 "panels.c"
-    for (i = 0, j = 0; i < n; i++, j++) {
-        *D_ovl0F_04_800485C4[j].unk0 = func_ovl0F_04_80047BA0(D_ovl0F_04_800485C4[j].unk4, D_ovl0F_04_800485C4[j].unk24 | 0x01000000, 0x30, D_ovl0F_04_800485C4[j].unk8);
-        func_ovl0F_04_800433FC(&D_ovl0F_04_800485C4[j]);
-        (*D_ovl0F_04_800485C4[j].unk0)->unk40->unk1C = D_ovl0F_04_800485C4[j].unk18;
-        (*D_ovl0F_04_800485C4[j].unk0)->unk40->unk20 = D_ovl0F_04_800485C4[j].unk1C;
-        (*D_ovl0F_04_800485C4[j].unk0)->unk40->unk24 = D_ovl0F_04_800485C4[j].unk20;
+    for (i = 0; i < count; i++) {
+        *p->unk0 = func_ovl0F_04_80047BA0(p->unk4, p->unk24 | 0x01000000, 0x30, p->unk8);
+        func_ovl0F_04_800433FC(p);
+        (*p->unk0)->unk40->unk1C = p->unk18;
+        (*p->unk0)->unk40->unk20 = p->unk1C;
+        (*p->unk0)->unk40->unk24 = p->unk20;
+        p++;
     }
 }
 #line 700 "1F2230.c"
@@ -787,9 +779,9 @@ static void func_ovl0F_04_80045E80(void) {
 static void func_ovl0F_04_80045E88(UnkStructA **arg0) {
     s32 i;
 
-    func_ovl0F_04_80045E78(arg0);
-    func_ovl0F_04_80045E70();
-    func_ovl0F_04_80045E80();
+    func_ovl0F_04_80045E80(arg0);
+    func_ovl0F_04_80045E78();
+    func_ovl0F_04_80045E70((UnkStruct_ovl0F_04_800485C4 *)&D_ovl0F_04_80048534[6], 6);
     for (i = 0; i < 6; i++) {
         func_ovl0F_04_80047B78(func_ovl0F_04_80047BB0(*D_ovl0F_04_800485C4[i].unk0), 0x02100000);
         D_ovl0F_04_80048534[i].unk11 = 0;
