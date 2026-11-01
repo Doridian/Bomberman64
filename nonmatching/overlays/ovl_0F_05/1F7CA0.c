@@ -1,51 +1,52 @@
 /*
  * NON_MATCHING: ovl_0F_05's game object, complete: every function and its data
- * (.data as the original, .rodata but for one constant, .bss 0x80).
+ * (.data, .rodata and .bss 0x80 as the original).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 293, eu 293, jp 293
+ * differing words: us 42, eu 42, jp 42
  *
- * Measured in jp. What went right, from 619 words, as in ovl_0F_08/0F_07:
- * - func_ovl0F_05_800440AC (112 to 0): ovl_0F_08's 80043A28 ported (Vec3f,
+ * From 619 words, as in ovl_0F_08/0F_07:
+ * - func_ovl0F_05_800440AC: ovl_0F_08's 80043A28 ported (Vec3f,
  *   `(s32)dx != (s32)vel.x` tests, the pack static 80043FE4 in "panels.c"
- *   and only on the hit path). The extra stub 8004409C is an empty static
- *   defined after 800440AC whose address only 80044AF4's `if (0)` takes,
- *   so it is not inlined and costs 800440AC no frame.
- * - func_ovl0F_05_800430BC (232 to 4): the loops 800430A4 (case 2) and
- *   80043018 (case 1) are defined in "panels.c" (`move s2,zero` after the
- *   table); 800430B4 declares i first (its counter spill at 0x54); the
- *   80045A30 block (0F_08's static 800432B4) is in "panels.c" in the
- *   handler, back to "1F7CA0.c" before the D_[2] stores, which replaces
- *   the old fake `if` and fixes the 2400.0f/0.0f schedule.
- * - func_ovl0F_05_8004472C: x's step before z's (the .rodata order).
- * - func_ovl0F_05_80043B74: unkE is u16 (`ori t0,zero,0x8000`); task
- *   declared before objs (task at 0xB4 as the original).
+ *   and only on the hit path).
+ * - func_ovl0F_05_800430BC: the loops 800430A4 (case 2) and 80043018 (case
+ *   1) are defined in "panels.c"; 800430B4 declares i first; the 80045A30
+ *   block is in "panels.c", back to "1F7CA0.c" before the D_[2] stores.
+ *   80045870 is declared s32, which puts case 1's count in v1.
+ * - func_ovl0F_05_80043B74: the 180-frame loop's dead `angle =
+ *   D_ovl0F_05_80046550.y; ANGLE_SUB(angle, 1/3)` (ovl_12_06's twin turns
+ *   the camera there) is register-allocated and then dropped: it leaves the
+ *   original's &D_ovl0F_05_80046550 in s0, 1/3 in $f28 and the saved
+ *   $f20-$f31. The wait is `while`, not `do`; objs' unk14 = 0 (an int: its
+ *   0.0f is a new $f22 rather than the $f28 kept from the start); the
+ *   locals are declared cam, i, task, j, k, angle, objs (every one gets a
+ *   slot: task at 0xB4, objs at 0x98).
  *
- * What still differs:
- * - func_ovl0F_05_800430BC (4): case 1's count is in v0 (original v1);
- *   bisecting shows it follows the case 2 loop (without it, v1). The
- *   3200.0f stores load D_[10]->unk40 into a0 (original a1).
- * - func_ovl0F_05_80043B74 (270): nine words short. The original saves
- *   $f20-$f31 and, before the 180-frame loop, loads &D_ovl0F_05_80046550
- *   into s0 and 1/3 (rodata 0x8004649C, which this draft lacks, so the
- *   .rodata after it is a word early) into $f28, unused; it also keeps
- *   0.0f in $f28 over the first calls, holds 500.0f/90.0f in $f24/$f26,
- *   leaves $f30 unused, and spills six caller-saved (j + 1) values around
- *   the loop's call: dead code that went after register allocation.
- *   ovl_12_06's twin (func_ovl12_06_800439D4) has `func(32768.0f, angle,
- *   32768.0f); ANGLE_SUB(angle, 0.33333334f);` there. Tried: a dead
- *   `if (flag)` (gives the saved registers and s0, not the 1/3), `if (i <
- *   0)`/`j`-tests (kept or stop the inner loop's unrolling), unreachable
- *   code after `continue`, dead stores to locals/structs, float-constant
- *   conditions, an empty or `if (param)` static: none loads the 1/3.
- *   The frame wants 12 bytes between task and objs and 8 more above.
- * - func_ovl0F_05_8004472C (19): its code matches; the words are the
- *   object's end shifted by 80043B74's missing ones.
+ * What still differs (the 42 words are all func_ovl0F_05_80043B74's, which
+ * fcmp counts up to 800440AC, stubs and 80043FF4 included):
+ * - The stub 8004409C: the original has it after 80043FF4, before 800440A4;
+ *   here it comes right after 80043B74 (39 words: 80043FE4, 80043FEC and
+ *   80043FF4 one stub late). It is an empty static only 80044AF4's `if (0)`
+ *   takes the address of, and a static never inlined comes out by its
+ *   definition among the globals, never inside 800440AC's group. Inlined
+ *   into 800440AC (stubs come in the reverse of the calls) it lands right
+ *   only when called between 800440A4 and the first 80043FF4 call, or
+ *   inside 800440A4, and there it costs 800440AC 8 bytes of frame (120,
+ *   not 112): a static inlined before 80043FEC's call adds its area (8 for
+ *   up to two params and locals, 16 for three or four) above 80043FEC's
+ *   spills, one after it is free. 800440A4 (x, z, vel: 16) can't shrink:
+ *   x and z must be its params for a0/a1, and the ways tried with two
+ *   (packed value and vel, two one-axis statics, nesting) give t registers
+ *   or reload unk64. Tried as well: a dead `if (0)` call (still inlined),
+ *   fewer locals in 80043FEC (no change), the prototypes' order.
+ * - `cam->unkC = cam->unkE = 0x4000;` (3 words): the original's 0x4000 is
+ *   in v1 (a uopt register), here in t5; separate stores, a variable, a
+ *   static setter (as 80043B6C too) and casts give t registers.
  * The `#line N "1F7CA0.c"` lines are the physical line numbers (the file
  * named the same whatever path it is compiled by).
  */
 #include "common.h"
-#line 49 "1F7CA0.c"
+#line 50 "1F7CA0.c"
 
 /*
  * ovl_0F_05's game object, IDO -O3: the functions are written last to first
@@ -78,6 +79,10 @@ typedef struct {
     /* 0x0E */ u16 unkE;
 } UnkStruct_ovl0F_05_80045110;
 
+/* as ovl_12_06's */
+#define ANGLE_SUB(a, d) \
+    (a) = ((a) - (d) >= 360.0f) ? (a) - (d) - 360.0f : ((a) < (d)) ? (a) - (d) + 360.0f : (a) - (d)
+
 void func_ovl0F_05_80044E58(s32);
 void func_ovl0F_05_80044E70(s32);
 void func_ovl0F_05_80044EB8(f32, f32, f32, f32 *, s32);
@@ -107,7 +112,7 @@ void func_ovl0F_05_800457C0(void);
 s32 func_ovl0F_05_80045808(UnkStructA *, s32);
 void func_ovl0F_05_80045858(UnkStructA *, s32);
 void func_ovl0F_05_80045860(UnkStructA *, s32);
-void func_ovl0F_05_80045870(UnkStructA *);
+s32 func_ovl0F_05_80045870(UnkStructA *);
 UnkStructA *func_ovl0F_05_800458C8(s32, s32);
 s32 func_ovl0F_05_80045978(UnkStructA *, s32, UnkStructA *);
 s32 func_ovl0F_05_800459A8(void (*)(void), s32, s32, s32, s32);
@@ -416,7 +421,7 @@ static void func_ovl0F_05_8004409C(void) {
 static void func_ovl0F_05_80043FE4(s32 *dst, f32 x, f32 z) {
     *dst = ((s16)(x * 500.0f) << 16) | ((s16)(z * 500.0f) & 0xFFFF);
 }
-#line 420 "1F7CA0.c"
+#line 425 "1F7CA0.c"
 
 static s32 func_ovl0F_05_80043FEC(UnkStructA *arg0) {
     s32 hit;
@@ -472,20 +477,20 @@ static void func_ovl0F_05_80043B6C(void) {
 }
 
 void func_ovl0F_05_80043B74(void) {
-    s32 task;
-    UnkStructA_40 *objs[4];
     UnkStruct_ovl0F_05_80045110 *cam;
     s32 i;
+    s32 task;
     s32 j;
     s32 k;
-    s32 flag;
+    f32 angle;
+    UnkStructA_40 *objs[4];
 
     func_ovl0F_05_80043B6C();
     cam = func_ovl0F_05_80045110(0);
     D_ovl0F_05_800463F0 = 0;
-    do {
+    while (D_ovl0F_05_800463F0 == 0) {
         func_ovl0F_05_800459F0();
-    } while (D_ovl0F_05_800463F0 == 0);
+    }
     task = func_ovl0F_05_800459A8(func_ovl0F_05_8004472C, 0, 0, 0, 0x130);
     func_ovl0F_05_80044F38(func_ovl0F_05_800440AC, 1);
     func_ovl0F_05_800450E0(0, 2);
@@ -518,25 +523,18 @@ void func_ovl0F_05_80043B74(void) {
         objs[i]->unkC |= 0x80;
         objs[i]->unk36 = 60;
         objs[i]->unk10 = 2450.0f;
-        objs[i]->unk14 = 0.0f;
+        objs[i]->unk14 = 0;
         objs[i]->unk18 = 500.0f;
         objs[i]->unk1C = 90.0f;
         objs[i]->unk28 = objs[i]->unk2C = objs[i]->unk30 = (i + 1) * 0.5f;
     }
-    flag = 0;
     for (i = 0; i < 180; i++) {
         for (j = 0; j < 4; j++) {
             objs[j]->unk10 -= (j + 1) * 4.0f;
             objs[j]->unk14 -= (j + 1);
         }
-        /* never runs: a guess. The original saves $f20-$f31 and before the
-         * loop loads &D_ovl0F_05_80046550 into s0 and 1/3 (rodata 0x8004649C)
-         * into $f28, none of which the loop uses; a dead call here gives the
-         * register count, not the loads */
-        if (flag) {
-            func_ovl0F_05_800459C8(1);
-            D_ovl0F_05_80046550.x += 0.33333334f;
-        }
+        angle = D_ovl0F_05_80046550.y;
+        ANGLE_SUB(angle, 0.33333334f);
         func_ovl0F_05_800459F0();
     }
     for (i = 0; i < 4; i++) {
@@ -651,7 +649,7 @@ static void func_ovl0F_05_800430A4(s32 arg1, UnkStruct_ovl0F_05_800461E0 *arg0) 
         arg0++;
     }
 }
-#line 655 "1F7CA0.c"
+#line 653 "1F7CA0.c"
 
 #line 1 "panels.c"
 static void func_ovl0F_05_80043018(s32 count, UnkStruct_ovl0F_05_800461E0 *p) {
@@ -662,7 +660,7 @@ static void func_ovl0F_05_80043018(s32 count, UnkStruct_ovl0F_05_800461E0 *p) {
         p++;
     }
 }
-#line 666 "1F7CA0.c"
+#line 664 "1F7CA0.c"
 
 /* The overlay's handler: the entry returns it to the loader. */
 void func_ovl0F_05_800430BC(s32 arg0) {
@@ -694,7 +692,7 @@ void func_ovl0F_05_800430BC(s32 arg0) {
             D_ovl0F_05_8004654C->unk40 = 0.6f;
             D_ovl0F_05_8004654C->unk44 = D_ovl0F_05_8004654C->unk40 * 0.75f;
             D_ovl0F_05_8004654C->unk3C = D_ovl0F_05_8004654C->unk4C * 0.3f;
-#line 698 "1F7CA0.c"
+#line 696 "1F7CA0.c"
             D_ovl0F_05_800464E0[2]->unk40->unk10 = 2400.0f;
             D_ovl0F_05_800464E0[2]->unk40->unk14 = 2600.0f;
             D_ovl0F_05_800464E0[2]->unk40->unk18 = -2000.0f;
@@ -708,7 +706,7 @@ void func_ovl0F_05_800430BC(s32 arg0) {
             }
             D_ovl0F_05_80046180 = -1;
             break;
-#line 712 "1F7CA0.c"
+#line 710 "1F7CA0.c"
         case 16:
             func_ovl0F_05_80045010(6, 0, 11);
             break;
