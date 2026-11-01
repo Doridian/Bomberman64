@@ -4,7 +4,7 @@
  * words are the original's, though IDO puts the scripts' strings in .rodata).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4, eu 4, jp 4
+ * differing words: us 2, eu 2, jp 2
  *
  * A first complete draft: the functions with a ratio-1.00 sibling are that
  * sibling's C translated (scratch/0C_01/sib.py: ovl_0C_06 first, then
@@ -1819,8 +1819,6 @@ typedef struct {
 
 void func_ovl0C_01_80044D3C(void) {
     f32 end;
-    f32 *pos;
-    s32 pad0;
     UnkStructA *obj;
     UnkStructA_40 *p;
     Snd_ovl0C_01 snd;
@@ -1835,8 +1833,7 @@ void func_ovl0C_01_80044D3C(void) {
     snd.unk4 = 0x213;
     snd.unk8 = 60;
     func_ovl0C_01_80049900(&snd);
-    pos = &p->unk10;
-    func_ovl0C_01_800443A4(pos, 500.0f, &p->unk14, 600.0f, 30);
+    func_ovl0C_01_800443A4(&p->unk10, 500.0f, &p->unk14, 600.0f, 30);
     func_ovl0C_01_80049EB0(0x211, p->unk10, p->unk14, p->unk18);
     while (p->unk48->unk4->unk4 > 1.0f) {
         func_ovl0C_01_80049950();
@@ -1866,7 +1863,7 @@ void func_ovl0C_01_80044D3C(void) {
     snd.unk4 = 0x20F;
     snd.unk8 = 0x44;
     func_ovl0C_01_80049900(&snd);
-    func_ovl0C_01_80043248(pos, -800.0f, 30);
+    func_ovl0C_01_80043248(&p->unk10, -800.0f, 30);
     p->unk48->unk4->unk4 = 0.0f;
     obj->unk40->unk10 = 2700.0f;
     obj->unk40->unk14 = 200.0f;

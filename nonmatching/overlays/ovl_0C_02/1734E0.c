@@ -4,7 +4,7 @@
  * 0xF0 where the original's is 0xD0).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 10, eu 10, jp 10
+ * differing words: us 2, eu 2, jp 2
  *
  * A first complete draft: the functions shared with bank 0x0C's and
  * 0x12/0x17's drafts are theirs (scratch/0C_02/sib.py), the rest m2c's
@@ -887,7 +887,7 @@ void func_ovl0C_02_80047410(void) {
 }
 
 void func_ovl0C_02_80046DD0(void) {
-    s32 pad[5]; /* unused: the original's frame is 24 bytes bigger */
+    s32 pad[5];
     f32 pos[3];
     UnkStructA *obj;
     UnkStructA *fade;
@@ -896,12 +896,7 @@ void func_ovl0C_02_80046DD0(void) {
     f32 amp;
     f32 angle;
     s16 alpha;
-    s16 i;
-    s32 j;
-    s32 fell;
-    f32 tx;
-    s32 tz;
-    s32 n;
+    s16 fell;
 
     func_ovl0C_02_80048830(0);
     func_ovl0C_02_800488B8(1);
@@ -932,14 +927,14 @@ void func_ovl0C_02_80046DD0(void) {
             amp = 20.0f;
             angle = 0;
             base = D_ovl0C_02_80049B50->unk0->unk40->unk18;
-            i = 0;
+            alpha = 0;
             while (TRUE) {
                 D_ovl0C_02_80049B50->unk0->unk40->unk18 = func_ovl0C_02_800493C0(angle) * amp + base;
                 angle += 20.0f;
                 if (angle >= 360.0f) {
-                    i++;
+                    alpha++;
                     amp -= 3.0f;
-                    if (i >= 6) {
+                    if (alpha >= 6) {
                         break;
                     }
                     angle -= 360.0f;
@@ -998,17 +993,7 @@ void func_ovl0C_02_80046DD0(void) {
             }
             func_ovl0C_02_80049238(0x3C);
             func_ovl0C_02_800497A0(0x2C);
-            tx = 22.0f;
-            tz = 14;
-            n = 5;
-            D_ovl0C_02_8004A100[0] = tx * 100.0f;
-            D_ovl0C_02_8004A100[1] = 0;
-            for (j = 0; j < n; j++) {
-                D_ovl0C_02_8004A100[1] += func_ovl0C_02_80048730(j) * 100.0f;
-            }
-            D_ovl0C_02_8004A100[1] += 100.0f;
-            D_ovl0C_02_8004A100[2] = tz * 100.0f;
-            D_ovl0C_02_8004A0F0 = func_ovl0C_02_80049670(0x28, D_ovl0C_02_8004A100, 0);
+            func_ovl0C_02_80045A7C();
             func_ovl0C_02_80049490(0x415);
             func_ovl0C_02_80049238(0x78);
             func_ovl0C_02_80049238(0x28);
@@ -1045,29 +1030,38 @@ UnkStructA *func_ovl0C_02_80046B68(UnkStruct_ovl0C_02_80049AB0 *arg0) {
         obj->unk40->unk14 = base - func_ovl0C_02_800493C0(i) * 1000.0f;
         obj->unk40->unk20 = angle;
         if (flag) {
-            angle = angle * 2.5f + 7.5f;
+            angle *= 2.5f;
         }
         func_ovl0C_02_80049260();
         angle += 20.0f;
+        if (flag) {
+            angle += 7.5f;
+        }
     }
     for (i = 5; i < 0x5A; i += 2) {
         obj->unk40->unk30 = func_ovl0C_02_800493C0(i) * 3.0f;
         obj->unk40->unk28 = obj->unk40->unk30;
         obj->unk40->unk20 = angle;
         if (flag) {
-            angle = angle * 2.5f + 7.5f;
+            angle *= 2.5f;
         }
         func_ovl0C_02_80049260();
         angle += 20.0f;
+        if (flag) {
+            angle += 7.5f;
+        }
     }
     for (i = 0; i < 0x5A; i += 2) {
         obj->unk40->unk2C = func_ovl0C_02_800493C8(i) * 10.0f + 1.0f;
         obj->unk40->unk20 = angle;
         if (flag) {
-            angle = angle * 2.5f + 7.5f;
+            angle *= 2.5f;
         }
         func_ovl0C_02_80049260();
         angle += 20.0f;
+        if (flag) {
+            angle += 7.5f;
+        }
     }
     return obj;
 }
@@ -1438,7 +1432,7 @@ static void func_ovl0C_02_80045A74(f32 x, s32 z, s32 count) {
     s32 i;
 
     D_ovl0C_02_8004A100[0] = x * 100.0f;
-    D_ovl0C_02_8004A100[1] = 0.0f;
+    D_ovl0C_02_8004A100[1] = 0;
     for (i = 0; i < count; i++) {
         D_ovl0C_02_8004A100[1] += func_ovl0C_02_80048730(i) * 100.0f;
     }
@@ -2031,15 +2025,11 @@ void func_ovl0C_02_80043C54(void) {
     func_ovl0C_02_80048F28(-90.0f, 45.0f, 2000.0f);
     func_ovl0C_02_800497A0(0x29);
     func_ovl0C_02_800497A0(0x54);
-    var_fs0 = 0.0f;
-    var_s1 = 0;
-    do {
+    for (var_s1 = 0, var_fs0 = 0.0f; var_s1 < 0x78; var_s1++, var_fs0 += 0.45f) {
         func_ovl0C_02_80048E18(D_ovl0C_02_80049EEC.unk4);
         D_ovl0C_02_80049EEC.unk4 = func_ovl0C_02_80048E10(D_ovl0C_02_80049EEC.unk0->unk40, 0, (s32) (s16) (0x40 - (s32) var_fs0), 0x400, (s32) D_ovl0C_02_80049EEC.unk10, (s32) D_ovl0C_02_80049EEC.unk12);
         func_ovl0C_02_80049260();
-        var_s1 += 1;
-        var_fs0 += 0.45f;
-    } while (var_s1 < 0x78);
+    }
     func_ovl0C_02_80049238(0x1E);
     func_ovl0C_02_80049030();
     func_ovl0C_02_80048FF8(D_ovl0C_02_8004A0D0);
