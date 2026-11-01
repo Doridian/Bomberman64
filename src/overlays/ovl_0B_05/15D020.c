@@ -1,10 +1,8 @@
 /*
- * NON_MATCHING: ovl_0B_05's game object (a menu of four options with a
- * level number, over ovl_0A_04's scene), complete: every function and its
- * data (.data 0x140, .rodata 0xE0, .bss 0xA0, as the original). Not built
- * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 11, eu 11, jp 11
+ * ovl_0B_05's game object (a menu of four options with a level number,
+ * over ovl_0A_04's scene), IDO -O3; it matches in us, eu and jp. Its
+ * `#line`s give the line numbers it matched with, a little below the
+ * lines they stand on.
  *
  * IDO -O3: the functions are written last to first. The scene
  * (800439B0-80043CE8, the two shadow tasks 80044094/8004431C, 800448C8 and
@@ -24,13 +22,16 @@
  * and the bottom line differently, and 80043254 shows one string or the
  * other at one height (`#if VERSION_JP`).
  *
- * What still differs in us (words; eu and jp the same):
- * - func_ovl0B_05_80044DD8 (static, counted with 80044D48): as in
- *   ovl_0B_01's 8004464C, the original takes &D_ovl0B_05_8004669C before
- *   storing arg0 to its home slot, and leaves the final store out of the
- *   delay slot of `jr ra`.
+ * The fade's display-list callback 80044DD8 is a static of its own
+ * (80044DD0, whose stub is the one before it) inlined into it, defined in
+ * a `#line 1 "panels.c"` region: the `.file` switches end as1's blocks
+ * around the body, so &D_ovl0B_05_8004669C is taken before arg0's home
+ * store and the final store stays out of the delay slot of `jr ra`, as in
+ * the original. The `#line` after the include names this file the way
+ * the one after the region does, whatever path it is compiled by.
  */
 #include "common.h"
+#line 34 "15D020.c"
 
 typedef struct {
     /* 0x00 */ u8 unk0[4];
@@ -183,6 +184,12 @@ void func_ovl0B_05_800461A0(void); /* 0x2404 */
 void func_ovl0B_05_800461A8(u8); /* 0x2405 */
 void func_ovl0B_05_800461E8(s32); /* 0x2502 */
 void func_ovl0B_05_800461F0(s32, u8 *, s32); /* 0x2503 */
+#if VERSION_JP
+/* jp's ZeroJump block ends at 0x250A: its calls of us's 0x250C and 0x250D
+ * go to 0x2501 and 0x2503 */
+#define func_ovl0B_05_80046238 func_ovl0B_05_800461E0
+#define func_ovl0B_05_80046240 func_ovl0B_05_800461F0
+#endif
 s32 func_ovl0B_05_80046238(u8 *, u16, u16, f32, f32, s32); /* 0x250C */
 void func_ovl0B_05_80046240(s32, u8 *, s32); /* 0x250D */
 s32 func_ovl0B_05_80046380(s32); /* 0x2B00 */
@@ -290,9 +297,6 @@ static void func_ovl0B_05_80043438(s32 arg0);
 static void func_ovl0B_05_800439A8(void);
 static void func_ovl0B_05_800444F0(void);
 
-static void func_ovl0B_05_80044DD0(void) {
-}
-
 static void func_ovl0B_05_80044DC8(void) {
 }
 
@@ -342,8 +346,8 @@ static void func_ovl0B_05_80044D60(void) {
     D_ovl0B_05_800467C0[0] = D_ovl0B_05_800467EC[0] + D_ovl0B_05_80046824[0];
 }
 
-static void func_ovl0B_05_80044DD8(s32 arg0, Gfx_ovl0B_05 **arg1) {
-    UnkStruct_ovl0B_05_8004669C *fade = &D_ovl0B_05_8004669C;
+#line 1 "panels.c"
+static void func_ovl0B_05_80044DD0(UnkStruct_ovl0B_05_8004669C *fade, Gfx_ovl0B_05 **arg1) {
     Gfx_ovl0B_05 *gfx = *arg1;
 
     { Gfx_ovl0B_05 *g = gfx++; g->w0 = 0xFA000000; g->w1 = ((fade->unk4 & 0xFF) << 24) | ((fade->unk8 & 0xFF) << 16) | ((fade->unkC & 0xFF) << 8) | (fade->unk10 & 0xFF); }
@@ -351,6 +355,11 @@ static void func_ovl0B_05_80044DD8(s32 arg0, Gfx_ovl0B_05 **arg1) {
     { Gfx_ovl0B_05 *g = gfx++; g->w0 = 0xF7000000; g->w1 = 0x10001; }
     { Gfx_ovl0B_05 *g = gfx++; g->w0 = 0xF6000000 | (((fade->unk2C + (s32) fade->unk34) & 0x3FF) << 14) | (((fade->unk30 + (s32) (fade->unk34 * fade->unk20)) & 0x3FF) << 2); g->w1 = (((fade->unk2C - (s32) fade->unk34) & 0x3FF) << 14) | (((fade->unk30 - (s32) (fade->unk34 * fade->unk20)) & 0x3FF) << 2); }
     *arg1 = gfx;
+}
+
+#line 352 "15D020.c"
+static void func_ovl0B_05_80044DD8(s32 arg0, Gfx_ovl0B_05 **arg1) {
+    func_ovl0B_05_80044DD0(&D_ovl0B_05_8004669C, arg1);
 }
 
 static void func_ovl0B_05_80044F54(void) {
