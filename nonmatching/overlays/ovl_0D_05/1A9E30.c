@@ -2,19 +2,21 @@
  * NON_MATCHING: ovl_0D_05's stage object, complete: every function and its data.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 120, eu 120, jp 120
+ * differing words: us 0, eu 0, jp 0
  *
- * What still differs in us (words):
- * - func_ovl0D_05_80043018 (6): a fake `if (!D_ovl0D_05_8004614C) {}`
- *   after the store to D_8004617C keeps the loads of D_80046170[0]/[2]
- *   after it, as in the original, but the call's argument is reloaded
- *   (`lw a0,0(v1)`) where the original moves it from v0.
- * - func_ovl0D_05_80043790 (109): the camera (ZeroJump 0x171A): the
- *   original puts 1600.0f in $f16 and copies it to $f14 and a3; ours loads
- *   it into $f14. One word long, so the rest is shifted.
- * - func_ovl0D_05_80044290 (5): a local 4 bytes higher (sp+172, not 168).
+ * It matches; what fixed what (from 120 words), ovl_0D_02/04/06's levers:
+ * - 80043790: the camera calls are in the empty static 80043760, and its
+ *   call is in a "panels.c" region (1600.0f in $f16, both its 1600s floats,
+ *   as ovl_0D_04's 80044D40). The region needs a function defined in
+ *   "panels.c": the empty static 80043788 is one.
+ * - 80043018: 80044CC8's result goes through a local j, and that statement
+ *   is in a "panels.c" region, so as1 keeps the loads of D_80046170 after
+ *   the store and passes j from v0 (ovl_0D_06's 8004305C).
+ * - 80044290: the inlined static 80044288 has a pad local ahead of grid,
+ *   so grid sits at sp+168 as in the original.
  */
 #include "common.h"
+#line 20 "1A9E30.c"
 
 /*
  * ovl_0D_05's stage object, IDO -O3: the functions are written last to first
@@ -363,6 +365,7 @@ static void func_ovl0D_05_80044280(Ent05 *e, s32 flag) {
 /* every few seconds, when the player is near, the model throws a bomb */
 static void func_ovl0D_05_80044288(Ent05 *e, s32 *timer) {
     UnkStructA_40 *p;
+    s32 pad; /* a fake (see the top) */
     s32 grid[6];
 
     if (*timer == 0) {
@@ -554,9 +557,9 @@ void func_ovl0D_05_80043790(void) {
     func_ovl0D_05_80043768();
     D_ovl0D_05_80046180 = func_ovl0D_05_80044D48();
     func_ovl0D_05_800459C0(0x407);
-    func_ovl0D_05_800454E8(2400.0f, 1600, 800.0f, 1600.0f);
-    func_ovl0D_05_800454F8(1600.0f, 1600.0f, 3200.0f, 1600.0f);
-    func_ovl0D_05_80043760();
+#line 1 "panels.c"
+    func_ovl0D_05_80043760(); /* a fake (see the top) */
+#line 563 "1A9E30.c"
     UNK_MACRO_ovl0D_05_800430CC();
     func_ovl0D_05_80043758();
     func_ovl0D_05_80043750();
@@ -577,8 +580,11 @@ void func_ovl0D_05_80043790(void) {
     func_ovl0D_05_80043524();
 }
 
+/* in "panels.c" (a fake: see the top) */
+#line 1 "panels.c"
 static void func_ovl0D_05_80043788(void) {
 }
+#line 588 "1A9E30.c"
 
 static void func_ovl0D_05_80043780(Trio05 *t, s32 count) {
     s32 i;
@@ -590,6 +596,8 @@ static void func_ovl0D_05_80043780(Trio05 *t, s32 count) {
 }
 
 static void func_ovl0D_05_80043760(void) {
+    func_ovl0D_05_800454E8(2400.0f, 1600.0f, 800.0f, 1600.0f);
+    func_ovl0D_05_800454F8(1600.0f, 1600.0f, 3200.0f, 1600.0f);
 }
 
 static void func_ovl0D_05_80043758(void) {
@@ -777,11 +785,14 @@ static void func_ovl0D_05_800430BC(void) {
 }
 
 void func_ovl0D_05_80043018(void) {
+    s32 j;
+
     if (func_ovl0D_05_800459D0(0x409) != 0) {
-        D_ovl0D_05_8004617C = func_ovl0D_05_80044CC8(0x15A);
-        if (!D_ovl0D_05_8004614C) {
-        }
-        func_ovl0D_05_80044CD0(D_ovl0D_05_8004617C, 0, 0, D_ovl0D_05_80046170[0] - 1, D_ovl0D_05_80046170[2] - 1, 0, 0, 0);
+        /* a fake (see the top) */
+#line 1 "panels.c"
+        j = D_ovl0D_05_8004617C = func_ovl0D_05_80044CC8(0x15A);
+#line 795 "1A9E30.c"
+        func_ovl0D_05_80044CD0(j, 0, 0, D_ovl0D_05_80046170[0] - 1, D_ovl0D_05_80046170[2] - 1, 0, 0, 0);
         func_ovl0D_05_80045600(D_ovl0D_05_80045F2C[0].obj, 0x01000000);
         func_ovl0D_05_80045600(D_ovl0D_05_80045F64[0].obj, 0x01000000);
         func_ovl0D_05_80045600(D_ovl0D_05_80045F64[1].obj, 0x01000000);
