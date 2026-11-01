@@ -9,23 +9,25 @@
  * goes through 0x2501 and 0x2503, with 0x2505 for 80043B5C's offsets.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 102, eu 102, jp 92
+ * differing words: us 92, eu 92, jp 82
  *
  * What still differs in us (words):
- * - func_ovl0A_06_80043010 (24; the statics up to 80043B5C): 8004311C's
+ * - func_ovl0A_06_80043010 (17; the statics up to 80043B5C): 8004311C's
  *   `ret = 1` uses s8 (the 1) where the original has `li` (6); 80043250's
  *   buffer at sp+40, not 32 (9): the original's frame has 12 bytes above
  *   the buffer and none below it for an inlined static (calling 0x101
  *   directly with three locals above the buffer gives that frame, but
  *   then 80043248's stub is gone; an empty 80043248 called there, even
- *   in an `if (0)`, costs 8 bytes again); 800432F8's spill slot (2);
- *   800436BC's inlined 800434CC loop puts `li s2,10` a slot early and
- *   80043250's call takes `move s2,s3` in its delay slot (7).
+ *   in an `if (0)`, costs 8 bytes again; 80043248 returning its own
+ *   buffer gets the frame too, but moves 80043250's registers and so its
+ *   callers'); 800432F8's spill slot, 0x18 for the original's 0x1C (2).
  * - func_ovl0A_06_80043B5C (62; with the statics after it): 80043E68
- *   uses t3 where the original avoids it (42); 80044620 (13).
- * - func_ovl0A_06_80044BFC (16): D_8004701C's value is in v0, not a0,
- *   and the colour in v1, not v0 (the colour shares `status`: a local of
- *   its own gets the original's v0 but grows the frame by 8).
+ *   uses t3 where the original avoids it (42: every address it keeps
+ *   in a register is one register on, in both arms); 80044620 (13:
+ *   D_ovl0A_06_800473F8 and the 1 stored into it in v0 where the
+ *   original has v1, in cases 10 and 15).
+ * - func_ovl0A_06_80044BFC (13): D_8004701C's value is in v1, not a0,
+ *   and `status` in a0, not v1 (no order of the four locals swaps them).
  *
  * What still differs in jp (words): the same as us's, with 80043E68's
  * avoided register t2 instead of t3 (32); 80043B5C's two inlined
@@ -43,8 +45,13 @@
  *   puts `li s2,10` in the branch's delay slot and `move s1,zero`
  *   between tbl's lui and addiu.
  * - 80044BFC: `D_ovl0A_06_80047024 = 9` is in both arms (three uses of
- *   the 9 put it in s5); the colour is loaded into a local in each case
- *   (the original's v0).
+ *   the 9 put it in s5); the colour is loaded into a local c in each case
+ *   (the original's v0); 0x1C02's result goes through c before 8004423C's
+ *   call (as an argument expression the call's result takes a slot of
+ *   its own, which pushes the locals up by 8).
+ * - 800436BC: 800434CC takes (n, tbl) and is defined before 800434D4
+ *   (as 80044F50 below), and 80043250 takes (value, dest): `li s2,10`
+ *   and `move s2,s3` fall where the original has them.
  * - 8004311C: `pressed` is s32, with 0xF03 returning u16 (the original's
  *   `move v1,v0`, no `andi`).
  */
@@ -518,7 +525,7 @@ s32 D_ovl0A_06_800473F0 = 0;
 static void func_ovl0A_06_80043020(s32 sfx, s32 sel);
 static s32 func_ovl0A_06_8004311C(void);
 static void func_ovl0A_06_80043248(u8 *str, s32 value);
-static void func_ovl0A_06_80043250(u8 *dest, s32 value);
+static void func_ovl0A_06_80043250(s32 value, u8 *dest);
 static void func_ovl0A_06_800432F8(UnkStruct_ovl0A_06_80047540 *notes);
 static s32 func_ovl0A_06_80043464(void);
 static void func_ovl0A_06_800434CC(UnkStruct_ovl0A_06_80047178 *tbl, s32 n);
@@ -563,7 +570,7 @@ static void func_ovl0A_06_800452B8(s32 arg0, UnkStruct_ovl0A_06_80047178 *tbl, U
 static void func_ovl0A_06_80043020(s32 sfx, s32 sel);
 static s32 func_ovl0A_06_8004311C(void);
 static void func_ovl0A_06_80043248(u8 *str, s32 value);
-static void func_ovl0A_06_80043250(u8 *dest, s32 value);
+static void func_ovl0A_06_80043250(s32 value, u8 *dest);
 static void func_ovl0A_06_800432F8(UnkStruct_ovl0A_06_80047540 *notes);
 static s32 func_ovl0A_06_80043464(void);
 static void func_ovl0A_06_800434CC(UnkStruct_ovl0A_06_80047178 *tbl, s32 n);
@@ -608,7 +615,7 @@ static void func_ovl0A_06_800452B8(s32 arg0, UnkStruct_ovl0A_06_80047178 *tbl, U
 static void func_ovl0A_06_80043020(s32 sfx, s32 sel);
 static s32 func_ovl0A_06_8004311C(void);
 static void func_ovl0A_06_80043248(u8 *str, s32 value);
-static void func_ovl0A_06_80043250(u8 *dest, s32 value);
+static void func_ovl0A_06_80043250(s32 value, u8 *dest);
 static void func_ovl0A_06_800432F8(UnkStruct_ovl0A_06_80047540 *notes);
 static s32 func_ovl0A_06_80043464(void);
 static void func_ovl0A_06_800434CC(UnkStruct_ovl0A_06_80047178 *tbl, s32 n);
@@ -653,7 +660,7 @@ static void func_ovl0A_06_800452B8(s32 arg0, UnkStruct_ovl0A_06_80047178 *tbl, U
 static void func_ovl0A_06_80043020(s32 sfx, s32 sel);
 static s32 func_ovl0A_06_8004311C(void);
 static void func_ovl0A_06_80043248(u8 *str, s32 value);
-static void func_ovl0A_06_80043250(u8 *dest, s32 value);
+static void func_ovl0A_06_80043250(s32 value, u8 *dest);
 static void func_ovl0A_06_800432F8(UnkStruct_ovl0A_06_80047540 *notes);
 static s32 func_ovl0A_06_80043464(void);
 static void func_ovl0A_06_800434CC(UnkStruct_ovl0A_06_80047178 *tbl, s32 n);
@@ -902,6 +909,7 @@ void func_ovl0A_06_80044BFC(void) {
     s32 ret;
     s32 counter = 0;
     s32 status;
+    s32 c;
 
     func_ovl0A_06_800436BC();
     D_ovl0A_06_80047178[7].unk0->unk18 = 10.0f;
@@ -915,7 +923,8 @@ void func_ovl0A_06_80044BFC(void) {
         func_ovl0A_06_8004423C(2);
     } else {
         if (func_ovl0A_06_800466A0(0) != 1) {
-            func_ovl0A_06_8004423C(func_ovl0A_06_800466A0(0) + 10);
+            c = func_ovl0A_06_800466A0(0);
+            func_ovl0A_06_8004423C(c + 10);
             D_ovl0A_06_80047024 = 9;
         } else {
             func_ovl0A_06_8004423C(D_ovl0A_06_80047024 + 10);
@@ -938,25 +947,25 @@ void func_ovl0A_06_80044BFC(void) {
         }
         switch (D_ovl0A_06_8004701C) {
             case 0:
-                status = D_ovl0A_06_800473E0;
+                c = D_ovl0A_06_800473E0;
                 D_ovl0A_06_80047168[1] = 0;
                 D_ovl0A_06_80047168[2] = 0;
-                D_ovl0A_06_80047168[0] = status;
+                D_ovl0A_06_80047168[0] = c;
                 break;
             case 1:
-                status = D_ovl0A_06_800473E0;
+                c = D_ovl0A_06_800473E0;
                 D_ovl0A_06_80047168[0] = 0;
                 D_ovl0A_06_80047168[2] = 0;
-                D_ovl0A_06_80047168[1] = status;
+                D_ovl0A_06_80047168[1] = c;
                 break;
             case 2:
             case 3:
             case 4:
             case 5:
-                status = D_ovl0A_06_800473E0;
+                c = D_ovl0A_06_800473E0;
                 D_ovl0A_06_80047168[2] = 0;
-                D_ovl0A_06_80047168[0] = status;
-                D_ovl0A_06_80047168[1] = status;
+                D_ovl0A_06_80047168[0] = c;
+                D_ovl0A_06_80047168[1] = c;
                 break;
         }
         if (D_ovl0A_06_8004701C < 10) {
@@ -1413,7 +1422,7 @@ static void func_ovl0A_06_800436BC(void) {
             func_ovl0A_06_800434D4();
             if (func_ovl0A_06_80043464() != 9) {
                 for (i = 0; i < 4; i++) {
-                    func_ovl0A_06_80043250(D_ovl0A_06_80047068[i], i);
+                    func_ovl0A_06_80043250(i, D_ovl0A_06_80047068[i]);
                     D_ovl0A_06_80047068[i][5] = 0;
                 }
             }
@@ -1522,10 +1531,6 @@ static void func_ovl0A_06_800434DC(void) {
 #endif
 }
 
-static void func_ovl0A_06_800434D4(void) {
-    func_ovl0A_06_800434CC(D_ovl0A_06_80047178, 10);
-}
-
 static void func_ovl0A_06_800434CC(UnkStruct_ovl0A_06_80047178 *tbl, s32 n) {
     s32 i;
 
@@ -1535,14 +1540,19 @@ static void func_ovl0A_06_800434CC(UnkStruct_ovl0A_06_80047178 *tbl, s32 n) {
     }
 }
 
+static void func_ovl0A_06_800434D4(void) {
+    func_ovl0A_06_800434CC(D_ovl0A_06_80047178, 10);
+}
+
+
 static s32 func_ovl0A_06_80043464(void) {
     s32 ret = func_ovl0A_06_800466B8(D_ovl0A_06_80047540);
 
     if (ret == 9) {
 #if VERSION_JP
-        func_ovl0A_06_80043250(&D_ovl0A_06_80046DE0[0x12], D_ovl0A_06_80047540[0].unk0 >> 8);
+        func_ovl0A_06_80043250(D_ovl0A_06_80047540[0].unk0 >> 8, &D_ovl0A_06_80046DE0[0x12]);
 #else
-        func_ovl0A_06_80043250(&D_ovl0A_06_80046DE0[0x1A], D_ovl0A_06_80047540[0].unk0 >> 8);
+        func_ovl0A_06_80043250(D_ovl0A_06_80047540[0].unk0 >> 8, &D_ovl0A_06_80046DE0[0x1A]);
 #endif
         func_ovl0A_06_800432F8(D_ovl0A_06_80047540);
     }
@@ -1558,7 +1568,7 @@ static void func_ovl0A_06_800432F8(UnkStruct_ovl0A_06_80047540 *notes) {
 
     n = D_ovl0A_06_80047020 * 4;
     for (i = 0; i < 4; i++) {
-        func_ovl0A_06_80043250(D_ovl0A_06_80047068[i], n + 1);
+        func_ovl0A_06_80043250(n + 1, D_ovl0A_06_80047068[i]);
         if (notes[n].unk4 != 0) {
             D_ovl0A_06_80047068[i][0x16] = 0;
             for (j = 0; j < 16; j++) {
@@ -1582,7 +1592,7 @@ static void func_ovl0A_06_800432F8(UnkStruct_ovl0A_06_80047540 *notes) {
             for (; len < 0x1C; len++) {
                 D_ovl0A_06_80047068[i][len] = 0xF;
             }
-            func_ovl0A_06_80043250(&D_ovl0A_06_80047068[i][0x1C], notes[n].unk8 >> 8);
+            func_ovl0A_06_80043250(notes[n].unk8 >> 8, &D_ovl0A_06_80047068[i][0x1C]);
             D_ovl0A_06_80047068[i][0x1F] = 0;
         } else {
             D_ovl0A_06_80047068[i][5] = 0;
@@ -1591,7 +1601,7 @@ static void func_ovl0A_06_800432F8(UnkStruct_ovl0A_06_80047540 *notes) {
     }
 }
 
-static void func_ovl0A_06_80043250(u8 *dest, s32 value) {
+static void func_ovl0A_06_80043250(s32 value, u8 *dest) {
     s32 i;
     u8 buf[4];
 
