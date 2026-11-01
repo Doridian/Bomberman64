@@ -3,7 +3,7 @@
  * (.data and .rodata as the original; .bss 0x60 with its unused words common).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4, eu 6, jp 4
+ * differing words: us 4, eu 4, jp 4
  *
  * Measured in jp. What went right, from 826 words (ovl_0F_07/0F_08/0F_09's
  * fixes where the code is shared):
@@ -43,11 +43,26 @@
  *   (its stub only referenced by address from dead code) everything
  *   matches but that stub comes out after the handler. Tried: the loop
  *   in a static of its own (its locals 8 lower), the locals in every
- *   order and scope.
+ *   order and scope. Locals (count, p, i, y) with no 80043428 call give
+ *   every slot right but a frame of 224; the call (8 bytes, wherever it
+ *   is inlined, nested or before the switch) then moves the locals up 8,
+ *   and the original wants those 8 bytes above count instead. An
+ *   address-only reference to 80043428 (`if (0)`) costs no frame but
+ *   puts its stub after the handler (or first, or after 80044780,
+ *   depending on where it is defined); called from 8004338C (a real
+ *   function) it is free but its stub comes before 8004338C. The loop in
+ *   80043428 itself (called first, 80043420/18 and 80046270 nested,
+ *   locals i, count, p) puts i right but count and p 12 low; pointer or
+ *   value parameters for count/p, or i from its return value, change
+ *   the code.
  * - func_ovl0F_10_80043CCC (2): `move s0,zero` (i = 0) fills the load
  *   delay after `lw t6` rather than the branch's delay slot. With `i = 0`
  *   before the `if` it goes in the delay slot, but i then loses s0.
- *   Tried: #line on the for/if, while/do forms.
+ *   Tried: #line on the for/if, while/do forms. In ugen's output as1
+ *   hoists the move into the load delay whatever its .loc, .file or
+ *   place in the block; it leaves it in the delay slot (the original)
+ *   only when its block has a second predecessor (a dead `b` to it,
+ *   which costs two words), so the original's code there likely differs.
  * The `#line N "205890.c"` lines are the physical line numbers (the file
  * named the same whatever path it is compiled by).
  */
