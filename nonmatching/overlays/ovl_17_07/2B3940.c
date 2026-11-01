@@ -2,13 +2,26 @@
  * NON_MATCHING: ovl_17_07's game object, complete: every function and its data.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 202, eu 202, jp 202
+ * differing words: us 188, eu 188, jp 188
  *
  * What still differs in us (words):
- * - func_ovl17_07_8004376C (189): frame 0x58, not 0x60: the original saves
- *   $f26/$f27 too and numbers the s registers one higher (s6 for ours s7);
- *   9 words short, so the rest is shifted.
- * - func_ovl17_07_80043A70 (13): one nop too many (a word long).
+ * - func_ovl17_07_8004376C (188): frame 0x58, not 0x60. The original
+ *   sets f26 to 0 in both arms of the `diff >= 360` test and copies it
+ *   to t's f20 after (so it saves f26/f27 too), and its obj and 60 are
+ *   in s6 and s7 where ours are in s7 and s6; 8 words short, so the rest
+ *   is shifted. Tried for the f26: t's arms through a local z (z is
+ *   folded away and the test with it), a ternary (`t = c ? 0.0f :
+ *   0.0f`, plain, nested, with i or 0.0 in an arm), a double 0.0 in
+ *   one arm (z survives, but in f0), the declaration order. With y set
+ *   in each arm of the 0x401 test (as the original's delay slot has it)
+ *   the loop's head matches, but 80043A70 then shifts by its epilogue's
+ *   alignment (207 in all).
+ *
+ * How the rest came to match:
+ * - arg1 lives in its home slot (the original's `sw a1,0x64(sp)` and
+ *   `lwc1` at each use): its address is taken in dead code; 80043A70
+ *   matches with it. `diff = 360.0f + diff` is the original's operand
+ *   order.
  */
 #include "common.h"
 
@@ -319,12 +332,12 @@ void func_ovl17_07_8004376C(s32 arg0, f32 arg1) {
     if (arg0 != 0xC0) {
         diff = cur - arg1;
         if (cur < arg1) {
-            diff += 360.0f;
+            diff = 360.0f + diff;
         }
     } else {
         diff = arg1 - cur;
         if (arg1 < cur) {
-            diff += 360.0f;
+            diff = 360.0f + diff;
         }
     }
     if (diff >= 360.0f) {
@@ -363,6 +376,9 @@ void func_ovl17_07_8004376C(s32 arg0, f32 arg1) {
     }
     D_ovl17_07_800457C0 = 5;
     obj->unk40->unk20 = arg1;
+    if (0) { /* fake: arg1 stays in its home slot, as in the original */
+        func_ovl17_07_80044BF0(&arg1, NULL, NULL);
+    }
 }
 
 void func_ovl17_07_8004354C(UnkStructA *arg0) {

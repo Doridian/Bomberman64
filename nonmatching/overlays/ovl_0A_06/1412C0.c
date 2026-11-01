@@ -9,29 +9,44 @@
  * goes through 0x2501 and 0x2503, with 0x2505 for 80043B5C's offsets.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 264, eu 264, jp 250
+ * differing words: us 102, eu 102, jp 92
  *
  * What still differs in us (words):
- * - func_ovl0A_06_80043010 (30; the statics up to 80043B5C): 8004311C's
- *   `pressed` is u16 for its size (the original copies it with a
- *   `move v1,v0` where ours masks it with `andi`) and ours uses s8
- *   (the 1) for `ret = 1` where the original has `li` (12); 80043250's
- *   buffer at sp+40, not 32 (9); 800432F8's spill slot (2);
+ * - func_ovl0A_06_80043010 (24; the statics up to 80043B5C): 8004311C's
+ *   `ret = 1` uses s8 (the 1) where the original has `li` (6); 80043250's
+ *   buffer at sp+40, not 32 (9): the original's frame has 12 bytes above
+ *   the buffer and none below it for an inlined static (calling 0x101
+ *   directly with three locals above the buffer gives that frame, but
+ *   then 80043248's stub is gone; an empty 80043248 called there, even
+ *   in an `if (0)`, costs 8 bytes again); 800432F8's spill slot (2);
  *   800436BC's inlined 800434CC loop puts `li s2,10` a slot early and
  *   80043250's call takes `move s2,s3` in its delay slot (7).
  * - func_ovl0A_06_80043B5C (62; with the statics after it): 80043E68
  *   uses t3 where the original avoids it (42); 80044620 (13).
- * - func_ovl0A_06_80044BFC (49): the 9 compared against is kept in s5 in
- *   the original (ours `li at,9` each time), D_8004701C in a0.
- * - func_ovl0A_06_80044F68 (123): frame 0x50, not 0x30: the inlined
- *   destroy loop (80044F50) is spilled where the original keeps s1/s2.
+ * - func_ovl0A_06_80044BFC (16): D_8004701C's value is in v0, not a0,
+ *   and the colour in v1, not v0 (the colour shares `status`: a local of
+ *   its own gets the original's v0 but grows the frame by 8).
  *
  * What still differs in jp (words): the same as us's, with 80043E68's
  * avoided register t2 instead of t3 (32); 80043B5C's two inlined
- * 80043010 loops spill a word higher than the original (5);
- * 80044F68 (119). 80043E68's copy `m` of msg keeps msg in s1, as the
- * original passes it (without it, msg goes to t5 in jp and 80044620,
- * 8004423C and 80044BFC around it change: jp 373).
+ * 80043010 loops spill a word higher than the original (5).
+ * 80043E68's copy `m` of msg keeps msg in s1, as the original passes it
+ * (without it, msg goes to t5 in jp and 80044620, 8004423C and
+ * 80044BFC around it change: jp 373).
+ *
+ * How the rest came to match:
+ * - 80044F68: the handler's empty cases are only `case 15: case 16:`
+ *   (the jump table is the same): with every case from 4 to 16 listed,
+ *   uopt keeps the inlined destroy loop's i and n in v0/v1 and spills
+ *   them around the call (frame 0x50) where the original has s1/s2.
+ *   80044F50 takes (n, tbl) and is defined before the handler, which
+ *   puts `li s2,10` in the branch's delay slot and `move s1,zero`
+ *   between tbl's lui and addiu.
+ * - 80044BFC: `D_ovl0A_06_80047024 = 9` is in both arms (three uses of
+ *   the 9 put it in s5); the colour is loaded into a local in each case
+ *   (the original's v0).
+ * - 8004311C: `pressed` is s32, with 0xF03 returning u16 (the original's
+ *   `move v1,v0`, no `andi`).
  */
 #include "common.h"
 
@@ -109,7 +124,7 @@ typedef struct {
 
 s32 func_ovl0A_06_800456D0(u8 *, const char *, s32); /* 0x101 */
 void func_ovl0A_06_80045B00(s32, s32, s32); /* 0xF00 */
-s32 func_ovl0A_06_80045B18(void); /* 0xF03 */
+u16 func_ovl0A_06_80045B18(void); /* 0xF03 */
 void func_ovl0A_06_80045B70(s32); /* 0xF0E */
 UnkStruct_ovl0A_06_800460E8 *func_ovl0A_06_800460E8(s32, s32); /* 0x1500 */
 void func_ovl0A_06_800460F0(UnkStruct_ovl0A_06_800460E8 *); /* 0x1501 */
@@ -524,7 +539,7 @@ static s32 func_ovl0A_06_800445C4(s32 mask);
 static s32 func_ovl0A_06_80044620(void);
 void func_ovl0A_06_80044BFC(void);
 static void func_ovl0A_06_80044F58(void);
-static void func_ovl0A_06_80044F50(UnkStruct_ovl0A_06_80047178 *tbl, s32 n);
+static void func_ovl0A_06_80044F50(s32 n, UnkStruct_ovl0A_06_80047178 *tbl);
 static void func_ovl0A_06_80044F60(void);
 void func_ovl0A_06_80044F68(s32 arg0);
 void func_ovl0A_06_80045168(s32 arg0, UnkStruct_ovl0A_06_80045168 *arg1);
@@ -569,7 +584,7 @@ static s32 func_ovl0A_06_800445C4(s32 mask);
 static s32 func_ovl0A_06_80044620(void);
 void func_ovl0A_06_80044BFC(void);
 static void func_ovl0A_06_80044F58(void);
-static void func_ovl0A_06_80044F50(UnkStruct_ovl0A_06_80047178 *tbl, s32 n);
+static void func_ovl0A_06_80044F50(s32 n, UnkStruct_ovl0A_06_80047178 *tbl);
 static void func_ovl0A_06_80044F60(void);
 void func_ovl0A_06_80044F68(s32 arg0);
 void func_ovl0A_06_80045168(s32 arg0, UnkStruct_ovl0A_06_80045168 *arg1);
@@ -614,7 +629,7 @@ static s32 func_ovl0A_06_800445C4(s32 mask);
 static s32 func_ovl0A_06_80044620(void);
 void func_ovl0A_06_80044BFC(void);
 static void func_ovl0A_06_80044F58(void);
-static void func_ovl0A_06_80044F50(UnkStruct_ovl0A_06_80047178 *tbl, s32 n);
+static void func_ovl0A_06_80044F50(s32 n, UnkStruct_ovl0A_06_80047178 *tbl);
 static void func_ovl0A_06_80044F60(void);
 void func_ovl0A_06_80044F68(s32 arg0);
 void func_ovl0A_06_80045168(s32 arg0, UnkStruct_ovl0A_06_80045168 *arg1);
@@ -659,7 +674,7 @@ static s32 func_ovl0A_06_800445C4(s32 mask);
 static s32 func_ovl0A_06_80044620(void);
 void func_ovl0A_06_80044BFC(void);
 static void func_ovl0A_06_80044F58(void);
-static void func_ovl0A_06_80044F50(UnkStruct_ovl0A_06_80047178 *tbl, s32 n);
+static void func_ovl0A_06_80044F50(s32 n, UnkStruct_ovl0A_06_80047178 *tbl);
 static void func_ovl0A_06_80044F60(void);
 void func_ovl0A_06_80044F68(s32 arg0);
 void func_ovl0A_06_80045168(s32 arg0, UnkStruct_ovl0A_06_80045168 *arg1);
@@ -815,6 +830,15 @@ void func_ovl0A_06_80045168(s32 arg0, UnkStruct_ovl0A_06_80045168 *arg1) {
     func_ovl0A_06_80046B00(arg0, p->unk10, p->unk14, p->unk18);
 }
 
+static void func_ovl0A_06_80044F50(s32 n, UnkStruct_ovl0A_06_80047178 *tbl) {
+    s32 i;
+
+    for (i = 0; i < n; i++) {
+        func_ovl0A_06_800460F0(tbl->unk0);
+        tbl++;
+    }
+}
+
 void func_ovl0A_06_80044F68(s32 arg0) {
     switch (arg0) {
         case 2:
@@ -831,7 +855,7 @@ void func_ovl0A_06_80044F68(s32 arg0) {
             }
             switch (D_ovl0A_06_80047014) {
                 case 0:
-                    func_ovl0A_06_80044F50(D_ovl0A_06_80047178, 10);
+                    func_ovl0A_06_80044F50(10, D_ovl0A_06_80047178);
                     break;
                 case 1:
                     break;
@@ -840,18 +864,7 @@ void func_ovl0A_06_80044F68(s32 arg0) {
         case 3:
             func_ovl0A_06_80045B70(0);
             break;
-        case 4:
-        case 5:
-        case 6:
-        case 7:
-        case 8:
-        case 9:
-        case 10:
-        case 11:
-        case 12:
-        case 13:
-        case 14:
-        case 15:
+        case 15: /* 4 to 14 are left to the default (see the header) */
         case 16:
             break;
     }
@@ -872,14 +885,6 @@ static void func_ovl0A_06_80044F60(void) {
     }
 }
 
-static void func_ovl0A_06_80044F50(UnkStruct_ovl0A_06_80047178 *tbl, s32 n) {
-    s32 i;
-
-    for (i = 0; i < n; i++) {
-        func_ovl0A_06_800460F0(tbl->unk0);
-        tbl++;
-    }
-}
 
 static void func_ovl0A_06_80044F58(void) {
     s32 i;
@@ -911,10 +916,11 @@ void func_ovl0A_06_80044BFC(void) {
     } else {
         if (func_ovl0A_06_800466A0(0) != 1) {
             func_ovl0A_06_8004423C(func_ovl0A_06_800466A0(0) + 10);
+            D_ovl0A_06_80047024 = 9;
         } else {
             func_ovl0A_06_8004423C(D_ovl0A_06_80047024 + 10);
+            D_ovl0A_06_80047024 = 9;
         }
-        D_ovl0A_06_80047024 = 9;
     }
     do {
         if (D_ovl0A_06_800473DC) {
@@ -932,22 +938,25 @@ void func_ovl0A_06_80044BFC(void) {
         }
         switch (D_ovl0A_06_8004701C) {
             case 0:
+                status = D_ovl0A_06_800473E0;
                 D_ovl0A_06_80047168[1] = 0;
                 D_ovl0A_06_80047168[2] = 0;
-                D_ovl0A_06_80047168[0] = D_ovl0A_06_800473E0;
+                D_ovl0A_06_80047168[0] = status;
                 break;
             case 1:
+                status = D_ovl0A_06_800473E0;
                 D_ovl0A_06_80047168[0] = 0;
                 D_ovl0A_06_80047168[2] = 0;
-                D_ovl0A_06_80047168[1] = D_ovl0A_06_800473E0;
+                D_ovl0A_06_80047168[1] = status;
                 break;
             case 2:
             case 3:
             case 4:
             case 5:
+                status = D_ovl0A_06_800473E0;
                 D_ovl0A_06_80047168[2] = 0;
-                D_ovl0A_06_80047168[0] = D_ovl0A_06_800473E0;
-                D_ovl0A_06_80047168[1] = D_ovl0A_06_800473E0;
+                D_ovl0A_06_80047168[0] = status;
+                D_ovl0A_06_80047168[1] = status;
                 break;
         }
         if (D_ovl0A_06_8004701C < 10) {
@@ -1612,7 +1621,7 @@ static s32 func_ovl0A_06_8004311C(void) {
     s32 wait;
     s32 ret = 0;
     s32 held;
-    u16 pressed;
+    s32 pressed;
 
     D_ovl0A_06_80047018 = 1;
     func_ovl0A_06_80043020(-1, 1);
