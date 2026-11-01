@@ -5,7 +5,7 @@
  * as the original (the .data and .rodata words too).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3, eu 3, jp 3
+ * differing words: us 0, eu 0, jp 0
  *
  * The sibling of ovl_0D_04/05/06 (nonmatching/overlays): the gate code
  * (80043510, 8004311C) is 0D_06's, the models' tasks 0D_05's.
@@ -24,10 +24,13 @@
  *   v a2, but ugen sets a2 up before a1, so `move a1,a3` lands in each
  *   call's delay slot (hand-edited ugen output through as0/as1 showed that
  *   only that order gives the original).
- * - 8004311C's case 1: z2 = grid[2] - 3 (not z0 + 1): one use fewer of z0
- *   gives the s registers the original's order (x0 s0, x1 s1, z1 s2,
- *   z0 s3; a random/hill-climb search over equivalent forms of the four
- *   cases found nothing else that does).
+ * - 8004311C: `len = x1 + z1` (dead: the switch sets len) ahead of x0's
+ *   set-up, a fake. x1, z1 and z0 weigh the same to uopt's register
+ *   allocator (case 1's z2 = z0 + 1, as the original), and a tie goes to
+ *   the variable it met first: z0's set-up came first, giving x0 s0, z0
+ *   s1, x1 s2, z1 s3 (41 words). Reading x1 and z1 before it gives the
+ *   original's x0 s0, x1 s1, z1 s2, z0 s3. (Moving z0's set-up after case
+ *   0's x1 and z1, or making its store volatile, shows the same order.)
  * - 800444FC: `#line 1 "panels.c"` regions (as in ovl_0D_07): around the
  *   probe static 800444EC (its store stays ahead of the next call), around
  *   the 80044474 call (the store of D_ovl0D_02_80047A54 is lui/%lo and the
@@ -42,17 +45,6 @@
  *   .file at the block's start did). The `#line` after the include gives
  *   the file one name.
  * - 80045964: grid[7] (not [6]) puts the timer static's grid at sp+168.
- * What still differs (jp):
- * - 8004311C case 1 (3 words): z2 is computed from grid[2] (`addiu
- *   t9,v0,-3`), not from z0 (`addiu t9,s3,1`; hand-editing ugen's output
- *   to that gives the original). With z2 = z0 + 1 (or any form uopt
- *   reads as a use of z0) z0's priority rises and the s registers go back
- *   to x0 s0, z0 s1, x1 s2, z1 s3 (41 words). Tried: every valid order of
- *   the case's statements, equivalent forms of all four cases (random and
- *   hill-climb), chained assignments, z0/z2 through `len` (dead by then:
- *   z0 gets a0, 6 words), z2 = (z0 = ...) + 1, z0 from z2 or z1, the
- *   declaration order (the frame follows it, the registers don't), the
- *   place of z0's set-up.
  */
 #include "common.h"
 #line 59 "19C2D0.c"
@@ -1326,6 +1318,7 @@ static void func_ovl0D_02_8004311C(Ent_0D02 *e) {
 
     p = e->obj->unk40;
     func_ovl0D_02_80046350(p->unk10, p->unk14, p->unk18, grid, 0);
+    len = x1 + z1; /* a fake (see the top) */
     x0 = grid[0];
     y0 = grid[1];
     z0 = grid[2];
@@ -1362,7 +1355,7 @@ static void func_ovl0D_02_8004311C(Ent_0D02 *e) {
             z0 = grid[2] - 4;
             x1 = grid[0] + len;
             x3 = x1;
-            z2 = grid[2] - 3; /* not z0 + 1 (see the top) */
+            z2 = z0 + 1;
             z3 = z1 - 1;
             x2 = grid[0];
             break;

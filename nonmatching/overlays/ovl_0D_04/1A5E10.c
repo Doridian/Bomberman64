@@ -4,7 +4,7 @@
  * too), and the stubs' places.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3, eu 684, jp 3 (eu not re-measured)
+ * differing words: us 0, eu 0, jp 0
  *
  * The gate 80044318 matches in us: its loop calls the per-gate static
  * 80044300 (Ent, flag), as ovl_0D_02's 800434F8 does, with a fake that
@@ -14,8 +14,9 @@
  * What fixed what (from 512 words in jp, us not re-measured):
  * - ovl_0D_02's gate code ported (nonmatching/overlays/ovl_0D_02): the
  *   clamp 80043EA8 is (axis, v, size), the direction 80043F1C takes the
- *   entity (`c.eq.s const, a`), 80043F24's case 1 computes z2 from grid[2],
- *   and case 0's first statement is in a "panels.c" region. Unlike ovl_0D_02,
+ *   entity (`c.eq.s const, a`), 80043F24's case 1 computes z2 as z0 + 1 with
+ *   `len = x1 + z1` (a dead fake) ahead of x0's set-up (ovl_0D_02's header
+ *   says why), and case 0's first statement is in a "panels.c" region. Unlike ovl_0D_02,
  *   80045948's second and fourth calls pass 0x11 here (checked against the
  *   original). The `#line` regions need a function defined in "panels.c":
  *   the static 80044D90 is one.
@@ -33,11 +34,6 @@
  *   address as another symbol, so uopt doesn't merge it with the block's
  *   &C24 into s4 (a fake); the camera static's call in a "panels.c" region
  *   puts 1600.0f in $f16 (as the original), and both its 1600s are floats.
- * What still differs (jp):
- * - 80043F24 (3 words, counted with 80043E70): case 1's z2 from grid[2]
- *   (`addiu t9,v0,-3`), not from z0 (`addiu t9,s3,1`); the same 3 words as
- *   ovl_0D_02's 8004311C (see its header); `#line` regions around any run
- *   of case 1's statements don't help (6 words or more).
  */
 #include "common.h"
 #line 44 "1A5E10.c"
@@ -855,6 +851,7 @@ static void func_ovl0D_04_80043F24(Ent_0D04 *e) {
 
     p = e->obj->unk40;
     func_ovl0D_04_80045960(p->unk10, p->unk14, p->unk18, grid, 0);
+    len = x1 + z1; /* a fake (see the top) */
     x0 = grid[0];
     y0 = grid[1];
     z0 = grid[2];
@@ -891,7 +888,7 @@ static void func_ovl0D_04_80043F24(Ent_0D04 *e) {
             z0 = grid[2] - 4;
             x1 = grid[0] + len;
             x3 = x1;
-            z2 = grid[2] - 3;
+            z2 = z0 + 1;
             z3 = z1 - 1;
             x2 = grid[0];
             break;
