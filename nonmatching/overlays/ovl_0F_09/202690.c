@@ -1,38 +1,43 @@
 /*
  * NON_MATCHING: ovl_0F_09's game object, complete: every function and its data
- * (.data and .rodata as the original, .bss 0x70).
+ * (.data, .rodata and .bss as the original).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 508, eu 508, jp 508
+ * differing words: us 2, eu 2, jp 2
  *
- * Every function is the right size but func_ovl0F_09_80043200 and
- * func_ovl0F_09_80043D88 (each a word short) and func_ovl0F_09_80044528
- * (its padding, below); the stubs and the
- * data (.data 0x220, .rodata 0x90, .bss 0x70) are all where they belong.
- * What still differs in us (words):
- * - func_ovl0F_09_80043010 (34): the stubs and functions up to
- *   func_ovl0F_09_800432CC. func_ovl0F_09_80043200's loop: the original
- *   tests `slt v1,zero,s2; beqz v1` first and `slt v1,s0,s2` at the end,
- *   ours `blez s2` and `slt v0` (`while (i++ < count)` comes closest;
- *   `for` gives `bne`); one word short, so the stubs after it shift.
- * - func_ovl0F_09_8004343C (397, mostly register names and shifts): the
- *   original keeps &D_ovl0F_09_80046200 in s1 in every case (across
- *   func_ovl0F_09_80045A30's call in case 2), ours in t1 (reloaded after the
- *   call), so case 20 also gets the player in s1 rather than s2. Case 0x50's
- *   first test loads D_ovl0F_09_800460F4 through v0 rather than s1, and the
- *   second through its own base rather than 0x1C(s1): in the original the two
- *   four-word areas share a base and nothing else does (a [2][7] array or a
- *   struct shares it with everything, a struct by value goes through the
- *   stack). As in ovl_0F_08, case 2's loops put `move s2,zero` before the
- *   table's address, and `D_ovl0F_09_80046260 = -1;` leaves `lui a0` before
- *   it.
- * - func_ovl0F_09_80043D88 (64): ovl_0F_08's func_ovl0F_08_80043A28 (see
- *   there): branch operand order and float registers in the pack at the end.
- * - func_ovl0F_09_80044528 (13): only the nops after its endless loop. IDO
- *   pads the dead epilogue to a 32-byte boundary of the object, so they
- *   follow once everything before matches.
+ * Measured in jp. What went right, from 508 words, as in ovl_0F_08/0F_07:
+ * - func_ovl0F_09_80043D88 (64 to 0): ovl_0F_08's 80043A28 ported (Vec3f,
+ *   `(s32)dx != (s32)vel.x` tests, the pack static 80043CC8 in "panels.c"
+ *   and only on the hit path).
+ * - func_ovl0F_09_8004343C (397 to 0): case 0x50's tests both index
+ *   D_ovl0F_09_800460F4 ([0..3] and [7..10], the second set past its end),
+ *   while what they pass on are separate globals (D_ovl0F_09_80046104..10C,
+ *   D_ovl0F_09_80046110..11C, D_ovl0F_09_80046120..128): the tests share
+ *   one base in s1 and the rest load by symbol. That freed s1 for
+ *   &D_ovl0F_09_80046200 everywhere (case 2 across 80045A30's call, case
+ *   20's player back in s2). The loops 8004341C (case 2) and 80043020
+ *   (case 1) and the static 80043434 (the `D_ovl0F_09_80046260 = -1;`
+ *   store ahead of `lui a0`) are defined in "panels.c", and so are case
+ *   2's D_ovl0F_09_80046200[2] stores and their `break` in the handler.
+ *   func_ovl0F_09_80043200 takes (count, dx, dy, ride): that order of its
+ *   register arguments (IDO passes them to the static in s2, $f20, $f22
+ *   and s0) gives the original's schedule at its three calls.
+ * - func_ovl0F_09_80044528: its padding follows once the rest matches.
+ *
+ * What still differs:
+ * - func_ovl0F_09_80043010 (2): func_ovl0F_09_80043200's loop. The
+ *   original tests `slt v1,zero,s2; beqz v1` on entry and `slt v1,s0,s2`
+ *   at the end (s0 = i + 1): a compare kept in a variable. Here the
+ *   variable c (`c = i++ < count; while (c) {...}`, with a fake `if (c)`
+ *   after the loop to make the entry's test `slt` rather than `blez`)
+ *   gets v1 on entry but v0 at the end. Tried: `while (i++ < count)` and
+ *   `for` (`blez`, and `bne` at the end), `(i++ < count) != 0` (an extra
+ *   `sltu`), c in other places and types, `register`, count as s16/u16/s8/u8.
+ * The `#line N "202690.c"` lines are the physical line numbers (the file
+ * named the same whatever path it is compiled by).
  */
 #include "common.h"
+#line 41 "202690.c"
 
 /*
  * ovl_0F_09's game object, IDO -O3: the functions are written last to first
@@ -140,7 +145,7 @@ static void func_ovl0F_09_80043028(void);
 static void func_ovl0F_09_800430C4(void);
 static void func_ovl0F_09_800430BC(void);
 static void func_ovl0F_09_80043150(s32);
-static void func_ovl0F_09_80043200(UnkStructA *, s32, f32, f32);
+static void func_ovl0F_09_80043200(s32, f32, f32, UnkStructA *);
 static void func_ovl0F_09_800432C4(void);
 static void func_ovl0F_09_80043314(s32);
 static void func_ovl0F_09_80043398(UnkStruct_ovl0F_09_80045FC0 *);
@@ -191,12 +196,16 @@ UnkStruct_ovl0F_09_80045FC0 D_ovl0F_09_80045FC0[7] = {
     { &D_ovl0F_09_80046200[5], 0x235, 0, 73.0f, 0.0f, 8.0f, 0.0f, -90.0f, 0.0f, 0, 0 },
     { &D_ovl0F_09_80046200[6], 0x26C, 0, 41.0f, 0.0f, 18.0f, 0.0f, 0.0f, 0.0f, 0, 0 },
 };
-/* func_ovl0F_09_8004343C's: two sets of four arguments to test, three to pass on */
+/* func_ovl0F_09_8004343C's: two sets of four arguments to test (the handler
+ * reads the second through D_ovl0F_09_800460F4[7..10]) and what it passes on */
 s32 D_ovl0F_09_800460F4[4] = { 6, 0x12, 6, 0x12 };
 s32 D_ovl0F_09_80046104 = 0x5E;
 s32 D_ovl0F_09_80046108 = 0x13;
 s32 D_ovl0F_09_8004610C = 0;
-s32 D_ovl0F_09_80046110[4] = { 0x29, 0x12, 0x29, 0x12 };
+s32 D_ovl0F_09_80046110 = 0x29;
+s32 D_ovl0F_09_80046114 = 0x12;
+s32 D_ovl0F_09_80046118 = 0x29;
+s32 D_ovl0F_09_8004611C = 0x12;
 s32 D_ovl0F_09_80046120 = 0x61;
 s32 D_ovl0F_09_80046124 = 0x13;
 s32 D_ovl0F_09_80046128 = 0;
@@ -348,17 +357,16 @@ void func_ovl0F_09_80044408(UnkStructA *arg0) {
     func_ovl0F_09_80045660(arg0, 0x01000000);
 }
 
-static void func_ovl0F_09_80043D80(s16 x, s16 z, f32 *vel) {
-    vel[0] = x * 0.002f;
-    vel[2] = z * 0.002f;
+static void func_ovl0F_09_80043D80(s16 x, s16 z, Vec3f *vel) {
+    vel->x = x * 0.002f;
+    vel->z = z * 0.002f;
 }
 
 void func_ovl0F_09_80043D88(UnkStructA *arg0) {
-    f32 vel[3];
+    Vec3f vel;
     f32 dx;
     f32 dz;
-    f32 pos[3];
-    UnkStructA_40 *p;
+    Vec3f pos;
 
     dx = arg0->unk40->unk10 - arg0->unk58;
     dz = arg0->unk40->unk18 - arg0->unk60;
@@ -374,58 +382,59 @@ void func_ovl0F_09_80043D88(UnkStructA *arg0) {
         D_ovl0F_09_80045F58 = 0;
         return;
     }
-    p = arg0->unk40;
-    pos[0] = p->unk10;
-    pos[1] = p->unk14;
-    pos[2] = p->unk18;
-    func_ovl0F_09_80043D80(arg0->unk64 >> 16, arg0->unk64 & 0xFFFF, vel);
-    if ((s32)vel[0] != (s32)dx) {
+    pos.x = arg0->unk40->unk10;
+    pos.y = arg0->unk40->unk14;
+    pos.z = arg0->unk40->unk18;
+    func_ovl0F_09_80043D80(arg0->unk64 >> 16, arg0->unk64 & 0xFFFF, &vel);
+    if ((s32)dx != (s32)vel.x) {
         arg0->unk40->unk10 = arg0->unk58;
-        if ((s32)dx < (s32)vel[0]) {
-            vel[0] -= (dz != 0.0f ? 0.707f : 1.0f) * (dx != 0.0f ? D_ovl0F_09_80045F54 : D_ovl0F_09_80045F50);
-            if (vel[0] < dx) {
-                vel[0] = dx;
+        if ((s32)dx < (s32)vel.x) {
+            vel.x -= (dz != 0.0f ? 0.707f : 1.0f) * (dx != 0.0f ? D_ovl0F_09_80045F54 : D_ovl0F_09_80045F50);
+            if (vel.x < dx) {
+                vel.x = dx;
             }
             func_ovl0F_09_80043CD8(dx);
-        } else if ((s32)vel[0] < (s32)dx) {
-            vel[0] += (dz != 0.0f ? 0.707f : 1.0f) * (dx != 0.0f ? D_ovl0F_09_80045F54 : D_ovl0F_09_80045F50);
-            if (dx < vel[0]) {
-                vel[0] = dx;
+        } else if ((s32)vel.x < (s32)dx) {
+            vel.x += (dz != 0.0f ? 0.707f : 1.0f) * (dx != 0.0f ? D_ovl0F_09_80045F54 : D_ovl0F_09_80045F50);
+            if (dx < vel.x) {
+                vel.x = dx;
             }
             func_ovl0F_09_80043CD8(dx);
         }
-        arg0->unk40->unk10 += vel[0];
+        arg0->unk40->unk10 += vel.x;
     }
-    if ((s32)vel[2] != (s32)dz) {
+    if ((s32)dz != (s32)vel.z) {
         arg0->unk40->unk18 = arg0->unk60;
-        if ((s32)dz < (s32)vel[2]) {
-            vel[2] -= (dx != 0.0f ? 0.707f : 1.0f) * (dz != 0.0f ? D_ovl0F_09_80045F54 : D_ovl0F_09_80045F50);
-            if (vel[2] < dz) {
-                vel[2] = dz;
+        if ((s32)dz < (s32)vel.z) {
+            vel.z -= (dx != 0.0f ? 0.707f : 1.0f) * (dz != 0.0f ? D_ovl0F_09_80045F54 : D_ovl0F_09_80045F50);
+            if (vel.z < dz) {
+                vel.z = dz;
             }
             func_ovl0F_09_80043CD8(dz);
-        } else if ((s32)vel[2] < (s32)dz) {
-            vel[2] += (dx != 0.0f ? 0.707f : 1.0f) * (dz != 0.0f ? D_ovl0F_09_80045F54 : D_ovl0F_09_80045F50);
-            if (dz < vel[2]) {
-                vel[2] = dz;
+        } else if ((s32)vel.z < (s32)dz) {
+            vel.z += (dx != 0.0f ? 0.707f : 1.0f) * (dz != 0.0f ? D_ovl0F_09_80045F54 : D_ovl0F_09_80045F50);
+            if (dz < vel.z) {
+                vel.z = dz;
             }
             func_ovl0F_09_80043CD8(dz);
         }
-        arg0->unk40->unk18 += vel[2];
+        arg0->unk40->unk18 += vel.z;
     }
     if (func_ovl0F_09_80043CD0(arg0)) {
         func_ovl0F_09_80043CC8(&arg0->unk64, 0.0f, 0.0f);
-        arg0->unk40->unk10 = pos[0];
-        arg0->unk40->unk14 = pos[1];
-        arg0->unk40->unk18 = pos[2];
+        arg0->unk40->unk10 = pos.x;
+        arg0->unk40->unk14 = pos.y;
+        arg0->unk40->unk18 = pos.z;
     } else {
-        func_ovl0F_09_80043CC8(&arg0->unk64, vel[0], vel[2]);
+        arg0->unk64 = ((s16)(vel.x * 500.0f) << 16) | ((s16)(vel.z * 500.0f) & 0xFFFF);
     }
 }
 
+#line 1 "panels.c"
 static void func_ovl0F_09_80043CC8(s32 *dst, f32 x, f32 z) {
     *dst = ((s16)(x * 500.0f) << 16) | ((s16)(z * 500.0f) & 0xFFFF);
 }
+#line 438 "202690.c"
 
 static s32 func_ovl0F_09_80043CD0(UnkStructA *arg0) {
     s32 hit;
@@ -483,6 +492,7 @@ void func_ovl0F_09_800432CC(f32 arg0) {
     func_ovl0F_09_800454B8(sp1C + arg0, 32768.0f, 32768.0f);
 }
 
+#line 1 "panels.c"
 static void func_ovl0F_09_80043434(void) {
     s32 count;
     u32 (*p)[3];
@@ -497,6 +507,7 @@ static void func_ovl0F_09_80043434(void) {
         p++;
     }
 }
+#line 511 "202690.c"
 
 static void func_ovl0F_09_8004342C(void) {
     func_ovl0F_09_80044C58(0x230);
@@ -511,6 +522,7 @@ static void func_ovl0F_09_80043424(void) {
     func_ovl0F_09_800430BC();
 }
 
+#line 1 "panels.c"
 static void func_ovl0F_09_8004341C(s32 arg1, UnkStruct_ovl0F_09_80045FC0 *arg0) {
     s32 i;
 
@@ -524,6 +536,7 @@ static void func_ovl0F_09_8004341C(s32 arg1, UnkStruct_ovl0F_09_80045FC0 *arg0) 
         arg0++;
     }
 }
+#line 540 "202690.c"
 
 static void func_ovl0F_09_80043390(void) {
     D_ovl0F_09_80046200[4]->unk40->unk14 -= 3200.0f;
@@ -569,7 +582,7 @@ static void func_ovl0F_09_800432A4(void) {
                                    D_ovl0F_09_8004612C[0].unk18);
             break;
         case 20:
-            func_ovl0F_09_80043200(D_ovl0F_09_80046200[6], 200, 0.0f, 3.0f);
+            func_ovl0F_09_80043200(200, 0.0f, 3.0f, D_ovl0F_09_80046200[6]);
             func_ovl0F_09_80045630(D_ovl0F_09_80046200[6]);
             func_ovl0F_09_80044E50(0xC0);
             func_ovl0F_09_80044E98(func_ovl0F_09_80044E38())->unk40->unk10 += 50.0f;
@@ -589,6 +602,7 @@ static void func_ovl0F_09_800431F8(void) {
     D_ovl0F_09_80045F58 = 0;
 }
 
+#line 1 "panels.c"
 static void func_ovl0F_09_80043020(s32 count, UnkStruct_ovl0F_09_80045FC0 *p) {
     s32 i;
 
@@ -597,6 +611,7 @@ static void func_ovl0F_09_80043020(s32 count, UnkStruct_ovl0F_09_80045FC0 *p) {
         p++;
     }
 }
+#line 615 "202690.c"
 
 static void func_ovl0F_09_80043018(void) {
     D_ovl0F_09_8004623C = func_ovl0F_09_80044E38();
@@ -623,6 +638,7 @@ void func_ovl0F_09_8004343C(s32 arg0) {
             } else {
                 func_ovl0F_09_80043314(0x27A);
             }
+#line 1 "panels.c"
             D_ovl0F_09_80046200[2]->unk40->unk10 = 2400.0f;
             D_ovl0F_09_80046200[2]->unk40->unk14 = 2600.0f;
             D_ovl0F_09_80046200[2]->unk40->unk18 = 5200.0f;
@@ -630,6 +646,7 @@ void func_ovl0F_09_8004343C(s32 arg0) {
             D_ovl0F_09_80046200[2]->unk40->unk2C = 16.0f;
             D_ovl0F_09_80046200[2]->unk40->unk30 = 16.0f;
             break;
+#line 650 "202690.c"
         case 17:
             func_ovl0F_09_80044E50(0x40);
             func_ovl0F_09_80044E10(6, 0, 0x12);
@@ -661,18 +678,18 @@ void func_ovl0F_09_8004343C(s32 arg0) {
                                        D_ovl0F_09_800460F4[3]) != 0) {
                 func_ovl0F_09_80044D50(D_ovl0F_09_80046104, D_ovl0F_09_80046108, D_ovl0F_09_8004610C);
             }
-            if (func_ovl0F_09_80044E20(D_ovl0F_09_80046110[0], D_ovl0F_09_80046110[1], D_ovl0F_09_80046110[2],
-                                       D_ovl0F_09_80046110[3]) != 0) {
+            if (func_ovl0F_09_80044E20(D_ovl0F_09_800460F4[7], D_ovl0F_09_800460F4[8], D_ovl0F_09_800460F4[9],
+                                       D_ovl0F_09_800460F4[10]) != 0) {
                 func_ovl0F_09_80044DC0(0);
                 func_ovl0F_09_80044E48(1);
                 func_ovl0F_09_80044E70(1);
                 D_ovl0F_09_80046200[5]->unk40->unk36 = 250;
                 D_ovl0F_09_80046260 = func_ovl0F_09_800457A8(func_ovl0F_09_80044528, -1, 0, 0, 0x110);
                 func_ovl0F_09_800457C8(10);
-                func_ovl0F_09_80043200(NULL, 26, 2.0f, 0.0f);
-                func_ovl0F_09_80044C98(D_ovl0F_09_80046110[0], 0, D_ovl0F_09_80046110[1],
-                                       D_ovl0F_09_80046110[2] + 1, D_ovl0F_09_80046110[3], 0x10);
-                func_ovl0F_09_80043200(D_ovl0F_09_80046200[6], 100, 0.0f, -2.5f);
+                func_ovl0F_09_80043200(26, 2.0f, 0.0f, NULL);
+                func_ovl0F_09_80044C98(D_ovl0F_09_80046110, 0, D_ovl0F_09_80046114, D_ovl0F_09_80046118 + 1,
+                                       D_ovl0F_09_8004611C, 0x10);
+                func_ovl0F_09_80043200(100, 0.0f, -2.5f, D_ovl0F_09_80046200[6]);
                 func_ovl0F_09_80044D50(D_ovl0F_09_80046120, D_ovl0F_09_80046124, D_ovl0F_09_80046128);
             }
             break;
@@ -718,10 +735,11 @@ static void func_ovl0F_09_80043314(s32 arg0) {
 
 /* moves the player (and what it rides, if anything) by (dx, dy) a frame for
  * count frames */
-static void func_ovl0F_09_80043200(UnkStructA *ride, s32 count, f32 dx, f32 dy) {
+static void func_ovl0F_09_80043200(s32 count, f32 dx, f32 dy, UnkStructA *ride) {
     UnkStructA *obj;
     f32 saved;
     s32 i;
+    s32 c;
 
     obj = func_ovl0F_09_80044E98(func_ovl0F_09_80044E38());
     saved = obj->unk70;
@@ -730,12 +748,17 @@ static void func_ovl0F_09_80043200(UnkStructA *ride, s32 count, f32 dx, f32 dy) 
         func_ovl0F_09_80045638(obj, ride);
         func_ovl0F_09_80045658(ride, 0x200000);
     }
+    /* fake: c and its use after the loop keep the compares in a register
+     * (the original's `slt v1`) */
     i = 0;
-    while (i++ < count) {
+    c = i++ < count;
+    while (c) {
         obj->unk40->unk10 += dx;
         obj->unk40->unk14 += dy;
         func_ovl0F_09_800457F0();
+        c = i++ < count;
     }
+    if (c) {}
     obj->unk70 = saved;
 }
 
