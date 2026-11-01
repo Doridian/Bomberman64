@@ -2,7 +2,7 @@
  * NON_MATCHING: ovl_12_05's game object, complete: every function and its data.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 100, jp 100
+ * differing words: us 0, eu 0, jp 0
  *
  * The functions with twins elsewhere are their C, renamed (ovl_12_03,
  * 12_04, 12_06, 10_13, 0C_10, 0E_15, 17_09, 17_10), with this object's
@@ -23,14 +23,15 @@
  * `jr ra; nop` stubs at 80043010, 80044480, 80045834/3C, 80046318,
  * 80046340 and, unused, the eleven at 800492FC-8004934C.
  *
- * What still differs (words by allf.py, each function on its own):
- * - 80044534 (99): registers only, the frame and code are the
- *   original's. sp0 and obj come out in s5/s6 swapped, dx and the
- *   constants of the scale loop in other saved float registers, and
- *   D_8004AC54->unk40 in v0 for t0 when dx is computed.
- *   nonmatching.py compares 80044488 and its statics as one run.
- * - 800486C4 (1): the slot its float is reloaded from is 0x58, not 0x5C;
- *   no order of its declarations moves it.
+ * How the last words came to match:
+ * - 80044534: func_ovl12_05_80049E10 and func_ovl12_05_8004A200 are
+ *   declared s32 (as void, sp0 and obj come out in s5/s6 swapped and the
+ *   constants in other saved float registers), and the scale loop's angle
+ *   wraps through f: `f = (... < 0.0f) ? ... : ...; angle = f;` in the
+ *   else arm, so the ternary's value is f0 and not a temporary's slot.
+ * - 800486C4: the same for its angle, through t, declared between i and n,
+ *   which places the slot the float is reloaded from at 0x5C.
+ * - eu's limits for D_ovl12_05_8004AC74 differ (LIMIT_HI/LIMIT_LO).
  *
  * Every declared local of the cut-scenes takes a frame slot, even one
  * kept in a register, so their frames come out the original's size only
@@ -42,6 +43,16 @@
  * functions before it.
  */
 #include "common.h"
+
+/* what D_ovl12_05_8004AC74 is compared with (80044534, 80045D3C): eu's
+ * limits are 10000 and 6000 where us's and jp's are 8000 and 5000 */
+#if VERSION_EU
+#define LIMIT_HI 10000
+#define LIMIT_LO 6000
+#else
+#define LIMIT_HI 8000
+#define LIMIT_LO 5000
+#endif
 
 #define ANGLE_ADD(a, d) \
     (a) = ((a) + (d) >= 360.0f) ? (a) + (d) - 360.0f : ((a) + (d) < 0.0f) ? (a) + (d) + 360.0f : (a) + (d)
@@ -119,7 +130,7 @@ void func_ovl12_05_80049DA8(UnkStructA_40 *, s32);
 void func_ovl12_05_80049DB0(UnkStructA_40 *, s32);
 void func_ovl12_05_80049DB8(UnkStructA_40 *, s32, s32, s32);
 void func_ovl12_05_80049DD0(UnkStructA_40 *, s32, s32);
-void func_ovl12_05_80049E10(s32, s32);
+s32 func_ovl12_05_80049E10(s32, s32); /* s32: see the header */
 s32 func_ovl12_05_80049E18(UnkStructA_40 *, s32);
 void func_ovl12_05_80049E20(s32, s32, s32);
 void func_ovl12_05_80049E30(s32, s32, s32);
@@ -142,7 +153,7 @@ UnkStructA *func_ovl12_05_8004A0E0(UnkStructA *);
 UnkStructA *func_ovl12_05_8004A0F0(s32, s32, f32, f32, f32);
 void func_ovl12_05_8004A128(UnkStructA *);
 s32 func_ovl12_05_8004A1F8(void (*)(void), void *, s32, s32, s32);
-void func_ovl12_05_8004A200(s32);
+s32 func_ovl12_05_8004A200(s32); /* s32: see the header */
 void func_ovl12_05_8004A208(void);
 void func_ovl12_05_8004A210(u16, s32);
 void func_ovl12_05_8004A218(s32);
@@ -462,6 +473,7 @@ void func_ovl12_05_800486C4(void) {
     f32 angle;
     f32 step;
     s32 i;
+    f32 t;
     s32 n;
 
     D_ovl12_05_8004AC84 = func_ovl12_05_8004A0D0(0x346, 0x01080000, 0xC0, 0);
@@ -484,7 +496,12 @@ void func_ovl12_05_800486C4(void) {
         } else {
             p->unk36 = func_ovl12_05_8004A3A0(angle) * 40.0f + i / 5;
         }
-        ANGLE_ADD(angle, 5.4f);
+        if (angle + 5.4f >= 360.0f) {
+            angle = angle + 5.4f - 360.0f;
+        } else {
+            t = (angle + 5.4f < 0.0f) ? angle + 5.4f + 360.0f : angle + 5.4f;
+            angle = t;
+        }
         func_ovl12_05_8004A240();
     }
     n = p->unk36;
@@ -1333,7 +1350,7 @@ static void func_ovl12_05_80044534(void) {
     }
     if ((D_ovl12_05_8004AC4C != 0x1C) && !(player->unk124 & 8)) {
         player = func_ovl12_05_8004A840(1);
-        if ((s->unk10 == 0 ? 8000 : 5000) >= D_ovl12_05_8004AC74) {
+        if ((s->unk10 == 0 ? LIMIT_HI : LIMIT_LO) >= D_ovl12_05_8004AC74) {
             sp68.x = player->unk1C->unk40->unk10;
             sp68.y = player->unk1C->unk40->unk14;
             sp68.z = player->unk1C->unk40->unk18;
@@ -1429,11 +1446,11 @@ static void func_ovl12_05_80044534(void) {
         e1->unk30 = f;
         e1->unk2C = f;
         e1->unk28 = f;
-        f = angle + 0.5f;
-        if (f >= 360.0f) {
-            angle = f - 360.0f;
+        if (angle + 0.5f >= 360.0f) {
+            angle = angle + 0.5f - 360.0f;
         } else {
-            angle = (f < 0.0f) ? f + 360.0f : f;
+            f = (angle + 0.5f < 0.0f) ? angle + 0.5f + 360.0f : angle + 0.5f;
+            angle = f;
         }
         dx += 0.004166667f;
         func_ovl12_05_8004A240();
@@ -1995,7 +2012,7 @@ void func_ovl12_05_80045D3C(s32 arg0) {
         func_ovl12_05_80049F50(0xF);
         spC0 = func_ovl12_05_8004A840(1);
         if ((D_ovl12_05_8004AC4C == 0x12) && !(spC0->unk124 & 8)) {
-            if ((spBC->unk10 == 0 ? 8000 : 5000) >= D_ovl12_05_8004AC74) {
+            if ((spBC->unk10 == 0 ? LIMIT_HI : LIMIT_LO) >= D_ovl12_05_8004AC74) {
                 spB0.x = spC0->unk1C->unk40->unk10;
                 spB0.y = spC0->unk1C->unk40->unk14;
                 spB0.z = spC0->unk1C->unk40->unk18;
@@ -2021,7 +2038,7 @@ void func_ovl12_05_80045D3C(s32 arg0) {
         func_ovl12_05_80049F50(0xF);
         spA0 = func_ovl12_05_8004A840(1);
         if ((D_ovl12_05_8004AC4C == 0x13) && !(spA0->unk124 & 8)) {
-            if ((sp9C->unk10 == 0 ? 8000 : 5000) >= D_ovl12_05_8004AC74) {
+            if ((sp9C->unk10 == 0 ? LIMIT_HI : LIMIT_LO) >= D_ovl12_05_8004AC74) {
                 sp90.x = spA0->unk1C->unk40->unk10;
                 sp90.y = spA0->unk1C->unk40->unk14;
                 sp90.z = spA0->unk1C->unk40->unk18;

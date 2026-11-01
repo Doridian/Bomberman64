@@ -3,7 +3,7 @@
  * data (.data 0x40 and .rodata 0xD0 byte for byte as the original, .bss 0x70).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 166, eu 166, jp 166
+ * differing words: us 0, eu 0, jp 0
  *
  * The text order took care: 80043010 (a static, args in a3/t0) comes first
  * only when every handler callee is defined above the handler, so that the
@@ -12,18 +12,20 @@
  * (inlined) with 80043F2C defined above it: written out instead, 80044D08
  * (with 80044C30) comes out ahead of 800448C0.
  *
- * What still differs in us (words):
- * - func_ovl0C_10_80043450 (122): the frame.  The original's is 0xA8, ours
- *   0xA0; its case 11 locals sit 20 bytes lower and with gaps (obj0 0x90,
- *   pos 0x80, target 0x74, angle 0x68, flag 0x60, task 0x58, snd 0x4C), as if
- *   case 11 were an inlined static.  Ours also stores `flag = FALSE` early
- *   (one word longer) and keeps the distance in f0 where the original has
- *   f14.
- * - func_ovl0C_10_80043F70 (25): the frame, 0x80 where the original's is
- *   0x78.  The inlined call to 80043F2C costs 8 bytes; without it the frame
- *   is right but the text order isn't (above).
- * - func_ovl0C_10_800447E4 (19): no difference of its own: an infinite loop's
- *   dead epilogue is aligned to 16, and the handler's extra word moves it.
+ * How it came to match:
+ * - The handler's case 11 is a static, func_ovl0C_10_80043070, inlined into
+ *   it (its stub is the one at 80043070), as in ovl_12_06
+ *   (src/overlays/ovl_12_06/25D670.c).  Its locals, with pad0 and pad1, give
+ *   the handler's frame the original's 0xA8 and the original's slots (obj0
+ *   0x90, pos 0x80, target 0x74, angle 0x68, flag 0x60, task 0x58, snd 0x4C).
+ * - Its ANGLE_ADD keeps the else arm's value in d (f14, as the distance)
+ *   and stores it after: as a macro, the ternary's temporary takes a slot.
+ *   `flag = FALSE` after the turn, not before it, schedules its store where
+ *   the original's is.
+ * - func_ovl0C_10_80043F70: the inlined 80043F2C costs 8 bytes of frame;
+ *   `obj = func_ovl0C_10_800454A8(1)` instead of a compound assignment through
+ *   the call saves the temporary's slot, and the declaration order places the
+ *   rest (frame 0x78).
  */
 #include "common.h"
 
@@ -376,15 +378,15 @@ void func_ovl0C_10_80043F2C(UnkStructA *arg0) {
 
 void func_ovl0C_10_80043F70(void) {
     s32 *flag;
+    UnkStructA *obj;
+    UnkStructA_40 *p;
     s32 task1;
     s32 task2;
     f32 dx;
     f32 dy;
     f32 dz;
-    UnkStruct_ovl0C_10_80045DB0 snd;
-    UnkStructA *obj;
-    UnkStructA_40 *p;
     s32 i;
+    UnkStruct_ovl0C_10_80045DB0 snd;
 
     flag = func_ovl0C_10_80045DE0();
     obj = func_ovl0C_10_80045C90(0x328, 0x01000000, 0xC0, 0);
@@ -507,7 +509,8 @@ void func_ovl0C_10_80043F70(void) {
     func_ovl0C_10_80045DD8(30);
     func_ovl0C_10_80045C80(obj);
     func_ovl0C_10_800463E8(1, 0, 0x17, 0, 0xD);
-    func_ovl0C_10_800454A8(1)->unk40->unk10 += 50.0f;
+    obj = func_ovl0C_10_800454A8(1);
+    obj->unk40->unk10 += 50.0f;
     func_ovl0C_10_80045460(0);
     func_ovl0C_10_80045478();
     func_ovl0C_10_800453F0(0x31, 0x11);
@@ -657,16 +660,12 @@ void func_ovl0C_10_800430D0(void) {
 }
 
 void func_ovl0C_10_80043078(void) {
-    func_ovl0C_10_80043070();
     if (D_ovl0C_10_800466C4 == 0x1A || D_ovl0C_10_800466C4 == 0x1B) {
         func_ovl0C_10_800464C0();
     }
     if (D_ovl0C_10_800466CC == 0) {
         func_ovl0C_10_80045FE0();
     }
-}
-
-static void func_ovl0C_10_80043070(void) {
 }
 
 /* A static: its callers pass `from` in a3 and `to` in t0. */
@@ -685,20 +684,141 @@ static f32 func_ovl0C_10_80043010(UnkStructA_40 *from, UnkStructA_40 *to) {
     func_ovl0C_10_80045BF8(&a.x, &b.x, &angle);
     return angle;
 }
-/* The overlay's handler: the entry returns it to the loader. */
-void func_ovl0C_10_80043450(s32 arg0) {
-    UnkStructA *obj;
-    UnkStructA *obj1;
+/* Case 11: a static inlined into the handler; its stub is the one at
+ * 80043070.  The pads place its block of the handler's frame. */
+static void func_ovl0C_10_80043070(void) {
+    f32 d;
     UnkStructA *obj0;
-    UnkStruct_ovl0C_10_80045DB0 snd;
-    s32 task;
-    s32 flag;
+    s32 i;
     Vec3f pos;
     Vec3f target;
+    UnkStructA *obj1;
+    UnkStructA *obj;
     f32 angle;
-    s32 i;
-    f32 d;
+    s32 pad0;
+    s32 flag;
+    s32 pad1;
+    s32 task;
+    UnkStruct_ovl0C_10_80045DB0 snd;
 
+    func_ovl0C_10_80045458(1);
+    func_ovl0C_10_80045B10(0x1F);
+    func_ovl0C_10_80046408(0);
+    func_ovl0C_10_80045AA8(2350.0f, 100.0f, 1720.0f);
+    func_ovl0C_10_80045AC8(0.0f, 45.0f, 2000.0f);
+    func_ovl0C_10_80045DD8(2);
+    obj1 = func_ovl0C_10_800454A8(1);
+    obj0 = func_ovl0C_10_800454A8(0);
+    func_ovl0C_10_80045C70(obj1, 0x0C000000);
+    func_ovl0C_10_80045990(obj1->unk40, 0, 0);
+    func_ovl0C_10_80045990(obj1->unk40, -1, 1);
+    func_ovl0C_10_80045C70(obj1, 0x05000000);
+    obj = func_ovl0C_10_80045C90(0x328, 0x01000000, 0xC0, 0);
+    func_ovl0C_10_80045C70(obj, 0x04000000);
+    func_ovl0C_10_80045CA0(obj);
+    obj->unk40->unk10 = obj1->unk40->unk10;
+    obj->unk40->unk14 = obj1->unk40->unk14;
+    obj->unk40->unk18 = obj1->unk40->unk18;
+    obj->unk40->unk20 = func_ovl0C_10_80043010(obj->unk40, obj0->unk40);
+    if (func_ovl0C_10_80045400(1) == 3) {
+        snd.unk0 = obj->unk40;
+        snd.unk4 = 0x213;
+        snd.unk8 = 0x3C;
+        func_ovl0C_10_80045DB0(&snd);
+        pos.x = obj0->unk40->unk10;
+        pos.y = obj0->unk40->unk14;
+        pos.z = obj0->unk40->unk18;
+        target.x = 2350.0f;
+        target.y = 0.0f;
+        target.z = 1550.0f;
+        func_ovl0C_10_80045BF8(&pos.x, &target.x, &angle);
+        target.x = func_ovl0C_10_80045F60(angle) * 800.0f + pos.x;
+        target.y = pos.y;
+        target.z = func_ovl0C_10_80045F68(angle) * 800.0f + pos.z;
+        pos.x = obj->unk40->unk10;
+        pos.y = obj->unk40->unk14;
+        pos.z = obj->unk40->unk18;
+        func_ovl0C_10_80045BF8(&pos.x, &target.x, &angle);
+        func_ovl0C_10_80045C10(&pos.x, &target.x);
+        obj->unk68 = 51.0f;
+        obj->unk40->unk14 = 0.1f;
+        obj->unk70 = 0.8166667f;
+        obj->unk6C = 16.333334f;
+        for (i = 0; i < 90; i++) {
+            obj->unk40->unk10 += (target.x - pos.x) / 90.0f;
+            obj->unk40->unk18 += (target.z - pos.z) / 90.0f;
+            if (obj->unk40->unk14 < 0.0f) {
+                obj->unk70 = 0.0f;
+                obj->unk68 = 0.0f;
+                obj->unk40->unk14 = 0.0f;
+            } else {
+                func_ovl0C_10_80045CE8(obj);
+            }
+            func_ovl0C_10_80045E00();
+        }
+        func_ovl0C_10_80046340(0x259);
+    }
+    obj->unk40->unk20 = func_ovl0C_10_80043010(obj->unk40, obj0->unk40);
+    obj0->unk40->unk20 = func_ovl0C_10_80043010(obj0->unk40, obj->unk40);
+    func_ovl0C_10_80045AA8(obj->unk40->unk10, 200.0f, obj->unk40->unk18);
+    func_ovl0C_10_80045AC8(obj0->unk40->unk20, 20.0f, 800.0f);
+    for (i = 0; i < 30; i++) {
+        obj->unk40->unk14 += 2.0f;
+        func_ovl0C_10_80045E00();
+    }
+    func_ovl0C_10_80045DD8(30);
+    task = func_ovl0C_10_80045DB8(func_ovl0C_10_800447E4, obj, 0, 0, 0x130);
+    if (func_ovl0C_10_80046020(0xA4) != 0) {
+        i = 0x333;
+    } else {
+        i = 0x331;
+    }
+    func_ovl0C_10_800459D0(i, 1);
+    func_ovl0C_10_80045458(1);
+    func_ovl0C_10_80045DD8(30);
+    func_ovl0C_10_80045408(50);
+    func_ovl0C_10_80046358();
+    func_ovl0C_10_80045DC0(task);
+    func_ovl0C_10_80046360(0x211, obj->unk40->unk10, obj->unk40->unk14, obj->unk40->unk18);
+    func_ovl0C_10_80045990(obj->unk40, 0x16, 0);
+    func_ovl0C_10_80045C68(obj, 0x04000000);
+    func_ovl0C_10_80045C70(obj, 0x08000000);
+    while (!(obj->unk40->unkC & 0x40)) {
+        func_ovl0C_10_80045E00();
+    }
+    snd.unk0 = obj->unk40;
+    snd.unk4 = 0x20F;
+    snd.unk8 = 0x44;
+    func_ovl0C_10_80045DB0(&snd);
+    flag = TRUE;
+    for (i = 0; i < 120; i++) {
+        obj->unk40->unk10 += func_ovl0C_10_80045F60(obj->unk40->unk20) * 40.0f;
+        obj->unk40->unk18 += func_ovl0C_10_80045F68(obj->unk40->unk20) * 40.0f;
+        obj->unk40->unk14 += 5.0f;
+        d = obj->unk40->unk10 < obj0->unk40->unk10 ? -(obj->unk40->unk10 - obj0->unk40->unk10)
+                                                    : obj->unk40->unk10 - obj0->unk40->unk10;
+        if (d < 20.0f && flag) {
+            if (obj0->unk40->unk20 + 180.0f >= 360.0f) {
+                obj0->unk40->unk20 = obj0->unk40->unk20 + 180.0f - 360.0f;
+            } else {
+                d = (obj0->unk40->unk20 + 180.0f < 0.0f) ? obj0->unk40->unk20 + 180.0f + 360.0f : obj0->unk40->unk20 + 180.0f;
+                obj0->unk40->unk20 = d;
+            }
+            flag = FALSE;
+        }
+        func_ovl0C_10_80045E00();
+    }
+    obj = func_ovl0C_10_800454A8(0);
+    func_ovl0C_10_80045AA8(obj->unk40->unk10, 50.0f, obj->unk40->unk18);
+    func_ovl0C_10_80045AC8(obj->unk40->unk20, 20.0f, 800.0f);
+    func_ovl0C_10_80045458(0);
+    func_ovl0C_10_80045408(32);
+    func_ovl0C_10_80045FE0();
+    D_ovl0C_10_800466CC = 1;
+}
+
+/* The overlay's handler: the entry returns it to the loader. */
+void func_ovl0C_10_80043450(s32 arg0) {
     switch (arg0) {
         case 2:
             D_ovl0C_10_800466C4 = func_ovl0C_10_80045368();
@@ -722,115 +842,7 @@ void func_ovl0C_10_80043450(s32 arg0) {
             func_ovl0C_10_80043078();
             break;
         case 11:
-            func_ovl0C_10_80045458(1);
-            func_ovl0C_10_80045B10(0x1F);
-            func_ovl0C_10_80046408(0);
-            func_ovl0C_10_80045AA8(2350.0f, 100.0f, 1720.0f);
-            func_ovl0C_10_80045AC8(0.0f, 45.0f, 2000.0f);
-            func_ovl0C_10_80045DD8(2);
-            obj1 = func_ovl0C_10_800454A8(1);
-            obj0 = func_ovl0C_10_800454A8(0);
-            func_ovl0C_10_80045C70(obj1, 0x0C000000);
-            func_ovl0C_10_80045990(obj1->unk40, 0, 0);
-            func_ovl0C_10_80045990(obj1->unk40, -1, 1);
-            func_ovl0C_10_80045C70(obj1, 0x05000000);
-            obj = func_ovl0C_10_80045C90(0x328, 0x01000000, 0xC0, 0);
-            func_ovl0C_10_80045C70(obj, 0x04000000);
-            func_ovl0C_10_80045CA0(obj);
-            obj->unk40->unk10 = obj1->unk40->unk10;
-            obj->unk40->unk14 = obj1->unk40->unk14;
-            obj->unk40->unk18 = obj1->unk40->unk18;
-            obj->unk40->unk20 = func_ovl0C_10_80043010(obj->unk40, obj0->unk40);
-            if (func_ovl0C_10_80045400(1) == 3) {
-                snd.unk0 = obj->unk40;
-                snd.unk4 = 0x213;
-                snd.unk8 = 0x3C;
-                func_ovl0C_10_80045DB0(&snd);
-                pos.x = obj0->unk40->unk10;
-                pos.y = obj0->unk40->unk14;
-                pos.z = obj0->unk40->unk18;
-                target.x = 2350.0f;
-                target.y = 0.0f;
-                target.z = 1550.0f;
-                func_ovl0C_10_80045BF8(&pos.x, &target.x, &angle);
-                target.x = func_ovl0C_10_80045F60(angle) * 800.0f + pos.x;
-                target.y = pos.y;
-                target.z = func_ovl0C_10_80045F68(angle) * 800.0f + pos.z;
-                pos.x = obj->unk40->unk10;
-                pos.y = obj->unk40->unk14;
-                pos.z = obj->unk40->unk18;
-                func_ovl0C_10_80045BF8(&pos.x, &target.x, &angle);
-                func_ovl0C_10_80045C10(&pos.x, &target.x);
-                obj->unk68 = 51.0f;
-                obj->unk40->unk14 = 0.1f;
-                obj->unk70 = 0.8166667f;
-                obj->unk6C = 16.333334f;
-                for (i = 0; i < 90; i++) {
-                    obj->unk40->unk10 += (target.x - pos.x) / 90.0f;
-                    obj->unk40->unk18 += (target.z - pos.z) / 90.0f;
-                    if (obj->unk40->unk14 < 0.0f) {
-                        obj->unk70 = 0.0f;
-                        obj->unk68 = 0.0f;
-                        obj->unk40->unk14 = 0.0f;
-                    } else {
-                        func_ovl0C_10_80045CE8(obj);
-                    }
-                    func_ovl0C_10_80045E00();
-                }
-                func_ovl0C_10_80046340(0x259);
-            }
-            obj->unk40->unk20 = func_ovl0C_10_80043010(obj->unk40, obj0->unk40);
-            obj0->unk40->unk20 = func_ovl0C_10_80043010(obj0->unk40, obj->unk40);
-            func_ovl0C_10_80045AA8(obj->unk40->unk10, 200.0f, obj->unk40->unk18);
-            func_ovl0C_10_80045AC8(obj0->unk40->unk20, 20.0f, 800.0f);
-            for (i = 0; i < 30; i++) {
-                obj->unk40->unk14 += 2.0f;
-                func_ovl0C_10_80045E00();
-            }
-            func_ovl0C_10_80045DD8(30);
-            task = func_ovl0C_10_80045DB8(func_ovl0C_10_800447E4, obj, 0, 0, 0x130);
-            if (func_ovl0C_10_80046020(0xA4) != 0) {
-                i = 0x333;
-            } else {
-                i = 0x331;
-            }
-            func_ovl0C_10_800459D0(i, 1);
-            func_ovl0C_10_80045458(1);
-            func_ovl0C_10_80045DD8(30);
-            func_ovl0C_10_80045408(50);
-            func_ovl0C_10_80046358();
-            func_ovl0C_10_80045DC0(task);
-            func_ovl0C_10_80046360(0x211, obj->unk40->unk10, obj->unk40->unk14, obj->unk40->unk18);
-            func_ovl0C_10_80045990(obj->unk40, 0x16, 0);
-            func_ovl0C_10_80045C68(obj, 0x04000000);
-            func_ovl0C_10_80045C70(obj, 0x08000000);
-            while (!(obj->unk40->unkC & 0x40)) {
-                func_ovl0C_10_80045E00();
-            }
-            snd.unk0 = obj->unk40;
-            snd.unk4 = 0x20F;
-            snd.unk8 = 0x44;
-            func_ovl0C_10_80045DB0(&snd);
-            flag = TRUE;
-            for (i = 0; i < 120; i++) {
-                obj->unk40->unk10 += func_ovl0C_10_80045F60(obj->unk40->unk20) * 40.0f;
-                obj->unk40->unk18 += func_ovl0C_10_80045F68(obj->unk40->unk20) * 40.0f;
-                obj->unk40->unk14 += 5.0f;
-                d = obj->unk40->unk10 < obj0->unk40->unk10 ? -(obj->unk40->unk10 - obj0->unk40->unk10)
-                                                            : obj->unk40->unk10 - obj0->unk40->unk10;
-                if (d < 20.0f && flag) {
-                    flag = FALSE;
-                    ANGLE_ADD(obj0->unk40->unk20, 180.0f);
-                }
-                func_ovl0C_10_80045E00();
-            }
-            obj = func_ovl0C_10_800454A8(0);
-            func_ovl0C_10_80045AA8(obj->unk40->unk10, 50.0f, obj->unk40->unk18);
-            func_ovl0C_10_80045AC8(obj->unk40->unk20, 20.0f, 800.0f);
-            func_ovl0C_10_80045458(0);
-            func_ovl0C_10_80045408(32);
-            func_ovl0C_10_80045FE0();
-            D_ovl0C_10_800466CC = 1;
+            func_ovl0C_10_80043070();
             break;
     }
 }
