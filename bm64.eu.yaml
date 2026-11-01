@@ -1466,11 +1466,11 @@ segments:
     symbol_name_format: ovl10_13_$VRAM
     dir: overlays/ovl_10_13
     subsegments:
-      - [0x2439E0, asm, ovl_10_13_entry]
-      - [0x2439F0, asm]
+      - [0x2439E0, c, ovl_10_13_entry]
+      - [0x2439F0, c]
       - [0x249C70, hasm, ovl_10_13_zerojmp]
-      - [0x24B2B0, rodata]
-      - {type: bss, vram: 0x8004AB50}
+      - [0x24B2B0, .rodata, 2439F0]
+      - {type: .bss, vram: 0x8004AB50, name: 2439F0}
   - name: ovl_12_01
     type: code
     start: 0x24B530

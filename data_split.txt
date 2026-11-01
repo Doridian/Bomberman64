@@ -308,6 +308,10 @@ ovl_10_04 214340 0xC0 0x90 0x2F0
 ovl_10_05 ovl_10_05_entry 0 0 0
 ovl_10_05 217050 0x120 0xC0 0x520
 
+# ovl_10_13: all C (-O3)
+ovl_10_13 ovl_10_13_entry 0 0 0
+ovl_10_13 2439F0 0 0x280 0x2A0
+
 # ovl_12_01: all C (-O3)
 ovl_12_01 ovl_12_01_entry 0 0 0
 ovl_12_01 24B540 0x120 0x170 0x60

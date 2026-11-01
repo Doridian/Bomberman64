@@ -1,19 +1,25 @@
 /*
- * NON_MATCHING: ovl_10_13's game object, complete: every function and its
- * .bss. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
- * drafts").
- * flags: -O3
- * differing words: us 46, jp 46
+ * ovl_10_13's game object, IDO -O3; it matches in us, eu and jp. eu's
+ * camera limits are 12000 and 10000 where us's and jp's are 10000 and 8000
+ * (`#if VERSION_EU`).
  *
- * What still differs in us (words, as tools/nonmatching.py counts them):
- * - 800464B0 (4): v1 for v0; a third temporary grows the frame.
- * - The statics, compared with 80043010 as one run (42), are all
- *   8004574C's; 80043070 and 80044E48 match (scratch/10_13/allf.py
- *   counts each on its own). 80044E48's two unused pads give the
- *   original's frame, with i and a between the vectors and angle. They
- *   are the cut-scenes the handler and 800474EC-800477E8 run. They save
- *   no callee-saved registers (their callers do), so they are static;
- *   they come first in the object.
+ * At -O3 every declared local gets a 4-byte home in the frame, used or
+ * not: top-down in declaration order, then a compiler temporary's
+ * (a ternary's, a common subexpression's), then the unreferenced locals',
+ * with the alignment hole at the bottom. So the frames below came from the
+ * count and order of the locals:
+ * - 800464B0: the camera's third read of obj->unk40 and `limit` are one
+ *   s32 (both live in v0); as a separate pointer (or as the expression,
+ *   whose temporary gets a home too) it took v0 but made the frame 0x48.
+ * - 8004574C: its 0x50 frame is 12 homes. The info and obj0 share one
+ *   variable (both s1), the player and the counter i one (s0), and the
+ *   wrap's inner value in the turn loop is a named f32 t declared before
+ *   i (its home is the 0x24 the original loads before the loop). The
+ *   three stores after the turn loop are one chained assignment
+ *   (ADD4 = ADD8 = ADE0 = 0): that gives the original's s6-s8 (ADD8's
+ *   address in s6, 0x1C in s7, ADA8's in s8) and the temporaries after
+ *   it (tools/decomp-permuter found it; as three statements the three
+ *   were permuted and the temporaries two registers off).
  * - 80043070 is Hudson's loops with the original's frame (0xA0: two
  *   locals above `pair`, four between it and the vectors, ten below;
  *   k, m, y and step are unused and only place the rest). Its counters
@@ -21,23 +27,19 @@
  *   animation lengths), j (the last five's count and every later loop)
  *   and n. Its saved float registers came from the constants' literals:
  *   the 0x2D5 block's 3 and a.x/b.x's 10 are ints, so they are other
- *   constants than the loops' 3.0f and 10.0f (as 3.0f, one live range
- *   ran from the 20-frame loop to the 0x2D5 block and lost its register,
- *   936 words to 721; 10, 721 to 13). The sine before the 10-frame walk
- *   is `scale` (the 150-frame loop's) and the cosine `x`. The last
- *   words: 8004A170 returns a value (v1 for the global read after it),
- *   the ring loop breaks at j == 50, and the turn after the 0x335 voice
- *   faces 8004ADC4's object, not 8004ADC0's.
- * - 8004574C has the original's code size: each move first takes the
- *   differences into a, b and c (a and b are the turn's angle and
- *   distance later; c stays in a temporary), then divides them in the
- *   reverse of the original's order (dy, dx, dz). With the differences
- *   folded into the divisions, 1150.0f and 1438.0f were kept in a saved
- *   float register (mfc1) instead of being loaded as immediates, and the
- *   function was 0x20 short. What's left: the saved s6-s8 are permuted,
- *   the temporaries after the turn loop are two registers off, and the
- *   wrap's temporary needs the unused pad (which makes the frame 0x60,
- *   not 0x50). 8004A130 returns a value (v1 after it).
+ *   constants than the loops' 3.0f and 10.0f. The sine before the
+ *   10-frame walk is `scale` (the 150-frame loop's) and the cosine `x`.
+ *   8004A170 returns a value (v1 for the global read after it), the ring
+ *   loop breaks at j == 50, and the turn after the 0x335 voice faces
+ *   8004ADC4's object, not 8004ADC0's.
+ * - 80044E48's two unused pads give the original's frame, with i and a
+ *   between the vectors and angle. The statics (80043010-8004574C) are
+ *   the cut-scenes the handler and 800474EC-800477E8 run; they save no
+ *   callee-saved registers (their callers do), so they are static, and
+ *   they come first in the object. In 8004574C each move takes the
+ *   differences into a, b and c first (a and b are the turn's angle and
+ *   distance later; c stays in a temporary) and divides them in the
+ *   reverse of the original's order (dy, dx, dz).
  * The handler's cases 800460E0-800468BC are globals defined above the
  * handler: it pulls them out, with the statics, in the reverse order of
  * their calls (statics first, as in the original). As statics they were
@@ -49,12 +51,10 @@
  * 80046ACC-80046E50 and 80049044 are ovl_10_12's and ovl_10_11's,
  * 80049138-80049210 ovl_17_09's (renamed); the rest is m2c's output
  * (scratch/10_13/ in the checkout has the scripts). .rodata (the two
- * strings, floats and jump tables) builds to the original's size and order
- * up to 0xCC, where a float of a differing function comes early. The .bss
- * has the original's order, but the unreferenced bytes (8004AB50, 0x24,
- * and the words at 8004AB7C and 8004AB94) aren't defined in place:
- * IDO leaves an unreferenced array COMMON, so the draft's .bss is 0x24
- * short at the front and 8 bytes short in the middle.
+ * strings, floats and jump tables) builds to the original's. The .bss
+ * has the original's order; its unreferenced bytes (8004AB50, 0x24, and
+ * the words at 8004AB7C and 8004AB94) are written in dead code in the
+ * empty 80049228, as -O3 drops an unreferenced global's storage.
  */
 #include "common.h"
 
@@ -245,10 +245,10 @@ void func_ovl10_13_80049280(void);
 u8 D_ovl10_13_8004AB50[0x24]; /* unused */
 s32 D_ovl10_13_8004AB74;
 s32 D_ovl10_13_8004AB78;
-Vec3f D_ovl10_13_8004AB80;
+s32 D_ovl10_13_8004AB7C; /* unused */ Vec3f D_ovl10_13_8004AB80;
 s32 D_ovl10_13_8004AB8C;
 s32 D_ovl10_13_8004AB90;
-s32 D_ovl10_13_8004AB98[64];
+s32 D_ovl10_13_8004AB94; /* unused */ s32 D_ovl10_13_8004AB98[64];
 s32 D_ovl10_13_8004AC98; /* the running task */
 void (*D_ovl10_13_8004ACA0[64])();
 UnkStructC *D_ovl10_13_8004ADA0;
@@ -304,7 +304,7 @@ void func_ovl10_13_80049230(void) {
 }
 
 void func_ovl10_13_80049228(void) {
-}
+    if (0) { D_ovl10_13_8004AB50[0] = D_ovl10_13_8004AB7C = D_ovl10_13_8004AB94 = 0; } /* the unused .bss keeps its place */ }
 
 void func_ovl10_13_80049210(void) {
     D_ovl10_13_8004AB74 = -1;
@@ -1059,6 +1059,7 @@ void func_ovl10_13_800466B8(void) {
     func_ovl10_13_80049E80(0xF);
 }
 
+/* limit is also the pointer for the camera's third read (header). */
 void func_ovl10_13_800464B0(void) {
     UnkStructA *obj;
     UnkStruct_ovl10_13_8004A770 *player;
@@ -1085,16 +1086,22 @@ void func_ovl10_13_800464B0(void) {
     func_ovl10_13_80049E80(0xF);
     func_ovl10_13_8004A778(0);
     func_ovl10_13_80049E80(0x1F);
-    temp_v1 = obj->unk40;
-    func_ovl10_13_80049E18(temp_v1->unk10, temp_v1->unk14 + 100.0f, temp_v1->unk18);
+    limit = (s32)obj->unk40;
+    func_ovl10_13_80049E18(((UnkStructA_40 *)limit)->unk10, ((UnkStructA_40 *)limit)->unk14 + 100.0f, ((UnkStructA_40 *)limit)->unk18);
     func_ovl10_13_80049E38(0.0f, 35.0f, 800.0f);
     player = func_ovl10_13_8004A770(1);
     if ((D_ovl10_13_8004ADA8 == 0x12) && !(player->unk124 & 8)) {
         
         if (info->unk10 == 0) {
+#if VERSION_EU
+            limit = 12000;
+        } else {
+            limit = 10000;
+#else
             limit = 10000;
         } else {
             limit = 8000;
+#endif
         }
         if (limit >= D_ovl10_13_8004ADD0) {
             pos.x = player->unk1C->unk40->unk10;
@@ -1127,9 +1134,15 @@ void func_ovl10_13_80046324(void) {
     player = func_ovl10_13_8004A770(1);
     if ((D_ovl10_13_8004ADA8 == 0x13) && !(player->unk124 & 8)) {
         if (info->unk10 == 0) {
+#if VERSION_EU
+            limit = 12000;
+        } else {
+            limit = 10000;
+#else
             limit = 10000;
         } else {
             limit = 8000;
+#endif
         }
         if (limit >= D_ovl10_13_8004ADD0) {
             pos.x = player->unk1C->unk40->unk10;
@@ -1243,9 +1256,9 @@ void func_ovl10_13_80046940(s32 arg0) {
     }
 }
 
+/* obj0 is first the info, i first the player, and t is the wrap's inner
+ * value (header). */
 static void func_ovl10_13_8004574C(void) {
-    UnkStruct_ovl10_13_80049728 *info;
-    UnkStruct_ovl10_13_8004A770 *player;
     UnkStructA *obj0;
     UnkStructA *obj1;
     UnkStructA *obj2;
@@ -1256,11 +1269,11 @@ static void func_ovl10_13_8004574C(void) {
     f32 b;
     f32 c;
     s32 limit;
+    f32 t;
     s32 i;
-    s32 pad;
 
-    info = func_ovl10_13_80049728();
-    D_ovl10_13_8004ADD0 = info->unk30;
+    obj0 = (UnkStructA *)func_ovl10_13_80049728();
+    D_ovl10_13_8004ADD0 = ((UnkStruct_ovl10_13_80049728 *)obj0)->unk30;
     func_ovl10_13_8004A778(0);
     func_ovl10_13_80049E80(0x1F);
     func_ovl10_13_80049868(0, 0);
@@ -1275,22 +1288,28 @@ static void func_ovl10_13_8004574C(void) {
     func_ovl10_13_80049888();
     func_ovl10_13_800497C8(1);
     func_ovl10_13_8004A198(0x70, 0x70, 0);
-    player = func_ovl10_13_8004A770(1);
-    player->unk0 = 0;
-    player->unk88 = -1;
-    player = func_ovl10_13_8004A770(2);
-    player->unk0 = 0;
-    player->unk88 = -1;
-    if ((D_ovl10_13_8004ADA8 != 0x1C) && !(player->unk124 & 8)) {
-        if (info->unk10 == 0) {
+    i = (s32)func_ovl10_13_8004A770(1);
+    ((UnkStruct_ovl10_13_8004A770 *)i)->unk0 = 0;
+    ((UnkStruct_ovl10_13_8004A770 *)i)->unk88 = -1;
+    i = (s32)func_ovl10_13_8004A770(2);
+    ((UnkStruct_ovl10_13_8004A770 *)i)->unk0 = 0;
+    ((UnkStruct_ovl10_13_8004A770 *)i)->unk88 = -1;
+    if ((D_ovl10_13_8004ADA8 != 0x1C) && !(((UnkStruct_ovl10_13_8004A770 *)i)->unk124 & 8)) {
+        if (((UnkStruct_ovl10_13_80049728 *)obj0)->unk10 == 0) {
+#if VERSION_EU
+            limit = 12000;
+        } else {
+            limit = 10000;
+#else
             limit = 10000;
         } else {
             limit = 8000;
+#endif
         }
         if (limit >= D_ovl10_13_8004ADD0) {
-            func_ovl10_13_8004A358(&player->unk2C);
-            player->unk124 |= 8;
-            info->unk2C += 1;
+            func_ovl10_13_8004A358(&((UnkStruct_ovl10_13_8004A770 *)i)->unk2C);
+            ((UnkStruct_ovl10_13_8004A770 *)i)->unk124 |= 8;
+            ((UnkStruct_ovl10_13_80049728 *)obj0)->unk2C += 1;
         }
     }
     obj0 = func_ovl10_13_80049818(0);
@@ -1391,13 +1410,20 @@ static void func_ovl10_13_8004574C(void) {
             func_ovl10_13_8004A6B0(0x250);
         }
         func_ovl10_13_80049E38(a, 32768.0f, b);
-        ANGLE_ADD(a, 0.15555556f);
+        if (a + 0.15555556f >= 360.0f) {
+            a = a + 0.15555556f - 360.0f;
+        } else {
+            if (a + 0.15555556f < 0.0f) {
+                t = a + 0.15555556f + 360.0f;
+            } else {
+                t = a + 0.15555556f;
+            }
+            a = t;
+        }
         b -= 6.311111f;
         func_ovl10_13_8004A170();
     }
-    D_ovl10_13_8004ADE0 = 0;
-    D_ovl10_13_8004ADD8 = 0;
-    D_ovl10_13_8004ADD4 = 0;
+    D_ovl10_13_8004ADD4 = D_ovl10_13_8004ADD8 = D_ovl10_13_8004ADE0 = 0;
     func_ovl10_13_8004A170();
     func_ovl10_13_80049778(0x20);
     if (D_ovl10_13_8004ADA8 == 0x1C) {
