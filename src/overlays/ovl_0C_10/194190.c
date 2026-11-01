@@ -1,9 +1,5 @@
 /*
- * NON_MATCHING: ovl_0C_10's game object, complete: every function and its
- * data (.data 0x40 and .rodata 0xD0 byte for byte as the original, .bss 0x70).
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * ovl_0C_10's game object, IDO -O3; it matches in us, eu and jp.
  *
  * The text order took care: 80043010 (a static, args in a3/t0) comes first
  * only when every handler callee is defined above the handler, so that the

@@ -1,11 +1,6 @@
 /*
- * NON_MATCHING: ovl_0F_09's game object, complete: every function and its data
- * (.data, .rodata and .bss as the original).
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
- *
- * Measured in jp. What went right, from 508 words, as in ovl_0F_08/0F_07:
+ * ovl_0F_09's game object, IDO -O3; it matches in us, eu and jp.
+ * What did it, from 508 words, as in ovl_0F_08/0F_07:
  * - func_ovl0F_09_80043D88 (64 to 0): ovl_0F_08's 80043A28 ported (Vec3f,
  *   `(s32)dx != (s32)vel.x` tests, the pack static 80043CC8 in "panels.c"
  *   and only on the hit path).

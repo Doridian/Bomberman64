@@ -1,8 +1,5 @@
 /*
- * NON_MATCHING: ovl_12_05's game object, complete: every function and its data.
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * ovl_12_05's game object, IDO -O3; it matches in us, eu and jp.
  *
  * The functions with twins elsewhere are their C, renamed (ovl_12_03,
  * 12_04, 12_06, 10_13, 0C_10, 0E_15, 17_09, 17_10), with this object's
@@ -32,6 +29,11 @@
  * - 800486C4: the same for its angle, through t, declared between i and n,
  *   which places the slot the float is reloaded from at 0x5C.
  * - eu's limits for D_ovl12_05_8004AC74 differ (LIMIT_HI/LIMIT_LO).
+ * - .bss: IDO aligns an 8-byte variable to 8, so the words 8004AC0C/10
+ *   and 8004AC18/1C are separate s32s, the unused ones kept by a dead
+ *   reference in the stub 8004934C.
+ * - 80046F44's scale adds `0.2f`: the original's double is 0.2f widened
+ *   (0x3FC99999A0000000), which tools/nonmatching.py doesn't compare.
  *
  * Every declared local of the cut-scenes takes a frame slot, even one
  * kept in a register, so their frames come out the original's size only
@@ -263,9 +265,9 @@ static void func_ovl12_05_8004934C(void);
 
 u8 D_ovl12_05_8004ABF0[0x10];
 Vec3f D_ovl12_05_8004AC00;
-s32 D_ovl12_05_8004AC0C[2]; /* the second word unused */
+s32 D_ovl12_05_8004AC0C; s32 D_ovl12_05_8004AC10; /* unused */
 s32 D_ovl12_05_8004AC14;
-s32 D_ovl12_05_8004AC18[2]; /* the second word unused */
+s32 D_ovl12_05_8004AC18; s32 D_ovl12_05_8004AC1C; /* unused */
 f32 D_ovl12_05_8004AC20[4]; /* a position; the fourth word unused */
 UnkStruct_ovl12_05_8004AC30 D_ovl12_05_8004AC30;
 UnkStructA *D_ovl12_05_8004AC44;
@@ -287,7 +289,7 @@ f32 D_ovl12_05_8004AC80;
 UnkStructA *D_ovl12_05_8004AC84;
 
 /* unused: the stubs IDO -O3 leaves at the end of the object */
-static void func_ovl12_05_8004934C(void) {
+static void func_ovl12_05_8004934C(void) { if (0) { D_ovl12_05_8004AC10 = 0; D_ovl12_05_8004AC1C = 0; }
 }
 
 static void func_ovl12_05_80049344(void) {
@@ -322,7 +324,7 @@ static void func_ovl12_05_800492FC(void) {
 
 void func_ovl12_05_800492E4(void) {
     D_ovl12_05_8004AC14 = -1;
-    D_ovl12_05_8004AC18[0] = -1;
+    D_ovl12_05_8004AC18 = -1;
 }
 
 /* twin of 17_09:80044B14 (nonmatching/overlays/ovl_17_09/2B8D20.c) */
@@ -908,7 +910,7 @@ void func_ovl12_05_80046F44(void) {
     angle = func_ovl12_05_8004A3B0() * 360.0;
     dx = func_ovl12_05_8004A3A0(angle) * dist;
     dz = func_ovl12_05_8004A3A8(angle) * dist;
-    scale = func_ovl12_05_8004A3B0() + 0.2;
+    scale = func_ovl12_05_8004A3B0() + 0.2f;
     obj->unk40->unk30 = scale;
     obj->unk40->unk2C = scale;
     obj->unk40->unk28 = scale;
@@ -1130,9 +1132,9 @@ void func_ovl12_05_80046390(f32 arg0) {
 /* twin of 12_04:80043068 (src/overlays/ovl_12_04/253A10.c) */
 void func_ovl12_05_80046348(void) {
     func_ovl12_05_80046340();
-    D_ovl12_05_8004AC0C[0] = func_ovl12_05_80049888();
+    D_ovl12_05_8004AC0C = func_ovl12_05_80049888();
     func_ovl12_05_80049868(&D_ovl12_05_8004AC00);
-    func_ovl12_05_80049890(D_ovl12_05_8004AC0C[0], D_ovl12_05_8004ABF0);
+    func_ovl12_05_80049890(D_ovl12_05_8004AC0C, D_ovl12_05_8004ABF0);
 }
 
 static void func_ovl12_05_80046340(void) {
