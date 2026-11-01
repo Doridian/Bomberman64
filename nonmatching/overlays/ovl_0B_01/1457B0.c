@@ -5,7 +5,7 @@
  * the original). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 326, eu 327, jp 416
+ * differing words: us 0, eu 0, jp 0
  *
  * IDO -O3: the functions are written last to first (IDO -O3 emits a file's
  * functions in reverse). The strings, the copyright line and the menu
@@ -13,27 +13,32 @@
  * 80043448 and 80043998 copy them as structures. ZeroJump 0x1909 and
  * 0x2B00 are declared s32: as void, 80043148 keeps its temporaries in $v0
  * where the original has $v1. Empty statics stand for the stubs before
- * 800430A4, 80043D64 and 80043DD4.
+ * 800430A4, 80043D64 and 80043DD4. eu's cheat code counts presses over
+ * 50 frames, not 60 (`#if VERSION_EU`).
  *
- * What still differs in us (words):
- * - func_ovl0B_01_8004376C (static, counted with 80043660) and
- *   func_ovl0B_01_80043998: register allocation. The static takes its mode
- *   in $s5 and works in $s0-$s6 unsaved, so the caller keeps sel and
- *   &D_ovl0B_01_80045ED8 in $s7/$fp; ours spreads the static over $s0-$fp
- *   (its second loop keeps &rect[i]/&spr[i] in $s1/$s0, the original in
- *   $a0/$v1), so 80043998's registers all move. Both originals also have
- *   12/16 bytes free above their arrays (ours below); unused locals don't
- *   reproduce it here. 80043998's x offset computes (scale - 1.5f) before
- *   converting xs[sel], ours after.
- * jp has no copyright line (80043448 shows its own picture at once) and no
- * third sprite in the handler (`#if VERSION_JP`); its count also takes
- * func_ovl0B_01_8004464C whole, since the tool finds it in jp but folds
- * it into the stubs before it in us and eu.
- * - func_ovl0B_01_8004464C (counted with 800445BC): the original takes
- *   &D_ovl0B_01_80045E34 before storing arg0 to its home slot, and leaves
- *   the final store out of the delay slot of `jr ra`.
+ * Every function matches in all three versions (tools/fcmp.py); it stays
+ * here until it is moved to src/ and checked in the full build. What made
+ * the last ones match:
+ * - func_ovl0B_01_8004464C: the empty static 800445E4 is defined in
+ *   "panels.c" (a fake `#line`) and inlined after `fade`'s address is
+ *   taken: its `.file` ends as1's block there, so the address comes before
+ *   arg0's home store. Its closing `}` and 800445BC are in "panels.c" too,
+ *   which keeps the final store out of `jr ra`'s delay slot.
+ * - func_ovl0B_01_8004376C (static, called only from 80043998): its scalars
+ *   are declared before its arrays (the original's frame has them at the
+ *   top). The first loop is a do-while (`++i < 4` gives the original's
+ *   `sltu` on the rect pointer), and the second loop counts the frames in
+ *   i and the items in j: with the same i as the first loop, uopt kept
+ *   &rect[i]/&spr[i] in $s registers. With that the static uses only
+ *   $s0-$s6, and 80043998 keeps sel and &D_ovl0B_01_80045ED8 in $s7/$fp.
+ * - func_ovl0B_01_80043998: step, scale and sel are initialised in their
+ *   declarations, before xs and ys are copied, and the reset sets step,
+ *   scale and i after the first call. The x position goes through a float
+ *   in an inner block (`x = xs.v[sel]; x -= ...`), which gives the
+ *   original's order and registers without a frame slot.
  */
 #include "common.h"
+#line 37 "1457B0.c"
 
 typedef struct {
     u32 w0;
@@ -122,6 +127,7 @@ void func_ovl0B_01_80045A48(s32); /* 0x2502 */
 void func_ovl0B_01_80045A58(s32, u16, u16); /* 0x2504 */
 void func_ovl0B_01_80045A68(s32, f32, f32); /* 0x2506 */
 UnkStructA_40 *func_ovl0B_01_80045A78(s32); /* 0x2508 */
+s32 func_ovl0B_01_80045A40(u8 *, u16, u16, f32, f32, s32); /* jp 0x2501 */
 s32 func_ovl0B_01_80045A98(u8 *, u16, u16, f32, f32, s32); /* 0x250C */
 s32 func_ovl0B_01_80045BE0(s32); /* 0x2B00 */
 void func_ovl0B_01_80045C00(s32, s32, s32, s32); /* 0x2B04 */
@@ -166,7 +172,11 @@ UnkStruct_ovl0B_01_80045E34 D_ovl0B_01_80045E34 = {
 UnkStruct_ovl0B_01_80045E78 D_ovl0B_01_80045E78 = { "'H\x0F\x1CHGMKHEE>K\x0F" "BG\x0F\xFF\x1CHGMKHEE>K\x0F,H<D>M\x0F\x11\xF8\xFF)E>:L>\x0FMNKG\x0FMA>\x0F\xFFIHP>K\x0FH\x3F\x3F\x0F:G=\x0F" "BGL>KM\x0F\xFF:\x0F\x1CHGMKHEE>K\xF8" };
 #endif
 s32 D_ovl0B_01_80045ED8 = 1;
+#if VERSION_JP
+UnkStruct_ovl0B_01_80045EDC D_ovl0B_01_80045EDC = { { 0x44, 0x44, 0x44, 0x49 } };
+#else
 UnkStruct_ovl0B_01_80045EDC D_ovl0B_01_80045EDC = { { 0x37, 0x27, 0x2A, 0x2B } };
+#endif
 UnkStruct_ovl0B_01_80045EDC D_ovl0B_01_80045EE4 = { { 0x28, 0x51, 0x7A, 0xA3 } };
 u16 D_ovl0B_01_80045EEC[18] = {
     0x6E, 0xAB, 0x0402, 0,
@@ -218,9 +228,6 @@ static void func_ovl0B_01_800445F4(void) {
 static void func_ovl0B_01_800445EC(void) {
 }
 
-static void func_ovl0B_01_800445E4(void) {
-}
-
 /* a fake: a second (dead) caller keeps func_ovl0B_01_800430A4 from being
  * inlined into its only real one */
 static void func_ovl0B_01_800445DC(void) {
@@ -233,21 +240,31 @@ static void func_ovl0B_01_800445D4(void) {
     D_ovl0B_01_80045F80[0] = D_ovl0B_01_80045FAC[0];
 }
 
+#line 1 "panels.c"
+static void func_ovl0B_01_800445E4(void) {
+}
+
+#line 238 "1457B0.c"
 static void func_ovl0B_01_8004464C(s32 arg0, Gfx_ovl0B_01 **arg1) {
     UnkStruct_ovl0B_01_80045E34 *fade = &D_ovl0B_01_80045E34;
-    Gfx_ovl0B_01 *gfx = *arg1;
+    Gfx_ovl0B_01 *gfx;
+
+    func_ovl0B_01_800445E4();
+    gfx = *arg1;
 
     { Gfx_ovl0B_01 *g = gfx++; g->w0 = 0xFA000000; g->w1 = ((fade->unk4 & 0xFF) << 24) | ((fade->unk8 & 0xFF) << 16) | ((fade->unkC & 0xFF) << 8) | (fade->unk10 & 0xFF); }
     { Gfx_ovl0B_01 *g = gfx++; g->w0 = 0xFCFFFFFF; g->w1 = 0xFFFDF6FB; }
     { Gfx_ovl0B_01 *g = gfx++; g->w0 = 0xF7000000; g->w1 = 0x10001; }
     { Gfx_ovl0B_01 *g = gfx++; g->w0 = 0xF6000000 | (((fade->unk2C + (s32) fade->unk34) & 0x3FF) << 14) | (((fade->unk30 + (s32) (fade->unk34 * fade->unk20)) & 0x3FF) << 2); g->w1 = (((fade->unk2C - (s32) fade->unk34) & 0x3FF) << 14) | (((fade->unk30 - (s32) (fade->unk34 * fade->unk20)) & 0x3FF) << 2); }
     *arg1 = gfx;
+#line 1 "panels.c"
 }
 
 void func_ovl0B_01_800445BC(void) {
     D_ovl0B_01_80045FA4 = -1;
     D_ovl0B_01_80045FA8 = -1;
 }
+#line 258 "1457B0.c"
 
 void func_ovl0B_01_80044560(f32 arg0, f32 arg1, f32 arg2) {
     func_ovl0B_01_80045348(D_ovl0B_01_80045FB0.x, D_ovl0B_01_80045FB0.y, D_ovl0B_01_80045FB0.z);
@@ -431,22 +448,44 @@ void func_ovl0B_01_80043D64(void) {
 
 static void func_ovl0B_01_8004376C(s32 *ids, s32 mode);
 
+/* jp's menu items are smaller (scale 1.0 where us and eu have 1.5; the
+ * height 1.63, in us and eu one bit above 1.63f), grow more slowly and sit
+ * further right, and jp's 0x250C is numbered 0x2501. The height ratio is
+ * written as a quotient: a plain 1.63f in jp would share the first 1.63f's
+ * register, where the original loads its own copy. */
+#if VERSION_JP
+#define MENU_SCALE 1.0f
+#define MENU_YSCALE 1.63f
+#define MENU_STEP 0.02f
+#define MENU_X0 0x44
+#define MENU_X1 0x44
+#define MENU_X2 0x44
+#define MENU_X3 0x49
+#define MENU_TEXT func_ovl0B_01_80045A40
+#else
+#define MENU_SCALE 1.5f
+#define MENU_YSCALE 1.6300001f
+#define MENU_STEP 0.025f
+#define MENU_X0 0x37
+#define MENU_X1 0x27
+#define MENU_X2 0x2A
+#define MENU_X3 0x2B
+#define MENU_TEXT func_ovl0B_01_80045A98
+#endif
+
 void func_ovl0B_01_80043998(void) {
+    f32 step = MENU_STEP;
+    f32 scale = MENU_SCALE;
+    s32 sel = D_ovl0B_01_80045ED8 - 1;
+    s32 i;
     s32 ids[4];
     UnkStruct_ovl0B_01_80045EDC xs = D_ovl0B_01_80045EDC;
     UnkStruct_ovl0B_01_80045EDC ys = D_ovl0B_01_80045EE4;
-    f32 step;
-    f32 scale;
-    s32 sel;
-    s32 i;
 
-    step = 0.025f;
-    scale = 1.5f;
-    sel = D_ovl0B_01_80045ED8 - 1;
-    ids[0] = func_ovl0B_01_80045A98(D_ovl0B_01_80045E00, 0x37, 0x28, 1.5f, 1.63f, 0);
-    ids[1] = func_ovl0B_01_80045A98(D_ovl0B_01_80045E0C, 0x27, 0x51, 1.5f, 1.63f, 0);
-    ids[2] = func_ovl0B_01_80045A98(D_ovl0B_01_80045E18, 0x2A, 0x7A, 1.5f, 1.63f, 0);
-    ids[3] = func_ovl0B_01_80045A98(D_ovl0B_01_80045E24, 0x2B, 0xA3, 1.5f, 1.63f, 0);
+    ids[0] = MENU_TEXT(D_ovl0B_01_80045E00, MENU_X0, 0x28, MENU_SCALE, MENU_YSCALE, 0);
+    ids[1] = MENU_TEXT(D_ovl0B_01_80045E0C, MENU_X1, 0x51, MENU_SCALE, MENU_YSCALE, 0);
+    ids[2] = MENU_TEXT(D_ovl0B_01_80045E18, MENU_X2, 0x7A, MENU_SCALE, MENU_YSCALE, 0);
+    ids[3] = MENU_TEXT(D_ovl0B_01_80045E24, MENU_X3, 0xA3, MENU_SCALE, MENU_YSCALE, 0);
     func_ovl0B_01_8004376C(ids, 0);
     while (D_ovl0B_01_80045FD0 != 0) {
         for (i = 0; i < 10; i++) {
@@ -454,15 +493,19 @@ void func_ovl0B_01_80043998(void) {
                 break;
             }
             if (D_ovl0B_01_80045ED8 > 0 && sel + 1 != D_ovl0B_01_80045ED8) {
-                step = 0.025f;
-                scale = 1.5f;
-                i = 0;
                 func_ovl0B_01_80045A58(ids[sel], xs.v[sel], ys.v[sel]);
-                func_ovl0B_01_80045A68(ids[sel], 1.5f, 1.63f);
+                step = MENU_STEP;
+                scale = MENU_SCALE;
+                i = 0;
+                func_ovl0B_01_80045A68(ids[sel], MENU_SCALE, MENU_YSCALE);
                 sel = D_ovl0B_01_80045ED8 - 1;
             }
-            func_ovl0B_01_80045A58(ids[sel], xs.v[sel] - (scale - 1.5f) * 80.0f, ys.v[sel]);
-            func_ovl0B_01_80045A68(ids[sel], scale, scale * 1.0866667f);
+            {
+                f32 x = xs.v[sel];
+                x -= (scale - MENU_SCALE) * 80.0f;
+                func_ovl0B_01_80045A58(ids[sel], x, ys.v[sel]);
+            }
+            func_ovl0B_01_80045A68(ids[sel], scale, scale * (MENU_YSCALE / MENU_SCALE));
             scale += step;
             func_ovl0B_01_800456A0();
         }
@@ -477,18 +520,19 @@ void func_ovl0B_01_80043998(void) {
 }
 
 static void func_ovl0B_01_8004376C(s32 *ids, s32 mode) {
-    UnkStructA_40 *spr[4];
-    f32 rect[4][4];
     s32 n;
     s32 i;
     s32 j;
+    UnkStructA_40 *spr[4];
+    f32 rect[4][4];
 
     if (mode == 0) {
         n = 30;
     } else {
         n = 15;
     }
-    for (i = 0; i < 4; i++) {
+    i = 0;
+    do {
         spr[i] = func_ovl0B_01_80045A78(ids[i]);
         rect[i][0] = spr[i]->unk10;
         rect[i][1] = spr[i]->unk14;
@@ -500,23 +544,23 @@ static void func_ovl0B_01_8004376C(s32 *ids, s32 mode) {
             spr[i]->unk14 = 120.0f;
             spr[i]->unk1C = 120.0f;
         }
-    }
-    for (j = 0; j < n; j++) {
-        for (i = 0; i < 4; i++) {
+    } while (++i < 4);
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < 4; j++) {
             if (mode == 0) {
                 if (D_ovl0B_01_80045FD0 == 0) {
-                    j = n;
+                    i = n;
                     break;
                 }
-                spr[i]->unk10 += (rect[i][0] - 160.0f) / n;
-                spr[i]->unk14 += (rect[i][1] - 120.0f) / n;
-                spr[i]->unk18 += (rect[i][2] - 160.0f) / n;
-                spr[i]->unk1C += (rect[i][3] - 120.0f) / n;
+                spr[j]->unk10 += (rect[j][0] - 160.0f) / n;
+                spr[j]->unk14 += (rect[j][1] - 120.0f) / n;
+                spr[j]->unk18 += (rect[j][2] - 160.0f) / n;
+                spr[j]->unk1C += (rect[j][3] - 120.0f) / n;
             } else {
-                spr[i]->unk10 += (160.0f - rect[i][0]) / n;
-                spr[i]->unk14 += (120.0f - rect[i][1]) / n;
-                spr[i]->unk18 += (160.0f - rect[i][2]) / n;
-                spr[i]->unk1C += (120.0f - rect[i][3]) / n;
+                spr[j]->unk10 += (160.0f - rect[j][0]) / n;
+                spr[j]->unk14 += (120.0f - rect[j][1]) / n;
+                spr[j]->unk18 += (160.0f - rect[j][2]) / n;
+                spr[j]->unk1C += (120.0f - rect[j][3]) / n;
             }
         }
         func_ovl0B_01_800456A0();
@@ -548,7 +592,11 @@ void func_ovl0B_01_80043660(void) {
             t = 0;
             presses = 0;
         }
+#if VERSION_EU
+        if (t == 49) { /* a second at 50 Hz */
+#else
         if (t == 59) {
+#endif
             if (presses >= 10 && presses < 15) {
                 presses = 0;
                 idle = 0;
