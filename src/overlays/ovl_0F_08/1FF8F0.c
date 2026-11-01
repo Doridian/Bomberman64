@@ -1,24 +1,26 @@
 /*
- * NON_MATCHING: ovl_0F_08's game object, complete: every function and its data
- * (.data and .rodata as the original, .bss 0x60).
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 72, eu 72, jp 72
- *
- * What still differs in us (words):
- * - func_ovl0F_08_800433DC (8): scheduling only. The loops of case 2 (the
- *   models) and case 1 put `move s2,zero` (i = 0) after the table's
- *   `lui`/`addiu` and the count in the original, before them in ours; after
- *   the if/else on func_ovl0F_08_80045600, the original loads
- *   D_ovl0F_08_80045DA0[2] after `lui at,0x4516`, ours before.
- * - func_ovl0F_08_80043A28 (64): ovl_0F_07's func_ovl0F_07_80043A58 again.
- *   `if ((s32)vel[0] != (s32)dx)` gives `beq dx,vel`, the original
- *   `beq vel,dx` (z too; written the other way round it's the same); in
- *   the pack at the end the original keeps 500.0f in $f0 and the vel[0]
- *   preload in $f6 (ours $f12/$f0), and has a nop after the hit path's
- *   mul.s. One word short, so the rest is shifted.
+ * ovl_0F_08 matches in us, eu and jp. What did it, from 72 words:
+ * - func_ovl0F_08_80043A28 (64 to 0): ovl_17_10's func_ovl17_10_80044564
+ *   (src/, it matches): vel and pos are Vec3f and the tests are written
+ *   `(s32)dx != (s32)vel.x` (the original's `beq vel,dx`, and 500.0f in
+ *   $f0 at the end). The else path packs vel in place; only the hit path
+ *   calls the inlined static 80043968, which is defined in "panels.c": the
+ *   `.file` at its body gives the hit path's `nop` after its mul.s (the
+ *   missing word), and the else path, with no static, has no `.file` (as
+ *   a static there, it costs the else path its schedule).
+ * - func_ovl0F_08_800433DC (8 to 0): the loops 800433BC (case 2) and
+ *   80043020 (case 1) are defined in "panels.c", which puts each loop's
+ *   `move s2,zero` after its table and count, as in ovl_0F_04. Case 2's
+ *   D_ovl0F_08_80045DA0[2] stores and their `break` are in "panels.c"
+ *   (`#line` in the handler, back to "1FF8F0.c" after the break), which
+ *   puts `lui at,0x4516` ahead of `lw t8,8(s1)`; switching back before the
+ *   break costs the `b`'s delay slot. ovl_0F_05 and 0F_07 have the same
+ *   stores.
+ * The `#line N "1FF8F0.c"` lines are the physical line numbers (the file
+ * named the same whatever path it is compiled by).
  */
 #include "common.h"
+#line 30 "1FF8F0.c"
 
 /*
  * ovl_0F_08's game object, IDO -O3: the functions are written last to first
@@ -300,17 +302,16 @@ void func_ovl0F_08_800440A8(UnkStructA *arg0) {
     func_ovl0F_08_80045230(arg0, 0x01000000);
 }
 
-static void func_ovl0F_08_80043A20(s16 x, s16 z, f32 *vel) {
-    vel[0] = x * 0.002f;
-    vel[2] = z * 0.002f;
+static void func_ovl0F_08_80043A20(s16 x, s16 z, Vec3f *vel) {
+    vel->x = x * 0.002f;
+    vel->z = z * 0.002f;
 }
 
 void func_ovl0F_08_80043A28(UnkStructA *arg0) {
-    f32 vel[3];
+    Vec3f vel;
     f32 dx;
     f32 dz;
-    f32 pos[3];
-    UnkStructA_40 *p;
+    Vec3f pos;
 
     dx = arg0->unk40->unk10 - arg0->unk58;
     dz = arg0->unk40->unk18 - arg0->unk60;
@@ -326,58 +327,59 @@ void func_ovl0F_08_80043A28(UnkStructA *arg0) {
         D_ovl0F_08_80045B28 = 0;
         return;
     }
-    p = arg0->unk40;
-    pos[0] = p->unk10;
-    pos[1] = p->unk14;
-    pos[2] = p->unk18;
-    func_ovl0F_08_80043A20(arg0->unk64 >> 16, arg0->unk64 & 0xFFFF, vel);
-    if ((s32)vel[0] != (s32)dx) {
+    pos.x = arg0->unk40->unk10;
+    pos.y = arg0->unk40->unk14;
+    pos.z = arg0->unk40->unk18;
+    func_ovl0F_08_80043A20(arg0->unk64 >> 16, arg0->unk64 & 0xFFFF, &vel);
+    if ((s32)dx != (s32)vel.x) {
         arg0->unk40->unk10 = arg0->unk58;
-        if ((s32)dx < (s32)vel[0]) {
-            vel[0] -= (dz != 0.0f ? 0.707f : 1.0f) * (dx != 0.0f ? D_ovl0F_08_80045B24 : D_ovl0F_08_80045B20);
-            if (vel[0] < dx) {
-                vel[0] = dx;
+        if ((s32)dx < (s32)vel.x) {
+            vel.x -= (dz != 0.0f ? 0.707f : 1.0f) * (dx != 0.0f ? D_ovl0F_08_80045B24 : D_ovl0F_08_80045B20);
+            if (vel.x < dx) {
+                vel.x = dx;
             }
             func_ovl0F_08_80043978(dx);
-        } else if ((s32)vel[0] < (s32)dx) {
-            vel[0] += (dz != 0.0f ? 0.707f : 1.0f) * (dx != 0.0f ? D_ovl0F_08_80045B24 : D_ovl0F_08_80045B20);
-            if (dx < vel[0]) {
-                vel[0] = dx;
+        } else if ((s32)vel.x < (s32)dx) {
+            vel.x += (dz != 0.0f ? 0.707f : 1.0f) * (dx != 0.0f ? D_ovl0F_08_80045B24 : D_ovl0F_08_80045B20);
+            if (dx < vel.x) {
+                vel.x = dx;
             }
             func_ovl0F_08_80043978(dx);
         }
-        arg0->unk40->unk10 += vel[0];
+        arg0->unk40->unk10 += vel.x;
     }
-    if ((s32)vel[2] != (s32)dz) {
+    if ((s32)dz != (s32)vel.z) {
         arg0->unk40->unk18 = arg0->unk60;
-        if ((s32)dz < (s32)vel[2]) {
-            vel[2] -= (dx != 0.0f ? 0.707f : 1.0f) * (dz != 0.0f ? D_ovl0F_08_80045B24 : D_ovl0F_08_80045B20);
-            if (vel[2] < dz) {
-                vel[2] = dz;
+        if ((s32)dz < (s32)vel.z) {
+            vel.z -= (dx != 0.0f ? 0.707f : 1.0f) * (dz != 0.0f ? D_ovl0F_08_80045B24 : D_ovl0F_08_80045B20);
+            if (vel.z < dz) {
+                vel.z = dz;
             }
             func_ovl0F_08_80043978(dz);
-        } else if ((s32)vel[2] < (s32)dz) {
-            vel[2] += (dx != 0.0f ? 0.707f : 1.0f) * (dz != 0.0f ? D_ovl0F_08_80045B24 : D_ovl0F_08_80045B20);
-            if (dz < vel[2]) {
-                vel[2] = dz;
+        } else if ((s32)vel.z < (s32)dz) {
+            vel.z += (dx != 0.0f ? 0.707f : 1.0f) * (dz != 0.0f ? D_ovl0F_08_80045B24 : D_ovl0F_08_80045B20);
+            if (dz < vel.z) {
+                vel.z = dz;
             }
             func_ovl0F_08_80043978(dz);
         }
-        arg0->unk40->unk18 += vel[2];
+        arg0->unk40->unk18 += vel.z;
     }
     if (func_ovl0F_08_80043970(arg0)) {
         func_ovl0F_08_80043968(&arg0->unk64, 0.0f, 0.0f);
-        arg0->unk40->unk10 = pos[0];
-        arg0->unk40->unk14 = pos[1];
-        arg0->unk40->unk18 = pos[2];
+        arg0->unk40->unk10 = pos.x;
+        arg0->unk40->unk14 = pos.y;
+        arg0->unk40->unk18 = pos.z;
     } else {
-        func_ovl0F_08_80043968(&arg0->unk64, vel[0], vel[2]);
+        arg0->unk64 = ((s16)(vel.x * 500.0f) << 16) | ((s16)(vel.z * 500.0f) & 0xFFFF);
     }
 }
 
+#line 1 "panels.c"
 static void func_ovl0F_08_80043968(s32 *dst, f32 x, f32 z) {
     *dst = ((s16)(x * 500.0f) << 16) | ((s16)(z * 500.0f) & 0xFFFF);
 }
+#line 389 "1FF8F0.c"
 
 static s32 func_ovl0F_08_80043970(UnkStructA *arg0) {
     s32 hit;
@@ -462,6 +464,7 @@ static void func_ovl0F_08_800433C4(void) {
     func_ovl0F_08_800430BC();
 }
 
+#line 1 "panels.c"
 static void func_ovl0F_08_800433BC(s32 arg1, UnkStruct_ovl0F_08_80045B90 *arg0) {
     s32 i;
 
@@ -475,6 +478,7 @@ static void func_ovl0F_08_800433BC(s32 arg1, UnkStruct_ovl0F_08_80045B90 *arg0) 
         arg0++;
     }
 }
+#line 488 "1FF8F0.c"
 
 static void func_ovl0F_08_80043330(void) {
     func_ovl0F_08_80044F20(D_ovl0F_08_80045DA0[3]->unk40, 0x61);
@@ -525,6 +529,7 @@ static void func_ovl0F_08_800431F8(void) {
     D_ovl0F_08_80045B28 = 0;
 }
 
+#line 1 "panels.c"
 static void func_ovl0F_08_80043020(s32 count, UnkStruct_ovl0F_08_80045B90 *p) {
     s32 i;
 
@@ -533,6 +538,7 @@ static void func_ovl0F_08_80043020(s32 count, UnkStruct_ovl0F_08_80045B90 *p) {
         p++;
     }
 }
+#line 548 "1FF8F0.c"
 
 static void func_ovl0F_08_80043018(void) {
     D_ovl0F_08_80045DD4 = func_ovl0F_08_80044A08();
@@ -557,6 +563,7 @@ void func_ovl0F_08_800433DC(s32 arg0) {
             } else {
                 func_ovl0F_08_800432B4(0x27A);
             }
+#line 1 "panels.c"
             D_ovl0F_08_80045DA0[2]->unk40->unk10 = 2400.0f;
             D_ovl0F_08_80045DA0[2]->unk40->unk14 = 2600.0f;
             D_ovl0F_08_80045DA0[2]->unk40->unk18 = 5200.0f;
@@ -564,6 +571,7 @@ void func_ovl0F_08_800433DC(s32 arg0) {
             D_ovl0F_08_80045DA0[2]->unk40->unk2C = 16.0f;
             D_ovl0F_08_80045DA0[2]->unk40->unk30 = 16.0f;
             break;
+#line 581 "1FF8F0.c"
         case 17:
             func_ovl0F_08_80044A20(0xC0);
             func_ovl0F_08_800449E0(0x29, 0, 0x12);
