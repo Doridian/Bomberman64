@@ -1,25 +1,34 @@
 /*
  * NON_MATCHING: ovl_10_10's game object, complete: every function and its
  * .data/.bss/.rodata (sizes 0x80/0xB0/0x490 and contents as the
- * original); .text one word short. Not built into the ROM
+ * original) and .text its size. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 81, eu 81, jp 81
+ * differing words: us 6, eu 6, jp 6
  *
  * What still differs in us (words; eu and jp the same), all of it as in
  * ovl_10_11's draft of the same code:
  * - func_ovl10_10_800431AC (6): 800473F8/800473FC are loaded in the
  *   order of the stores (the original loads them as the call's
- *   arguments, a1 first) and the call's `move a2,zero` is scheduled
- *   before the jal.
- * - func_ovl10_10_80043D88 (62): one word short. The original builds
- *   the addresses of 80047468-800474B0 in registers (lui/addiu/addu,
- *   a2/a3/t0/t1); ours stores them through `at`. While and for loops
- *   are worse (93 words).
- * - func_ovl10_10_80044CA0 (2): the two stores of `y` (sp+0x74 and the
- *   call's sp+0x18) swap.
- * - func_ovl10_10_80045700 (11): the same code; the padding after its
- *   endless loop is a word longer because 80043D88 is a word short.
+ *   arguments, a1 first: lui a0, lui a1, lw a1, lw a0) and the call's
+ *   `move a2,zero` is scheduled before the jal (the original has it in
+ *   the delay slot and `sw a1` before the jal). Tried: every order of the
+ *   two loads, two stores and the move in ugen's output, with any .loc
+ *   lines (scratch/10_10/hp4.py, assembling edited ugen output with as1):
+ *   as1 gives only the four orders "lui X; lw X; ...", never the
+ *   original. A .file before the move gives the delay slot (4 words left);
+ *   a .file between the loads and the stores gives the loads' order but a
+ *   nop after them. Locals, chained/comma assignments, volatile, a
+ *   pointer to 800470C4, statement order and #line renumbering don't
+ *   change it, and an inlined static to get a .file would leave a stub.
+ *
+ * Fixed: 80043D88 (62, and 80045700's padding, 11) by the empty
+ * `do {} while (0);` before the stores of 80047468-800474B0: after it uopt
+ * strength-reduces their addresses instead of hoisting the bases, and with
+ * no saved register left for them they are rebuilt in a2/a3/t0/t1 as the
+ * original's lui/addiu/addu. 80044CA0 (2) by passing out[1] rather than y
+ * to func_ovl10_10_80045D20: y's spill (sp+0x74) is then put out before
+ * the argument's store.
  *
  * ovl_10_10's game object, IDO -O3: the functions are written last to first
  * (IDO -O3 emits a file's functions in reverse). Most of it is ovl_10_11's
@@ -526,7 +535,7 @@ void func_ovl10_10_80044CA0(void) {
             y = out[1];
             func_ovl10_10_80045D20(D_ovl10_10_80047388[i][0], D_ovl10_10_80047388[i][1], D_ovl10_10_80047388[i][2],
                                    D_ovl10_10_80047388[i][0] + 1, D_ovl10_10_80047388[i][2] + 1,
-                                   D_ovl10_10_80047388[i][0], y, D_ovl10_10_80047388[i][2]);
+                                   D_ovl10_10_80047388[i][0], out[1], D_ovl10_10_80047388[i][2]);
             func_ovl10_10_80045D28(D_ovl10_10_80047388[i][0], D_ovl10_10_80047388[i][1], D_ovl10_10_80047388[i][2],
                                    D_ovl10_10_80047388[i][0] + 1, D_ovl10_10_80047388[i][2] + 1, 0);
             D_ovl10_10_80047450[i] = D_ovl10_10_80047388[i][1];
@@ -583,6 +592,8 @@ void func_ovl10_10_80043D88(s32 *arg0) {
         D_ovl10_10_80047400[i] = arg0[4];
         D_ovl10_10_80047418[i] = arg0[5];
         D_ovl10_10_80047430[i] = arg0[6];
+        /* a uopt block boundary: the addresses below are strength-reduced */
+        do {} while (0);
         D_ovl10_10_80047468[i] = arg0[7];
         D_ovl10_10_80047480[i] = arg0[8];
         D_ovl10_10_80047498[i] = arg0[9];
