@@ -5,7 +5,7 @@
  * (the .data and .rodata words too).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 76, eu 723, jp 76 (eu not re-measured)
+ * differing words: us 0, eu 0, jp 0
  *
  * The sibling of ovl_0D_04 (nonmatching/overlays/ovl_0D_04): its gate code
  * (80044414, 80044808, 800440AC) and model tables are the same. The
@@ -17,9 +17,11 @@
  * What fixed what (from 552 words in jp, us not re-measured):
  * - ovl_0D_04's and ovl_0D_02's gate code ported: the clamp 80044398 is
  *   (axis, v, size), the direction 8004440C takes the entity, 80044414's
- *   case 1 computes z2 from grid[2] and case 0's first statement is in a
- *   "panels.c" region (the static 80045184 is defined there, so the file
- *   exists). 80045DC8's second and fourth calls pass 0x11 here (checked).
+ *   case 1 computes z2 as z0 + 1 with `len = x1 + z1` (a dead fake) ahead
+ *   of x0's set-up (ovl_0D_02's header says why), and case 0's first
+ *   statement is in a "panels.c" region (the static 80045184 is defined
+ *   there, so the file exists). 80045DC8's second and fourth calls pass
+ *   0x11 here (checked).
  * - 8004518C: the camera static's call in a "panels.c" region (1600.0f in
  *   $f16, both its 1600s floats); the empty static 80045184 called after
  *   the 8004517C rows (the frame and the first statement's place).
@@ -35,18 +37,21 @@
  * - 800435FC: its address taken in an `if (0)` in 80043500 (a fake): as
  *   an address-taken static it uses t0-t5 for the 7-argument calls, as the
  *   original, and still comes out after 8004355C.
- * - 8004305C: i = 1 before the first 80046790 call and i++ (not i = 2):
- *   the original's run-time index of D_ovl0D_06_800470BC[2] (4 words).
- * What still differs (jp):
- * - func_ovl0D_06_8004305C (73): the original keeps i in s0 across the
- *   calls (`li s0,1` before the first, `li s0,2` again before the third)
- *   and multiplies it at run time for D_ovl0D_06_80047164[2] and [3]
- *   (`multu s0,v1`, v1 = 0x38); ours shares i*56 with 800470BC[2] and
- *   spills it; the frame is 0x48 (ours 0x40). Tried: every placement of
- *   i = 1 / i++ / i = 2 / i = 3 and literal indexes (64 variants), the empty
- *   static 80043010 called here.
- * - func_ovl0D_06_8004435C (3; 80044414 with it): case 1's z2, the same 3
- *   words as ovl_0D_02's 8004311C and ovl_0D_04's 80043F24.
+ * - 8004305C (from 73 words): each array walked with i from 0, as
+ *   `i = 0; f(A[i++].obj)` (a post-increment in a call's argument folds
+ *   A[i] after it to a constant address; a separate i++ gives a run-time
+ *   index, s0 * 56), so 800470BC[2] and 80047164[2] and [3] are run-time
+ *   indexes and i stays in s0 (`li s0,1`, `li s0,2` in the calls' delay
+ *   slots, `multu` by 0x38 for 80047164); with one i walking both arrays
+ *   uopt shared i*56 between them and spilled it. The frame (0x48) takes a
+ *   local j for 80045E58's result (`j = D_ovl0D_06_80047604 = ...`, which
+ *   also puts `move a0,v0` right after the store) and the empty static
+ *   80043010 called once more after 80045E60 (a fake; unused locals do it
+ *   too). That statement in a "panels.c" region (a fake): the `.file`
+ *   after it ends as1's block, so the loads of 800475F8[2] and [0] for
+ *   80045E60 stay after the store (ugen marks the two addresses
+ *   `.noalias`, and as1 hoisted them; hand-edited ugen output with a
+ *   `.file` there gave the original).
  */
 #include "common.h"
 #line 53 "1ACF60.c"
@@ -883,6 +888,7 @@ static void func_ovl0D_06_80044414(Ent_0D06 *e) {
 
     p = e->obj->unk40;
     func_ovl0D_06_80045DE0(p->unk10, p->unk14, p->unk18, grid, 0);
+    len = x1 + z1; /* a fake (see the top) */
     x0 = grid[0];
     y0 = grid[1];
     z0 = grid[2];
@@ -919,7 +925,7 @@ static void func_ovl0D_06_80044414(Ent_0D06 *e) {
             z0 = grid[2] - 4;
             x1 = grid[0] + len;
             x3 = x1;
-            z2 = grid[2] - 3; /* not z0 + 1 (see the top) */
+            z2 = z0 + 1;
             z3 = z1 - 1;
             x2 = grid[0];
             break;
@@ -1299,20 +1305,26 @@ static void func_ovl0D_06_800431D8(void) {
 
 void func_ovl0D_06_8004305C(void) {
     s32 i;
+    s32 j;
 
     if (func_ovl0D_06_80046B60(0x409) != 0) {
         func_ovl0D_06_80043018(D_ovl0D_06_800472BC[0].obj);
-        D_ovl0D_06_80047604 = func_ovl0D_06_80045E58(0x15B);
-        func_ovl0D_06_80045E60(D_ovl0D_06_80047604, 0, 0, D_ovl0D_06_800475F8[0] - 1, D_ovl0D_06_800475F8[2] - 1, 0, 0, 0);
-        i = 1;
-        func_ovl0D_06_80046790(D_ovl0D_06_800470BC[0].obj, 0x01000000);
+        /* a fake (see the top) */
+#line 1 "panels.c"
+        j = D_ovl0D_06_80047604 = func_ovl0D_06_80045E58(0x15B);
+#line 1307 "1ACF60.c"
+        func_ovl0D_06_80045E60(j, 0, 0, D_ovl0D_06_800475F8[0] - 1, D_ovl0D_06_800475F8[2] - 1, 0, 0, 0);
+        func_ovl0D_06_80043010(); /* a fake (see the top) */
+        i = 0;
+        func_ovl0D_06_80046790(D_ovl0D_06_800470BC[i++].obj, 0x01000000);
         D_ovl0D_06_800470BC[i].unk18 = 180.0f;
         D_ovl0D_06_800470BC[i].obj->unk40->unk14 = D_ovl0D_06_800470BC[i].unk18 * 10.0f;
         i++;
         D_ovl0D_06_800470BC[i].unk18 = 20.0f;
         D_ovl0D_06_800470BC[i].obj->unk40->unk14 = D_ovl0D_06_800470BC[i].unk18 * 10.0f;
-        func_ovl0D_06_80046790(D_ovl0D_06_80047164[0].obj, 0x01000000);
-        func_ovl0D_06_80046790(D_ovl0D_06_80047164[1].obj, 0x01000000);
+        i = 0;
+        func_ovl0D_06_80046790(D_ovl0D_06_80047164[i++].obj, 0x01000000);
+        func_ovl0D_06_80046790(D_ovl0D_06_80047164[i++].obj, 0x01000000);
         D_ovl0D_06_80047164[i].unk18 = 20.0f;
         D_ovl0D_06_80047164[i].obj->unk40->unk14 = D_ovl0D_06_80047164[i].unk18 * 10.0f;
         i++;
