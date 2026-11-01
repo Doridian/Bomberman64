@@ -1144,7 +1144,7 @@ void func_ovl0F_02_80043FEC(void) {
                 if (hit != 0 && ((hit & 0x2000) || (hit & 0x4000))) {
                     func_ovl0F_02_80043FEC_inl1(&D_ovl0F_02_80048734[j]);
                     (*D_ovl0F_02_80048734[j].unk0)->unk68 = 20.0f;
-                    (*D_ovl0F_02_80048734[j].unk0)->unk70 = 0.81666666f;
+                    (*D_ovl0F_02_80048734[j].unk0)->unk70 = 0.8166667f;
                     D_ovl0F_02_800486A4[j].unk11 = 2;
                     func_ovl0F_02_80047E38(func_ovl0F_02_80044B28, (void *) j, 0, 0, 0x150);
                 }
