@@ -3,25 +3,37 @@
  * data (.rodata and .bss as the original).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 306, eu 306, jp 306
+ * differing words: us 21, eu 21, jp 21
  *
- * What still differs in us (words):
- * - func_ovl0E_15_800444C4 (300): mostly the same code with other registers
- *   and stack slots.  Ours keeps &D_ovl0E_15_80046958 in s2 for its three
- *   `= 0` stores (the original uses `lui at` each time, and s2 for a loop
- *   bound), so the s registers of the later loops differ; dz's slot is 84
- *   where the original's is 80; the three divisions by 60 load 60.0f once
- *   (the original three times) and are scheduled differently.
- * - func_ovl0E_15_800433E0 (6): the frame, 0x98 where the original's is
- *   0xA0, and the spilled random value at 0x70 (the original 0x60).  As in
- *   ovl_12_06 and ovl_0C_10, each function inlined into the handler (here
- *   80043378, 80043340 and 80043010) takes 8 bytes below the locals: with
- *   case 2 written out, plus two unused Vec3f locals, the handler matches,
- *   but then 80043340 and 80043378 come out after it.
+ * What came right (from 306):
+ * - func_ovl0E_15_800433E0: case 11 is a static, func_ovl0E_15_80043068,
+ *   inlined into the handler with its own locals (and a pad), as ovl_12_06's
+ *   case 11; its stub is the one at 80043068, and 80043070's wait loop is
+ *   written inline.  The handler's frame (0xA0) and the spilled random value
+ *   (0x60) follow.
+ * - func_ovl0E_15_800444C4: in the 30-frame loop `p = obj1->unk40;` (p in
+ *   s0, as the original) frees s2, so &D_ovl0E_15_80046958 is no longer
+ *   kept in a register; the camera deltas are the differences, divided by
+ *   60 in the loop (hoisted: 60.0f loaded three times, as the original);
+ *   the random values are the call's arguments, not f64 locals.
+ *
+ * What still differs:
+ * - func_ovl0E_15_800444C4 (21): only the frame: 0xB0 where the original's
+ *   is 0xA8, so every slot from y up (y, a, z, snd) is 8 higher and the
+ *   spilled z delta is at 0x54 (the original 0x50).  The three hoisted
+ *   divisions cost the extra slots: with the deltas divided before the loop
+ *   the frame is 0xA8, but uopt then loads 60.0f once (3 words of schedule
+ *   and the registers differ); mixed (some divided before, some in the
+ *   loop, `/ 60` against `/ 60.0f` to keep the constants apart) gets the
+ *   frame and loses the registers.  Tried: the deltas in a block, at
+ *   function level in every position, a Vec3f or an array; f64 locals for
+ *   the random values (rx, ry, rz; the original spills one of them, the
+ *   slot comes right either way); a local less (obj as obj0: no change);
+ *   the statements' order.
  * The text order: 80043340 must be defined above 800444C4 (anywhere above
  * it); defined next to 80043378, the reference to 80045024 it makes pulls
- * 80045024 out ahead of 80044E90.  The two `jr ra; nop` after 80043010 and
- * 800430E4 are statics inlined into the next function, as in ovl_12_06.
+ * 80045024 out ahead of 80044E90.  The `jr ra; nop` after 800430E4 is a
+ * static inlined into 80043180, as in ovl_12_06.
  */
 #include "common.h"
 
@@ -300,9 +312,7 @@ void func_ovl0E_15_80043340(void) {
 }
 
 /* a task, started by the handler's case 4 for D_ovl0E_15_80046954 0x10,
- * 0x1A and 0x1B.  The camera deltas are block locals and the random values
- * locals: only so do the stack slots of y, a, z and the spilled random
- * value come out where the original has them. */
+ * 0x1A and 0x1B */
 void func_ovl0E_15_800444C4(void) {
     UnkStructA *obj0;
     UnkStructA *obj1;
@@ -315,9 +325,6 @@ void func_ovl0E_15_800444C4(void) {
     s32 id;
     UnkStructA *obj;
     UnkStructA_40 *p;
-    f64 rx;
-    f64 ry;
-    f64 rz;
 
     obj0 = func_ovl0E_15_80045748(0);
     obj1 = func_ovl0E_15_80045748(1);
@@ -359,15 +366,15 @@ void func_ovl0E_15_800444C4(void) {
         f32 da;
         f32 dz;
 
-        dy = (1250.0f - y) / 60.0f;
-        da = (35.0f - a) / 60.0f;
-        dz = (1770.0f - z) / 60.0f;
+        dy = 1250.0f - y;
+        da = 35.0f - a;
+        dz = 1770.0f - z;
         for (j = 0; j < 60; j++) {
             func_ovl0E_15_80045D48(32768.0f, y, 32768.0f);
             func_ovl0E_15_80045D68(32768.0f, a, z);
-            y += dy;
-            a += da;
-            z += dz;
+            y += dy / 60.0f;
+            a += da / 60.0f;
+            z += dz / 60.0f;
             func_ovl0E_15_800460A0();
         }
     }
@@ -379,10 +386,7 @@ void func_ovl0E_15_800444C4(void) {
         } else {
             id = 0x16;
         }
-        rx = func_ovl0E_15_80046210();
-        ry = func_ovl0E_15_80046210();
-        rz = func_ovl0E_15_80046210();
-        func_ovl0E_15_800464A8(id, rx * 500.0 + 2100.0, ry * 500.0 + 1050.0, rz * 500.0 + 950.0, 0);
+        func_ovl0E_15_800464A8(id, func_ovl0E_15_80046210() * 500.0 + 2100.0, func_ovl0E_15_80046210() * 500.0 + 1050.0, func_ovl0E_15_80046210() * 500.0 + 950.0, 0);
         if (j == 54) {
             func_ovl0E_15_800465E0(0x22C);
             func_ovl0E_15_80045BF0(snd);
@@ -427,7 +431,8 @@ void func_ovl0E_15_800444C4(void) {
         if (j == 5) {
             obj1->unk40->unk48->unk4->unk8 |= 0x40;
         }
-        obj1->unk40->unk18 += 5.0f;
+        p = obj1->unk40;
+        p->unk18 += 5.0f;
         func_ovl0E_15_800460A0();
     }
     if (D_ovl0E_15_80046954 == 0x1B) {
@@ -782,16 +787,11 @@ void func_ovl0E_15_800430E4(void) {
     }
 }
 
-/* inlined into func_ovl0E_15_80043070, its stub just before it */
-static void func_ovl0E_15_80043068(void) {
-    while (D_ovl0E_15_80046958 != 0) {
-        func_ovl0E_15_800460A0();
-    }
-}
-
 void func_ovl0E_15_80043070(void) {
     if (D_ovl0E_15_80046954 == 0x10 || D_ovl0E_15_80046954 == 0x1A || D_ovl0E_15_80046954 == 0x1B) {
-        func_ovl0E_15_80043068();
+        while (D_ovl0E_15_80046958 != 0) {
+            func_ovl0E_15_800460A0();
+        }
         func_ovl0E_15_800456F8(0);
     }
     /* empty: without it the function is small enough to be inlined into
@@ -809,13 +809,74 @@ void func_ovl0E_15_80043010(void) {
     }
 }
 
-/* The overlay's handler: the entry returns it to the loader. */
-void func_ovl0E_15_800433E0(s32 arg0) {
+/* Case 11: a static inlined into the handler (as in ovl_12_06); its stub
+ * is the one at 80043068. */
+static void func_ovl0E_15_80043068(void) {
+    s32 pad; /* unused: places the block (the handler's frame 0xA0) */
     UnkStructA *obj0;
     UnkStructA *obj1;
     s32 i;
     s32 id;
 
+    if (func_ovl0E_15_800456A0(1) == 3) {
+        return;
+    }
+    obj0 = func_ovl0E_15_80045748(0);
+    obj1 = func_ovl0E_15_80045748(1);
+    func_ovl0E_15_800456F8(0);
+    func_ovl0E_15_80045D48(2350.0f, 52.0f, 1668.0f);
+    func_ovl0E_15_80045D68(0.0f, 45.0f, 2157.0f);
+    func_ovl0E_15_80046078(30);
+    func_ovl0E_15_800465E0(0x22E);
+    obj1->unk40->unkC |= 0x4000;
+    func_ovl0E_15_80045C30(obj1->unk40, 7, 0);
+    func_ovl0E_15_80045C30(obj1->unk40, -1, 1);
+    obj1->unk40->unk48->unk4->unk8 |= 0x20;
+    obj1->unk40->unk48->unk4->unk8 &= ~0x40;
+    func_ovl0E_15_80046078(30);
+    func_ovl0E_15_80046058(func_ovl0E_15_80044290, obj1, 0, 0, 0x130);
+    func_ovl0E_15_80046078(30);
+    func_ovl0E_15_80046078(60);
+    D_ovl0E_15_80046960 = 0;
+    for (i = 0; i < 4; i++) {
+        func_ovl0E_15_80046058(func_ovl0E_15_80044048, obj1, 0, 0, 0x130);
+    }
+    func_ovl0E_15_800456A8(50);
+    func_ovl0E_15_800465F8();
+    for (i = 0; i < 32; i++) {
+        func_ovl0E_15_80046218(0x100);
+        func_ovl0E_15_80046058(func_ovl0E_15_80043E8C, obj1, 0, 0, 0x130);
+        if (func_ovl0E_15_80046218(0x100) & 1) {
+            id = 0xC;
+        } else {
+            id = 0x18;
+        }
+        func_ovl0E_15_800464A8(id, func_ovl0E_15_80046210() * 160.0 + (obj1->unk40->unk10 - 80.0f),
+                               func_ovl0E_15_80046210() * 50.0 + obj1->unk40->unk14 + 50.0,
+                               func_ovl0E_15_80046210() * 160.0 + (obj1->unk40->unk18 - 80.0f), 0);
+        func_ovl0E_15_80046078(4);
+    }
+    func_ovl0E_15_800465E0(0x230);
+    func_ovl0E_15_800465E0(0x1B8);
+    func_ovl0E_15_80046058(func_ovl0E_15_80043D4C, obj1, 0, 0, 0x130);
+    func_ovl0E_15_80046058(func_ovl0E_15_80043C18, obj1, 0, 0, 0x130);
+    for (i = 0; i < 40; i++) {
+        obj1->unk40->unk14 += 25.0f;
+        func_ovl0E_15_800460A0();
+    }
+    func_ovl0E_15_80045F10(obj1, 0x01000000);
+    func_ovl0E_15_80046078(60);
+    obj0 = func_ovl0E_15_80045748(0);
+    func_ovl0E_15_80045D48(obj0->unk40->unk10, 50.0f, obj0->unk40->unk18);
+    func_ovl0E_15_80045D68(obj0->unk40->unk20, 20.0f, 800.0f);
+    func_ovl0E_15_800456F8(0);
+    func_ovl0E_15_800456A8(32);
+    func_ovl0E_15_80046280();
+    D_ovl0E_15_8004695C = 1;
+}
+
+/* The overlay's handler: the entry returns it to the loader. */
+void func_ovl0E_15_800433E0(s32 arg0) {
     switch (arg0) {
         case 2:
             D_ovl0E_15_80046954 = func_ovl0E_15_80045608();
@@ -836,61 +897,7 @@ void func_ovl0E_15_800433E0(s32 arg0) {
             func_ovl0E_15_80043070();
             break;
         case 11:
-            if (func_ovl0E_15_800456A0(1) == 3) {
-                break;
-            }
-            obj0 = func_ovl0E_15_80045748(0);
-            obj1 = func_ovl0E_15_80045748(1);
-            func_ovl0E_15_800456F8(0);
-            func_ovl0E_15_80045D48(2350.0f, 52.0f, 1668.0f);
-            func_ovl0E_15_80045D68(0.0f, 45.0f, 2157.0f);
-            func_ovl0E_15_80046078(30);
-            func_ovl0E_15_800465E0(0x22E);
-            obj1->unk40->unkC |= 0x4000;
-            func_ovl0E_15_80045C30(obj1->unk40, 7, 0);
-            func_ovl0E_15_80045C30(obj1->unk40, -1, 1);
-            obj1->unk40->unk48->unk4->unk8 |= 0x20;
-            obj1->unk40->unk48->unk4->unk8 &= ~0x40;
-            func_ovl0E_15_80046078(30);
-            func_ovl0E_15_80046058(func_ovl0E_15_80044290, obj1, 0, 0, 0x130);
-            func_ovl0E_15_80046078(30);
-            func_ovl0E_15_80046078(60);
-            D_ovl0E_15_80046960 = 0;
-            for (i = 0; i < 4; i++) {
-                func_ovl0E_15_80046058(func_ovl0E_15_80044048, obj1, 0, 0, 0x130);
-            }
-            func_ovl0E_15_800456A8(50);
-            func_ovl0E_15_800465F8();
-            for (i = 0; i < 32; i++) {
-                func_ovl0E_15_80046218(0x100);
-                func_ovl0E_15_80046058(func_ovl0E_15_80043E8C, obj1, 0, 0, 0x130);
-                if (func_ovl0E_15_80046218(0x100) & 1) {
-                    id = 0xC;
-                } else {
-                    id = 0x18;
-                }
-                func_ovl0E_15_800464A8(id, func_ovl0E_15_80046210() * 160.0 + (obj1->unk40->unk10 - 80.0f),
-                                       func_ovl0E_15_80046210() * 50.0 + obj1->unk40->unk14 + 50.0,
-                                       func_ovl0E_15_80046210() * 160.0 + (obj1->unk40->unk18 - 80.0f), 0);
-                func_ovl0E_15_80046078(4);
-            }
-            func_ovl0E_15_800465E0(0x230);
-            func_ovl0E_15_800465E0(0x1B8);
-            func_ovl0E_15_80046058(func_ovl0E_15_80043D4C, obj1, 0, 0, 0x130);
-            func_ovl0E_15_80046058(func_ovl0E_15_80043C18, obj1, 0, 0, 0x130);
-            for (i = 0; i < 40; i++) {
-                obj1->unk40->unk14 += 25.0f;
-                func_ovl0E_15_800460A0();
-            }
-            func_ovl0E_15_80045F10(obj1, 0x01000000);
-            func_ovl0E_15_80046078(60);
-            obj0 = func_ovl0E_15_80045748(0);
-            func_ovl0E_15_80045D48(obj0->unk40->unk10, 50.0f, obj0->unk40->unk18);
-            func_ovl0E_15_80045D68(obj0->unk40->unk20, 20.0f, 800.0f);
-            func_ovl0E_15_800456F8(0);
-            func_ovl0E_15_800456A8(32);
-            func_ovl0E_15_80046280();
-            D_ovl0E_15_8004695C = 1;
+            func_ovl0E_15_80043068();
             break;
         case 1:
             func_ovl0E_15_80043010();
