@@ -1,11 +1,7 @@
 /*
- * NON_MATCHING: ovl_0F_01's game object, complete: every function and its
- * data (.data and .bss as the original's sizes).
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, jp 0
+ * ovl_0F_01's game object, IDO -O3; it matches in us, eu and jp.
  *
- * ovl_0F_04's draft (1F2230.c) ported where the code is the same: the
+ * ovl_0F_04's object (1F2230.c) ported where the code is the same: the
  * movers (8004464C with its _inl0/_inl1, 80044E54, 80045158, 8004529C,
  * the script step 80044408 with its five empty statics, the turn
  * 800441CC), the particles (8004540C and its loop static 80045404, the
@@ -91,8 +87,7 @@
  *   4's 0x4C) has q and obj as its locals (obj first), y and i in the
  *   case 15 and case 4 statics, the unused pad[12] in 800430F8 and pad[2]
  *   in 80043020.
- * There are no VERSION conditionals (none in the earlier draft either);
- * only jp is measured.
+ * There are no VERSION conditionals.
  */
 #include "common.h"
 
@@ -507,7 +502,7 @@ char D_ovl0F_01_800485B0[] = "WM1 WG1 WSH WAP WDS WB2 ST30";
 char D_ovl0F_01_800485D0[] = "WM1 WG1 WSH WAP WDE WB1 ST30";
 
 /* unused: the stubs IDO -O3 leaves at the end of the object */
-static void func_ovl0F_01_80046A78(void) {
+static void func_ovl0F_01_80046A78(void) { if (0) { D_ovl0F_01_8004874C[0] = D_ovl0F_01_8004875C[0] = D_ovl0F_01_80048770[0] = D_ovl0F_01_8004877C[0] = D_ovl0F_01_80048794[0] = D_ovl0F_01_80048934[0] = 0; } /* the unused .bss keeps its place */
 }
 
 static void func_ovl0F_01_80046A80(void) {

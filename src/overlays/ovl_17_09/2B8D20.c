@@ -1,15 +1,8 @@
 /*
- * NON_MATCHING: ovl_17_09's game object, complete: every function and its
- * data.
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
- *
- * (jp measured; us and eu compile but are not measured, and the file has
- * no version conditionals.)
+ * ovl_17_09's game object, IDO -O3; it matches in us, eu and jp.
  *
  * Every function and stub comes out in the original's order, at the
- * original's address. The order is ovl_0F_04's (see its draft): the
+ * original's address. The order is ovl_0F_04's (see its source): the
  * handler (func_ovl17_09_80043290) is compiled first, its direct callees
  * (80043010, the static 80043144) come out first with its inlined
  * statics' stubs, in the reverse of its cases and calls. The six stubs
@@ -189,6 +182,7 @@ Vec3f D_ovl17_09_80046560;
 UnkStructA *D_ovl17_09_8004656C;
 f32 D_ovl17_09_80046570;
 f32 D_ovl17_09_80046574;
+u8 D_ovl17_09_80046578[0x8];
 
 /* .data */
 UnkStruct_ovl17_09_80046280 *D_ovl17_09_80046280 = NULL;
@@ -224,6 +218,10 @@ static void func_ovl17_09_80044B90(void) {
     /* fake: 800448A0 comes out after 80044828 (the header) */
     if (0) {
         func_ovl17_09_80045068((void (*)(UnkStructA *)) func_ovl17_09_800448A0, 0);
+        /* and the .bss nothing uses keeps its place (unreferenced, -O3
+         * drops it) */
+        D_ovl17_09_80046390[0] = D_ovl17_09_800463BC[0] = D_ovl17_09_800463CC[0] =
+            D_ovl17_09_80046578[0] = 0;
     }
 }
 
@@ -672,7 +670,7 @@ static void func_ovl17_09_80043288(void) {
     if (func_ovl17_09_800450D8()->unk10 == 0) {
         D_ovl17_09_800462A8 = 8.5f;
     } else {
-        D_ovl17_09_800462A8 = 15.3f;
+        D_ovl17_09_800462A8 = 15.299999f;
     }
 }
 

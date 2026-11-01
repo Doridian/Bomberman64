@@ -1,9 +1,5 @@
 /*
- * NON_MATCHING: ovl_0F_04's game object, complete: every function and its
- * data (.data and .bss as the original's sizes).
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, jp 0
+ * ovl_0F_04's game object, IDO -O3; it matches in us, eu and jp.
  *
  * Every function comes out in the original's order, and so do the
  * stubs. The order is ovl_0F_02's (and ovl_0F_03's): the functions are defined in
@@ -71,7 +67,7 @@
  * schedules below; the original likely #included part of the file, but
  * the renumberings are fakes.
  *
- * Every function matches (jp; us and eu not yet built). Per function:
+ * Per function:
  * - The handler matches. Its statics for the panels (80043578, the search
  *   80043BC0, the case-1 loop 80043020, the case-2 loop _inl0), the
  *   wrapper _inl4 (the 80043578 call) and case 1's and case 0x52's code
@@ -249,7 +245,7 @@ typedef struct {
     /* 0x18 */ u16 (*unk18)[2];
     /* 0x1C */ s32 unk1C;
     /* 0x20 */ void (*unk20)(s32, s32);
-} UnkStruct_ovl0F_04_80048C90; /* size 0x24 */
+} UnkStruct_ovl0F_04_80048C90; /* 0x24, but the original's .bss (0x240) ends at 0x20: unk20 is past it */
 
 /* one of the particles func_ovl0F_04_8004544C draws (D_ovl0F_04_80048AF0) */
 typedef struct {
@@ -546,11 +542,7 @@ s32 D_ovl0F_04_800488FC[7] = { 8, 0x1D, 9, 0x1E, 0x5A, 0x14, 0 };
 UnkStruct_ovl0F_04_80048918 D_ovl0F_04_80048918[2] = {
     { 0x40, 3, 8.5f, 3, 0, 1, 0 },
     { 0xE0, 3, 8.5f, 2, 0, 1, 0 },
-};
-char D_ovl0F_04_80048950[] = "MA";
-char D_ovl0F_04_80048954[] = "MA";
-char D_ovl0F_04_80048958[] = "WM1 WG1 WSH WAP WDW WB3 ST10";
-char D_ovl0F_04_80048978[] = "WM1 WG1 WSH WAP WDE WB2 ST30";
+}; /* the scripts' strings, .rodata in this order */ const char D_ovl0F_04_80048950[] = "MA"; const char D_ovl0F_04_80048954[] = "MA"; const char D_ovl0F_04_80048958[] = "WM1 WG1 WSH WAP WDW WB3 ST10"; const char D_ovl0F_04_80048978[] = "WM1 WG1 WSH WAP WDE WB2 ST30";
 
 /* unused: the stubs IDO -O3 leaves at the end of the object */
 static void func_ovl0F_04_80046C70(void) {
@@ -618,7 +610,7 @@ void func_ovl0F_04_80046C58(void) {
 
 static void func_ovl0F_04_800460B4(void) {
     /* fake: first references in descending address order (the header) */
-    if (0) {
+    if (0) { D_ovl0F_04_80048AB4[0] = D_ovl0F_04_80048AC8[0] = D_ovl0F_04_80048AD4[0] = D_ovl0F_04_80048AE8[0] = 0; /* the unused .bss keeps its place */
         func_ovl0F_04_80047258((void (*)(UnkStructA *)) func_ovl0F_04_80045E14, 0);
         func_ovl0F_04_80047258((void (*)(UnkStructA *)) func_ovl0F_04_8004544C, 0);
         func_ovl0F_04_80047258((void (*)(UnkStructA *)) func_ovl0F_04_800452A0, 0);
@@ -705,7 +697,7 @@ static void func_ovl0F_04_800460CC(s32 n1, s32 n2) {
     if (func_ovl0F_04_800472C8()->unk10 == 0) {
         D_ovl0F_04_80048490 = 8.5f;
     } else {
-        D_ovl0F_04_80048490 = 15.3f;
+        D_ovl0F_04_80048490 = 15.299999f;
     }
     D_ovl0F_04_80048488 = 0;
     D_ovl0F_04_8004848C = 0.0f;

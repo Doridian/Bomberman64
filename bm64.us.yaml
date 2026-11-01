@@ -1137,25 +1137,27 @@ segments:
     symbol_name_format: ovl0F_01_$VRAM
     dir: overlays/ovl_0F_01
     subsegments:
-      - [0x1E2D70, asm, ovl_0F_01_entry]
-      - [0x1E2D80, asm]
+      - [0x1E2D70, c, ovl_0F_01_entry]
+      - [0x1E2D80, c]
       - [0x1E6860, hasm, ovl_0F_01_zerojmp]
-      - [0x1E7EA0, rodata]
-      - {type: bss, vram: 0x80048720}
+      - [0x1E7EA0, .data, 1E2D80]
+      - [0x1E8360, .rodata, 1E2D80]
+      - {type: .bss, vram: 0x80048720, name: 1E2D80}
   - name: ovl_0F_02
     type: code
     start: 0x1E8490
     vram: 0x80043000
-    bss_size: 0x240
+    bss_size: 0x250
     exclusive_ram_id: overlay
     symbol_name_format: ovl0F_02_$VRAM
     dir: overlays/ovl_0F_02
     subsegments:
-      - [0x1E8490, asm, ovl_0F_02_entry]
-      - [0x1E84A0, asm]
+      - [0x1E8490, c, ovl_0F_02_entry]
+      - [0x1E84A0, c]
       - [0x1EC430, hasm, ovl_0F_02_zerojmp]
-      - [0x1EDA70, rodata]
-      - {type: bss, vram: 0x80048D00}
+      - [0x1EDA70, .data, 1E84A0]
+      - [0x1EDFA0, .rodata, 1E84A0]
+      - {type: .bss, vram: 0x80048D00, name: 1E84A0}
   - name: ovl_0F_03
     type: code
     start: 0x1EE190
@@ -1174,16 +1176,17 @@ segments:
     type: code
     start: 0x1F2220
     vram: 0x80043000
-    bss_size: 0x240
+    bss_size: 0x250
     exclusive_ram_id: overlay
     symbol_name_format: ovl0F_04_$VRAM
     dir: overlays/ovl_0F_04
     subsegments:
-      - [0x1F2220, asm, ovl_0F_04_entry]
-      - [0x1F2230, asm]
+      - [0x1F2220, c, ovl_0F_04_entry]
+      - [0x1F2230, c]
       - [0x1F6050, hasm, ovl_0F_04_zerojmp]
-      - [0x1F7690, rodata]
-      - {type: bss, vram: 0x80048A70}
+      - [0x1F7690, .data, 1F2230]
+      - [0x1F7B70, .rodata, 1F2230]
+      - {type: .bss, vram: 0x80048A70, name: 1F2230}
   - name: ovl_0F_05
     type: code
     start: 0x1F7C90
@@ -1768,11 +1771,12 @@ segments:
     symbol_name_format: ovl17_09_$VRAM
     dir: overlays/ovl_17_09
     subsegments:
-      - [0x2B8D10, asm, ovl_17_09_entry]
-      - [0x2B8D20, asm]
+      - [0x2B8D10, c, ovl_17_09_entry]
+      - [0x2B8D20, c]
       - [0x2BA950, hasm, ovl_17_09_zerojmp]
-      - [0x2BBF90, rodata]
-      - {type: bss, vram: 0x80046390}
+      - [0x2BBF90, .data, 2B8D20]
+      - [0x2BC010, .rodata, 2B8D20]
+      - {type: .bss, vram: 0x80046390, name: 2B8D20}
   - name: ovl_17_10
     type: code
     start: 0x2BC0A0

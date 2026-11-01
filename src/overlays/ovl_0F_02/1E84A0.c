@@ -1,11 +1,7 @@
 /*
- * NON_MATCHING: ovl_0F_02's game object, complete: every function and its
- * data (.data as the original). Not built into the ROM (docs/DECOMPILING.md,
- * "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, jp 0
+ * ovl_0F_02's game object, IDO -O3; it matches in us, eu and jp.
  *
- * ovl_0F_04's draft (1F2230.c) ported: the same functions in the same
+ * ovl_0F_04's object (1F2230.c) ported: the same functions in the same
  * order, its statics, fakes, pads and `#line`s, with this overlay's
  * names, constants and handler. Its header has the reasons for each; what
  * follows is what is different here. Every function and stub comes out in
@@ -46,8 +42,7 @@
  *   cause looks like a size limit in uopt's allocation. 80046150 has no pad
  *   (ovl_0F_04's 80043578 has pad[1]; with it the frame is 8 bytes bigger).
  *
- * Every function matches, statics included (jp; us and eu not yet
- * built). There are no VERSION conditionals, as in ovl_0F_04's draft.
+ * There are no VERSION conditionals, as in ovl_0F_04's.
  * 800454E8 and its static 800454E0 are ovl_0F_04's 8004544C/80045444
  * renamed, nothing else changed.
  */
@@ -137,7 +132,7 @@ typedef struct {
     /* 0x18 */ u16 (*unk18)[2];
     /* 0x1C */ u8 unk1C[4];
     /* 0x20 */ void (*unk20)(s32, s32);
-} UnkStruct_ovl0F_02_80048F20;
+} UnkStruct_ovl0F_02_80048F20; /* 0x24, but the original's .bss (0x240) ends at 0x20: unk20 is past it */
 
 /* a switch's state */
 typedef struct {
@@ -474,7 +469,7 @@ s32 D_ovl0F_02_80048A70[7] = { 0xD, 1, 0xE, 2, 0x5A, 0x12, 0 };
 UnkStruct_ovl0F_02_80048A8C D_ovl0F_02_80048A8C[2] = {
     { 0x40, 3, 8.5f, 3, 0, 1, 0 },
     { 0xA0, 3, 8.5f, 3, 0, 1, 1 },
-};
+}; /* the scripts' strings, .rodata in this order */ const char D_ovl0F_02_80048B10[] = "MA"; const char D_ovl0F_02_80048B14[] = "MA"; const char D_ovl0F_02_80048B18[] = "WM1 WG1 WSH WAP WDSW WB2"; const char D_ovl0F_02_80048B34[] = "WM1 WG1 WSH WAP WDW WB11 WDNW WB1"; const char D_ovl0F_02_80048B58[] = "M1 ST1 M6 ST1"; const char D_ovl0F_02_80048B68[] = "WM1 WG1 WSH WAP WDNE WB2 WDN WB0"; const char D_ovl0F_02_80048B8C[] = "M2 ST200"; const char D_ovl0F_02_80048B98[] = "WM1 WG1 WSH WAP WDN WB3 WDW WB0"; const char D_ovl0F_02_80048BB8[] = "WM1 WG1 WSH WAP WDW WB5"; const char D_ovl0F_02_80048BD0[] = "M0 M0"; const char D_ovl0F_02_80048BD8[] = "WM1 WG1 WSH WAP WDW WB3 ST10"; const char D_ovl0F_02_80048BF8[] = "WM1 WG1 WSH WAP WDE WB2 ST30";
 /* passed to func_ovl0F_02_80047B60 */
 u32 D_ovl0F_02_80048AC4[17] = {
     0x14, 1, 1, 0, 0, 0, 0, 0, 0, 0x40900000, 0, 0, 0xBE75C28F, 0, 0, 0, 0,
@@ -548,7 +543,7 @@ void func_ovl0F_02_80046DF8(void) {
 
 static void func_ovl0F_02_80046170(void) {
     /* fake: first references in descending address order (the header) */
-    if (0) {
+    if (0) { D_ovl0F_02_80048D44[0] = D_ovl0F_02_80048D58[0] = D_ovl0F_02_80048D64[0] = D_ovl0F_02_80048D78[0] = 0; /* the unused .bss keeps its place */
         func_ovl0F_02_800473C8((void (*)(UnkStructA *)) func_ovl0F_02_80045EB0, 0);
         func_ovl0F_02_800473C8((void (*)(UnkStructA *)) func_ovl0F_02_800454E8, 0);
         func_ovl0F_02_800473C8((void (*)(UnkStructA *)) func_ovl0F_02_8004533C, 0);
@@ -641,7 +636,7 @@ static void func_ovl0F_02_80046178(s32 n1, s32 n2) {
     if (func_ovl0F_02_80047438()->unk10 == 0) {
         D_ovl0F_02_80048600 = 8.5f;
     } else {
-        D_ovl0F_02_80048600 = 15.3f;
+        D_ovl0F_02_80048600 = 15.299999f;
     }
     D_ovl0F_02_800485F8 = 0;
     D_ovl0F_02_800485FC = 0.0f;
@@ -1491,7 +1486,7 @@ void func_ovl0F_02_80043618(void) {
         func_ovl0F_02_80047E80();
     }
     func_ovl0F_02_80047E58(30);
-    func_ovl0F_02_800474F0("MA");
+    func_ovl0F_02_800474F0(D_ovl0F_02_80048B14);
     func_ovl0F_02_80047E48();
 }
 
@@ -1543,15 +1538,15 @@ void func_ovl0F_02_80043404(void) {
     }
     func_ovl0F_02_80047450(0);
     func_ovl0F_02_80047588(1);
-    func_ovl0F_02_800474F0("WM1 WG1 WSH WAP WDSW WB2");
-    func_ovl0F_02_800474F0("WM1 WG1 WSH WAP WDW WB11 WDNW WB1");
+    func_ovl0F_02_800474F0(D_ovl0F_02_80048B18);
+    func_ovl0F_02_800474F0(D_ovl0F_02_80048B34);
     func_ovl0F_02_80047B60(D_ovl0F_02_80048AC4, 0x170, 0);
-    func_ovl0F_02_800474F0("M1 ST1 M6 ST1");
-    func_ovl0F_02_800474F0("WM1 WG1 WSH WAP WDNE WB2 WDN WB0");
-    func_ovl0F_02_800474F0("M2 ST200");
-    func_ovl0F_02_800474F0("WM1 WG1 WSH WAP WDN WB3 WDW WB0");
-    func_ovl0F_02_800474F0("WM1 WG1 WSH WAP WDW WB5");
-    func_ovl0F_02_800474F0("M0 M0");
+    func_ovl0F_02_800474F0(D_ovl0F_02_80048B58);
+    func_ovl0F_02_800474F0(D_ovl0F_02_80048B68);
+    func_ovl0F_02_800474F0(D_ovl0F_02_80048B8C);
+    func_ovl0F_02_800474F0(D_ovl0F_02_80048B98);
+    func_ovl0F_02_800474F0(D_ovl0F_02_80048BB8);
+    func_ovl0F_02_800474F0(D_ovl0F_02_80048BD0);
     func_ovl0F_02_80047E58(60);
     func_ovl0F_02_80048538();
     func_ovl0F_02_80047E48();
@@ -1586,7 +1581,7 @@ static void func_ovl0F_02_80043324(s32 n, char *msg) {
     func_ovl0F_02_80047E38(func_ovl0F_02_80045EB0, (void *) n, 0, 0, 0x130);
     func_ovl0F_02_800474F0(msg);
     func_ovl0F_02_80047588(0);
-    func_ovl0F_02_800474F0("MA");
+    func_ovl0F_02_800474F0(D_ovl0F_02_80048B10);
 }
 
 static void func_ovl0F_02_80043018(void) {
@@ -1676,7 +1671,7 @@ static void func_ovl0F_02_800462F8_inl1(void) {
         func_ovl0F_02_80047B88(0x10);
         func_ovl0F_02_80047B18(0);
         func_ovl0F_02_80047B38(581.4f, 1430.1f, 1133.3f);
-        func_ovl0F_02_80043324(60, "WM1 WG1 WSH WAP WDW WB3 ST10");
+        func_ovl0F_02_80043324(60, D_ovl0F_02_80048BD8);
     }
 }
 
@@ -1691,7 +1686,7 @@ static void func_ovl0F_02_800462F8_inl2(void) {
         func_ovl0F_02_80047B18(1);
         func_ovl0F_02_80047C50();
         func_ovl0F_02_80047C18(D_ovl0F_02_80048D38);
-        func_ovl0F_02_80043324(60, "WM1 WG1 WSH WAP WDE WB2 ST30");
+        func_ovl0F_02_80043324(60, D_ovl0F_02_80048BF8);
     }
 }
 
