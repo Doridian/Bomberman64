@@ -3,7 +3,7 @@
  * data (.data and .bss as the original's sizes).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 27, jp 27
+ * differing words: us 0, jp 0
  *
  * Every function comes out in the original's order, and so do the
  * stubs. The order is ovl_0F_02's (and ovl_0F_03's): the functions are defined in
@@ -47,11 +47,11 @@
  * the original had them (and their stubs) is open.
  *
  * Inlined statics with locals of their own are what give the big
- * functions the original's frames: 8004544C's body is the static 80045444
- * taking &gfx (gfx homed at 0x124, in s1 in the loop), and the handler's
+ * functions the original's frames: 8004544C's particle loop is the static
+ * 80045444 taking &gfx (gfx homed at 0x124, in s1 in the loop), and the handler's
  * statics take their arrays as parameters (80043578 and the panel search
  * as (n, panels, flags), incremented, the door its struct). The pads in
- * them (and view[19]) stand in for locals not yet known.
+ * them stand in for locals not yet known.
  *
  * 80044084 matches: _inl0 has the locals tilt and slope and returns the
  * product the caller stores, _inl1 has pos (after an unused padP, so at
@@ -71,7 +71,7 @@
  * schedules below; the original likely #included part of the file, but
  * the renumberings are fakes.
  *
- * What still differs (words, by scratch/0F_04/p4/allf.py's procedures):
+ * Every function matches (jp; us and eu not yet built). Per function:
  * - The handler matches. Its statics for the panels (80043578, the search
  *   80043BC0, the case-1 loop 80043020, the case-2 loop _inl0), the
  *   wrapper _inl4 (the 80043578 call) and case 1's and case 0x52's code
@@ -88,17 +88,18 @@
  *   are tuned to the frame (door 4, 80043578 1, _inl1 8, _inl2 3; the
  *   handler's own i is the search's). 800460CC has its object in a local
  *   (scratch/0F_04/p4/d2.c), now that the handler has its length.
- * - func_ovl0F_04_8004544C (27): the header's three display-list
- *   commands each have their own block-scoped g, the 80047E70 calls are
- *   written in their expressions (no c), the x drift's -D_ovl0F_04_80048474
- *   twice (no dx), and the 80047E80 result goes through r (the spills at
- *   the original's 0x78/0x7C/0x80). The unused c is a pad, like view[19];
- *   which commands were gbi macro blocks is open. Left: the header's
- *   scratch registers (a3/t0/a0, the original's t1/t2/t3), the schedule
- *   around `move a0, s0`, and s6/s7 swapped (D_ovl0F_04_80048474/78, 4
- *   references each, a tie in priority; declaration and statement order
- *   don't change it). ovl_0F_01, 0F_02, 0F_03 and 17_09 have the same
- *   function (0F_01's also 0x9C8).
+ * - func_ovl0F_04_8004544C: the display-list header is in it, each
+ *   command through gfx++ in a block-scoped g, as gbi macros expand (the
+ *   original's t1/t2/t3), t = D_ovl0F_04_80048470 a local (a frame word);
+ *   the particle loop is the static 80045444 (&gfx), defined before it
+ *   (the order of `sw s1` / `addiu t6` after the loop). view is f32[3], no
+ *   pads. The update is `if (D_ovl0F_04_80048484 == 0.0f) { continue; }`
+ *   then a bare block with dx and dy (the continue gives
+ *   D_ovl0F_04_80048474 s6 and 78 s7; the block keeps the slots' order).
+ *   dx and dy only take frame words (fakes, for two unknown locals). The
+ *   texture rectangle's three commands are on one line, as
+ *   gSPTextureRectangle expands (one .loc). ovl_0F_01, 0F_02, 0F_03 and
+ *   17_09 have the same function (0F_01's also 0x9C8).
  * - func_ovl0F_04_80043028: static, its first chain's divisions by
  *   300 and 180 at run time from fs0/fs1 (float locals, so IDO can't fold
  *   them), which the handler saves; the timer in a local, the second
@@ -803,47 +804,14 @@ void func_ovl0F_04_80045E14(void) {
     func_ovl0F_04_80047CD8();
 }
 
-void func_ovl0F_04_8004544C(s32 arg0, UnkStruct_ovl0F_04_Gfx **arg1) {
-    UnkStruct_ovl0F_04_Gfx *gfx;
-
-    gfx = *arg1;
-    func_ovl0F_04_80045444(&gfx);
-    { UnkStruct_ovl0F_04_Gfx *g = gfx++; g->w0 = 0xBA001301; g->w1 = 0x00080000; }
-    { UnkStruct_ovl0F_04_Gfx *g = gfx++; g->w0 = 0xBA000E02; g->w1 = 0; }
-    *arg1 = gfx;
-}
-
 static void func_ovl0F_04_80045444(UnkStruct_ovl0F_04_Gfx **gdl) {
-    UnkStruct_ovl0F_04_Gfx *g;
-    UnkStruct_ovl0F_04_80048470 *t;
     UnkStruct_ovl0F_04_Gfx *g2;
     f32 oldx;
     f32 oldz;
     f32 s;
-    f32 c;
-    f32 scale;
     s32 i;
-    f32 view[19];
+    f32 view[3];
 
-    { UnkStruct_ovl0F_04_Gfx *g = (*gdl)++; g->w0 = 0xB900031D; g->w1 = 0x00553048; }
-    g = (*gdl)++; g->w0 = 0xFCFFFFFF; g->w1 = 0xFFFCF279;
-    g = (*gdl)++; g->w0 = 0xBB000001; g->w1 = 0x80008000;
-    g = (*gdl)++; g->w0 = 0xBA001301; g->w1 = 0;
-    g = (*gdl)++; g->w0 = 0xBA000E02; g->w1 = 0x8000;
-    t = D_ovl0F_04_80048470;
-    g = (*gdl)++; g->w0 = 0xFD100000; g->w1 = t->unk20 + (u32) t;
-    g = (*gdl)++; g->w0 = 0xE8000000; g->w1 = 0;
-    { UnkStruct_ovl0F_04_Gfx *g = (*gdl)++; g->w0 = 0xF5000100; g->w1 = 0x07000000; }
-    g = (*gdl)++; g->w0 = 0xE6000000; g->w1 = 0;
-    g = (*gdl)++; g->w0 = 0xF0000000; g->w1 = 0x0703C000;
-    g = (*gdl)++; g->w0 = 0xE7000000; g->w1 = 0;
-    { UnkStruct_ovl0F_04_Gfx *g = (*gdl)++; g->w0 = 0xFD500000; g->w1 = t->unk14 + (u32) t; }
-    g = (*gdl)++; g->w0 = 0xF5500000; g->w1 = 0x07000000;
-    g = (*gdl)++; g->w0 = 0xE6000000; g->w1 = 0;
-    g = (*gdl)++; g->w0 = 0xF3000000; g->w1 = 0x0703F800;
-    g = (*gdl)++; g->w0 = 0xE7000000; g->w1 = 0;
-    g = (*gdl)++; g->w0 = 0xF5400200; g->w1 = 0;
-    g = (*gdl)++; g->w0 = 0xF2000000; g->w1 = 0x0003C03C;
     g2 = *gdl;
     oldx = D_ovl0F_04_80048C80.x;
     oldz = D_ovl0F_04_80048C80.z;
@@ -853,29 +821,27 @@ static void func_ovl0F_04_80045444(UnkStruct_ovl0F_04_Gfx **gdl) {
     D_ovl0F_04_80048474 = ((D_ovl0F_04_80048C80.x - oldx) * s - func_ovl0F_04_80047E70(view[0]) * (D_ovl0F_04_80048C80.z - oldz)) * 0.5f;
     s = func_ovl0F_04_80047E78(view[0]);
     D_ovl0F_04_80048478 = (func_ovl0F_04_80047E70(view[0]) * (D_ovl0F_04_80048C80.x - oldx) + (D_ovl0F_04_80048C80.z - oldz) * s) * 0.2f;
-    scale = 1500.0f / view[2];
-    D_ovl0F_04_80048474 *= scale;
-    D_ovl0F_04_80048478 *= scale;
+    D_ovl0F_04_80048474 *= 1500.0f / view[2];
+    D_ovl0F_04_80048478 *= 1500.0f / view[2];
     for (i = 0; i < 20; i++) {
         if (func_ovl0F_04_80047F50(0x407) != 0) {
             UnkStruct_ovl0F_04_80048AF0 *p = &D_ovl0F_04_80048AF0[i];
 
-            {
-                UnkStruct_ovl0F_04_Gfx *g = g2++;
-
-                g->w0 = _SHIFTL(0xE4, 24, 8) | _SHIFTL((u32) (p->unk8 + p->unk4 - 1) << 2, 0, 12) | _SHIFTL((u32) (p->unk0 + p->unk8 - 1) << 2, 12, 12);
-                g->w1 = _SHIFTL(0, 24, 3) | _SHIFTL((u32) p->unk4 << 2, 0, 12) | _SHIFTL((u32) p->unk0 << 2, 12, 12);
-            }
-            { UnkStruct_ovl0F_04_Gfx *g = g2++; g->w0 = 0xB4000000; g->w1 = 0; }
-            { UnkStruct_ovl0F_04_Gfx *g = g2++; g->w0 = 0xB3000000; g->w1 = _SHIFTL((s32) (16.0f / (p->unk8 - 1) * 1024.0f), 0, 16) | _SHIFTL((s32) (16.0f / (p->unk8 - 1) * 1024.0f), 16, 16); }
+            { UnkStruct_ovl0F_04_Gfx *g = g2++; g->w0 = _SHIFTL(0xE4, 24, 8) | _SHIFTL((u32) (p->unk8 + p->unk4 - 1) << 2, 0, 12) | _SHIFTL((u32) (p->unk0 + p->unk8 - 1) << 2, 12, 12); g->w1 = _SHIFTL(0, 24, 3) | _SHIFTL((u32) p->unk4 << 2, 0, 12) | _SHIFTL((u32) p->unk0 << 2, 12, 12); { UnkStruct_ovl0F_04_Gfx *g = g2++; g->w0 = 0xB4000000; g->w1 = 0; } { UnkStruct_ovl0F_04_Gfx *g = g2++; g->w0 = 0xB3000000; g->w1 = _SHIFTL((s32) (16.0f / (p->unk8 - 1) * 1024.0f), 0, 16) | _SHIFTL((s32) (16.0f / (p->unk8 - 1) * 1024.0f), 16, 16); } }
         }
-        if (D_ovl0F_04_80048484 != 0.0f) {
+        if (D_ovl0F_04_80048484 == 0.0f) {
+            continue;
+        }
+        {
             f32 r;
+            f32 dx;
+            f32 dy;
             f64 drift;
 
             s = func_ovl0F_04_80047E78(view[0]);
             r = func_ovl0F_04_80047E80();
-            D_ovl0F_04_80048AF0[i].unk0 += -D_ovl0F_04_80048474 - r * (-D_ovl0F_04_80048474 * 0.25f) + D_ovl0F_04_8004847C * s;
+            dx = -D_ovl0F_04_80048474;
+            D_ovl0F_04_80048AF0[i].unk0 += dx - r * (dx * 0.25f) + D_ovl0F_04_8004847C * s;
             s = (D_ovl0F_04_8004847C != 0.0f ? 1.0f : 0);
             if (func_ovl0F_04_80047E70(view[0]) * (s * D_ovl0F_04_8004847C) + D_ovl0F_04_80048480 < 0.0f) {
                 f32 sign = (D_ovl0F_04_8004847C != 0.0f ? 1.0f : 0);
@@ -887,7 +853,8 @@ static void func_ovl0F_04_80045444(UnkStruct_ovl0F_04_Gfx **gdl) {
                 drift = func_ovl0F_04_80047E70(view[0]) * (sign * D_ovl0F_04_8004847C) + D_ovl0F_04_80048480;
             }
             r = func_ovl0F_04_80047E80();
-            D_ovl0F_04_80048AF0[i].unk4 += (D_ovl0F_04_80048AF0[i].unkC - D_ovl0F_04_80048478) - r * ((D_ovl0F_04_80048AF0[i].unkC - D_ovl0F_04_80048478) * 0.6f) + drift;
+            dy = D_ovl0F_04_80048AF0[i].unkC - D_ovl0F_04_80048478;
+            D_ovl0F_04_80048AF0[i].unk4 += dy - r * (dy * 0.6f) + drift;
             D_ovl0F_04_80048AF0[i].unk8 -= 0.1f * (D_ovl0F_04_80048AF0[i].unk8 * 0.0625f);
             if (340.0f <= D_ovl0F_04_80048AF0[i].unk0 || 240.0f <= D_ovl0F_04_80048AF0[i].unk4 || D_ovl0F_04_80048AF0[i].unk8 <= 3.0f ||
                 D_ovl0F_04_80048AF0[i].unk10++ >= 240 || D_ovl0F_04_80048AF0[i].unk0 < -20.0f || D_ovl0F_04_80048AF0[i].unk4 < -10.0f) {
@@ -896,6 +863,36 @@ static void func_ovl0F_04_80045444(UnkStruct_ovl0F_04_Gfx **gdl) {
         }
     }
     *gdl = g2;
+}
+
+void func_ovl0F_04_8004544C(s32 arg0, UnkStruct_ovl0F_04_Gfx **arg1) {
+    UnkStruct_ovl0F_04_Gfx *gfx;
+    UnkStruct_ovl0F_04_80048470 *t;
+
+    gfx = *arg1;
+    { UnkStruct_ovl0F_04_Gfx *g = gfx++; g->w0 = 0xB900031D; g->w1 = 0x00553048; }
+    { UnkStruct_ovl0F_04_Gfx *g = gfx++; g->w0 = 0xFCFFFFFF; g->w1 = 0xFFFCF279; }
+    { UnkStruct_ovl0F_04_Gfx *g = gfx++; g->w0 = 0xBB000001; g->w1 = 0x80008000; }
+    { UnkStruct_ovl0F_04_Gfx *g = gfx++; g->w0 = 0xBA001301; g->w1 = 0; }
+    { UnkStruct_ovl0F_04_Gfx *g = gfx++; g->w0 = 0xBA000E02; g->w1 = 0x8000; }
+    t = D_ovl0F_04_80048470;
+    { UnkStruct_ovl0F_04_Gfx *g = gfx++; g->w0 = 0xFD100000; g->w1 = t->unk20 + (u32) t; }
+    { UnkStruct_ovl0F_04_Gfx *g = gfx++; g->w0 = 0xE8000000; g->w1 = 0; }
+    { UnkStruct_ovl0F_04_Gfx *g = gfx++; g->w0 = 0xF5000100; g->w1 = 0x07000000; }
+    { UnkStruct_ovl0F_04_Gfx *g = gfx++; g->w0 = 0xE6000000; g->w1 = 0; }
+    { UnkStruct_ovl0F_04_Gfx *g = gfx++; g->w0 = 0xF0000000; g->w1 = 0x0703C000; }
+    { UnkStruct_ovl0F_04_Gfx *g = gfx++; g->w0 = 0xE7000000; g->w1 = 0; }
+    { UnkStruct_ovl0F_04_Gfx *g = gfx++; g->w0 = 0xFD500000; g->w1 = t->unk14 + (u32) t; }
+    { UnkStruct_ovl0F_04_Gfx *g = gfx++; g->w0 = 0xF5500000; g->w1 = 0x07000000; }
+    { UnkStruct_ovl0F_04_Gfx *g = gfx++; g->w0 = 0xE6000000; g->w1 = 0; }
+    { UnkStruct_ovl0F_04_Gfx *g = gfx++; g->w0 = 0xF3000000; g->w1 = 0x0703F800; }
+    { UnkStruct_ovl0F_04_Gfx *g = gfx++; g->w0 = 0xE7000000; g->w1 = 0; }
+    { UnkStruct_ovl0F_04_Gfx *g = gfx++; g->w0 = 0xF5400200; g->w1 = 0; }
+    { UnkStruct_ovl0F_04_Gfx *g = gfx++; g->w0 = 0xF2000000; g->w1 = 0x0003C03C; }
+    func_ovl0F_04_80045444(&gfx);
+    { UnkStruct_ovl0F_04_Gfx *g = gfx++; g->w0 = 0xBA001301; g->w1 = 0x00080000; }
+    { UnkStruct_ovl0F_04_Gfx *g = gfx++; g->w0 = 0xBA000E02; g->w1 = 0; }
+    *arg1 = gfx;
 }
 
 static void func_ovl0F_04_80045308(UnkStruct_ovl0F_04_80048AF0 *p) {
