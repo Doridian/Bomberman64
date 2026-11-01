@@ -1550,11 +1550,12 @@ segments:
     symbol_name_format: ovl12_06_$VRAM
     dir: overlays/ovl_12_06
     subsegments:
-      - [0x25C0B0, asm, ovl_12_06_entry]
-      - [0x25C0C0, asm, 25D670]
+      - [0x25C0B0, c, ovl_12_06_entry]
+      - [0x25C0C0, c, 25D670]
       - [0x25D900, hasm, ovl_12_06_zerojmp]
-      - [0x25EF20, rodata]
-      - {type: bss, vram: 0x80045F60}
+      - [0x25EF20, .data, 25D670]
+      - [0x25EF50, .rodata, 25D670]
+      - {type: .bss, vram: 0x80045F60, name: 25D670}
   - name: ovl_13_01
     type: code
     start: 0x25F010

@@ -1,29 +1,27 @@
 /*
- * NON_MATCHING: ovl_12_06's game object, complete: every function and its data
- * (.data and .rodata as the original, .bss 0x50).
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 44, eu 44, jp 44
- *
- * IDO -O3: the functions are written last to first (IDO -O3 emits a file's
+ * ovl_12_06's game object, IDO -O3; it matches in us, eu and jp.
+ * The functions are written last to first (IDO -O3 emits a file's
  * functions in reverse).  func_ovl12_06_80045708 and func_ovl12_06_800456E8
  * are declared s32: as void, the handler and the task take $v0 where the
  * original takes $v1.
  *
- * What still differs in us (words):
- * - func_ovl12_06_80043164 (40): the frame.  The original's is 0xA0, ours
- *   0x88: it has 11 words above obj0 (0x70, ours 0x84) and 5 fewer below
- *   angle, so every stack offset of case 11 differs.  The four inlined
- *   statics (and func_ovl12_06_80043010 inlined in case 1) take 2 words
- *   each below the locals; unused locals only go above.  Case 16/17
- *   written inline with a no-call helper for `->unk10 += 50.0f` gives
- *   their code exactly, but three stubs and a frame still 4 words off.
- *   Also case 2: the original stores D_ovl12_06_80045FBC in the delay slot
- *   of the second call (ours before it, even on one line).
- * - func_ovl12_06_800439D4 (4): the loop over a/b/c keeps its 40 in $s0
- *   and the count in $s3, ours the other way round.
+ * How it came to match:
+ * - The handler's frame (0xA0, locals 11 words above obj0 and 7 below
+ *   angle): case 11 is a static, func_ovl12_06_800430C8, inlined into the
+ *   handler with its own locals.  An inlined static's block of the frame
+ *   lies below the slots of the statics inlined before it and above those
+ *   inlined after it; `pad0` and `pad1` place it.  Its stub is the one at
+ *   800430C8 (inlined statics come out after their callees, in reverse
+ *   call order), so func_ovl12_06_800430D0's wait loop is written inline.
+ * - Case 2: D_ovl12_06_80045FBC stored in the delay slot of the second
+ *   call: a `#line` giving that call an earlier line than the store.
+ *   `#line 30 "25D670.c"` after the include keeps the numbering whatever
+ *   the header's length.
+ * - func_ovl12_06_800439D4: the a/b/c loop counts in k and its inner loop
+ *   in i (40 in $s0, the count in $s3).
  */
 #include "common.h"
+#line 30 "25D670.c"
 
 /* What func_ovl12_06_80045770 returns (D_ovl12_06_80045FCC). */
 typedef struct {
@@ -109,6 +107,7 @@ void func_ovl12_06_80044774(f32, f32, f32);
 void func_ovl12_06_800447D0(void);
 void func_ovl12_06_800447E8(void);
 static f32 func_ovl12_06_80043068(UnkStructA_40 *from, UnkStructA_40 *to);
+static void func_ovl12_06_800430C8(void);
 
 /* .bss */
 u8 D_ovl12_06_80045F80[0x24];
@@ -246,13 +245,13 @@ void func_ovl12_06_800439D4(void) {
     }
     func_ovl12_06_80045708(30);
     func_ovl12_06_800453D8(obj->unk40->unk10, obj->unk40->unk14 + 50.0f, obj->unk40->unk18);
-    for (i = 0; i < 3; i++) {
+    for (k = 0; k < 3; k++) {
         angle = 2250.0f;
-        for (j = 0; j < 40; j++) {
+        for (i = 0; i < 40; i++) {
             if (D_ovl12_06_80045FBC == 0x1B) {
-                func_ovl12_06_800453F8(c[i], b[i], angle);
+                func_ovl12_06_800453F8(c[k], b[k], angle);
             } else {
-                func_ovl12_06_800453F8(a[i], b[i], angle);
+                func_ovl12_06_800453F8(a[k], b[k], angle);
             }
             angle -= 42.5f;
             func_ovl12_06_80045730();
@@ -375,7 +374,9 @@ void func_ovl12_06_800439D4(void) {
  * leaving its `jr ra; nop` stub just before it. */
 static void func_ovl12_06_80043144(void) {
     D_ovl12_06_80045FBC = func_ovl12_06_80044C98();
+#line 374
     func_ovl12_06_80044B98(0x236);
+#line 383
     func_ovl12_06_80044BB0(0x241);
     func_ovl12_06_80044D48();
     D_ovl12_06_80045FCC = func_ovl12_06_80045770(0x279);
@@ -430,16 +431,11 @@ static void func_ovl12_06_8004315C(void) {
     }
 }
 
-/* inlined into func_ovl12_06_800430D0, its stub just before it */
-static void func_ovl12_06_800430C8(void) {
-    while (D_ovl12_06_80045FC0 != 0) {
-        func_ovl12_06_80045730();
-    }
-}
-
 void func_ovl12_06_800430D0(void) {
     if (D_ovl12_06_80045FBC == 0x10 || D_ovl12_06_80045FBC == 0x1A || D_ovl12_06_80045FBC == 0x1B) {
-        func_ovl12_06_800430C8();
+        while (D_ovl12_06_80045FC0 != 0) {
+            func_ovl12_06_80045730();
+        }
         func_ovl12_06_80044D88(0);
     }
     /* empty: without it the function is small enough to be inlined into
@@ -448,15 +444,102 @@ void func_ovl12_06_800430D0(void) {
     }
 }
 
-/* The overlay's handler: the entry returns it to the loader. */
-void func_ovl12_06_80043164(s32 arg0) {
+/* Case 11: a static inlined into the handler; its stub is the one at
+ * 800430C8.  The pads give its block of the handler's frame the original's
+ * place (11 words above obj0, 7 below angle, frame 0xA0). */
+static void func_ovl12_06_800430C8(void) {
+    s32 pad0[1];
     UnkStructA *obj0;
     Vec3f pos;
     Vec3f target;
     UnkStructA *obj1;
     s32 i;
     f32 angle;
+    s32 pad1[3];
 
+    func_ovl12_06_80044D88(1);
+    func_ovl12_06_80045440(0x1F);
+    func_ovl12_06_80045D38(0);
+    func_ovl12_06_800453D8(2350.0f, 100.0f, 1720.0f);
+    func_ovl12_06_800453F8(0.0f, 45.0f, 2000.0f);
+    func_ovl12_06_80045708(2);
+    obj1 = func_ovl12_06_80044DD8(1);
+    obj0 = func_ovl12_06_80044DD8(0);
+    func_ovl12_06_800455A0(obj1, 0x0C000000);
+    func_ovl12_06_800452C0(obj1->unk40, 0, 0);
+    func_ovl12_06_800452C0(obj1->unk40, -1, 1);
+    obj1->unk40->unk20 = func_ovl12_06_80043068(obj1->unk40, obj0->unk40);
+    if (func_ovl12_06_80044D30(1) == 3) {
+        pos.x = obj0->unk40->unk10;
+        pos.y = obj0->unk40->unk14;
+        pos.z = obj0->unk40->unk18;
+        target.x = 2350.0f;
+        target.y = 0.0f;
+        target.z = 1550.0f;
+        func_ovl12_06_80045528(&pos.x, &target.x, &angle);
+        target.x = func_ovl12_06_80045890(angle) * 800.0f + pos.x;
+        target.y = pos.y;
+        target.z = func_ovl12_06_80045898(angle) * 800.0f + pos.z;
+        pos.x = obj1->unk40->unk10;
+        pos.y = obj1->unk40->unk14;
+        pos.z = obj1->unk40->unk18;
+        func_ovl12_06_80045528(&pos.x, &target.x, &angle);
+        func_ovl12_06_80045540(&pos.x, &target.x);
+        obj1->unk68 = 51.0f;
+        obj1->unk40->unk14 = 0.1f;
+        obj1->unk70 = 0.8166667f;
+        obj1->unk6C = 16.333334f;
+        for (i = 0; i < 90; i++) {
+            obj1->unk40->unk10 += (target.x - pos.x) / 90.0f;
+            obj1->unk40->unk18 += (target.z - pos.z) / 90.0f;
+            if (obj1->unk40->unk14 < 0.0f) {
+                obj1->unk70 = 0.0f;
+                obj1->unk68 = 0.0f;
+                obj1->unk40->unk14 = 0.0f;
+            } else {
+                func_ovl12_06_80045618(obj1);
+            }
+            func_ovl12_06_80045730();
+        }
+        func_ovl12_06_80045C70(0x259);
+    }
+    obj1->unk40->unk20 = func_ovl12_06_80043068(obj1->unk40, obj0->unk40);
+    obj0->unk40->unk20 = func_ovl12_06_80043068(obj0->unk40, obj1->unk40);
+    func_ovl12_06_800453D8(obj0->unk40->unk10, 200.0f, obj0->unk40->unk18);
+    func_ovl12_06_800453F8(obj1->unk40->unk20, 20.0f, 800.0f);
+    for (i = 0; i < 30; i++) {
+        obj1->unk40->unk14 += 2.0f;
+        func_ovl12_06_80045730();
+    }
+    func_ovl12_06_80045708(30);
+    func_ovl12_06_80045300(0x334, 1);
+    func_ovl12_06_80044D88(1);
+    func_ovl12_06_80044D38(50);
+    func_ovl12_06_80045C88();
+    func_ovl12_06_80045708(60);
+    obj1->unk40->unkC |= 0x4000;
+    func_ovl12_06_800452C0(obj1->unk40, 0x1C, 0);
+    func_ovl12_06_800452C0(obj1->unk40, -1, 1);
+    obj1->unk40->unk48->unk4->unk8 |= 0x20;
+    while (!(obj1->unk40->unk48->unk4->unk8 & 0x40)) {
+        func_ovl12_06_80045730();
+    }
+    func_ovl12_06_80045C70(0x20F);
+    for (i = 0; i < 40; i++) {
+        obj1->unk40->unk14 += 25.0f;
+        func_ovl12_06_80045730();
+    }
+    func_ovl12_06_800455A0(obj1, 0x01000000);
+    func_ovl12_06_800453D8(obj0->unk40->unk10, 50.0f, obj0->unk40->unk18);
+    func_ovl12_06_800453F8(obj0->unk40->unk20, 20.0f, 800.0f);
+    func_ovl12_06_80044D88(0);
+    func_ovl12_06_80044D38(32);
+    func_ovl12_06_80045910();
+    D_ovl12_06_80045FC4 = 1;
+}
+
+/* The overlay's handler: the entry returns it to the loader. */
+void func_ovl12_06_80043164(s32 arg0) {
     switch (arg0) {
         case 2:
             func_ovl12_06_80043144();
@@ -476,85 +559,7 @@ void func_ovl12_06_80043164(s32 arg0) {
             func_ovl12_06_800430D0();
             break;
         case 11:
-            func_ovl12_06_80044D88(1);
-            func_ovl12_06_80045440(0x1F);
-            func_ovl12_06_80045D38(0);
-            func_ovl12_06_800453D8(2350.0f, 100.0f, 1720.0f);
-            func_ovl12_06_800453F8(0.0f, 45.0f, 2000.0f);
-            func_ovl12_06_80045708(2);
-            obj1 = func_ovl12_06_80044DD8(1);
-            obj0 = func_ovl12_06_80044DD8(0);
-            func_ovl12_06_800455A0(obj1, 0x0C000000);
-            func_ovl12_06_800452C0(obj1->unk40, 0, 0);
-            func_ovl12_06_800452C0(obj1->unk40, -1, 1);
-            obj1->unk40->unk20 = func_ovl12_06_80043068(obj1->unk40, obj0->unk40);
-            if (func_ovl12_06_80044D30(1) == 3) {
-                pos.x = obj0->unk40->unk10;
-                pos.y = obj0->unk40->unk14;
-                pos.z = obj0->unk40->unk18;
-                target.x = 2350.0f;
-                target.y = 0.0f;
-                target.z = 1550.0f;
-                func_ovl12_06_80045528(&pos.x, &target.x, &angle);
-                target.x = func_ovl12_06_80045890(angle) * 800.0f + pos.x;
-                target.y = pos.y;
-                target.z = func_ovl12_06_80045898(angle) * 800.0f + pos.z;
-                pos.x = obj1->unk40->unk10;
-                pos.y = obj1->unk40->unk14;
-                pos.z = obj1->unk40->unk18;
-                func_ovl12_06_80045528(&pos.x, &target.x, &angle);
-                func_ovl12_06_80045540(&pos.x, &target.x);
-                obj1->unk68 = 51.0f;
-                obj1->unk40->unk14 = 0.1f;
-                obj1->unk70 = 0.8166667f;
-                obj1->unk6C = 16.333334f;
-                for (i = 0; i < 90; i++) {
-                    obj1->unk40->unk10 += (target.x - pos.x) / 90.0f;
-                    obj1->unk40->unk18 += (target.z - pos.z) / 90.0f;
-                    if (obj1->unk40->unk14 < 0.0f) {
-                        obj1->unk70 = 0.0f;
-                        obj1->unk68 = 0.0f;
-                        obj1->unk40->unk14 = 0.0f;
-                    } else {
-                        func_ovl12_06_80045618(obj1);
-                    }
-                    func_ovl12_06_80045730();
-                }
-                func_ovl12_06_80045C70(0x259);
-            }
-            obj1->unk40->unk20 = func_ovl12_06_80043068(obj1->unk40, obj0->unk40);
-            obj0->unk40->unk20 = func_ovl12_06_80043068(obj0->unk40, obj1->unk40);
-            func_ovl12_06_800453D8(obj0->unk40->unk10, 200.0f, obj0->unk40->unk18);
-            func_ovl12_06_800453F8(obj1->unk40->unk20, 20.0f, 800.0f);
-            for (i = 0; i < 30; i++) {
-                obj1->unk40->unk14 += 2.0f;
-                func_ovl12_06_80045730();
-            }
-            func_ovl12_06_80045708(30);
-            func_ovl12_06_80045300(0x334, 1);
-            func_ovl12_06_80044D88(1);
-            func_ovl12_06_80044D38(50);
-            func_ovl12_06_80045C88();
-            func_ovl12_06_80045708(60);
-            obj1->unk40->unkC |= 0x4000;
-            func_ovl12_06_800452C0(obj1->unk40, 0x1C, 0);
-            func_ovl12_06_800452C0(obj1->unk40, -1, 1);
-            obj1->unk40->unk48->unk4->unk8 |= 0x20;
-            while (!(obj1->unk40->unk48->unk4->unk8 & 0x40)) {
-                func_ovl12_06_80045730();
-            }
-            func_ovl12_06_80045C70(0x20F);
-            for (i = 0; i < 40; i++) {
-                obj1->unk40->unk14 += 25.0f;
-                func_ovl12_06_80045730();
-            }
-            func_ovl12_06_800455A0(obj1, 0x01000000);
-            func_ovl12_06_800453D8(obj0->unk40->unk10, 50.0f, obj0->unk40->unk18);
-            func_ovl12_06_800453F8(obj0->unk40->unk20, 20.0f, 800.0f);
-            func_ovl12_06_80044D88(0);
-            func_ovl12_06_80044D38(32);
-            func_ovl12_06_80045910();
-            D_ovl12_06_80045FC4 = 1;
+            func_ovl12_06_800430C8();
             break;
         case 1:
             func_ovl12_06_80043010();
