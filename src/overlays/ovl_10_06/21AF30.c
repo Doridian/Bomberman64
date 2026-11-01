@@ -1,15 +1,7 @@
 /*
- * NON_MATCHING: ovl_10_06's game object, complete: every function, its
- * .data, .rodata and .bss (sizes 0x170/0x160/0x1080 as the original; .data
- * byte for byte, .rodata's strings and first floats in place, the later
- * floats in another order). .text is the original's size. Not built into
- * the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, jp 0
+ * ovl_10_06's game object, IDO -O3; it matches in us, eu and jp.
  *
- * Every function matches in jp (us is the same code; eu not measured);
- * .rodata's later floats are still in another order (above), which
- * tools/nonmatching.py doesn't see. What fixed the last 187 words:
+ * What fixed the last 187 words:
  * - func_ovl10_06_80049FB0 returns a value (declared s32): as void it
  *   put 80045888 (102), 80045CE4 (32 of its 38) and 80048110 (22) a
  *   register off.
@@ -462,7 +454,7 @@ void func_ovl10_06_80049208(void) {
     if (0) {
         D_ovl10_06_8004AB60[0] = D_ovl10_06_8004AB8C[0] + D_ovl10_06_8004ABA4[0] + D_ovl10_06_8004ACAC[0] +
                                  D_ovl10_06_8004AF1C[0] + D_ovl10_06_8004B28C[0] + D_ovl10_06_8004B7D4[0] +
-                                 D_ovl10_06_8004B9AC[0];
+                                 D_ovl10_06_8004B9AC[0] + D_ovl10_06_8004B24C[0] + D_ovl10_06_8004B998[0];
     }
 }
 

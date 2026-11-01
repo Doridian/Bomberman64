@@ -308,6 +308,34 @@ ovl_10_04 214340 0xC0 0x90 0x2F0
 ovl_10_05 ovl_10_05_entry 0 0 0
 ovl_10_05 217050 0x120 0xC0 0x520
 
+# ovl_10_06: all C (-O3)
+ovl_10_06 ovl_10_06_entry 0 0 0
+ovl_10_06 21AF30 0x170 0x160 0x1080
+
+# ovl_10_07: all C (-O3)
+ovl_10_07 ovl_10_07_entry 0 0 0
+ovl_10_07 222A90 0x190 0xD0 0x1380
+
+# ovl_10_08: all C (-O3)
+ovl_10_08 ovl_10_08_entry 0 0 0
+ovl_10_08 229610 0x320 0x1C0 0x1360
+
+# ovl_10_09: all C (-O3)
+ovl_10_09 ovl_10_09_entry 0 0 0
+ovl_10_09 22FCD0 0x4E0 0xD0 0x1370
+
+# ovl_10_10: all C (-O3)
+ovl_10_10 ovl_10_10_entry 0 0 0
+ovl_10_10 236680 0x80 0xB0 0x490
+
+# ovl_10_11: all C (-O3)
+ovl_10_11 ovl_10_11_entry 0 0 0
+ovl_10_11 23A720 0x150 0xB0 0x450
+
+# ovl_10_12: all C (-O3)
+ovl_10_12 ovl_10_12_entry 0 0 0
+ovl_10_12 23DDC0 0x290 0x120 0x1230
+
 # ovl_10_13: all C (-O3)
 ovl_10_13 ovl_10_13_entry 0 0 0
 ovl_10_13 2439F0 0 0x280 0x2A0

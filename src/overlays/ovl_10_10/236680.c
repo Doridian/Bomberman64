@@ -1,12 +1,7 @@
 /*
- * NON_MATCHING: ovl_10_10's game object, complete: every function and its
- * .data/.bss/.rodata (sizes 0x80/0xB0/0x490 and contents as the
- * original) and .text its size. Not built into the ROM
- * (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * ovl_10_10's game object, IDO -O3; it matches in us, eu and jp.
  *
- * Every function matches (jp measured). 800431AC: the permuter's fakes,
+ * 800431AC: the permuter's fakes,
  * as in ovl_10_11's draft: D_800473F8 read into a local `a` and an
  * empty test of D_800473FC on a's line, so the loads come out as the
  * call's arguments, a1 first, with the call's move in its delay slot.

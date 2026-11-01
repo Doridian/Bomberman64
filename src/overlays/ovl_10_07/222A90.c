@@ -1,11 +1,5 @@
 /*
- * NON_MATCHING: ovl_10_07's game object, complete: every function, its
- * .bss and its .data tables. Not built into the ROM
- * (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, jp 0
- *
- * Every function matches in jp (us is the same code).
+ * ovl_10_07's game object, IDO -O3; it matches in us, eu and jp.
  *
  * Fixed as in ovl_10_08 (its header): 80043254 (6), 80045758 (62, and
  * 8004809C's padding, 11), 800479D4 (2), 80044FD8 (12), 800452A8 (14),

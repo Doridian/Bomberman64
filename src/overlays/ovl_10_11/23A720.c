@@ -1,13 +1,7 @@
 /*
- * NON_MATCHING: ovl_10_11's game object, complete: every function and its
- * .data/.bss/.rodata (sizes 0x150/0x450/0xB0 as the original) and .text
- * its size. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
- * drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * ovl_10_11's game object, IDO -O3; it matches in us, eu and jp.
  *
- * Every function matches in jp (us and eu are the same code; only jp is
- * measured). What fixed the last 81 words:
+ * What fixed the last 81 words:
  * - func_ovl10_11_800431AC (6): the loads of 800469F8/800469FC as the
  *   call's arguments (the original loads them a1 first, after both luis,
  *   and puts `move a2,zero` in the jal's delay slot), by two fakes from

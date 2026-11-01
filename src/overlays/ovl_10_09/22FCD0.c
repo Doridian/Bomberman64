@@ -1,11 +1,5 @@
 /*
- * NON_MATCHING: ovl_10_09's game object, complete: every function, its
- * .bss and its .data tables. Not built into the ROM
- * (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, jp 0
- *
- * Every function matches in jp (us is the same code). Fixed:
+ * ovl_10_09's game object, IDO -O3; it matches in us, eu and jp. Fixed:
  * - func_ovl10_09_80043238 (2, a `lui at` one place early): 8004A1FC
  *   read into a local b (where pad2 was) and stored and passed from it
  *   (the permuter). ovl_10_07's, 10_08's, 10_11's and 10_12's copies
