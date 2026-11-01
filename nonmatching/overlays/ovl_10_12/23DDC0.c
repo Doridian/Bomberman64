@@ -1,21 +1,22 @@
 /*
  * NON_MATCHING: ovl_10_12's game object, complete: every function, its
- * .bss and its .data tables; .text one word long. Not built into the ROM
- * (docs/DECOMPILING.md, "NON_MATCHING drafts").
+ * .bss and its .data tables. Not built into the ROM (docs/DECOMPILING.md,
+ * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 111, eu 195, jp 111
+ * differing words: us 0, eu 195, jp 0
  *
- * What still differs in us (words; eu and jp the same):
- * - func_ovl10_12_800432B0 (6), func_ovl10_12_80044FEC (62) and
- *   func_ovl10_12_80046908 (2): ovl_10_11's 800431AC, 80043C2C and
- *   80044150, with the same differences (its header).
- * - func_ovl10_12_80047008 (11): the same code; the padding IDO puts after its
- *   endless loop (to a 16-byte boundary) is a word longer
- *   because 80044FEC is a word short (as in ovl_10_11's 80044C24).
- * - func_ovl10_12_80044C68 (12): s4 and s5 swap (arg0 and &80048D28[i]).
- * - func_ovl10_12_80046048 (9): pos and pos2 sit a word lower in the
- *   original, in the same frame.
- * - func_ovl10_12_8004635C (9): s0 and s1 swap.
+ * Every function matches in jp (us the same code; eu, recorded at 195
+ * before these fixes, not measured: only jp is extracted).
+ *
+ * Fixed: 800432B0 (6) as ovl_10_11's 800431AC (80049468 in a local a,
+ * the `if (8004946C && ...) {}` fake on its line; ovl_10_11's header).
+ * 80044FEC (62, and 80047008's padding, 11) and 80046908 (2) as
+ * in ovl_10_10 (the empty `do {} while (0);` before the stores of
+ * 800494D8-80049520; out[1] for y). 80044C68 (12, s4 and
+ * s5 swapped) by an empty `if (arg0) {}` in its first inner loop (the
+ * permuter). 80046048 (9, pos and pos2 a word high) by a local `id` for
+ * 80043150's result, declared first. 8004635C (9, s0 and s1 swapped) by
+ * counting its last loop with j, not a fourth variable k.
  *
  * ovl_10_12's game object, IDO -O3: the functions are written last to first
  * (IDO -O3 emits a file's functions in reverse). Most of it is ovl_10_11's
@@ -537,7 +538,7 @@ void func_ovl10_12_80046908(void) {
             y = out[1];
             func_ovl10_12_80047630(D_ovl10_12_800493F8[i][0], D_ovl10_12_800493F8[i][1], D_ovl10_12_800493F8[i][2],
                                    D_ovl10_12_800493F8[i][0] + 1, D_ovl10_12_800493F8[i][2] + 1,
-                                   D_ovl10_12_800493F8[i][0], y, D_ovl10_12_800493F8[i][2]);
+                                   D_ovl10_12_800493F8[i][0], out[1], D_ovl10_12_800493F8[i][2]);
             func_ovl10_12_80047638(D_ovl10_12_800493F8[i][0], D_ovl10_12_800493F8[i][1], D_ovl10_12_800493F8[i][2],
                                    D_ovl10_12_800493F8[i][0] + 1, D_ovl10_12_800493F8[i][2] + 1, 0);
             D_ovl10_12_800494C0[i] = D_ovl10_12_800493F8[i][1];
@@ -630,7 +631,6 @@ void func_ovl10_12_8004635C(void) {
     s32 i;
     s32 j;
     s32 found;
-    s32 k;
 
     i = D_ovl10_12_80049860[D_ovl10_12_80049258];
     found = -1;
@@ -652,13 +652,13 @@ void func_ovl10_12_8004635C(void) {
         }
     }
     if (D_ovl10_12_80049D48 != 0) {
-        for (k = 0; k < D_ovl10_12_80049960; k++) {
-            if (D_ovl10_12_80049558[k] != NULL) {
-                func_ovl10_12_80047FA0(D_ovl10_12_80049558[k]);
-                func_ovl10_12_80047FA0(D_ovl10_12_800495C8[k]);
-                D_ovl10_12_80049558[k] = NULL;
-                func_ovl10_12_80045FE4(k, 0);
-                D_ovl10_12_800497F0[k] = 0;
+        for (j = 0; j < D_ovl10_12_80049960; j++) {
+            if (D_ovl10_12_80049558[j] != NULL) {
+                func_ovl10_12_80047FA0(D_ovl10_12_80049558[j]);
+                func_ovl10_12_80047FA0(D_ovl10_12_800495C8[j]);
+                D_ovl10_12_80049558[j] = NULL;
+                func_ovl10_12_80045FE4(j, 0);
+                D_ovl10_12_800497F0[j] = 0;
             }
         }
         func_ovl10_12_8004555C();
@@ -670,10 +670,12 @@ void func_ovl10_12_8004635C(void) {
 }
 
 void func_ovl10_12_80046048(s32 arg0, s32 arg1) {
+    s32 id;
     Vec3f pos;
     Vec3f pos2;
 
-    D_ovl10_12_80049D50[func_ovl10_12_80043150(func_ovl10_12_80046608)] = arg0;
+    id = func_ovl10_12_80043150(func_ovl10_12_80046608);
+    D_ovl10_12_80049D50[id] = arg0;
     if (arg1 != 0) {
         D_ovl10_12_80049558[arg0] = func_ovl10_12_80047FB0(0xBE, 0x01080000, 0x10, 0);
         func_ovl10_12_800475E8(D_ovl10_12_80049638[arg0][0], D_ovl10_12_80049638[arg0][1],
@@ -1004,6 +1006,8 @@ void func_ovl10_12_80044FEC(s32 *arg0) {
         D_ovl10_12_80049470[i] = arg0[4];
         D_ovl10_12_80049488[i] = arg0[5];
         D_ovl10_12_800494A0[i] = arg0[6];
+        /* a uopt block boundary: the addresses below are strength-reduced */
+        do {} while (0);
         D_ovl10_12_800494D8[i] = arg0[7];
         D_ovl10_12_800494F0[i] = arg0[8];
         D_ovl10_12_80049508[i] = arg0[9];
@@ -1071,6 +1075,7 @@ void func_ovl10_12_80044C68(s32 *arg0) {
             D_ovl10_12_80048D58[i] = 0;
             if (D_ovl10_12_80048D28[i] & 1) {
                 for (j = 0; j < D_ovl10_12_80048F20[i]; j++) {
+                    if (arg0) {} /* keeps arg0 in s4 (the permuter) */
                     func_ovl10_12_800475C0(D_ovl10_12_80048CA0[i][0] + j, D_ovl10_12_80048CA0[i][1], D_ovl10_12_80048CA0[i][2], 1);
                 }
             } else {
@@ -1556,7 +1561,7 @@ void func_ovl10_12_800432B0(void) {
     s32 out[6];
     s32 pad1;
     s32 pad2;
-    s32 pad3;
+    s32 a;
 
     D_ovl10_12_80049550 = -1.0f;
     func_ovl10_12_800477B0(0x40);
@@ -1569,9 +1574,11 @@ void func_ovl10_12_800432B0(void) {
     func_ovl10_12_80047778(1);
     func_ovl10_12_800431C8(D_ovl10_12_800493E4, D_ovl10_12_80049540, D_ovl10_12_80049544, -1.0f);
     func_ovl10_12_800480F8(0x78);
-    D_ovl10_12_80048C54 = D_ovl10_12_80049468;
+    /* fakes (the permuter): a, and the test of D_ovl10_12_8004946C, on a's line */
+    a = D_ovl10_12_80049468; if (D_ovl10_12_8004946C && D_ovl10_12_8004946C && D_ovl10_12_8004946C) {}
+    D_ovl10_12_80048C54 = a;
     D_ovl10_12_80048C58 = D_ovl10_12_8004946C;
-    func_ovl10_12_80047680(D_ovl10_12_80049468, D_ovl10_12_8004946C, 0);
+    func_ovl10_12_80047680(a, D_ovl10_12_8004946C, 0);
 }
 
 void func_ovl10_12_800431C8(s32 arg0, f32 arg1, f32 arg2, f32 arg3) {

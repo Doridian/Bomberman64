@@ -5,19 +5,25 @@
  * floats in another order). .text is the original's size. Not built into
  * the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 187, jp 187
+ * differing words: us 0, jp 0
  *
- * What still differs in us (words, as tools/nonmatching.py counts them; a
- * static's words go to the named function before it):
- * - 80045888 (102): its frame is right (pad2 fills the slots of what it
- *   inlines: 8004584C, 800448EC), but its t registers are one off from
- *   the local initializer's copy on, and its a registers differ late.
- * - 80045CE4 (38), 80045458 (8), 80048110 (22): the same kind of miss:
- *   one value in another register from the start (80045CE4 keeps
- *   8004B3A0[i] in a2 and its address in v1; 80045458 the result's field
- *   in a1; 80048110 the switch value in a1), the rest following it.
- * - 800443DC (7), 80044F8C (4), 800442D4 (2), 800460C8 (2), 80047110
- *   (2, a spill slot 4 bytes low).
+ * Every function matches in jp (us is the same code; eu not measured);
+ * .rodata's later floats are still in another order (above), which
+ * tools/nonmatching.py doesn't see. What fixed the last 187 words:
+ * - func_ovl10_06_80049FB0 returns a value (declared s32): as void it
+ *   put 80045888 (102), 80045CE4 (32 of its 38) and 80048110 (22) a
+ *   register off.
+ * - 80045CE4: its locals as pad[2], hit, i, flags, pad2[3] (the frame
+ *   and hit's home); the four statements from the 8004B9A4 test to the
+ *   first 8004ACB0 store on one source line (one .loc; the permuter's
+ *   find).
+ * - 80045458 (8): 8004ADB4[4] read into a local before the test.
+ * - 800443DC (7): one variable for both angles (m2c had sp1C and a copy).
+ * - 800442D4 (2): the comparisons on (f32) 8004B7E8 itself, no
+ *   temporary.
+ * - 80044F8C (4) and 800460C8 (2): i declared before pos (a home above
+ *   it). 80047110 (2): a local id for 800430A8's result where pad0 was.
+ *
  * - The third pass rewrote m2c's pointer arithmetic as Hudson's indexed
  *   globals (`D[i]->unk40->x` re-read at each use, `for` loops), which
  *   matched most of the object; the rest came from: a Vec3f for what
@@ -147,7 +153,7 @@ void func_ovl10_06_80049F70(UnkStructA *);
 void func_ovl10_06_80049F78(UnkStructA *, UnkStructA *);
 void func_ovl10_06_80049F98(UnkStructA *, s32);
 void func_ovl10_06_80049FA0(UnkStructA *, s32);
-void func_ovl10_06_80049FB0(UnkStructA *);
+s32 func_ovl10_06_80049FB0(UnkStructA *);
 UnkStructA *func_ovl10_06_80049FC0(s32, s32, s32, s32);
 UnkStructA *func_ovl10_06_80049FD0(UnkStructA *);
 void *func_ovl10_06_80049FF0(s32, s32, UnkStructA *);
@@ -1083,7 +1089,7 @@ void func_ovl10_06_80047308(void) {
 }
 
 void func_ovl10_06_80047110(s32 arg0) {
-    s32 pad0;
+    s32 id;
     Vec3f a;
     Vec3f b;
     s32 pad[2];
@@ -1107,7 +1113,8 @@ void func_ovl10_06_80047110(s32 arg0) {
     D_ovl10_06_8004B110[arg0] = (a.z - b.z) / 56.0f;
     D_ovl10_06_8004BBD0[arg0]->unk68 = 40.0f;
     func_ovl10_06_80049FD0(D_ovl10_06_8004BBD0[arg0]);
-    D_ovl10_06_8004B7F8[func_ovl10_06_800430A8(func_ovl10_06_80047810)] = arg0;
+    id = func_ovl10_06_800430A8(func_ovl10_06_80047810);
+    D_ovl10_06_8004B7F8[id] = arg0;
     func_ovl10_06_8004A068(D_ovl10_06_8004BBD0[arg0], &a);
     a.y += 50.0f;
     func_ovl10_06_8004A540(0xE, &a.x, 0);
@@ -1392,8 +1399,8 @@ void func_ovl10_06_800460C8(void) {
     f32 model[3] = { 175.0f, 173.0f, 173.0f };
     f32 model2[3] = { 177.0f, 181.0f, 181.0f };
     s32 slot;
-    Vec3f pos;
     s32 i;
+    Vec3f pos;
 
     i = D_ovl10_06_8004B290[D_ovl10_06_8004ACA8];
     D_ovl10_06_8004ADC0[i] = func_ovl10_06_80049FC0(model[i], 0x01002070, 0x20, 0);
@@ -1440,10 +1447,11 @@ void func_ovl10_06_80045F9C(void) {
 }
 
 void func_ovl10_06_80045CE4(void) {
+    s32 pad[2];
     s32 hit;
     s32 i;
     s32 flags;
-    s32 pad[3];
+    s32 pad2[3];
 
     i = D_ovl10_06_8004B290[D_ovl10_06_8004ACA8];
     hit = 0;
@@ -1474,12 +1482,9 @@ void func_ovl10_06_80045CE4(void) {
                 if (D_ovl10_06_8004B3AC & 4) {
                     D_ovl10_06_8004B3AC &= ~4;
                 }
-                if (D_ovl10_06_8004B9A4 != NULL) {
-                    func_ovl10_06_80049FB0(D_ovl10_06_8004B9A4);
-                    D_ovl10_06_8004B9A4 = NULL;
-                }
-                D_ovl10_06_8004B3AC = 0;
-                D_ovl10_06_8004ACB0[func_ovl10_06_80045C20(func_ovl10_06_80047E10)] = NULL;
+                /* one line (one .loc) for these four statements: as1 then schedules the
+                 * D_ovl10_06_8004B9A4 store before &D_ovl10_06_8004B3AC as the original */
+                if (D_ovl10_06_8004B9A4 != NULL) { func_ovl10_06_80049FB0(D_ovl10_06_8004B9A4); D_ovl10_06_8004B9A4 = NULL; } D_ovl10_06_8004B3AC = 0; D_ovl10_06_8004ACB0[func_ovl10_06_80045C20(func_ovl10_06_80047E10)] = NULL;
                 D_ovl10_06_8004ACB0[func_ovl10_06_80045C20(func_ovl10_06_80047B0C)] = NULL;
             }
             D_ovl10_06_8004AFA4 = 2.1333334f;
@@ -1657,7 +1662,7 @@ void func_ovl10_06_80045518(void) {
 }
 
 void func_ovl10_06_80045458(s32 arg0) {
-    s32 pad;
+    s32 flag;
 
     D_ovl10_06_8004B290[func_ovl10_06_800430A8(func_ovl10_06_80046A04)] = arg0;
     D_ovl10_06_8004B390[arg0] = 0;
@@ -1665,7 +1670,8 @@ void func_ovl10_06_80045458(s32 arg0) {
     D_ovl10_06_8004B270[arg0] = -1;
     D_ovl10_06_8004B240[arg0] = 1;
     D_ovl10_06_8004ADB4 = func_ovl10_06_800496E8();
-    if (D_ovl10_06_8004ADB4[4] != 0) {
+    flag = D_ovl10_06_8004ADB4[4];
+    if (flag != 0) {
         D_ovl10_06_8004B240[arg0] += 2;
     }
     D_ovl10_06_8004B250[arg0] = 0;
@@ -1714,8 +1720,8 @@ void func_ovl10_06_8004526C(void) {
 }
 
 void func_ovl10_06_80044F8C(s32 arg0) {
-    Vec3f pos;
     s32 i;
+    Vec3f pos;
 
     func_ovl10_06_80049648(0x1D, 1, 8, 0x26, 0x16, 1);
     func_ovl10_06_800495D0(0x27, 1, 0xD, 1);
@@ -1961,20 +1967,16 @@ void func_ovl10_06_800444F0(void) {
 }
 
 void func_ovl10_06_800443DC(void) {
-    f32 sp1C;
-    f32 var_fv1;
+    f32 v;
 
     func_ovl10_06_80049E00(&D_ovl10_06_8004B008, NULL, NULL);
     if ((D_ovl10_06_8004B008 >= 0.0f) && (D_ovl10_06_8004B008 < 135.0f)) {
-        sp1C = -45.0f - D_ovl10_06_8004B008;
+        v = -45.0f - D_ovl10_06_8004B008;
     }
-    var_fv1 = sp1C;
-    if (D_ovl10_06_8004B008 >= 135.0f) {
-        if (D_ovl10_06_8004B008 < 315.0f) {
-            var_fv1 = 315.0f - D_ovl10_06_8004B008;
-        }
+    if ((D_ovl10_06_8004B008 >= 135.0f) && (D_ovl10_06_8004B008 < 315.0f)) {
+        v = 315.0f - D_ovl10_06_8004B008;
     }
-    D_ovl10_06_8004B004 = var_fv1 / 60.0f;
+    D_ovl10_06_8004B004 = v / 60.0f;
     if (D_ovl10_06_8004B004 > 2.0f) {
         D_ovl10_06_8004B004 = 2.0f;
     }
@@ -1986,12 +1988,10 @@ void func_ovl10_06_800443DC(void) {
 
 void func_ovl10_06_800442D4(void) {
     UnkStructA_40_48_4 *temp_v0;
-    f32 temp_fv0;
 
     temp_v0 = D_ovl10_06_8004AF18->unk40->unk48->unk4;
     temp_v0->unk4 += (f32) D_ovl10_06_8004B7E8;
-    temp_fv0 = (f32) D_ovl10_06_8004B7E8;
-    if (((temp_fv0 == 1.0f) && (D_ovl10_06_8004AF18->unk40->unk48->unk4->unk4 >= 41.0f)) || ((temp_fv0 == -1.0f) && (D_ovl10_06_8004AF18->unk40->unk48->unk4->unk4 <= 0.0f))) {
+    if ((((f32) D_ovl10_06_8004B7E8 == 1.0f) && (D_ovl10_06_8004AF18->unk40->unk48->unk4->unk4 >= 41.0f)) || (((f32) D_ovl10_06_8004B7E8 == -1.0f) && (D_ovl10_06_8004AF18->unk40->unk48->unk4->unk4 <= 0.0f))) {
         D_ovl10_06_8004ACB0[D_ovl10_06_8004ACA8] = NULL;
     }
 }

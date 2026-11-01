@@ -3,22 +3,16 @@
  * .bss and its .data tables. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 128, jp 128
+ * differing words: us 0, jp 0
  *
- * What still differs in us (words):
- * - func_ovl10_09_80044FEC (12), 8004576C (62), 800468FC (9), 80046C10
- *   (9) and 800474A8 (2): ovl_10_08's 80044F98, 800455FC, 8004675C,
- *   80046A70 and 80047264 (ovl_10_12's), with the same differences
- *   (their headers).
- * - func_ovl10_09_80047B70 (17): the same code; the padding IDO puts after its
- *   endless loop (to a 16-byte boundary) is a word longer
- *   because 8004576C is a word short (as in ovl_10_11's 80044C24).
- * - func_ovl10_09_80043238 (2): a `lui at` scheduled one place early, as
- *   in ovl_10_08's 800432B0.
- * - func_ovl10_09_80043B78 (1): pos a word high, as in ovl_10_08's
- *   80044238.
- * - func_ovl10_09_800452BC (14): s3 and s4 swap, as in ovl_10_08's
- *   80045268.
+ * Every function matches in jp (us is the same code). Fixed:
+ * - func_ovl10_09_80043238 (2, a `lui at` one place early): 8004A1FC
+ *   read into a local b (where pad2 was) and stored and passed from it
+ *   (the permuter). ovl_10_07's, 10_08's, 10_11's and 10_12's copies
+ *   (6 words, another schedule) take another fake (ovl_10_11's header).
+ * - As in ovl_10_08 (its header): 8004576C (62, and 80047B70's padding,
+ *   17), 800474A8 (2), 80044FEC (12), 800452BC (14), 800468FC (9),
+ *   80043B78 (1) and 80046C10 (9).
  *
  * ovl_10_09's game object, IDO -O3: the functions are written last to first
  * (IDO -O3 emits a file's functions in reverse). Most of it is ovl_10_08's
@@ -558,7 +552,7 @@ void func_ovl10_09_800474A8(void) {
             y = out[1];
             func_ovl10_09_800481B0(D_ovl10_09_8004A188[i][0], D_ovl10_09_8004A188[i][1], D_ovl10_09_8004A188[i][2],
                                    D_ovl10_09_8004A188[i][0] + 1, D_ovl10_09_8004A188[i][2] + 1,
-                                   D_ovl10_09_8004A188[i][0], y, D_ovl10_09_8004A188[i][2]);
+                                   D_ovl10_09_8004A188[i][0], out[1], D_ovl10_09_8004A188[i][2]);
             func_ovl10_09_800481B8(D_ovl10_09_8004A188[i][0], D_ovl10_09_8004A188[i][1], D_ovl10_09_8004A188[i][2],
                                    D_ovl10_09_8004A188[i][0] + 1, D_ovl10_09_8004A188[i][2] + 1, 0);
             D_ovl10_09_8004A250[i] = D_ovl10_09_8004A188[i][1];
@@ -683,7 +677,6 @@ void func_ovl10_09_80046C10(void) {
     s32 i;
     s32 j;
     s32 found;
-    s32 k;
 
     i = D_ovl10_09_8004A720[D_ovl10_09_80049DD8];
     found = -1;
@@ -705,13 +698,13 @@ void func_ovl10_09_80046C10(void) {
         }
     }
     if (D_ovl10_09_8004AC08 != 0) {
-        for (k = 0; k < D_ovl10_09_8004A820; k++) {
-            if (D_ovl10_09_8004A418[k] != NULL) {
-                func_ovl10_09_80048B20(D_ovl10_09_8004A418[k]);
-                func_ovl10_09_80048B20(D_ovl10_09_8004A488[k]);
-                D_ovl10_09_8004A418[k] = NULL;
-                func_ovl10_09_80046898(k, 0);
-                D_ovl10_09_8004A6B0[k] = 0;
+        for (j = 0; j < D_ovl10_09_8004A820; j++) {
+            if (D_ovl10_09_8004A418[j] != NULL) {
+                func_ovl10_09_80048B20(D_ovl10_09_8004A418[j]);
+                func_ovl10_09_80048B20(D_ovl10_09_8004A488[j]);
+                D_ovl10_09_8004A418[j] = NULL;
+                func_ovl10_09_80046898(j, 0);
+                D_ovl10_09_8004A6B0[j] = 0;
             }
         }
         func_ovl10_09_80045C10();
@@ -723,10 +716,12 @@ void func_ovl10_09_80046C10(void) {
 }
 
 void func_ovl10_09_800468FC(s32 arg0, s32 arg1) {
+    s32 id;
     Vec3f pos;
     Vec3f pos2;
 
-    D_ovl10_09_8004AC10[func_ovl10_09_800430D8(func_ovl10_09_80046E04)] = arg0;
+    id = func_ovl10_09_800430D8(func_ovl10_09_80046E04);
+    D_ovl10_09_8004AC10[id] = arg0;
     if (arg1 != 0) {
         D_ovl10_09_8004A418[arg0] = func_ovl10_09_80048B30(0xBE, 0x01080000, 0x10, 0);
         func_ovl10_09_80048168(D_ovl10_09_8004A4F8[arg0][0], D_ovl10_09_8004A4F8[arg0][1],
@@ -1085,6 +1080,8 @@ void func_ovl10_09_8004576C(s32 *arg0) {
         D_ovl10_09_8004A200[i] = arg0[4];
         D_ovl10_09_8004A218[i] = arg0[5];
         D_ovl10_09_8004A230[i] = arg0[6];
+        /* a uopt block boundary: the addresses below are strength-reduced */
+        do {} while (0);
         D_ovl10_09_8004A268[i] = arg0[7];
         D_ovl10_09_8004A280[i] = arg0[8];
         D_ovl10_09_8004A298[i] = arg0[9];
@@ -1178,6 +1175,7 @@ void func_ovl10_09_800452BC(s32 *arg0) {
             D_ovl10_09_8004A2F8[i]->unk34 = 50.0f;
             D_ovl10_09_8004A2F8[i]->unk38 = 50.0f;
             if (D_ovl10_09_8004A2FC[i] != 0) {
+                if (!arg0 && !arg0) {} /* keeps arg0 in s3 (the permuter) */
                 v = 1;
                 D_ovl10_09_8004A2F4[i]->unk40->unk18 -= 100.0f;
                 D_ovl10_09_8004A2F8[i]->unk40->unk18 += 100.0f;
@@ -1227,6 +1225,7 @@ void func_ovl10_09_80044FEC(s32 *arg0) {
             D_ovl10_09_80049AD8[i] = 0;
             if (D_ovl10_09_80049AA8[i] & 1) {
                 for (j = 0; j < D_ovl10_09_80049CA0[i]; j++) {
+                    if (arg0) {} /* keeps arg0 in s4 (the permuter) */
                     func_ovl10_09_80048140(D_ovl10_09_80049A20[i][0] + j, D_ovl10_09_80049A20[i][1], D_ovl10_09_80049A20[i][2], 1);
                 }
             } else {
@@ -1581,12 +1580,14 @@ void func_ovl10_09_80043D88(void) {
 
 /* opens (arg1 1) or closes the gate */
 void func_ovl10_09_80043B78(s32 arg0, s32 arg1) {
+    s32 id;
     s32 pad;
     Vec3f pos;
 
     if (arg1 != D_ovl10_09_8004A2FC[arg0]) {
         if (D_ovl10_09_8004A404[arg0] == 0) {
-            D_ovl10_09_8004A300[func_ovl10_09_800430D8(func_ovl10_09_80047104)] = arg0;
+            id = func_ovl10_09_800430D8(func_ovl10_09_80047104);
+            D_ovl10_09_8004A300[id] = arg0;
         }
         if (arg1 != 0) {
             D_ovl10_09_8004A40C[arg0] = D_ovl10_09_8004A2F4[arg0]->unk40->unk18 - 100.0f;
@@ -1784,7 +1785,7 @@ void func_ovl10_09_80043324(void) {
 void func_ovl10_09_80043238(void) {
     s32 out[6];
     s32 pad1;
-    s32 pad2;
+    s32 b;
     s32 pad3;
 
     D_ovl10_09_8004A2E0 = -1.0f;
@@ -1798,9 +1799,10 @@ void func_ovl10_09_80043238(void) {
     func_ovl10_09_800482F8(1);
     func_ovl10_09_80043150(D_ovl10_09_8004A174, D_ovl10_09_8004A2D0, D_ovl10_09_8004A2D4, -1.0f);
     func_ovl10_09_80048C78(0x78);
+    b = D_ovl10_09_8004A1FC;
     D_ovl10_09_800499D4 = D_ovl10_09_8004A1F8;
-    D_ovl10_09_800499D8 = D_ovl10_09_8004A1FC;
-    func_ovl10_09_80048200(D_ovl10_09_8004A1F8, D_ovl10_09_8004A1FC, 0);
+    D_ovl10_09_800499D8 = b;
+    func_ovl10_09_80048200(D_ovl10_09_8004A1F8, b, 0);
 }
 
 void func_ovl10_09_80043150(s32 arg0, f32 arg1, f32 arg2, f32 arg3) {

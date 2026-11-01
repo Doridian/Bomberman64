@@ -1,26 +1,25 @@
 /*
  * NON_MATCHING: ovl_10_11's game object, complete: every function and its
- * .data/.bss/.rodata (sizes 0x150/0x450/0xB0 as the original); .text one
- * word short. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
+ * .data/.bss/.rodata (sizes 0x150/0x450/0xB0 as the original) and .text
+ * its size. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 81, eu 81, jp 81
+ * differing words: us 0, eu 0, jp 0
  *
- * What still differs in us (words; eu and jp the same):
- * - func_ovl10_11_800431AC (6): 800469F8/800469FC are loaded in the
- *   order of the stores (the original loads them as the call's
- *   arguments, a1 first) and the call's `move a2,zero` is scheduled
- *   before the jal. Its frame needs the three unused locals.
- * - func_ovl10_11_80043C2C (62): one word short. The original builds
- *   the addresses of 80046A68-80046AB0 in registers (lui/addiu/addu,
- *   a2/a3/t0/t1); ours stores three of them through `at`. A while loop
- *   strength-reduces every array; the do/if form keeps the multu as the
- *   original. A whole-file permuter run found nothing.
- * - func_ovl10_11_80044150 (2): the two stores of `y` (sp+0x74 and the
- *   call's sp+0x18) swap.
- * - func_ovl10_11_80044C24 (11): the same code; the padding IDO puts
- *   after its endless loop (to a 16-byte boundary) is a word longer
- *   because 80043C2C is a word short.
+ * Every function matches in jp (us and eu are the same code; only jp is
+ * measured). What fixed the last 81 words:
+ * - func_ovl10_11_800431AC (6): the loads of 800469F8/800469FC as the
+ *   call's arguments (the original loads them a1 first, after both luis,
+ *   and puts `move a2,zero` in the jal's delay slot), by two fakes from
+ *   the permuter: 800469F8 read into a local a (where pad3 was), and an
+ *   empty `if (800469FC && 800469FC && 800469FC) {}` written on a's line
+ *   (one .loc; on a line of its own it misses by 2). The three
+ *   statements as an inlined static in a "panels.c" `#line` region also
+ *   give the function, but leave its stub before it.
+ * - 80043C2C (62, and 80044C24's padding, 11) by the empty
+ *   `do {} while (0);` before the stores of 80046A68-80046AB0, and
+ *   80044150 (2) by passing out[1] rather than y to
+ *   func_ovl10_11_80045250, as in ovl_10_10.
  *
  * ovl_10_11's game object, IDO -O3: the functions are written last to first
  * (IDO -O3 emits a file's functions in reverse). The task functions
@@ -493,7 +492,7 @@ void func_ovl10_11_80044150(void) {
             y = out[1];
             func_ovl10_11_80045250(D_ovl10_11_80046988[i][0], D_ovl10_11_80046988[i][1], D_ovl10_11_80046988[i][2],
                                    D_ovl10_11_80046988[i][0] + 1, D_ovl10_11_80046988[i][2] + 1,
-                                   D_ovl10_11_80046988[i][0], y, D_ovl10_11_80046988[i][2]);
+                                   D_ovl10_11_80046988[i][0], out[1], D_ovl10_11_80046988[i][2]);
             func_ovl10_11_80045258(D_ovl10_11_80046988[i][0], D_ovl10_11_80046988[i][1], D_ovl10_11_80046988[i][2],
                                    D_ovl10_11_80046988[i][0] + 1, D_ovl10_11_80046988[i][2] + 1, 0);
             D_ovl10_11_80046A50[i] = D_ovl10_11_80046988[i][1];
@@ -605,6 +604,8 @@ void func_ovl10_11_80043C2C(s32 *arg0) {
         D_ovl10_11_80046A00[i] = arg0[4];
         D_ovl10_11_80046A18[i] = arg0[5];
         D_ovl10_11_80046A30[i] = arg0[6];
+        /* a uopt block boundary: the addresses below are strength-reduced */
+        do {} while (0);
         D_ovl10_11_80046A68[i] = arg0[7];
         D_ovl10_11_80046A80[i] = arg0[8];
         D_ovl10_11_80046A98[i] = arg0[9];
@@ -821,7 +822,7 @@ void func_ovl10_11_800431AC(void) {
     s32 out[6];
     s32 pad1;
     s32 pad2;
-    s32 pad3;
+    s32 a;
 
     D_ovl10_11_80046AE0 = -1.0f;
     func_ovl10_11_800453D0(0x40);
@@ -834,9 +835,11 @@ void func_ovl10_11_800431AC(void) {
     func_ovl10_11_80045398(1);
     func_ovl10_11_800430C4(D_ovl10_11_80046974, D_ovl10_11_80046AD0, D_ovl10_11_80046AD4, -1.0f);
     func_ovl10_11_80045D18(0x78);
-    D_ovl10_11_800466C4 = D_ovl10_11_800469F8;
+    /* fakes (the permuter): a, and the test of D_ovl10_11_800469FC, on a's line */
+    a = D_ovl10_11_800469F8; if (D_ovl10_11_800469FC && D_ovl10_11_800469FC && D_ovl10_11_800469FC) {}
+    D_ovl10_11_800466C4 = a;
     D_ovl10_11_800466C8 = D_ovl10_11_800469FC;
-    func_ovl10_11_800452A0(D_ovl10_11_800469F8, D_ovl10_11_800469FC, 0);
+    func_ovl10_11_800452A0(a, D_ovl10_11_800469FC, 0);
 }
 
 void func_ovl10_11_800430C4(s32 arg0, f32 arg1, f32 arg2, f32 arg3) {
