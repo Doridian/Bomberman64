@@ -838,11 +838,12 @@ segments:
     symbol_name_format: ovl0D_02_$VRAM
     dir: overlays/ovl_0D_02
     subsegments:
-      - [0x19C2C0, asm, ovl_0D_02_entry]
-      - [0x19C2D0, asm]
+      - [0x19C2C0, c, ovl_0D_02_entry]
+      - [0x19C2D0, c]
       - [0x19F270, hasm, ovl_0D_02_zerojmp]
-      - [0x1A08B0, rodata]
-      - {type: bss, vram: 0x80047A00}
+      - [0x1A08B0, .data, 19C2D0]
+      - [0x1A0B80, .rodata, 19C2D0]
+      - {type: .bss, vram: 0x80047A00, name: 19C2D0}
   - name: ovl_0D_03
     type: code
     start: 0x1A0CC0
@@ -866,11 +867,12 @@ segments:
     symbol_name_format: ovl0D_04_$VRAM
     dir: overlays/ovl_0D_04
     subsegments:
-      - [0x1A5E00, asm, ovl_0D_04_entry]
-      - [0x1A5E10, asm]
+      - [0x1A5E00, c, ovl_0D_04_entry]
+      - [0x1A5E10, c]
       - [0x1A83C0, hasm, ovl_0D_04_zerojmp]
-      - [0x1A9A00, rodata]
-      - {type: bss, vram: 0x80047020}
+      - [0x1A9A00, .data, 1A5E10]
+      - [0x1A9D50, .rodata, 1A5E10]
+      - {type: .bss, vram: 0x80047020, name: 1A5E10}
   - name: ovl_0D_05
     type: code
     start: 0x1A9E20
@@ -894,11 +896,12 @@ segments:
     symbol_name_format: ovl0D_06_$VRAM
     dir: overlays/ovl_0D_06
     subsegments:
-      - [0x1ACF50, asm, ovl_0D_06_entry]
-      - [0x1ACF60, asm]
+      - [0x1ACF50, c, ovl_0D_06_entry]
+      - [0x1ACF60, c]
       - [0x1AF990, hasm, ovl_0D_06_zerojmp]
-      - [0x1B0FD0, rodata]
-      - {type: bss, vram: 0x800475B0}
+      - [0x1B0FD0, .data, 1ACF60]
+      - [0x1B1490, .rodata, 1ACF60]
+      - {type: .bss, vram: 0x800475B0, name: 1ACF60}
   - name: ovl_0D_07
     type: code
     start: 0x1B1500

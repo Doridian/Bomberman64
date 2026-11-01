@@ -201,6 +201,18 @@ ovl_0C_09 18F6B0 0x270 0xA0 0x60
 ovl_0C_10 ovl_0C_10_entry 0 0 0
 ovl_0C_10 194190 0x40 0xD0 0x70
 
+# ovl_0D_02: all C (-O3)
+ovl_0D_02 ovl_0D_02_entry 0 0 0
+ovl_0D_02 19C2D0 0x2D0 0x140 0x190
+
+# ovl_0D_04: all C (-O3)
+ovl_0D_04 ovl_0D_04_entry 0 0 0
+ovl_0D_04 1A5E10 0x350 0xD0 0x60
+
+# ovl_0D_06: all C (-O3)
+ovl_0D_06 ovl_0D_06_entry 0 0 0
+ovl_0D_06 1ACF60 0x4C0 0x70 0x60
+
 # ovl_0D_07: all C (-O3)
 ovl_0D_07 ovl_0D_07_entry 0 0 0
 ovl_0D_07 1B1510 0x40 0x100 0x60

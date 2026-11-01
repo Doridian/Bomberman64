@@ -1,10 +1,5 @@
 /*
- * NON_MATCHING: ovl_0D_04's stage object, complete: all 43 functions; .data 0x350,
- * .rodata 0xD0 and .bss 0x60 as the original (the .data and .rodata words
- * too), and the stubs' places.
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * ovl_0D_04's stage object, IDO -O3; it matches in us, eu and jp.
  *
  * The gate 80044318 matches in us: its loop calls the per-gate static
  * 80044300 (Ent, flag), as ovl_0D_02's 800434F8 does, with a fake that
@@ -12,7 +7,7 @@
  * are dir, pos, r with dir.x set first.
  *
  * What fixed what (from 512 words in jp, us not re-measured):
- * - ovl_0D_02's gate code ported (nonmatching/overlays/ovl_0D_02): the
+ * - ovl_0D_02's gate code ported (src/overlays/ovl_0D_02): the
  *   clamp 80043EA8 is (axis, v, size), the direction 80043F1C takes the
  *   entity (`c.eq.s const, a`), 80043F24's case 1 computes z2 as z0 + 1 with
  *   `len = x1 + z1` (a dead fake) ahead of x0's set-up (ovl_0D_02's header

@@ -1,13 +1,7 @@
 /*
- * NON_MATCHING: ovl_0D_06's stage object, complete: all 45 functions, the
- * stubs the inlined statics leave in their places (the two unused ones at
- * the end too), .data 0x4C0, .rodata 0x70 and .bss 0x60 as the original
- * (the .data and .rodata words too).
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * ovl_0D_06's stage object, IDO -O3; it matches in us, eu and jp.
  *
- * The sibling of ovl_0D_04 (nonmatching/overlays/ovl_0D_04): its gate code
+ * The sibling of ovl_0D_04 (src/overlays/ovl_0D_04): its gate code
  * (80044414, 80044808, 800440AC) and model tables are the same. The
  * gate 80044808 matches in us: as ovl_0D_04's 80044318, its loop calls the
  * per-gate static 800447F0 (Ent, flag), with a fake that reads
@@ -33,7 +27,9 @@
  * - 80044D50 (80044D48): the call of 800467A0 in a "panels.c" region.
  * - 8004355C: its parameters (id, x, n, z): the caller sets s4 first.
  * - 80043824: the 8004747C count stored and divided by through the field
- *   (the store is forwarded; no local n, which took v0).
+ *   (the store is forwarded; no local n, which took v0). After the
+ *   1700.0f camera call it passes D_ovl0D_06_80047364's model, not
+ *   8004732C's (only the linked ROM showed it: one relocation).
  * - 800435FC: its address taken in an `if (0)` in 80043500 (a fake): as
  *   an address-taken static it uses t0-t5 for the 7-argument calls, as the
  *   original, and still comes out after 8004355C.
@@ -59,7 +55,7 @@
 /*
  * ovl_0D_06's stage object, IDO -O3: the functions are written last to first
  * (IDO -O3 emits a file's functions in reverse; docs/DECOMPILING.md).
- * ovl_0D_04's object (nonmatching/overlays/ovl_0D_04) is its sibling.
+ * ovl_0D_04's object (src/overlays/ovl_0D_04) is its sibling.
  */
 
 typedef struct {
@@ -1169,7 +1165,7 @@ void func_ovl0D_06_80043824(void) {
     func_ovl0D_06_800433B4(D_ovl0D_06_8004739C[1].obj);
     func_ovl0D_06_80046E60(0x70);
     func_ovl0D_06_800465C8(2200.0f, 500.0f, 1700.0f);
-    func_ovl0D_06_800433B4(D_ovl0D_06_8004732C[0].obj);
+    func_ovl0D_06_800433B4(D_ovl0D_06_80047364[0].obj);
     func_ovl0D_06_80046E60(0x71);
     func_ovl0D_06_80043318(0x11, 0x10);
     D_ovl0D_06_8004732C[0].obj->unk40->unk10 -= 300.0f;

@@ -1,13 +1,7 @@
 /*
- * NON_MATCHING: ovl_0D_02's stage object, complete: all 29 functions, the
- * stubs the inlined statics leave in their places (every function and stub
- * at the original's address), .data 0x2D0, .rodata 0x140 and .bss 0x190
- * as the original (the .data and .rodata words too).
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * ovl_0D_02's stage object, IDO -O3; it matches in us, eu and jp.
  *
- * The sibling of ovl_0D_04/05/06 (nonmatching/overlays): the gate code
+ * The sibling of ovl_0D_04/05/06 (src/ and nonmatching/): the gate code
  * (80043510, 8004311C) is 0D_06's, the models' tasks 0D_05's.
  * What fixed what (from 98 words):
  * - 8004311C's second and fourth 80046338 calls pass 0x12 (the draft had
@@ -52,7 +46,7 @@
 /*
  * ovl_0D_02's stage object, IDO -O3: the functions are written last to first
  * (IDO -O3 emits a file's functions in reverse; docs/DECOMPILING.md).
- * ovl_0D_04, 0D_05 and 0D_06 (nonmatching/overlays) are its siblings.
+ * ovl_0D_04, 0D_05 and 0D_06 (src/ and nonmatching/) are its siblings.
  */
 
 typedef struct {
