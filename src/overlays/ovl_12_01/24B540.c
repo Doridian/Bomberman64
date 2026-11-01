@@ -1,32 +1,10 @@
 /*
- * NON_MATCHING: ovl_12_01's game object, complete: every function and its data.
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 19, eu 19, jp 19
- *
- * The text is the original's size and order, and .data/.rodata/.bss
- * build to the original's bytes (0x120, 0x170, 0x60). What still differs
- * (words; the same in all three), both as in ovl_12_03's draft:
- * - func_ovl12_01_80043190 (17): the inlined func_ovl12_01_80043188's
- *   first block is scheduled differently: the original saves s1/s2 and
- *   sets &D_ovl12_01_800464F0 and the count before computing x, and
- *   stores y before x. The copies inlined into func_ovl12_01_80043468 and
- *   func_ovl12_01_800441AC match. Parameter order, statement order, a
- *   body with locals in place of the static, a pointer local, and a folded
- *   test at the start don't help. (The store before the epilogue is the
- *   fake test's; see the static.)
- * - func_ovl12_01_80043754 (2): the `lui a0` of D_ovl12_01_800464E0 is
- *   scheduled before `sw ra`; the original has it after (one or two empty
- *   statics, a static holding the calls or returning the value, a local
- *   copy, K&R declarations, the lines joined: no change). The permuter
- *   gets the order with a test of an unset pointer before the load
- *   (`s32 *p; if ((p && p) && p) {} p = &D_ovl12_01_800464E0;`), which
- *   costs a stack slot (frame 0x20 for 0x18) here and in
- *   func_ovl12_01_80043850: a block boundary before the load.
- * The entry (ovl_12_01_entry, `return func_ovl12_01_80044350;`) goes to
- * src/ with it.
+ * ovl_12_01 matches in us, eu and jp. Two `#line`
+ * regions in another file (panels.c) end as1's blocks where the
+ * original's do (see func_ovl12_01_8004374C and func_ovl12_01_80043188).
  */
 #include "common.h"
+#line 16 "24B540.c"
 
 /*
  * ovl_12_01's game object, IDO -O3: the functions are written last to first
@@ -757,8 +735,12 @@ void func_ovl12_01_80043754(void) {
     func_ovl12_01_80045058();
 }
 
+/* In panels.c: its inlined (empty) body's `.file` ends the block before
+ * the load of D_ovl12_01_800464E0, so `sw ra` comes first (2 words to 0). */
+#line 1 "panels.c"
 static void func_ovl12_01_8004374C(void) {
 }
+#line 752 "24B540.c"
 
 /* Defined above func_ovl12_01_800436F8, which pulls it out (and it its own
  * callees, defined below it) ahead of itself. */
@@ -851,29 +833,25 @@ void func_ovl12_01_80043190(void) {
 }
 
 /* Inlined into func_ovl12_01_80043190 only; that one is inlined into its
- * callers in turn (ovl_12_03's func_ovl12_03_8004316C).
- * The empty test after the body is a fake (the permuter's): the branch IDO
- * folds away still ends the block, so the store of D_ovl12_01_800464E0
- * comes before the epilogue as in the original (27 words to 18). The body
- * on one line (a macro) saves one more. */
-#define UNK_MACRO_ovl12_01_80043188()                                                     \
-    D_ovl12_01_800464F0[0] = x * 100.0f;                                                  \
-    D_ovl12_01_800464F0[1] = 0.0f;                                                        \
-    for (i = 0; i < count; i++) {                                                         \
-        D_ovl12_01_800464F0[1] += func_ovl12_01_80044FA0(i) * 100.0f;                     \
-    }                                                                                     \
-    D_ovl12_01_800464F0[1] += 100.0f;                                                     \
-    D_ovl12_01_800464F0[2] = z * 100.0f;                                                  \
-    D_ovl12_01_800464E0 = func_ovl12_01_80045EE0(0x28, (Vec3f *) D_ovl12_01_800464F0, 0)
-
+ * callers in turn (ovl_12_03's func_ovl12_03_8004316C). Defined in another
+ * file (panels.c): the `.file` at the inlined body ends as1's block after
+ * the prologue and the hoisted &D_ovl12_01_800464F0, 100.0f and count, as
+ * in the original (17 words to 0). */
+#line 1 "panels.c"
 static void func_ovl12_01_80043188(f32 x, s32 z, s32 count) {
     s32 i;
 
-    UNK_MACRO_ovl12_01_80043188();
-    if (!i && !i) {
+    D_ovl12_01_800464F0[0] = x * 100.0f;
+    D_ovl12_01_800464F0[1] = 0.0f;
+    for (i = 0; i < count; i++) {
+        D_ovl12_01_800464F0[1] += func_ovl12_01_80044FA0(i) * 100.0f;
     }
+    D_ovl12_01_800464F0[1] += 100.0f;
+    D_ovl12_01_800464F0[2] = z * 100.0f;
+    D_ovl12_01_800464E0 = func_ovl12_01_80045EE0(0x28, (Vec3f *) D_ovl12_01_800464F0, 0);
 }
 
+#line 863 "24B540.c"
 static void func_ovl12_01_80043180(void) {
     func_ovl12_01_800458A0();
     func_ovl12_01_80045868(D_ovl12_01_800464C0);

@@ -1,22 +1,24 @@
 /*
- * NON_MATCHING: ovl_0D_07's stage object, complete: every function and its data.
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 15, eu 15, jp 15
- *
- * Its .data and .rodata match (scratch/tools/datacmp.py), and the .bss has
- * the original's layout. What still differs in us (words):
- * - func_ovl0D_07_80043660 (13): registers only. Event 5 keeps
- *   D_8004671C in v1 where the original has v0; in event 11 the inlined
- *   func_ovl0D_07_80043010 has p0 and p1 in a3 and v1 (the original: v1
- *   and a3). How 80043010 is called decides event 4's register:
- *   with (obj[0], obj[1]) both arguments take a t register for the whole
- *   function and event 4 gets t2 for the original's t0; passing player 0
- *   through `o` and player 1's unk40 leaves only one, as in the original.
- * - func_ovl0D_07_8004342C (2): `mtc1 $zero` comes after `sw $ra` in the
- *   prologue, not before it (no fake moves it).
+ * ovl_0D_07's stage object, IDO -O3; it matches in us, eu and jp. Its
+ * fakes:
+ * - `#line 1 "panels.c"` around the two statics 80043424 and 800432F0
+ *   (back to "1B1510.c" after them): the `.file` ugen emits where each is
+ *   inlined ends an as1 block, which puts 8004342C's `mtc1 $zero` ahead of
+ *   `sw $ra` and keeps both statics' stores ahead of the next call (it
+ *   replaces the `if (!D && !D && !D) {}` fakes 8004342C and 800432F8 had).
+ *   The `#line` after the include gives the file one name however it is
+ *   compiled.
+ * - func_ovl0D_07_80043660, event 5: D_ovl0D_07_8004671C read into a
+ *   block-local `k`, so it is its own live range and gets v0 (with the
+ *   global compared directly it shares event 4's v1).
+ * - event 11: the static 80043010 takes player 0 and the `obj` array and
+ *   reads player 1's unk40 itself, after player 0's: p0 gets v1 and p1 a3,
+ *   and player 1 is reloaded into a temporary, as in the original.
+ * - 80043660's `pad[3]` (the frame's size) and the three empty statics
+ *   80043030 calls (the stubs' placement).
  */
 #include "common.h"
+#line 28 "1B1510.c"
 
 /*
  * ovl_0D_07's stage object, IDO -O3: the functions are written last to first
@@ -126,7 +128,7 @@ void func_ovl0D_07_80043D80(void);
 static void func_ovl0D_07_80043028(void);
 static void func_ovl0D_07_80043020(void);
 static void func_ovl0D_07_80043018(void);
-static f32 func_ovl0D_07_80043010(UnkStructA *obj0, UnkStructA_40 *p1);
+static f32 func_ovl0D_07_80043010(UnkStructA *obj0, UnkStructA **obj);
 static void func_ovl0D_07_80043424(UnkStruct_ovl0D_07_800465A0 *e);
 static void func_ovl0D_07_800432F0(UnkStruct_ovl0D_07_800465A0 *e);
 void func_ovl0D_07_80044628(void);
@@ -339,13 +341,7 @@ void func_ovl0D_07_80044798(void) {
 /* above its callback 80044754 in the source: defined with the other helpers,
  * the callbacks come out out of order */
 void func_ovl0D_07_8004342C(void) {
-    /* fakes: the first keeps the call's argument out of the prologue, the
-     * second keeps the static's last stores ahead of the next call */
-    if (!D_ovl0D_07_80046704 && !D_ovl0D_07_80046704 && !D_ovl0D_07_80046704) {
-    }
     func_ovl0D_07_80043424(&D_ovl0D_07_800465A0);
-    if (!D_ovl0D_07_80046704 && !D_ovl0D_07_80046704 && !D_ovl0D_07_80046704) {
-    }
     func_ovl0D_07_80045CB0(D_ovl0D_07_800465A0.unk0, 0x80000);
     D_ovl0D_07_8004673C = func_ovl0D_07_80045988(0x207, 0);
     D_ovl0D_07_8004673C->unkC |= 0x80;
@@ -537,7 +533,9 @@ void func_ovl0D_07_80043D80(void) {
 }
 
 
-/* the stage's model (D_ovl0D_07_800465A0) placed */
+/* the stage's model (D_ovl0D_07_800465A0) placed; this static and the next
+ * are in "panels.c" (a fake, see the top) */
+#line 1 "panels.c"
 static void func_ovl0D_07_80043424(UnkStruct_ovl0D_07_800465A0 *e) {
     e->unk0 = func_ovl0D_07_80045CF0(e->unk8, 0xD0, 0.0f, 0.0f, 0.0f);
     func_ovl0D_07_80045CA8(e->unk0, 0x01080000);
@@ -569,6 +567,7 @@ static void func_ovl0D_07_800432F0(UnkStruct_ovl0D_07_800465A0 *e) {
     e->unk0 = NULL;
     e->unk4 = -1;
 }
+#line 577 "1B1510.c"
 
 
 void func_ovl0D_07_800432F8(void) {
@@ -583,9 +582,6 @@ void func_ovl0D_07_800432F8(void) {
         }
     }
     func_ovl0D_07_800432F0(&D_ovl0D_07_800465A0);
-    /* a fake: keeps the static's stores ahead of the next call's argument */
-    if (!D_ovl0D_07_80046704 && !D_ovl0D_07_80046704 && !D_ovl0D_07_80046704) {
-    }
     func_ovl0D_07_80045990(D_ovl0D_07_8004673C);
     if (D_ovl0D_07_80046738 == 0) {
         func_ovl0D_07_80046020();
@@ -642,16 +638,17 @@ void func_ovl0D_07_80043030(void) {
 }
 
 /* the two players face each other (event 11): the angle for player 1. A
- * static: its locals sit below the caller's and the spill, as in the original
- * (`pad` is a word the frame has there: a p1 copy does the same) */
-static f32 func_ovl0D_07_80043010(UnkStructA *obj0, UnkStructA_40 *p1) {
-    s32 pad;
+ * static: its locals sit below the caller's and the spill, as in the original.
+ * Player 1's unk40 is read here, after player 0's (see the top) */
+static f32 func_ovl0D_07_80043010(UnkStructA *obj0, UnkStructA **obj) {
     UnkStructA_40 *p0;
+    UnkStructA_40 *p1;
     Vec3f pos0;
     Vec3f pos1;
     Vec3f angle;
 
     p0 = obj0->unk40;
+    p1 = obj[1]->unk40;
     pos0.x = p0->unk10;
     pos0.y = p0->unk14;
     pos0.z = p0->unk18;
@@ -707,11 +704,15 @@ void func_ovl0D_07_80043660(s32 arg0) {
             func_ovl0D_07_80043030();
             break;
         case 5:
-            if (D_ovl0D_07_8004671C == 0x10 || 0x1A == D_ovl0D_07_8004671C || D_ovl0D_07_8004671C == 0x1B) {
-                while (D_ovl0D_07_80046734 != 0) {
-                    func_ovl0D_07_80045E40();
+            {
+                s32 k = D_ovl0D_07_8004671C;
+
+                if (k == 0x10 || 0x1A == k || k == 0x1B) {
+                    while (D_ovl0D_07_80046734 != 0) {
+                        func_ovl0D_07_80045E40();
+                    }
+                    func_ovl0D_07_80045498(0);
                 }
-                func_ovl0D_07_80045498(0);
             }
             break;
         case 4:
@@ -730,7 +731,7 @@ void func_ovl0D_07_80043660(s32 arg0) {
             func_ovl0D_07_80045E18(30);
             obj[1] = func_ovl0D_07_800454E8(1);
             obj[0] = o = func_ovl0D_07_800454E8(0);
-            obj[0]->unk40->unk20 = func_ovl0D_07_80043010(o, obj[1]->unk40);
+            obj[0]->unk40->unk20 = func_ovl0D_07_80043010(o, obj);
             func_ovl0D_07_80045AE8(obj[1]->unk40->unk10, obj[1]->unk40->unk14 + 50.0f, obj[1]->unk40->unk18);
             func_ovl0D_07_80045AD8(0);
             func_ovl0D_07_80045AF8(2350.0f, 300.0f, 1550.0f);

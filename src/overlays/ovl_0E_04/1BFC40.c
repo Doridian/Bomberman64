@@ -1,29 +1,28 @@
 /*
- * NON_MATCHING: ovl_0E_04's game object, complete: every function and its data
- * (.data 0x410, .rodata 0xB0 and .bss 0x60 as the original).
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 21, eu 21, jp 21
+ * ovl_0E_04 matches in us, eu and jp.
  *
- * What still differs in us (words):
- * - func_ovl0E_04_800439A4 (17): ovl_12_01's 80043190 (the same camera
- *   set-up, func_ovl0E_04_8004399C): the original saves s1/s2 and sets
- *   &D_ovl0E_04_80046F30 and the count before computing x, and stores y
- *   before x. The copies inlined into func_ovl0E_04_80043DD4 and
- *   func_ovl0E_04_80044274 match.
- * - func_ovl0E_04_80043158 (2): ovl_12_01's 80043754: the `lui a0` of
- *   D_ovl0E_04_80046F20 is scheduled before `sw ra`; the original has it
- *   after.
- * - func_ovl0E_04_80043B4C (2): ovl_0E_05's 80043860: `move a1,s4` is
- *   scheduled into a load delay slot where the original has it in a call's
- *   delay slot.
+ * - func_ovl0E_04_800439A4: the static it inlines, func_ovl0E_04_8004399C,
+ *   is defined in "panels.c" (a fake `#line`; the `#line` after it returns
+ *   to the file's own numbers, and the one after the include gives the file
+ *   one name however it is compiled), as in ovl_0C_09's 18F6B0.c. The
+ *   original's prologue has a block boundary right after the hoisted
+ *   invariants (&D_ovl0E_04_80046F30 in s1, 100.0f in fs0, the count in
+ *   s2): the `.file` ugen emits where the inlined body starts is it. The
+ *   fakes it had before (the body as a one-line macro, `!i && !i`) go.
+ * - func_ovl0E_04_80043158: the last of its empty statics,
+ *   func_ovl0E_04_80043150, is defined in "panels.c" too: the boundary
+ *   keeps the `lui a0` of D_ovl0E_04_80046F20 after `sw ra`.
+ * - func_ovl0E_04_80043B4C: the fake test of unkE before the last call is
+ *   ovl_0E_05's (src/overlays/ovl_0E_05/1C3B40.c): it ends the block, so
+ *   `move a1,s4` stays in the call's delay slot.
  */
 #include "common.h"
+#line 27 "1BFC40.c"
 
 /*
  * ovl_0E_04's game object, IDO -O3: the functions are written last to first
  * (IDO -O3 emits a file's functions in reverse). Much of it is ovl_0E_05's
- * code (nonmatching/overlays/ovl_0E_05) and ovl_0E_02's, with ovl_12_01's
+ * code (src/overlays/ovl_0E_05/1C3B40.c) and ovl_0E_02's, with ovl_12_01's
  * camera set-up (func_ovl0E_04_8004399C).
  */
 
@@ -758,6 +757,10 @@ void func_ovl0E_04_80043B4C(void) {
         D_ovl0E_04_80046D70[i].unk0->unk40->unk28 = D_ovl0E_04_80046D70[i].unk2C;
         D_ovl0E_04_80046D70[i].unk0->unk40->unk2C = D_ovl0E_04_80046D70[i].unk30;
         D_ovl0E_04_80046D70[i].unk0->unk40->unk30 = D_ovl0E_04_80046D70[i].unk34;
+        /* a fake (ends the block): without it `move a1` for the next call is
+         * scheduled into a load delay slot above, not the call's delay slot */
+        if (!D_ovl0E_04_80046D70[i].unkE && !D_ovl0E_04_80046D70[i].unkE && !D_ovl0E_04_80046D70[i].unkE) {
+        }
         func_ovl0E_04_80046150(D_ovl0E_04_80046D70[i].unk0, 0x80000);
     }
 }
@@ -820,26 +823,22 @@ void func_ovl0E_04_800439A4(void) {
 }
 
 /* Inlined into func_ovl0E_04_800439A4 only, which is inlined into its
- * callers in turn (ovl_12_01's func_ovl12_01_80043188).
- * The empty test after the body is a fake (the permuter's, in ovl_12_01):
- * the branch IDO folds away still ends the block. */
-#define UNK_MACRO_ovl0E_04_8004399C()                                                     \
-    D_ovl0E_04_80046F30[0] = x * 100.0f;                                                  \
-    D_ovl0E_04_80046F30[1] = 0.0f;                                                        \
-    for (i = 0; i < count; i++) {                                                         \
-        D_ovl0E_04_80046F30[1] += func_ovl0E_04_800457B0(i) * 100.0f;                     \
-    }                                                                                     \
-    D_ovl0E_04_80046F30[1] += 100.0f;                                                     \
-    D_ovl0E_04_80046F30[2] = z * 100.0f;                                                  \
-    D_ovl0E_04_80046F20 = func_ovl0E_04_800466F0(0x25, D_ovl0E_04_80046F30, 0)
-
+ * callers in turn; in "panels.c" for the block boundary where its body
+ * starts (ovl_0C_09's func_ovl0C_09_80043D00). */
+#line 1 "panels.c"
 static void func_ovl0E_04_8004399C(f32 x, s32 z, s32 count) {
     s32 i;
 
-    UNK_MACRO_ovl0E_04_8004399C();
-    if (!i && !i) {
+    D_ovl0E_04_80046F30[0] = x * 100.0f;
+    D_ovl0E_04_80046F30[1] = 0.0f;
+    for (i = 0; i < count; i++) {
+        D_ovl0E_04_80046F30[1] += func_ovl0E_04_800457B0(i) * 100.0f;
     }
+    D_ovl0E_04_80046F30[1] += 100.0f;
+    D_ovl0E_04_80046F30[2] = z * 100.0f;
+    D_ovl0E_04_80046F20 = func_ovl0E_04_800466F0(0x25, D_ovl0E_04_80046F30, 0);
 }
+#line 848 "1BFC40.c"
 
 void func_ovl0E_04_80043908(void) {
     s16 flag;
@@ -1032,8 +1031,11 @@ void func_ovl0E_04_80043158(void) {
     func_ovl0E_04_80045868();
 }
 
+/* in "panels.c": a block boundary before the load in func_ovl0E_04_80043158 */
+#line 1 "panels.c"
 static void func_ovl0E_04_80043150(void) {
 }
+#line 1045 "1BFC40.c"
 
 static void func_ovl0E_04_80043148(void) {
 }

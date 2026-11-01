@@ -1,9 +1,5 @@
 /*
- * NON_MATCHING: ovl_0C_09's game object, complete: every function and its
- * data (.data 0x270, .rodata 0xA0 and .bss 0x60 laid out as the original).
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 17, jp 17
+ * ovl_0C_09 matches in us, eu and jp.
  *
  * Float zeros come in two kinds: the original keeps the zero it compares
  * with (written `0`) in one register and the zero it stores (`0.0f`) in
@@ -12,28 +8,19 @@
  * for its parameters) with the flag and the drop distance in locals, and
  * 80045060's second flag is an s16.
  *
- * What still differs in us (words):
- * - func_ovl0C_09_80043D08 (17): the prologue's schedule only.  The
- *   original has a block boundary right after the hoisted invariants
- *   (&D_ovl0C_09_80047B10 in s1, 100.0f in fs0, the count in s2): IDO's
- *   ugen output (cc -c -S, u.out.s) assembled with a referenced label
- *   inserted after `li $18, 5` gives the original's 19 words exactly, so
- *   the body after it is a block of its own (x, 0 and the mul late, y
- *   stored before x).  No C found for that boundary yet: fakes at the top
- *   of the static or the wrapper, goto/do-while(0)/while(1)-break around
- *   the body, a self call under `if (0)` and every placement of the static
- *   are no better (they change the loop test to `bne` or store x through
- *   `lui at`); without `.noalias $17,$sp` or with the saves reordered the
- *   schedule doesn't come out either.  Line breaks, parameter order and
- *   types, the callees' declarations and -r4300_mul make no difference.
- *   The static defined below 80043D08 and the second fake
- *   (`!count && !count`) put the store of D_ovl0C_09_80047B00 right after
- *   its call (21 words to 17); in ovl_12_01/12_03/0E_04, whose wrappers end
- *   with the static, the second fake doesn't help.
- * - func_ovl0C_09_80044BA4: 0 (`hit = FALSE` shares its line with the
- *   while, which keeps it after the lw of obj->unk40).
+ * - func_ovl0C_09_80043D08: the static it inlines, func_ovl0C_09_80043D00,
+ *   is defined in "panels.c" (a fake `#line`; `#line 1047` returns to the
+ *   file's own numbers, and the `#line 30` after the include gives the
+ *   file one name however it is compiled).  The original's prologue has a
+ *   block boundary right after the hoisted invariants
+ *   (&D_ovl0C_09_80047B10 in s1, 100.0f in fs0, the count in s2): the
+ *   `.file` ugen emits where the inlined body starts is it.  The fakes it
+ *   needed before (`!count && !count`, the body as a one-line macro) go.
+ * - func_ovl0C_09_80044BA4: `hit = FALSE` shares its line with the while,
+ *   which keeps it after the lw of obj->unk40.
  */
 #include "common.h"
+#line 30 "18F6B0.c"
 
 /*
  * ovl_0C_09's game object, IDO -O3: the functions are written last to first
@@ -1037,26 +1024,20 @@ void func_ovl0C_09_80043D08(void) {
     func_ovl0C_09_80046518(0x1F, 5, 0xF, 0x20, 0x10, 0x12);
 }
 
-/* Inlined into func_ovl0C_09_80043D08 only, as ovl_12_03's 8004316C. */
-#define UNK_MACRO_ovl0C_09_80043D00()                                          \
-    D_ovl0C_09_80047B10.x = x * 100.0f;                                        \
-    D_ovl0C_09_80047B10.y = 0.0f;                                              \
-    for (i = 0; i < count; i++) {                                              \
-        D_ovl0C_09_80047B10.y += func_ovl0C_09_80046540(i) * 100.0f;           \
-    }                                                                          \
-    D_ovl0C_09_80047B10.y += 100.0f;                                           \
-    D_ovl0C_09_80047B10.z = z * 100.0f;                                        \
-    D_ovl0C_09_80047B00 = func_ovl0C_09_80047480(0x26, &D_ovl0C_09_80047B10, 0)
-
+#line 1 "panels.c"
 static void func_ovl0C_09_80043D00(f32 x, s32 z, s32 count) {
     s32 i;
 
-    UNK_MACRO_ovl0C_09_80043D00();
-    if (!i && !i) {
+    D_ovl0C_09_80047B10.x = x * 100.0f;
+    D_ovl0C_09_80047B10.y = 0.0f;
+    for (i = 0; i < count; i++) {
+        D_ovl0C_09_80047B10.y += func_ovl0C_09_80046540(i) * 100.0f;
     }
-    if (!count && !count) {
-    }
+    D_ovl0C_09_80047B10.y += 100.0f;
+    D_ovl0C_09_80047B10.z = z * 100.0f;
+    D_ovl0C_09_80047B00 = func_ovl0C_09_80047480(0x26, &D_ovl0C_09_80047B10, 0);
 }
+#line 1047 "18F6B0.c"
 
 void func_ovl0C_09_80043C40(UnkStruct_ovl0C_09_8004784C *arg0) {
     UnkStructA *obj;

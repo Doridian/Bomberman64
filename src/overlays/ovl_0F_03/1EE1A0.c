@@ -1,10 +1,5 @@
 /*
- * NON_MATCHING: ovl_0F_03's game object, complete: every function and its
- * data (.data, .rodata and .bss as the original; every .bss symbol at its
- * address).
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 2, eu 2, jp 2
+ * ovl_0F_03 matches in us, eu and jp.
  *
  * The functions ovl_0F_02's draft (1E84A0.c) shares with this overlay are
  * ported from it: the particles (func_ovl0F_03_80044258 with its loop in
@@ -45,38 +40,28 @@
  * - The door's 2.45 is 2.4500003f: the original's float is 0x401CCCCE,
  *   one ulp above 2.45f (ovl_0F_02's and ovl_0F_04's drafts have 2.45f
  *   against the same 0x401CCCCE).
- * - D_ovl0F_03_800470C8 is written in the unused static 80045678 (its body
- *   isn't emitted): -O3 drops an unreferenced global's storage, and the
- *   original has 4 bytes at 800470C8 that no code reads (.bss 0x1F0 to
- *   0x200, every symbol after it in place). 800470B4, 800470D4 and
- *   800470E4 stay unreferenced: their 4 bytes are the 8-byte alignment of
- *   the next object.
+ * - D_ovl0F_03_800470C8, 800470B4, 800470D4 and 800470E4 are written in
+ *   the unused static 80045678 (its body isn't emitted): -O3 drops an
+ *   unreferenced global's storage, and the original has 4 bytes at each
+ *   that no code reads (.bss 0x1F0 to 0x200 for 800470C8; the others sit
+ *   in alignment gaps, and unreferenced they are left as empty symbols at
+ *   the wrong address).
  * - 800434AC ends with an empty `if (pos) {}`: its label is where the
  *   original's beqz goes (8004376C, a nop in its delay slot), apart from the
  *   early returns' (80043770). Any statement there costs a basic block,
  *   and one more block makes uopt keep arg0 in a3 (a 0x78 frame), so
  *   80043494's `else { other = NULL; }` (redundant, and ovl_17_09's matched
  *   copy has none) is gone to make room.
+ * - 80043494 returns s64 and keeps saved and hit as the two words of a
+ *   union, saved high; 800434AC tests `(s32)` of what it returns. Only so
+ *   does the flag come out in v1, as the original's: ugen loads an s64
+ *   return value straight from memory into v0/v1, the test's load folds
+ *   into v1's and as1 drops the unused v0 load. With an s32 return (and
+ *   a second test, an address-taken hit, s64/u64 of an s32 hit, #line
+ *   around the test) it is loaded into v0 or t0.
  * - The `if (0)` in 80043434 only puts 80044C20 (which nothing uses)
  *   where the original has it, and the unused static 80045678's call
  *   keeps 80043030 from being inlined.
- *
- * What still differs (jp):
- * - func_ovl0F_03_800434AC (2): the hit flag (80043494's) is loaded into
- *   v0, the original's v1. ugen loads it twice (`lw $2` for the return,
- *   a temporary for the test) and as1 folds them into v0; with a .file
- *   change between them the temporary survives (t0). ovl_0F_10's copy
- *   (80044074) keeps the flag in v1 for two tests (the restore, then
- *   bnez v1 over its else), so here v1 likely comes from a second use
- *   that leaves only 8004376C's label. Tried: a second `if (ret)`/
- *   `if (!ret)` (empty, a dead store, an empty static's call: t0, or a
- *   0x88 frame), 80043494's hit address-taken (one register over two
- *   tests in ovl_0F_10, but v0), the flag through 8004348C's parameter,
- *   s64/narrow return types, #line around the test, the restore and
- *   the closing brace.
- *
- * jp only measured; us and eu are recorded equal to it (there are no
- * VERSION conditionals).
  *
  * The order is IDO's: the handler, last in the file but for
  * func_ovl0F_03_80043010, is compiled first, its callees (and the statics
@@ -328,7 +313,7 @@ extern UnkStruct_ovl0F_03_80046FE4 D_ovl0F_03_80046FE4;
 /* A second caller keeps func_ovl0F_03_80043030 from being inlined. */
 static void func_ovl0F_03_80045678(void) {
     func_ovl0F_03_80043030(D_ovl0F_03_80046EB4);
-    D_ovl0F_03_800470C8[0] = 0;
+    D_ovl0F_03_800470C8[0] = D_ovl0F_03_800470B4[0] = D_ovl0F_03_800470D4[0] = D_ovl0F_03_800470E4[0] = 0;
 }
 
 static void func_ovl0F_03_80045670(void) {
@@ -738,7 +723,7 @@ void func_ovl0F_03_8004377C(UnkStructA *arg0) {
 }
 
 static void func_ovl0F_03_800434A4(UnkStructA *arg0, f32 *pos);
-static s32 func_ovl0F_03_80043494(UnkStructA *arg0);
+static s64 func_ovl0F_03_80043494(UnkStructA *arg0);
 static void func_ovl0F_03_8004348C(UnkStructA *arg0, f32 *pos);
 static void func_ovl0F_03_8004349C(UnkStructA *arg0, f32 angle);
 
@@ -759,7 +744,7 @@ void func_ovl0F_03_800434AC(UnkStructA *arg0) {
         return;
     }
     func_ovl0F_03_8004349C(arg0, angle);
-    if (func_ovl0F_03_80043494(arg0)) {
+    if ((s32)func_ovl0F_03_80043494(arg0)) {
         func_ovl0F_03_8004348C(arg0, pos);
     }
     if (pos) {
@@ -774,15 +759,17 @@ static void func_ovl0F_03_800434A4(UnkStructA *arg0, f32 *pos) {
 }
 #line 719 "1EE1A0.c"
 
-static s32 func_ovl0F_03_80043494(UnkStructA *arg0) {
-    s32 hit;
-    s32 saved;
+static s64 func_ovl0F_03_80043494(UnkStructA *arg0) {
+    union {
+        s64 ll;
+        s32 w[2];
+    } u;
     UnkStructA *other;
     s32 id;
 
-    hit = 0;
+    u.w[1] = 0;
     other = NULL;
-    saved = arg0->unkC;
+    u.w[0] = arg0->unkC;
     arg0->unkC = 0;
     if (arg0->unk8 & 1) {
         other = func_ovl0F_03_80045D78(func_ovl0F_03_80045CD8());
@@ -794,13 +781,13 @@ static s32 func_ovl0F_03_80043494(UnkStructA *arg0) {
     }
     if (other != NULL) {
         if (func_ovl0F_03_80046618(arg0, 0x10, other) != 0) {
-            hit = 1;
+            u.w[1] = 1;
         }
     } else if (func_ovl0F_03_800464A8(arg0, 0x10) != 0) {
-        hit = 1;
+        u.w[1] = 1;
     }
-    arg0->unkC = saved;
-    return hit;
+    arg0->unkC = u.w[0];
+    return u.ll;
 }
 
 static void func_ovl0F_03_8004348C(UnkStructA *arg0, f32 *pos) {
