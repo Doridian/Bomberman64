@@ -1,11 +1,7 @@
 /*
- * NON_MATCHING: ovl_0C_06's game object, complete: every function and its
- * data (.data 0x410, .rodata 0xB0 and .bss 0x60 laid out as the original).
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * ovl_0C_06's game object, IDO -O3; it matches in us, eu and jp.
  *
- * It matches in every version; what it took:
+ * What it took:
  * - The blocks' and switches' flag (80043248, 80044340, 80044494): the
  *   original keeps `arg ? 0x01000000 : 0x01000000` unfolded.  A union of
  *   s32 and u32 does it: stores through members of different types aren't

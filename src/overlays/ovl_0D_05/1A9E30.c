@@ -1,10 +1,7 @@
 /*
- * NON_MATCHING: ovl_0D_05's stage object, complete: every function and its data.
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * ovl_0D_05's stage object, IDO -O3; it matches in us, eu and jp.
  *
- * It matches; what fixed what (from 120 words), ovl_0D_02/04/06's levers:
+ * What fixed what (from 120 words), ovl_0D_02/04/06's levers:
  * - 80043790: the camera calls are in the empty static 80043760, and its
  *   call is in a "panels.c" region (1600.0f in $f16, both its 1600s floats,
  *   as ovl_0D_04's 80044D40). The region needs a function defined in
