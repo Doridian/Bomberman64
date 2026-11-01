@@ -3,7 +3,7 @@
  * data.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 44, eu 44, jp 44
+ * differing words: us 0, eu 0, jp 0
  *
  * (jp measured; us and eu compile but are not measured, and the file has
  * no version conditionals.)
@@ -45,24 +45,25 @@
  *   0x98, and cell at 0x7C). The nops after its endless loop pad the dead
  *   epilogue to a 32-byte boundary, so they come right once everything
  *   before it has the original's size.
- * - The handler (36): 80043010's call in case 2 is in "panels.c" (inside
- *   8004313C), which leaves the jal's slot empty as the original does, and
- *   case 3's final test, the handler's end and everything after it are in
- *   "panels.c" (the bnez's slot gets the epilogue's lw ra). Case 2's
- *   stores are A0, A4, B4 in that order; the object of 800456E8 goes
- *   through a local before D_ovl17_09_8004656C (no address CSE); the
+ * - The handler matches: 80043010's call in case 2 is in "panels.c"
+ *   (inside 8004313C), which leaves the jal's slot empty as the original
+ *   does, and case 3's final test, the handler's end and everything after
+ *   it are in "panels.c" (the bnez's slot gets the epilogue's lw ra).
+ *   Case 2's stores are A0, A4, B4 in that order; the object of 800456E8
+ *   goes through a local before D_ovl17_09_8004656C (no address CSE); the
  *   ovl_0F_04 fake `if (D_ovl17_09_800462A4) {}` after the 8004628C store
- *   is kept (the 0.5 product's registers differ without it). What
- *   differs is the timer: the original keeps D_ovl17_09_800462A0 in a0
- *   (`move a0, zero` when it wraps, reloaded only after the 80046060
- *   call) for the final `== 0` test; written `D = t` (t = 0) when it
- *   wraps, ours reloads it, so the registers of case 3 and case 2 (which
- *   shares the addresses) differ. `if (D != 0) t = D;` after the wrap
- *   gets the a0 but adds a branch (4 bytes).
- * - func_ovl17_09_80043010 (8): the eight angles' float registers. The
- *   original cycles f4, f6, f8, f10; IDO gives f4..f10, f16, f18 (nothing
- *   in this object uses f16 or f18). Written as an if chain, through a
- *   local, a setter static or with #line, it doesn't change.
+ *   is kept (the 0.5 product's registers differ without it). The timer
+ *   (8004312C) wraps with `D_ovl17_09_800462A0 = 0` and is followed by a
+ *   fake `if (D_ovl17_09_800462A0) {}`: the extra reference makes uopt
+ *   keep the counter in a0 (`move a0, zero` when it wraps, reloaded only
+ *   after the 80046060 call) for case 3's final `== 0` test, as the
+ *   original does; without it the test reloads it and case 3's and case
+ *   2's registers differ.
+ * - func_ovl17_09_80043010 matches as a static: IDO -O3 gives a static
+ *   function that isn't inlined only the temporaries t6-t9 and f4-f10
+ *   (its eight angles cycle f4, f6, f8, f10, as the original's), where an
+ *   external one also takes f16 and f18 (ovl_0A_06's static 800434E4
+ *   shows the same).
  */
 #include "common.h"
 
@@ -164,7 +165,7 @@ void func_ovl17_09_80045FD8(UnkStructA *, s32, f32);
 void func_ovl17_09_80046060(s32);
 void func_ovl17_09_80046080(s32, f32, f32, f32);
 
-void func_ovl17_09_80043010(void);
+static void func_ovl17_09_80043010(void);
 static void func_ovl17_09_80043144(UnkStruct_ovl17_09_800463D0 *);
 static void func_ovl17_09_80043748(UnkStruct_ovl17_09_Gfx **);
 static void func_ovl17_09_8004412C(UnkStruct_ovl17_09_800462DC *);
@@ -627,9 +628,11 @@ static void func_ovl17_09_8004312C(void) {
     t = 0;
     D_ovl17_09_800462A0++;
     if (D_ovl17_09_800462A0 >= 720) {
-        D_ovl17_09_800462A0 = t;
+        D_ovl17_09_800462A0 = 0;
     } else {
         t = D_ovl17_09_800462A0;
+    }
+    if (D_ovl17_09_800462A0) {
     }
     d = func_ovl17_09_80043124(t);
     D_ovl17_09_800462A4 += d;
@@ -785,7 +788,7 @@ static void func_ovl17_09_80043144(UnkStruct_ovl17_09_800463D0 *p) {
     p->unkC = r * r * 5.0f + 0.5f;
 }
 
-void func_ovl17_09_80043010(void) {
+static void func_ovl17_09_80043010(void) {
     D_ovl17_09_8004629C = (func_ovl17_09_80045C98(8) << 5) & 0xF0;
     switch (D_ovl17_09_8004629C) {
         case 0x00:
