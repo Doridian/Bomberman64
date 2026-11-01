@@ -1,27 +1,20 @@
 /*
- * NON_MATCHING: ovl_0E_12's game object, complete: every function and its data.
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 2, eu 2, jp 2
+ * ovl_0E_12's game object, IDO -O3; it matches in us, eu and jp.
  *
- * What still differs in us (words):
- * - func_ovl0E_12_80043164 (2): `sll t4,s3,5` (the next call's &D_FCC[i])
- *   scheduled before the stores to unk0 and unk4; the original has it
- *   after them (ours: sll, unk4, unk0). IDO's scheduling follows source
- *   lines: with the two stores on separate lines it's 3 words, with the
- *   call on their line too 4. Assembling IDO's -S output with a label
- *   between the stores (two lines) and the call gives the original's
- *   order exactly, so the original has a block boundary there; the folded
- *   fake that fixed 80043A64 leaves its branch in here (a store fills its
- *   delay slot), and do/while(0), goto, labels, inlined statics, other
- *   fake tests and the permuter didn't give one. A grid of 19278 variants
- *   of the store/call region (6 store forms, pointer and temp stores, 3
- *   prelude forms, 17 empty or branch statements at 3 places, 7 call forms,
- *   3 line joins) reached 2 words at best, never 0 or 1. ovl_0E_03's
- *   func_ovl0E_03_800430A8 is the same region and went from 3 to 2 with
- *   its stores on one line, as here.
+ * func_ovl0E_12_80043164 needs an as1 basic-block boundary between its two
+ * stores (unk0, unk4) and the next call (`sll t4,s3,5` for &D_FCC[i] is
+ * scheduled above the stores): the call is in the inlined static
+ * func_ovl0E_12_8004315C, defined under `#line 1 "panels.c"`, so ugen
+ * emits a `.file` there. 8004315C is the static whose stub sits between
+ * 80043164 and 8004311C; it isn't the empty call at 80043164's start (an
+ * inline there from another file breaks the prologue's schedule). The
+ * stores stay in 80043164 on separate lines (inside the static, the beq
+ * delay slots lose their `li t3,-1`). A `#line` after the include names
+ * the file 1D6120.c, so every function is in the same file whatever path
+ * it's compiled from.
  */
 #include "common.h"
+#line 21 "1D6120.c"
 
 /*
  * ovl_0E_12's game object, IDO -O3: the functions are written last to first
@@ -202,7 +195,7 @@ void func_ovl0E_12_800448A8(void);
 void func_ovl0E_12_800448C0(void);
 
 /* empty statics: each leaves a `jr ra; nop` just before its caller */
-static void func_ovl0E_12_8004315C(void);
+static void func_ovl0E_12_8004315C(s16 i);
 static void func_ovl0E_12_800433A4(void);
 static void func_ovl0E_12_80043A0C(void);
 static void func_ovl0E_12_80043444(void);
@@ -748,7 +741,6 @@ void func_ovl0E_12_80043164(void) {
     s16 i;
     s32 flags;
 
-    func_ovl0E_12_8004315C();
     D_ovl0E_12_80046304->unk30 = 4;
     D_ovl0E_12_80046304->unk34 = 85.0f;
     D_ovl0E_12_80046304->unk38 = 400.0f;
@@ -769,9 +761,9 @@ void func_ovl0E_12_80043164(void) {
                         D_ovl0E_12_80045F94[i].unk10 != 0xFFFF && D_ovl0E_12_80045F94[i].unk12 != 0xFFFF) {
                         func_ovl0E_12_80045398(D_ovl0E_12_80045F94[i].unk4);
                     }
-                    /* one line: see the header */
-                    D_ovl0E_12_80045F94[i].unk0 = NULL; D_ovl0E_12_80045F94[i].unk4 = -1;
-                    func_ovl0E_12_8004311C(&D_ovl0E_12_80045FCC[i]);
+                    D_ovl0E_12_80045F94[i].unk0 = NULL;
+                    D_ovl0E_12_80045F94[i].unk4 = -1;
+                    func_ovl0E_12_8004315C(i);
                     func_ovl0E_12_80045A10(p->unk0);
                 } else {
                     func_ovl0E_12_80045D40(0x26, D_ovl0E_12_80046304->unk40->unk10, D_ovl0E_12_80046304->unk40->unk14,
@@ -782,8 +774,11 @@ void func_ovl0E_12_80043164(void) {
     }
 }
 
-static void func_ovl0E_12_8004315C(void) {
+#line 1 "panels.c"
+static void func_ovl0E_12_8004315C(s16 i) {
+    func_ovl0E_12_8004311C(&D_ovl0E_12_80045FCC[i]);
 }
+#line 785 "1D6120.c"
 
 void func_ovl0E_12_8004311C(UnkStruct_ovl0E_12_80045FCC *arg0) {
     func_ovl0E_12_80044C88(arg0->unk14, arg0->unk16, arg0->unk18, arg0->unk1A, arg0->unk1C, arg0->unk1E);

@@ -1,27 +1,18 @@
 /*
- * NON_MATCHING: ovl_0C_07's game object, complete: every function and its
- * data (.data 0x2B0, .rodata 0x170 and .bss 0x60 laid out as the original).
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 2, eu 2, jp 2
+ * ovl_0C_07's game object, IDO -O3; it matches in us, eu and jp.
  *
  * The handler's case 2 calls func_ovl0C_07_80044594 (inlined), whose call
  * of func_ovl0C_07_8004455C then stays a call, and its empty case 0x53
  * is kept (both only together give the handler).
  *
- * What still differs in us (words):
- * - func_ovl0C_07_80044178 (2): the epilogue restores s2, s1, s0; the
- *   original restores s0 first, as in ovl_0C_04's 80043878 (the same
- *   function) and ovl_0C_08's 80043654.  The loop as an index, a constant
- *   count, a for with the pointer step or a do-while are all worse.
- *   Also no change: all 24 local declaration orders, s16/u32/s32/f32
- *   index and pointer types, a while (TRUE) exit, a temp for unk40, the
- *   record set-up as a static taking its pointer (20 words in all), and
- *   41 orders of the final nine stores (49 words or more).
- *   ugen (cc -S) lists the restores s0, s1, s2; as1 reverses them when the
- *   last block ends in a lw, lw, store chain.  A block boundary before the
- *   epilogue (a label, .align or a section switch) or ugen's restores
- *   reversed give the original; no C found does (scratch/epi/).
+ * func_ovl0C_07_80044178's closing `}` and the empty static
+ * func_ovl0C_07_80044170 after it are in "panels.c" (a fake `#line`;
+ * `#line 953` returns to its own line numbers).  The `.file` ugen then
+ * emits ends as1's block before the epilogue, which keeps ugen's restore
+ * order s0, s1, s2 (as1 reverses it when the last block ends in the
+ * lw, lw, store chain).  ugen drops a `#line` file whose region holds no
+ * function definition, hence the static in it (the `}` alone does
+ * nothing).
  */
 #include "common.h"
 
@@ -949,10 +940,12 @@ void func_ovl0C_07_80044178(void) {
     rec->unk0->unk40->unk28 = rec->unk2C;
     rec->unk0->unk40->unk2C = rec->unk30;
     rec->unk0->unk40->unk30 = rec->unk34;
+#line 1 "panels.c"
 }
 
 static void func_ovl0C_07_80044170(void) {
 }
+#line 953 "1887C0.c"
 
 void func_ovl0C_07_80044024(void) {
     UnkStruct_ovl0C_07_800476D0 *p;

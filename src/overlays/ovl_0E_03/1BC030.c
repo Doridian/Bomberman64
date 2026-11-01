@@ -1,18 +1,18 @@
 /*
- * NON_MATCHING: ovl_0E_03's game object, complete: every function and its data
- * (.data 0x490, .rodata 0x70 and .bss 0x60 as the original; .text 0x20C0).
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 2, eu 3, jp 2
+ * ovl_0E_03's game object, IDO -O3; it matches in us, eu and jp.
  *
- * What still differs in us (words):
- * - func_ovl0E_03_800430A8 (2): ovl_0E_12's 80043164: `sll t4,s3,5` (the
- *   next call's &D_80046B78[i]) is scheduled before the store to unk4; the
- *   original has it after the stores. The two stores on one line gave 2
- *   (on separate lines, 3); no other form of the region reached less than
- *   2 (ovl_0E_12's header, the 19k-variant grid).
+ * func_ovl0E_03_800430A8 is ovl_0E_12's 80043164 and is matched the same
+ * way: an as1 block boundary between the two stores (unk0, unk4; separate
+ * lines) and the next call, whose `sll t4,s3,5` (&D_80046B78[i]) is
+ * scheduled above them. The call is in the inlined static
+ * func_ovl0E_03_800430A0, defined under `#line 1 "panels.c"` so ugen emits
+ * a `.file` there; 800430A0 is the static whose stub sits between 800430A8
+ * and 80043060, not an empty call at 800430A8's start. `#line` after the
+ * include names the file 1BC030.c whatever path it's compiled from
+ * (src/overlays/ovl_0E_12/1D6120.c has the details).
  */
 #include "common.h"
+#line 22 "1BC030.c"
 
 /*
  * ovl_0E_03's game object, IDO -O3: the functions are written last to first
@@ -213,7 +213,7 @@ void func_ovl0E_03_80045098(void);
 
 /* empty statics: each leaves a `jr ra; nop` just before its caller */
 static void func_ovl0E_03_80043018(void);
-static void func_ovl0E_03_800430A0(void);
+static void func_ovl0E_03_800430A0(s16 i);
 static void func_ovl0E_03_800432E8(void);
 static void func_ovl0E_03_800438E8(UnkStruct_ovl0E_03_80046AD0 *);
 static void func_ovl0E_03_80043388(void);
@@ -930,7 +930,6 @@ void func_ovl0E_03_800430A8(void) {
     s16 i;
     s32 flags;
 
-    func_ovl0E_03_800430A0();
     D_ovl0E_03_80046C6C->unk30 = 4;
     D_ovl0E_03_80046C6C->unk34 = 85.0f;
     D_ovl0E_03_80046C6C->unk38 = 400.0f;
@@ -951,9 +950,9 @@ void func_ovl0E_03_800430A8(void) {
                         D_ovl0E_03_80046B40[i].unk10 != 0xFFFF && D_ovl0E_03_80046B40[i].unk12 != 0xFFFF) {
                         func_ovl0E_03_80045B68(D_ovl0E_03_80046B40[i].unk4);
                     }
-                    /* one line: see the header */
-                    D_ovl0E_03_80046B40[i].unk0 = NULL; D_ovl0E_03_80046B40[i].unk4 = -1;
-                    func_ovl0E_03_80043060(&D_ovl0E_03_80046B78[i]);
+                    D_ovl0E_03_80046B40[i].unk0 = NULL;
+                    D_ovl0E_03_80046B40[i].unk4 = -1;
+                    func_ovl0E_03_800430A0(i);
                     func_ovl0E_03_800461E0(p->unk0);
                 } else {
                     func_ovl0E_03_80046510(0x26, D_ovl0E_03_80046C6C->unk40->unk10, D_ovl0E_03_80046C6C->unk40->unk14,
@@ -964,8 +963,11 @@ void func_ovl0E_03_800430A8(void) {
     }
 }
 
-static void func_ovl0E_03_800430A0(void) {
+#line 1 "panels.c"
+static void func_ovl0E_03_800430A0(s16 i) {
+    func_ovl0E_03_80043060(&D_ovl0E_03_80046B78[i]);
 }
+#line 977 "1BC030.c"
 
 void func_ovl0E_03_80043060(UnkStruct_ovl0E_03_80046B78 *arg0) {
     func_ovl0E_03_80045458(arg0->unk14, arg0->unk16, arg0->unk18, arg0->unk1A, arg0->unk1C, arg0->unk1E);
