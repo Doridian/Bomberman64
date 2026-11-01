@@ -4,7 +4,7 @@
  * 0xF0 where the original's is 0xD0).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 124, eu 124, jp 124
+ * differing words: us 10, eu 10, jp 10
  *
  * A first complete draft: the functions shared with bank 0x0C's and
  * 0x12/0x17's drafts are theirs (scratch/0C_02/sib.py), the rest m2c's
@@ -1319,21 +1319,23 @@ void func_ovl0C_02_800460B0(void) {
             }
         }
     }
-    D_ovl0C_02_80049EEC.unk0->unk40->unk10 = D_ovl0C_02_80049EEC.unk14 * 10.0f;
-    D_ovl0C_02_80049EEC.unk0->unk40->unk14 = D_ovl0C_02_80049EEC.unk18 * 10.0f;
-    D_ovl0C_02_80049EEC.unk0->unk40->unk18 = D_ovl0C_02_80049EEC.unk1C * 10.0f;
-    D_ovl0C_02_80049EEC.unk0->unk40->unk1C = D_ovl0C_02_80049EEC.unk20;
-    D_ovl0C_02_80049EEC.unk0->unk40->unk20 = D_ovl0C_02_80049EEC.unk24;
-    D_ovl0C_02_80049EEC.unk0->unk40->unk24 = D_ovl0C_02_80049EEC.unk28;
-    D_ovl0C_02_80049EEC.unk0->unk40->unk28 = D_ovl0C_02_80049EEC.unk2C;
-    D_ovl0C_02_80049EEC.unk0->unk40->unk2C = D_ovl0C_02_80049EEC.unk30;
-    D_ovl0C_02_80049EEC.unk0->unk40->unk30 = D_ovl0C_02_80049EEC.unk34;
+    rec->unk0->unk40->unk10 = rec->unk14 * 10.0f;
+    rec->unk0->unk40->unk14 = rec->unk18 * 10.0f;
+    rec->unk0->unk40->unk18 = rec->unk1C * 10.0f;
+    rec->unk0->unk40->unk1C = rec->unk20;
+    rec->unk0->unk40->unk20 = rec->unk24;
+    rec->unk0->unk40->unk24 = rec->unk28;
+    rec->unk0->unk40->unk28 = rec->unk2C;
+    rec->unk0->unk40->unk2C = rec->unk30;
+    rec->unk0->unk40->unk30 = rec->unk34;
+#line 1 "panels.c"
     if (func_ovl0C_02_800494A0(0x41A) != 0) {
-        func_ovl0C_02_80048E18(rec->unk4);
-        rec->unk4 = func_ovl0C_02_80048E10(rec->unk0->unk40, 0, 0xA, 0x400, rec->unk10, rec->unk12);
+        func_ovl0C_02_80048E18(D_ovl0C_02_80049EEC.unk4);
+        D_ovl0C_02_80049EEC.unk4 = func_ovl0C_02_80048E10(D_ovl0C_02_80049EEC.unk0->unk40, 0, 0xA, 0x400, D_ovl0C_02_80049EEC.unk10, D_ovl0C_02_80049EEC.unk12);
     }
     func_ovl0C_02_800454B4();
 }
+#line 1339 "1734E0.c"
 
 void func_ovl0C_02_80046078(void) {
     func_ovl0C_02_80046038();
@@ -1816,23 +1818,20 @@ void func_ovl0C_02_80044710(UnkStruct_ovl0C_02_80049A38 *arg0) {
 }
 
 void func_ovl0C_02_8004460C(void) {
-    s32 temp_v0;
-
     if ((D_ovl0C_02_8004A110.unk0 == 4) || (D_ovl0C_02_8004A110.unk0 == 5)) {
         func_ovl0C_02_80044580();
     }
     func_ovl0C_02_800488C8(D_ovl0C_02_8004A110.unk4, 3, 4.0f, D_ovl0C_02_8004A110.unk10, 0, 1, 1);
-    temp_v0 = D_ovl0C_02_8004A110.unk0;
-    if (temp_v0 == 7) {
+    if (D_ovl0C_02_8004A110.unk0 == 7) {
         func_ovl0C_02_800444D4(D_ovl0C_02_80049AB0);
     }
-    if (temp_v0 == 8) {
+    if (D_ovl0C_02_8004A110.unk0 == 8) {
         func_ovl0C_02_800444D4(D_ovl0C_02_80049ACC);
     }
-    if (temp_v0 == 9) {
+    if (D_ovl0C_02_8004A110.unk0 == 9) {
         func_ovl0C_02_800444D4(D_ovl0C_02_80049AE8);
     }
-    if (temp_v0 == 0xA) {
+    if (D_ovl0C_02_8004A110.unk0 == 0xA) {
         func_ovl0C_02_800444D4(D_ovl0C_02_80049B04);
     }
     if (func_ovl0C_02_800494A0(0x429) == 0) {
@@ -1976,16 +1975,17 @@ void func_ovl0C_02_80043FD8(void) {
 }
 
 void func_ovl0C_02_80043E0C(UnkStruct_ovl0C_02_80049B20 *arg0) {
-    f32 pos[3];
     f32 base;
     s16 i;
+    f32 t;
+    Vec3f pos;
 
     func_ovl0C_02_800488B8(1);
     func_ovl0C_02_80048978();
-    pos[0] = arg0->unk4;
-    pos[1] = arg0->unk8;
-    pos[2] = arg0->unkC;
-    func_ovl0C_02_800496B8(pos);
+    pos.x = arg0->unk4;
+    pos.y = arg0->unk8;
+    pos.z = arg0->unkC;
+    func_ovl0C_02_800496B8((f32 *)&pos);
     func_ovl0C_02_80049788();
     func_ovl0C_02_80048838(1);
     func_ovl0C_02_80049290(0xB0, 0xB0);
@@ -2004,7 +2004,8 @@ void func_ovl0C_02_80043E0C(UnkStruct_ovl0C_02_80049B20 *arg0) {
     }
     base = arg0->unk0->unk40->unk14;
     for (i = 0; i < 0x5A; i += 2) {
-        arg0->unk0->unk40->unk14 = base + func_ovl0C_02_800493C0(i) * 1000.0f;
+        t = func_ovl0C_02_800493C0(i) * 1000.0f;
+        arg0->unk0->unk40->unk14 = base + t;
         func_ovl0C_02_80049260();
     }
     func_ovl0C_02_800487C0(0x29, arg0->unk10, 0);
