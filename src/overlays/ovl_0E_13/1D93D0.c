@@ -1,25 +1,25 @@
 /*
- * NON_MATCHING: ovl_0E_13's game object, complete: every function and its data
- * (.text 0x2150, .data 0x530, .rodata 0x80, .bss 0x60 as the original).
- * Much of it is ovl_0E_09's code.
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 35, eu 35, jp 35
+ * ovl_0E_13 matches in us, eu and jp. Much of it is ovl_0E_09's code.
  *
- * What still differs in us (words):
- * - func_ovl0E_13_80043110 (24), 8004439C (9): the D80 position set-up
- *   (UNK_MACRO_ovl0E_13_80043110) is scheduled differently: the original
- *   sets s1 = &D80 first and stores .y before .x; in 80043110 it also
- *   stores D70 right after the last call, ours in the epilogue. Its `p += 0`
- *   is a fake that keeps &D80 in s1 (without it .y goes through `lui at`,
- *   177 words in all).
- * - func_ovl0E_13_80043940 (2): the epilogue restores s1 before s0 (the
- *   original s0 first), as in ovl_0C_08's 80043654.
+ * - func_ovl0E_13_80043110: the D80 position set-up is the static it
+ *   inlines, func_ovl0E_13_80043108 (the stub before it), with x, z and the
+ *   count as arguments, as ovl_0E_04's func_ovl0E_04_8004399C. It is
+ *   defined in "panels.c" (a fake `#line`; the `#line` after it returns to
+ *   the file's own numbers, and the one after the include gives the file
+ *   one name however it is compiled): the `.file` ugen emits where the
+ *   inlined body starts ends an as1 block right after the hoisted
+ *   invariants (&D80 in s1, 100.0f in fs0, the count in s2), in 80043110
+ *   and where it is inlined in 8004439C and 80043444. The macro it was
+ *   and its `p += 0` fake go.
+ * - func_ovl0E_13_80043940: its closing brace and func_ovl0E_13_800437C0
+ *   are in "panels.c" too (as ovl_0C_08's 80043654): the block boundary
+ *   before the epilogue makes it restore s0 before s1.
  * IDO's scheduling follows source lines: 80043444 matches only with its
  * two camera pans on one line (UNK_MACRO_ovl0E_13_80043444), the second
  * reusing the first's a and y.
  */
 #include "common.h"
+#line 30 "1D93D0.c"
 
 /*
  * ovl_0E_13's game object, IDO -O3: the functions are written last to first
@@ -218,35 +218,12 @@ static void func_ovl0E_13_80043CCC(void);
 static void func_ovl0E_13_80043C78(void);
 static void func_ovl0E_13_80043C80(void);
 static void func_ovl0E_13_80043C88(void);
-static void func_ovl0E_13_80043108(void);
+static void func_ovl0E_13_80043108(f32, s32, s32);
 
 /* The three statements are on one line, a macro: only then does IDO
  * schedule across them (the store into the first call's delay slot). */
 #define UNK_MACRO_ovl0E_13_80043BE0() \
     D_ovl0E_13_80046D6C = func_ovl0E_13_80045688(); func_ovl0E_13_80045668(&D_ovl0E_13_80046D60); func_ovl0E_13_80045690(D_ovl0E_13_80046D6C, D_ovl0E_13_80046D50)
-
-/* the position of something at tile (22, ?, 30), set up in three places.
- * `p += 0` is a fake (the permuter's): without it
- * IDO folds p into D80 and stores .y through `lui at`; the original keeps &D80
- * in an s register for .x and .y (not .z) and passes it on. */
-#define UNK_MACRO_ovl0E_13_80043110()                                                \
-    {                                                                                \
-        f32 unit;                                                                    \
-        s32 i;                                                                       \
-        s32 n;                                                                       \
-        Vec3f *p = &D_ovl0E_13_80046D80;                                             \
-        p += 0;                                                                      \
-        unit = 100.0f;                                                               \
-        p->x = 22.0f * unit;                                                         \
-        p->y = 0.0f;                                                                 \
-        n = 3;                                                                       \
-        for (i = 0; i < n; i++) {                                                    \
-            p->y += func_ovl0E_13_80045510(i) * unit;                                \
-        }                                                                            \
-        p->y += unit;                                                                \
-        D_ovl0E_13_80046D80.z = (n * 10) * unit;                                     \
-        D_ovl0E_13_80046D70 = func_ovl0E_13_80046450(0x27, &p->x, 0);                \
-    }
 
 /* The two camera pans of func_ovl0E_13_80043444, a macro (one line): IDO's
  * scheduling follows source lines, and only this matches. */
@@ -568,7 +545,7 @@ void func_ovl0E_13_8004439C(void) {
     if (func_ovl0E_13_80046280(0x40E) == 0) {
         func_ovl0E_13_80044158();
     } else {
-        UNK_MACRO_ovl0E_13_80043110();
+        func_ovl0E_13_80043110();
     }
     func_ovl0E_13_80045BF0(obj->unk40, 0, 0, 0, 2, 0x400);
     func_ovl0E_13_80046338(0x37A, 0x3DE, 0xFF, 0x87, 0x1F);
@@ -876,6 +853,8 @@ void func_ovl0E_13_80043940(s16 arg0) {
     func_ovl0E_13_80045EA8(e->unk0, 0x02000000);
     func_ovl0E_13_80046040();
     func_ovl0E_13_800437B8(f);
+    /* the brace in "panels.c": the epilogue restores s0 before s1 */
+#line 1 "panels.c"
 }
 
 static void func_ovl0E_13_800437C0(UnkStruct_ovl0E_13_80046800 *e) {
@@ -900,6 +879,7 @@ static void func_ovl0E_13_800437C0(UnkStruct_ovl0E_13_80046800 *e) {
     e->unk0->unk40->unk30 = e->unk34;
 }
 
+#line 890 "1D93D0.c"
 static void func_ovl0E_13_800437B8(UnkStruct_ovl0E_13_80046800 *e) {
     func_ovl0E_13_80045EB0(e->unk0, 0x01000000);
     func_ovl0E_13_80045EC0(e->unk0);
@@ -941,7 +921,7 @@ void func_ovl0E_13_80043444(void) {
     UNK_MACRO_ovl0E_13_80043444();
     func_ovl0E_13_80046018(10);
     func_ovl0E_13_80046580(0x2C);
-    UNK_MACRO_ovl0E_13_80043110();
+    func_ovl0E_13_80043110();
     func_ovl0E_13_80046018(120);
     func_ovl0E_13_80045E10();
     func_ovl0E_13_80045DD8(D_ovl0E_13_80046D50);
@@ -984,12 +964,26 @@ void func_ovl0E_13_800431E4(void) {
 }
 
 void func_ovl0E_13_80043110(void) {
-    func_ovl0E_13_80043108();
-    UNK_MACRO_ovl0E_13_80043110();
+    func_ovl0E_13_80043108(22.0f, 30, 3);
 }
 
-static void func_ovl0E_13_80043108(void) {
+/* Inlined into func_ovl0E_13_80043110 only, which is inlined into its
+ * callers in turn; in "panels.c" for the block boundary where its body
+ * starts. */
+#line 1 "panels.c"
+static void func_ovl0E_13_80043108(f32 x, s32 z, s32 count) {
+    s32 i;
+
+    D_ovl0E_13_80046D80.x = x * 100.0f;
+    D_ovl0E_13_80046D80.y = 0.0f;
+    for (i = 0; i < count; i++) {
+        D_ovl0E_13_80046D80.y += func_ovl0E_13_80045510(i) * 100.0f;
+    }
+    D_ovl0E_13_80046D80.y += 100.0f;
+    D_ovl0E_13_80046D80.z = z * 100.0f;
+    D_ovl0E_13_80046D70 = func_ovl0E_13_80046450(0x27, &D_ovl0E_13_80046D80.x, 0);
 }
+#line 994 "1D93D0.c"
 
 void func_ovl0E_13_800430E8(void) {
     func_ovl0E_13_800456F0(1);

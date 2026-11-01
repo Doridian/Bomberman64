@@ -1,26 +1,12 @@
 /*
- * NON_MATCHING: ovl_12_03's game object, complete: every function and its data.
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 23, eu 23, jp 23
- *
- * What still differs (words; the same in all three):
- * - func_ovl12_03_80043174 (17): the inlined func_ovl12_03_8004316C's
- *   first block is scheduled differently: the original saves s1/s2 and
- *   sets &D_ovl12_03_80045ED0 and the count before computing x, and
- *   stores y before x. The copies inlined into 80043408 and 80043F68
- *   match. (The store before the epilogue is the fake test's; see the
- *   static. ovl_12_01's draft lists what else was tried.)
- * - func_ovl12_03_80043668 (4): each `func_ovl12_03_80044B98(n)` call
- *   sets `a0` again in its delay slot; the original has a nop there (`a0`
- *   is already set in the branch's delay slot; the two calls or the whole
- *   `if` on one line, no `!= 0`, `D + k` for `&D[k]`: no change).
- * - func_ovl12_03_80043108 (2): the `lui a0` of D_ovl12_03_80045EC0 is
- *   scheduled before `sw ra`; the original has it after.
- * The entry (ovl_12_03_entry, `return func_ovl12_03_8004418C;`) goes to
- * src/ with it.
+ * ovl_12_03 matches in us, eu and jp. Two `#line` regions in another file
+ * (panels.c) end as1's blocks where the original's do (see
+ * func_ovl12_03_80043100 and func_ovl12_03_8004316C), as in ovl_12_01
+ * (src/overlays/ovl_12_01/24B540.c), and func_ovl12_03_80044B98 is called
+ * with no arguments (see its declaration).
  */
 #include "common.h"
+#line 16 "250B70.c"
 
 /*
  * ovl_12_03's game object, IDO -O3: the functions are written last to first
@@ -89,7 +75,12 @@ void func_ovl12_03_80044AE0(s32);
 void func_ovl12_03_80044AE8(s32, s32, f32, s32, s32, s32, s32);
 void func_ovl12_03_80044AF8(void);
 void func_ovl12_03_80044B30(s32);
-void func_ovl12_03_80044B98(s32);
+/* Declared without a prototype and called with no arguments: the `a0`
+ * it gets is what the branch's delay slot loads for the next test (0x1D,
+ * 0xD, 0x1D, 0x28), and its `jal` keeps a nop in its slot, as in the
+ * original (4 words to 0). ovl_12_06 passes an argument to the same
+ * service (0x1020). */
+void func_ovl12_03_80044B98();
 void func_ovl12_03_80044FF0(UnkStructA_40 *, s32);
 void func_ovl12_03_80044FF8(UnkStructA_40 *, s32, s32, s32);
 f32 func_ovl12_03_80045028(UnkStructA_40 *, s32);
@@ -570,19 +561,19 @@ void func_ovl12_03_800437BC(void) {
 
 void func_ovl12_03_80043668(void) {
     if (func_ovl12_03_80044AB0(0xD, 7, 0xE, 8) != 0) {
-        func_ovl12_03_80044B98(0x1D);
+        func_ovl12_03_80044B98();
         func_ovl12_03_80043408(&D_ovl12_03_80045C84[0]);
     }
     if (func_ovl12_03_80044AB0(0x1D, 7, 0x1E, 8) != 0) {
-        func_ovl12_03_80044B98(0xD);
+        func_ovl12_03_80044B98();
         func_ovl12_03_80043408(&D_ovl12_03_80045C84[1]);
     }
     if (func_ovl12_03_80044AB0(0xD, 0x16, 0xE, 0x17) != 0) {
-        func_ovl12_03_80044B98(0x1D);
+        func_ovl12_03_80044B98();
         func_ovl12_03_80043408(&D_ovl12_03_80045C84[2]);
     }
     if (func_ovl12_03_80044AB0(0x1D, 0x16, 0x1E, 0x17) != 0) {
-        func_ovl12_03_80044B98(0x28);
+        func_ovl12_03_80044B98();
         func_ovl12_03_80043408(&D_ovl12_03_80045C84[3]);
     }
     if (func_ovl12_03_80044AB0(0x28, 0xF, 0x28, 0xF) != 0 && func_ovl12_03_800456C0(0x405) &&
@@ -681,29 +672,25 @@ void func_ovl12_03_80043174(void) {
 
 /* Inlined into func_ovl12_03_80043174 only; that one is inlined into its
  * callers in turn. Called from more than one function it isn't inlined.
- * The parameter order sets func_ovl12_03_80043408's frame.
- * The empty test after the body is a fake (the permuter's, found for
- * ovl_12_01's copy): the branch IDO folds away still ends the block, so
- * the store of D_ovl12_03_80045EC0 comes before the epilogue as in the
- * original (27 words to 18). The body on one line (a macro) saves one more. */
-#define UNK_MACRO_ovl12_03_8004316C()                                                     \
-    D_ovl12_03_80045ED0[0] = x * 100.0f;                                                  \
-    D_ovl12_03_80045ED0[1] = 0.0f;                                                        \
-    for (i = 0; i < count; i++) {                                                         \
-        D_ovl12_03_80045ED0[1] += func_ovl12_03_80044950(i) * 100.0f;                     \
-    }                                                                                     \
-    D_ovl12_03_80045ED0[1] += 100.0f;                                                     \
-    D_ovl12_03_80045ED0[2] = z * 100.0f;                                                  \
-    D_ovl12_03_80045EC0 = func_ovl12_03_80045890(0x28, (Vec3f *) D_ovl12_03_80045ED0, 0)
-
+ * The parameter order sets func_ovl12_03_80043408's frame. Defined in
+ * another file (panels.c), as ovl_12_01's func_ovl12_01_80043188: the
+ * `.file` at the inlined body ends as1's block after the prologue and the
+ * hoisted &D_ovl12_03_80045ED0, 100.0f and count (17 words to 0). */
+#line 1 "panels.c"
 static void func_ovl12_03_8004316C(f32 x, s32 z, s32 count) {
     s32 i;
 
-    UNK_MACRO_ovl12_03_8004316C();
-    if (!i && !i) {
+    D_ovl12_03_80045ED0[0] = x * 100.0f;
+    D_ovl12_03_80045ED0[1] = 0.0f;
+    for (i = 0; i < count; i++) {
+        D_ovl12_03_80045ED0[1] += func_ovl12_03_80044950(i) * 100.0f;
     }
+    D_ovl12_03_80045ED0[1] += 100.0f;
+    D_ovl12_03_80045ED0[2] = z * 100.0f;
+    D_ovl12_03_80045EC0 = func_ovl12_03_80045890(0x28, (Vec3f *) D_ovl12_03_80045ED0, 0);
 }
 
+#line 700 "250B70.c"
 void func_ovl12_03_80043138(s32 arg0) {
     func_ovl12_03_80045250();
     func_ovl12_03_80045218(D_ovl12_03_80045EA0);
@@ -717,8 +704,12 @@ void func_ovl12_03_80043108(void) {
     func_ovl12_03_80044A08();
 }
 
+/* In panels.c: its inlined (empty) body's `.file` ends the block before
+ * the load of D_ovl12_03_80045EC0, so `sw ra` comes first (2 words to 0). */
+#line 1 "panels.c"
 static void func_ovl12_03_80043100(void) {
 }
+#line 719 "250B70.c"
 
 static void func_ovl12_03_800430F8(void) {
 }

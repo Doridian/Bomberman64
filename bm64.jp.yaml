@@ -1100,11 +1100,12 @@ segments:
     symbol_name_format: ovl0E_13_$VRAM
     dir: overlays/ovl_0E_13
     subsegments:
-      - [0x1D81F0, asm, ovl_0E_13_entry]
-      - [0x1D8200, asm, 1D93D0]
+      - [0x1D81F0, c, ovl_0E_13_entry]
+      - [0x1D8200, c, 1D93D0]
       - [0x1DA350, hasm, ovl_0E_13_zerojmp]
-      - [0x1DB970, rodata]
-      - {type: bss, vram: 0x80046D30}
+      - [0x1DB970, .data, 1D93D0]
+      - [0x1DBEA0, .rodata, 1D93D0]
+      - {type: .bss, vram: 0x80046D30, name: 1D93D0}
   - name: ovl_0E_14
     type: code
     start: 0x1DBF20
@@ -1500,16 +1501,17 @@ segments:
     type: code
     start: 0x24F610
     vram: 0x80043000
-    bss_size: 0x50
+    bss_size: 0x60
     exclusive_ram_id: overlay
     symbol_name_format: ovl12_03_$VRAM
     dir: overlays/ovl_12_03
     subsegments:
-      - [0x24F610, asm, ovl_12_03_entry]
-      - [0x24F620, asm, 250B70]
+      - [0x24F610, c, ovl_12_03_entry]
+      - [0x24F620, c, 250B70]
       - [0x250BB0, hasm, ovl_12_03_zerojmp]
-      - [0x2521D0, rodata]
-      - {type: bss, vram: 0x80045E80}
+      - [0x2521D0, .data, 250B70]
+      - [0x252440, .rodata, 250B70]
+      - {type: .bss, vram: 0x80045E80, name: 250B70}
   - name: ovl_12_04
     type: code
     start: 0x252490

@@ -249,6 +249,10 @@ ovl_0E_11 1D2C60 0x230 0x70 0x60
 ovl_0E_12 ovl_0E_12_entry 0 0 0
 ovl_0E_12 1D6120 0x180 0x1F0 0x60
 
+# ovl_0E_13: all C (-O3)
+ovl_0E_13 ovl_0E_13_entry 0 0 0
+ovl_0E_13 1D93D0 0x530 0x80 0x60
+
 # ovl_0E_14: all C
 ovl_0E_14 ovl_0E_14_entry 0 0 0
 ovl_0E_14 1DD120 0x40 0x50 0x60
@@ -303,6 +307,10 @@ ovl_12_01 24B540 0x120 0x170 0x60
 # ovl_12_02: all C (-O3); .rodata is its floats and the handler's jump table
 ovl_12_02 ovl_12_02_entry 0 0 0
 ovl_12_02 24EA00 0x70 0x50 0x60
+
+# ovl_12_03: all C (-O3)
+ovl_12_03 ovl_12_03_entry 0 0 0
+ovl_12_03 250B70 0x270 0x50 0x60
 
 # ovl_12_04: all C (-O3); .rodata is its floats and the handler's jump table
 ovl_12_04 ovl_12_04_entry 0 0 0
