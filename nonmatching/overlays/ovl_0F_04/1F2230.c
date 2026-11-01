@@ -932,7 +932,7 @@ void func_ovl0F_04_80044F88(void) {
     (*a->unk0)->unk34 = 250.0f;
     (*a->unk0)->unkC = 0;
     (*b->unk0)->unkC = 0;
-    (*b->unk0)->unk70 = 2.45f;
+    (*b->unk0)->unk70 = 2.4500003f; /* 0x401CCCCE, one step above 2.45f */
     while (func_ovl0F_04_80047F50(a->unk28) == 0) {
         hit = func_ovl0F_04_80047B28(*a->unk0, 0x40);
         if (hit != 0) {
