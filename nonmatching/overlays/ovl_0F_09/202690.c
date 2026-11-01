@@ -3,7 +3,7 @@
  * (.data, .rodata and .bss as the original).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2, eu 2, jp 2
+ * differing words: us 0, eu 0, jp 0
  *
  * Measured in jp. What went right, from 508 words, as in ovl_0F_08/0F_07:
  * - func_ovl0F_09_80043D88 (64 to 0): ovl_0F_08's 80043A28 ported (Vec3f,
@@ -24,15 +24,15 @@
  *   and s0) gives the original's schedule at its three calls.
  * - func_ovl0F_09_80044528: its padding follows once the rest matches.
  *
- * What still differs:
- * - func_ovl0F_09_80043010 (2): func_ovl0F_09_80043200's loop. The
+ * - func_ovl0F_09_80043010 (2 to 0): func_ovl0F_09_80043200's loop. The
  *   original tests `slt v1,zero,s2; beqz v1` on entry and `slt v1,s0,s2`
- *   at the end (s0 = i + 1): a compare kept in a variable. Here the
- *   variable c (`c = i++ < count; while (c) {...}`, with a fake `if (c)`
- *   after the loop to make the entry's test `slt` rather than `blez`)
- *   gets v1 on entry but v0 at the end. Tried: `while (i++ < count)` and
- *   `for` (`blez`, and `bne` at the end), `(i++ < count) != 0` (an extra
- *   `sltu`), c in other places and types, `register`, count as s16/u16/s8/u8.
+ *   at the end (s0 = i + 1): a compare kept in a variable. The variable c
+ *   (`c = i++ < count; while (c) {...}`, with a fake `if (c)` after the
+ *   loop to make the entry's test `slt` rather than `blez`) gives the
+ *   entry; the end's compare goes to a second variable d (`c = d`), kept
+ *   out of v0 by the call's result r, live across it (`if (r) {}`), so
+ *   both compares are in v1 (the moves to c in v0 are dead). Without r,
+ *   or with `c = d = i++ < count`, the end stays in v0.
  * The `#line N "202690.c"` lines are the physical line numbers (the file
  * named the same whatever path it is compiled by).
  */
@@ -119,7 +119,7 @@ void func_ovl0F_09_800457B0(s32);
 void func_ovl0F_09_800457B8(void);
 void func_ovl0F_09_800457C8(s32);
 s32 func_ovl0F_09_800457D0(void);
-void func_ovl0F_09_800457F0(void);
+s32 func_ovl0F_09_800457F0(void);
 UnkStructC *func_ovl0F_09_80045830(s32);
 void func_ovl0F_09_80045840(UnkStructC *, s32);
 s32 func_ovl0F_09_80045A30(s32);
@@ -740,6 +740,8 @@ static void func_ovl0F_09_80043200(s32 count, f32 dx, f32 dy, UnkStructA *ride) 
     f32 saved;
     s32 i;
     s32 c;
+    s32 r;
+    s32 d;
 
     obj = func_ovl0F_09_80044E98(func_ovl0F_09_80044E38());
     saved = obj->unk70;
@@ -749,14 +751,17 @@ static void func_ovl0F_09_80043200(s32 count, f32 dx, f32 dy, UnkStructA *ride) 
         func_ovl0F_09_80045658(ride, 0x200000);
     }
     /* fake: c and its use after the loop keep the compares in a register
-     * (the original's `slt v1`) */
+     * (the original's `slt v1`); r (the call's result, live across the
+     * loop's compare) and d move that compare out of v0 */
     i = 0;
     c = i++ < count;
     while (c) {
         obj->unk40->unk10 += dx;
         obj->unk40->unk14 += dy;
-        func_ovl0F_09_800457F0();
-        c = i++ < count;
+        r = func_ovl0F_09_800457F0();
+        d = i++ < count;
+        if (r) {}
+        c = d;
     }
     if (c) {}
     obj->unk70 = saved;
