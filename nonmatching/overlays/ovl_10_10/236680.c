@@ -4,23 +4,12 @@
  * original) and .text its size. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 6, eu 6, jp 6
+ * differing words: us 0, eu 0, jp 0
  *
- * What still differs in us (words; eu and jp the same), all of it as in
- * ovl_10_11's draft of the same code:
- * - func_ovl10_10_800431AC (6): 800473F8/800473FC are loaded in the
- *   order of the stores (the original loads them as the call's
- *   arguments, a1 first: lui a0, lui a1, lw a1, lw a0) and the call's
- *   `move a2,zero` is scheduled before the jal (the original has it in
- *   the delay slot and `sw a1` before the jal). Tried: every order of the
- *   two loads, two stores and the move in ugen's output, with any .loc
- *   lines (scratch/10_10/hp4.py, assembling edited ugen output with as1):
- *   as1 gives only the four orders "lui X; lw X; ...", never the
- *   original. A .file before the move gives the delay slot (4 words left);
- *   a .file between the loads and the stores gives the loads' order but a
- *   nop after them. Locals, chained/comma assignments, volatile, a
- *   pointer to 800470C4, statement order and #line renumbering don't
- *   change it, and an inlined static to get a .file would leave a stub.
+ * Every function matches (jp measured). 800431AC: the permuter's fakes,
+ * as in ovl_10_11's draft: D_800473F8 read into a local `a` and an
+ * empty test of D_800473FC on a's line, so the loads come out as the
+ * call's arguments, a1 first, with the call's move in its delay slot.
  *
  * Fixed: 80043D88 (62, and 80045700's padding, 11) by the empty
  * `do {} while (0);` before the stores of 80047468-800474B0: after it uopt
@@ -1054,7 +1043,7 @@ void func_ovl10_10_800431AC(void) {
     s32 out[6];
     s32 pad1;
     s32 pad2;
-    s32 pad3;
+    s32 a;
 
     D_ovl10_10_800474E0 = -1.0f;
     func_ovl10_10_80045EA0(0x40);
@@ -1067,9 +1056,11 @@ void func_ovl10_10_800431AC(void) {
     func_ovl10_10_80045E68(1);
     func_ovl10_10_800430C4(D_ovl10_10_80047374, D_ovl10_10_800474D0, D_ovl10_10_800474D4, -1.0f);
     func_ovl10_10_800467E8(0x78);
-    D_ovl10_10_800470C4 = D_ovl10_10_800473F8;
+    /* fakes (the permuter): a, and the test of D_ovl10_10_800473FC, on a's line */
+    a = D_ovl10_10_800473F8; if (D_ovl10_10_800473FC && D_ovl10_10_800473FC && D_ovl10_10_800473FC) {}
+    D_ovl10_10_800470C4 = a;
     D_ovl10_10_800470C8 = D_ovl10_10_800473FC;
-    func_ovl10_10_80045D70(D_ovl10_10_800473F8, D_ovl10_10_800473FC, 0);
+    func_ovl10_10_80045D70(a, D_ovl10_10_800473FC, 0);
 }
 
 void func_ovl10_10_800430C4(s32 arg0, f32 arg1, f32 arg2, f32 arg3) {
