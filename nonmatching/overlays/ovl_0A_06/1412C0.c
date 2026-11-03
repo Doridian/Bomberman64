@@ -19,11 +19,14 @@
  *   then 80043248's stub is gone; an empty 80043248 called there, even
  *   in an `if (0)`, costs 8 bytes again; 80043248 returning its own
  *   buffer gets the frame too, but moves 80043250's registers and so its
- *   callers').
+ *   callers'; an empty 80043248 inlined after the direct call costs 8 too;
+ *   its address in a dead call, or 80043248 global and uncalled, gets the
+ *   frame but emits it elsewhere, first in the object).
  * - func_ovl0A_06_80043B5C (1; with the statics after it): the inner
  *   `== 2` test's `bne` takes its delay slot's `li a0,0x20` from the
  *   fall-through, where the original takes it from the target and
- *   branches past it.
+ *   branches past it (not #line on `erase = 0` or the call, nor the
+ *   argument ahead of the store in hand-edited ugen output).
  *
  * What still differs in jp (words): the same as us's. 80043E68's copy `m`
  * of msg keeps msg in s1, as the original passes it (without it, msg goes
@@ -1662,7 +1665,7 @@ static s32 func_ovl0A_06_8004311C(void) {
         } else if ((pressed & 0x8000) || (pressed & 0x1000)) {
 #line 1700
             ret = 1;
-#line 1664
+#line 1667
             if (D_ovl0A_06_80047018 == 0) {
                 /* SE(1, 1) with `ret = 2` between its wait and its call */
                 switch (1) {
@@ -1681,7 +1684,7 @@ static s32 func_ovl0A_06_8004311C(void) {
         } else if (pressed & 0x4000) {
 #line 1700
             ret = 1;
-#line 1681
+#line 1684
             SE(2, 2);
         }
         func_ovl0A_06_800465A0();
