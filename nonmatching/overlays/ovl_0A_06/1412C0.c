@@ -26,7 +26,15 @@
  *   fall-through keeps its own `li` (a word more). Not the callees'
  *   parameter types (u32/s16/u8/unprototyped), `erase = 0` in the test,
  *   the call's result in a variable, `if (... != 2) goto`. The permuter
- *   (40 min) found nothing.
+ *   (40 min) found nothing. Hand-edited ugen output: `li a0,0x20` ahead
+ *   of the bne (and none in the fall-through) puts the li in the slot
+ *   but keeps the target (as1 retargets only when it fills from the
+ *   target); no li at all leaves a nop. Nor: a local x = 0x20 (before
+ *   the test or in it, declared last) passed as x, (x | 0), (x ^ 0),
+ *   (x & ~0), (x * 1) to one or both calls (x takes a slot, frame +8);
+ *   the test as (f() | 0) == 2, 2 == f(), f() - 2 == 0, (u32), 2U, or
+ *   (2 | 0); erase cleared as erase--, ^= 1, &= 0, -= erase, FALSE; the
+ *   argument as 32, 0x20 | 0, (s16)/(u8) 0x20, 0x10 * 2, 0x40 >> 1.
  *
  * What still differs in jp (words): the same as us's. 80043E68's copy `m`
  * of msg keeps msg in s1, as the original passes it (without it, msg goes

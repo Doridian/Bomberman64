@@ -88,6 +88,22 @@
  * reaches the label through D_ovl0B_03_80048C90[k], its address in $s3),
  * and its spills are 4 nearer w, as in us; without lab in jp alone the
  * frame stays 312 until that gap is found, so lab stays.
+ *
+ * The frame, measured (scratch/lastmile3/ of the main checkout: sp.py,
+ * sp2.py, gap.py and the v*.py variant lists): below the locals uopt
+ * lays out its temporaries top-down, here 7 words (the saves end at
+ * 120): three never used, the two spills, two more never used; adding a
+ * local anywhere (even after w) moves the spills down by the same 4, so
+ * the original has one temporary fewer ahead of the spills (us: 2 + the
+ * spills + 2, then 4 bytes of rounding; jp: 2 + 2 + 2, frame 304 without
+ * lab). That temporary didn't move with any single statement or block
+ * of 8004386C deleted (about 500 variants), nor without every ternary
+ * (WRAPW's and case 1's switch), every nested call (0x800484B8, 80043234),
+ * the inner switches, case 0, the cursor tables' initializers, each
+ * float constant (replaced by a global), different forms of case 1's
+ * spilled loop, or initialising any local at entry; ternaries and nested
+ * calls added to case 1 don't add one either. The permuter (us, 10 min)
+ * found nothing.
  */
 
 #include "common.h"
