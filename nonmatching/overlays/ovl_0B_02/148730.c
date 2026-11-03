@@ -6,7 +6,7 @@
  * of it 800431C4's local table). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 963, eu 963, jp 1026
+ * differing words: us 472, eu 472, jp 535
  * jp has no `#if VERSION_JP` yet.
  *
  * A first draft from m2c (with a context of the ZeroJump prototypes the
@@ -365,7 +365,10 @@ static void func_ovl0B_02_80047C84(void) {
     obj->unk40->unk30 = 0.3f;
     obj->unk40->unk28 = obj->unk40->unk2C = obj->unk40->unk30;
     angle = 0.0f;
-    while (D_ovl0B_02_8004A448 == 0) {
+    while (TRUE) {
+        if (D_ovl0B_02_8004A448 != 0) {
+            break;
+        }
         obj->unk40->unk20 = angle - 90.0 >= 360.0 ? angle - 90.0 - 360.0 : angle < 90.0 ? angle - 90.0 + 360.0 : angle - 90.0;
         obj->unk40->unk10 = func_ovl0B_02_80049320(angle) * 140.0f + 19.0f;
         obj->unk40->unk14 = -480.0f;
@@ -380,9 +383,12 @@ static void func_ovl0B_02_80047C84(void) {
 static void func_ovl0B_02_80047E98(void) {
     s32 i;
 
-    while (D_ovl0B_02_8004A448 == 0) {
-        func_ovl0B_02_800495C8(0x19, func_ovl0B_02_80049320(func_ovl0B_02_80049330() * 0.0) * 50.0f + 19.0f, -580.0f,
-                               func_ovl0B_02_80049328(func_ovl0B_02_80049330() * 0.0) * 50.0f + -716.0f, 0);
+    while (TRUE) {
+        if (D_ovl0B_02_8004A448 != 0) {
+            break;
+        }
+        func_ovl0B_02_800495C8(0x19, func_ovl0B_02_80049320(func_ovl0B_02_80049330() * 360.0) * 50.0f + 19.0f, -580.0f,
+                               func_ovl0B_02_80049328(func_ovl0B_02_80049330() * 360.0) * 50.0f + -716.0f, 0);
         for (i = 0; i < func_ovl0B_02_80049338(80) + 50; i++) {
             if (D_ovl0B_02_8004A448 != 0) {
                 break;
@@ -399,7 +405,10 @@ static void func_ovl0B_02_80048018(void) {
     s32 j;
     s32 x;
 
-    while (D_ovl0B_02_8004A448 == 0) {
+    while (TRUE) {
+        if (D_ovl0B_02_8004A448 != 0) {
+            break;
+        }
         for (x = 120, j = 0; j < 2; j++) {
             func_ovl0B_02_80049178(func_ovl0B_02_80046B8C, (void *) x, 0, 0, 0x130);
             x += 30;
@@ -434,9 +443,13 @@ static void func_ovl0B_02_80048018(void) {
 
 static void func_ovl0B_02_800481E8(void) {
     s32 i;
+    s32 j;
 
-    while (D_ovl0B_02_8004A448 == 0) {
-        for (i = 0; i != 4; i++) {
+    while (TRUE) {
+        if (D_ovl0B_02_8004A448 != 0) {
+            break;
+        }
+        for (j = 0; j != 4; j++) {
             func_ovl0B_02_80049178(func_ovl0B_02_800469C8, NULL, 0, 0, 0x130);
         }
         for (i = 0; i < func_ovl0B_02_80049338(10) + 10; i++) {
@@ -481,6 +494,7 @@ static void func_ovl0B_02_800443DC(Piece_ovl0B_02 *pieces, s32 n);
 
 void func_ovl0B_02_800478EC(s32 arg0) {
     s32 i;
+    s32 n;
 
     switch (arg0) {
         case 2:
@@ -508,7 +522,8 @@ void func_ovl0B_02_800478EC(s32 arg0) {
                 func_ovl0B_02_800443DC(D_ovl0B_02_8004A0EC[D_ovl0B_02_8004A3D4].unk0,
                                        D_ovl0B_02_8004A0EC[D_ovl0B_02_8004A3D4].unk8);
                 func_ovl0B_02_80049180(D_ovl0B_02_8004A444);
-                for (i = 0; i < 2; i++) {
+                n = 2;
+                for (i = 0; i < n; i++) {
                     func_ovl0B_02_80048D10(D_ovl0B_02_80049A50[i].unk10);
                 }
                 for (i = 0; i < 20; i++) {
@@ -720,7 +735,7 @@ void func_ovl0B_02_80046B8C(void) {
     func_ovl0B_02_80049028(b, 0x80000);
     a->unk40->unk36 = b->unk40->unk36 = 0xC8;
     dy = func_ovl0B_02_80049330() + 6.0;
-    dx = func_ovl0B_02_80049330() * 2.0;
+    dx = func_ovl0B_02_80049330() * 2;
     func_ovl0B_02_800495C8(0x19, 19.0f, -580.0f, -776.0f, 0);
     for (i = 0; i != 60; i++) {
         if (D_ovl0B_02_8004A448 != 0) {
