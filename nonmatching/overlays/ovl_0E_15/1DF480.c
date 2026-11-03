@@ -3,9 +3,9 @@
  * data (.rodata and .bss as the original).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 21, eu 21, jp 21
+ * differing words: us 0, eu 0, jp 0
  *
- * What came right (from 306):
+ * Every function matches in us, eu and jp.  What came right (from 306):
  * - func_ovl0E_15_800433E0: case 11 is a static, func_ovl0E_15_80043068,
  *   inlined into the handler with its own locals (and a pad), as ovl_12_06's
  *   case 11; its stub is the one at 80043068, and 80043070's wait loop is
@@ -16,20 +16,13 @@
  *   kept in a register; the camera deltas are the differences, divided by
  *   60 in the loop (hoisted: 60.0f loaded three times, as the original);
  *   the random values are the call's arguments, not f64 locals.
+ * - func_ovl0E_15_800444C4 (21 to 0): the frame (0xB0 against 0xA8) was
+ *   two locals too many: the 0x1B object is obj0 again (the first one is
+ *   dead by then) and the effect id is a ternary in the call's argument
+ *   rather than a local `id` set in an if/else.  Either alone left the
+ *   frame at 0xB0 (the ternary's temporary takes a slot; it did move the
+ *   spilled z delta to 0x50).
  *
- * What still differs:
- * - func_ovl0E_15_800444C4 (21): only the frame: 0xB0 where the original's
- *   is 0xA8, so every slot from y up (y, a, z, snd) is 8 higher and the
- *   spilled z delta is at 0x54 (the original 0x50).  The three hoisted
- *   divisions cost the extra slots: with the deltas divided before the loop
- *   the frame is 0xA8, but uopt then loads 60.0f once (3 words of schedule
- *   and the registers differ); mixed (some divided before, some in the
- *   loop, `/ 60` against `/ 60.0f` to keep the constants apart) gets the
- *   frame and loses the registers.  Tried: the deltas in a block, at
- *   function level in every position, a Vec3f or an array; f64 locals for
- *   the random values (rx, ry, rz; the original spills one of them, the
- *   slot comes right either way); a local less (obj as obj0: no change);
- *   the statements' order.
  * The text order: 80043340 must be defined above 800444C4 (anywhere above
  * it); defined next to 80043378, the reference to 80045024 it makes pulls
  * 80045024 out ahead of 80044E90.  The `jr ra; nop` after 800430E4 is a
@@ -322,8 +315,6 @@ void func_ovl0E_15_800444C4(void) {
     f32 a;
     s32 j;
     f32 z;
-    s32 id;
-    UnkStructA *obj;
     UnkStructA_40 *p;
 
     obj0 = func_ovl0E_15_80045748(0);
@@ -381,12 +372,7 @@ void func_ovl0E_15_800444C4(void) {
     func_ovl0E_15_800465E0(0x236);
     for (j = 0; j < 64; j++) {
         func_ovl0E_15_80046218(0x100);
-        if (func_ovl0E_15_80046218(0x100) & 1) {
-            id = 0xE;
-        } else {
-            id = 0x16;
-        }
-        func_ovl0E_15_800464A8(id, func_ovl0E_15_80046210() * 500.0 + 2100.0, func_ovl0E_15_80046210() * 500.0 + 1050.0, func_ovl0E_15_80046210() * 500.0 + 950.0, 0);
+        func_ovl0E_15_800464A8((func_ovl0E_15_80046218(0x100) & 1) ? 0xE : 0x16, func_ovl0E_15_80046210() * 500.0 + 2100.0, func_ovl0E_15_80046210() * 500.0 + 1050.0, func_ovl0E_15_80046210() * 500.0 + 950.0, 0);
         if (j == 54) {
             func_ovl0E_15_800465E0(0x22C);
             func_ovl0E_15_80045BF0(snd);
@@ -441,33 +427,33 @@ void func_ovl0E_15_800444C4(void) {
         while (obj1->unk68 != 0.0f) {
             func_ovl0E_15_800460A0();
         }
-        obj = func_ovl0E_15_80045F30(0x1C2, 0x01000000, 0xC0, 0);
-        func_ovl0E_15_80045F40(obj);
-        obj->unk40->unk10 = obj1->unk40->unk10;
-        obj->unk40->unk14 = 800.0f;
-        obj->unk40->unk18 = obj1->unk40->unk18;
-        obj->unk70 = 0.8166667f;
-        obj->unk6C = 16.333334f;
-        while (obj->unk40->unk14 > 310.0f) {
-            func_ovl0E_15_80045F88(obj);
+        obj0 = func_ovl0E_15_80045F30(0x1C2, 0x01000000, 0xC0, 0);
+        func_ovl0E_15_80045F40(obj0);
+        obj0->unk40->unk10 = obj1->unk40->unk10;
+        obj0->unk40->unk14 = 800.0f;
+        obj0->unk40->unk18 = obj1->unk40->unk18;
+        obj0->unk70 = 0.8166667f;
+        obj0->unk6C = 16.333334f;
+        while (obj0->unk40->unk14 > 310.0f) {
+            func_ovl0E_15_80045F88(obj0);
             func_ovl0E_15_800460A0();
         }
         p = obj1->unk40;
         func_ovl0E_15_800464A8(0, p->unk10, p->unk14 + 100.0f, p->unk18, 0);
-        obj->unk70 = 0.8166667f;
-        obj->unk6C = 16.333334f;
-        obj->unk68 = 30.0f;
+        obj0->unk70 = 0.8166667f;
+        obj0->unk6C = 16.333334f;
+        obj0->unk68 = 30.0f;
         p = obj1->unk40;
         func_ovl0E_15_800464A8(5, p->unk10, p->unk14 + 80.0f, p->unk18, 0);
         func_ovl0E_15_80045798(1, 8);
         for (j = 0; j < 90; j++) {
-            obj->unk40->unk10 += 4.4444447f;
-            if (obj->unk40->unk14 < 150.0f) {
-                obj->unk6C = 16.333334f;
-                obj->unk70 = 0.8166667f;
-                obj->unk68 = 30.0f;
+            obj0->unk40->unk10 += 4.4444447f;
+            if (obj0->unk40->unk14 < 150.0f) {
+                obj0->unk6C = 16.333334f;
+                obj0->unk70 = 0.8166667f;
+                obj0->unk68 = 30.0f;
             }
-            func_ovl0E_15_80045F88(obj);
+            func_ovl0E_15_80045F88(obj0);
             func_ovl0E_15_800460A0();
         }
         func_ovl0E_15_80046758();
