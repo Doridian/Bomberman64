@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1340, eu 1340, jp 3056
+ * differing words: us 1306, eu 1306, jp 3052
  *
  * Order (scratch/ord/search.py, hill-climb over definition order, scored by
  * the emitted sequence's edit distance from the original's address order):
@@ -846,7 +846,18 @@ static void func_ovl0B_04_8004461C(void) {
 static void func_ovl0B_04_80044624(void) {
 }
 
-static void func_ovl0B_04_800450B8(void) {
+/* Page 9's fade in, over the page (inlined). */
+static void func_ovl0B_04_800450B8(Fade *f) {
+    f32 step;
+
+    step = (f->unk18 - f->unk14) / f->unk1C;
+    D_ovl0B_04_8004A3E4 = f;
+    f->unk0 = func_ovl0B_04_80047E58(func_ovl0B_04_80043CD0, 0);
+    f->unk0->unkC |= 0x80;
+    for (f->unk34 = f->unk14; f->unk34 < f->unk18; f->unk34 += step) {
+        func_ovl0B_04_80048290();
+    }
+    func_ovl0B_04_80048290();
 }
 
 /* The name kept (and whether it changed), and the screen's texts freed
@@ -1414,23 +1425,12 @@ u8 func_ovl0B_04_80045214(u8 arg0, u16 arg1) {
 /* Page 9's set-up: the name over a fade. */
 void func_ovl0B_04_800450C0(Obj *arg0) {
     Obj *o = func_ovl0B_04_80048668(D_ovl0B_04_8004A3B0[4]);
-    Fade *f;
 
     func_ovl0B_04_80044394(D_ovl0B_04_8004A3B0[4], D_ovl0B_04_8004A3B0[5]);
     func_ovl0B_04_8004447C(D_ovl0B_04_8004A3B0[4], 0x50);
     func_ovl0B_04_8004447C(D_ovl0B_04_8004A3B0[5], 0x32);
     o->unkC |= 0x400;
-    f = &D_ovl0B_04_80049B20[4];
-    D_ovl0B_04_8004A3E4 = f;
-    f->unk0 = func_ovl0B_04_80047E58(func_ovl0B_04_80043CD0, 0);
-    f->unk0->unkC |= 0x80;
-    for (f->unk34 = f->unk14; f->unk34 < f->unk18; f->unk34 += (f->unk18 - f->unk14) / f->unk1C) {
-        func_ovl0B_04_80048290();
-    }
-    func_ovl0B_04_80048290();
-    if (0) {
-        func_ovl0B_04_800450B8();
-    }
+    func_ovl0B_04_800450B8(&D_ovl0B_04_80049B20[4]);
 }
 
 /* The name copied into the one being entered (inlined). */
@@ -1815,7 +1815,7 @@ static void func_ovl0B_04_80044394(s32 a, s32 b) {
     }
     n--;
     if (n != -1) {
-        x = -func_ovl0B_04_80048680(D_ovl0B_04_80048A20) * 0.65f / 2.0f;
+        x = -func_ovl0B_04_80048680(D_ovl0B_04_80048A20) * 0.65f / 2;
         func_ovl0B_04_80048650(a, x, 0);
         if (b != -1) {
             func_ovl0B_04_80048650(b, x, 0);
@@ -1899,8 +1899,8 @@ static void func_ovl0B_04_800440C8(Fade *f) {
 static void func_ovl0B_04_8004401C(Fade *f) {
     f32 step;
 
-    D_ovl0B_04_8004A3E4 = f;
     step = (f->unk18 - f->unk14) / f->unk1C;
+    D_ovl0B_04_8004A3E4 = f;
     f->unk0 = func_ovl0B_04_80047E58(func_ovl0B_04_80043CD0, 2);
     f->unk0->unkC |= 0x480;
     for (f->unk34 = f->unk14; f->unk34 < f->unk18; f->unk34 += step) {
