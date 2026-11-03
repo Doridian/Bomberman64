@@ -6,8 +6,9 @@
  * of it 800431C4's local table). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 430, eu 430, jp 493
- * jp has no `#if VERSION_JP` yet.
+ * differing words: us 430, eu 430, jp 430
+ * jp counts the characters itself in 80044424 (24 pixels each, as
+ * ovl_0B_03 does) and draws through ZeroJump 0x2501 (DRAW_TEXT).
  *
  * A first draft from m2c (with a context of the ZeroJump prototypes the
  * other drafts give the same codes), every function rewritten by hand:
@@ -50,6 +51,13 @@
  *   800467D0-800468C4, 80047020, 800470B0, 80047B24-80047BA0 match.
  */
 #include "common.h"
+
+/* The text is drawn through ZeroJump 0x250C in us and eu, 0x2501 in jp. */
+#if VERSION_JP
+#define DRAW_TEXT func_ovl0B_02_80049560
+#else
+#define DRAW_TEXT func_ovl0B_02_800495B8
+#endif
 
 #define M2C_FIELD(expr, type, offset) (*(type)((u8 *)(expr) + (offset)))
 
@@ -169,6 +177,7 @@ void func_ovl0B_02_80049518(void); /* 0x2403 */
 void func_ovl0B_02_80049520(void); /* 0x2404 */
 s32 func_ovl0B_02_80049530(void); /* 0x2406 */
 void func_ovl0B_02_80049568(s32); /* 0x2502 */
+s32 func_ovl0B_02_80049560(u8 *, u16, u16, f32, f32, s32); /* 0x2501 */
 s32 func_ovl0B_02_800495B0(u8 *); /* 0x250B */
 s32 func_ovl0B_02_800495B8(u8 *, u16, u16, f32, f32, s32); /* 0x250C */
 void func_ovl0B_02_800495C8(s32, f32, f32, f32, s32); /* 0x2600 */
@@ -180,12 +189,29 @@ void func_ovl0B_02_80049720(s32, f32, f32, f32); /* 0x2B04 */
 void func_ovl0B_02_80049840(void); /* 0x2F0A */
 
 /* .bss */
-u8 D_ovl0B_02_8004A380[0x1C]; /* not referenced here */
-s32 D_ovl0B_02_8004A39C[2];
-s32 D_ovl0B_02_8004A3A4[2];
+/* jp's first 0x38 bytes are laid out differently (its 80047BFC clears the
+ * words at +0x2C and +0x30); the words nobody uses are kept by 800482D0 */
+#if VERSION_JP
+u8 D_ovl0B_02_8004A380[0xC];
+s32 D_ovl0B_02_8004A39C[1];
+s32 D_ovl0B_02_8004A3A0[3];
+s32 D_ovl0B_02_8004A3A4[1];
+s32 D_ovl0B_02_8004A3A8;
+u8 D_ovl0B_02_8004A3AC[4];
+s32 D_ovl0B_02_8004A3B0_jp;
+s32 D_ovl0B_02_8004A3B0;
+s32 D_ovl0B_02_8004A3B4;
+s32 D_ovl0B_02_8004A3B4_jp;
+#else
+u8 D_ovl0B_02_8004A380[0x1C];
+s32 D_ovl0B_02_8004A39C[1];
+s32 D_ovl0B_02_8004A3A0[1];
+s32 D_ovl0B_02_8004A3A4[1];
+s32 D_ovl0B_02_8004A3A8;
 u8 D_ovl0B_02_8004A3AC[4];
 s32 D_ovl0B_02_8004A3B0;
 s32 D_ovl0B_02_8004A3B4;
+#endif
 Vec3f D_ovl0B_02_8004A3B8;
 s32 D_ovl0B_02_8004A3C4;
 s32 D_ovl0B_02_8004A3C8;
@@ -232,10 +258,20 @@ static void func_ovl0B_02_80048018(void);
 static void func_ovl0B_02_800481E8(void);
 
 /* .data */
+#if VERSION_JP
+u8 D_ovl0B_02_80049920[0xC] = { 0x8F, 0xF9, 0x80, 0xAE, 0xD3, 0xD1, 0xCE, 0xBC, 0xB5, 0xF7, 0x00, 0x00 };
+u8 D_ovl0B_02_8004992C[0xC] = { 0x0F, 0xD3, 0xD1, 0xC4, 0xB1, 0x0F, 0x0F, 0xD3, 0xD1, 0xD8, 0x00, 0x00 };
+u8 D_ovl0B_02_80049938[0x8] = { 0xA2, 0x89, 0x61, 0xE2, 0xB5, 0xAF, 0x00, 0x00 };
+/* the time: minutes, a two-byte character, seconds, another */
+u8 D_ovl0B_02_80049944[0xC] = { 0x10, 0x10, 0xE2, 0xB5, 0xAF, 0x10, 0x10, 0xCB, 0xAF, 0x00, 0x00, 0x00 };
+#define SECONDS_AT 5
+#else
 u8 D_ovl0B_02_80049920[0xC] = { 0x2A, 0x4E, 0x42, 0x4D, 0x0F, 0x20, 0x3A, 0x46, 0x3E, 0xF7, 0x00, 0x00 };
 u8 D_ovl0B_02_8004992C[0xC] = { 0x0F, 0x27, 0x28, 0x0F, 0x0F, 0x0F, 0x0F, 0x32, 0x1E, 0x2C, 0x00, 0x00 };
 u8 D_ovl0B_02_80049938[0xC] = { 0x29, 0x45, 0x3A, 0x52, 0x0F, 0x2D, 0x42, 0x46, 0x3E, 0x00, 0x00, 0x00 };
 u8 D_ovl0B_02_80049944[0xC] = { 0x10, 0x10, 0x41, 0xF8, 0x10, 0x10, 0x46, 0xF8, 0x00, 0x00, 0x00, 0x00 };
+#define SECONDS_AT 4
+#endif
 Box_ovl0B_02 D_ovl0B_02_80049950[5] = {
     { 79.0f, 44.0f, 90.0f, 40.0f, 1.0f, 0x37, 2, NULL },
     { 50.0f, 110.0f, 20.0f, 20.0f, 1.0f, 0x39, 0, NULL },
@@ -309,7 +345,11 @@ Vec3f D_ovl0B_02_8004A168[3] = {
     { 134.0f, -949.0f, -1185.0f },
     { 242.0f, -923.0f, -1254.0f },
 };
+#if VERSION_JP
+u16 D_ovl0B_02_8004A18C[8] = { 0x4C, 0x82, 0, 2, 0xC0, 0x82, 0, 0x100 };
+#else
 u16 D_ovl0B_02_8004A18C[8] = { 0x64, 0x82, 0, 2, 0xAC, 0x82, 0, 0x100 };
+#endif
 
 /* unused: the stubs IDO -O3 leaves after the tail */
 static void func_ovl0B_02_80047C14(void) {
@@ -465,7 +505,12 @@ static void func_ovl0B_02_800481E8(void) {
 /* unused: the stub IDO -O3 leaves at the end of the object; it refers to
  * the .bss nothing else uses, which would otherwise be common */
 static void func_ovl0B_02_800482D0(void) {
-    D_ovl0B_02_8004A380[0] = 0;
+    if (0) {
+        D_ovl0B_02_8004A380[0] = D_ovl0B_02_8004A3A0[0] = D_ovl0B_02_8004A3A8 = 0;
+#if VERSION_JP
+        D_ovl0B_02_8004A3B0_jp = D_ovl0B_02_8004A3B4_jp = 0;
+#endif
+    }
 }
 
 void func_ovl0B_02_80047BFC(void) {
@@ -1183,10 +1228,10 @@ void func_ovl0B_02_80044490(void) {
         }
         func_ovl0B_02_800482F0(D_ovl0B_02_8004A3AC, "%02d", D_ovl0B_02_8004A3E0->unk38 % 3600 / 60);
         for (i = 0; i != 2; i++) {
-            D_ovl0B_02_80049944[i + 4] = D_ovl0B_02_8004A3AC[i] - 0x20;
+            D_ovl0B_02_80049944[i + SECONDS_AT] = D_ovl0B_02_8004A3AC[i] - 0x20;
         }
-        D_ovl0B_02_8004A39C[0] = func_ovl0B_02_800495B8(D_ovl0B_02_80049938, 0x2D, 0xAA, 0.6f, 0.6f, 5);
-        D_ovl0B_02_8004A3A4[0] = func_ovl0B_02_800495B8(D_ovl0B_02_80049944, 0x2D, 0xBE, 0.6f, 0.6f, 5);
+        D_ovl0B_02_8004A39C[0] = DRAW_TEXT(D_ovl0B_02_80049938, 0x2D, 0xAA, 0.6f, 0.6f, 5);
+        D_ovl0B_02_8004A3A4[0] = DRAW_TEXT(D_ovl0B_02_80049944, 0x2D, 0xBE, 0.6f, 0.6f, 5);
     }
     while (TRUE) {
         buttons = func_ovl0B_02_80049530();
@@ -1253,8 +1298,8 @@ void func_ovl0B_02_80044490(void) {
         }
         if (func_ovl0B_02_80048738() & 0x4000) {
             func_ovl0B_02_800491C0();
-            a = func_ovl0B_02_800495B8(D_ovl0B_02_80049920, func_ovl0B_02_80044424(D_ovl0B_02_80049920, 0.8f), 100, 0.8f, 0.8f, 3);
-            b = func_ovl0B_02_800495B8(D_ovl0B_02_8004992C, func_ovl0B_02_80044424(D_ovl0B_02_8004992C, 0.8f), 120, 0.8f, 0.8f, 2);
+            a = DRAW_TEXT(D_ovl0B_02_80049920, func_ovl0B_02_80044424(D_ovl0B_02_80049920, 0.8f), 100, 0.8f, 0.8f, 3);
+            b = DRAW_TEXT(D_ovl0B_02_8004992C, func_ovl0B_02_80044424(D_ovl0B_02_8004992C, 0.8f), 120, 0.8f, 0.8f, 2);
             func_ovl0B_02_80049500(func_ovl0B_02_80046258, D_ovl0B_02_8004A18C, 0x130, 0xC, 0xC);
             func_ovl0B_02_80049520();
             func_ovl0B_02_80049518();
@@ -1396,7 +1441,15 @@ void func_ovl0B_02_80044490(void) {
 
 /* The original takes the scale in $f20 (its callers' register). */
 static s32 func_ovl0B_02_80044424(u8 *str, f32 scale) {
+#if VERSION_JP
+    s32 n;
+
+    for (n = 0; str[n] != 0; n++) {
+    }
+    return (320.0f - n * 24 * scale) / 2;
+#else
     return (320.0f - func_ovl0B_02_800495B0(str) * scale) / 2;
+#endif
 }
 
 static void func_ovl0B_02_800443D4(void) {
