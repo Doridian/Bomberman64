@@ -6,7 +6,7 @@
  * tables, .bss 0x1140, as the original's sizes). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 10, eu 10, jp 72
+ * differing words: us 4, eu 4, jp 66
  *
  * jp (`#if VERSION_JP`) has its own strings (80048AF4, 80048B60,
  * 80049144, and D_ovl0B_03_8004901C_jp for us's 80049168, with the
@@ -57,19 +57,22 @@
  * 3/4 copies each model's own y (E9C[i].unk8), not a -10.0f (m2c's).
  *
  * 80046510's grid is a plain i/j loop writing D_ovl0B_03_8004A340[i][j]
- * directly (through a pointer, uopt doesn't know the stores leave
- * D_ovl0B_03_80049104 alone, and its loads stay below them), x = j * 64,
- * the rows' y0/y1 steps in the for's increment; y0 and y1 stay in their
- * homes (14 slots, the original's frame); the update loop takes the next
- * step into a local.
+ * directly, the new object stored straight into it and read back from
+ * it (through a pointer, uopt doesn't know the stores leave
+ * D_ovl0B_03_80049104 alone, and its loads stay below them; an obj local
+ * costs a frame slot), with the rows' y as i * 64 + 24 and i * 64 + 88 in
+ * the stores: uopt strength-reduces them into the two induction
+ * variables it keeps in frame temporaries (84/96(sp)), and their li's
+ * come after the la of the table as in the original. The update loop
+ * takes the next step into a local.
  *
  * What still differs in us (words): 8004386C 4 (case 1's two spills
- * around 80043340 are at 128/132(sp), the original's at 132/136: one
- * temporary fewer below them; tried: the wrap's and the switch's ternary
- * forms, the locals' order), 80046510 6 (the grid's preheader: the
- * original's la of D_ovl0B_03_8004A340 starts before y0/y1's li and ends
- * after their stores; tried: the inits in the for, #line). Everything
- * else matches.
+ * around 80043340 are at 128/132(sp), the original's at 132/136: uopt
+ * leaves 12 bytes between w and them where the original leaves 8. Not
+ * the ternaries, the nested calls, the switches, the loops (all tried,
+ * one at a time), nor lab: without lab (D_ovl0B_03_80048C90[k]
+ * throughout) the spills come out right but w 4 higher, 1 word).
+ * Everything else matches.
  *
  * jp builds the same 8004386C but for its #if VERSION_JP parts: the
  * labels and strings, and the second option-label loop, which keeps the
@@ -78,11 +81,13 @@
  * is what keeps &D_ovl0B_03_8004A324 out of a register in jp: uopt's
  * priority for the address is at the edge in this function, and with the
  * handle in next (or freed straight from lab->unk18) it still takes $s0.
- * What still differs in jp (words): 8004386C 66, all stack offsets (the
- * original's frame is 8 smaller, w at 144(sp) and the cursor tables and
- * the locals above w 8 lower: w sits 4 nearer the top than in us, so
- * one local of i, t, lab fewer, and the spills 4 nearer w, as in us),
- * 80046510 6, as in us.
+ * What still differs in jp (words): 8004386C 66, all stack offsets: the
+ * original's frame is 8 smaller (w at 144(sp), the cursor tables and the
+ * locals above w 8 lower). w sits 4 nearer the top than in us, so jp has
+ * one local fewer between the tables and w (lab, likely: the original jp
+ * reaches the label through D_ovl0B_03_80048C90[k], its address in $s3),
+ * and its spills are 4 nearer w, as in us; without lab in jp alone the
+ * frame stays 312 until that gap is found, so lab stays.
  */
 
 #include "common.h"
@@ -676,18 +681,7 @@ void func_ovl0B_03_80046510(void) {
     s32 i;
     s32 j;
     Anim_ovl0B_03 *a;
-    UnkStructA_40 *obj;
     s32 n;
-    s32 pad0;
-    s32 pad1;
-    s32 pad2;
-    s32 pad3;
-    s32 y0;
-    s32 padm0;
-    s32 padm1;
-    s32 y1;
-    s32 padt0;
-
 
     func_ovl0B_03_800464B0(D_ovl0B_03_80048D08, 4);
     D_ovl0B_03_80048D08[2].unk10->unkC |= 0x80;
@@ -706,19 +700,16 @@ void func_ovl0B_03_80046510(void) {
         }
         D_ovl0B_03_8004A400[i] = func_ovl0B_03_80047F28(D_ovl0B_03_80048E9C[i].unk10, 0xF);
     }
-    y0 = 0x18;
-    y1 = 0x58;
-    for (i = 0; i < 3; i++, y0 += 0x40, y1 += 0x40) {
+    for (i = 0; i < 3; i++) {
         for (j = 0; j < 5; j++) {
-            obj = func_ovl0B_03_80047E98(0x30, 0);
-            D_ovl0B_03_8004A340[i][j].unk0 = obj;
+            D_ovl0B_03_8004A340[i][j].unk0 = func_ovl0B_03_80047E98(0x30, 0);
             D_ovl0B_03_8004A340[i][j].unk8 = (i + j) & 3;
             D_ovl0B_03_8004A340[i][j].unk4 = D_ovl0B_03_80049104[(i + j) & 3].unk4;
-            M2C_FIELD(obj, s32 *, 0x38) = D_ovl0B_03_80049104[(i + j) & 3].unk0;
+            M2C_FIELD(D_ovl0B_03_8004A340[i][j].unk0, s32 *, 0x38) = D_ovl0B_03_80049104[(i + j) & 3].unk0;
             D_ovl0B_03_8004A340[i][j].unk0->unk10 = j * 64;
-            D_ovl0B_03_8004A340[i][j].unk0->unk14 = y0;
+            D_ovl0B_03_8004A340[i][j].unk0->unk14 = i * 64 + 24;
             D_ovl0B_03_8004A340[i][j].unk0->unk18 = j * 64 + 64;
-            D_ovl0B_03_8004A340[i][j].unk0->unk1C = y1;
+            D_ovl0B_03_8004A340[i][j].unk0->unk1C = i * 64 + 88;
             D_ovl0B_03_8004A340[i][j].unk0->unkC |= 0x400;
         }
     }
