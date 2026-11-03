@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1855, eu 1855, jp 3351
+ * differing words: us 1582, eu 1582, jp 3267
  *
  * Order (scratch/ord/search.py, hill-climb over definition order, scored by
  * the emitted sequence's edit distance from the original's address order):
@@ -718,6 +718,7 @@ s32 D_ovl0B_04_8004A1AC[14] = { 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 1, 1 };
 s32 D_ovl0B_04_8004A1E4 = 0;
 
 static void func_ovl0B_04_80043050(Entry *e, Desc *d);
+static void func_ovl0B_04_FreeEntries(Entry *e, s32 n);
 static void func_ovl0B_04_800438FC(u32 mode, s32 id, Item *it);
 static void func_ovl0B_04_80043A24(s32 n, s32 *ids, Item *items);
 static void func_ovl0B_04_80043A7C(s32 n, s32 *ids, Item *items);
@@ -766,8 +767,8 @@ static void func_ovl0B_04_800438F4(void) {
 static void func_ovl0B_04_80043AD4(s32 *ids, s32 n) {
     s32 i;
 
-    for (i = 0; i < n; i++) {
-        func_ovl0B_04_80048638(ids[i]);
+    for (i = 0; i < n; i++, ids++) {
+        func_ovl0B_04_80048638(*ids);
     }
 }
 
@@ -849,10 +850,29 @@ static void func_ovl0B_04_80044624(void) {
 static void func_ovl0B_04_800450B8(void) {
 }
 
+/* The name kept (and whether it changed), and the screen's texts freed
+ * (inlined in 80045540). */
 static void func_ovl0B_04_80045530(void) {
+    s32 i;
+
+    func_ovl0B_04_80043AD4(D_ovl0B_04_8004A448, 8);
+    func_ovl0B_04_80043AD4(D_ovl0B_04_8004A468, 6);
+    for (i = 0; i < 5; i++) {
+        func_ovl0B_04_80047DE0(D_ovl0B_04_8004A060[i].unk0);
+    }
+    func_ovl0B_04_FreeEntries(&D_ovl0B_04_8004A060[5], 3);
+    func_ovl0B_04_FreeEntries(&D_ovl0B_04_8004A060[8], 2);
 }
 
 static void func_ovl0B_04_80045538(void) {
+    s32 i;
+
+    for (i = 0; i < 8; i++) {
+        if (D_ovl0B_04_80048A20[i] != D_ovl0B_04_8004A290[i][0]) {
+            D_ovl0B_04_8004A18C = 1;
+        }
+        D_ovl0B_04_80048A20[i] = D_ovl0B_04_8004A290[i][0];
+    }
 }
 
 static void func_ovl0B_04_80045848(void) {
@@ -1247,8 +1267,6 @@ void func_ovl0B_04_800459C4(Obj *arg0) {
         func_ovl0B_04_80045850();
         func_ovl0B_04_80045848();
         func_ovl0B_04_80045540(0, 0, 0);
-        func_ovl0B_04_80045538();
-        func_ovl0B_04_80045530();
     }
 }
 
@@ -1293,12 +1311,13 @@ static void func_ovl0B_04_80045540(u8 item, u16 buttons, u8 *ret) {
     u8 c;
 
     if (buttons & 2) {
-        p = D_ovl0B_04_8004A290[D_ovl0B_04_8004A490.unk0];
+        i = D_ovl0B_04_8004A490.unk0;
+        p = D_ovl0B_04_8004A290[i];
         c = p[0];
         D_ovl0B_04_8004A490.unk1 = 0;
         p[0] = 0;
-        if ((D_ovl0B_04_8004A490.unk0 == 7 && c == 0) || (D_ovl0B_04_8004A490.unk0 != 7 && D_ovl0B_04_8004A490.unk0 > 0)) {
-            D_ovl0B_04_8004A490.unk0--;
+        if ((i == 7 && c == 0) || (i != 7 && i > 0)) {
+            D_ovl0B_04_8004A490.unk0 = i - 1;
         }
         func_ovl0B_04_80044210();
         func_ovl0B_04_80044154();
@@ -1310,23 +1329,8 @@ static void func_ovl0B_04_80045540(u8 item, u16 buttons, u8 *ret) {
                 func_ovl0B_04_800487D0(1);
                 func_ovl0B_04_80043FA4(ret, 0, 1, 1);
                 D_ovl0B_04_8004A164->unk20 = 0.0f;
-                for (i = 0; i < 8; i++) {
-                    if (D_ovl0B_04_80048A20[i] != D_ovl0B_04_8004A290[i][0]) {
-                        D_ovl0B_04_8004A18C = 1;
-                    }
-                    D_ovl0B_04_80048A20[i] = D_ovl0B_04_8004A290[i][0];
-                }
-                for (i = 0; i < 8; i++) {
-                    func_ovl0B_04_80048638(D_ovl0B_04_8004A448[i]);
-                }
-                for (i = 0; i < 6; i++) {
-                    func_ovl0B_04_80048638(D_ovl0B_04_8004A468[i]);
-                }
-                for (i = 0; i < 5; i++) {
-                    func_ovl0B_04_80047DE0(D_ovl0B_04_8004A060[i].unk0);
-                }
-                func_ovl0B_04_FreeEntries(&D_ovl0B_04_8004A060[5], 3);
-                func_ovl0B_04_FreeEntries(&D_ovl0B_04_8004A060[8], 2);
+                func_ovl0B_04_80045538();
+                func_ovl0B_04_80045530();
             } else {
                 D_ovl0B_04_8004A490.unk1 = func_ovl0B_04_8004426C(D_ovl0B_04_8004A490.unk2, item);
                 D_ovl0B_04_8004A490.unk3 = item;
@@ -1429,6 +1433,16 @@ void func_ovl0B_04_800450C0(Obj *arg0) {
     }
 }
 
+/* The name copied into the one being entered (inlined). */
+static void func_ovl0B_04_80044BE0(void) {
+    s32 i;
+
+    for (i = 0; i < 8; i++) {
+        D_ovl0B_04_8004A290[i][0] = D_ovl0B_04_80048A20[i];
+        D_ovl0B_04_8004A290[i][1] = 0;
+    }
+}
+
 /* Page 0: the name, the four slots (pages 5-8), and B to leave (through
  * page 9 if anything changed). */
 u8 func_ovl0B_04_80044BE8(u8 arg0, u16 arg1) {
@@ -1460,10 +1474,7 @@ u8 func_ovl0B_04_80044BE8(u8 arg0, u16 arg1) {
         func_ovl0B_04_800487D0(1);
         switch (arg0) {
             case 1:
-                for (i = 0; i < 8; i++) {
-                    D_ovl0B_04_8004A290[i][0] = D_ovl0B_04_80048A20[i];
-                    D_ovl0B_04_8004A290[i][1] = 0;
-                }
+                func_ovl0B_04_80044BE0();
                 func_ovl0B_04_80043A7C(8, D_ovl0B_04_8004A448, D_ovl0B_04_80049308);
                 func_ovl0B_04_80043A24(1, D_ovl0B_04_8004A468, D_ovl0B_04_800493A8);
                 func_ovl0B_04_80043A7C(5, &D_ovl0B_04_8004A468[1], D_ovl0B_04_800493BC);
@@ -1657,6 +1668,8 @@ static s32 func_ovl0B_04_8004471C(u8 set, u8 c) {
     u8 r = 0;
 
     switch (set) {
+        default:
+            return 0;
         case 1:
             if (c >= 0xB5 && c < 0xC4) {
                 return 0x27;
@@ -1664,10 +1677,7 @@ static s32 func_ovl0B_04_8004471C(u8 set, u8 c) {
             if (c >= 0xC9 && c < 0xCE) {
                 return 0x22;
             }
-            /* fallthrough */
-        case 3:
-        case 4:
-            return r;
+            break;
         case 2:
             if (c >= 0x65 && c < 0x74) {
                 return 0x27;
@@ -1675,14 +1685,16 @@ static s32 func_ovl0B_04_8004471C(u8 set, u8 c) {
             if (c >= 0x79 && c < 0x7E) {
                 r = 0x22;
             }
-            return r;
-        default:
-            return 0;
+            break;
+        case 3:
+        case 4:
+            break;
     }
+    return r;
 }
 
 static s32 func_ovl0B_04_8004462C(u8 set, u8 c) {
-    u8 r = 0;
+    s32 r = 0;
 
     switch (set) {
         case 1:
