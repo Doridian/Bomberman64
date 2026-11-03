@@ -9,10 +9,10 @@
  * goes through 0x2501 and 0x2503, with 0x2505 for 80043B5C's offsets.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 16, eu 16, jp 16
+ * differing words: us 12, eu 12, jp 12
  *
  * What still differs in us (words):
- * - func_ovl0A_06_80043010 (13; the statics up to 80043B5C): 8004311C's
+ * - func_ovl0A_06_80043010 (11; the statics up to 80043B5C): 8004311C's
  *   `ret = 2` comes before the wait's `li s0,15`, not after it (2: ret = 2
  *   on a later #line, or after the SE, moves it past the call); 80043250's
  *   buffer at sp+40, not 32 (9): the original's frame has 12 bytes above
@@ -21,17 +21,21 @@
  *   then 80043248's stub is gone; an empty 80043248 called there, even
  *   in an `if (0)`, costs 8 bytes again; 80043248 returning its own
  *   buffer gets the frame too, but moves 80043250's registers and so its
- *   callers'); 800432F8's spill slot, 0x18 for the original's 0x1C (2).
- * - func_ovl0A_06_80043B5C (3; with the statics after it): a spill of s4
- *   in 80044620 is one word high (2); the inner `== 2` test's `bne`
- *   takes its delay slot's `li a0,0x20` from the fall-through, where
- *   the original takes it from the target and branches past it (1).
+ *   callers').
+ * - func_ovl0A_06_80043B5C (1; with the statics after it): the inner
+ *   `== 2` test's `bne` takes its delay slot's `li a0,0x20` from the
+ *   fall-through, where the original takes it from the target and
+ *   branches past it.
  *
  * What still differs in jp (words): the same as us's. 80043E68's copy `m`
  * of msg keeps msg in s1, as the original passes it (without it, msg goes
  * to t5 in jp and 80044620, 8004423C and 80044BFC around it change).
  *
  * How the rest came to match:
+ * - 80044468 declares i before ret (ret's spill slot is the original's
+ *   0x18).
+ * - 800436BC's first loop passes `i * 0x14 + 0x67` (no y): the original's
+ *   order of the pointer increments.
  * - 80043010 takes (n, handles): its inlined copies in 80043B5C spill n
  *   at the original's offset.
  * - 80043E68: the D_ovl0A_06_80047748 loops are index loops (uopt turns
@@ -1184,8 +1188,8 @@ static s32 func_ovl0A_06_80044534(s32 arg0) {
 }
 
 static s32 func_ovl0A_06_80044468(s32 reload) {
-    s32 ret = 9;
     s32 i;
+    s32 ret = 9;
 
     if (reload) {
         ret = func_ovl0A_06_80043464();
@@ -1416,7 +1420,6 @@ static void func_ovl0A_06_80043010(s32 n, s32 *handles) {
 static void func_ovl0A_06_800436BC(void) {
     s32 i;
     s32 j;
-    s32 y;
 
     func_ovl0A_06_80046578(0x14);
     func_ovl0A_06_80046838(1);
@@ -1440,8 +1443,8 @@ static void func_ovl0A_06_800436BC(void) {
                 }
             }
             func_ovl0A_06_80046988(8, 0xC, 0x48, 0x200);
-            for (i = 0, y = 0x67; i != 4; i++, y += 0x14) {
-                D_ovl0A_06_80047708[i] = func_ovl0A_06_80046940(D_ovl0A_06_80047068[i], 0x23, y, 1.0f, 1.0f, 0);
+            for (i = 0; i != 4; i++) {
+                D_ovl0A_06_80047708[i] = func_ovl0A_06_80046940(D_ovl0A_06_80047068[i], 0x23, i * 0x14 + 0x67, 1.0f, 1.0f, 0);
                 D_ovl0A_06_80047718[i] = func_ovl0A_06_80046978(D_ovl0A_06_80047708[i]);
             }
             func_ovl0A_06_80046988(0x18, 0x18, 0x47, 0);
@@ -1660,7 +1663,7 @@ static s32 func_ovl0A_06_8004311C(void) {
         } else if ((pressed & 0x8000) || (pressed & 0x1000)) {
 #line 1700
             ret = 1;
-#line 1662
+#line 1665
             if (D_ovl0A_06_80047018 == 0) {
                 ret = 2;
                 SE(1, 1);
@@ -1670,7 +1673,7 @@ static s32 func_ovl0A_06_8004311C(void) {
         } else if (pressed & 0x4000) {
 #line 1700
             ret = 1;
-#line 1670
+#line 1673
             SE(2, 2);
         }
         func_ovl0A_06_800465A0();
