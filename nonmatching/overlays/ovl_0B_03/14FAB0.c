@@ -6,7 +6,7 @@
  * tables, .bss 0x1140, as the original's sizes). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 26, eu 26, jp 2561
+ * differing words: us 16, eu 16, jp 2551
  *
  * jp (`#if VERSION_JP`) has its own strings (80048AF4, 80048B60,
  * 80049144, and D_ovl0B_03_8004901C_jp for us's 80049168, with the
@@ -689,17 +689,16 @@ void func_ovl0B_03_80046510(void) {
     y1 = 0x58;
     for (i = 0; i < 3; i++) {
         for (j = 0; j < 5; j++) {
-            a = &D_ovl0B_03_8004A340[i][j];
             obj = func_ovl0B_03_80047E98(0x30, 0);
-            a->unk0 = obj;
-            a->unk8 = (i + j) & 3;
-            a->unk4 = D_ovl0B_03_80049104[(i + j) & 3].unk4;
+            D_ovl0B_03_8004A340[i][j].unk0 = obj;
+            D_ovl0B_03_8004A340[i][j].unk8 = (i + j) & 3;
+            D_ovl0B_03_8004A340[i][j].unk4 = D_ovl0B_03_80049104[(i + j) & 3].unk4;
             M2C_FIELD(obj, s32 *, 0x38) = D_ovl0B_03_80049104[(i + j) & 3].unk0;
-            a->unk0->unk10 = j * 64;
-            a->unk0->unk14 = y0;
-            a->unk0->unk18 = j * 64 + 64;
-            a->unk0->unk1C = y1;
-            a->unk0->unkC |= 0x400;
+            D_ovl0B_03_8004A340[i][j].unk0->unk10 = j * 64;
+            D_ovl0B_03_8004A340[i][j].unk0->unk14 = y0;
+            D_ovl0B_03_8004A340[i][j].unk0->unk18 = j * 64 + 64;
+            D_ovl0B_03_8004A340[i][j].unk0->unk1C = y1;
+            D_ovl0B_03_8004A340[i][j].unk0->unkC |= 0x400;
         }
         y0 += 0x40;
         y1 += 0x40;
