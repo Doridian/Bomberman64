@@ -6,7 +6,7 @@
  * of it 800431C4's local table). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 243, eu 243, jp 243
+ * differing words: us 239, eu 239, jp 239
  * jp counts the characters itself in 80044424 (24 pixels each, as
  * ovl_0B_03 does) and draws through ZeroJump 0x2501 (DRAW_TEXT).
  *
@@ -1654,8 +1654,8 @@ void func_ovl0B_02_800431C4(void) {
                 for (t = 40.0f; t >= 0.0f; t -= 1.0f) {
                     for (i = 0; i < g->unk8; i++) {
                         m = pieces[i].unk10;
-                        m->unk1C = WRAP(g->unk4[D_ovl0B_02_8004A3D8 - 1][0] + (a + -g->unk4[D_ovl0B_02_8004A3D8 - 1][0] / 1600.0f * t * t));
-                        m->unk20 = WRAP(g->unk4[D_ovl0B_02_8004A3D8 - 1][1] + (b + -g->unk4[D_ovl0B_02_8004A3D8 - 1][1] / 1600.0f * t * t));
+                        m->unk1C = WRAP((a + -g->unk4[D_ovl0B_02_8004A3D8 - 1][0] / 1600.0f * t * t) + g->unk4[D_ovl0B_02_8004A3D8 - 1][0]);
+                        m->unk20 = WRAP((b + -g->unk4[D_ovl0B_02_8004A3D8 - 1][1] / 1600.0f * t * t) + g->unk4[D_ovl0B_02_8004A3D8 - 1][1]);
                     }
                     func_ovl0B_02_800491C0();
                 }
