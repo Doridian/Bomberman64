@@ -18,8 +18,8 @@
  * 80048418 and 80047CB4, 80048B6C in 80048BB0), object creation is
  * chained (`obj = D_x = func_ovl13_01_8004B660(...)`), and the locals are
  * declared in the order that gives the original's frame slots. 800431D4's
- * thresholds are an `s32 thr[2]` the frame holds (the original spills
- * them) with an int `frames`, which costs a `li`/`cvt.s.w` but is the
+ * thresholds are an `s32 thr[3]` the frame holds (the original spills
+ * them; [1] and [2] used) with an int `frames`, which costs a `li`/`cvt.s.w` but is the
  * closest found.
  * The 14 stubs (two `jr ra` in a row): 8004A200 is the camera reset
  * 8004A208, 8004A2D4 and 8004A4C4 share (inlined in each), 8004A4AC-BC
@@ -40,9 +40,11 @@
  * 80049158, 800490DC, 80048E2C, 80048BB0, 80048B6C, 8004899C, 80048418,
  * 800471D8 is the order their addresses must first appear in.
  *
- * D_ovl13_01_8004C3D0/C3D4 are function-scope statics of 800455D0 (as
- * file-scope globals uopt keeps their address in a register; the original
- * reloads it with lui each time): check their .bss places at move time.
+ * D_ovl13_01_8004C3D0/C3D4 (800455D0) and C3D8 (80045538) are
+ * function-scope statics, the last three words of .bss but for C3DC-C3EC
+ * (as file-scope globals uopt keeps their address in a register; the
+ * original reloads it with lui each time): check their .bss places at
+ * move time.
  *
  * What still differs in us (words): 80043878 271, 800446FC 226, 800431D4
  * 218, 800450B4 127; under 50 each: 80043608, 800455D0, 80045B0C, 80045C9C,
