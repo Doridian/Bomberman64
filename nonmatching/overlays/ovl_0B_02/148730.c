@@ -7,48 +7,48 @@
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
  * differing words: us 113, eu 113, jp 113
- * jp counts the characters itself in 80044424 (24 pixels each, as
- * ovl_0B_03 does) and draws through ZeroJump 0x2501 (DRAW_TEXT).
+ * jp has its own strings, counts the characters itself in 80044424 (24
+ * pixels each, as ovl_0B_03 does), draws through ZeroJump 0x2501
+ * (DRAW_TEXT), puts the seconds one character further on and lays out the
+ * first 0x38 bytes of .bss differently.
  *
- * A first draft from m2c (with a context of the ZeroJump prototypes the
- * other drafts give the same codes), every function rewritten by hand:
- * the logic is the original's, the big functions' schedules aren't.
- * Source order is the reverse of the address order. The statics take
- * arguments in their callers' registers: 80043018 and 800443DC (n in $s2),
- * 80043150 ($s2, $s3), 80043054 and 80043F4C (i in $s1), 80043EF8 (its one
- * parameter in $a1), 800430C4 ($f12), 80044424 ($f20);
- * 800472C0 and 80043FC4 are static too (they use saved registers their
- * callers save, so the handler saves $s0-$fp and $f20-$f27). The 22 stubs
- * (two `jr ra` in a row): 80043010, 80043FBC, 800443D4 and 800472A0-B8 are
- * inlined-once statics before their callers (80043010 is 800431C4's copy
- * of 80043018's loop, its n kept in $s1 as inlined parameters are); 80047C14-80047C7C are the 14
- * unused stubs after the tail, and the four group tasks in
- * D_ovl0B_02_8004A150 (80047C84-800481E8, static, referred to only from
- * .data) come out after them in definition order, then 800482D0 (it
- * stores to the unreferenced .bss to keep it out of common).
- * 800470B0/800471A8 are ovl_0B_03's 80046E8C/80046F78 (a loop test against
- * an int 0); 80043018-80043150 and 80044424 are ovl_0B_03's
- * 80043134-80043340 and 80043234 with a 0x20-byte box; 80046418 is
- * ovl_12_05's 80046990.
+ * A first draft from m2c, every function rewritten by hand. Source order
+ * is the reverse of the address order. The statics take arguments in
+ * their callers' registers: 80043018 and 800443DC (n in $s2), 80043150
+ * ($s2, $s3), 80043054 and 80043F4C (i in $s1), 80043EF8 (its one
+ * parameter in $a1), 800430C4 ($f12), 80044424 ($f20); 800472C0 and
+ * 80043FC4 are static too. The 22 stubs (two `jr ra` in a row): 80043010
+ * is 800431C4's inlined copy of 80043018's loop (its n kept in $s1, as
+ * inlined parameters are); 80043FBC is 80043FC4's object loop, inlined
+ * (n's home stored); 800443D4 and 800472A0-B8 are inlined-once statics
+ * before their callers; 80047C14-80047C7C are the 14 unused stubs after
+ * the tail, and the four group tasks in D_ovl0B_02_8004A150
+ * (80047C84-800481E8, static, referred to only from .data) come out after
+ * them in definition order, then 800482D0 (a dead block in it keeps the
+ * .bss words nobody uses). A dead call in 800431C4 places 80043018 after
+ * the 80043010 stub; six dead calls in 80044490 bring it over IDO's
+ * per-caller inline budget, which keeps both 80043018 and 80044424 out of
+ * line there (with fewer, one of the two is inlined). Loop bounds held in
+ * a variable (j = 2, buttons = 3, n = 2) are what make uopt derive the end
+ * pointer from the start one (`addiu s1,s0,0x60`); the 4x4 table is read
+ * flat (tbl[i * 4 + j]) in 800431C4 and 800472C0. 800470B0/800471A8 are
+ * ovl_0B_03's 80046E8C/80046F78; 80043018-80043150 and 80044424 are
+ * ovl_0B_03's 80043134-80043340 and 80043234 with a 0x20-byte box;
+ * 80046418 is ovl_12_05's 80046990.
  *
- * Many of the differing words are the sign of a relocated %lo: the
- * .data and .rodata addresses only come right once .text has the
- * original's size. .rodata is 0x10 short.
- *
- * What still differs in us (words):
- * - 800431C4 712: 0xA0 bytes too long.
- * - 80043E10 296: with the statics after it (80043EF8-80044424); 80044424
- *   is inlined into both its callers here (8 bytes where the original has
- *   0x6C), whether static, defined above its caller or called from a dead
- *   static; 80043FC4 is 0x18 bytes too long.
- * - 80044490 1064: 0x10C too long (80044424's two inlined copies are part).
- * - 800454F0 407, 80046B8C 117 (0xC short), 80046EFC 38 (registers),
- *   80046100 20 (8 long), 800469C8 9, 80046418 4, 80045C30 3.
- * - 800471A8 374: with 800472A0-800472C0 (800472C0 0x10 too long).
- * - 800478EC 48 (4 bytes long); 80047BFC 326: with the stubs and the four
- *   group tasks (80047C84 0xC long, 80047E98 0xC short, 800481E8 8 short).
- * - 80043010-80043150, 80045F10-80046014, 80046258, 800462C8,
- *   800467D0-800468C4, 80047020, 800470B0, 80047B24-80047BA0 match.
+ * What still differs (words, the same in every version):
+ * - 800431C4 94: registers only. At the start the original gives the
+ *   marks loop's i $s1, n $s2 and 0x10000 $s3 (here $s2, $s3, $s1), and
+ *   frees no s register for the 0x4000 exit's piece loops (i in $t0
+ *   there, $s2 here); the 0x8000 exit stores its i = 0 to i's home before
+ *   the 80049178 call where uopt hoists it to the top of the branch here;
+ *   the page turns keep &marks[i] in $v1 (here $s0).
+ * - 80043E10 7: 80043FC4 loads D_ovl0B_02_8004A3D4 into $v1 (here $v0).
+ * - 800469C8 9: the 30.0f divisor and the converted sum in $f8/$f2 (here
+ *   $f10/$f8).
+ * - 800454F0 3: the star's fade loop's j = 0 goes into the 0x2DC call's
+ *   delay slot in the original.
+ * - Everything else matches.
  */
 #include "common.h"
 
@@ -1177,7 +1177,7 @@ void func_ovl0B_02_80044490(void) {
     s32 buttons;
     UnkStructA_40 *m;
 
-    if (0) {
+    if (0) { /* fake: over IDO's inline budget (see the header) */
         func_ovl0B_02_80049198(1);
         func_ovl0B_02_80049198(1);
         func_ovl0B_02_80049198(1);
@@ -1562,6 +1562,7 @@ void func_ovl0B_02_80043E10(void) {
 static UnkStructA_40 *func_ovl0B_02_80043054(s32 i);
 static void func_ovl0B_02_80043018(Box_ovl0B_02 *boxes, s32 n);
 
+/* 80043018's loop again, inlined into 800431C4 (the stub at 80043010). */
 static void func_ovl0B_02_80043010(Box_ovl0B_02 *boxes, s32 n) {
     s32 i;
 
@@ -1697,7 +1698,9 @@ void func_ovl0B_02_800431C4(void) {
         } else if (func_ovl0B_02_80048738() & 0x4000) {
             func_ovl0B_02_80049700(2);
             func_ovl0B_02_80049180(task);
-if (0) { func_ovl0B_02_80043018(D_ovl0B_02_800499F0, 3); }
+            if (0) { /* fake: places 80043018 after this function's stub */
+                func_ovl0B_02_80043018(D_ovl0B_02_800499F0, 3);
+            }
             func_ovl0B_02_80043010(D_ovl0B_02_800499F0, 3);
             func_ovl0B_02_80049180(D_ovl0B_02_8004A3C8);
             func_ovl0B_02_80048D10(D_ovl0B_02_8004A3E8[0]);
