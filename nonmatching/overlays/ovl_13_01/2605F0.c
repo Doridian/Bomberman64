@@ -9,7 +9,7 @@
  * .bss 0x1F0 as the original). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1076, eu 1076, jp 1076
+ * differing words: us 1035, eu 1035, jp 1035
  *
  * A first draft from m2c (with the ZeroJump prototypes the other drafts give
  * the same codes), made to compile: vectors as Vec3f, the pointer loops over
@@ -42,10 +42,9 @@
  *
  * What still differs in us (words): 80043878 271, 800446FC 226, 800431D4
  * 218, 800450B4 127; under 50 each: 80043608, 80043830, 8004400C, 800455D0,
- * 80045B0C, 80045C9C, 80045DAC, 8004636C, 800465FC, 80046800, 80046DC4,
- * 80046E00, 80046FA8, 80047144, 800473A8, 800477C0, 80047CB4, 80047F74,
- * 800481D0, 80048418, 8004956C, 80049870, 8004A208, 8004A4C4. The other 54
- * match.
+ * 80045B0C, 80045C9C, 80045DAC, 8004636C, 80046DC4, 80046E00, 80046FA8,
+ * 80047144, 800473A8, 800477C0, 80047CB4, 80047F74, 800481D0, 80048418,
+ * 8004956C, 80049870, 8004A208, 8004A4C4. The other 56 match.
  */
 #include "common.h"
 
@@ -1822,86 +1821,47 @@ void func_ovl13_01_800468A0(void) {
 
 void func_ovl13_01_80046800(void) {
     Vec3f sp24;
-    f32 sp18[2];
-    f32 temp_ft4;
+    Vec3f sp18;
 
     if (func_ovl13_01_8004BA10(0x41A) != 0) {
-        func_ovl13_01_8004B590(sp18);
+        func_ovl13_01_8004B590(&sp18.x);
         sp24.x = D_ovl13_01_8004C200.x;
-        temp_ft4 = func_ovl13_01_8004B930(sp18[1]) * (D_ovl13_01_8004C250 * 0.5f);
+        sp24.y = func_ovl13_01_8004B930(sp18.y) * (D_ovl13_01_8004C250 * 0.5f) + (D_ovl13_01_8004C200.y + 450.0f);
         sp24.z = D_ovl13_01_8004C200.z;
-        sp24.y = temp_ft4 + (D_ovl13_01_8004C200.y + 450.0f);
         func_ovl13_01_8004B568(&sp24.x);
-        func_ovl13_01_800465FC(&sp24.x, sp18);
-        func_ovl13_01_8004B588(sp18);
+        func_ovl13_01_800465FC(&sp24.x, &sp18.x);
+        func_ovl13_01_8004B588(&sp18.x);
     }
 }
 
 void func_ovl13_01_800465FC(f32 *arg0, f32 *arg1) {
+    f32 d;
+    f32 lim;
+    f32 pad;
     Vec3f sp38;
     Vec3f sp2C;
-    f32 temp_fa0;
-    f32 temp_fa0_2;
-    f32 temp_fa1;
-    f32 temp_fv0;
-    f32 var_ft4;
-    f32 var_fv0;
-    f32 var_fv1;
-    f32 var_fv1_2;
 
     sp2C.x = D_ovl13_01_8004C388.x;
     sp2C.y = D_ovl13_01_8004C388.y - 200.0f;
     sp2C.z = D_ovl13_01_8004C388.z;
     func_ovl13_01_8004B5C8(&sp2C.x, arg0, &sp38.x);
-    temp_fv0 = sp38.y - 90.0f;
-    if (temp_fv0 >= 360.0f) {
-        sp38.y = temp_fv0 - 360.0f;
-    } else {
-        if (sp38.y < 90.0f) {
-            var_fv1 = temp_fv0 + 360.0f;
-        } else {
-            var_fv1 = temp_fv0;
-        }
-        sp38.y = var_fv1;
+    sp38.y = (sp38.y - 90.0f >= 360.0f) ? sp38.y - 90.0f - 360.0f : (sp38.y < 90.0f) ? sp38.y - 90.0f + 360.0f : sp38.y - 90.0f;
+    d = A180(sp38.x) - A180(arg1[0]);
+    if (d >= 180.0f) {
+        d -= 360.0f;
     }
-    if (sp38.x >= 0.0f) {
-        if (sp38.x <= 180.0f) {
-            var_ft4 = sp38.x;
-        } else {
-            goto block_10;
-        }
-    } else {
-block_10:
-        var_ft4 = (360.0f - sp38.x) * -1.0f;
+    if (d < -180.0f) {
+        d += 360.0f;
     }
-    temp_fa1 = arg1[0];
-    if (temp_fa1 >= 0.0f) {
-        if (temp_fa1 <= 180.0f) {
-            var_fv1_2 = temp_fa1;
-        } else {
-            goto block_15;
-        }
-    } else {
-block_15:
-        var_fv1_2 = (360.0f - temp_fa1) * -1.0f;
+    lim = -1.0f * D_ovl13_01_8004C24C;
+    if (D_ovl13_01_8004C24C < d) {
+        d = D_ovl13_01_8004C24C;
     }
-    temp_fa0 = var_ft4 - var_fv1_2;
-    var_fv0 = temp_fa0;
-    if (temp_fa0 >= 180.0f) {
-        var_fv0 = temp_fa0 - 360.0f;
+    if (d < lim) {
+        d = lim;
     }
-    if (var_fv0 < -180.0f) {
-        var_fv0 += 360.0f;
-    }
-    temp_fa0_2 = -1.0f * D_ovl13_01_8004C24C;
-    if (D_ovl13_01_8004C24C < var_fv0) {
-        var_fv0 = D_ovl13_01_8004C24C;
-    }
-    if (var_fv0 < temp_fa0_2) {
-        var_fv0 = temp_fa0_2;
-    }
-    if ((var_fv0 < -0.01f) || (var_fv0 > 0.01f)) {
-        arg1[0] = (f32) (temp_fa1 + var_fv0);
+    if ((d < -0.01f) || (d > 0.01f)) {
+        arg1[0] += d;
     }
     arg1[1] = sp38.y;
 }
