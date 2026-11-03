@@ -302,6 +302,10 @@ ovl_0E_13 1D93D0 0x530 0x80 0x60
 ovl_0E_14 ovl_0E_14_entry 0 0 0
 ovl_0E_14 1DD120 0x40 0x50 0x60
 
+# ovl_0E_15: all C (-O3)
+ovl_0E_15 ovl_0E_15_entry 0 0 0
+ovl_0E_15 1DF480 0 0x100 0x70
+
 # ovl_0F_01: all C (-O3); ovl_0F_04's object with real panel-loop calls
 ovl_0F_01 ovl_0F_01_entry 0 0 0
 ovl_0F_01 1E2D80 0x4C0 0x130 0x240

@@ -1141,11 +1141,11 @@ segments:
     symbol_name_format: ovl0E_15_$VRAM
     dir: overlays/ovl_0E_15
     subsegments:
-      - [0x1DE260, asm, ovl_0E_15_entry]
-      - [0x1DE270, asm, 1DF480]
+      - [0x1DE260, c, ovl_0E_15_entry]
+      - [0x1DE270, c, 1DF480]
       - [0x1E0420, hasm, ovl_0E_15_zerojmp]
-      - [0x1E1A40, rodata]
-      - {type: bss, vram: 0x800468E0}
+      - [0x1E1A40, .rodata, 1DF480]
+      - {type: .bss, vram: 0x800468E0, name: 1DF480}
   - name: ovl_0F_01
     type: code
     start: 0x1E1B40

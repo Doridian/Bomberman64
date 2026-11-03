@@ -1,11 +1,7 @@
 /*
- * NON_MATCHING: ovl_0E_15's game object, complete: every function and its
- * data (.rodata and .bss as the original).
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * ovl_0E_15's game object, IDO -O3; it matches in us, eu and jp.
  *
- * Every function matches in us, eu and jp.  What came right (from 306):
+ * What came right (from 306):
  * - func_ovl0E_15_800433E0: case 11 is a static, func_ovl0E_15_80043068,
  *   inlined into the handler with its own locals (and a pad), as ovl_12_06's
  *   case 11; its stub is the one at 80043068, and 80043070's wait loop is
