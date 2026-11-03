@@ -1,14 +1,15 @@
 /*
  * NON_MATCHING: ovl_0D_03's stage object, complete: all 30 functions and the
  * stubs the inlined statics leave in their places, .data and .bss as the
- * original. It matches in us and jp (tools/nonmatching.py); not yet moved
+ * original. It matches in us, eu and jp (tools/nonmatching.py); not yet moved
  * to src/ (its data not checked in a linked build).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 0, jp 0
+ * differing words: us 0, eu 0, jp 0
  *
  * ovl_0D_02's sibling (src/overlays/ovl_0D_02); the levers of 0D_02, 04, 05
- * and 06 ported. What fixed what (from 791 words in us and jp):
+ * and 06 ported. What fixed what (from 791 words in us and jp; eu was not
+ * measured):
  * - 8004305C: each array walked with i from 0, `f(A[i++].obj)` and a
  *   separate `i++` (as ovl_0D_06's 8004305C): [1] at constant addresses,
  *   [2] a run-time index (s0 * 56). The frame (0x58) takes five unused
@@ -37,7 +38,7 @@
  *   ovl_0D_02's 80045964).
  */
 #include "common.h"
-#line 41 "1A0CD0.c"
+#line 42 "1A0CD0.c"
 
 /*
  * ovl_0D_03's stage object, IDO -O3: the functions are written last to first
@@ -908,7 +909,7 @@ static void func_ovl0D_03_80044AA0(void) {
     D_ovl0D_03_800481A0 = func_ovl0D_03_80046B38();
 #line 1 "panels.c"
     func_ovl0D_03_80044A3C();
-#line 912 "1A0CD0.c"
+#line 913 "1A0CD0.c"
 }
 
 /* the models, as the flags already set leave them */
@@ -1003,7 +1004,7 @@ static void func_ovl0D_03_8004449C(Vec3f *corner, Vec3f (*rows)[4]) {
     /* a fake (as in ovl_0D_02): j = 0 after the loop's line */
 #line 3000 "1A0CD0.c"
     j = 0;
-#line 1007 "1A0CD0.c"
+#line 1008 "1A0CD0.c"
     for (; j < 3; j++) {
         for (k = 0; k < 4; k++) {
             rows[j][k].x = corner->x * 10.0f - k * 200.0f;
@@ -1102,7 +1103,7 @@ static void func_ovl0D_03_800441BC(Trio_0D03 *t, s32 count) {
         t++;
     }
 }
-#line 1106 "1A0CD0.c"
+#line 1107 "1A0CD0.c"
 
 void func_ovl0D_03_8004419C(void) {
     func_ovl0D_03_80044138();
@@ -1258,7 +1259,7 @@ static void func_ovl0D_03_80043C14(void) {
     /* a fake (see the top) */
 #line 1 "panels.c"
     func_ovl0D_03_80047400(D_ovl0D_03_8004817C);
-#line 1262 "1A0CD0.c"
+#line 1263 "1A0CD0.c"
     for (p = D_ovl0D_03_80047D1C; p < D_ovl0D_03_80047D1C + 3; p++) {
         if (p->obj != NULL) {
             func_ovl0D_03_80043B98(p);
@@ -1415,7 +1416,7 @@ static void func_ovl0D_03_8004337C(Ent_0D03 *e) {
             /* a fake (see the top) */
 #line 1 "panels.c"
             x0 = grid[0] - 1;
-#line 1419 "1A0CD0.c"
+#line 1420 "1A0CD0.c"
             x1 = x0 + 4;
             z1 = grid[2] + len;
             x2 = x0 + 1;
