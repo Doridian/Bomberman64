@@ -5,7 +5,7 @@
  * few words), .data 0x3E0 and .bss 0x70 as the original.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1089, jp 1089
+ * differing words: us 774, eu 774, jp 774
  *
  * The sibling of ovl_0D_04 and ovl_0D_06 (nonmatching/overlays): the gate
  * code (800444E0, 800448D4), the model tables, the setup's loops and the
@@ -31,6 +31,7 @@
  *   long), 800439CC (4), 80043D3C (4), 80045A00 (2): register allocation.
  */
 #include "common.h"
+#line 35 "197800.c"
 
 /*
  * ovl_0D_01's stage object, IDO -O3: the functions are written last to first
@@ -866,8 +867,10 @@ void func_ovl0D_01_80044D74(void) {
     }
 }
 
+#line 1 "panels.c"
 static void func_ovl0D_01_80044D6C(void) {
 }
+#line 874 "197800.c"
 
 static void func_ovl0D_01_80044D64(void) {
 }
@@ -898,15 +901,13 @@ void func_ovl0D_01_80044C0C(void) {
 void func_ovl0D_01_800448D4(void) {
     s32 i;
 
-    /* a fake (as in ovl_0D_06's 80044808): keeps the first call out of the prologue */
-    if (!D_ovl0D_01_80047560 && !D_ovl0D_01_80047560 && !D_ovl0D_01_80047560) {
-    }
+    /* a fake: the region's .file keeps the first call out of the prologue */
+#line 1 "panels.c"
     func_ovl0D_01_800448CC();
+#line 908 "197800.c"
     func_ovl0D_01_800448C4();
     for (i = 0; i < 2; i++) {
-        if (D_ovl0D_01_8004775C[i] != 0x400 || func_ovl0D_01_80047040(0x407) != 0) {
-            func_ovl0D_01_800448BC(&D_ovl0D_01_800476EC[i], D_ovl0D_01_8004775C[i]);
-        }
+        func_ovl0D_01_800448BC(&D_ovl0D_01_800476EC[i], D_ovl0D_01_8004775C[i]);
     }
 }
 
@@ -923,6 +924,9 @@ static void func_ovl0D_01_800448BC(Ent_0D01 *e, s32 flag) {
     Vec3f pos;
     s32 r;
 
+    if (flag == 0x400 && func_ovl0D_01_80047040(0x407) == 0) {
+        return;
+    }
     if (!(e->obj->unk8 & 0x04000000)) {
         D_ovl0D_01_80047B0C->unk30 = 1;
         D_ovl0D_01_80047B0C->unk34 = 75.0f;
@@ -1325,7 +1329,7 @@ void func_ovl0D_01_80043744(void) {
 
 static void func_ovl0D_01_800436C8(Ent_0D01 *arg0) {
     func_ovl0D_01_80046C80(arg0->obj);
-    if (arg0->unkC != -1 && arg0->unkE != -1 && arg0->unk10 != -1 && arg0->unk12 != -1) {
+    if (arg0->unkC != 0xFFFF && arg0->unkE != 0xFFFF && arg0->unk10 != 0xFFFF && arg0->unk12 != 0xFFFF) {
         func_ovl0D_01_800469B8(arg0->unk4);
     }
     arg0->obj = NULL;
