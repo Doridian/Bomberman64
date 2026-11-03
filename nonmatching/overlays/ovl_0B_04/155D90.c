@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3294, jp 3786
+ * differing words: us 2812, eu 2812, jp 3763
  *
  * Order (scratch/ord/search.py, hill-climb over definition order, scored by
  * the emitted sequence's edit distance from the original's address order):
@@ -206,7 +206,7 @@ void func_ovl0B_04_80048660(s32, f32, f32); /* 0x2507 */
 Obj *func_ovl0B_04_80048668(s32); /* 0x2508 */
 s32 func_ovl0B_04_80048680(u8 *); /* 0x250B */
 s32 func_ovl0B_04_80048688(u8 *, u16, u16, f32, f32, s32); /* 0x250C */
-void func_ovl0B_04_80048690(s32, u8 *, s32); /* 0x250D */
+s32 func_ovl0B_04_80048690(s32, u8 *, s32); /* 0x250D */
 s32 func_ovl0B_04_800487D0(s32); /* 0x2B00 */
 void func_ovl0B_04_800487E0(s32); /* 0x2B02 */
 void func_ovl0B_04_800487E8(void); /* 0x2B03 */
@@ -718,7 +718,7 @@ s32 D_ovl0B_04_8004A1AC[14] = { 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 1, 1 };
 s32 D_ovl0B_04_8004A1E4 = 0;
 
 static void func_ovl0B_04_80043050(Entry *e, Desc *d);
-static void func_ovl0B_04_800438FC(u32 mode, Item *it, s32 id);
+static void func_ovl0B_04_800438FC(u32 mode, s32 id, Item *it);
 static void func_ovl0B_04_80043A24(Item *items, s32 *ids, s32 n);
 static void func_ovl0B_04_80043A7C(Item *items, s32 *ids, s32 n);
 void func_ovl0B_04_80043CD0(s32 arg0, Gfx0B04 **arg1);
@@ -739,7 +739,7 @@ static u8 func_ovl0B_04_8004471C(u8 set, u8 c);
 static void func_ovl0B_04_800447DC(u16 buttons, u8 *ret);
 static void func_ovl0B_04_80046294(u8 item);
 static void func_ovl0B_04_80046600(u16 buttons, u8 item);
-static void func_ovl0B_04_80046734(u16 buttons, u8 item);
+static void func_ovl0B_04_80046734(u8 item, u16 buttons);
 static void func_ovl0B_04_800468F0(s32 base);
 static void func_ovl0B_04_80045540(u8 item, u16 buttons, u8 *ret);
 static void func_ovl0B_04_800458F4(s32 *ids);
@@ -747,6 +747,14 @@ static void func_ovl0B_04_80045958(s32 *ids);
 static void func_ovl0B_04_80045850(void);
 static void func_ovl0B_04_80043640(f32 d);
 static u8 func_ovl0B_04_Mark27(u8 set, u8 c);
+
+/* A text drawn centred on an item (its string evaluated twice). */
+#define DRAW_ITEM(str, it) \
+    func_ovl0B_04_80048688((str), (it)->unk4 - (s32) (func_ovl0B_04_80048680(str) * 0.6f / 2) + 40, (it)->unk6, (it)->unk8, \
+                           (it)->unkC, 1)
+/* Pages 5-8: an item's line in the page's half. */
+#define HALF_IDX(item, half) ((item) < 11 ? (item) - (half) * 5 : 6)
+#define PAGE_IDX(item) HALF_IDX(item, D_ovl0B_04_8004A1A8)
 
 static void func_ovl0B_04_800436C0(void) {
 }
@@ -870,18 +878,20 @@ static void func_ovl0B_04_80047164(void) {
 
 /* The objects of a run of entries, and their removal (inlined). */
 static void func_ovl0B_04_MakeEntries(Entry *e, s32 n, Desc *d) {
-    Entry *p;
+    s32 i;
 
-    for (p = e; p < e + n; p++) {
-        func_ovl0B_04_80043050(p, d);
+    for (i = 0; i < n; i++) {
+        func_ovl0B_04_80043050(&e[i], d);
     }
 }
 
 static void func_ovl0B_04_FreeEntries(Entry *e, s32 n) {
-    Entry *p;
+    s32 i;
+    s32 pad;
+    s32 pad2;
 
-    for (p = e; p < e + n; p++) {
-        func_ovl0B_04_80047DE0(p->unk0);
+    for (i = 0; i < n; i++) {
+        func_ovl0B_04_80047DE0(e[i].unk0);
     }
 }
 
@@ -894,7 +904,7 @@ static void func_ovl0B_04_PageItem(u32 mode, u8 item, s32 half) {
     } else {
         i = 6;
     }
-    func_ovl0B_04_800438FC(mode, &D_ovl0B_04_8004A404->unk8[i], D_ovl0B_04_8004A404->unk4[i]);
+    func_ovl0B_04_800438FC(mode, D_ovl0B_04_8004A404->unk4[i], &D_ovl0B_04_8004A404->unk8[i]);
 }
 
 /* A text set to a string, colour and scale (inlined in the set-ups). */
@@ -907,10 +917,8 @@ static void func_ovl0B_04_SetText(s32 id, u8 *str, s32 col, f32 scale) {
  * open), in two halves of five. */
 u8 func_ovl0B_04_800471F4(u8 arg0, u16 arg1) {
     u8 ret = 1;
-    u8 pad[0x30];
-    Entry *p;
 
-    func_ovl0B_04_80046734(arg1, arg0);
+    func_ovl0B_04_80046734(arg0, arg1);
     if (arg1 & 1) {
         if (arg0 >= 11) {
             func_ovl0B_04_80047E70(D_ovl0B_04_8004A170, 10, -1);
@@ -925,12 +933,8 @@ u8 func_ovl0B_04_800471F4(u8 arg0, u16 arg1) {
     } else if (arg1 & 2) {
         func_ovl0B_04_800487D0(2);
         func_ovl0B_04_80043FA4(&ret, 0, 5, 0);
-        for (p = &D_ovl0B_04_8004A060[10]; p < &D_ovl0B_04_8004A060[10] + 1; p++) {
-            func_ovl0B_04_80047DE0(p->unk0);
-        }
-        for (p = &D_ovl0B_04_8004A060[11]; p < &D_ovl0B_04_8004A060[11] + 1; p++) {
-            func_ovl0B_04_80047DE0(p->unk0);
-        }
+        func_ovl0B_04_FreeEntries(&D_ovl0B_04_8004A060[10], 1);
+        func_ovl0B_04_FreeEntries(&D_ovl0B_04_8004A060[11], 1);
     }
     return ret;
 }
@@ -944,10 +948,8 @@ void func_ovl0B_04_8004716C(Obj *arg0) {
 
 u8 func_ovl0B_04_80046FA8(u8 arg0, u16 arg1) {
     u8 ret = 1;
-    u8 pad[0x30];
-    Entry *p;
 
-    func_ovl0B_04_80046734(arg1, arg0);
+    func_ovl0B_04_80046734(arg0, arg1);
     if (arg1 & 1) {
         if (arg0 >= 11) {
             func_ovl0B_04_80047E70(D_ovl0B_04_8004A170, 3, -1);
@@ -962,12 +964,8 @@ u8 func_ovl0B_04_80046FA8(u8 arg0, u16 arg1) {
     } else if (arg1 & 2) {
         func_ovl0B_04_800487D0(2);
         func_ovl0B_04_80043FA4(&ret, 0, 4, 0);
-        for (p = &D_ovl0B_04_8004A060[10]; p < &D_ovl0B_04_8004A060[10] + 1; p++) {
-            func_ovl0B_04_80047DE0(p->unk0);
-        }
-        for (p = &D_ovl0B_04_8004A060[11]; p < &D_ovl0B_04_8004A060[11] + 1; p++) {
-            func_ovl0B_04_80047DE0(p->unk0);
-        }
+        func_ovl0B_04_FreeEntries(&D_ovl0B_04_8004A060[10], 1);
+        func_ovl0B_04_FreeEntries(&D_ovl0B_04_8004A060[11], 1);
     }
     return ret;
 }
@@ -981,10 +979,8 @@ void func_ovl0B_04_80046F20(Obj *arg0) {
 
 u8 func_ovl0B_04_80046D74(u8 arg0, u16 arg1) {
     u8 ret = 1;
-    u8 pad[0x30];
-    Entry *p;
 
-    func_ovl0B_04_80046734(arg1, arg0);
+    func_ovl0B_04_80046734(arg0, arg1);
     if (arg1 & 1) {
         if (arg0 >= 11) {
             func_ovl0B_04_80047E70(D_ovl0B_04_8004A170, 1, -1);
@@ -998,12 +994,8 @@ u8 func_ovl0B_04_80046D74(u8 arg0, u16 arg1) {
     } else if (arg1 & 2) {
         func_ovl0B_04_800487D0(2);
         func_ovl0B_04_80043FA4(&ret, 0, 3, 0);
-        for (p = &D_ovl0B_04_8004A060[10]; p < &D_ovl0B_04_8004A060[10] + 1; p++) {
-            func_ovl0B_04_80047DE0(p->unk0);
-        }
-        for (p = &D_ovl0B_04_8004A060[11]; p < &D_ovl0B_04_8004A060[11] + 1; p++) {
-            func_ovl0B_04_80047DE0(p->unk0);
-        }
+        func_ovl0B_04_FreeEntries(&D_ovl0B_04_8004A060[10], 1);
+        func_ovl0B_04_FreeEntries(&D_ovl0B_04_8004A060[11], 1);
     }
     return ret;
 }
@@ -1018,7 +1010,7 @@ void func_ovl0B_04_80046CEC(Obj *arg0) {
 u8 func_ovl0B_04_80046B28(u8 arg0, u16 arg1) {
     u8 ret = 1;
 
-    func_ovl0B_04_80046734(arg1, arg0);
+    func_ovl0B_04_80046734(arg0, arg1);
     if (arg1 & 1) {
         if (arg0 >= 11) {
             func_ovl0B_04_80047E70(D_ovl0B_04_8004A170, 6, -1);
@@ -1087,27 +1079,17 @@ static void func_ovl0B_04_800468F0(s32 base) {
 }
 
 /* Pages 5-8's cursor. */
-static void func_ovl0B_04_80046734(u16 buttons, u8 item) {
-    s32 i;
-
+static void func_ovl0B_04_80046734(u8 item, u16 buttons) {
     if ((buttons & 0x20) || (buttons & 0x40)) {
-        if (D_ovl0B_04_8004A174 < 11) {
-            i = D_ovl0B_04_8004A174 - D_ovl0B_04_8004A1A4 * 5;
-        } else {
-            i = 6;
-        }
-        func_ovl0B_04_800438FC(0, &D_ovl0B_04_8004A404->unk8[i], D_ovl0B_04_8004A404->unk4[i]);
-        if (item < 11) {
-            i = item - D_ovl0B_04_8004A1A8 * 5;
-        } else {
-            i = 6;
-        }
-        func_ovl0B_04_800438FC(1, &D_ovl0B_04_8004A404->unk8[i], D_ovl0B_04_8004A404->unk4[i]);
-    }
-    if ((buttons & 0x80) || (buttons & 0x100)) {
+        func_ovl0B_04_800438FC(0, D_ovl0B_04_8004A404->unk4[HALF_IDX(D_ovl0B_04_8004A174, D_ovl0B_04_8004A1A4)],
+                               &D_ovl0B_04_8004A404->unk8[HALF_IDX(D_ovl0B_04_8004A174, D_ovl0B_04_8004A1A4)]);
+        func_ovl0B_04_800438FC(1, D_ovl0B_04_8004A404->unk4[HALF_IDX(item, D_ovl0B_04_8004A1A8)],
+                               &D_ovl0B_04_8004A404->unk8[HALF_IDX(item, D_ovl0B_04_8004A1A8)]);
+        D_ovl0B_04_8004A174 = item;
+    } else if ((buttons & 0x80) || (buttons & 0x100)) {
         func_ovl0B_04_80046600(buttons, item);
+        D_ovl0B_04_8004A174 = item;
     }
-    D_ovl0B_04_8004A174 = item;
 }
 
 /* Pages 5-8: the other half of the choices, and its arrows. */
@@ -1139,27 +1121,25 @@ static void func_ovl0B_04_80046600(u16 buttons, u8 item) {
 static void func_ovl0B_04_80046294(u8 item) {
     s32 i;
     s32 j;
-    u8 *str;
-    Item *it;
+    s32 n;
+    s32 k;
 
     D_ovl0B_04_80048B98[5] = D_ovl0B_04_8004A1A8 + 0x11;
     func_ovl0B_04_80048690(D_ovl0B_04_8004A404->unk4[8], D_ovl0B_04_80048B98, 5);
-    for (j = 0, i = D_ovl0B_04_8004A1A8 * 5; i < D_ovl0B_04_8004A1A8 * 5 + 5; i++, j++) {
-        it = &D_ovl0B_04_8004A404->unk8[j + 1];
+    for (j = 1, k = 0, i = D_ovl0B_04_8004A1A8 * 5, n = i + 5; i < n; i++, j++, k++) {
         if (D_ovl0B_04_8004A480[i + 1] == 0) {
-            str = D_ovl0B_04_80048B88;
+            D_ovl0B_04_8004A40C[k] = DRAW_ITEM(D_ovl0B_04_80048B88, &D_ovl0B_04_8004A404->unk8[j]);
+            D_ovl0B_04_8004A404->unk8[j].unk0 = D_ovl0B_04_80048B88;
         } else {
-            str = D_ovl0B_04_800494C0[D_ovl0B_04_8004A168 - 5][i];
+            D_ovl0B_04_8004A40C[k] = DRAW_ITEM(D_ovl0B_04_800494C0[D_ovl0B_04_8004A168 - 5][i], &D_ovl0B_04_8004A404->unk8[j]);
+            D_ovl0B_04_8004A404->unk8[j].unk0 = D_ovl0B_04_800494C0[D_ovl0B_04_8004A168 - 5][i];
         }
-        D_ovl0B_04_8004A40C[j] = func_ovl0B_04_80048688(
-            str, it->unk4 - (s32) (func_ovl0B_04_80048680(str) * 0.6f / 2.0f) + 40, it->unk6, it->unk8, it->unkC, 1);
-        it->unk0 = str;
     }
-    for (j = 0, i = D_ovl0B_04_8004A1A8 * 5; i < D_ovl0B_04_8004A1A8 * 5 + 5; i++, j++) {
-        func_ovl0B_04_80048638(D_ovl0B_04_8004A404->unk4[j + 1]);
-        D_ovl0B_04_8004A404->unk4[j + 1] = D_ovl0B_04_8004A40C[j];
+    for (j = 1, k = 0, i = D_ovl0B_04_8004A1A8 * 5, n = i + 5; i < n; i++, j++, k++) {
+        func_ovl0B_04_80048638(D_ovl0B_04_8004A404->unk4[j]);
+        D_ovl0B_04_8004A404->unk4[j] = D_ovl0B_04_8004A40C[k];
     }
-    func_ovl0B_04_PageItem(3, item, D_ovl0B_04_8004A1A8);
+    func_ovl0B_04_800438FC(3, D_ovl0B_04_8004A404->unk4[PAGE_IDX(item)], &D_ovl0B_04_8004A404->unk8[PAGE_IDX(item)]);
 }
 
 /* Pages 1-4: the character sets; the R button goes to the next. */
@@ -1387,8 +1367,8 @@ u8 func_ovl0B_04_80045214(u8 arg0, u16 arg1) {
     s32 i;
 
     if ((arg1 & 0x80) || (arg1 & 0x100)) {
-        func_ovl0B_04_800438FC(0, &D_ovl0B_04_80049930[D_ovl0B_04_8004A174], D_ovl0B_04_8004A3B0[D_ovl0B_04_8004A174]);
-        func_ovl0B_04_800438FC(1, &D_ovl0B_04_80049930[arg0], D_ovl0B_04_8004A3B0[arg0]);
+        func_ovl0B_04_800438FC(0, D_ovl0B_04_8004A3B0[D_ovl0B_04_8004A174], &D_ovl0B_04_80049930[D_ovl0B_04_8004A174]);
+        func_ovl0B_04_800438FC(1, D_ovl0B_04_8004A3B0[arg0], &D_ovl0B_04_80049930[arg0]);
         D_ovl0B_04_8004A174 = arg0;
     }
     if (arg1 & 1) {
@@ -1467,8 +1447,8 @@ u8 func_ovl0B_04_80044BE8(u8 arg0, u16 arg1) {
     s32 i;
 
     if ((arg1 & 0x20) || (arg1 & 0x40)) {
-        func_ovl0B_04_800438FC(0, &D_ovl0B_04_8004922C[D_ovl0B_04_8004A174], D_ovl0B_04_8004A2A8[D_ovl0B_04_8004A174]);
-        func_ovl0B_04_800438FC(1, &D_ovl0B_04_8004922C[arg0], D_ovl0B_04_8004A2A8[arg0]);
+        func_ovl0B_04_800438FC(0, D_ovl0B_04_8004A2A8[D_ovl0B_04_8004A174], &D_ovl0B_04_8004922C[D_ovl0B_04_8004A174]);
+        func_ovl0B_04_800438FC(1, D_ovl0B_04_8004A2A8[arg0], &D_ovl0B_04_8004922C[arg0]);
         D_ovl0B_04_8004A174 = arg0;
     }
     if (arg1 & 2) {
@@ -1987,7 +1967,7 @@ void func_ovl0B_04_80043ADC(void) {
         }
         menu = func_ovl0B_04_800485D0(p->unkC, p->unk10, p->unk16, p->unk18, p->unk1A);
         if (p->unk1C != 2) {
-            func_ovl0B_04_800438FC(1, &p->unk8[D_ovl0B_04_8004A16C], p->unk4[D_ovl0B_04_8004A16C]);
+            func_ovl0B_04_800438FC(1, p->unk4[D_ovl0B_04_8004A16C], &p->unk8[D_ovl0B_04_8004A16C]);
         }
         func_ovl0B_04_800485F8(D_ovl0B_04_8004A16C);
         D_ovl0B_04_8004A174 = D_ovl0B_04_8004A16C;
@@ -2030,7 +2010,7 @@ static void func_ovl0B_04_80043A24(Item *items, s32 *ids, s32 n) {
 }
 
 /* An item lit (1), unlit (0), or set without growing (2-4). */
-static void func_ovl0B_04_800438FC(u32 mode, Item *it, s32 id) {
+static void func_ovl0B_04_800438FC(u32 mode, s32 id, Item *it) {
     s32 grow = 1;
     f32 d;
     u8 col;
