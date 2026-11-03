@@ -7,66 +7,65 @@
  * drafts").
  * flags: -O3
  * differing words: us 3371, eu 3371, jp 3208
- * jp has no `#if VERSION_JP` yet: its strings, text positions and code
- * changes are not drafted (docs/DECOMPILING.md, "Versions", step 6).
+ * jp's code differences are drafted (`#if VERSION_JP`), its .data is not:
+ * its five own strings are only declared, and its text tables and
+ * positions are us's.
  *
- * A first draft from m2c, with every function rewritten by hand: the logic
- * is the original's, the schedule mostly isn't. Most of the callees are
- * statics that take arguments in the callers' registers: 80043040 (rect
- * $s0, sprite $s1, offset $fs0), 800433B0/80043404 (label $s0), 80044BE4
- * and 80046634 (mode $t0/$t2; the label loops in them keep $a2/$a3/$t1 across
- * calls to 80044B08: FADE_LABELS/FADE_SLOTS), 80044F70 (mask $s1, wait $s3),
- * 80045100 ($s4), 80045340 (save record $s2), 80045794 (mode $s6, the others
- * in the callers' argument slots), 80045C24 ($s0-$s4 and the two flags in
- * $t0/$s6), 80045F20 ($s2, $s3, $s5), 80046558 ($s0), 80046868 ($fp),
- * 80046F14 (two parameters, the second in $a3), 80047880 ($s0); an unused
- * parameter goes to the caller's 0(sp) (80043480's, 80047B98's first).
- * The empty stubs (where the original has two `jr ra` in a row) are
- * statics inlined into every caller, which leaves 8-byte bodies; most are
- * still empty here, their code written into the caller. 80043450 shows a
- * run of labels (n kept in a register, as an inlined parameter is) and
- * 80044B90 fades one.
+ * A first draft from m2c, with every function rewritten by hand. Most of
+ * the callees are statics that take arguments in the callers' registers:
+ * 80043040 (rect $s0, sprite $s1, offset $fs0), 800433B0/80043404 (label
+ * $s0), 80044BE4 and 80046634 (mode $t0/$t2), 80044F70 (mask $s1, wait
+ * $s3), 80045100 ($s4), 80045340 (save record $s2), 80045794 (mode $s6),
+ * 80045C24 ($s0-$s4 and the two flags in $t0/$s6), 80045F20 ($s2, $s3,
+ * $s5), 80046558 ($s0), 80046868 ($fp), 80046F14 (two parameters, the
+ * second in $a3), 80047880 ($s0). An unused parameter is passed in the
+ * caller's 0(sp) (80043480's, 80047B98's first) and an unused float one not
+ * at all. The stubs (two `jr ra` in a row) are statics inlined into every
+ * caller: 80043010 frees a run of labels, 80043450 shows one, 80044B90
+ * fades one (their counts kept in registers, as inlined parameters are),
+ * 80043478 draws a slot's number (us only); most others are still empty
+ * here, their code written into the caller.
  *
  * Every sound with its wait is SE(id, wait), and the original keeps the
  * wait in a saved register, set at the start of the block (`li $s0,15`
  * ahead of the sound and the calls before it, `move $a0,$s0` for the
  * wait), where this gives `li $a0,15`: one word short at each of 32
- * sounds. Nothing found reproduces it within IDO's inline budget: a local
- * that a switch might change gives the register (80044E48 matches with it)
- * but no static holding such a switch, or called from a function holding
- * one, is inlined, and the erase, copy and level menus' inner statics must
- * be (us inlines them, the original's stubs 80046164, 80046860 and
- * 80047028 are theirs).
+ * sounds, which shifts the rest of each function. It isn't a constant
+ * uopt keeps (80045F20 holds 5 in $s7 for its compares and still loads
+ * the wait's 5 into $s0). A local that a switch after it might change
+ * gives the register (80044E48 matches that way), but no static holding a
+ * switch, or called from a function holding one, is inlined, and the
+ * menus' inner statics below must be.
  *
  * The erase, copy and level menus are a static choosing a file calling a
- * static asking about it. us inlines the inner one; jp doesn't, and jp's
- * map names the inner one for us's whole (80047030, 80046868) and the outer
- * one as jp's own (_jp), so the C names them through macros (ERASE_FILE,
- * ERASE_ASK and so on). jp replaces a title through 0x2503 and moves it
- * (0x2505) where us redraws both labels (80045C24), draws the slot numbers
- * with 80043404 where us has 0x2501's digits (80043478), and centres a
- * file's name by its length (80045340).
- * 80045C24 takes (a, b, dx, dy, fa, str, fb), the flags being a->unk14 and
- * b->unk14, loaded by every caller.
+ * static asking about it. us inlines the inner one (its stub stays:
+ * 80047028, 80046164, 80046860); jp doesn't, and jp's map names the inner
+ * one for us's whole (80047030, 80046868) and the outer one as jp's own
+ * (_jp), so the C names them through macros (ERASE_FILE, ERASE_ASK and so
+ * on; MSG_TASK for 8004473C, jp's 800445BC_jp). jp replaces a title
+ * through 0x2503 and moves it (0x2505) where us redraws both labels
+ * (80045C24), draws the slot numbers with 80043404 where us has 0x2501's
+ * digits (80043478), centres a file's name by its length (80045340), has
+ * no pak-note pictures (D_8004A660/664) and doesn't centre the names in
+ * the handler.
  *
  * Order: the globals 8004390C, 80043B20 and 80043220 come out in place only
  * when defined above their callers (the handler; 80043220 is inlined into
  * the handler's case 1 and keeps its body), where the statics are defined
  * below theirs.
- * jp's and eu's strings and text positions aren't drafted yet.
  *
- * What still differs in us (words):
- * - 80043220 253: with the statics after it (80043280-80043834); 80043480 is
- *   8 bytes long (it holds 3.0, 6.0 and 9.0 in $f26-$f30 where this keeps
- *   0.0, 6.0 and 9.0).
- * - 80043C48 592: the handler, 0x20 bytes short.
- * - 8004473C 1375, 8004616C 1171: each with the statics after it up to the
- *   next global (80044908-80045F20 and 800464C0-80047030), most of them
- *   the wrong size.
- * - 8004747C 248, 800478D4 18 (with 80047880); 80043010 12 (the stubs and
- *   80043040-800430F0); the callbacks 80047D08-80047DE4 1 each (80047DE4 is
- *   counted with nothing after it).
- * - 8004390C, 80043B20, 80047A48, 80047A7C and 80047AC4 match.
+ * What still differs in us (words; each with the statics after it up to
+ * the next global, so a function the wrong size shifts the rest):
+ * - 80043220 197 (80043280-80043834): 80043480 holds 0.0, 6.0 and 9.0 in
+ *   $f26-$f30 where the original holds 3.0, 6.0 and 9.0 (8 bytes long).
+ * - 80043C48 587: the handler. Its box loops are inlined statics in the
+ *   original (frame 280 here 192); written as statics they aren't inlined.
+ * - 8004473C 1235 (80044908-80045F20), 8004616C 1167 (800464C0-80047030):
+ *   the SE waits, and the inner statics' frames.
+ * - 8004747C 173, 80043010 12 (the stubs and 80043040-800430F0).
+ * - 8004390C, 80043B20, 800478D4, 80047A48-80047B20 and the callbacks
+ *   match; so do 80044F70, 80045C24 and 80046F14 by themselves, and
+ *   80044E48 with a switch in SE.
  */
 #include "common.h"
 
@@ -258,8 +257,6 @@ s32 func_ovl0B_06_80049390(void); /* 0x2F0E */
 #endif
 
 
-/* The labels of a list fade in or out together. */
-#define FADE_LABELS(mode, labels, n) { s32 i_; for (i_ = 0; i_ < (n); i_++) { func_ovl0B_06_80044B08(mode, &(labels)[i_]); } }
 #define FADE_SLOTS(mode) { s32 *p_; Label_ovl0B_06 *l_; s32 *e_; p_ = D_ovl0B_06_8004A5D0; e_ = p_ + 3; for (l_ = D_ovl0B_06_800499F0; p_ < e_; p_++, l_++) { if (*p_ != 0) { func_ovl0B_06_80044B08(mode, l_); } } }
 static void func_ovl0B_06_80043038(void);
 static void func_ovl0B_06_80043030(void);
