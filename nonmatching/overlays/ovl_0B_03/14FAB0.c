@@ -6,7 +6,7 @@
  * tables, .bss 0x1140, as the original's sizes). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1064, eu 1064, jp 2640
+ * differing words: us 363, eu 363, jp 2640
  *
  * jp (`#if VERSION_JP`) has its own strings (80048AF4, 80048B60,
  * 80049144, and D_ovl0B_03_8004901C_jp for us's 80049168, with the
@@ -2315,8 +2315,8 @@ void func_ovl0B_03_8004386C(void) {
 #endif
                 switch (sel) {
                 case 0:
-                    str = D_ovl0B_03_80048AE8;
                     *D_ovl0B_03_80048AE8 = D_ovl0B_03_8004A324->unk24 + 0x10;
+                    str = D_ovl0B_03_80048AE8;
                     break;
                 case 1:
                     if (M2C_FIELD(D_ovl0B_03_8004A324, s32 *, 0x28) == 6) {
@@ -2447,8 +2447,8 @@ void func_ovl0B_03_8004386C(void) {
                     }
                     func_ovl0B_03_80048890(0x18);
                 } else if (held & 0x4000) {
-                    next = 1;
                     func_ovl0B_03_80048890(2);
+                    next = 1;
                     break;
                 }
                 D_ovl0B_03_80048E9C[D_ovl0B_03_8004A330].unk10->unk14 = D_ovl0B_03_8004A324->unk90[D_ovl0B_03_8004A330] * -70.0f;
@@ -2485,7 +2485,6 @@ void func_ovl0B_03_8004386C(void) {
             D_ovl0B_03_8004A334->unk1C = 50.0f;
             D_ovl0B_03_8004A334->unk30 = 0.4f;
             D_ovl0B_03_8004A334->unk28 = D_ovl0B_03_8004A334->unk2C = D_ovl0B_03_8004A334->unk30;
-            t = 0.0f;
             if (D_ovl0B_03_800490B4[D_ovl0B_03_8004A324->unkA0] != -1) {
                 D_ovl0B_03_8004A338 = func_ovl0B_03_80047E98(D_ovl0B_03_800490B4[D_ovl0B_03_8004A324->unkA0], 0);
                 D_ovl0B_03_8004A338->unkC |= 0x10000;
@@ -2497,6 +2496,7 @@ void func_ovl0B_03_8004386C(void) {
             } else {
                 D_ovl0B_03_8004A338 = NULL;
             }
+            t = 0.0f;
 #if VERSION_JP
             h = func_ovl0B_03_800486F0(D_ovl0B_03_80049194[D_ovl0B_03_8004A324->unkA0], func_ovl0B_03_80043234(D_ovl0B_03_80049194[D_ovl0B_03_8004A324->unkA0], 1.0f), 0xB4, 1.0f, 1.0f, 2);
 #else
@@ -2624,8 +2624,8 @@ void func_ovl0B_03_8004386C(void) {
                     if (D_ovl0B_03_8004A338 != NULL) {
                         func_ovl0B_03_80047EA0(D_ovl0B_03_8004A338);
                     }
-                    next = 6;
                     func_ovl0B_03_800486F8(h);
+                    next = 6;
                     D_ovl0B_03_8004A324->unkA4[0] = 0;
                     D_ovl0B_03_8004A324->unkA4[1] = 0;
                     D_ovl0B_03_8004A324->unkA4[2] = 0;
