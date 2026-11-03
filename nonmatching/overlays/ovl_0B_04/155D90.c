@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2812, eu 2812, jp 3763
+ * differing words: us 1946, eu 1946, jp 3353
  *
  * Order (scratch/ord/search.py, hill-climb over definition order, scored by
  * the emitted sequence's edit distance from the original's address order):
@@ -742,8 +742,8 @@ static void func_ovl0B_04_80046600(u16 buttons, u8 item);
 static void func_ovl0B_04_80046734(u8 item, u16 buttons);
 static void func_ovl0B_04_800468F0(s32 base);
 static void func_ovl0B_04_80045540(u8 item, u16 buttons, u8 *ret);
-static void func_ovl0B_04_800458F4(s32 *ids);
-static void func_ovl0B_04_80045958(s32 *ids);
+static void func_ovl0B_04_800458F4(s32 id0, s32 id1);
+static void func_ovl0B_04_80045958(s32 id0, s32 id1);
 static void func_ovl0B_04_80045850(void);
 static void func_ovl0B_04_80043640(f32 d);
 static u8 func_ovl0B_04_Mark27(u8 set, u8 c);
@@ -895,18 +895,6 @@ static void func_ovl0B_04_FreeEntries(Entry *e, s32 n) {
     }
 }
 
-/* An item of the current page lit (mode 1) or not (0); 6 past the list. */
-static void func_ovl0B_04_PageItem(u32 mode, u8 item, s32 half) {
-    s32 i;
-
-    if (item < 11) {
-        i = item - half * 5;
-    } else {
-        i = 6;
-    }
-    func_ovl0B_04_800438FC(mode, D_ovl0B_04_8004A404->unk4[i], &D_ovl0B_04_8004A404->unk8[i]);
-}
-
 /* A text set to a string, colour and scale (inlined in the set-ups). */
 static void func_ovl0B_04_SetText(s32 id, u8 *str, s32 col, f32 scale) {
     func_ovl0B_04_80048640(id, str, col);
@@ -1035,12 +1023,11 @@ void func_ovl0B_04_80046AA0(Obj *arg0) {
     func_ovl0B_04_800468F0(0);
     if (0) {
         func_ovl0B_04_800468E8();
-        func_ovl0B_04_800468F0(0);
         func_ovl0B_04_800468E0();
-        func_ovl0B_04_8004628C();
         func_ovl0B_04_80046734(0, 0);
         func_ovl0B_04_80046600(0, 0);
         func_ovl0B_04_80046294(0);
+        func_ovl0B_04_8004628C();
         func_ovl0B_04_80046284();
     }
 }
@@ -1154,18 +1141,18 @@ u8 func_ovl0B_04_80046180(u8 arg0, u16 arg1) {
         func_ovl0B_04_80045540(arg0, arg1, &ret);
     }
     if (ret == 0) {
-        func_ovl0B_04_800458F4(D_ovl0B_04_8004A2E8);
+        func_ovl0B_04_800458F4(D_ovl0B_04_8004A2E8[0], D_ovl0B_04_8004A2E8[1]);
         func_ovl0B_04_800440C8(&D_ovl0B_04_80049B20[3]);
     }
     return ret;
 }
 
 void func_ovl0B_04_80046054(Obj *arg0) {
-    func_ovl0B_04_800458F4(D_ovl0B_04_8004A2E8);
+    func_ovl0B_04_800458F4(D_ovl0B_04_8004A2E8[0], D_ovl0B_04_8004A2E8[1]);
     func_ovl0B_04_80047DF0(arg0, 0x55);
     func_ovl0B_04_8004401C(&D_ovl0B_04_80049B20[3]);
     func_ovl0B_04_80045850();
-    func_ovl0B_04_80045958(D_ovl0B_04_8004A2E8);
+    func_ovl0B_04_80045958(D_ovl0B_04_8004A2E8[0], D_ovl0B_04_8004A2E8[1]);
     func_ovl0B_04_SetText(D_ovl0B_04_8004A468[4], D_ovl0B_04_80048A84, 5, 0.7f);
     func_ovl0B_04_SetText(D_ovl0B_04_8004A468[3], D_ovl0B_04_80048A80, 6, 0.5f);
 }
@@ -1181,18 +1168,18 @@ u8 func_ovl0B_04_80045F50(u8 arg0, u16 arg1) {
         func_ovl0B_04_80045540(arg0, arg1, &ret);
     }
     if (ret == 0) {
-        func_ovl0B_04_800458F4((s32 *) D_ovl0B_04_8004A2E0[0]);
+        func_ovl0B_04_800458F4(D_ovl0B_04_8004A2E0[0], D_ovl0B_04_8004A2E0[1]);
         func_ovl0B_04_800440C8(&D_ovl0B_04_80049B20[2]);
     }
     return ret;
 }
 
 void func_ovl0B_04_80045E24(Obj *arg0) {
-    func_ovl0B_04_800458F4(D_ovl0B_04_8004A2E0);
+    func_ovl0B_04_800458F4(D_ovl0B_04_8004A2E0[0], D_ovl0B_04_8004A2E0[1]);
     func_ovl0B_04_80047DF0(arg0, 0x55);
     func_ovl0B_04_8004401C(&D_ovl0B_04_80049B20[2]);
     func_ovl0B_04_80045850();
-    func_ovl0B_04_80045958(D_ovl0B_04_8004A2E0);
+    func_ovl0B_04_80045958(D_ovl0B_04_8004A2E0[0], D_ovl0B_04_8004A2E0[1]);
     func_ovl0B_04_SetText(D_ovl0B_04_8004A468[3], D_ovl0B_04_80048A80, 5, 0.7f);
     func_ovl0B_04_SetText(D_ovl0B_04_8004A468[4], D_ovl0B_04_80048A84, 6, 0.5f);
 }
@@ -1208,18 +1195,18 @@ u8 func_ovl0B_04_80045D20(u8 arg0, u16 arg1) {
         func_ovl0B_04_80045540(arg0, arg1, &ret);
     }
     if (ret == 0) {
-        func_ovl0B_04_800458F4(D_ovl0B_04_8004A2D8);
+        func_ovl0B_04_800458F4(D_ovl0B_04_8004A2D8[0], D_ovl0B_04_8004A2D8[1]);
         func_ovl0B_04_800440C8(&D_ovl0B_04_80049B20[1]);
     }
     return ret;
 }
 
 void func_ovl0B_04_80045BF4(Obj *arg0) {
-    func_ovl0B_04_800458F4(D_ovl0B_04_8004A2D8);
+    func_ovl0B_04_800458F4(D_ovl0B_04_8004A2D8[0], D_ovl0B_04_8004A2D8[1]);
     func_ovl0B_04_80047DF0(arg0, 0x55);
     func_ovl0B_04_8004401C(&D_ovl0B_04_80049B20[1]);
     func_ovl0B_04_80045850();
-    func_ovl0B_04_80045958(D_ovl0B_04_8004A2D8);
+    func_ovl0B_04_80045958(D_ovl0B_04_8004A2D8[0], D_ovl0B_04_8004A2D8[1]);
     func_ovl0B_04_SetText(D_ovl0B_04_8004A468[2], D_ovl0B_04_80048A7C, 5, 0.7f);
     func_ovl0B_04_SetText(D_ovl0B_04_8004A468[1], D_ovl0B_04_80048A78, 6, 0.5f);
 }
@@ -1235,23 +1222,23 @@ u8 func_ovl0B_04_80045AF0(u8 arg0, u16 arg1) {
         func_ovl0B_04_80045540(arg0, arg1, &ret);
     }
     if (ret == 0) {
-        func_ovl0B_04_800458F4(D_ovl0B_04_8004A2D0);
+        func_ovl0B_04_800458F4(D_ovl0B_04_8004A2D0[0], D_ovl0B_04_8004A2D0[1]);
         func_ovl0B_04_800440C8(&D_ovl0B_04_80049B20[0]);
     }
     return ret;
 }
 
 void func_ovl0B_04_800459C4(Obj *arg0) {
-    func_ovl0B_04_800458F4(D_ovl0B_04_8004A2D0);
+    func_ovl0B_04_800458F4(D_ovl0B_04_8004A2D0[0], D_ovl0B_04_8004A2D0[1]);
     func_ovl0B_04_80047DF0(arg0, 0x55);
     func_ovl0B_04_8004401C(&D_ovl0B_04_80049B20[0]);
     func_ovl0B_04_80045850();
-    func_ovl0B_04_80045958(D_ovl0B_04_8004A2D0);
+    func_ovl0B_04_80045958(D_ovl0B_04_8004A2D0[0], D_ovl0B_04_8004A2D0[1]);
     func_ovl0B_04_SetText(D_ovl0B_04_8004A468[1], D_ovl0B_04_80048A78, 5, 0.7f);
     func_ovl0B_04_SetText(D_ovl0B_04_8004A468[4], D_ovl0B_04_80048A84, 6, 0.5f);
     if (0) {
-        func_ovl0B_04_80045958(0);
-        func_ovl0B_04_800458F4(0);
+        func_ovl0B_04_80045958(0, 0);
+        func_ovl0B_04_800458F4(0, 0);
         func_ovl0B_04_80045850();
         func_ovl0B_04_80045848();
         func_ovl0B_04_80045540(0, 0, 0);
@@ -1261,9 +1248,9 @@ void func_ovl0B_04_800459C4(Obj *arg0) {
 }
 
 /* A page's two texts and the menu's cursor shown, and hidden. */
-static void func_ovl0B_04_80045958(s32 *ids) {
-    Obj *a = func_ovl0B_04_80048668(ids[0]);
-    Obj *b = func_ovl0B_04_80048668(ids[1]);
+static void func_ovl0B_04_80045958(s32 id0, s32 id1) {
+    Obj *a = func_ovl0B_04_80048668(id0);
+    Obj *b = func_ovl0B_04_80048668(id1);
     Obj *c = func_ovl0B_04_80048608();
 
     a->unkC &= ~1;
@@ -1271,9 +1258,9 @@ static void func_ovl0B_04_80045958(s32 *ids) {
     c->unkC &= ~1;
 }
 
-static void func_ovl0B_04_800458F4(s32 *ids) {
-    Obj *a = func_ovl0B_04_80048668(ids[0]);
-    Obj *b = func_ovl0B_04_80048668(ids[1]);
+static void func_ovl0B_04_800458F4(s32 id0, s32 id1) {
+    Obj *a = func_ovl0B_04_80048668(id0);
+    Obj *b = func_ovl0B_04_80048668(id1);
     Obj *c = func_ovl0B_04_80048608();
 
     a->unkC |= 1;
@@ -1422,7 +1409,7 @@ void func_ovl0B_04_800450C0(Obj *arg0) {
 
     func_ovl0B_04_80044394(D_ovl0B_04_8004A3B0[4], D_ovl0B_04_8004A3B0[5]);
     func_ovl0B_04_8004447C(D_ovl0B_04_8004A3B0[4], 0x50);
-    func_ovl0B_04_8004447C(D_ovl0B_04_8004A3B0[5], 0x50);
+    func_ovl0B_04_8004447C(D_ovl0B_04_8004A3B0[5], 0x32);
     o->unkC |= 0x400;
     f = &D_ovl0B_04_80049B20[4];
     D_ovl0B_04_8004A3E4 = f;
@@ -2112,10 +2099,98 @@ static void func_ovl0B_04_80043640(f32 d) {
     }
 }
 
-/* The handler the entry returns. */
-void func_ovl0B_04_80043110(s32 arg0) {
+/* The handler's cases (inlined). */
+static void func_ovl0B_04_H4(void) {
+    func_ovl0B_04_MakeEntries(D_ovl0B_04_80049D40, 20, &D_ovl0B_04_80049C38[0]);
+    func_ovl0B_04_MakeEntries(D_ovl0B_04_80049ED0, 20, &D_ovl0B_04_80049C38[1]);
+    func_ovl0B_04_80043050(&D_ovl0B_04_8004A060[12], &D_ovl0B_04_80049C38[7]);
+    D_ovl0B_04_8004A060[12].unk0->unk36 = 90;
+}
+
+static void func_ovl0B_04_H5a(void) {
     s32 i;
 
+    D_ovl0B_04_8004A164 = func_ovl0B_04_80047DD8(0x49, 0);
+    D_ovl0B_04_8004A164->unk10 = -110.0f;
+    D_ovl0B_04_8004A164->unk14 = -70.0f;
+    D_ovl0B_04_8004A164->unk18 = 0.0f;
+    D_ovl0B_04_8004A164->unk20 = 0.0f;
+    func_ovl0B_04_80047E00(D_ovl0B_04_8004A164, 12);
+    for (i = 0; i < 12; i++) {
+        func_ovl0B_04_80047E08(D_ovl0B_04_8004A164, 0x4A, i, i);
+    }
+    func_ovl0B_04_80047E28(D_ovl0B_04_8004A164, -1, i);
+    D_ovl0B_04_8004A164->unkC |= 0x20;
+    D_ovl0B_04_8004A170 = func_ovl0B_04_80047E68(D_ovl0B_04_8004A164, 0xF);
+}
+
+static void func_ovl0B_04_H5b(void) {
+    D_ovl0B_04_8004A178 = func_ovl0B_04_800484E0(8);
+    D_ovl0B_04_8004A17C = func_ovl0B_04_800484E0(9);
+    D_ovl0B_04_8004A180 = func_ovl0B_04_800484E0(10);
+    D_ovl0B_04_8004A184 = func_ovl0B_04_800484E0(11);
+    D_ovl0B_04_8004A188 = func_ovl0B_04_800484E0(12);
+    D_ovl0B_04_8004A190 = *D_ovl0B_04_8004A178;
+    D_ovl0B_04_8004A194 = *D_ovl0B_04_8004A17C;
+    D_ovl0B_04_8004A198 = *D_ovl0B_04_8004A180;
+    D_ovl0B_04_8004A19C = *D_ovl0B_04_8004A184;
+    if (*D_ovl0B_04_8004A178 != 0) {
+        func_ovl0B_04_800478A0(D_ovl0B_04_8004A170, 0, *D_ovl0B_04_8004A178);
+    }
+    if (*D_ovl0B_04_8004A17C != 0) {
+        func_ovl0B_04_800478A0(D_ovl0B_04_8004A170, 1, *D_ovl0B_04_8004A17C);
+    }
+    if (*D_ovl0B_04_8004A180 != 0) {
+        func_ovl0B_04_800478A0(D_ovl0B_04_8004A170, 2, *D_ovl0B_04_8004A180);
+    }
+    if (*D_ovl0B_04_8004A184 != 0) {
+        func_ovl0B_04_800478A0(D_ovl0B_04_8004A170, 3, *D_ovl0B_04_8004A184);
+    }
+}
+
+static void func_ovl0B_04_H5c(void) {
+    s32 i;
+
+    for (i = 0; i < 8; i++) {
+        D_ovl0B_04_80048A20[i] = D_ovl0B_04_8004A188[i];
+        D_ovl0B_04_8004A498[i] = D_ovl0B_04_8004A188[i];
+    }
+    D_ovl0B_04_80048A20[8] = 0;
+    D_ovl0B_04_8004A188[8] = 0;
+}
+
+static void func_ovl0B_04_H5d(void) {
+    func_ovl0B_04_80048248(func_ovl0B_04_80043ADC, NULL, 0, 0, 0x130);
+    D_ovl0B_04_8004A4A0 = func_ovl0B_04_80048248(func_ovl0B_04_800436C8, NULL, 0, 0, 0x130);
+}
+
+static void func_ovl0B_04_H5(void) {
+    func_ovl0B_04_800487E0(0x1D);
+    D_ovl0B_04_8004A18C = 0;
+    func_ovl0B_04_800485A0(1);
+    func_ovl0B_04_800485A8(0x46);
+    func_ovl0B_04_H5a();
+    func_ovl0B_04_H5b();
+    func_ovl0B_04_H5c();
+    func_ovl0B_04_H5d();
+}
+
+static void func_ovl0B_04_H12(void) {
+    func_ovl0B_04_800487E8();
+}
+
+static void func_ovl0B_04_H1(void) {
+    func_ovl0B_04_800485A0(0);
+    func_ovl0B_04_80048250(D_ovl0B_04_8004A4A0);
+    func_ovl0B_04_80047E78(D_ovl0B_04_8004A170);
+    func_ovl0B_04_80047DE0(D_ovl0B_04_8004A164);
+    func_ovl0B_04_FreeEntries(D_ovl0B_04_80049D40, 20);
+    func_ovl0B_04_FreeEntries(D_ovl0B_04_80049ED0, 20);
+    func_ovl0B_04_80047DE0(D_ovl0B_04_8004A060[12].unk0);
+}
+
+/* The handler the entry returns. */
+void func_ovl0B_04_80043110(s32 arg0) {
     switch (arg0) {
         case 2:
             func_ovl0B_04_80047FA0(0x7F);
@@ -2131,69 +2206,18 @@ void func_ovl0B_04_80043110(s32 arg0) {
             D_ovl0B_04_8004A490.unk3 = 0x32;
             break;
         case 4:
-            func_ovl0B_04_MakeEntries(D_ovl0B_04_80049D40, 20, &D_ovl0B_04_80049C38[0]);
-            func_ovl0B_04_MakeEntries(D_ovl0B_04_80049ED0, 20, &D_ovl0B_04_80049C38[1]);
-            func_ovl0B_04_80043050(&D_ovl0B_04_8004A060[12], &D_ovl0B_04_80049C38[7]);
-            D_ovl0B_04_8004A060[12].unk0->unk36 = 90;
+            func_ovl0B_04_H4();
             break;
         case 5:
-            func_ovl0B_04_800487E0(0x1D);
-            D_ovl0B_04_8004A18C = 0;
-            func_ovl0B_04_800485A0(1);
-            func_ovl0B_04_800485A8(0x46);
-            D_ovl0B_04_8004A164 = func_ovl0B_04_80047DD8(0x49, 0);
-            D_ovl0B_04_8004A164->unk10 = -110.0f;
-            D_ovl0B_04_8004A164->unk14 = -70.0f;
-            D_ovl0B_04_8004A164->unk18 = 0.0f;
-            D_ovl0B_04_8004A164->unk20 = 0.0f;
-            func_ovl0B_04_80047E00(D_ovl0B_04_8004A164, 12);
-            for (i = 0; i < 12; i++) {
-                func_ovl0B_04_80047E08(D_ovl0B_04_8004A164, 0x4A, i, i);
-            }
-            func_ovl0B_04_80047E28(D_ovl0B_04_8004A164, -1, i);
-            D_ovl0B_04_8004A164->unkC |= 0x20;
-            D_ovl0B_04_8004A170 = func_ovl0B_04_80047E68(D_ovl0B_04_8004A164, 0xF);
-            D_ovl0B_04_8004A178 = func_ovl0B_04_800484E0(8);
-            D_ovl0B_04_8004A17C = func_ovl0B_04_800484E0(9);
-            D_ovl0B_04_8004A180 = func_ovl0B_04_800484E0(10);
-            D_ovl0B_04_8004A184 = func_ovl0B_04_800484E0(11);
-            D_ovl0B_04_8004A188 = func_ovl0B_04_800484E0(12);
-            D_ovl0B_04_8004A190 = *D_ovl0B_04_8004A178;
-            D_ovl0B_04_8004A194 = *D_ovl0B_04_8004A17C;
-            D_ovl0B_04_8004A198 = *D_ovl0B_04_8004A180;
-            D_ovl0B_04_8004A19C = *D_ovl0B_04_8004A184;
-            if (*D_ovl0B_04_8004A178 != 0) {
-                func_ovl0B_04_800478A0(D_ovl0B_04_8004A170, 0, *D_ovl0B_04_8004A178);
-            }
-            if (*D_ovl0B_04_8004A17C != 0) {
-                func_ovl0B_04_800478A0(D_ovl0B_04_8004A170, 1, *D_ovl0B_04_8004A17C);
-            }
-            if (*D_ovl0B_04_8004A180 != 0) {
-                func_ovl0B_04_800478A0(D_ovl0B_04_8004A170, 2, *D_ovl0B_04_8004A180);
-            }
-            if (*D_ovl0B_04_8004A184 != 0) {
-                func_ovl0B_04_800478A0(D_ovl0B_04_8004A170, 3, *D_ovl0B_04_8004A184);
-            }
-            for (i = 0; i < 8; i++) {
-                D_ovl0B_04_80048A20[i] = D_ovl0B_04_8004A188[i];
-                D_ovl0B_04_8004A498[i] = D_ovl0B_04_8004A188[i];
-            }
-            D_ovl0B_04_80048A20[8] = 0;
-            D_ovl0B_04_8004A188[8] = 0;
-            func_ovl0B_04_80048248(func_ovl0B_04_80043ADC, NULL, 0, 0, 0x130);
-            D_ovl0B_04_8004A4A0 = func_ovl0B_04_80048248(func_ovl0B_04_800436C8, NULL, 0, 0, 0x130);
+            func_ovl0B_04_H5();
             break;
         case 12:
-            func_ovl0B_04_800487E8();
+            func_ovl0B_04_H12();
             break;
         case 1:
-            func_ovl0B_04_800485A0(0);
-            func_ovl0B_04_80048250(D_ovl0B_04_8004A4A0);
-            func_ovl0B_04_80047E78(D_ovl0B_04_8004A170);
-            func_ovl0B_04_80047DE0(D_ovl0B_04_8004A164);
-            func_ovl0B_04_FreeEntries(D_ovl0B_04_80049D40, 20);
-            func_ovl0B_04_FreeEntries(D_ovl0B_04_80049ED0, 20);
-            func_ovl0B_04_80047DE0(D_ovl0B_04_8004A060[12].unk0);
+            func_ovl0B_04_H1();
+            break;
+        case 16:
             break;
     }
 }
