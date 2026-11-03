@@ -9,30 +9,36 @@
  * goes through 0x2501 and 0x2503, with 0x2505 for 80043B5C's offsets.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 10, eu 10, jp 10
+ * differing words: us 1, eu 1, jp 1
  *
  * What still differs in us (words):
- * - func_ovl0A_06_80043010 (9; the statics up to 80043B5C): 80043250's
- *   buffer at sp+40, not 32 (9): the original's frame has 12 bytes above
- *   the buffer and none below it for an inlined static (calling 0x101
- *   directly with three locals above the buffer gives that frame, but
- *   then 80043248's stub is gone; an empty 80043248 called there, even
- *   in an `if (0)`, costs 8 bytes again; 80043248 returning its own
- *   buffer gets the frame too, but moves 80043250's registers and so its
- *   callers'; an empty 80043248 inlined after the direct call costs 8 too;
- *   its address in a dead call, or 80043248 global and uncalled, gets the
- *   frame but emits it elsewhere, first in the object).
  * - func_ovl0A_06_80043B5C (1; with the statics after it): the inner
  *   `== 2` test's `bne` takes its delay slot's `li a0,0x20` from the
  *   fall-through, where the original takes it from the target and
  *   branches past it (not #line on `erase = 0` or the call, nor the
- *   argument ahead of the store in hand-edited ugen output).
+ *   argument ahead of the store in hand-edited ugen output). The
+ *   original's fall-through has no `li a0,0x20` of its own: the delay
+ *   slot's serves the 0x2F10 call, and the target skips the join's copy,
+ *   as if uopt kept the 0x20 in a0 over the branch for both calls (a
+ *   variable for it, set before the test and on the other paths into
+ *   the join, only adds a frame slot). With the `li` moved ahead of the
+ *   store, or a `.file` between them, as1 fills from the target but the
+ *   fall-through keeps its own `li` (a word more). Not the callees'
+ *   parameter types (u32/s16/u8/unprototyped), `erase = 0` in the test,
+ *   the call's result in a variable, `if (... != 2) goto`. The permuter
+ *   (40 min) found nothing.
  *
  * What still differs in jp (words): the same as us's. 80043E68's copy `m`
  * of msg keeps msg in s1, as the original passes it (without it, msg goes
  * to t5 in jp and 80044620, 8004423C and 80044BFC around it change).
  *
  * How the rest came to match:
+ * - 80043250 (9 to 0): its buffer is at sp+32 under three locals (i and
+ *   two unused ones) and the frame stays 48 because 80043248, the stub
+ *   before it, is an empty static defined without a prototype
+ *   (`static void f() {}`), called after the sprintf: inlined, a K&R
+ *   empty static takes no frame, where `f(void)` takes 8 bytes (and the
+ *   sprintf inside 80043248 took 16).
  * - 80044468 declares i before ret (ret's spill slot is the original's
  *   0x18).
  * - 800436BC's first loop passes `i * 0x14 + 0x67` (no y): the original's
@@ -542,7 +548,7 @@ s32 D_ovl0A_06_800473F0 = 0;
 
 static void func_ovl0A_06_80043020(s32 sfx, s32 sel);
 static s32 func_ovl0A_06_8004311C(void);
-static void func_ovl0A_06_80043248(u8 *str, s32 value);
+static void func_ovl0A_06_80043248();
 static void func_ovl0A_06_80043250(s32 value, u8 *dest);
 static void func_ovl0A_06_800432F8(UnkStruct_ovl0A_06_80047540 *notes);
 static s32 func_ovl0A_06_80043464(void);
@@ -587,7 +593,7 @@ static void func_ovl0A_06_800452B8(s32 arg0, UnkStruct_ovl0A_06_80047178 *tbl, U
 
 static void func_ovl0A_06_80043020(s32 sfx, s32 sel);
 static s32 func_ovl0A_06_8004311C(void);
-static void func_ovl0A_06_80043248(u8 *str, s32 value);
+static void func_ovl0A_06_80043248();
 static void func_ovl0A_06_80043250(s32 value, u8 *dest);
 static void func_ovl0A_06_800432F8(UnkStruct_ovl0A_06_80047540 *notes);
 static s32 func_ovl0A_06_80043464(void);
@@ -632,7 +638,7 @@ static void func_ovl0A_06_800452B8(s32 arg0, UnkStruct_ovl0A_06_80047178 *tbl, U
 
 static void func_ovl0A_06_80043020(s32 sfx, s32 sel);
 static s32 func_ovl0A_06_8004311C(void);
-static void func_ovl0A_06_80043248(u8 *str, s32 value);
+static void func_ovl0A_06_80043248();
 static void func_ovl0A_06_80043250(s32 value, u8 *dest);
 static void func_ovl0A_06_800432F8(UnkStruct_ovl0A_06_80047540 *notes);
 static s32 func_ovl0A_06_80043464(void);
@@ -677,7 +683,7 @@ static void func_ovl0A_06_800452B8(s32 arg0, UnkStruct_ovl0A_06_80047178 *tbl, U
 
 static void func_ovl0A_06_80043020(s32 sfx, s32 sel);
 static s32 func_ovl0A_06_8004311C(void);
-static void func_ovl0A_06_80043248(u8 *str, s32 value);
+static void func_ovl0A_06_80043248();
 static void func_ovl0A_06_80043250(s32 value, u8 *dest);
 static void func_ovl0A_06_800432F8(UnkStruct_ovl0A_06_80047540 *notes);
 static s32 func_ovl0A_06_80043464(void);
@@ -1621,10 +1627,13 @@ static void func_ovl0A_06_800432F8(UnkStruct_ovl0A_06_80047540 *notes) {
 
 static void func_ovl0A_06_80043250(s32 value, u8 *dest) {
     s32 i;
+    s32 unused1;
+    s32 unused2;
     u8 buf[4];
 
     i = 0;
-    func_ovl0A_06_80043248(buf, value);
+    func_ovl0A_06_800456D0(buf, "%03d", value);
+    func_ovl0A_06_80043248();
     buf[i] -= 0x20;
     i++;
     buf[i] -= 0x20;
@@ -1641,8 +1650,8 @@ static void func_ovl0A_06_80043250(s32 value, u8 *dest) {
     }
 }
 
-static void func_ovl0A_06_80043248(u8 *str, s32 value) {
-    func_ovl0A_06_800456D0(str, "%03d", value);
+/* empty, and defined without a prototype: inlined, it takes no frame */
+static void func_ovl0A_06_80043248() {
 }
 
 static s32 func_ovl0A_06_8004311C(void) {
@@ -1665,7 +1674,7 @@ static s32 func_ovl0A_06_8004311C(void) {
         } else if ((pressed & 0x8000) || (pressed & 0x1000)) {
 #line 1700
             ret = 1;
-#line 1667
+#line 1676
             if (D_ovl0A_06_80047018 == 0) {
                 /* SE(1, 1) with `ret = 2` between its wait and its call */
                 switch (1) {
@@ -1684,7 +1693,7 @@ static s32 func_ovl0A_06_8004311C(void) {
         } else if (pressed & 0x4000) {
 #line 1700
             ret = 1;
-#line 1684
+#line 1695
             SE(2, 2);
         }
         func_ovl0A_06_800465A0();
