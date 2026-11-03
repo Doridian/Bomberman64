@@ -2,22 +2,35 @@
  * NON_MATCHING: ovl_17_07's game object, complete: every function and its data.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 188, eu 188, jp 188
+ * differing words: us 53, eu 53, jp 53
  *
  * What still differs in us (words):
- * - func_ovl17_07_8004376C (188): frame 0x58, not 0x60. The original
- *   sets f26 to 0 in both arms of the `diff >= 360` test and copies it
- *   to t's f20 after (so it saves f26/f27 too), and its obj and 60 are
- *   in s6 and s7 where ours are in s7 and s6; 8 words short, so the rest
- *   is shifted. Tried for the f26: t's arms through a local z (z is
- *   folded away and the test with it), a ternary (`t = c ? 0.0f :
- *   0.0f`, plain, nested, with i or 0.0 in an arm), a double 0.0 in
- *   one arm (z survives, but in f0), the declaration order. With y set
- *   in each arm of the 0x401 test (as the original's delay slot has it)
- *   the loop's head matches, but 80043A70 then shifts by its epilogue's
- *   alignment (207 in all).
+ * - func_ovl17_07_8004376C (53): the frame, f26 and obj in s6 match now,
+ *   but (1) the `cur - arg1` arm loads arg1 into $f12 (uopt's) where the
+ *   original has the temporaries $f4/$f6 and 360.0f in $f12, (2) the fake
+ *   `obj++; obj--;` leaves `addiu s6,s6,0` in the arm's `b` delay slot
+ *   (the original has 360's `lui` there), (3) &D_ovl17_07_800457C0 and
+ *   the 10 are in s5/s4 for the original's s4/s5, (4) every later
+ *   integer temporary is one register early (t7 for the original's t8).
+ *   Hand-edited ugen output shows (2) and (4) are one thing: the
+ *   original's arm ends in a dead computation into a temporary ($15),
+ *   which as1 drops (`addu $15,$22,116` alone gives the original's
+ *   `bc1f`/`b`/`lui` shape). Tried for it: dead int and float ternaries
+ *   (`x = (arg0 + 1 < 5) ? arg0 + 1 : 7`, an ANGLE_SUB-like one; their
+ *   branch stays), expression statements, `if (obj + 1) {}`, a reload of
+ *   obj, `arg0++; arg0--;`, a switch, swapped arms, arg1 through a
+ *   pointer.
  *
  * How the rest came to match:
+ * - The original sets f26 to 0 in both arms of the `diff >= 360` test
+ *   and copies it to t's f20 after: z is 0.0f in one arm and an int 0 in
+ *   the other (identical constants fold, and the test with them), and a
+ *   dead `if (z != 0.0f)` in the loop keeps z live over the calls, so it
+ *   gets a saved register (frame 0x60).
+ * - `obj++; obj--;` at the end of the first arm keeps the inner if's join
+ *   a block of its own (the original's `bc1f` to a `b`), and puts obj in
+ *   s6 and the 60 in s7.
+ * - y is set in each arm of the 0x401 test (the original's delay slot).
  * - arg1 lives in its home slot (the original's `sw a1,0x64(sp)` and
  *   `lwc1` at each use): its address is taken in dead code; 80043A70
  *   matches with it. `diff = 360.0f + diff` is the original's operand
@@ -323,6 +336,8 @@ void func_ovl17_07_8004376C(s32 arg0, f32 arg1) {
     f32 cur;
     f32 diff;
     f32 t;
+    f32 z;
+    f32 u;
     s32 i;
     s32 x;
     s32 y;
@@ -334,6 +349,8 @@ void func_ovl17_07_8004376C(s32 arg0, f32 arg1) {
         if (cur < arg1) {
             diff = 360.0f + diff;
         }
+        obj++; /* fake: keeps this arm's join a block of its own */
+        obj--;
     } else {
         diff = arg1 - cur;
         if (arg1 < cur) {
@@ -341,17 +358,17 @@ void func_ovl17_07_8004376C(s32 arg0, f32 arg1) {
         }
     }
     if (diff >= 360.0f) {
-        t = 0.0f;
+        z = 0.0f;
     } else {
-        t = 0.0f;
+        z = 0; /* an int 0, so that uopt doesn't fold the two arms */
     }
+    t = z;
     if (arg0 != 0xC0) {
         diff = -diff;
     }
     diff /= 60.0f;
     for (i = 0; i < 60; i++) {
         obj->unk40->unk20 += diff;
-        y = -0x400;
         if (func_ovl17_07_80045160(0x401) != 0) {
             y = 0x400;
             if (func_ovl17_07_80045160(0x400) != 0) {
@@ -361,6 +378,7 @@ void func_ovl17_07_8004376C(s32 arg0, f32 arg1) {
             }
             D_ovl17_07_800457C0 = x / 2;
         } else {
+            y = -0x400;
             if (func_ovl17_07_80045160(0x400) != 0) {
                 x = -(s32) t;
             } else {
@@ -373,6 +391,9 @@ void func_ovl17_07_8004376C(s32 arg0, f32 arg1) {
                                                           D_ovl17_07_800456B0.unk10, D_ovl17_07_800456B0.unk12);
         func_ovl17_07_80044F20();
         t += 0.16666667f;
+        if (z != 0.0f) { /* fake: dead, but keeps z live (in $f26) over the loop */
+            u = 1.0f;
+        }
     }
     D_ovl17_07_800457C0 = 5;
     obj->unk40->unk20 = arg1;
