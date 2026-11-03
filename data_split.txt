@@ -322,6 +322,10 @@ ovl_0F_03 1EE1A0 0x210 0x90 0x200
 ovl_0F_04 ovl_0F_04_entry 0 0 0
 ovl_0F_04 1F2230 0x4E0 0x120 0x250
 
+# ovl_0F_05: all C (-O3)
+ovl_0F_05 ovl_0F_05_entry 0 0 0
+ovl_0F_05 1F7CA0 0x2B0 0xE0 0x80
+
 # ovl_0F_06: all C
 ovl_0F_06 ovl_0F_06_entry 0 0 0
 ovl_0F_06 1FB180 0x50 0x60 0x40

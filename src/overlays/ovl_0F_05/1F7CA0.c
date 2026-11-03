@@ -1,9 +1,5 @@
 /*
- * NON_MATCHING: ovl_0F_05's game object, complete: every function and its data
- * (.data, .rodata and .bss 0x80 as the original).
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * ovl_0F_05's game object, IDO -O3; it matches in us, eu and jp.
  *
  * From 619 words, as in ovl_0F_08/0F_07:
  * - func_ovl0F_05_800440AC: ovl_0F_08's 80043A28 ported (Vec3f,
@@ -34,7 +30,6 @@
  *   chained `a = b = 0x4000` gives ugen's t5) and two stores, which put it
  *   in v0; 800459C8 declared s32 (the call before) moves it to v1.
  *
- * Matches in all three versions (not moved to src/ yet).
  * The `#line N "1F7CA0.c"` lines are the physical line numbers (the file
  * named the same whatever path it is compiled by).
  */
