@@ -6,7 +6,7 @@
  * of it 800431C4's local table). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 472, eu 472, jp 535
+ * differing words: us 430, eu 430, jp 493
  * jp has no `#if VERSION_JP` yet.
  *
  * A first draft from m2c (with a context of the ZeroJump prototypes the
@@ -697,8 +697,8 @@ void func_ovl0B_02_80047020(void) {
 
 /* A piece's display list (the callback of the objects 80043FC4 makes). */
 void func_ovl0B_02_80046EFC(UnkStructA_40 *arg0, Gfx_ovl0B_02 **arg1) {
-    Piece_ovl0B_02 *p = M2C_FIELD(arg0, Piece_ovl0B_02 **, 0x40);
     Gfx_ovl0B_02 *gfx = *arg1;
+    Piece_ovl0B_02 *p = M2C_FIELD(arg0, Piece_ovl0B_02 **, 0x40);
     u32 *e = (u32 *) (p->unk14 + p->unk18 * 12 + 12);
 
     { Gfx_ovl0B_02 *g = gfx++; g->w0 = 0xBC000806; g->w1 = p->unk14; }
@@ -707,7 +707,7 @@ void func_ovl0B_02_80046EFC(UnkStructA_40 *arg0, Gfx_ovl0B_02 **arg1) {
         { Gfx_ovl0B_02 *g = gfx++; g->w0 = 0xF8000000; g->w1 = (arg0->unk36 & 0xFF) | ~0xFF; }
     } else {
         { Gfx_ovl0B_02 *g = gfx++; g->w0 = 0xB900031D; g->w1 = 0xF5005178; }
-        { Gfx_ovl0B_02 *g = gfx++; g->w0 = 0xF8000000; g->w1 = (p->unk1C << 24) | ((p->unk20 & 0xFF) << 16) | ((p->unk24 & 0xFF) << 8) | (arg0->unk36 & 0xFF); }
+        { Gfx_ovl0B_02 *g = gfx++; g->w0 = 0xF8000000; g->w1 = ((p->unk1C & 0xFF) << 24) | ((p->unk20 & 0xFF) << 16) | ((p->unk24 & 0xFF) << 8) | (arg0->unk36 & 0xFF); }
     }
     { Gfx_ovl0B_02 *g = gfx++; g->w0 = 0x06000000; g->w1 = e[2] + p->unk14; }
     *arg1 = gfx;
@@ -822,10 +822,10 @@ void func_ovl0B_02_80046418(void) {
     UnkStructA *obj;
     f32 angle;
     f32 dist;
-    f32 dx;
     f32 dz;
-    f32 rx;
+    f32 dx;
     s32 i;
+    f32 rx;
     f32 ry;
     f32 rz;
 
