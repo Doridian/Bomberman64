@@ -6,7 +6,7 @@
  * floats). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 3371, eu 3371, jp 3315
+ * differing words: us 3371, eu 3371, jp 3233
  * jp has no `#if VERSION_JP` yet: its strings, text positions and code
  * changes are not drafted (docs/DECOMPILING.md, "Versions", step 6).
  *
@@ -400,8 +400,10 @@ u8 D_ovl0B_06_8004A63C[4]; /* not referenced here */
 u8 D_ovl0B_06_8004A640[8];
 u8 D_ovl0B_06_8004A648[8];
 s32 D_ovl0B_06_8004A650[4];
+#if !VERSION_JP
 UnkStructA_40 *D_ovl0B_06_8004A660;
 UnkStructA_40 *D_ovl0B_06_8004A664;
+#endif
 s32 D_ovl0B_06_8004A668[2];
 s32 D_ovl0B_06_8004A670[4];
 
@@ -2181,6 +2183,7 @@ void func_ovl0B_06_80043C48(s32 arg0) {
             D_ovl0B_06_8004A62C->unk36 = 0x5A;
             D_ovl0B_06_8004A630->unk36 = 0x5A;
             D_ovl0B_06_8004A634->unk36 = 0x5A;
+#if !VERSION_JP
             D_ovl0B_06_8004A660 = func_ovl0B_06_80048838(0x367, 5);
             D_ovl0B_06_8004A660->unk10 = 210.0f;
             D_ovl0B_06_8004A660->unk14 = 114.0f;
@@ -2195,6 +2198,7 @@ void func_ovl0B_06_80043C48(s32 arg0) {
             D_ovl0B_06_8004A664->unkC |= 0x680;
             D_ovl0B_06_8004A660->unk36 = 0x5A;
             D_ovl0B_06_8004A664->unk36 = 0x5A;
+#endif
             break;
         case 16:
             for (i = 0, box = D_ovl0B_06_80049CAC; i < 5; i++, box++) {
@@ -2250,11 +2254,15 @@ void func_ovl0B_06_80043C48(s32 arg0) {
                     }
                     func_ovl0B_06_80043450(D_ovl0B_06_80049B94, 10);
                     for (i = 0, label = D_ovl0B_06_80049B94, name = D_ovl0B_06_80049558; i != 3; i++, name += 9, label++) {
+#if !VERSION_JP
                         func_ovl0B_06_800490B0(label[1].unk4, -(s32) (func_ovl0B_06_800490E0(name) * 0.8f * 0.5f), 0);
+#endif
                         if (func_ovl0B_06_80049368(i, 8) != 0) {
                             func_ovl0B_06_800433B0(&label[7]);
                             label[7].unk18->unk36 = 0x82;
+#if !VERSION_JP
                             func_ovl0B_06_800490B0(label[7].unk4, -(s32) (func_ovl0B_06_800490E0(name) * 0.8f * 0.5f), 0);
+#endif
                         } else {
                             label[7].unk18->unkC |= 1;
                         }
@@ -2284,8 +2292,10 @@ void func_ovl0B_06_80043C48(s32 arg0) {
             func_ovl0B_06_80043010(D_ovl0B_06_8004999C, 3);
             func_ovl0B_06_80043280();
             func_ovl0B_06_80043220();
+#if !VERSION_JP
             func_ovl0B_06_80048840(D_ovl0B_06_8004A660);
             func_ovl0B_06_80048840(D_ovl0B_06_8004A664);
+#endif
             switch (D_ovl0B_06_8004A668[0]) {
                 case 16:
                     func_ovl0B_06_80043010(D_ovl0B_06_80049A44, 6);
