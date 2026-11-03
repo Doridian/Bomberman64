@@ -2,31 +2,35 @@
  * NON_MATCHING: ovl_17_07's game object, complete: every function and its data.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 22, eu 22, jp 22
+ * differing words: us 17, eu 17, jp 17
  *
  * What still differs in us (words):
- * - func_ovl17_07_8004376C (22): (1) the `cur - arg1` arm loads arg1 into
+ * - func_ovl17_07_8004376C (17): (1) the `cur - arg1` arm loads arg1 into
  *   $f12 (uopt's) where the original has the temporaries $f4/$f6 and
- *   360.0f in $f12; (2) the fake `obj++; obj--;` leaves `addiu s6,s6,0`
- *   in the arm's `b` delay slot (the original has 360's `lui` there);
- *   (3) &D_ovl17_07_800457C0 and the 10 are in s5/s4 for the original's
- *   s4/s5 (the draft had them right before z existed). Hand-edited ugen
- *   output says the original's arm ends in a dead computation into a
- *   temporary, which as1 drops (`addu $15,$22,116` alone there gives the
- *   original's `bc1f`/`b`/`lui` shape); moved there, the dead test below
- *   breaks the arms. Tried for (2): dead int and float ternaries (their
- *   branch stays), expression statements and dead stores (uopt drops
- *   them), `if (obj + 1) {}`, a reload of obj, `arg0++; arg0--;`, a
- *   switch, swapped arms, arg1 through a pointer. For (3): dead reads of
- *   D_ovl17_07_800457C0 (they keep loads), the 10 in a local, the
- *   declaration order, other forms of the abs.
+ *   360.0f in $f12 (in the first arm and the `diff >= 360` test, not the
+ *   second arm: a uopt register for 360.0f over the first arm's end
+ *   block?); (2) the fake `obj++; obj--;` leaves `addiu s6,s6,0` in the
+ *   arm's `b` delay slot (the original has 360's `lui` there); (3) the
+ *   zero the arms set is in $f2, copied to t, where the original keeps it
+ *   in $f26 (with z only dead-used in the loop it gets $f26 but the 1/6
+ *   then gets $f26 and z $f24, or the 10 and &D_ovl17_07_800457C0 swap
+ *   s4/s5). Hand-edited ugen output says the original's first arm ends
+ *   in a dead computation into a temporary, which as1 drops (`addu
+ *   $15,$22,116` alone there gives the original's `bc1f`/`b`/`lui`
+ *   shape). Tried for (1)/(2): dead int and float ternaries (their
+ *   branch stays), dead tests of diff or 360.0f there, expression
+ *   statements and dead stores (uopt drops them), `if (obj + 1) {}`, a
+ *   reload of obj, `arg0++; arg0--;`, a switch, swapped arms, arg1
+ *   through a pointer, int/double 360s.
  *
  * How the rest came to match:
- * - The original sets f26 to 0 in both arms of the `diff >= 360` test
- *   and copies it to t's f20 after: z is 0.0f in one arm and an int 0 in
- *   the other (identical constants fold, and the test with them), and a
- *   dead `if (z != 0.0f)` in the loop keeps z live over the calls, so it
- *   gets a saved register (frame 0x60).
+ * - The original sets a zero in both arms of the `diff >= 360` test and
+ *   copies it to t's f20 after: z is 0.0f in one arm and an int 0 in the
+ *   other (identical constants fold, and the test with them), and a dead
+ *   `if (z != 0.0f)` in the loop keeps a saved float register in use
+ *   (frame 0x60). The `z = 0;` in the loop and the empty do-while after
+ *   the abs (from the permuter) put the 10 in s5 and
+ *   &D_ovl17_07_800457C0 in s4, and the 1/6 in $f24.
  * - `obj++; obj--;` at the end of the first arm keeps the inner if's join
  *   a block of its own (the original's `bc1f` to a `b`), and puts obj in
  *   s6 and the 60 in s7.
@@ -391,13 +395,16 @@ void func_ovl17_07_8004376C(s32 arg0, f32 arg1) {
                 x = -(10 - (s32) t);
             }
             D_ovl17_07_800457C0 = (x < 0 ? -x : x) / 2;
+            do { /* fake */
+            } while (0);
         }
         func_ovl17_07_80044AD8(D_ovl17_07_800456B0.unk4);
+        z = 0; /* fake */
         D_ovl17_07_800456B0.unk4 = func_ovl17_07_80044AD0(D_ovl17_07_800456B0.unk0->unk40, 0, x, y,
                                                           D_ovl17_07_800456B0.unk10, D_ovl17_07_800456B0.unk12);
         func_ovl17_07_80044F20();
         t += 0.16666667f;
-        if (z != 0.0f) { /* fake: dead, but keeps z live (in $f26) over the loop */
+        if (z != 0.0f) { /* fake: dead, keeps a saved float register in use */
             u = 1.0f;
         }
     }
