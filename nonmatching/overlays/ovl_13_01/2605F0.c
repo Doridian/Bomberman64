@@ -9,7 +9,7 @@
  * .bss 0x1F0 as the original). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1228, eu 1228, jp 1228
+ * differing words: us 1130, eu 1130, jp 1130
  *
  * A first draft from m2c (with the ZeroJump prototypes the other drafts give
  * the same codes), made to compile: vectors as Vec3f, the pointer loops over
@@ -41,11 +41,11 @@
  * reloads it with lui each time): check their .bss places at move time.
  *
  * What still differs in us (words): 80043878 271, 800446FC 226, 800431D4
- * 218, 800450B4 127; under 50 each: 80043608, 80043830, 8004400C, 80045538,
- * 800455D0, 80045B0C, 80045C9C, 80045DAC, 8004636C, 800465FC, 80046800,
- * 80046C2C, 80046DC4, 80046E00, 80046FA8, 80047144, 800473A8, 800477C0,
- * 80047CB4, 80047F74, 800481D0, 80048418, 8004956C, 800496E0, 80049870,
- * 8004A088, 8004A208, 8004A4C4. The other 50 match.
+ * 218, 800450B4 127; under 50 each: 80043608, 80043830, 8004400C, 800455D0,
+ * 80045B0C, 80045C9C, 80045DAC, 8004636C, 800465FC, 80046800, 80046C2C,
+ * 80046DC4, 80046E00, 80046FA8, 80047144, 800473A8, 800477C0, 80047CB4,
+ * 80047F74, 800481D0, 80048418, 8004956C, 800496E0, 80049870, 8004A208,
+ * 8004A4C4. The other 52 match.
  */
 #include "common.h"
 
@@ -248,7 +248,6 @@ s32 D_ovl13_01_8004C3C0;
 s32 D_ovl13_01_8004C3C4;
 u32 D_ovl13_01_8004C3C8;
 s32 D_ovl13_01_8004C3CC;
-s32 D_ovl13_01_8004C3D8;
 u8 D_ovl13_01_8004C3DC[4];
 Vec3f D_ovl13_01_8004C3E0;
 u8 D_ovl13_01_8004C3EC[4];
@@ -563,9 +562,8 @@ void func_ovl13_01_8004A088(void) {
     func_ovl13_01_8004BA08(0x412);
     func_ovl13_01_8004BA08(0x411);
     func_ovl13_01_8004BA08(0x401);
-    temp_v0 = func_ovl13_01_8004AD88();
-    D_ovl13_01_8004C23C = temp_v0;
-    if (M2C_FIELD(temp_v0, s32 *, 0x10) == 0) {
+    D_ovl13_01_8004C23C = func_ovl13_01_8004AD88();
+    if (M2C_FIELD(D_ovl13_01_8004C23C, s32 *, 0x10) == 0) {
         func_ovl13_01_8004BA00(0x41F);
     }
 }
@@ -2130,7 +2128,7 @@ void func_ovl13_01_80045B0C(void) {
     temp_fv1 = temp_v1->unk30;
     temp_v1->unk2C = temp_fv1;
     temp_v0->unk40->unk28 = temp_fv1;
-    temp_v0->unk50 = 0.0f;
+    temp_v0->unk50 = 0;
     func_ovl13_01_80043124(0xD9, D_ovl13_01_8004C31C);
     if (*temp_s0 != 0) {
         do {
@@ -2239,6 +2237,8 @@ loop:
 }
 
 void func_ovl13_01_80045538(void) {
+    static s32 D_ovl13_01_8004C3D8;
+
     D_ovl13_01_8004C3D8 = 1;
     func_ovl13_01_8004B788(func_ovl13_01_800462DC, &D_ovl13_01_8004C3D8, 0, 0, 0x150);
     func_ovl13_01_8004B788(func_ovl13_01_80044F74, &D_ovl13_01_8004C3D8, 0, 0, 0x150);
