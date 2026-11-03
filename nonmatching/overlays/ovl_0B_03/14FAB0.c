@@ -6,7 +6,7 @@
  * tables, .bss 0x1140, as the original's sizes). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 105, eu 105, jp 2640
+ * differing words: us 26, eu 26, jp 2561
  *
  * jp (`#if VERSION_JP`) has its own strings (80048AF4, 80048B60,
  * 80049144, and D_ovl0B_03_8004901C_jp for us's 80049168, with the
@@ -652,17 +652,21 @@ s32 func_ovl0B_03_80046850(u8 arg0, u16 arg1) {
 }
 
 void func_ovl0B_03_80046510(void) {
-    /* the original's frame has 32 bytes more than its locals: no stack
-     * address is taken, so this only keeps the frame the same size */
-    f32 pad[8];
     s32 i;
     s32 j;
-    s32 k;
-    s32 x;
-    s32 y0;
-    s32 y1;
     Anim_ovl0B_03 *a;
     UnkStructA_40 *obj;
+    s32 n;
+    s32 pad0;
+    s32 pad1;
+    s32 pad2;
+    s32 pad3;
+    s32 y0;
+    s32 padm0;
+    s32 padm1;
+    s32 y1;
+    s32 padt0;
+
 
     func_ovl0B_03_800464B0(D_ovl0B_03_80048D08, 4);
     D_ovl0B_03_80048D08[2].unk10->unkC |= 0x80;
@@ -681,38 +685,37 @@ void func_ovl0B_03_80046510(void) {
         }
         D_ovl0B_03_8004A400[i] = func_ovl0B_03_80047F28(D_ovl0B_03_80048E9C[i].unk10, 0xF);
     }
-    y1 = 0x58;
     y0 = 0x18;
+    y1 = 0x58;
     for (i = 0; i < 3; i++) {
-        k = i;
-        for (j = 0, x = 0; x != 0x140; j++, x += 0x40) {
+        for (j = 0; j < 5; j++) {
             a = &D_ovl0B_03_8004A340[i][j];
             obj = func_ovl0B_03_80047E98(0x30, 0);
             a->unk0 = obj;
-            a->unk8 = k & 3;
-            a->unk4 = D_ovl0B_03_80049104[k & 3].unk4;
-            M2C_FIELD(obj, s32 *, 0x38) = D_ovl0B_03_80049104[k & 3].unk0;
-            a->unk0->unk10 = x;
+            a->unk8 = (i + j) & 3;
+            a->unk4 = D_ovl0B_03_80049104[(i + j) & 3].unk4;
+            M2C_FIELD(obj, s32 *, 0x38) = D_ovl0B_03_80049104[(i + j) & 3].unk0;
+            a->unk0->unk10 = j * 64;
             a->unk0->unk14 = y0;
-            a->unk0->unk18 = x + 0x40;
+            a->unk0->unk18 = j * 64 + 64;
             a->unk0->unk1C = y1;
             a->unk0->unkC |= 0x400;
-            k++;
         }
-        y1 += 0x40;
         y0 += 0x40;
+        y1 += 0x40;
     }
     while (TRUE) {
         for (i = 0; i < 3; i++) {
             for (j = 0; j < 5; j++) {
                 a = &D_ovl0B_03_8004A340[i][j];
                 if (--a->unk4 == 0) {
-                    a->unk8++;
-                    if (a->unk8 >= 8) {
-                        a->unk8 = 0;
+                    n = a->unk8 + 1;
+                    if (n >= 8) {
+                        n = 0;
                     }
-                    a->unk4 = D_ovl0B_03_80049104[a->unk8].unk4;
-                    M2C_FIELD(a->unk0, s32 *, 0x38) = D_ovl0B_03_80049104[a->unk8].unk0;
+                    a->unk8 = n;
+                    a->unk4 = D_ovl0B_03_80049104[n].unk4;
+                    M2C_FIELD(a->unk0, s32 *, 0x38) = D_ovl0B_03_80049104[n].unk0;
                 }
             }
         }
