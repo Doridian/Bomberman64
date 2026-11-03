@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1946, eu 1946, jp 3353
+ * differing words: us 1855, eu 1855, jp 3351
  *
  * Order (scratch/ord/search.py, hill-climb over definition order, scored by
  * the emitted sequence's edit distance from the original's address order):
@@ -114,7 +114,7 @@ typedef struct {
     /* 0x14 */ s16 unk14;
     /* 0x16 */ u16 unk16;
     /* 0x18 */ u16 unk18;
-    /* 0x1A */ s16 unk1A;
+    /* 0x1A */ u16 unk1A;
     /* 0x1C */ s32 unk1C;
     /* 0x20 */ void (*unk20)(Obj *);
 } Page; /* size = 0x24 */
@@ -719,8 +719,8 @@ s32 D_ovl0B_04_8004A1E4 = 0;
 
 static void func_ovl0B_04_80043050(Entry *e, Desc *d);
 static void func_ovl0B_04_800438FC(u32 mode, s32 id, Item *it);
-static void func_ovl0B_04_80043A24(Item *items, s32 *ids, s32 n);
-static void func_ovl0B_04_80043A7C(Item *items, s32 *ids, s32 n);
+static void func_ovl0B_04_80043A24(s32 n, s32 *ids, Item *items);
+static void func_ovl0B_04_80043A7C(s32 n, s32 *ids, Item *items);
 void func_ovl0B_04_80043CD0(s32 arg0, Gfx0B04 **arg1);
 static void func_ovl0B_04_80043FA4(u8 *ret, s32 page, s32 item, s32 mode);
 static void func_ovl0B_04_8004401C(Fade *f);
@@ -734,11 +734,11 @@ static void func_ovl0B_04_80044394(s32 a, s32 b);
 static void func_ovl0B_04_8004447C(s32 id, s32 alpha);
 static void func_ovl0B_04_8004456C(void);
 static void func_ovl0B_04_800445C4(void);
-static u8 func_ovl0B_04_8004462C(u8 set, u8 c);
-static u8 func_ovl0B_04_8004471C(u8 set, u8 c);
+static s32 func_ovl0B_04_8004462C(u8 set, u8 c);
+static s32 func_ovl0B_04_8004471C(u8 set, u8 c);
 static void func_ovl0B_04_800447DC(u16 buttons, u8 *ret);
 static void func_ovl0B_04_80046294(u8 item);
-static void func_ovl0B_04_80046600(u16 buttons, u8 item);
+static void func_ovl0B_04_80046600(u8 item, u16 buttons);
 static void func_ovl0B_04_80046734(u8 item, u16 buttons);
 static void func_ovl0B_04_800468F0(s32 base);
 static void func_ovl0B_04_80045540(u8 item, u16 buttons, u8 *ret);
@@ -746,7 +746,7 @@ static void func_ovl0B_04_800458F4(s32 id0, s32 id1);
 static void func_ovl0B_04_80045958(s32 id0, s32 id1);
 static void func_ovl0B_04_80045850(void);
 static void func_ovl0B_04_80043640(f32 d);
-static u8 func_ovl0B_04_Mark27(u8 set, u8 c);
+static u8 func_ovl0B_04_80044714(u8 set, u8 c);
 
 /* A text drawn centred on an item (its string evaluated twice). */
 #define DRAW_ITEM(str, it) \
@@ -762,7 +762,13 @@ static void func_ovl0B_04_800436C0(void) {
 static void func_ovl0B_04_800438F4(void) {
 }
 
-static void func_ovl0B_04_80043AD4(void) {
+/* A page's texts freed (inlined). */
+static void func_ovl0B_04_80043AD4(s32 *ids, s32 n) {
+    s32 i;
+
+    for (i = 0; i < n; i++) {
+        func_ovl0B_04_80048638(ids[i]);
+    }
 }
 
 static void func_ovl0B_04_80043F3C(void) {
@@ -838,9 +844,6 @@ static void func_ovl0B_04_8004461C(void) {
 }
 
 static void func_ovl0B_04_80044624(void) {
-}
-
-static void func_ovl0B_04_80044714(void) {
 }
 
 static void func_ovl0B_04_800450B8(void) {
@@ -1043,8 +1046,8 @@ static void func_ovl0B_04_800468F0(s32 base) {
     o->unkC |= 0x480;
     o->unk36 = 100;
     D_ovl0B_04_8004A480[0] = 0;
-    for (i = 11; i < 13; i++) {
-        D_ovl0B_04_8004A480[i] = 1;
+    for (i = 1; i < 3; i++) {
+        D_ovl0B_04_8004A480[i + 10] = 1;
     }
     for (i = 1; i < 11; i++) {
         if (func_ovl0B_04_800484B0(base + i) == 0) {
@@ -1059,7 +1062,7 @@ static void func_ovl0B_04_800468F0(s32 base) {
     D_ovl0B_04_8004A1A4 = 0;
     D_ovl0B_04_8004A174 = D_ovl0B_04_8004A16C;
     func_ovl0B_04_80046294(D_ovl0B_04_8004A16C);
-    func_ovl0B_04_80046600(0, D_ovl0B_04_8004A16C);
+    func_ovl0B_04_80046600(D_ovl0B_04_8004A16C, 0);
     o = func_ovl0B_04_80048608();
     o->unk36 = 0;
     o->unkC |= 0x80;
@@ -1074,13 +1077,13 @@ static void func_ovl0B_04_80046734(u8 item, u16 buttons) {
                                &D_ovl0B_04_8004A404->unk8[HALF_IDX(item, D_ovl0B_04_8004A1A8)]);
         D_ovl0B_04_8004A174 = item;
     } else if ((buttons & 0x80) || (buttons & 0x100)) {
-        func_ovl0B_04_80046600(buttons, item);
+        func_ovl0B_04_80046600(item, buttons);
         D_ovl0B_04_8004A174 = item;
     }
 }
 
 /* Pages 5-8: the other half of the choices, and its arrows. */
-static void func_ovl0B_04_80046600(u16 buttons, u8 item) {
+static void func_ovl0B_04_80046600(u8 item, u16 buttons) {
     if (D_ovl0B_04_8004A1A8 == 0 && (buttons & 0x100)) {
         D_ovl0B_04_8004A1A4 = D_ovl0B_04_8004A1A8;
         D_ovl0B_04_8004A1A8++;
@@ -1113,7 +1116,9 @@ static void func_ovl0B_04_80046294(u8 item) {
 
     D_ovl0B_04_80048B98[5] = D_ovl0B_04_8004A1A8 + 0x11;
     func_ovl0B_04_80048690(D_ovl0B_04_8004A404->unk4[8], D_ovl0B_04_80048B98, 5);
-    for (j = 1, k = 0, i = D_ovl0B_04_8004A1A8 * 5, n = i + 5; i < n; i++, j++, k++) {
+    i = D_ovl0B_04_8004A1A8 * 5;
+    n = i + 5;
+    for (j = 1, k = 0; i < n; i++, j++, k++) {
         if (D_ovl0B_04_8004A480[i + 1] == 0) {
             D_ovl0B_04_8004A40C[k] = DRAW_ITEM(D_ovl0B_04_80048B88, &D_ovl0B_04_8004A404->unk8[j]);
             D_ovl0B_04_8004A404->unk8[j].unk0 = D_ovl0B_04_80048B88;
@@ -1459,9 +1464,9 @@ u8 func_ovl0B_04_80044BE8(u8 arg0, u16 arg1) {
                     D_ovl0B_04_8004A290[i][0] = D_ovl0B_04_80048A20[i];
                     D_ovl0B_04_8004A290[i][1] = 0;
                 }
-                func_ovl0B_04_80043A7C(D_ovl0B_04_80049308, D_ovl0B_04_8004A448, 8);
-                func_ovl0B_04_80043A24(D_ovl0B_04_800493A8, D_ovl0B_04_8004A468, 1);
-                func_ovl0B_04_80043A7C(D_ovl0B_04_800493BC, &D_ovl0B_04_8004A468[1], 5);
+                func_ovl0B_04_80043A7C(8, D_ovl0B_04_8004A448, D_ovl0B_04_80049308);
+                func_ovl0B_04_80043A24(1, D_ovl0B_04_8004A468, D_ovl0B_04_800493A8);
+                func_ovl0B_04_80043A7C(5, &D_ovl0B_04_8004A468[1], D_ovl0B_04_800493BC);
                 a = func_ovl0B_04_80048668(D_ovl0B_04_8004A468[1]);
                 b = func_ovl0B_04_80048668(D_ovl0B_04_8004A468[2]);
                 a->unk36 = 0;
@@ -1502,7 +1507,6 @@ u8 func_ovl0B_04_80044BE8(u8 arg0, u16 arg1) {
     }
     if (0) {
         func_ovl0B_04_8004471C(0, 0);
-        func_ovl0B_04_80044714();
         func_ovl0B_04_800447DC(0, 0);
         func_ovl0B_04_80044624();
         func_ovl0B_04_8004461C();
@@ -1515,7 +1519,7 @@ u8 func_ovl0B_04_80044BE8(u8 arg0, u16 arg1) {
 
 /* The character before the cursor: the marks it can take (the 0x1E00
  * buttons put them on in turn), shown in D_ovl0B_04_80048A70. */
-static u8 func_ovl0B_04_Mark27(u8 set, u8 c) {
+static u8 func_ovl0B_04_80044714(u8 set, u8 c) {
     u8 r = 0;
 
     switch (set) {
@@ -1537,7 +1541,6 @@ static u8 func_ovl0B_04_Mark27(u8 set, u8 c) {
 }
 
 static void func_ovl0B_04_800447DC(u16 buttons, u8 *ret) {
-    u8 ch;
     u8 set;
     u8 idx;
     u8 c;
@@ -1548,14 +1551,14 @@ static void func_ovl0B_04_800447DC(u16 buttons, u8 *ret) {
     s32 t;
 
     if (D_ovl0B_04_8004A490.unk0 == 0) {
-        ch = 0;
+        c = 0;
     } else if (D_ovl0B_04_8004A490.unk0 == 7 && D_ovl0B_04_8004A290[D_ovl0B_04_8004A490.unk0][0] != 0) {
-        ch = D_ovl0B_04_8004A290[D_ovl0B_04_8004A490.unk0][0];
+        c = D_ovl0B_04_8004A290[D_ovl0B_04_8004A490.unk0][0];
     } else {
-        ch = D_ovl0B_04_8004A290[D_ovl0B_04_8004A490.unk0 - 1][0];
+        c = D_ovl0B_04_8004A290[D_ovl0B_04_8004A490.unk0 - 1][0];
     }
-    set = D_ovl0B_04_8004905C[ch];
-    idx = D_ovl0B_04_80048F5C[ch];
+    set = D_ovl0B_04_8004905C[c];
+    idx = D_ovl0B_04_80048F5C[c];
     if (set == 1 || set == 2) {
         n = 0;
         c = func_ovl0B_04_8004426C(set, idx);
@@ -1563,7 +1566,7 @@ static void func_ovl0B_04_800447DC(u16 buttons, u8 *ret) {
         if (d1) {
             n = 1;
         }
-        d2 = func_ovl0B_04_Mark27(set, c);
+        d2 = func_ovl0B_04_80044714(set, c);
         if (d2) {
             n++;
         }
@@ -1650,7 +1653,7 @@ static void func_ovl0B_04_800447DC(u16 buttons, u8 *ret) {
     func_ovl0B_04_80048640(D_ovl0B_04_8004A468[5], D_ovl0B_04_80048A70, 5);
 }
 
-static u8 func_ovl0B_04_8004471C(u8 set, u8 c) {
+static s32 func_ovl0B_04_8004471C(u8 set, u8 c) {
     u8 r = 0;
 
     switch (set) {
@@ -1678,7 +1681,7 @@ static u8 func_ovl0B_04_8004471C(u8 set, u8 c) {
     }
 }
 
-static u8 func_ovl0B_04_8004462C(u8 set, u8 c) {
+static s32 func_ovl0B_04_8004462C(u8 set, u8 c) {
     u8 r = 0;
 
     switch (set) {
@@ -1940,6 +1943,7 @@ void func_ovl0B_04_80043E4C(s32 arg0, UnkStructA *arg1) {
 /* The menu task: each page in turn until one leaves with 0xFF. */
 void func_ovl0B_04_80043ADC(void) {
     Page *p;
+    Page *p3;
     Obj *menu;
     s32 i;
 
@@ -1947,10 +1951,11 @@ void func_ovl0B_04_80043ADC(void) {
     D_ovl0B_04_8004A168 = 0;
     while (D_ovl0B_04_8004A168 != 0xFF) {
         p = &D_ovl0B_04_800499B8[D_ovl0B_04_8004A168];
-        if (p == &D_ovl0B_04_800499B8[3] || p == &D_ovl0B_04_800499B8[4]) {
-            func_ovl0B_04_80043A7C(p->unk8, p->unk4, p->unk0);
+        p3 = &D_ovl0B_04_800499B8[3];
+        if (p == p3 || p == &D_ovl0B_04_800499B8[4]) {
+            func_ovl0B_04_80043A7C(p->unk0, p->unk4, p->unk8);
         } else {
-            func_ovl0B_04_80043A24(p->unk8, p->unk4, p->unk0);
+            func_ovl0B_04_80043A24(p->unk0, p->unk4, p->unk8);
         }
         menu = func_ovl0B_04_800485D0(p->unkC, p->unk10, p->unk16, p->unk18, p->unk1A);
         if (p->unk1C != 2) {
@@ -1962,16 +1967,13 @@ void func_ovl0B_04_80043ADC(void) {
             p->unk20(menu);
         }
         func_ovl0B_04_800485F0();
-        for (i = 0; i < p->unk0; i++) {
-            func_ovl0B_04_80048638(p->unk4[i]);
-        }
+        func_ovl0B_04_80043AD4(p->unk4, p->unk0);
         func_ovl0B_04_800485E8();
         func_ovl0B_04_80048268(2);
     }
     func_ovl0B_04_800477F0(0x1F, 0x11, 0);
     func_ovl0B_04_80048258();
     if (0) {
-        func_ovl0B_04_80043AD4();
         func_ovl0B_04_80043A7C(0, 0, 0);
         func_ovl0B_04_80043A24(0, 0, 0);
         func_ovl0B_04_800438FC(0, 0, 0);
@@ -1980,7 +1982,7 @@ void func_ovl0B_04_80043ADC(void) {
 }
 
 /* A page's texts written (0x2501 for pages 3 and 4, 0x250C otherwise). */
-static void func_ovl0B_04_80043A7C(Item *items, s32 *ids, s32 n) {
+static void func_ovl0B_04_80043A7C(s32 n, s32 *ids, Item *items) {
     s32 i;
 
     for (i = 0; i < n; i++, ids++, items++) {
@@ -1988,7 +1990,7 @@ static void func_ovl0B_04_80043A7C(Item *items, s32 *ids, s32 n) {
     }
 }
 
-static void func_ovl0B_04_80043A24(Item *items, s32 *ids, s32 n) {
+static void func_ovl0B_04_80043A24(s32 n, s32 *ids, Item *items) {
     s32 i;
 
     for (i = 0; i < n; i++, ids++, items++) {
