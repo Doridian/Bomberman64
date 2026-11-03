@@ -1,10 +1,5 @@
 /*
- * NON_MATCHING: ovl_0C_01's game object, complete: every function and its
- * data (.data 0x520, .rodata 0x3B0 and .bss 0x70; the .data and .rodata
- * words are the original's, though IDO puts the scripts' strings in .rodata).
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * ovl_0C_01's game object, IDO -O3; it matches in us, eu and jp.
  *
  * The first draft took the ratio-1.00 siblings' C (scratch/0C_01/sib.py:
  * ovl_0C_06, 0C_07, 0C_09, 0C_04, 0C_02) and m2c's output for the rest.
@@ -1752,7 +1747,7 @@ void func_ovl0C_01_800452F4(UnkStruct_ovl0C_01_8004A584 *arg0) {
     func_ovl0C_01_80048EB0(0x29, arg0->unk10, 0);
 }
 
-void func_ovl0C_01_800452EC(void) {
+void func_ovl0C_01_800452EC(void) { if (0) { D_ovl0C_01_8004A9A0[0] = D_ovl0C_01_8004A9AC[0]; } /* a fake: keeps the unused words in .bss */
 }
 
 void func_ovl0C_01_80045194(void) {

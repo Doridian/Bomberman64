@@ -1,11 +1,7 @@
 /*
- * NON_MATCHING: ovl_0B_01's game object (the title screen: PUSH START, the
- * copyright line, the four-item menu and its cheat-code task), complete:
- * every function and its data (.data 0x110, .rodata 0x70, .bss 0x70, as
- * the original). Not built into the ROM (docs/DECOMPILING.md,
- * "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * ovl_0B_01's game object (the title screen: PUSH START, the copyright
+ * line, the four-item menu and its cheat-code task), IDO -O3; it matches
+ * in us, eu and jp.
  *
  * IDO -O3: the functions are written last to first (IDO -O3 emits a file's
  * functions in reverse). The strings, the copyright line and the menu
@@ -15,10 +11,10 @@
  * where the original has $v1. Empty statics stand for the stubs before
  * 800430A4, 80043D64 and 80043DD4. eu's cheat code counts presses over
  * 50 frames, not 60 (`#if VERSION_EU`).
+ * jp's four menu strings are its own; the second is declared [12] for
+ * the four zero bytes after it.
  *
- * Every function matches in all three versions (tools/fcmp.py); it stays
- * here until it is moved to src/ and checked in the full build. What made
- * the last ones match:
+ * What made the last ones match:
  * - func_ovl0B_01_8004464C: the empty static 800445E4 is defined in
  *   "panels.c" (a fake `#line`) and inlined after `fade`'s address is
  *   taken: its `.file` ends as1's block there, so the address comes before
@@ -159,10 +155,17 @@ static void func_ovl0B_01_8004464C(s32 arg0, Gfx_ovl0B_01 **arg1);
 static void func_ovl0B_01_800430A4(UnkStruct_ovl0B_01_80045E34 *arg0);
 
 /* .data */
+#if VERSION_JP
+u8 D_ovl0B_01_80045E00[] = "ls\xF9\x87\xF9\x82\xF9\x9A";
+u8 D_ovl0B_01_80045E0C[12] = "\x0F\x9Bs\x88\x82\xF9\x9A";
+u8 D_ovl0B_01_80045E18[] = "elo\x80\x9F_\x9B\xF9";
+u8 D_ovl0B_01_80045E24[] = "\x0F" "d\xA2k]_";
+#else
 u8 D_ovl0B_01_80045E00[] = "\x1A=O>GMNK>";
 u8 D_ovl0B_01_80045E0C[] = "\x0F\x0F\x0F\x1B:MME>";
 u8 D_ovl0B_01_80045E18[] = "\x0F\x0F\x1CNLMHF";
 u8 D_ovl0B_01_80045E24[] = "\x0F\x0F(IMBHGL";
+#endif
 s32 D_ovl0B_01_80045E30 = 0;
 UnkStruct_ovl0B_01_80045E34 D_ovl0B_01_80045E34 = {
     NULL, 0x1E, 0x1E, 0x1E, 0xB4, 0.0f, 160.0f, 1.0f, 0.75f, 160, 160, 160, 120, 0.0f, 0, 0x80,

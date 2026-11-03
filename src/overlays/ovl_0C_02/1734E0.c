@@ -1,10 +1,5 @@
 /*
- * NON_MATCHING: ovl_0C_02's game object, complete: every function and its
- * data (.data 0x640, .rodata 0xD0 and .bss 0x60 laid out as the
- * original).
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * ovl_0C_02's game object, IDO -O3; it matches in us, eu and jp.
  *
  * The first draft took the shared functions from bank 0x0C's and
  * 0x12/0x17's drafts (scratch/0C_02/sib.py) and m2c's output for the
@@ -1338,7 +1333,7 @@ void func_ovl0C_02_80046038(void) {
     func_ovl0C_02_80049498(0x404);
 }
 
-void func_ovl0C_02_80046030(void) {
+void func_ovl0C_02_80046030(void) { if (0) { D_ovl0C_02_8004A0FC[0] = 0; } /* a fake: keeps the unused word in .bss */
 }
 
 void func_ovl0C_02_80045E8C(void) {

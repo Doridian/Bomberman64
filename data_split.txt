@@ -168,10 +168,23 @@ boot_code @us libultra/libc/xldtob rodata=0x8001BF60
 boot_code @eu libultra/libc/xldtob rodata=0x8001BF60
 boot_code @jp libultra/libc/xldtob rodata=0x8001BF40
 
+# ovl_0B_01: all C (-O3); jp has its own strings
+ovl_0B_01 ovl_0B_01_entry 0 0 0
+ovl_0B_01 1457B0 0x110 0x70 0x70
+ovl_0B_01 @jp 1457B0 sizes=0xB0,0x60,0x70
+
 # ovl_0B_05: all C (-O3); jp has its own strings
 ovl_0B_05 ovl_0B_05_entry 0 0 0
 ovl_0B_05 15D020 0x140 0xE0 0xA0
 ovl_0B_05 @jp 15D020 sizes=0x110,0xE0,0xA0
+
+# ovl_0C_01: all C (-O3)
+ovl_0C_01 ovl_0C_01_entry 0 0 0
+ovl_0C_01 16BB60 0x520 0x3B0 0x70
+
+# ovl_0C_02: all C (-O3)
+ovl_0C_02 ovl_0C_02_entry 0 0 0
+ovl_0C_02 1734E0 0x640 0xD0 0x60
 
 # ovl_0C_03: all C (-O3); .rodata is its floats and the handler's jump table
 ovl_0C_03 ovl_0C_03_entry 0 0 0
