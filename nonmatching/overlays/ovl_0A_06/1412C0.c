@@ -9,11 +9,12 @@
  * goes through 0x2501 and 0x2503, with 0x2505 for 80043B5C's offsets.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 66, eu 66, jp 56
+ * differing words: us 62, eu 62, jp 52
  *
  * What still differs in us (words):
- * - func_ovl0A_06_80043010 (17; the statics up to 80043B5C): 8004311C's
- *   `ret = 1` uses s8 (the 1) where the original has `li` (6); 80043250's
+ * - func_ovl0A_06_80043010 (13; the statics up to 80043B5C): 8004311C's
+ *   `ret = 2` comes before the wait's `li s0,15`, not after it (2: ret = 2
+ *   on a later #line, or after the SE, moves it past the call); 80043250's
  *   buffer at sp+40, not 32 (9): the original's frame has 12 bytes above
  *   the buffer and none below it for an inlined static (calling 0x101
  *   directly with three locals above the buffer gives that frame, but
@@ -57,7 +58,11 @@
  *   (as 80044F50 below), and 80043250 takes (value, dest): `li s2,10`
  *   and `move s2,s3` fall where the original has them.
  * - 8004311C: `pressed` is s32, with 0xF03 returning u16 (the original's
- *   `move v1,v0`, no `andi`).
+ *   `move v1,v0`, no `andi`). ret is u32, so its 1 is not the s32 1 kept
+ *   in s8 (the original's `li s7,1`), and both `ret = 1` are on a later
+ *   line (#line 1700), which puts them after the wait's `li s0,10` (the
+ *   #lines after them restore the file's numbering: keep them in step if
+ *   lines are added above).
  */
 #include "common.h"
 
@@ -1635,7 +1640,7 @@ static void func_ovl0A_06_80043248(u8 *str, s32 value) {
 
 static s32 func_ovl0A_06_8004311C(void) {
     s32 wait;
-    s32 ret = 0;
+    u32 ret = 0;
     s32 held;
     s32 pressed;
 
@@ -1651,7 +1656,9 @@ static s32 func_ovl0A_06_8004311C(void) {
             D_ovl0A_06_80047018 = 1;
             func_ovl0A_06_80043020(0, 1);
         } else if ((pressed & 0x8000) || (pressed & 0x1000)) {
+#line 1700
             ret = 1;
+#line 1660
             if (D_ovl0A_06_80047018 == 0) {
                 ret = 2;
                 SE(1, 1);
@@ -1659,7 +1666,9 @@ static s32 func_ovl0A_06_8004311C(void) {
                 SE(2, 2);
             }
         } else if (pressed & 0x4000) {
+#line 1700
             ret = 1;
+#line 1668
             SE(2, 2);
         }
         func_ovl0A_06_800465A0();
