@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1180, eu 1180, jp 1176
+ * differing words: us 1172, eu 1172, jp 1168
  *
  * Order (scratch/ord/search.py, hill-climb over definition order, scored by
  * the emitted sequence's edit distance from the original's address order):
@@ -1620,7 +1620,7 @@ u8 func_ovl0B_04_80044BE8(u8 arg0, u16 arg1) {
 /* The character before the cursor: the marks it can take (the 0x1E00
  * buttons put them on in turn), shown in D_ovl0B_04_80048A70. */
 static u8 func_ovl0B_04_80044714(u8 set, u8 c) {
-    u8 r = 0;
+    s32 r = 0;
 
     switch (set) {
         case 1:
@@ -1729,7 +1729,7 @@ static void func_ovl0B_04_800447DC(u16 buttons, u8 *ret) {
                 if (D_ovl0B_04_8004A490.unk1 != c) {
                     D_ovl0B_04_8004A490.unk1 = c;
                     t = 0;
-                    if (D_ovl0B_04_8004A490.unk0 != 7 || D_ovl0B_04_8004A290[7][0] == 0) {
+                    if ((D_ovl0B_04_8004A490.unk0 == 7 && D_ovl0B_04_8004A290[7][0] == 0) || D_ovl0B_04_8004A490.unk0 != 7) {
                         D_ovl0B_04_8004A490.unk0--;
                         t = 1;
                     }
@@ -1786,6 +1786,8 @@ static s32 func_ovl0B_04_8004462C(u8 set, u8 c) {
     s32 r = 0;
 
     switch (set) {
+        default:
+            return 0;
         case 1:
             if (c >= 0xB0 && c < 0xB5) {
                 return -0xB;
@@ -1796,10 +1798,7 @@ static s32 func_ovl0B_04_8004462C(u8 set, u8 c) {
             if (c == 0xC1) {
                 return -0x17;
             }
-            /* fallthrough */
-        case 3:
-        case 4:
-            return r;
+            break;
         case 2:
             if (c >= 0x60 && c < 0x65) {
                 return -0xB;
@@ -1810,10 +1809,12 @@ static s32 func_ovl0B_04_8004462C(u8 set, u8 c) {
             if (c == 0x71) {
                 r = -0x17;
             }
-            return r;
-        default:
-            return 0;
+            break;
+        case 3:
+        case 4:
+            break;
     }
+    return r;
 }
 
 /* No marks: the mark texts back at their places. */
