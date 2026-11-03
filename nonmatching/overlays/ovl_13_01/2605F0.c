@@ -9,7 +9,7 @@
  * .bss 0x1F0 as the original). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 5887, eu 5887, jp 5887
+ * differing words: us 3948, eu 3948, jp 3948
  *
  * A first draft from m2c (with the ZeroJump prototypes the other drafts give
  * the same codes), made to compile: vectors as Vec3f, the pointer loops over
@@ -21,24 +21,28 @@
  * inlined-once statics before their callers; 8004A898-8004A8E0 are the ten
  * unused statics after the tail, defined first in ascending order.
  *
- * Source order: not simply the reverse of the address order. With every
- * definition in descending order IDO emitted 800473A8, 80048B6C and others
- * far from their places (9232 words); the order below is the one
- * scratch/13_01/climb.py found by moving one definition at a time (5895).
- * Still out of place: 800430CC after 80043124, 800473A8 and 80048418 after
- * 80048B6C, 8004956C before 80049158; most of the words of 800473A8,
- * 80048418, 800490DC, 800493EC, 800481D0 and 800471D8 are that.
+ * Source order: every function comes out in .text in the original's order.
+ * IDO processes definitions last to first and pulls a function's callees
+ * out before it; 800496E0's indirect call (`arg3()`) counts as a call of
+ * every address-taken function, which come out (those not out yet) in the
+ * reverse of the order their addresses first appear in the source. So
+ * 800496E0 is defined just above 80047144 (processed right after it, it
+ * pulls 800471D8 through 8004956C), 80043124 above 80043158 (which pulls
+ * 800430CC first), 8004A3E8 and 8004A4C4 above 8004A6FC (which pulls
+ * them), 800493EC and 80049158 just above 80049870, and 8004A4C4's
+ * `func_ovl13_01_8004AD20(func_ovl13_01_80048B6C)` sits in the static
+ * 8004A4AC, defined between 80049158 and 80049870: 8004956C, 800493EC,
+ * 80049158, 800490DC, 80048E2C, 80048BB0, 80048B6C, 8004899C, 80048418,
+ * 800471D8 is the order their addresses must first appear in.
  *
- * What still differs in us (words): 800473A8 940, 80049870 467, 800446FC
- * 393, 80048418 373, 80043878 348, 80044160 331, 800477C0 299, 800450B4
- * 282, 800490DC 261, 80045F14 237, 800431D4 230, 800455D0 218, 800471D8
- * 173, 800493EC 166, 800481D0 153, 80048E2C 142, 800491B4 131, 80047CB4
- * 113, 80048BB0 112, 800475EC 112; under 50 each: 8004306C, 80043124,
- * 80043608, 80043830, 8004400C, 80045538, 80045B0C, 80045C60, 80045C9C,
- * 80045DAC, 8004636C, 800465FC, 80046800, 80046C2C, 80046DC4, 80046E00,
- * 80046FA8, 80047144, 80047F74, 80048AF0, 8004956C, 800496E0, 8004A088,
- * 8004A208, 8004A2D4, 8004A4C4. The other 36 match. .text is 0x150
- * short of the original's, .rodata 0x10 long.
+ * What still differs in us (words): 80049870 467, 800446FC 393, 80043878
+ * 348, 80044160 331, 800477C0 299, 800450B4 282, 80045F14 237, 800431D4 230,
+ * 800455D0 218, 80048E2C 142, 800491B4 131, 80047CB4 113, 800475EC 112,
+ * 80048BB0 112, 800493EC 73, 800471D8 59; under 50 each: 80043608, 80043830,
+ * 8004400C, 80045538, 80045B0C, 80045C60, 80045C9C, 80045DAC, 8004636C,
+ * 800465FC, 80046800, 80046C2C, 80046DC4, 80046E00, 80046FA8, 80047144,
+ * 800473A8, 80047F74, 800481D0, 80048418, 80048AF0, 8004956C, 800496E0,
+ * 8004A088, 8004A208, 8004A2D4, 8004A4C4. The other 39 match.
  */
 #include "common.h"
 
@@ -250,6 +254,7 @@ u8 D_ovl13_01_8004C3EC[4];
 void func_ovl13_01_80043010(void);
 void func_ovl13_01_8004306C(s32 arg0);
 static void func_ovl13_01_800430CC(UnkStructA *arg0);
+static void func_ovl13_01_8004A4AC(void);
 void func_ovl13_01_80043124(s32 arg0, UnkStructA *arg1);
 void func_ovl13_01_80043158(void);
 void func_ovl13_01_800431D4(void);
@@ -388,6 +393,63 @@ void func_ovl13_01_8004A7DC(f32 arg0) {
     func_ovl13_01_8004B498(sp1C + arg0, 32768.0f, 32768.0f);
 }
 
+void func_ovl13_01_8004A3E8(void) {
+    func_ovl13_01_8004ADB0(0);
+    func_ovl13_01_8004B4E0(0x1F);
+    func_ovl13_01_8004B4F0(2);
+    func_ovl13_01_8004B530(25.0f, 25.0f);
+    func_ovl13_01_8004B498(0.0f, 25.0f, 2500.0f);
+    D_ovl13_01_8004C24C = 1.0f;
+    D_ovl13_01_8004C250 = 600.0f;
+    func_ovl13_01_8004B630(0);
+    func_ovl13_01_80043608();
+    if (*D_ovl13_01_8004C23C & 2) {
+        func_ovl13_01_8004B788(func_ovl13_01_8004956C, NULL, 0, 0, 0x130);
+    }
+    func_ovl13_01_8004B9C0();
+}
+
+static void func_ovl13_01_8004A4BC(void) {
+}
+
+static void func_ovl13_01_8004A4B4(void) {
+}
+
+void func_ovl13_01_8004A4C4(void) {
+    UnkStructC *temp_v0;
+
+    func_ovl13_01_8004A4BC();
+    func_ovl13_01_8004A4B4();
+    D_ovl13_01_8004C254 = func_ovl13_01_8004B660(0x292, 0x01000000, 0xD0, NULL);
+    D_ovl13_01_8004C25C = func_ovl13_01_8004B660(0x294, 0x01080000, 0xD0, NULL);
+    D_ovl13_01_8004C258 = func_ovl13_01_8004B660(0x293, 0x01080000, 0xD0, NULL);
+    D_ovl13_01_8004C25C->unk40->unk36 = 0xB2;
+    D_ovl13_01_8004C258->unk40->unk36 = D_ovl13_01_8004C25C->unk40->unk36;
+    func_ovl13_01_8004AC50(0x295);
+    func_ovl13_01_8004ADE8();
+    func_ovl13_01_8004AE78(func_ovl13_01_8004AE18())->unk40->unk20 = 180.0f;
+    func_ovl13_01_8004A088();
+    func_ovl13_01_8004AC48(D_ovl13_01_8004C270);
+    D_ovl13_01_8004C260.y = 0.0f;
+    D_ovl13_01_8004C260.x = ((f32) ((s32) D_ovl13_01_8004C270[0] / 2) * 100.0f) - 50.0f;
+    D_ovl13_01_8004C260.z = (f32) (((f32) ((s32) D_ovl13_01_8004C270[2] / 2) * 100.0f) - 50.0f);
+    func_ovl13_01_8004A4AC();
+    func_ovl13_01_8004AD18(func_ovl13_01_800493EC, 5);
+    func_ovl13_01_8004AD70(func_ovl13_01_80049158);
+    temp_v0 = func_ovl13_01_8004B810(0x296);
+    D_ovl13_01_8004C27C = temp_v0;
+    func_ovl13_01_8004B820(temp_v0, 0x20000000);
+    D_ovl13_01_8004C27C->unk40 = 0.5f;
+    D_ovl13_01_8004C27C->unk44 = D_ovl13_01_8004C27C->unk40 * 0.75f;
+    D_ovl13_01_8004C27C->unk3C = D_ovl13_01_8004C27C->unk4C * 0.25f;
+    D_ovl13_01_8004C21C = func_ovl13_01_8004AE18();
+    func_ovl13_01_8004ADF8(&D_ovl13_01_8004C210.x);
+    func_ovl13_01_8004AE20(D_ovl13_01_8004C21C, &D_ovl13_01_8004C200.x);
+    func_ovl13_01_8004B770();
+    func_ovl13_01_8004B9A8();
+    func_ovl13_01_80049870();
+}
+
 void func_ovl13_01_8004A6FC(s32 arg0) {
     switch (arg0) {
     case 2:
@@ -420,67 +482,6 @@ void func_ovl13_01_8004A6FC(s32 arg0) {
     }
 }
 
-static void func_ovl13_01_8004A4BC(void) {
-}
-
-static void func_ovl13_01_8004A4B4(void) {
-}
-
-static void func_ovl13_01_8004A4AC(void) {
-}
-
-void func_ovl13_01_8004A4C4(void) {
-    UnkStructC *temp_v0;
-
-    func_ovl13_01_8004A4BC();
-    func_ovl13_01_8004A4B4();
-    func_ovl13_01_8004A4AC();
-    D_ovl13_01_8004C254 = func_ovl13_01_8004B660(0x292, 0x01000000, 0xD0, NULL);
-    D_ovl13_01_8004C25C = func_ovl13_01_8004B660(0x294, 0x01080000, 0xD0, NULL);
-    D_ovl13_01_8004C258 = func_ovl13_01_8004B660(0x293, 0x01080000, 0xD0, NULL);
-    D_ovl13_01_8004C25C->unk40->unk36 = 0xB2;
-    D_ovl13_01_8004C258->unk40->unk36 = D_ovl13_01_8004C25C->unk40->unk36;
-    func_ovl13_01_8004AC50(0x295);
-    func_ovl13_01_8004ADE8();
-    func_ovl13_01_8004AE78(func_ovl13_01_8004AE18())->unk40->unk20 = 180.0f;
-    func_ovl13_01_8004A088();
-    func_ovl13_01_8004AC48(D_ovl13_01_8004C270);
-    D_ovl13_01_8004C260.y = 0.0f;
-    D_ovl13_01_8004C260.x = ((f32) ((s32) D_ovl13_01_8004C270[0] / 2) * 100.0f) - 50.0f;
-    D_ovl13_01_8004C260.z = (f32) (((f32) ((s32) D_ovl13_01_8004C270[2] / 2) * 100.0f) - 50.0f);
-    func_ovl13_01_8004AD20(func_ovl13_01_80048B6C);
-    func_ovl13_01_8004AD18(func_ovl13_01_800493EC, 5);
-    func_ovl13_01_8004AD70(func_ovl13_01_80049158);
-    temp_v0 = func_ovl13_01_8004B810(0x296);
-    D_ovl13_01_8004C27C = temp_v0;
-    func_ovl13_01_8004B820(temp_v0, 0x20000000);
-    D_ovl13_01_8004C27C->unk40 = 0.5f;
-    D_ovl13_01_8004C27C->unk44 = D_ovl13_01_8004C27C->unk40 * 0.75f;
-    D_ovl13_01_8004C27C->unk3C = D_ovl13_01_8004C27C->unk4C * 0.25f;
-    D_ovl13_01_8004C21C = func_ovl13_01_8004AE18();
-    func_ovl13_01_8004ADF8(&D_ovl13_01_8004C210.x);
-    func_ovl13_01_8004AE20(D_ovl13_01_8004C21C, &D_ovl13_01_8004C200.x);
-    func_ovl13_01_8004B770();
-    func_ovl13_01_8004B9A8();
-    func_ovl13_01_80049870();
-}
-
-void func_ovl13_01_8004A3E8(void) {
-    func_ovl13_01_8004ADB0(0);
-    func_ovl13_01_8004B4E0(0x1F);
-    func_ovl13_01_8004B4F0(2);
-    func_ovl13_01_8004B530(25.0f, 25.0f);
-    func_ovl13_01_8004B498(0.0f, 25.0f, 2500.0f);
-    D_ovl13_01_8004C24C = 1.0f;
-    D_ovl13_01_8004C250 = 600.0f;
-    func_ovl13_01_8004B630(0);
-    func_ovl13_01_80043608();
-    if (*D_ovl13_01_8004C23C & 2) {
-        func_ovl13_01_8004B788(func_ovl13_01_8004956C, NULL, 0, 0, 0x130);
-    }
-    func_ovl13_01_8004B9C0();
-}
-
 void func_ovl13_01_8004A39C(void) {
     if (*D_ovl13_01_8004C23C & 2) {
         func_ovl13_01_8004B788(func_ovl13_01_8004956C, NULL, 0, 0, 0x130);
@@ -502,46 +503,6 @@ void func_ovl13_01_8004A2D4(void) {
         func_ovl13_01_8004BA00(0x400);
     }
     func_ovl13_01_8004B788(func_ovl13_01_800490DC, (void *)0x11, 0, 0, 0x150);
-}
-
-void func_ovl13_01_800493EC(UnkStructA *arg0) {
-    Vec3f sp3C;
-    Vec3f sp30;
-    s32 temp_t5;
-    s32 temp_v1;
-    Vec3f *temp_a1;
-
-    if (func_ovl13_01_8004BA10(0x415) != 0) {
-        func_ovl13_01_8004B708(arg0, &sp30.x);
-        func_ovl13_01_8004B5C8(&D_ovl13_01_8004C388.x, &sp30.x, &sp3C.x);
-        if (!(D_ovl13_01_8004C388.y < sp30.y) && !(sp3C.z > 1000.0f)) {
-            func_ovl13_01_800491B4(arg0, &sp3C.x);
-            if (arg0->unk68 == 0.0f) {
-                if (arg0->unk6C == 0.0f) {
-                    temp_v1 = D_ovl13_01_8004C284;
-                    if ((temp_v1 == D_ovl13_01_8004C288) && (D_ovl13_01_8004C280 < 0xA)) {
-                        D_ovl13_01_8004C280 += 1;
-                        func_ovl13_01_8004B708(arg0, &(&D_ovl13_01_8004C3E0)[D_ovl13_01_8004C288].x);
-                        temp_a1 = &(&D_ovl13_01_8004C3E0)[D_ovl13_01_8004C288];
-                        temp_a1->y += 25.0f;
-                        func_ovl13_01_8004B788(func_ovl13_01_80048E2C, temp_a1, 0, 0, 0x150);
-                    }
-                    temp_t5 = temp_v1 + 1;
-                    D_ovl13_01_8004C284 = temp_t5;
-                    if (temp_t5 >= 0xA) {
-                        D_ovl13_01_8004C284 = 0;
-                    }
-                }
-            }
-        }
-    }
-}
-
-void func_ovl13_01_80049158(UnkStructA *arg0) {
-    func_ovl13_01_80043124(0x1E, D_ovl13_01_8004C31C);
-    func_ovl13_01_8004BD10(0xDB);
-    func_ovl13_01_8004B788(func_ovl13_01_80048BB0, arg0, 0, 0, 0x150);
-    func_ovl13_01_8004B7A8(0x78);
 }
 
 static void func_ovl13_01_8004A200(void) {
@@ -608,6 +569,50 @@ void func_ovl13_01_8004A088(void) {
     if (M2C_FIELD(temp_v0, s32 *, 0x10) == 0) {
         func_ovl13_01_8004BA00(0x41F);
     }
+}
+
+void func_ovl13_01_800493EC(UnkStructA *arg0) {
+    Vec3f sp3C;
+    Vec3f sp30;
+    s32 temp_t5;
+    s32 temp_v1;
+    Vec3f *temp_a1;
+
+    if (func_ovl13_01_8004BA10(0x415) != 0) {
+        func_ovl13_01_8004B708(arg0, &sp30.x);
+        func_ovl13_01_8004B5C8(&D_ovl13_01_8004C388.x, &sp30.x, &sp3C.x);
+        if (!(D_ovl13_01_8004C388.y < sp30.y) && !(sp3C.z > 1000.0f)) {
+            func_ovl13_01_800491B4(arg0, &sp3C.x);
+            if (arg0->unk68 == 0.0f) {
+                if (arg0->unk6C == 0.0f) {
+                    temp_v1 = D_ovl13_01_8004C284;
+                    if ((temp_v1 == D_ovl13_01_8004C288) && (D_ovl13_01_8004C280 < 0xA)) {
+                        D_ovl13_01_8004C280 += 1;
+                        func_ovl13_01_8004B708(arg0, &(&D_ovl13_01_8004C3E0)[D_ovl13_01_8004C288].x);
+                        temp_a1 = &(&D_ovl13_01_8004C3E0)[D_ovl13_01_8004C288];
+                        temp_a1->y += 25.0f;
+                        func_ovl13_01_8004B788(func_ovl13_01_80048E2C, temp_a1, 0, 0, 0x150);
+                    }
+                    temp_t5 = temp_v1 + 1;
+                    D_ovl13_01_8004C284 = temp_t5;
+                    if (temp_t5 >= 0xA) {
+                        D_ovl13_01_8004C284 = 0;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void func_ovl13_01_80049158(UnkStructA *arg0) {
+    func_ovl13_01_80043124(0x1E, D_ovl13_01_8004C31C);
+    func_ovl13_01_8004BD10(0xDB);
+    func_ovl13_01_8004B788(func_ovl13_01_80048BB0, arg0, 0, 0, 0x150);
+    func_ovl13_01_8004B7A8(0x78);
+}
+
+static void func_ovl13_01_8004A4AC(void) {
+    func_ovl13_01_8004AD20(func_ovl13_01_80048B6C);
 }
 
 void func_ovl13_01_80049870(void) {
@@ -1068,6 +1073,13 @@ void func_ovl13_01_80048BB0(void) {
     func_ovl13_01_8004B798();
 }
 
+void func_ovl13_01_80048B6C(UnkStructA *arg0) {
+    if (arg0->unk8 & 1) {
+        func_ovl13_01_8004BA08(0x41A);
+    }
+    func_ovl13_01_80048AF0(arg0);
+}
+
 void func_ovl13_01_80048AF0(UnkStructA *arg0) {
     UnkStructA_40 *temp_v0;
     s16 temp_v1;
@@ -1085,115 +1097,6 @@ void func_ovl13_01_80048AF0(UnkStructA *arg0) {
         func_ovl13_01_8004B7D0();
         var_s0 += 1;
     } while (var_s0 != 0x3C);
-}
-
-void func_ovl13_01_80048418(void) {
-    s32 i;
-    UnkStructA_40_48_4 *temp_v0;
-    f32 temp_fv0;
-    f32 var_fv1;
-
-loop_1:
-    func_ovl13_01_800481D0();
-    func_ovl13_01_80046800();
-    func_ovl13_01_800477C0();
-    func_ovl13_01_800475EC(D_ovl13_01_8004C324, 60.0f, 45.0f, -70.0f);
-    func_ovl13_01_800475EC(D_ovl13_01_8004C328, 60.0f, 45.0f, -70.0f);
-    for (i = 0; i < 2; i++) {
-        func_ovl13_01_800475EC(D_ovl13_01_8004C330[i], 60.0f, 45.0f, -70.0f);
-    }
-    func_ovl13_01_800475EC(D_ovl13_01_8004C31C, 60.0f, 45.0f, -70.0f);
-    func_ovl13_01_80047570();
-    D_ovl13_01_8004C398.x = D_ovl13_01_8004C388.x;
-    D_ovl13_01_8004C398.y = (f32) D_ovl13_01_8004C388.y;
-    D_ovl13_01_8004C398.z = (f32) D_ovl13_01_8004C388.z;
-    func_ovl13_01_800473A8();
-    temp_fv0 = func_ovl13_01_8004B378(D_ovl13_01_8004C338->unk40, 0);
-    temp_v0 = D_ovl13_01_8004C338->unk40->unk48->unk4;
-    var_fv1 = temp_v0->unk4;
-    if (temp_fv0 <= var_fv1) {
-        var_fv1 -= temp_fv0;
-    } else if (var_fv1 < 0.0f) {
-        var_fv1 += temp_fv0;
-    }
-    temp_v0->unk4 = var_fv1;
-    func_ovl13_01_8004B7D0();
-    goto loop_1;
-}
-
-void func_ovl13_01_800473A8(void) {
-    f32 sp1C;
-
-    func_ovl13_01_800496E0(D_ovl13_01_8004C338, &D_ovl13_01_8004C28C, &D_ovl13_01_8004BF34, NULL);
-    func_ovl13_01_800496E0(D_ovl13_01_8004C358, &D_ovl13_01_8004C290, &D_ovl13_01_8004BF38, func_ovl13_01_80046A50);
-    func_ovl13_01_800496E0(D_ovl13_01_8004C35C, &D_ovl13_01_8004C294, &D_ovl13_01_8004BF3C, func_ovl13_01_80046940);
-    func_ovl13_01_800496E0(D_ovl13_01_8004C31C, &D_ovl13_01_8004C298, &D_ovl13_01_8004BF40, func_ovl13_01_80046B60);
-    func_ovl13_01_800496E0(D_ovl13_01_8004C348[3], &D_ovl13_01_8004C29C, &D_ovl13_01_8004BF44, func_ovl13_01_800468A0);
-    if ((func_ovl13_01_8004BA10(0x41E) == 0) && (D_ovl13_01_8004C290 == 0)) {
-        func_ovl13_01_8004BA00(0x41E);
-        func_ovl13_01_8004B708(D_ovl13_01_8004C358, &sp1C);
-        func_ovl13_01_8004B9B8(&sp1C);
-    }
-    if ((func_ovl13_01_8004BA10(0x41D) == 0) && (D_ovl13_01_8004C294 == 0)) {
-        func_ovl13_01_8004BA00(0x41D);
-        func_ovl13_01_8004B708(D_ovl13_01_8004C35C, &sp1C);
-        func_ovl13_01_8004B9B8(&sp1C);
-    }
-    if ((func_ovl13_01_8004BA10(0x41C) == 0) && (D_ovl13_01_8004C298 == 0)) {
-        func_ovl13_01_8004BA00(0x41C);
-        func_ovl13_01_8004B708(D_ovl13_01_8004C31C, &sp1C);
-        func_ovl13_01_8004B9B8(&sp1C);
-    }
-    if (func_ovl13_01_8004BA10(0x41B) == 0) {
-        if (D_ovl13_01_8004C29C == 0) {
-            func_ovl13_01_8004BA00(0x41B);
-            func_ovl13_01_8004B708(D_ovl13_01_8004C348[3], &sp1C);
-            func_ovl13_01_8004B9B8(&sp1C);
-        }
-    }
-}
-
-void func_ovl13_01_800496E0(UnkStructA *arg0, s32 *arg1, s32 *arg2, void (*arg3)()) {
-    s32 sp24;
-    s32 temp_v0;
-    s32 temp_v0_2;
-    s32 var_v0;
-    s32 var_v1;
-
-    if (*arg1 != 0) {
-        temp_v0 = *arg2;
-        if (temp_v0 == 0) {
-            temp_v0_2 = func_ovl13_01_80046DC4(arg0);
-            var_v1 = temp_v0_2;
-            if (temp_v0_2 != 0) {
-                if (arg0 == D_ovl13_01_8004C338) {
-                    sp24 = temp_v0_2;
-                    func_ovl13_01_80043124(0xC0, D_ovl13_01_8004C31C);
-                    var_v1 = sp24;
-                }
-                var_v0 = *arg1 - var_v1;
-                *arg1 = var_v0;
-                if (var_v0 < 0) {
-                    *arg1 = 0;
-                    var_v0 = 0;
-                }
-                if ((var_v0 == 0) && (arg3 != NULL)) {
-                    arg3();
-                }
-                func_ovl13_01_8004B788(func_ovl13_01_80046C2C, arg0, 0, 0, 0x150);
-                *arg2 = 0x78;
-            }
-        } else {
-            *arg2 = temp_v0 - 1;
-        }
-    }
-}
-
-void func_ovl13_01_80048B6C(UnkStructA *arg0) {
-    if (arg0->unk8 & 1) {
-        func_ovl13_01_8004BA08(0x41A);
-    }
-    func_ovl13_01_80048AF0(arg0);
 }
 
 void func_ovl13_01_8004899C(void) {
@@ -1332,6 +1235,40 @@ void func_ovl13_01_8004863C(void) {
         var_s0 += 1;
     }
     M2C_FIELD(D_ovl13_01_8004C23C, s32 *, 0x2C) = var_s0;
+}
+
+void func_ovl13_01_80048418(void) {
+    s32 i;
+    UnkStructA_40_48_4 *temp_v0;
+    f32 temp_fv0;
+    f32 var_fv1;
+
+loop_1:
+    func_ovl13_01_800481D0();
+    func_ovl13_01_80046800();
+    func_ovl13_01_800477C0();
+    func_ovl13_01_800475EC(D_ovl13_01_8004C324, 60.0f, 45.0f, -70.0f);
+    func_ovl13_01_800475EC(D_ovl13_01_8004C328, 60.0f, 45.0f, -70.0f);
+    for (i = 0; i < 2; i++) {
+        func_ovl13_01_800475EC(D_ovl13_01_8004C330[i], 60.0f, 45.0f, -70.0f);
+    }
+    func_ovl13_01_800475EC(D_ovl13_01_8004C31C, 60.0f, 45.0f, -70.0f);
+    func_ovl13_01_80047570();
+    D_ovl13_01_8004C398.x = D_ovl13_01_8004C388.x;
+    D_ovl13_01_8004C398.y = (f32) D_ovl13_01_8004C388.y;
+    D_ovl13_01_8004C398.z = (f32) D_ovl13_01_8004C388.z;
+    func_ovl13_01_800473A8();
+    temp_fv0 = func_ovl13_01_8004B378(D_ovl13_01_8004C338->unk40, 0);
+    temp_v0 = D_ovl13_01_8004C338->unk40->unk48->unk4;
+    var_fv1 = temp_v0->unk4;
+    if (temp_fv0 <= var_fv1) {
+        var_fv1 -= temp_fv0;
+    } else if (var_fv1 < 0.0f) {
+        var_fv1 += temp_fv0;
+    }
+    temp_v0->unk4 = var_fv1;
+    func_ovl13_01_8004B7D0();
+    goto loop_1;
 }
 
 void func_ovl13_01_800481D0(void) {
@@ -1831,6 +1768,38 @@ block_4:
     D_ovl13_01_8004C2C0.unkC = (f32) (D_ovl13_01_8004C2C0.unkC + var_fv0);
 }
 
+void func_ovl13_01_800473A8(void) {
+    f32 sp1C;
+
+    func_ovl13_01_800496E0(D_ovl13_01_8004C338, &D_ovl13_01_8004C28C, &D_ovl13_01_8004BF34, NULL);
+    func_ovl13_01_800496E0(D_ovl13_01_8004C358, &D_ovl13_01_8004C290, &D_ovl13_01_8004BF38, func_ovl13_01_80046A50);
+    func_ovl13_01_800496E0(D_ovl13_01_8004C35C, &D_ovl13_01_8004C294, &D_ovl13_01_8004BF3C, func_ovl13_01_80046940);
+    func_ovl13_01_800496E0(D_ovl13_01_8004C31C, &D_ovl13_01_8004C298, &D_ovl13_01_8004BF40, func_ovl13_01_80046B60);
+    func_ovl13_01_800496E0(D_ovl13_01_8004C348[3], &D_ovl13_01_8004C29C, &D_ovl13_01_8004BF44, func_ovl13_01_800468A0);
+    if ((func_ovl13_01_8004BA10(0x41E) == 0) && (D_ovl13_01_8004C290 == 0)) {
+        func_ovl13_01_8004BA00(0x41E);
+        func_ovl13_01_8004B708(D_ovl13_01_8004C358, &sp1C);
+        func_ovl13_01_8004B9B8(&sp1C);
+    }
+    if ((func_ovl13_01_8004BA10(0x41D) == 0) && (D_ovl13_01_8004C294 == 0)) {
+        func_ovl13_01_8004BA00(0x41D);
+        func_ovl13_01_8004B708(D_ovl13_01_8004C35C, &sp1C);
+        func_ovl13_01_8004B9B8(&sp1C);
+    }
+    if ((func_ovl13_01_8004BA10(0x41C) == 0) && (D_ovl13_01_8004C298 == 0)) {
+        func_ovl13_01_8004BA00(0x41C);
+        func_ovl13_01_8004B708(D_ovl13_01_8004C31C, &sp1C);
+        func_ovl13_01_8004B9B8(&sp1C);
+    }
+    if (func_ovl13_01_8004BA10(0x41B) == 0) {
+        if (D_ovl13_01_8004C29C == 0) {
+            func_ovl13_01_8004BA00(0x41B);
+            func_ovl13_01_8004B708(D_ovl13_01_8004C348[3], &sp1C);
+            func_ovl13_01_8004B9B8(&sp1C);
+        }
+    }
+}
+
 void func_ovl13_01_800471D8(void) {
     Vec3f sp64;
     f32 sp60;
@@ -1869,6 +1838,42 @@ void func_ovl13_01_800471D8(void) {
     } while (var_s0 != 0x3C);
     func_ovl13_01_8004B650(temp_s6);
     func_ovl13_01_8004B798();
+}
+
+void func_ovl13_01_800496E0(UnkStructA *arg0, s32 *arg1, s32 *arg2, void (*arg3)()) {
+    s32 sp24;
+    s32 temp_v0;
+    s32 temp_v0_2;
+    s32 var_v0;
+    s32 var_v1;
+
+    if (*arg1 != 0) {
+        temp_v0 = *arg2;
+        if (temp_v0 == 0) {
+            temp_v0_2 = func_ovl13_01_80046DC4(arg0);
+            var_v1 = temp_v0_2;
+            if (temp_v0_2 != 0) {
+                if (arg0 == D_ovl13_01_8004C338) {
+                    sp24 = temp_v0_2;
+                    func_ovl13_01_80043124(0xC0, D_ovl13_01_8004C31C);
+                    var_v1 = sp24;
+                }
+                var_v0 = *arg1 - var_v1;
+                *arg1 = var_v0;
+                if (var_v0 < 0) {
+                    *arg1 = 0;
+                    var_v0 = 0;
+                }
+                if ((var_v0 == 0) && (arg3 != NULL)) {
+                    arg3();
+                }
+                func_ovl13_01_8004B788(func_ovl13_01_80046C2C, arg0, 0, 0, 0x150);
+                *arg2 = 0x78;
+            }
+        } else {
+            *arg2 = temp_v0 - 1;
+        }
+    }
 }
 
 void func_ovl13_01_80047144(void) {
@@ -3506,6 +3511,13 @@ void func_ovl13_01_800431D4(void) {
     }
 }
 
+void func_ovl13_01_80043124(s32 arg0, UnkStructA *arg1) {
+    UnkStructA_40 *temp_v0;
+
+    temp_v0 = arg1->unk40;
+    func_ovl13_01_8004BD30(arg0, temp_v0->unk10, temp_v0->unk14, temp_v0->unk18);
+}
+
 void func_ovl13_01_80043158(void) {
     func_ovl13_01_8004306C(0);
     func_ovl13_01_8004B638(D_ovl13_01_8004C31C, 0x04000000);
@@ -3515,13 +3527,6 @@ void func_ovl13_01_80043158(void) {
     func_ovl13_01_8004306C(1);
     func_ovl13_01_8004B638(D_ovl13_01_8004C31C, 0x04000000);
     func_ovl13_01_8004B798();
-}
-
-void func_ovl13_01_80043124(s32 arg0, UnkStructA *arg1) {
-    UnkStructA_40 *temp_v0;
-
-    temp_v0 = arg1->unk40;
-    func_ovl13_01_8004BD30(arg0, temp_v0->unk10, temp_v0->unk14, temp_v0->unk18);
 }
 
 static void func_ovl13_01_800430CC(UnkStructA *arg0) {
