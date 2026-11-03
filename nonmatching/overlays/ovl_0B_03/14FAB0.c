@@ -6,7 +6,7 @@
  * tables, .bss 0x1140, as the original's sizes). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 10, eu 10, jp 2539
+ * differing words: us 10, eu 10, jp 72
  *
  * jp (`#if VERSION_JP`) has its own strings (80048AF4, 80048B60,
  * 80049144, and D_ovl0B_03_8004901C_jp for us's 80049168, with the
@@ -71,11 +71,18 @@
  * after their stores; tried: the inits in the for, #line). Everything
  * else matches.
  *
- * jp builds the same 8004386C (its #if VERSION_JP parts: the labels and
- * strings). What still differs in jp (words): 8004386C 2533 (the original
- * keeps &D_ovl0B_03_8004A324 out of a register throughout, so every use is
- * a lui/lw and the state group gets $s0; its frame is 8 smaller, w at
- * 144(sp); otherwise the code is the same), 80046510 6, as in us.
+ * jp builds the same 8004386C but for its #if VERSION_JP parts: the
+ * labels and strings, and the second option-label loop, which keeps the
+ * old label's handle in state (`state = lab->unk18;` before freeing it)
+ * where us keeps it in next until after the new label. That one variable
+ * is what keeps &D_ovl0B_03_8004A324 out of a register in jp: uopt's
+ * priority for the address is at the edge in this function, and with the
+ * handle in next (or freed straight from lab->unk18) it still takes $s0.
+ * What still differs in jp (words): 8004386C 66, all stack offsets (the
+ * original's frame is 8 smaller, w at 144(sp) and the cursor tables and
+ * the locals above w 8 lower: w sits 4 nearer the top than in us, so
+ * one local of i, t, lab fewer, and the spills 4 nearer w, as in us),
+ * 80046510 6, as in us.
  */
 
 #include "common.h"
@@ -1203,7 +1210,8 @@ void func_ovl0B_03_8004386C(void) {
                 }
                 lab = &D_ovl0B_03_80048C90[k];
 #if VERSION_JP
-                func_ovl0B_03_800486F8(lab->unk18);
+                state = lab->unk18;
+                func_ovl0B_03_800486F8(state);
 #else
                 next = lab->unk18;
 #endif
