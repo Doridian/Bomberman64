@@ -3,7 +3,7 @@
  * (.data, .rodata and .bss 0x80 as the original).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 42, eu 42, jp 42
+ * differing words: us 0, eu 0, jp 0
  *
  * From 619 words, as in ovl_0F_08/0F_07:
  * - func_ovl0F_05_800440AC: ovl_0F_08's 80043A28 ported (Vec3f,
@@ -22,42 +22,19 @@
  *   locals are declared cam, i, task, j, k, angle, objs (every one gets a
  *   slot: task at 0xB4, objs at 0x98).
  *
- * What still differs (the 42 words are all func_ovl0F_05_80043B74's, which
- * fcmp counts up to 800440AC, stubs and 80043FF4 included):
- * - The stub 8004409C: the original has it after 80043FF4, before 800440A4;
- *   here it comes right after 80043B74 (39 words: 80043FE4, 80043FEC and
- *   80043FF4 one stub late). It is an empty static only 80044AF4's `if (0)`
- *   takes the address of, and a static never inlined comes out by its
- *   definition among the globals, never inside 800440AC's group. Inlined
- *   into 800440AC (stubs come in the reverse of the calls) it lands right
- *   only when called between 800440A4 and the first 80043FF4 call, or
- *   inside 800440A4, and there it costs 800440AC 8 bytes of frame (120,
- *   not 112): a static inlined before 80043FEC's call adds its area (8 for
- *   up to two params and locals, 16 for three or four) above 80043FEC's
- *   spills, one after it is free. 800440A4 (x, z, vel: 16) can't shrink:
- *   x and z must be its params for a0/a1, and the ways tried with two
- *   (packed value and vel, two one-axis statics, nesting) give t registers
- *   or reload unk64. Tried as well: a dead `if (0)` call (still inlined),
- *   fewer locals in 80043FEC (no change), the prototypes' order.
- *   Measured since (2026-11-03, scratch/0F_05/w): 800440AC's 0x30-0x50 is
- *   800440A4's area (16) and two ternary temporaries (8 each: the two
- *   ternaries of one statement, reused by the next statements); 80043FEC's
- *   area holds its four spilled locals (0x20-0x2C), and with two locals it
- *   is 8.  So the original's 8 for 8004409C has to come out of 800440A4 or
- *   a ternary.  800440A4(s32 v, Vec3f *vel) { vel->x = (s16)(v >> 16) *
- *   0.002f; 8004409C(v & 0xFFFF, vel); } with 8004409C(s16 z, Vec3f *vel)
- *   writing vel->z gives the frame and every stub right (80043B74 down to
- *   its 3 words) and 800440AC differs only in registers (76 words: x and z
- *   in t registers, the original's a0/a1 are what a static's own s16
- *   params bound at a call from 800440AC get).  One ternary per statement
- *   through vel.y (`if (dz != 0.0f) vel.y = 0.707f; else vel.y = 1.0f;`)
- *   also gives the frame, with one `swc1` to vel.y too many per statement
- *   (vel lives in memory).  Two one-axis statics (x, then z) called from
- *   800440AC give the frame but reload unk64 after the vel.x store, with
- *   or without a dead `&vel`.
- * - `cam->unkC = cam->unkE = 0x4000;` (3 words): the original's 0x4000 is
- *   in v1 (a uopt register), here in t5; separate stores, a variable, a
- *   static setter (as 80043B6C too) and casts give t registers.
+ * - The stub 8004409C (from 42 words to 3, 2026-11-03): an empty static
+ *   defined K&R-style, `static void f() {}`, called at the end of 800440A4.
+ *   Inlined, a `(void)` empty static costs its caller 8 bytes of frame
+ *   (800440AC was 120, not 112); the K&R one costs none, and its stub lands
+ *   right before 800440A4's.  (Before: never inlined, kept by an `if (0)`
+ *   address in 80044AF4, it came out among the globals after 80043B74.)
+ * - `cam->unkE = 0x4000; cam->unkC = 0x4000;` (3 words to 0): the original
+ *   holds 0x4000 in v1 (uopt merged the two constants).  That takes unkC and
+ *   unkE of one type (u16: with s16/u16 the constants differ, and the
+ *   chained `a = b = 0x4000` gives ugen's t5) and two stores, which put it
+ *   in v0; 800459C8 declared s32 (the call before) moves it to v1.
+ *
+ * Matches in all three versions (not moved to src/ yet).
  * The `#line N "1F7CA0.c"` lines are the physical line numbers (the file
  * named the same whatever path it is compiled by).
  */
@@ -91,7 +68,7 @@ typedef struct {
     /* 0x00 */ f32 unk0;
     /* 0x04 */ f32 unk4;
     /* 0x08 */ f32 unk8;
-    /* 0x0C */ s16 unkC;
+    /* 0x0C */ u16 unkC;
     /* 0x0E */ u16 unkE;
 } UnkStruct_ovl0F_05_80045110;
 
@@ -134,7 +111,7 @@ s32 func_ovl0F_05_80045978(UnkStructA *, s32, UnkStructA *);
 s32 func_ovl0F_05_800459A8(void (*)(void), s32, s32, s32, s32);
 void func_ovl0F_05_800459B0(s32);
 void func_ovl0F_05_800459B8(void);
-void func_ovl0F_05_800459C8(s32);
+s32 func_ovl0F_05_800459C8(s32);
 void func_ovl0F_05_800459F0(void);
 UnkStructC *func_ovl0F_05_80045A30(s32);
 void func_ovl0F_05_80045A40(UnkStructC *, s32);
@@ -164,7 +141,7 @@ void func_ovl0F_05_80044A6C(void);
 void func_ovl0F_05_80044A84(void);
 
 static void func_ovl0F_05_80043020(UnkStruct_ovl0F_05_800461E0 *);
-static void func_ovl0F_05_8004409C(void);
+static void func_ovl0F_05_8004409C();
 static void func_ovl0F_05_80043FF4(f32);
 static s32 func_ovl0F_05_80043FEC(UnkStructA *);
 static void func_ovl0F_05_80043FE4(s32 *, f32, f32);
@@ -237,11 +214,9 @@ static void func_ovl0F_05_80044AFC(void) {
 }
 
 /* A second caller keeps func_ovl0F_05_80043020 from being inlined into the
- * handler (it is a call there, with its argument in s0); the dead address
- * keeps func_ovl0F_05_8004409C a function of its own. */
+ * handler (it is a call there, with its argument in s0). */
 static void func_ovl0F_05_80044AF4(void) {
     func_ovl0F_05_80043020(D_ovl0F_05_800461E0);
-    if (0) { func_ovl0F_05_80044F38((void (*)(UnkStructA *))func_ovl0F_05_8004409C, 0); }
 }
 
 static void func_ovl0F_05_80044AEC(void) {
@@ -358,6 +333,7 @@ void func_ovl0F_05_8004472C(void) {
 static void func_ovl0F_05_800440A4(s16 x, s16 z, Vec3f *vel) {
     vel->x = x * 0.002f;
     vel->z = z * 0.002f;
+    func_ovl0F_05_8004409C();
 }
 
 void func_ovl0F_05_800440AC(UnkStructA *arg0) {
@@ -428,9 +404,9 @@ void func_ovl0F_05_800440AC(UnkStructA *arg0) {
     }
 }
 
-/* empty, not inlined (80044AF4 takes its address): the stub before
- * 800440A4 */
-static void func_ovl0F_05_8004409C(void) {
+/* empty, K&R-style (no frame when inlined, unlike `(void)`): inlined in
+ * 800440A4, its stub comes right before 800440A4's */
+static void func_ovl0F_05_8004409C() {
 }
 
 #line 1 "panels.c"
@@ -563,7 +539,8 @@ void func_ovl0F_05_80043B74(void) {
     func_ovl0F_05_800459C8(30);
     cam->unk8 = 0.0f;
     func_ovl0F_05_800459C8(80);
-    cam->unkC = cam->unkE = 0x4000;
+    cam->unkE = 0x4000;
+    cam->unkC = 0x4000;
     func_ovl0F_05_800459F0();
     cam->unkE = 0;
     func_ovl0F_05_800459C8(30);
