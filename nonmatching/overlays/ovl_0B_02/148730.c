@@ -6,7 +6,7 @@
  * of it 800431C4's local table). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 96, eu 96, jp 96
+ * differing words: us 86, eu 86, jp 86
  * jp has its own strings, counts the characters itself in 80044424 (24
  * pixels each, as ovl_0B_03 does), draws through ZeroJump 0x2501
  * (DRAW_TEXT), puts the seconds one character further on and lays out the
@@ -35,15 +35,16 @@
  * ovl_0B_03's 80046E8C/80046F78; 80043018-80043150 and 80044424 are
  * ovl_0B_03's 80043134-80043340 and 80043234 with a 0x20-byte box;
  * 80046418 is ovl_12_05's 80046990.
+ * 800431C4's first loops count the table with i and the marks with n
+ * (the other way round, uopt gave the marks loop's counter $s2 and n $s1
+ * where the original has $s1 and $s2).
  * 800469C8 divides by 30.0f in the loop (`unk14 -= dy / 30.0f`, dy the
  * converted sum): uopt hoists the quotient into $f20 and leaves the sum
  * in its own register ($f2), as the original; divided before the loop,
  * the sum was a ugen temporary and the divisor took the next one.
  *
  * What still differs (words, the same in every version):
- * - 800431C4 94: registers only. At the start the original gives the
- *   marks loop's i $s1, n $s2 and 0x10000 $s3 (here $s2, $s3, $s1), and
- *   frees no s register for the 0x4000 exit's piece loops (i in $t0
+ * - 800431C4 84: registers only. The original frees no s register for the 0x4000 exit's piece loops (i in $t0
  *   there, $s2 here); the 0x8000 exit stores its i = 0 to i's home before
  *   the 80049178 call where uopt hoists it to the top of the branch here;
  *   the page turns keep &marks[i] in $v1 (here $s0).
@@ -1612,29 +1613,29 @@ void func_ovl0B_02_800431C4(void) {
     D_ovl0B_02_8004A3C8 = func_ovl0B_02_80049178(func_ovl0B_02_80046100, NULL, 0, 0, 0x130);
     D_ovl0B_02_8004A3E8[0] = func_ovl0B_02_80043054(D_ovl0B_02_8004A3D8);
     tbl = func_ovl0B_02_80049410(0x15);
-    for (n = 0; n != 4; n++) {
-        if (((s32 *) tbl)[D_ovl0B_02_8004A3D4 * 4 + n] == 0) {
+    for (i = 0; i != 4; i++) {
+        if (((s32 *) tbl)[D_ovl0B_02_8004A3D4 * 4 + i] == 0) {
             break;
         }
     }
-    for (i = 0; i != 5; i++) {
-        marks[i] = m = func_ovl0B_02_80048D08(0x19, 0);
-        if (func_ovl0B_02_800493E0(D_ovl0B_02_8004A3D4 * 20 + D_ovl0B_02_8004A3D8 * 5 + i + 0x2C) != 0) {
+    for (n = 0; n != 5; n++) {
+        marks[n] = m = func_ovl0B_02_80048D08(0x19, 0);
+        if (func_ovl0B_02_800493E0(D_ovl0B_02_8004A3D4 * 20 + D_ovl0B_02_8004A3D8 * 5 + n + 0x2C) != 0) {
             m->unkC |= 0x10000;
         } else {
             m->unkC |= 0x11080;
             m->unk36 = 0x50;
         }
         m->unk1C = 315.0f;
-        m->unk10 = i * 20.0f + -78.5f;
+        m->unk10 = n * 20.0f + -78.5f;
         m->unk14 = 72.0f;
         m->unk18 = 123.0f;
         m->unk28 = m->unk2C = m->unk30 = 0.18f;
     }
-    if (n >= 4) {
+    if (i >= 4) {
         D_ovl0B_02_8004A3C4 = 3;
     } else {
-        D_ovl0B_02_8004A3C4 = n;
+        D_ovl0B_02_8004A3C4 = i;
     }
     task = func_ovl0B_02_80049178(func_ovl0B_02_80043E10, NULL, 0, 0, 0x130);
     g = &D_ovl0B_02_8004A0EC[D_ovl0B_02_8004A3D4];
