@@ -9,7 +9,7 @@
  * goes through 0x2501 and 0x2503, with 0x2505 for 80043B5C's offsets.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 23, eu 23, jp 23
+ * differing words: us 20, eu 20, jp 20
  *
  * What still differs in us (words):
  * - func_ovl0A_06_80043010 (13; the statics up to 80043B5C): 8004311C's
@@ -22,23 +22,18 @@
  *   in an `if (0)`, costs 8 bytes again; 80043248 returning its own
  *   buffer gets the frame too, but moves 80043250's registers and so its
  *   callers'); 800432F8's spill slot, 0x18 for the original's 0x1C (2).
- * - func_ovl0A_06_80043B5C (10; with the statics after it): 80043E68's
- *   msg == 0 arm keeps its 1 in t3 (jp t2), the original in s1 (jp ra)
- *   (3: the original's t3 is taken in that arm too; a second `n = 4`
- *   bound there takes t2 and moves every address); the two inlined
- *   80043010 loops spill n one word high (4), a spill of s4 in 80044620
- *   is one word high too (2), and a branch is 4 off (1).
+ * - func_ovl0A_06_80043B5C (7; with the statics after it): the two
+ *   inlined 80043010 loops spill n one word high (4), a spill of s4 in
+ *   80044620 is one word high too (2), and a branch is 4 off (1).
  *
- * What still differs in jp (words): the same as us's (the 1 in t2 where
- * the original has ra). 80043E68's copy `m` of msg keeps msg in s1, as
+ * What still differs in jp (words): the same as us's. 80043E68's copy `m` of msg keeps msg in s1, as
  * the original passes it (without it, msg goes to t5 in jp and 80044620,
  * 8004423C and 80044BFC around it change).
  *
  * How the rest came to match:
- * - 80043E68: the msg != 0 arm's first loop runs to &D_80047748[n4] with
- *   `n4 = 4` set just before (permuter): uopt gives n4 a register (t3,
- *   jp t2) and folds it, as1 drops the dead `li`, and the addresses
- *   after it get the original's registers.
+ * - 80043E68: the D_ovl0A_06_80047748 loops are index loops (uopt turns
+ *   them into pointer loops; the index keeps t3, jp t2, before it dies,
+ *   so the addresses after it get the original's registers).
  * - 80044BFC: D_8004701C's value in a0 and `status` in v1 come from a
  *   dead `if (!D_ovl0A_06_800473DC && !D_ovl0A_06_800473DC) {}` in the
  *   switch's case 1 (its loads survive uopt and are register-allocated,
@@ -1271,10 +1266,8 @@ static void func_ovl0A_06_80043E68(s32 msg) {
     s32 wait;
     s32 m = msg;
     s16 alpha = 0x3C;
-    UnkStruct_ovl0A_06_800460E8 **p;
     u8 **str;
     s32 i;
-    s32 n4;
 
     if (msg != 0) {
         if (msg == 0x11) {
@@ -1288,16 +1281,15 @@ static void func_ovl0A_06_80043E68(s32 msg) {
         D_ovl0A_06_8004752C->unk36 = alpha;
         D_ovl0A_06_80047530->unkC |= 0x80;
         D_ovl0A_06_80047530->unk36 = alpha;
-        n4 = 4; /* fake: takes t3 */
         D_ovl0A_06_80047534->unkC |= 0x80;
         D_ovl0A_06_80047534->unk36 = alpha;
 #if !VERSION_JP
         D_ovl0A_06_80047538->unkC |= 0x80;
         D_ovl0A_06_80047538->unk36 = alpha;
 #endif
-        for (p = D_ovl0A_06_80047748; p < &D_ovl0A_06_80047748[n4]; p++) {
-            (*p)->unkC |= 0x80;
-            (*p)->unk36 = alpha;
+        for (i = 0; i < 4; i++) {
+            D_ovl0A_06_80047748[i]->unkC |= 0x80;
+            D_ovl0A_06_80047748[i]->unk36 = alpha;
         }
         for (i = 0; i < 4; i++) {
             D_ovl0A_06_80047718[i]->unkC |= 0x80;
@@ -1330,9 +1322,9 @@ static void func_ovl0A_06_80043E68(s32 msg) {
         D_ovl0A_06_80047538->unkC &= ~0x80;
         D_ovl0A_06_80047538->unk36 = 0xFF;
 #endif
-        for (p = D_ovl0A_06_80047748; p < &D_ovl0A_06_80047748[4]; p++) {
-            (*p)->unkC &= ~0x80;
-            (*p)->unk36 = 0xFF;
+        for (i = 0; i < 4; i++) {
+            D_ovl0A_06_80047748[i]->unkC &= ~0x80;
+            D_ovl0A_06_80047748[i]->unk36 = 0xFF;
         }
         for (i = 0; i < 4; i++) {
             D_ovl0A_06_80047718[i]->unkC &= ~0x80;
@@ -1665,7 +1657,7 @@ static s32 func_ovl0A_06_8004311C(void) {
         } else if ((pressed & 0x8000) || (pressed & 0x1000)) {
 #line 1700
             ret = 1;
-#line 1667
+#line 1659
             if (D_ovl0A_06_80047018 == 0) {
                 ret = 2;
                 SE(1, 1);
@@ -1675,7 +1667,7 @@ static s32 func_ovl0A_06_8004311C(void) {
         } else if (pressed & 0x4000) {
 #line 1700
             ret = 1;
-#line 1675
+#line 1667
             SE(2, 2);
         }
         func_ovl0A_06_800465A0();
