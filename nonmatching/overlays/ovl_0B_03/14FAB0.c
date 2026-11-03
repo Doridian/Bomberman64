@@ -6,7 +6,7 @@
  * tables, .bss 0x1140, as the original's sizes). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 132, eu 132, jp 2640
+ * differing words: us 105, eu 105, jp 2640
  *
  * jp (`#if VERSION_JP`) has its own strings (80048AF4, 80048B60,
  * 80049144, and D_ovl0B_03_8004901C_jp for us's 80049168, with the
@@ -130,7 +130,7 @@ typedef struct {
 } Anim_ovl0B_03;
 
 #define WRAP_ovl0B_03(x) ((x) >= 360.0f ? (x) - 360.0f : (x) < 0.0f ? (x) + 360.0f : (x))
-#define WRAPW_ovl0B_03(x) ((x) >= 360.0f ? (x) - 360.0f : (w = (x) < 0.0f ? (x) + 360.0f : (x)))
+#define WRAPW_ovl0B_03(x) ((x) >= 360.0f ? (x) - 360.0f : (w = ((x) < 0.0f ? (x) + 360.0f : (x)), w))
 #define GFX_W_ovl0B_03(pkt, a, b) { Gfx_ovl0A_01 *_g = (pkt); _g->w0 = (a); _g->w1 = (b); }
 
 void func_ovl0B_03_800478B0(s32, s32, s32);
@@ -1892,13 +1892,13 @@ void func_ovl0B_03_8004386C(void) {
     s32 v3C;
     s32 max;
     s32 h;
+    s32 *p;
     MenuPos_ovl0B_03 spCC[6] = { { 71, 87, 0, 2, 0, 0 }, { 71, 117, 1, 3, 0, 0 }, { 71, 147, 2, 4, 0, 0 }, { 71, 177, 3, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0 } };
     MenuPos_ovl0B_03 spA4[5] = { { 172, 78, 0, 2, 0, 0 }, { 172, 108, 1, 3, 0, 0 }, { 172, 138, 2, 4, 0, 0 }, { 172, 168, 3, 5, 0, 0 }, { 172, 198, 4, 0, 0, 0 } };
     s32 i;
     f32 t;
     Label_ovl0B_03 *lab;
     f32 w;
-    s32 *p;
 
     D_ovl0B_03_8004A324 = func_ovl0B_03_80047938();
     func_ovl0B_03_80048060(0x7F);
