@@ -1,11 +1,5 @@
 /*
- * NON_MATCHING: ovl_0D_01's stage object, complete: all 47 functions and the
- * stubs the inlined statics leave in their places, .data 0x3E0, .rodata
- * 0x190 and .bss 0x70 as the original. It matches in us, eu and jp
- * (nonmatching.py); not yet built into the ROM (docs/DECOMPILING.md,
- * "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * ovl_0D_01's stage object, IDO -O3; it matches in us, eu and jp.
  *
  * The sibling of ovl_0D_04 and ovl_0D_06 (src/overlays): the gate code
  * (800444E0, 800448D4), the model tables, the setup's loops and the camera
