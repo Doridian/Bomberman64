@@ -6,58 +6,64 @@
  * flags: -O3
  * differing words: us 1172, eu 1172, jp 1168
  *
- * Order (scratch/ord/search.py, hill-climb over definition order, scored by
- * the emitted sequence's edit distance from the original's address order):
- * distance 31 of 56 functions out of place, from 4362 words; the search
- * stopped at its kick limit, so it is a local best. No static/global changes.
- * A first draft from m2c: the logic is the original's, the layout isn't.
  * The pages are a table (D_ovl0B_04_800499B8: texts, handler, cursor
  * table, set-up) that func_ovl0B_04_80043ADC runs in turn; pages 1-4 are
  * the character sets, 5-8 the slots, 9 the save question. The statics
- * the original passes arguments in $s/$t registers (80043050, 800438FC,
- * 80043A24/80043A7C, 8004401C/800440C8, 80044394, 8004447C, 800447DC,
- * 80045540, 800458F4/80045958, 800468F0) are statics here with ordinary
- * parameters; MakeEntries/FreeEntries, PageItem, SetText and Mark27 are
- * statics the original inlines (their parameter slots show in the frames).
+ * the original passes arguments to in $s/$t registers (80043050, 800438FC
+ * (mode, id, item), 80043A24/80043A7C (n, ids, items), 8004401C/800440C8,
+ * 80044394, 8004447C, 800447DC, 80045540, 800458F4/80045958 (two text
+ * ids), 80046294, 80046600/80046734 (item first), 800468F0) are statics
+ * with ordinary parameters. Inlined statics stand where the original has
+ * their stubs: the handler 80043110's cases (H1/H12/H4/H5 and H5's four
+ * parts give the ten stubs before it), MakeEntries/FreeEntries (index
+ * loops: IDO never inlined them as pointer loops), the text-freeing
+ * 80043AD4 (its own ids pointer), 80044BE0 (80044BE8's name copy,
+ * unrolled), 80045530/80045538 (80045540's name check and frees),
+ * 800450B8 (page 9's fade in), 80044714 (the marks, r an int), SetText.
  * Emission order: IDO -O3 takes the globals in reverse definition order
  * and puts each one's static callees just before it, in the reverse order
- * of its calls (each after its own callees); an indirect call also pulls
- * every function whose address the code takes (why 80043CD0 comes out
- * first: 80043110's or 80043ADC's call through the page table pulls it).
- * The original's statics come out before callers that don't call them
- * (80043FA4-8004447C before 800444E8, 80045540 before 800459C4, 80046294-
- * 80046734 before 80046AA0), so its callers probably inlined statics whose
- * dead branches called them. Here a dead `if (0) { ... }` at the end of
- * the global lists the run in reverse (scratch/0B_04/p4/pull.py and
- * spec2.txt in the main checkout); the empty stubs it calls are named for
- * the original's stub addresses. The `if (0)` calls to 8004471C keep it out
- * of line, as in the original. 80046734 writes PageItem out twice (no
- * stubs before it in the original); PageItem itself is 80046294's.
- * Data: .data 800489F0-8004A1F0 typed from data_c.py's words
- * (scratch/0B_04/gendata.py in the main checkout); the .bss in address
- * order without the unreferenced gaps.
+ * of its calls (each after its own callees); the `if (0)` call lists at
+ * the end of 800444E8, 800459C4, 80046AA0 and the others pull the
+ * original's runs of statics and stubs into place. An indirect call pulls
+ * every function whose address the code takes: 80043ADC's pulls
+ * 80043CD0 in front of it wherever it is defined, so it is defined last
+ * (then it comes out first, counted with 80043110's lead statics).
+ * 800436C8's counter D_ovl0B_04_8004A1E4 is a function-scope static (as a
+ * file-scope one uopt keeps its address in a register).
  *
- * What still differs in us (words; the comparison counts a global with the
- * statics after it, so a static of the wrong size costs the rest of its run):
- * - 80043CD0 173: it comes out first (an indirect call pulls it, see
- *   above), so 80043110's lead (8 stubs, 80043050, 2 stubs) is counted
- *   with it; FreeEntries/MakeEntries aren't inlined yet (the original
- *   inlines them: its loops are 80043110's sltu end-pointer loops);
- * - 80043110 349, 80043ADC 207, 80044BE8 205, 800450C0 81 (their own code);
- * - 800436C8 246: its frame and saved registers (s8 where the original
- *   keeps -65 in s7) and 0xC too long; its run (80043A24/80043A7C, which
- *   walk their parameters in the caller's s0/s2/s3, match) follows it;
- * - 800444E8 334: 8004462C 0x10 and 8004471C 0x10 too long, 800447DC 0x1C
- *   short; 80045214 425: 80045540 0x74 short, 800458F4/80045958 4 long;
- *   80046180 537: 80046294 0x10C, 80046734 0x74 and 800468F0 0x34 short;
- * - 80045AF0/80045D20 25 each, 80045F50 24 (it passes D[0]'s value to
- *   800458F4 by a cast, as the original does; its D[1] in $s1 isn't in C),
- *   80045BF4/80045E24/80046054/800459C4 73 each, 80046B28 111,
- *   80046FA8/800471F4 79, 80046D74 73; 80046D74, 80046FA8 and 800471F4
- *   have their 0x30-byte pad (the frame is 144 as in the original) and
- *   their FreeEntries loops written out;
- * - 80043E4C, 80043E80, 80043EC8, 80043F24's run (29), 80046AA0,
- *   80046CEC, 80046F20 and 8004716C match.
+ * jp (`#if VERSION_JP`): its 0x250C/0x250D calls go to 0x2501/0x2503 (one
+ * text function, so no 80043A7C; page 0's six labels in one call), no
+ * set clamp in 800441C4 (which jp inlines), 80044394 places the name at
+ * 56 - 8n, no menu-cursor fade in 800444E8/800468F0 nor page 0's 0x80
+ * flags, 80045214's texts at x 55/50, R goes to set 1, 80045E24's second
+ * text, 80046294 sets the choices' strings in place and 80046734 lights
+ * only open ones; one stub fewer at 80043F3C. jp's .data and .bss are
+ * still us's (nonmatching.py doesn't compare them; jp's strings and its
+ * .bss layout, e.g. its fade pointer at 8004A4A4, are to do).
+ *
+ * What still differs in us (words; the comparison counts a global with
+ * the statics after it, so a static of the wrong size costs the rest of
+ * its run):
+ * - 80043CD0 153, 80043ADC 131: 80043CD0 comes out first (see above), so
+ *   80043ADC is compared with 80043CD0 appended and 80043CD0 with
+ *   80043110's lead. Read through D_ovl0B_04_8004A3E4 each time (no local
+ *   fade) it matches on its own (scratch/0B_04/cd0_fix_C4.c in the main
+ *   checkout), but then 800436C8's trailing nops (they pad to an
+ *   alignment) come out 3 short until the order is right, a net loss.
+ * - 80043110 287: its frame (184) and registers: the original keeps only
+ *   $s0/$s1, the MakeEntries pointer in $s0 spilled around 80043050 and
+ *   case 5's counter in $a2; the FreeEntries count (li 20) stays live in
+ *   the original. 0x10 short.
+ * - 800444E8 303: 800447DC 4 short and its registers (the original gets
+ *   buttons in $t1, d1 in $t0 then $s2, d2/d3 copied to $v1/$v0 before use,
+ *   unk1 stored by its own lui); 8004462C/8004471C 4 long each (their
+ *   return block: the original's branches into it keep nop delay slots).
+ * - 80045214 163: 80045214's copy loop registers; 80045540's rub-out
+ *   (the original copies the cursor to $v1 and stores unk3 by its own lui).
+ * - 800450C0 57: uopt makes a base register for page 9's fade fields.
+ * - 80044BE8 26 (its frame is 8 bigger), 800436C8 25 (a1 = -1 hoisted),
+ *   80043F24 19 (8004426C's case 4 through $v1), 80046180 8.
+ * Everything else matches.
  */
 #include "common.h"
 
