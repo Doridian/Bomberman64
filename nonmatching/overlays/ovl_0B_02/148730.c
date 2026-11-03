@@ -6,7 +6,7 @@
  * of it 800431C4's local table). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1664, eu 1664, jp 1727
+ * differing words: us 1226, eu 1226, jp 1289
  * jp has no `#if VERSION_JP` yet.
  *
  * A first draft from m2c (with a context of the ZeroJump prototypes the
@@ -964,9 +964,10 @@ void func_ovl0B_02_80045C30(void) {
 }
 
 void func_ovl0B_02_800454F0(void) {
-    UnkStructA_40 *star;
-    UnkStructA_40 *model;
     s32 pad;
+    UnkStructA_40 *model;
+    UnkStructA_40 *star;
+    s32 pad1;
     s32 anim;
     s32 task;
     s32 pad2[2];
@@ -979,8 +980,8 @@ void func_ovl0B_02_800454F0(void) {
     s32 j;
 
     if (D_ovl0B_02_8004A3D4 < 5) {
-        obj = D_ovl0B_02_80049A50[0].unk10;
         tbl = func_ovl0B_02_80049410(0x15);
+        obj = D_ovl0B_02_80049A50[0].unk10;
         ANGLE_ADD(obj->unk20, 90.0f);
         dir = (D_ovl0B_02_8004A3DC - 1) & 3;
         if (D_ovl0B_02_8004A3CC != 0x13) {
@@ -1007,19 +1008,19 @@ void func_ovl0B_02_800454F0(void) {
             anim = func_ovl0B_02_80048D98(model, 5);
             task = func_ovl0B_02_80049178(func_ovl0B_02_8004686C, model, 0, 0, 0x130);
             func_ovl0B_02_80049198(0x3C);
-            for (i = 0; i < 3; i++) {
-                for (j = 0; j != 5; j++) {
+            for (j = 0; j < 3; j++) {
+                for (i = 0; i != 5; i++) {
                     if (func_ovl0B_02_80049338(0x100) & 1) {
                         func_ovl0B_02_80049700(0x34);
                     } else {
                         func_ovl0B_02_80049700(0x33);
                     }
-                    func_ovl0B_02_800495C8(0x14, (0.5 - func_ovl0B_02_80049330()) * 100.0 + D_ovl0B_02_8004A168[i].x,
-                                           (0.5 - func_ovl0B_02_80049330()) * 100.0 + D_ovl0B_02_8004A168[i].y,
-                                           D_ovl0B_02_8004A168[i].z, 0);
+                    func_ovl0B_02_800495C8(0x14, D_ovl0B_02_8004A168[j].x + (0.5 - func_ovl0B_02_80049330()) * 100.0,
+                                           D_ovl0B_02_8004A168[j].y + (0.5 - func_ovl0B_02_80049330()) * 100.0,
+                                           D_ovl0B_02_8004A168[j].z, 0);
                     func_ovl0B_02_80049198(10);
                 }
-                func_ovl0B_02_80048DA0(anim, D_ovl0B_02_8004A144[i], 0x4F);
+                func_ovl0B_02_80048DA0(anim, D_ovl0B_02_8004A144[j], 0x4F);
                 func_ovl0B_02_800491C0();
             }
             func_ovl0B_02_80049700(0x35);
@@ -1041,7 +1042,7 @@ void func_ovl0B_02_800454F0(void) {
             star->unk2C = 15.0f;
             starTask = func_ovl0B_02_80049178(func_ovl0B_02_800467D0, star, 0, 0, 0x130);
         }
-        for (; t < 60.0f; t += 1.0f) {
+        for (t = 0.0f; t < 60.0f; t += 1.0f) {
             if (D_ovl0B_02_8004A3CC == 0x12 && i == 16) {
                 obj->unk10 -= 5.6666665f;
                 obj->unk14 -= 10.083333f;
@@ -1472,7 +1473,7 @@ static void func_ovl0B_02_80043EF8(s32 i) {
 /* Blinks the current page's piece. */
 void func_ovl0B_02_80043E10(void) {
     UnkStructA_40 *obj;
-    s16 alpha;
+    s32 alpha;
 
     while (TRUE) {
         obj = D_ovl0B_02_8004A0EC[D_ovl0B_02_8004A3D4].unk0[D_ovl0B_02_8004A3D8].unk10;
