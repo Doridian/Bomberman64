@@ -5,7 +5,7 @@
  * as the original; jp's .data is 0x1A0). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 676, eu 676, jp 682
+ * differing words: us 676, eu 676, jp 678
  *
  * IDO -O3: the functions are written last to first. The tail (80045438,
  * 800453F0, 800453BC, 80045494 and the twelve empty stubs) is ovl_17_10's;
@@ -31,7 +31,8 @@
  *   order (several dead reads do; this one also suits jp); x counts the
  *   second object's two frames ($s7 there as in the original); the endless
  *   button waits are `while (TRUE) { if (...) break; ... }` (test at the
- *   top, `b` back); the figures' loop sets i = 0 ahead of x. Only $fs0 is
+ *   top, `b` back); the figures' loop sets i = 0 ahead of x; each text
+ *   x goes through x before its call (jp's frame needs it). Only $fs0 is
  *   saved, 1.5f and the text height stay out of registers, and the frame
  *   is 0x98 (jp 0x70; the inlined statics' areas count once anything
  *   below them, the spilled height, is used).
@@ -50,8 +51,9 @@
  *   original) for the same reason.
  *
  * What still differs:
- * - func_ovl0B_07_800435FC (jp 6): jp's frame is 0x78 where the
- *   original's is 0x70 (the spilled height at sp+0x54, not sp+0x50).
+ * - func_ovl0B_07_800435FC (jp 2): in the second text's creation the
+ *   original loads 1.0f after the name's address (`mtc1 at,fv0` after
+ *   `lw t7`), ours before.
  * - func_ovl0B_07_8004400C (658): one instruction longer; the original
  *   keeps the counter address in $fp and i in $s7 (ours the other way),
  *   one 0.0f constant in $fs4 for all its uses (ours two: the int-0 split
@@ -647,19 +649,19 @@ void func_ovl0B_07_800435FC(void) {
     }
     func_ovl0B_07_800466A0();
     if (D_ovl0B_07_80046F18->unk0 == 0 && D_ovl0B_07_80046F18->unk40[D_ovl0B_07_80046F20[0]] == 1) {
-        D_ovl0B_07_80046F30 = TEXT_NEW(TEXT_CONGRATS, TEXT_X(TEXT_CONGRATS, 1.0f), 30, 1.0f, 1.0f, 3);
-        D_ovl0B_07_80046F34 = TEXT_NEW(D_ovl0B_07_80046F18->unkC4[D_ovl0B_07_80046F20[0]],
-                                       TEXT_X(D_ovl0B_07_80046F18->unkC4[D_ovl0B_07_80046F20[0]], 1.0f), 190,
-                                       1.0f, 1.0f, 5);
+        x = TEXT_X(TEXT_CONGRATS, 1.0f);
+        D_ovl0B_07_80046F30 = TEXT_NEW(TEXT_CONGRATS, x, 30, 1.0f, 1.0f, 3);
+        x = TEXT_X(D_ovl0B_07_80046F18->unkC4[D_ovl0B_07_80046F20[0]], 1.0f);
+        D_ovl0B_07_80046F34 = TEXT_NEW(D_ovl0B_07_80046F18->unkC4[D_ovl0B_07_80046F20[0]], x, 190, 1.0f, 1.0f, 5);
         scale = 0.0f;
         for (i = 0; i < 40; i++) {
             scale += 0.025f;
             func_ovl0B_07_800467B8(D_ovl0B_07_80046F30, scale, scale);
             func_ovl0B_07_800467B8(D_ovl0B_07_80046F34, scale, scale);
-            func_ovl0B_07_800467A8(D_ovl0B_07_80046F30, TEXT_X(TEXT_CONGRATS, scale), 42.0f - 24.0f * scale * 0.5f);
-            func_ovl0B_07_800467A8(D_ovl0B_07_80046F34,
-                                   TEXT_X(D_ovl0B_07_80046F18->unkC4[D_ovl0B_07_80046F20[0]], scale),
-                                   202.0f - 24.0f * scale * 0.5f);
+            x = TEXT_X(TEXT_CONGRATS, scale);
+            func_ovl0B_07_800467A8(D_ovl0B_07_80046F30, x, 42.0f - 24.0f * scale * 0.5f);
+            x = TEXT_X(D_ovl0B_07_80046F18->unkC4[D_ovl0B_07_80046F20[0]], scale);
+            func_ovl0B_07_800467A8(D_ovl0B_07_80046F34, x, 202.0f - 24.0f * scale * 0.5f);
             if (func_ovl0B_07_80043544() & 0xD000) {
                 goto end;
             }
