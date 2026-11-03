@@ -6,7 +6,7 @@
  * floats). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 3398, eu 3398, jp 3983
+ * differing words: us 3371, eu 3371, jp 3315
  * jp has no `#if VERSION_JP` yet: its strings, text positions and code
  * changes are not drafted (docs/DECOMPILING.md, "Versions", step 6).
  *
@@ -27,11 +27,25 @@
  * run of labels (n kept in a register, as an inlined parameter is) and
  * 80044B90 fades one.
  *
- * Every sound with its wait goes through SE(id, wait): the wait is held in
- * a local that the switch after it might change, so uopt neither folds it
- * nor keeps it out of a saved register, and hoists it above the calls
- * before (`li $s0,15` ahead of the sound, `move $a0,$s0` for the wait); a
- * plain `wait(15)` gives `li $a0,15`. The switch's cases are a guess.
+ * Every sound with its wait is SE(id, wait), and the original keeps the
+ * wait in a saved register, set at the start of the block (`li $s0,15`
+ * ahead of the sound and the calls before it, `move $a0,$s0` for the
+ * wait), where this gives `li $a0,15`: one word short at each of 32
+ * sounds. Nothing found reproduces it within IDO's inline budget: a local
+ * that a switch might change gives the register (80044E48 matches with it)
+ * but no static holding such a switch, or called from a function holding
+ * one, is inlined, and the erase, copy and level menus' inner statics must
+ * be (us inlines them, the original's stubs 80046164, 80046860 and
+ * 80047028 are theirs).
+ *
+ * The erase, copy and level menus are a static choosing a file calling a
+ * static asking about it. us inlines the inner one; jp doesn't, and jp's
+ * map names the inner one for us's whole (80047030, 80046868) and the outer
+ * one as jp's own (_jp), so the C names them through macros (ERASE_FILE,
+ * ERASE_ASK and so on). jp replaces a title through 0x2503 and moves it
+ * (0x2505) where us redraws both labels (80045C24), draws the slot numbers
+ * with 80043404 where us has 0x2501's digits (80043478), and centres a
+ * file's name by its length (80045340).
  * 80045C24 takes (a, b, dx, dy, fa, str, fb), the flags being a->unk14 and
  * b->unk14, loaded by every caller.
  *
@@ -199,8 +213,9 @@ f32 func_ovl0B_06_80048E50(f32); /* 0x1D00 */
 void func_ovl0B_06_80048EF0(void); /* 0x1E00 */
 void func_ovl0B_06_80048FF8(s32, s32, s32); /* 0x2201 */
 s32 func_ovl0B_06_80049060(void); /* 0x2406 */
-s32 func_ovl0B_06_80049090(u8 *, u16, u16, f32, f32, s32); /* 0x2501 */
+s32 func_ovl0B_06_80049090(u8 *, u16, u16, f32, f32, u8); /* 0x2501 */
 void func_ovl0B_06_80049098(s32); /* 0x2502 */
+void func_ovl0B_06_800490A0(s32, u8 *, s32); /* 0x2503 */
 void func_ovl0B_06_800490A8(s32, u16, u16); /* 0x2504 */
 void func_ovl0B_06_800490B0(s32, u16, u16); /* 0x2505 */
 void func_ovl0B_06_800490B8(s32, f32, f32); /* 0x2506 */
@@ -218,11 +233,34 @@ void func_ovl0B_06_80049380(s32); /* 0x2F0C */
 s32 func_ovl0B_06_80049388(void); /* 0x2F0D */
 s32 func_ovl0B_06_80049390(void); /* 0x2F0E */
 
+/*
+ * Three menus are a static asking within a static choosing a file: us
+ * inlines the inner one (its stub stays), jp doesn't, and jp's map names
+ * them after the code that moved (the inner one gets us's name of the
+ * whole).
+ */
+#if VERSION_JP
+#define MSG_TASK func_ovl0B_06_800445BC_jp
+#define COPY_FILE func_ovl0B_06_80046170
+#define LEVEL_FILE func_ovl0B_06_80046BB8_jp
+#define LEVEL_ASK func_ovl0B_06_80046868
+#define COPY_ASK func_ovl0B_06_80045EE0_jp
+#define ERASE_FILE func_ovl0B_06_80047184_jp
+#define ERASE_ASK func_ovl0B_06_80047030
+#else
+#define MSG_TASK func_ovl0B_06_8004473C
+#define COPY_FILE func_ovl0B_06_8004616C
+#define LEVEL_FILE func_ovl0B_06_80046868
+#define LEVEL_ASK func_ovl0B_06_80046860
+#define COPY_ASK func_ovl0B_06_80046164
+#define ERASE_FILE func_ovl0B_06_80047030
+#define ERASE_ASK func_ovl0B_06_80047028
+#endif
+
 
 /* The labels of a list fade in or out together. */
 #define FADE_LABELS(mode, labels, n) { s32 i_; for (i_ = 0; i_ < (n); i_++) { func_ovl0B_06_80044B08(mode, &(labels)[i_]); } }
 #define FADE_SLOTS(mode) { s32 *p_; Label_ovl0B_06 *l_; s32 *e_; p_ = D_ovl0B_06_8004A5D0; e_ = p_ + 3; for (l_ = D_ovl0B_06_800499F0; p_ < e_; p_++, l_++) { if (*p_ != 0) { func_ovl0B_06_80044B08(mode, l_); } } }
-#define STUBS() { func_ovl0B_06_80043038(); func_ovl0B_06_80043030(); func_ovl0B_06_80043028(); func_ovl0B_06_80043020(); func_ovl0B_06_80043018(); func_ovl0B_06_800450F8(); func_ovl0B_06_80045184(); func_ovl0B_06_800459D0(); func_ovl0B_06_80046164(); func_ovl0B_06_80047028(); func_ovl0B_06_80047D00(); func_ovl0B_06_80047B38(); func_ovl0B_06_80047B40(); func_ovl0B_06_80047B48(); func_ovl0B_06_80047B50(); func_ovl0B_06_80047B58(); func_ovl0B_06_80047B60(); func_ovl0B_06_80047B68(); func_ovl0B_06_80047B70(); func_ovl0B_06_80047B78(); func_ovl0B_06_80047B80(); func_ovl0B_06_80047B88(); func_ovl0B_06_80047B90(); }
 static void func_ovl0B_06_80043038(void);
 static void func_ovl0B_06_80043030(void);
 static void func_ovl0B_06_80043028(void);
@@ -243,7 +281,9 @@ static void func_ovl0B_06_80043458(void);
 static void func_ovl0B_06_80043460(void);
 static void func_ovl0B_06_80043468(void);
 static void func_ovl0B_06_80043470(void);
-static void func_ovl0B_06_80043478(void);
+#if !VERSION_JP
+static void func_ovl0B_06_80043478(Label_ovl0B_06 *label);
+#endif
 static void func_ovl0B_06_80043480(s32 arg0);
 static void func_ovl0B_06_80043450(Label_ovl0B_06 *p, s32 n);
 static void func_ovl0B_06_80043010(Label_ovl0B_06 *p, s32 n);
@@ -255,7 +295,7 @@ void func_ovl0B_06_8004390C(void);
 void func_ovl0B_06_80043B20(void);
 static void func_ovl0B_06_80043C40(void);
 void func_ovl0B_06_80043C48(s32 arg0);
-void func_ovl0B_06_8004473C(void);
+void MSG_TASK(void);
 static void func_ovl0B_06_80044908(s32 arg0);
 static void func_ovl0B_06_80044B08(s32 arg0, Label_ovl0B_06 *label);
 static void func_ovl0B_06_80044B90(s32 mode, Label_ovl0B_06 *labels, s32 n);
@@ -278,9 +318,9 @@ static void func_ovl0B_06_80045C24(Label_ovl0B_06 *a, Label_ovl0B_06 *b, s16 dx,
 static void func_ovl0B_06_80045D20(void);
 static void func_ovl0B_06_80045D28(s32 arg0, s32 arg1);
 static s32 func_ovl0B_06_80045F20(s32 arg0, Col_ovl0B_06 *on, Col_ovl0B_06 *off, s32 n);
-#define SE(id, w) { s32 n_ = (w); switch (id) { case 0x7F: case 0x7E: n_ = 0; break; } func_ovl0B_06_80049230(id); func_ovl0B_06_80048CC8(n_); }
-static void func_ovl0B_06_80046164();
-void func_ovl0B_06_8004616C(void);
+#define SE(id, w) { func_ovl0B_06_80049230(id); func_ovl0B_06_80048CC8(w); }
+static s32 COPY_ASK(void);
+void COPY_FILE(void);
 static void func_ovl0B_06_800464C0(s32 arg0);
 static void func_ovl0B_06_80046558(s32 arg0, s32 arg1);
 static void func_ovl0B_06_800465E0(s16 alpha, UnkStructA_40 *obj);
@@ -289,11 +329,11 @@ static void func_ovl0B_06_8004662C(void);
 static void func_ovl0B_06_80046634(s32 arg0);
 static void func_ovl0B_06_80046850(void);
 static void func_ovl0B_06_80046858(void);
-static void func_ovl0B_06_80046860(void);
-static s32 func_ovl0B_06_80046868(s32 slot);
+static s32 LEVEL_ASK(s32 slot, s32 side);
+static s32 LEVEL_FILE(s32 slot);
 static void func_ovl0B_06_80046F14(s32 arg3, s32 arg0);
-static void func_ovl0B_06_80047028(void);
-static s32 func_ovl0B_06_80047030(void);
+static s32 ERASE_ASK(s32 slot, Col_ovl0B_06 *off, Col_ovl0B_06 *on);
+static s32 ERASE_FILE(void);
 void func_ovl0B_06_8004747C(void);
 static void func_ovl0B_06_80047880(s32 arg0);
 void func_ovl0B_06_800478D4(void);
@@ -321,6 +361,27 @@ void func_ovl0B_06_80047D60(s32 arg0, Gfx_ovl0B_06 **arg1);
 void func_ovl0B_06_80047D8C(s32 arg0, Gfx_ovl0B_06 **arg1);
 void func_ovl0B_06_80047DB8(s32 arg0, Gfx_ovl0B_06 **arg1);
 void func_ovl0B_06_80047DE4(s32 arg0, Gfx_ovl0B_06 **arg1);
+
+/*
+ * Labels are drawn through ZeroJump 0x250C in us and eu, 0x2501 in jp, and
+ * their text replaced through 0x250D (jp 0x2503).
+ */
+#if VERSION_JP
+#define DRAW_TEXT func_ovl0B_06_80049090
+#define SET_TEXT func_ovl0B_06_800490A0
+#else
+#define DRAW_TEXT func_ovl0B_06_800490E8
+#define SET_TEXT func_ovl0B_06_800490F0
+#endif
+
+#if VERSION_JP
+extern u8 D_ovl0B_06_8004937C_jp[];
+extern u8 D_ovl0B_06_8004939C_jp[];
+extern u8 D_ovl0B_06_800493EC_jp[];
+extern u8 D_ovl0B_06_8004959C_jp[];
+extern u8 D_ovl0B_06_800495DC_jp[];
+#endif
+
 
 /* .bss */
 u8 D_ovl0B_06_8004A590[0x24]; /* not referenced here */
@@ -718,14 +779,14 @@ void func_ovl0B_06_8004747C(void) {
         if ((r & 0xF0) != 0x30) {
             slot = r & 0xF;
             if (slot == 3) {
-                sel = (r & 0xF0) | func_ovl0B_06_80047030();
+                sel = (r & 0xF0) | ERASE_FILE();
             } else {
                 loop = 0;
                 D_ovl0B_06_80049924 = slot;
                 state = func_ovl0B_06_80049368(slot, 0);
                 if (state == 10) {
                     sel = r;
-                    state = func_ovl0B_06_80046868(D_ovl0B_06_80049924);
+                    state = LEVEL_FILE(D_ovl0B_06_80049924);
                     if (state == 10) {
                         loop = 1;
                     } else {
@@ -744,7 +805,7 @@ void func_ovl0B_06_8004747C(void) {
     } while (loop != 0);
     switch (sel) {
         case 1:
-            func_ovl0B_06_80048CA8(func_ovl0B_06_8004473C, NULL, 0, 0, 0x130);
+            func_ovl0B_06_80048CA8(MSG_TASK, NULL, 0, 0, 0x130);
             func_ovl0B_06_80048CF0();
             func_ovl0B_06_800464C0(0);
             D_ovl0B_06_8004992C = 0x2FC8;
@@ -795,104 +856,125 @@ void func_ovl0B_06_8004747C(void) {
 
 
 /* @80047030 */
-static s32 func_ovl0B_06_80047030(void) {
+static s32 ERASE_FILE(void) {
     s32 loop;
     s32 sel;
-    s32 side;
-    s32 done;
-    s32 keep;
-    s32 held;
-    s32 pressed;
-    s32 i;
+    s32 slot;
 
-    func_ovl0B_06_80047028();
     loop = 1;
     sel = 0;
-    func_ovl0B_06_80048CA8(func_ovl0B_06_8004473C, NULL, 0, 0, 0x130);
+    func_ovl0B_06_80048CA8(MSG_TASK, NULL, 0, 0, 0x130);
     func_ovl0B_06_800464C0(0);
+#if VERSION_JP
+    SET_TEXT(D_ovl0B_06_80049A44[0].unk4, D_ovl0B_06_8004939C_jp, D_ovl0B_06_80049A44[0].unk14);
+    func_ovl0B_06_800490B0(D_ovl0B_06_80049A44[0].unk4, 10, 0);
+    SET_TEXT(D_ovl0B_06_80049A44[5].unk4, D_ovl0B_06_8004939C_jp, D_ovl0B_06_80049A44[5].unk14);
+    func_ovl0B_06_800490B0(D_ovl0B_06_80049A44[5].unk4, 10, 0);
+#else
     func_ovl0B_06_80045C24(&D_ovl0B_06_80049A44[0], &D_ovl0B_06_80049A44[5], -0x26, 0, D_ovl0B_06_80049A44[0].unk14, D_ovl0B_06_800494C8, D_ovl0B_06_80049A44[5].unk14);
+#endif
     func_ovl0B_06_800433B0(&D_ovl0B_06_80049A44[5]);
     do {
         sel = func_ovl0B_06_80045F20(sel & 0xF, &D_ovl0B_06_8004A264, &D_ovl0B_06_8004A244, 3);
         if ((sel & 0xF0) == 0x30) {
             loop = 0;
         } else {
-            if (func_ovl0B_06_80049368(sel & 0xF, 0) == 10) {
+            slot = sel & 0xF;
+            if (func_ovl0B_06_80049368(slot, 0) == 10) {
                 D_ovl0B_06_8004992C = 0x1064;
                 SE(0x18, 50);
             } else {
-                keep = 1;
-                side = 1;
-                done = 0;
-                D_ovl0B_06_8004992C = 0;
                 loop = 0;
-                func_ovl0B_06_80043450(D_ovl0B_06_80049B40, 3);
-                func_ovl0B_06_80044BA0(sel & 0xF, &D_ovl0B_06_8004A264);
-                func_ovl0B_06_80046F14(2, 0);
-                do {
-                    held = func_ovl0B_06_80049060();
-                    pressed = func_ovl0B_06_80048268();
-                    if ((held & 0x200) && side == 1) {
-                        side = 0;
-                        func_ovl0B_06_80046F14(1, 0);
-                        func_ovl0B_06_80046F14(2, 1);
-                        SE(0, 5);
-                    } else if ((held & 0x100) && side == 0) {
-                        side = 1;
-                        func_ovl0B_06_80046F14(1, 1);
-                        func_ovl0B_06_80046F14(2, 0);
-                        SE(0, 5);
-                    } else if ((pressed & 0x8000) || (pressed & 0x1000)) {
-                        done = 1;
-                        if (side == 0) {
-                            for (i = 0; i < 3; i++) {
-                                D_ovl0B_06_80049B40[i].unk18->unkC |= 1;
-                            }
-                            keep = 0;
-                            D_ovl0B_06_8004992C = 0x43C8;
-                            func_ovl0B_06_80048CF0();
-                            SE(1, 15);
-                            func_ovl0B_06_80049378(sel & 0xF);
-                            func_ovl0B_06_80049380(10);
-                            if (func_ovl0B_06_80049390() != 0) {
-                                D_ovl0B_06_8004992C = 0;
-                                func_ovl0B_06_80048CF0();
-                                func_ovl0B_06_80046634(0);
-                                D_ovl0B_06_8004992C = 0x44C8;
-                                SE(0x18, 50);
-                                func_ovl0B_06_80048CC8(0xC8);
-                                func_ovl0B_06_80046634(1);
-                            }
-                            func_ovl0B_06_80043280();
-                            func_ovl0B_06_80043010(D_ovl0B_06_80049A44, 6);
-                            func_ovl0B_06_800430F0(1);
-                            func_ovl0B_06_80043480(1);
-                            done = 1;
-                            func_ovl0B_06_80043834();
-                        }
-                    } else if (pressed & 0x4000) {
-                        done = 1;
-                        SE(2, 10);
-                    }
-                    func_ovl0B_06_80048CF0();
-                } while (done == 0);
-                func_ovl0B_06_80044BA0(sel & 0xF, &D_ovl0B_06_8004A244);
-                func_ovl0B_06_80043010(D_ovl0B_06_80049B40, 3);
+                ERASE_ASK(slot, &D_ovl0B_06_8004A244, &D_ovl0B_06_8004A264);
             }
         }
         func_ovl0B_06_80048CF0();
     } while (loop != 0);
+    slot = sel & 0xF;
+#if VERSION_JP
+    SET_TEXT(D_ovl0B_06_80049A44[0].unk4, D_ovl0B_06_80049480, D_ovl0B_06_80049A44[0].unk14);
+    func_ovl0B_06_800490B0(D_ovl0B_06_80049A44[0].unk4, -10, 0);
+    SET_TEXT(D_ovl0B_06_80049A44[5].unk4, D_ovl0B_06_80049480, D_ovl0B_06_80049A44[5].unk14);
+    func_ovl0B_06_800490B0(D_ovl0B_06_80049A44[5].unk4, -10, 0);
+#else
     func_ovl0B_06_80045C24(&D_ovl0B_06_80049A44[0], &D_ovl0B_06_80049A44[5], 0, 0, D_ovl0B_06_80049A44[0].unk14, D_ovl0B_06_80049480, D_ovl0B_06_80049A44[5].unk14);
+#endif
     func_ovl0B_06_800433B0(&D_ovl0B_06_80049A44[5]);
     D_ovl0B_06_8004992C = 0x400;
     func_ovl0B_06_800464C0(1);
-    return sel & 0xF;
+    return slot;
 }
 
 
-/* @80047028 */
-static void func_ovl0B_06_80047028(void) {
+/* @80047028: erasing the chosen file, with its yes/no (inlined in us, not in jp) */
+static s32 ERASE_ASK(s32 slot, Col_ovl0B_06 *off, Col_ovl0B_06 *on) {
+    s32 keep;
+    s32 side;
+    s32 done;
+    s32 held;
+    s32 pressed;
+    s32 i;
+
+    keep = 1;
+    side = 1;
+    done = 0;
+    D_ovl0B_06_8004992C = 0;
+    func_ovl0B_06_80043450(D_ovl0B_06_80049B40, 3);
+    func_ovl0B_06_80044BA0(slot, on);
+    func_ovl0B_06_80046F14(2, 0);
+    do {
+        held = func_ovl0B_06_80049060();
+        pressed = func_ovl0B_06_80048268();
+        if ((held & 0x200) && side == 1) {
+            side = 0;
+            func_ovl0B_06_80046F14(1, 0);
+            func_ovl0B_06_80046F14(2, 1);
+            SE(0, 5);
+        } else if ((held & 0x100) && side == 0) {
+            side = 1;
+            func_ovl0B_06_80046F14(1, 1);
+            func_ovl0B_06_80046F14(2, 0);
+            SE(0, 5);
+        } else if ((pressed & 0x8000) || (pressed & 0x1000)) {
+            done = 1;
+            if (side == 0) {
+                for (i = 0; i < 3; i++) {
+                    D_ovl0B_06_80049B40[i].unk18->unkC |= 1;
+                }
+                keep = 0;
+                D_ovl0B_06_8004992C = 0x43C8;
+                func_ovl0B_06_80048CF0();
+                SE(1, 15);
+                func_ovl0B_06_80049378(slot);
+                func_ovl0B_06_80049380(10);
+                if (func_ovl0B_06_80049390() != 0) {
+                    D_ovl0B_06_8004992C = 0;
+                    func_ovl0B_06_80048CF0();
+                    func_ovl0B_06_80046634(0);
+                    D_ovl0B_06_8004992C = 0x44C8;
+                    SE(0x18, 50);
+                    func_ovl0B_06_80048CC8(0xC8);
+                    func_ovl0B_06_80046634(1);
+                }
+                func_ovl0B_06_80043280();
+                func_ovl0B_06_80043010(D_ovl0B_06_80049A44, 6);
+                func_ovl0B_06_800430F0(1);
+                func_ovl0B_06_80043480(1);
+                done = 1;
+                func_ovl0B_06_80043834();
+            }
+        } else if (pressed & 0x4000) {
+            done = 1;
+            SE(2, 10);
+        }
+        func_ovl0B_06_80048CF0();
+    } while (done == 0);
+    func_ovl0B_06_80044BA0(slot, off);
+    func_ovl0B_06_80043010(D_ovl0B_06_80049B40, 3);
+    return keep;
 }
+
+
 
 
 /* @80046F14 */
@@ -916,6 +998,20 @@ static void func_ovl0B_06_80046F14(s32 arg3, s32 arg0) {
             dy = 5;
             flag = 1;
             break;
+#if VERSION_JP
+        case 2:
+            scale = 0.5f;
+            dx = -20;
+            dy = -5;
+            flag = 0;
+            break;
+        case 18:
+            scale = -0.5f;
+            dx = 20;
+            dy = 5;
+            flag = 1;
+            break;
+#else
         case 2:
             scale = 0.5f;
             dy = -5;
@@ -928,117 +1024,40 @@ static void func_ovl0B_06_80046F14(s32 arg3, s32 arg0) {
             flag = 1;
             dx = 10;
             break;
+#endif
     }
     label = &D_ovl0B_06_80049B40[arg3];
     func_ovl0B_06_800490C0(label->unk4, scale, scale);
     func_ovl0B_06_800490B0(label->unk4, dx, dy);
-    func_ovl0B_06_800490F0(label->unk4, label->unk0, flag);
+    SET_TEXT(label->unk4, label->unk0, flag);
     label->unk18 = func_ovl0B_06_800490C8(label->unk4);
 }
 
 
 /* @80046868 */
-static s32 func_ovl0B_06_80046868(s32 slot) {
+static s32 LEVEL_FILE(s32 slot) {
     Label_ovl0B_06 *label;
     s32 ret;
     s32 loop;
     s32 result;
-    s32 side;
-    s32 held;
-    s32 pressed;
-    s32 y;
-    f32 dy;
-    f32 fy;
-    f32 t;
-    f32 s;
-    s32 i;
 
-    func_ovl0B_06_80046850();
-    func_ovl0B_06_80046858();
-    func_ovl0B_06_80046860();
     ret = 10;
     func_ovl0B_06_800464C0(0);
     label = &D_ovl0B_06_80049A44[slot];
     label[1].unk18->unkC |= 1;
     func_ovl0B_06_80043450(D_ovl0B_06_80049AEC, 2);
+#if VERSION_JP
+    SET_TEXT(D_ovl0B_06_80049A44[0].unk4, D_ovl0B_06_8004937C_jp, D_ovl0B_06_80049A44[0].unk14);
+    func_ovl0B_06_800490B0(D_ovl0B_06_80049A44[0].unk4, -40, 0);
+    SET_TEXT(D_ovl0B_06_80049A44[5].unk4, D_ovl0B_06_8004937C_jp, D_ovl0B_06_80049A44[5].unk14);
+    func_ovl0B_06_800490B0(D_ovl0B_06_80049A44[5].unk4, -40, 0);
+#else
     func_ovl0B_06_80045C24(&D_ovl0B_06_80049A44[0], &D_ovl0B_06_80049A44[5], -0x1C, 0, D_ovl0B_06_80049A44[0].unk14, D_ovl0B_06_800494A4, D_ovl0B_06_80049A44[5].unk14);
+#endif
     func_ovl0B_06_800433B0(&D_ovl0B_06_80049A44[5]);
-    dy = slot * 40;
     loop = 0;
     do {
-        t = 0.0f;
-        result = 0;
-        side = 0;
-        func_ovl0B_06_80043040(&D_ovl0B_06_80049E44[4], &D_ovl0B_06_8004A0C4[10], dy);
-        func_ovl0B_06_80043040(&D_ovl0B_06_80049E44[5], &D_ovl0B_06_8004A0C4[12], dy);
-        func_ovl0B_06_80043040(&D_ovl0B_06_80049E44[6], &D_ovl0B_06_8004A0C4[13], dy);
-        func_ovl0B_06_80043040(&D_ovl0B_06_80049E44[7], &D_ovl0B_06_8004A0C4[11], dy);
-        func_ovl0B_06_80044BA0(slot, &D_ovl0B_06_8004A274);
-        D_ovl0B_06_80049E44[5].unk0->unkC &= ~1;
-        D_ovl0B_06_80049E44[6].unk0->unkC |= 1;
-        y = slot * 40 + 0x3E;
-        fy = slot * 40 + 0x32;
-        while (TRUE) {
-            held = func_ovl0B_06_80049060();
-            pressed = func_ovl0B_06_80048268();
-            s = func_ovl0B_06_80048E50(t);
-            if (side == 0) {
-                t += 3.0f;
-                if (t >= 360.0f) {
-                    t -= 360.0f;
-                }
-                func_ovl0B_06_800490B8(D_ovl0B_06_80049AEC[0].unk4, 0.55f, (s * 0.5f + 1.1f) * 0.7f);
-                func_ovl0B_06_800490A8(D_ovl0B_06_80049AEC[0].unk4, 0x5D, (u32) (fy + 12.0f * (1.0f - s * 0.8f)));
-                func_ovl0B_06_800490B8(D_ovl0B_06_80049AEC[1].unk4, 0.55f, 0.7f);
-                func_ovl0B_06_800490A8(D_ovl0B_06_80049AEC[1].unk4, 0xF5, y);
-            } else {
-                t += 7.0f;
-                if (t >= 360.0f) {
-                    t -= 360.0f;
-                }
-                func_ovl0B_06_800490B8(D_ovl0B_06_80049AEC[0].unk4, 0.55f, 0.7f);
-                func_ovl0B_06_800490A8(D_ovl0B_06_80049AEC[0].unk4, 0x5D, y);
-                func_ovl0B_06_800490B8(D_ovl0B_06_80049AEC[1].unk4, 0.55f, (s * 0.7f + 1.1f) * 0.7f);
-                func_ovl0B_06_800490A8(D_ovl0B_06_80049AEC[1].unk4, 0xF5, (u32) (fy + 12.0f * (1.0f - s)));
-            }
-            if ((held & 0x200) && side == 1) {
-                t = 0.0f;
-                side = 0;
-                D_ovl0B_06_80049E44[5].unk0->unkC &= ~1;
-                D_ovl0B_06_80049E44[6].unk0->unkC |= 1;
-                SE(0, 5);
-            } else if ((held & 0x100) && side == 0) {
-                t = 0.0f;
-                side = 1;
-                D_ovl0B_06_80049E44[5].unk0->unkC |= 1;
-                D_ovl0B_06_80049E44[6].unk0->unkC &= ~1;
-                SE(0, 5);
-            } else if (pressed & 0x8000) {
-                result = 0x10;
-                SE(1, 15);
-            } else if (pressed & 0x1000) {
-                result = 0x20;
-                SE(1, 15);
-            } else if (pressed & 0x4000) {
-                result = 0x30;
-                SE(2, 10);
-            }
-            func_ovl0B_06_80048CF0();
-            if (result != 0) {
-                break;
-            }
-        }
-        if (result == 0x30) {
-            func_ovl0B_06_80048840(D_ovl0B_06_80049E44[4].unk0);
-            func_ovl0B_06_80048840(D_ovl0B_06_80049E44[5].unk0);
-            func_ovl0B_06_80048840(D_ovl0B_06_80049E44[6].unk0);
-            func_ovl0B_06_80048840(D_ovl0B_06_80049E44[7].unk0);
-            func_ovl0B_06_80044BA0(slot, &D_ovl0B_06_8004A244);
-            D_ovl0B_06_80049928 = 0;
-        } else {
-            D_ovl0B_06_80049928 = 1;
-        }
-        result |= side;
+        result = LEVEL_ASK(slot, 0);
         if ((result & 0xF0) != 0x30) {
             if (!(result & 0xF)) {
                 ret = 0;
@@ -1049,7 +1068,14 @@ static s32 func_ovl0B_06_80046868(s32 slot) {
         func_ovl0B_06_80048CF0();
     } while (loop != 0);
     if ((result & 0xF0) == 0x30) {
+#if VERSION_JP
+        SET_TEXT(D_ovl0B_06_80049A44[0].unk4, D_ovl0B_06_80049480, D_ovl0B_06_80049A44[0].unk14);
+        func_ovl0B_06_800490B0(D_ovl0B_06_80049A44[0].unk4, 40, 0);
+        SET_TEXT(D_ovl0B_06_80049A44[5].unk4, D_ovl0B_06_80049480, D_ovl0B_06_80049A44[5].unk14);
+        func_ovl0B_06_800490B0(D_ovl0B_06_80049A44[5].unk4, 40, 0);
+#else
         func_ovl0B_06_80045C24(&D_ovl0B_06_80049A44[0], &D_ovl0B_06_80049A44[5], 0, 0, D_ovl0B_06_80049A44[0].unk14, D_ovl0B_06_80049480, D_ovl0B_06_80049A44[5].unk14);
+#endif
         func_ovl0B_06_800433B0(&D_ovl0B_06_80049A44[5]);
         func_ovl0B_06_800464C0(1);
         label[1].unk18->unkC &= ~1;
@@ -1059,9 +1085,101 @@ static s32 func_ovl0B_06_80046868(s32 slot) {
 }
 
 
-/* @80046634 */
-static void func_ovl0B_06_80046860(void) {
+/* @80046860: a file's level, normal or hard (inlined in us, not in jp) */
+static s32 LEVEL_ASK(s32 slot, s32 side) {
+    s32 result;
+    s32 held;
+    s32 pressed;
+    s32 y;
+    f32 dy;
+    f32 fy;
+    f32 t;
+    f32 s;
+
+    func_ovl0B_06_80046850();
+    func_ovl0B_06_80046858();
+    t = 0.0f;
+    result = 0;
+    dy = slot * 40;
+    func_ovl0B_06_80043040(&D_ovl0B_06_80049E44[4], &D_ovl0B_06_8004A0C4[10], dy);
+    func_ovl0B_06_80043040(&D_ovl0B_06_80049E44[5], &D_ovl0B_06_8004A0C4[12], dy);
+    func_ovl0B_06_80043040(&D_ovl0B_06_80049E44[6], &D_ovl0B_06_8004A0C4[13], dy);
+    func_ovl0B_06_80043040(&D_ovl0B_06_80049E44[7], &D_ovl0B_06_8004A0C4[11], dy);
+    func_ovl0B_06_80044BA0(slot, &D_ovl0B_06_8004A274);
+    if (side == 0) {
+        D_ovl0B_06_80049E44[5].unk0->unkC &= ~1;
+        D_ovl0B_06_80049E44[6].unk0->unkC |= 1;
+    } else {
+        D_ovl0B_06_80049E44[5].unk0->unkC |= 1;
+        D_ovl0B_06_80049E44[6].unk0->unkC &= ~1;
+    }
+    y = slot * 40 + 0x3E;
+    fy = slot * 40 + 0x32;
+    while (TRUE) {
+        held = func_ovl0B_06_80049060();
+        pressed = func_ovl0B_06_80048268();
+        s = func_ovl0B_06_80048E50(t);
+        if (side == 0) {
+            t += 3.0f;
+            if (t >= 360.0f) {
+                t -= 360.0f;
+            }
+            func_ovl0B_06_800490B8(D_ovl0B_06_80049AEC[0].unk4, 0.55f, (s * 0.5f + 1.1f) * 0.7f);
+            func_ovl0B_06_800490A8(D_ovl0B_06_80049AEC[0].unk4, 0x5D, (u32) (fy + 12.0f * (1.0f - s * 0.8f)));
+            func_ovl0B_06_800490B8(D_ovl0B_06_80049AEC[1].unk4, 0.55f, 0.7f);
+            func_ovl0B_06_800490A8(D_ovl0B_06_80049AEC[1].unk4, 0xF5, y);
+        } else {
+            t += 7.0f;
+            if (t >= 360.0f) {
+                t -= 360.0f;
+            }
+            func_ovl0B_06_800490B8(D_ovl0B_06_80049AEC[0].unk4, 0.55f, 0.7f);
+            func_ovl0B_06_800490A8(D_ovl0B_06_80049AEC[0].unk4, 0x5D, y);
+            func_ovl0B_06_800490B8(D_ovl0B_06_80049AEC[1].unk4, 0.55f, (s * 0.7f + 1.1f) * 0.7f);
+            func_ovl0B_06_800490A8(D_ovl0B_06_80049AEC[1].unk4, 0xF5, (u32) (fy + 12.0f * (1.0f - s)));
+        }
+        if ((held & 0x200) && side == 1) {
+            t = 0.0f;
+            side = 0;
+            D_ovl0B_06_80049E44[5].unk0->unkC &= ~1;
+            D_ovl0B_06_80049E44[6].unk0->unkC |= 1;
+            SE(0, 5);
+        } else if ((held & 0x100) && side == 0) {
+            t = 0.0f;
+            side = 1;
+            D_ovl0B_06_80049E44[5].unk0->unkC |= 1;
+            D_ovl0B_06_80049E44[6].unk0->unkC &= ~1;
+            SE(0, 5);
+        } else if (pressed & 0x8000) {
+            result = 0x10;
+            SE(1, 15);
+        } else if (pressed & 0x1000) {
+            result = 0x20;
+            SE(1, 15);
+        } else if (pressed & 0x4000) {
+            result = 0x30;
+            SE(2, 10);
+        }
+        func_ovl0B_06_80048CF0();
+        if (result != 0) {
+            break;
+        }
+    }
+    if (result == 0x30) {
+        func_ovl0B_06_80048840(D_ovl0B_06_80049E44[4].unk0);
+        func_ovl0B_06_80048840(D_ovl0B_06_80049E44[5].unk0);
+        func_ovl0B_06_80048840(D_ovl0B_06_80049E44[6].unk0);
+        func_ovl0B_06_80048840(D_ovl0B_06_80049E44[7].unk0);
+        func_ovl0B_06_80044BA0(slot, &D_ovl0B_06_8004A244);
+        D_ovl0B_06_80049928 = 0;
+    } else {
+        D_ovl0B_06_80049928 = 1;
+    }
+    return result | side;
 }
+
+
+/* @80046634 */
 
 static void func_ovl0B_06_80046858(void) {
 }
@@ -1125,7 +1243,7 @@ static void func_ovl0B_06_800465E0(s16 alpha, UnkStructA_40 *obj) {
 static void func_ovl0B_06_80046558(s32 arg0, s32 arg1) {
     func_ovl0B_06_80049380(arg0);
     if (arg1 != 0) {
-        func_ovl0B_06_80048CA8(func_ovl0B_06_8004473C, NULL, 0, 0, 0x130);
+        func_ovl0B_06_80048CA8(MSG_TASK, NULL, 0, 0, 0x130);
         func_ovl0B_06_80048CF0();
         func_ovl0B_06_800464C0(0);
         func_ovl0B_06_80044E48(0x42C8, 0x18);
@@ -1152,50 +1270,19 @@ static void func_ovl0B_06_800464C0(s32 arg0) {
 
 
 /* @8004616C */
-void func_ovl0B_06_8004616C(void) {
+void COPY_FILE(void) {
     s32 loop;
     s32 sel;
-    s32 inner;
-    s32 sub;
     s32 slot;
 
-    func_ovl0B_06_80046164();
     loop = 1;
     sel = 0;
     do {
         sel = func_ovl0B_06_80045F20(sel & 0xF, &D_ovl0B_06_8004A254, &D_ovl0B_06_8004A244, 5);
         if ((sel & 0xF0) != 0x30) {
             if ((sel & 0xF) == 3) {
-                inner = 1;
-                sub = 0;
                 sel &= 0xF0;
-                func_ovl0B_06_80048CA8(func_ovl0B_06_8004473C, NULL, 0, 0, 0x130);
-                func_ovl0B_06_80044908(0);
-                func_ovl0B_06_80045C24(&D_ovl0B_06_80049B94[0], &D_ovl0B_06_80049B94[6], -0x28, 0, D_ovl0B_06_80049B94[0].unk14, D_ovl0B_06_80049534, D_ovl0B_06_80049B94[6].unk14);
-                func_ovl0B_06_800433B0(&D_ovl0B_06_80049B94[6]);
-                do {
-                    sub = func_ovl0B_06_80045F20(sub & 0xF, &D_ovl0B_06_8004A264, &D_ovl0B_06_8004A244, 3);
-                    if ((sub & 0xF0) == 0x30) {
-                        inner = 0;
-                    } else {
-                        slot = sub & 0xF;
-                        if (func_ovl0B_06_80049368(slot, 0) == 10) {
-                            D_ovl0B_06_8004992C = 0x1064;
-                            SE(0x18, 50);
-                        } else {
-                            D_ovl0B_06_8004992C = 0;
-                            inner = 0;
-                            func_ovl0B_06_80048CF0();
-                            func_ovl0B_06_80045D28(slot, 0);
-                        }
-                    }
-                    func_ovl0B_06_80048CF0();
-                } while (inner != 0);
-                func_ovl0B_06_80044908(1);
-                func_ovl0B_06_80045C24(&D_ovl0B_06_80049B94[0], &D_ovl0B_06_80049B94[6], 0, 0, D_ovl0B_06_80049B94[0].unk14, D_ovl0B_06_80049508, D_ovl0B_06_80049B94[6].unk14);
-                func_ovl0B_06_800433B0(&D_ovl0B_06_80049B94[6]);
-                D_ovl0B_06_8004992C = 0x400;
-                sel |= sub & 0xF;
+                sel |= COPY_ASK();
             } else if ((sel & 0xF) == 4) {
                 func_ovl0B_06_800459D8(0);
             } else {
@@ -1207,7 +1294,7 @@ void func_ovl0B_06_8004616C(void) {
                     func_ovl0B_06_80049378(slot);
                     if (func_ovl0B_06_80049388() != 0) {
                         func_ovl0B_06_80049380(NULL);
-                        func_ovl0B_06_80048CA8(func_ovl0B_06_8004473C, NULL, 0, 0, 0x130);
+                        func_ovl0B_06_80048CA8(MSG_TASK, NULL, 0, 0, 0x130);
                         func_ovl0B_06_80048CF0();
                         func_ovl0B_06_80044908(0);
                         func_ovl0B_06_80044BE4(0);
@@ -1229,9 +1316,63 @@ void func_ovl0B_06_8004616C(void) {
 }
 
 
-/* @80046164 */
-static void func_ovl0B_06_80046164() {
+/* @80046164: copying, the file to copy from (inlined in us, not in jp) */
+static s32 COPY_ASK(void) {
+    s32 loop;
+    s32 sub;
+    s32 slot;
+
+    loop = 1;
+    sub = 0;
+    func_ovl0B_06_80048CA8(MSG_TASK, NULL, 0, 0, 0x130);
+    func_ovl0B_06_80044908(0);
+#if VERSION_JP
+    SET_TEXT(D_ovl0B_06_80049B94[0].unk4, D_ovl0B_06_800493EC_jp, D_ovl0B_06_80049B94[0].unk14);
+    func_ovl0B_06_800490B0(D_ovl0B_06_80049B94[0].unk4, 10, 0);
+    D_ovl0B_06_80049B94[0].unk18 = func_ovl0B_06_800490C8(D_ovl0B_06_80049B94[0].unk4);
+    SET_TEXT(D_ovl0B_06_80049B94[6].unk4, D_ovl0B_06_800493EC_jp, D_ovl0B_06_80049B94[6].unk14);
+    func_ovl0B_06_800490B0(D_ovl0B_06_80049B94[6].unk4, 10, 0);
+    D_ovl0B_06_80049B94[6].unk18 = func_ovl0B_06_800490C8(D_ovl0B_06_80049B94[6].unk4);
+#else
+    func_ovl0B_06_80045C24(&D_ovl0B_06_80049B94[0], &D_ovl0B_06_80049B94[6], -0x28, 0, D_ovl0B_06_80049B94[0].unk14, D_ovl0B_06_80049534, D_ovl0B_06_80049B94[6].unk14);
+#endif
+    func_ovl0B_06_800433B0(&D_ovl0B_06_80049B94[6]);
+    do {
+        sub = func_ovl0B_06_80045F20(sub & 0xF, &D_ovl0B_06_8004A264, &D_ovl0B_06_8004A244, 3);
+        if ((sub & 0xF0) == 0x30) {
+            loop = 0;
+        } else {
+            slot = sub & 0xF;
+            if (func_ovl0B_06_80049368(slot, 0) == 10) {
+                D_ovl0B_06_8004992C = 0x1064;
+                SE(0x18, 50);
+            } else {
+                D_ovl0B_06_8004992C = 0;
+                loop = 0;
+                func_ovl0B_06_80048CF0();
+                func_ovl0B_06_80045D28(slot, 0);
+            }
+        }
+        func_ovl0B_06_80048CF0();
+    } while (loop != 0);
+    func_ovl0B_06_80044908(1);
+    slot = sub & 0xF;
+#if VERSION_JP
+    SET_TEXT(D_ovl0B_06_80049B94[0].unk4, D_ovl0B_06_80049508, D_ovl0B_06_80049B94[0].unk14);
+    func_ovl0B_06_800490B0(D_ovl0B_06_80049B94[0].unk4, -10, 0);
+    D_ovl0B_06_80049B94[0].unk18 = func_ovl0B_06_800490C8(D_ovl0B_06_80049B94[0].unk4);
+    SET_TEXT(D_ovl0B_06_80049B94[6].unk4, D_ovl0B_06_80049508, D_ovl0B_06_80049B94[6].unk14);
+    func_ovl0B_06_800490B0(D_ovl0B_06_80049B94[6].unk4, -10, 0);
+    D_ovl0B_06_80049B94[6].unk18 = func_ovl0B_06_800490C8(D_ovl0B_06_80049B94[6].unk4);
+#else
+    func_ovl0B_06_80045C24(&D_ovl0B_06_80049B94[0], &D_ovl0B_06_80049B94[6], 0, 0, D_ovl0B_06_80049B94[0].unk14, D_ovl0B_06_80049508, D_ovl0B_06_80049B94[6].unk14);
+#endif
+    func_ovl0B_06_800433B0(&D_ovl0B_06_80049B94[6]);
+    D_ovl0B_06_8004992C = 0x400;
+    return slot;
 }
+
+
 
 
 /* @80045F20 */
@@ -1352,8 +1493,8 @@ static void func_ovl0B_06_80045C24(Label_ovl0B_06 *a, Label_ovl0B_06 *b, s16 dx,
     s32 ta;
     s32 tb;
 
-    ta = func_ovl0B_06_800490E8(str, a->unk8 + dx, a->unkA + dy, a->unkC, a->unk10, fa);
-    tb = func_ovl0B_06_800490E8(str, b->unk8 + dx, b->unkA + dy, b->unkC, b->unk10, fb);
+    ta = DRAW_TEXT(str, a->unk8 + dx, a->unkA + dy, a->unkC, a->unk10, fa);
+    tb = DRAW_TEXT(str, b->unk8 + dx, b->unkA + dy, b->unkC, b->unk10, fb);
     func_ovl0B_06_80049098(a->unk4);
     func_ovl0B_06_80049098(b->unk4);
     a->unk4 = ta;
@@ -1371,7 +1512,7 @@ static void func_ovl0B_06_800459D8(s32 arg0) {
     func_ovl0B_06_800459D0();
     slot = -1;
     func_ovl0B_06_80044908(0);
-    func_ovl0B_06_80048CA8(func_ovl0B_06_8004473C, NULL, 0, 0, 0x130);
+    func_ovl0B_06_80048CA8(MSG_TASK, NULL, 0, 0, 0x130);
     func_ovl0B_06_80048CF0();
     D_ovl0B_06_8004992C = 0x2AC8;
     func_ovl0B_06_80048CF0();
@@ -1506,31 +1647,49 @@ static s32 func_ovl0B_06_80045794(s32 arg0, s32 arg1, s32 arg2, s32 mode) {
 
 /* @80045340 */
 static void func_ovl0B_06_80045340(s32 arg0, u8 *save) {
+    s32 i;
     u8 *text;
+    u8 flag;
     s16 x;
     f32 scale;
-    u8 flag;
     u8 *dst;
+#if VERSION_JP
+    s32 n;
+#else
     u8 *src;
+#endif
 
     switch (arg0) {
         case 0:
             text = D_ovl0B_06_8004974C;
+#if VERSION_JP
+            x = 0x2A;
+#else
             x = 0x5F;
+#endif
             flag = 0;
             D_ovl0B_06_8004A410 = 0;
             scale = 1.0f;
             break;
         case 1:
             text = D_ovl0B_06_8004975C;
+#if VERSION_JP
+            x = 0x28;
+#else
             x = 0x1D;
+#endif
             flag = 0;
             D_ovl0B_06_8004A410 = 0;
             scale = 0.6f;
             break;
         case 2:
+#if VERSION_JP
+            text = D_ovl0B_06_8004959C_jp;
+            x = 0x1B;
+#else
             text = D_ovl0B_06_80049784;
             x = 0x50;
+#endif
             flag = 2;
             D_ovl0B_06_8004A410 = 1;
             scale = 0.7f;
@@ -1544,8 +1703,8 @@ static void func_ovl0B_06_80045340(s32 arg0, u8 *save) {
     D_ovl0B_06_8004A478->unk18 = 100.0f;
     D_ovl0B_06_8004A478->unk20 = 0.0f;
     func_ovl0B_06_80048860(D_ovl0B_06_8004A478, 0xC);
-    for (x = 0; x < 0xC; x++) {
-        func_ovl0B_06_80048868(D_ovl0B_06_8004A478, 0x4A, x, x);
+    for (i = 0; i < 0xC; i++) {
+        func_ovl0B_06_80048868(D_ovl0B_06_8004A478, 0x4A, i, i);
     }
     func_ovl0B_06_80048888(D_ovl0B_06_8004A478, -1, 0);
     D_ovl0B_06_8004A478->unkC &= ~0x20;
@@ -1555,19 +1714,38 @@ static void func_ovl0B_06_80045340(s32 arg0, u8 *save) {
     func_ovl0B_06_80048300(D_ovl0B_06_8004A47C, 1, save[0x17]);
     func_ovl0B_06_80048300(D_ovl0B_06_8004A47C, 2, save[0x18]);
     func_ovl0B_06_80048300(D_ovl0B_06_8004A47C, 3, save[0x19]);
+#if VERSION_JP
+    dst = D_ovl0B_06_8004A640;
+    n = 8;
+    for (i = 0; i < n; i++) {
+        if ((*dst = save[i + 8]) == 0) {
+            break;
+        }
+        dst++;
+    }
+#else
     for (dst = D_ovl0B_06_8004A640, src = save + 8; dst != D_ovl0B_06_8004A648; dst++, src++) {
         if ((*dst = *src) == 0) {
             break;
         }
     }
+#endif
     *dst = 0;
-    D_ovl0B_06_8004A650[0] = func_ovl0B_06_800490E8(text, x, 0x2E, 0.7f, scale, flag);
-    D_ovl0B_06_8004A650[1] = func_ovl0B_06_800490E8(D_ovl0B_06_800497A4, 0x28, 0xD2, 0.5f, 0.5f, 4);
-    D_ovl0B_06_8004A650[2] = func_ovl0B_06_800490E8(D_ovl0B_06_8004A640, (u32) (208.0f - func_ovl0B_06_800490E0(D_ovl0B_06_8004A640) * 0.8f / 2.0f), 0x78, 0.8f, 1.0f, 5);
-    D_ovl0B_06_8004A650[3] = func_ovl0B_06_800490E8(D_ovl0B_06_80049738, 0x33, 0x14, 0.8f, 0.8f, 0);
+    D_ovl0B_06_8004A650[0] = DRAW_TEXT(text, x, 0x2E, 0.7f, scale, flag);
+    D_ovl0B_06_8004A650[1] = DRAW_TEXT(D_ovl0B_06_800497A4, 0x28, 0xD2, 0.5f, 0.5f, 4);
+#if VERSION_JP
+    D_ovl0B_06_8004A650[2] = DRAW_TEXT(D_ovl0B_06_8004A640, (u32) ((n - i) * 9.6f + 125.0f), 0x78, 0.8f, 1.0f, 5);
+    D_ovl0B_06_8004A650[3] = DRAW_TEXT(D_ovl0B_06_80049738, 0x41, 0x14, 0.8f, 0.8f, 0);
     D_ovl0B_06_8004A404 = 0;
-    D_ovl0B_06_8004A408 = func_ovl0B_06_800490E8(D_ovl0B_06_800497BC, 0x5F, 0xB2, 0.8f, 0.8f, 1);
-    D_ovl0B_06_8004A40C = func_ovl0B_06_800490E8(D_ovl0B_06_800497C4, 0xB9, 0xA8, 1.5f, 1.5f, 0);
+    D_ovl0B_06_8004A408 = DRAW_TEXT(D_ovl0B_06_800497BC, 0x50, 0xB2, 0.8f, 0.8f, 1);
+    D_ovl0B_06_8004A40C = DRAW_TEXT(D_ovl0B_06_800495DC_jp, 0xA0, 0xA8, 1.5f, 1.5f, 0);
+#else
+    D_ovl0B_06_8004A650[2] = DRAW_TEXT(D_ovl0B_06_8004A640, (u32) (208.0f - func_ovl0B_06_800490E0(D_ovl0B_06_8004A640) * 0.8f / 2.0f), 0x78, 0.8f, 1.0f, 5);
+    D_ovl0B_06_8004A650[3] = DRAW_TEXT(D_ovl0B_06_80049738, 0x33, 0x14, 0.8f, 0.8f, 0);
+    D_ovl0B_06_8004A404 = 0;
+    D_ovl0B_06_8004A408 = DRAW_TEXT(D_ovl0B_06_800497BC, 0x5F, 0xB2, 0.8f, 0.8f, 1);
+    D_ovl0B_06_8004A40C = DRAW_TEXT(D_ovl0B_06_800497C4, 0xB9, 0xA8, 1.5f, 1.5f, 0);
+#endif
     func_ovl0B_06_800490C8(D_ovl0B_06_8004A650[1])->unkC |= 1;
     D_ovl0B_06_8004A480[0] = func_ovl0B_06_80048CA8(func_ovl0B_06_800478D4, NULL, 0, 0, 0x130);
 }
@@ -1587,8 +1765,8 @@ static s32 func_ovl0B_06_8004518C(void) {
         if ((held & 0x200) || (held & 0x100)) {
             if (D_ovl0B_06_8004A404 == 1 && (held & 0x100)) {
                 D_ovl0B_06_8004A404 = 0;
-                a = func_ovl0B_06_800490E8(D_ovl0B_06_800497BC, 0x5F, 0xB2, 0.8f, 0.8f, 1);
-                b = func_ovl0B_06_800490E8(D_ovl0B_06_800497C4, 0xB9, 0xA8, 1.5f, 1.5f, 0);
+                a = DRAW_TEXT(D_ovl0B_06_800497BC, 0x5F, 0xB2, 0.8f, 0.8f, 1);
+                b = DRAW_TEXT(D_ovl0B_06_800497C4, 0xB9, 0xA8, 1.5f, 1.5f, 0);
                 func_ovl0B_06_80049098(D_ovl0B_06_8004A408);
                 func_ovl0B_06_80049098(D_ovl0B_06_8004A40C);
                 D_ovl0B_06_8004A408 = a;
@@ -1596,8 +1774,8 @@ static s32 func_ovl0B_06_8004518C(void) {
                 SE(0, 5);
             } else if (D_ovl0B_06_8004A404 == 0 && (held & 0x200)) {
                 D_ovl0B_06_8004A404 = 1;
-                a = func_ovl0B_06_800490E8(D_ovl0B_06_800497BC, 0x4B, 0xA8, 1.5f, 1.5f, 0);
-                b = func_ovl0B_06_800490E8(D_ovl0B_06_800497C4, 0xC3, 0xB2, 0.8f, 0.8f, 1);
+                a = DRAW_TEXT(D_ovl0B_06_800497BC, 0x4B, 0xA8, 1.5f, 1.5f, 0);
+                b = DRAW_TEXT(D_ovl0B_06_800497C4, 0xC3, 0xB2, 0.8f, 0.8f, 1);
                 func_ovl0B_06_80049098(D_ovl0B_06_8004A408);
                 func_ovl0B_06_80049098(D_ovl0B_06_8004A40C);
                 D_ovl0B_06_8004A408 = a;
@@ -1698,7 +1876,7 @@ static s32 func_ovl0B_06_80044F70(s32 arg0, s32 arg1, s32 mask, s32 wait) {
             item = &D_ovl0B_06_8004A43C;
             break;
     }
-    text = func_ovl0B_06_800490E8(item->unk0, item->unk4, item->unk6, item->unk8, item->unkC, item->unk10);
+    text = DRAW_TEXT(item->unk0, item->unk4, item->unk6, item->unk8, item->unkC, item->unk10);
     if (mask == 0) {
         func_ovl0B_06_80048CC8(wait);
     } else {
@@ -1857,7 +2035,7 @@ static void func_ovl0B_06_80044908(s32 arg0) {
 
 
 /* @8004473C */
-void func_ovl0B_06_8004473C(void) {
+void MSG_TASK(void) {
     Txt_ovl0B_06 *txt;
     Pair_ovl0B_06 *pos;
     s32 text;
@@ -1874,7 +2052,7 @@ void func_ovl0B_06_8004473C(void) {
             }
             txt = &D_ovl0B_06_8004A294[idx];
             pos = &D_ovl0B_06_8004A3E4[txt->unkC];
-            text = func_ovl0B_06_800490E8(txt->unk0, txt->unk4, pos->unk0, txt->unk8, pos->unk4, D_ovl0B_06_80049B24.unk14);
+            text = DRAW_TEXT(txt->unk0, txt->unk4, pos->unk0, txt->unk8, pos->unk4, D_ovl0B_06_80049B24.unk14);
             func_ovl0B_06_80049098(D_ovl0B_06_80049B24.unk4);
             D_ovl0B_06_80049B24.unk4 = text;
             D_ovl0B_06_80049B24.unk18 = func_ovl0B_06_800490C8(text);
@@ -2051,7 +2229,7 @@ void func_ovl0B_06_80043C48(s32 arg0) {
                     break;
                 case 17:
                     func_ovl0B_06_80043480(0);
-                    func_ovl0B_06_80048CA8(func_ovl0B_06_8004616C, NULL, D_ovl0B_06_8004A670, 0x1000, 0x130);
+                    func_ovl0B_06_80048CA8(COPY_FILE, NULL, D_ovl0B_06_8004A670, 0x1000, 0x130);
                     for (i = 0, name = D_ovl0B_06_80049558; i < 3; i++, name += 9) {
                         src = (u8 *) func_ovl0B_06_80049368(i, 8);
                         if (src != NULL) {
@@ -2199,7 +2377,6 @@ static void func_ovl0B_06_80043480(s32 arg0) {
     func_ovl0B_06_80043460();
     func_ovl0B_06_80043468();
     func_ovl0B_06_80043470();
-    func_ovl0B_06_80043478();
     for (i = 0; i < 3; i++) {
         state = func_ovl0B_06_80049368(i, 0);
         if (state != 10) {
@@ -2218,8 +2395,11 @@ static void func_ovl0B_06_80043480(s32 arg0) {
             label->unk0[1] = buf[0];
             label->unk0[2] = buf[1];
             label->unk0[3] = buf[2];
-            label->unk4 = func_ovl0B_06_80049090(label->unk0, label->unk8, label->unkA, label->unkC, label->unk10, label->unk14);
-            label->unk18 = func_ovl0B_06_800490C8(label->unk4);
+#if VERSION_JP
+            func_ovl0B_06_80043404(label);
+#else
+            func_ovl0B_06_80043478(label);
+#endif
             p->unk0 = func_ovl0B_06_80048838(p->unk4, p->unk8);
             p->unk0->unk10 = p->unkC;
             p->unk0->unk14 = p->unk10;
@@ -2273,8 +2453,13 @@ static void func_ovl0B_06_80043480(s32 arg0) {
 
 
 /* @80043404 */
-static void func_ovl0B_06_80043478(void) {
+#if !VERSION_JP
+/* A slot's number, in 0x2501's digits (jp has no such font: 80043404) */
+static void func_ovl0B_06_80043478(Label_ovl0B_06 *label) {
+    label->unk4 = func_ovl0B_06_80049090(label->unk0, label->unk8, label->unkA, label->unkC, label->unk10, label->unk14);
+    label->unk18 = func_ovl0B_06_800490C8(label->unk4);
 }
+#endif
 
 static void func_ovl0B_06_80043470(void) {
 }
@@ -2292,7 +2477,7 @@ static void func_ovl0B_06_80043458(void) {
 static void func_ovl0B_06_80043404(Label_ovl0B_06 *label) {
     func_ovl0B_06_800433F4();
     func_ovl0B_06_800433FC();
-    label->unk4 = func_ovl0B_06_800490E8(label->unk0, label->unk8, label->unkA, label->unkC, label->unk10, label->unk14);
+    label->unk4 = DRAW_TEXT(label->unk0, label->unk8, label->unkA, label->unkC, label->unk10, label->unk14);
     label->unk18 = func_ovl0B_06_800490C8(label->unk4);
 }
 
