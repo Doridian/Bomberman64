@@ -9,7 +9,7 @@
  * .bss 0x1F0 as the original). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 964, eu 964, jp 964
+ * differing words: us 935, eu 935, jp 935
  *
  * A first draft from m2c (with the ZeroJump prototypes the other drafts give
  * the same codes), made to compile: vectors as Vec3f, the pointer loops over
@@ -41,9 +41,9 @@
  * reloads it with lui each time): check their .bss places at move time.
  *
  * What still differs in us (words): 80043878 271, 800446FC 226, 800431D4
- * 218, 800450B4 127; under 50 each: 80043608, 8004400C, 800455D0, 80045B0C,
- * 80045C9C, 8004636C, 80046DC4, 80046E00, 80046FA8, 80047144, 800477C0,
- * 80047CB4, 80047F74, 80048418, 80049870, 8004A208. The other 62 match.
+ * 218, 800450B4 127; under 50 each: 80043608, 800455D0, 80045B0C, 80045C9C,
+ * 8004636C, 80046DC4, 80046E00, 80047144, 800477C0, 80047CB4, 80048418,
+ * 80049870. The other 66 match.
  */
 #include "common.h"
 
@@ -508,15 +508,12 @@ static void func_ovl13_01_8004A200(void) {
 }
 
 void func_ovl13_01_8004A208(void) {
-    s32 temp_t7;
-
     if ((func_ovl13_01_8004ACF8(func_ovl13_01_8004AE78(func_ovl13_01_8004AE18())->unk40) != 20000.0f) || !(D_ovl13_01_8004C200.y < 0.0f)) {
         func_ovl13_01_8004A200();
     }
     func_ovl13_01_8004BA00(0x420);
-    temp_t7 = D_ovl13_01_8004C288 + 1;
-    D_ovl13_01_8004C288 = temp_t7;
-    if (temp_t7 >= 0xA) {
+    D_ovl13_01_8004C288++;
+    if (D_ovl13_01_8004C288 >= 10) {
         D_ovl13_01_8004C288 = 0;
     }
     D_ovl13_01_8004C284 = 0;
@@ -1264,26 +1261,8 @@ void func_ovl13_01_80047F74(void) {
 
     if (func_ovl13_01_8004BA10(0x414) != 0) {
         func_ovl13_01_8004B5C8(&D_ovl13_01_8004C398.x, &D_ovl13_01_8004C388.x, &sp3C.x);
-        if (sp3C.x >= 0.0f) {
-            if (sp3C.x <= 180.0f) {
-                var_fa0 = sp3C.x;
-            } else {
-                goto block_5;
-            }
-        } else {
-block_5:
-            var_fa0 = (360.0f - sp3C.x) * -1.0f;
-        }
-        if (D_ovl13_01_8004C3A8.x >= 0.0f) {
-            if (D_ovl13_01_8004C3A8.x <= 180.0f) {
-                var_fv1 = D_ovl13_01_8004C3A8.x;
-            } else {
-                goto block_10;
-            }
-        } else {
-block_10:
-            var_fv1 = (360.0f - D_ovl13_01_8004C3A8.x) * -1.0f;
-        }
+        var_fa0 = A180(sp3C.x);
+        var_fv1 = A180(D_ovl13_01_8004C3A8.x);
         if (sp3C.z <= 1.0f) {
             var_fa0_2 = -30.0f;
             sp3C.y = 0.0f;
@@ -1301,16 +1280,7 @@ block_17:
                 var_fa0_2 = -60.0f;
             }
         }
-        if (D_ovl13_01_8004C3A8.y >= 0.0f) {
-            if (D_ovl13_01_8004C3A8.y <= 180.0f) {
-                var_fv1_2 = D_ovl13_01_8004C3A8.y;
-            } else {
-                goto block_22;
-            }
-        } else {
-block_22:
-            var_fv1_2 = (360.0f - D_ovl13_01_8004C3A8.y) * -1.0f;
-        }
+        var_fv1_2 = A180(D_ovl13_01_8004C3A8.y);
         temp_fv0_2 = var_fa0_2 - var_fv1_2;
         var_fa1 = temp_fv0_2;
         if (var_fv1_2 <= var_fa0_2) {
@@ -1617,57 +1587,31 @@ void func_ovl13_01_80047144(void) {
 
 void func_ovl13_01_80046FA8(f32 *arg0) {
     Vec3f sp34;
-    f32 temp_fv1;
-    f32 var_fa0;
-    f32 var_ft4;
-    f32 var_fv0;
-    f32 var_fv1;
+    f32 d;
+    f32 lim;
 
     sp34.z = 0.0f;
     sp34.y = 0.0f;
     sp34.x = 0.0f;
     func_ovl13_01_8004B5C8(&D_ovl13_01_8004C388.x, arg0, &sp34.x);
-    if (sp34.x >= 0.0f) {
-        if (sp34.x <= 180.0f) {
-            var_ft4 = sp34.x;
-        } else {
-            goto block_4;
+    d = A180(sp34.x) - A180(D_ovl13_01_8004C3A8.x);
+    if (d >= 180.0f) {
+        d -= 360.0f;
+    }
+    if (d < -180.0f) {
+        d += 360.0f;
+    }
+    if (d >= 0.0f) {
+        if (D_ovl13_01_8004C2A8 < d) {
+            d = D_ovl13_01_8004C2A8;
         }
     } else {
-block_4:
-        var_ft4 = (360.0f - sp34.x) * -1.0f;
-    }
-    if (D_ovl13_01_8004C3A8.x >= 0.0f) {
-        if (D_ovl13_01_8004C3A8.x <= 180.0f) {
-            var_fa0 = D_ovl13_01_8004C3A8.x;
-        } else {
-            goto block_9;
-        }
-    } else {
-block_9:
-        var_fa0 = (360.0f - D_ovl13_01_8004C3A8.x) * -1.0f;
-    }
-    temp_fv1 = var_ft4 - var_fa0;
-    var_fv0 = temp_fv1;
-    if (temp_fv1 >= 180.0f) {
-        var_fv0 = temp_fv1 - 360.0f;
-    }
-    if (var_fv0 < -180.0f) {
-        var_fv0 += 360.0f;
-    }
-    if (var_fv0 >= 0.0f) {
-        var_fv1 = D_ovl13_01_8004C2A8;
-        if (var_fv1 < var_fv0) {
-            goto block_18;
-        }
-    } else {
-        var_fv1 = D_ovl13_01_8004C2A8 * -1.0f;
-        if (var_fv0 < var_fv1) {
-block_18:
-            var_fv0 = var_fv1;
+        lim = D_ovl13_01_8004C2A8 * -1.0f;
+        if (d < lim) {
+            d = lim;
         }
     }
-    D_ovl13_01_8004C3A8.x += var_fv0;
+    D_ovl13_01_8004C3A8.x += d;
 }
 
 void func_ovl13_01_80046E00(void) {
@@ -2506,25 +2450,22 @@ void func_ovl13_01_80044118(void) {
 }
 
 void func_ovl13_01_8004400C(f32 arg0) {
-    UnkStructA_40_48_4 *temp_v0;
-    f32 temp_fv0;
-    f32 var_fs0;
-    s32 var_s0;
+    f32 len;
+    f32 d;
+    s32 i;
 
-    temp_fv0 = func_ovl13_01_80043F88(D_ovl13_01_8004C3B4);
+    len = func_ovl13_01_80043F88(D_ovl13_01_8004C3B4);
     D_ovl13_01_8004C338->unk40->unk48->unk4->unk4 = D_ovl13_01_8004C3B8;
-    var_s0 = 0;
     if (D_ovl13_01_8004C3B8 <= arg0) {
-        var_fs0 = arg0 - D_ovl13_01_8004C3B8;
+        d = arg0 - D_ovl13_01_8004C3B8;
     } else {
-        var_fs0 = (temp_fv0 - D_ovl13_01_8004C3B8) + arg0;
+        d = (len - D_ovl13_01_8004C3B8) + arg0;
     }
-    do {
+    d /= 30.0f;
+    for (i = 0; i < 30; i++) {
         func_ovl13_01_8004B7D0();
-        var_s0 += 1;
-        temp_v0 = D_ovl13_01_8004C338->unk40->unk48->unk4;
-        temp_v0->unk4 += var_fs0 / 30.0f;
-    } while (var_s0 != 0x1E);
+        D_ovl13_01_8004C338->unk40->unk48->unk4->unk4 += d;
+    }
     D_ovl13_01_8004C338->unk40->unk48->unk4->unk4 = arg0;
 }
 
