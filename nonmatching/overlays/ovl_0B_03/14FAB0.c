@@ -6,7 +6,7 @@
  * tables, .bss 0x1140, as the original's sizes). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1200, eu 1200, jp 2643
+ * differing words: us 1064, eu 1064, jp 2640
  *
  * jp (`#if VERSION_JP`) has its own strings (80048AF4, 80048B60,
  * 80049144, and D_ovl0B_03_8004901C_jp for us's 80049168, with the
@@ -171,7 +171,7 @@ void func_ovl0B_03_800486F8(s32);
 s32 func_ovl0B_03_800486F0(u8 *, u16, u16, f32, f32, s32); /* 0x2501 */
 s32 func_ovl0B_03_80048740(u8 *);
 s32 func_ovl0B_03_80048748(u8 *, u16, u16, f32, f32, s32);
-void func_ovl0B_03_80048890(s32);
+s32 func_ovl0B_03_80048890(s32);
 void func_ovl0B_03_800488A0(s32);
 void func_ovl0B_03_800488A8(void);
 void func_ovl0B_03_800488B0(s32, f32, f32, f32);
@@ -2368,7 +2368,7 @@ void func_ovl0B_03_8004386C(void) {
                 }
             }
             D_ovl0B_03_8004A330 = i;
-            D_ovl0B_03_80048E9C[i].unk10->unkC &= ~0x40;
+            D_ovl0B_03_80048E9C[D_ovl0B_03_8004A330].unk10->unkC &= ~0x40;
             func_ovl0B_03_80043340(D_ovl0B_03_80048DA0, 4, 0x35);
             func_ovl0B_03_80043340(D_ovl0B_03_80049024, 2, 0x130);
             M2C_FIELD(D_ovl0B_03_80049024[0].unk14, s32 *, 0x38) = 0x12;
