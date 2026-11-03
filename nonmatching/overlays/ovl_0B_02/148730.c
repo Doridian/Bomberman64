@@ -6,7 +6,7 @@
  * of it 800431C4's local table). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 113, eu 113, jp 113
+ * differing words: us 106, eu 106, jp 106
  * jp has its own strings, counts the characters itself in 80044424 (24
  * pixels each, as ovl_0B_03 does), draws through ZeroJump 0x2501
  * (DRAW_TEXT), puts the seconds one character further on and lays out the
@@ -43,7 +43,6 @@
  *   there, $s2 here); the 0x8000 exit stores its i = 0 to i's home before
  *   the 80049178 call where uopt hoists it to the top of the branch here;
  *   the page turns keep &marks[i] in $v1 (here $s0).
- * - 80043E10 7: 80043FC4 loads D_ovl0B_02_8004A3D4 into $v1 (here $v0).
  * - 800469C8 9: the 30.0f divisor and the converted sum in $f8/$f2 (here
  *   $f10/$f8).
  * - 800454F0 3: the star's fade loop's j = 0 goes into the 0x2DC call's
@@ -1496,7 +1495,8 @@ static void func_ovl0B_02_80043FC4(void) {
     s32 i;
     s32 j;
 
-    g = &D_ovl0B_02_8004A0EC[D_ovl0B_02_8004A3D4];
+    i = D_ovl0B_02_8004A3D4;
+    g = &D_ovl0B_02_8004A0EC[i];
     n = g->unk8;
     pieces = g->unk0;
     func_ovl0B_02_80043FBC(pieces, n);
