@@ -6,7 +6,7 @@
  * of it 800431C4's local table). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 430, eu 430, jp 430
+ * differing words: us 243, eu 243, jp 243
  * jp counts the characters itself in 80044424 (24 pixels each, as
  * ovl_0B_03 does) and draws through ZeroJump 0x2501 (DRAW_TEXT).
  *
