@@ -1,11 +1,6 @@
 /*
- * NON_MATCHING: ovl_0A_01's game object (the opening's stage), complete: every
- * function and its .data/.bss; .text 0x40C0 as the original.
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
- *
- * Matches in all three versions (not moved to src/ yet).
+ * ovl_0A_01's game object (the opening's stage), IDO -O3; it matches in us,
+ * eu and jp.
  *
  * 80043010's `(task | 0) != -1` (2026-11-03, 3 words to 0): the original's
  * three inlined copies in 80043028 compare `beq s0,a0` (-1 kept in s0),
@@ -49,6 +44,9 @@
  * 80046084 the variables shared between loops as the original's register
  * allocation needs (c is the first loop's alpha, the fade's colour and
  * the last loop's speed; z the first loop's level and the light's z).
+ *
+ * 800456C4's 0.1, 0.3 and 0.7 are `(f64)0.1f` etc.: the original's doubles
+ * are the floats widened (3FB99999A0000000), which the text alone doesn't show.
  */
 #include "common.h"
 #line 31 "126950.c"
@@ -984,8 +982,8 @@ void func_ovl0A_01_800456C4(void) {
     func_ovl0A_01_80047E70(obj);
     obj->unk40->unk10 = pos[0] + func_ovl0A_01_80048140() * 200.0;
     obj->unk40->unk14 = pos[1];
-    obj->unk40->unk18 = pos[2] + (func_ovl0A_01_80048140() - 0.1) * 1000.0;
-    s = (func_ovl0A_01_80048140() + 0.3) * 0.7;
+    obj->unk40->unk18 = pos[2] + (func_ovl0A_01_80048140() - (f64)0.1f) * 1000.0;
+    s = (func_ovl0A_01_80048140() + (f64)0.3f) * (f64)0.7f;
     obj->unk40->unk30 = s;
     obj->unk40->unk28 = s;
     obj->unk40->unk2C = 0.7f;

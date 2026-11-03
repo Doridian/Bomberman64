@@ -489,11 +489,12 @@ segments:
     symbol_name_format: ovl0A_01_$VRAM
     dir: overlays/ovl_0A_01
     subsegments:
-      - [0x1268C0, asm, ovl_0A_01_entry]
-      - [0x1268D0, asm, 126950]
+      - [0x1268C0, c, ovl_0A_01_entry]
+      - [0x1268D0, c, 126950]
       - [0x12A9B0, hasm, ovl_0A_01_zerojmp]
-      - [0x12BFD0, rodata]
-      - {type: bss, vram: 0x80048CC0}
+      - [0x12BFD0, .data, 126950]
+      - [0x12C3A0, .rodata, 126950]
+      - {type: .bss, vram: 0x80048CC0, name: 126950}
   - name: ovl_0A_02
     type: code
     start: 0x12C580
