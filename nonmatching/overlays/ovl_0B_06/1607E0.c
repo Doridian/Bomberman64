@@ -6,7 +6,7 @@
  * floats). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 3675, eu 3675, jp 3936
+ * differing words: us 3410, eu 3410, jp 3913
  * jp has no `#if VERSION_JP` yet: its strings, text positions and code
  * changes are not drafted (docs/DECOMPILING.md, "Versions", step 6).
  *
@@ -19,20 +19,21 @@
  * 80045100 ($s4), 80045340 (save record $s2), 80045794 (mode $s6, the others
  * in the callers' argument slots), 80045C24 ($s0-$s4 and the two flags in
  * $t0/$s6), 80045F20 ($s2, $s3, $s5), 80046558 ($s0), 80046868 ($fp),
- * 80046F14 ($a0, $a3), 80047880 ($s0). The empty stubs (48 of them, where
- * the original has two `jr ra` in a row) are statics inlined into the
- * function after each, which leaves their 8-byte bodies in place; most are
- * still empty here, their code written into the caller. 8004382C is the
- * first loop of 80043834 (walking its pointer parameter up to a count) and
- * 80046164 the error sound and wait 8004616C inlines twice (its parameter
- * in $s7).
+ * 80046F14 (two parameters, the second in $a3), 80047880 ($s0); an unused
+ * parameter goes to the caller's 0(sp) (80043480's, 80047B98's first).
+ * The empty stubs (where the original has two `jr ra` in a row) are
+ * statics inlined into every caller, which leaves 8-byte bodies; most are
+ * still empty here, their code written into the caller. 80043450 shows a
+ * run of labels (n kept in a register, as an inlined parameter is) and
+ * 80044B90 fades one.
  *
- * 80045C24 takes seven parameters in the original: (a, b, dx, dy, fa, str,
- * fb), the two u8 flags being a->unk14 and b->unk14, loaded by every caller
- * ($t0/$s6; dx, dy, fa and fb in argument slots 2, 3, 4 and 6). With that
- * prototype it matches by itself and 8004616C's argument area is the
- * original's, but the callers' runs, still the wrong size, count 14 words
- * more, so it isn't in yet (scratch/0B_06/p2/t7.c has it).
+ * Every sound with its wait goes through SE(id, wait): the wait is held in
+ * a local that the switch after it might change, so uopt neither folds it
+ * nor keeps it out of a saved register, and hoists it above the calls
+ * before (`li $s0,15` ahead of the sound, `move $a0,$s0` for the wait); a
+ * plain `wait(15)` gives `li $a0,15`. The switch's cases are a guess.
+ * 80045C24 takes (a, b, dx, dy, fa, str, fb), the flags being a->unk14 and
+ * b->unk14, loaded by every caller.
  *
  * Order: the globals 8004390C, 80043B20 and 80043220 come out in place only
  * when defined above their callers (the handler; 80043220 is inlined into
@@ -150,7 +151,7 @@ typedef struct {
     /* 0x06 */ s16 unk6;
     /* 0x08 */ f32 unk8;
     /* 0x0C */ f32 unkC;
-    /* 0x10 */ s32 unk10;
+    /* 0x10 */ u8 unk10;
 } Item_ovl0B_06; /* size = 0x14 */
 
 /* D_ovl0B_06_8004A5E0 */
@@ -206,7 +207,7 @@ void func_ovl0B_06_800490B8(s32, f32, f32); /* 0x2506 */
 void func_ovl0B_06_800490C0(s32, f32, f32); /* 0x2507 */
 UnkStructA_40 *func_ovl0B_06_800490C8(s32); /* 0x2508 */
 s32 func_ovl0B_06_800490E0(u8 *); /* 0x250B */
-s32 func_ovl0B_06_800490E8(u8 *, u16, u16, f32, f32, s32); /* 0x250C */
+s32 func_ovl0B_06_800490E8(u8 *, u16, u16, f32, f32, u8); /* 0x250C */
 void func_ovl0B_06_800490F0(s32, u8 *, s32); /* 0x250D */
 void func_ovl0B_06_80049230(s32); /* 0x2B00 */
 void func_ovl0B_06_80049250(s32, f32, f32, f32); /* 0x2B04 */
@@ -220,7 +221,7 @@ s32 func_ovl0B_06_80049390(void); /* 0x2F0E */
 
 /* The labels of a list fade in or out together. */
 #define FADE_LABELS(mode, labels, n) { s32 i_; for (i_ = 0; i_ < (n); i_++) { func_ovl0B_06_80044B08(mode, &(labels)[i_]); } }
-#define FADE_SLOTS(mode) { s32 *p_; Label_ovl0B_06 *l_; for (p_ = D_ovl0B_06_8004A5D0, l_ = D_ovl0B_06_800499F0; p_ < D_ovl0B_06_8004A5D0 + 3; p_++, l_++) { if (*p_ != 0) { func_ovl0B_06_80044B08(mode, l_); } } }
+#define FADE_SLOTS(mode) { s32 *p_; Label_ovl0B_06 *l_; s32 *e_; p_ = D_ovl0B_06_8004A5D0; e_ = p_ + 3; for (l_ = D_ovl0B_06_800499F0; p_ < e_; p_++, l_++) { if (*p_ != 0) { func_ovl0B_06_80044B08(mode, l_); } } }
 #define STUBS() { func_ovl0B_06_80043010(); func_ovl0B_06_80043018(); func_ovl0B_06_80043020(); func_ovl0B_06_80043028(); func_ovl0B_06_80043030(); func_ovl0B_06_80043038(); func_ovl0B_06_800450F8(); func_ovl0B_06_80045184(); func_ovl0B_06_800459D0(); func_ovl0B_06_80046164(); func_ovl0B_06_80047028(); func_ovl0B_06_80047D00(); func_ovl0B_06_80047B38(); func_ovl0B_06_80047B40(); func_ovl0B_06_80047B48(); func_ovl0B_06_80047B50(); func_ovl0B_06_80047B58(); func_ovl0B_06_80047B60(); func_ovl0B_06_80047B68(); func_ovl0B_06_80047B70(); func_ovl0B_06_80047B78(); func_ovl0B_06_80047B80(); func_ovl0B_06_80047B88(); func_ovl0B_06_80047B90(); }
 static void func_ovl0B_06_80043010(void);
 static void func_ovl0B_06_80043018(void);
@@ -239,14 +240,14 @@ static void func_ovl0B_06_800433B0(Label_ovl0B_06 *label);
 static void func_ovl0B_06_800433F4(void);
 static void func_ovl0B_06_800433FC(void);
 static void func_ovl0B_06_80043404(Label_ovl0B_06 *label);
-static void func_ovl0B_06_80043450(void);
 static void func_ovl0B_06_80043458(void);
 static void func_ovl0B_06_80043460(void);
 static void func_ovl0B_06_80043468(void);
 static void func_ovl0B_06_80043470(void);
 static void func_ovl0B_06_80043478(void);
 static void func_ovl0B_06_80043480(s32 arg0);
-static void func_ovl0B_06_8004382C(Label_ovl0B_06 *p, s32 n);
+static void func_ovl0B_06_80043450(Label_ovl0B_06 *p, s32 n);
+static void func_ovl0B_06_8004382C();
 static void func_ovl0B_06_80043834(void);
 static void func_ovl0B_06_800438FC(void);
 static void func_ovl0B_06_80043904(void);
@@ -257,7 +258,7 @@ void func_ovl0B_06_80043C48(s32 arg0);
 void func_ovl0B_06_8004473C(void);
 static void func_ovl0B_06_80044908(s32 arg0);
 static void func_ovl0B_06_80044B08(s32 arg0, Label_ovl0B_06 *label);
-static void func_ovl0B_06_80044B90(void);
+static void func_ovl0B_06_80044B90(s32 mode, Label_ovl0B_06 *labels, s32 n);
 static void func_ovl0B_06_80044B98(void);
 static void func_ovl0B_06_80044BA0(s32 arg0, Col_ovl0B_06 *col);
 static void func_ovl0B_06_80044BE4(s32 arg0);
@@ -273,11 +274,12 @@ static void func_ovl0B_06_80045340(s32 arg0, u8 *save);
 static s32 func_ovl0B_06_80045794(s32 arg0, s32 arg1, s32 arg2, s32 mode);
 static void func_ovl0B_06_800459D0(void);
 static void func_ovl0B_06_800459D8(s32 arg0);
-static void func_ovl0B_06_80045C24(Label_ovl0B_06 *a, Label_ovl0B_06 *b, u8 *str, s16 dx, s16 dy);
+static void func_ovl0B_06_80045C24(Label_ovl0B_06 *a, Label_ovl0B_06 *b, s16 dx, s16 dy, u8 fa, u8 *str, u8 fb);
 static void func_ovl0B_06_80045D20(void);
 static void func_ovl0B_06_80045D28(s32 arg0, s32 arg1);
 static s32 func_ovl0B_06_80045F20(s32 arg0, Col_ovl0B_06 *on, Col_ovl0B_06 *off, s32 n);
-static void func_ovl0B_06_80046164(s32 n);
+#define SE(id, w) { s32 n_ = (w); switch (id) { case 0x7F: case 0x7E: n_ = 0; break; } func_ovl0B_06_80049230(id); func_ovl0B_06_80048CC8(n_); }
+static void func_ovl0B_06_80046164();
 void func_ovl0B_06_8004616C(void);
 static void func_ovl0B_06_800464C0(s32 arg0);
 static void func_ovl0B_06_80046558(s32 arg0, s32 arg1);
@@ -289,7 +291,7 @@ static void func_ovl0B_06_80046850(void);
 static void func_ovl0B_06_80046858(void);
 static void func_ovl0B_06_80046860(void);
 static s32 func_ovl0B_06_80046868(s32 slot);
-static void func_ovl0B_06_80046F14(s32 arg0, s32 arg1, s32 arg2, s32 arg3);
+static void func_ovl0B_06_80046F14(s32 arg3, s32 arg0);
 static void func_ovl0B_06_80047028(void);
 static s32 func_ovl0B_06_80047030(void);
 void func_ovl0B_06_8004747C(void);
@@ -311,7 +313,7 @@ static void func_ovl0B_06_80047B78(void);
 static void func_ovl0B_06_80047B80(void);
 static void func_ovl0B_06_80047B88(void);
 static void func_ovl0B_06_80047B90(void);
-static void func_ovl0B_06_80047B98(Gfx_ovl0B_06 **arg0, Box_ovl0B_06 *box);
+static void func_ovl0B_06_80047B98(s32 x, Gfx_ovl0B_06 **arg0, Box_ovl0B_06 *box);
 static void func_ovl0B_06_80047D00(void);
 void func_ovl0B_06_80047D08(s32 arg0, Gfx_ovl0B_06 **arg1);
 void func_ovl0B_06_80047D34(s32 arg0, Gfx_ovl0B_06 **arg1);
@@ -523,37 +525,37 @@ s32 D_ovl0B_06_8004A480[4] = { 0, 0, 0, 0 };
 
 /* @80047DE4 */
 void func_ovl0B_06_80047DE4(s32 arg0, Gfx_ovl0B_06 **arg1) {
-    func_ovl0B_06_80047B98(arg1, &D_ovl0B_06_80049CAC[5]);
+    func_ovl0B_06_80047B98(arg0, arg1, &D_ovl0B_06_80049CAC[5]);
 }
 
 /* @80047DB8 */
 void func_ovl0B_06_80047DB8(s32 arg0, Gfx_ovl0B_06 **arg1) {
-    func_ovl0B_06_80047B98(arg1, &D_ovl0B_06_80049CAC[4]);
+    func_ovl0B_06_80047B98(arg0, arg1, &D_ovl0B_06_80049CAC[4]);
 }
 
 
 /* @80047D8C */
 void func_ovl0B_06_80047D8C(s32 arg0, Gfx_ovl0B_06 **arg1) {
-    func_ovl0B_06_80047B98(arg1, &D_ovl0B_06_80049CAC[3]);
+    func_ovl0B_06_80047B98(arg0, arg1, &D_ovl0B_06_80049CAC[3]);
 }
 
 
 /* @80047D60 */
 void func_ovl0B_06_80047D60(s32 arg0, Gfx_ovl0B_06 **arg1) {
-    func_ovl0B_06_80047B98(arg1, &D_ovl0B_06_80049CAC[2]);
+    func_ovl0B_06_80047B98(arg0, arg1, &D_ovl0B_06_80049CAC[2]);
 }
 
 
 /* @80047D34 */
 void func_ovl0B_06_80047D34(s32 arg0, Gfx_ovl0B_06 **arg1) {
-    func_ovl0B_06_80047B98(arg1, &D_ovl0B_06_80049CAC[1]);
+    func_ovl0B_06_80047B98(arg0, arg1, &D_ovl0B_06_80049CAC[1]);
 }
 
 
 /* @80047D08 */
 void func_ovl0B_06_80047D08(s32 arg0, Gfx_ovl0B_06 **arg1) {
     func_ovl0B_06_80047D00();
-    func_ovl0B_06_80047B98(arg1, &D_ovl0B_06_80049CAC[0]);
+    func_ovl0B_06_80047B98(arg0, arg1, &D_ovl0B_06_80049CAC[0]);
 }
 
 
@@ -563,7 +565,7 @@ static void func_ovl0B_06_80047D00(void) {
 
 
 /* @80047B98 */
-static void func_ovl0B_06_80047B98(Gfx_ovl0B_06 **arg0, Box_ovl0B_06 *box) {
+static void func_ovl0B_06_80047B98(s32 x, Gfx_ovl0B_06 **arg0, Box_ovl0B_06 *box) {
     Gfx_ovl0B_06 *gfx = *arg0;
 
     func_ovl0B_06_80047B38();
@@ -761,11 +763,10 @@ void func_ovl0B_06_8004747C(void) {
                 func_ovl0B_06_800465E0(0x3C, D_ovl0B_06_80049E44[5].unk0);
                 func_ovl0B_06_800465E0(0x3C, D_ovl0B_06_80049E44[6].unk0);
                 func_ovl0B_06_800465E0(0x3C, D_ovl0B_06_80049E44[7].unk0);
-                FADE_LABELS(0, D_ovl0B_06_80049AEC, 2);
+                func_ovl0B_06_80044B90(0, D_ovl0B_06_80049AEC, 2);
                 func_ovl0B_06_80046634(0);
                 D_ovl0B_06_8004992C = 0x44C8;
-                func_ovl0B_06_80049230(0x18);
-                func_ovl0B_06_80048CC8(0x32);
+                SE(0x18, 50);
                 func_ovl0B_06_80048CC8(0xC8);
                 func_ovl0B_06_80046634(1);
             }
@@ -814,7 +815,7 @@ static s32 func_ovl0B_06_80047030(void) {
     sel = 0;
     func_ovl0B_06_80048CA8(func_ovl0B_06_8004473C, NULL, 0, 0, 0x130);
     func_ovl0B_06_800464C0(0);
-    func_ovl0B_06_80045C24(&D_ovl0B_06_80049A44[0], &D_ovl0B_06_80049A44[5], D_ovl0B_06_800494C8, -0x26, 0);
+    func_ovl0B_06_80045C24(&D_ovl0B_06_80049A44[0], &D_ovl0B_06_80049A44[5], -0x26, 0, D_ovl0B_06_80049A44[0].unk14, D_ovl0B_06_800494C8, D_ovl0B_06_80049A44[5].unk14);
     func_ovl0B_06_800433B0(&D_ovl0B_06_80049A44[5]);
     do {
         sel = func_ovl0B_06_80045F20(sel & 0xF, &D_ovl0B_06_8004A264, &D_ovl0B_06_8004A244, 3);
@@ -824,8 +825,7 @@ static s32 func_ovl0B_06_80047030(void) {
             slot = sel & 0xF;
             if (func_ovl0B_06_80049368(slot, 0) == 10) {
                 D_ovl0B_06_8004992C = 0x1064;
-                func_ovl0B_06_80049230(0x18);
-                func_ovl0B_06_80048CC8(0x32);
+                SE(0x18, 50);
             } else {
                 keep = 1;
                 side = 1;
@@ -833,26 +833,22 @@ static s32 func_ovl0B_06_80047030(void) {
                 D_ovl0B_06_8004992C = 0;
                 n = 3;
                 loop = 0;
-                for (i = 0; i < 3; i++) {
-                    func_ovl0B_06_80043404(&D_ovl0B_06_80049B40[i]);
-                }
+                func_ovl0B_06_80043450(D_ovl0B_06_80049B40, 3);
                 func_ovl0B_06_80044BA0(slot, &D_ovl0B_06_8004A264);
-                func_ovl0B_06_80046F14(0, 0, 0, 2);
+                func_ovl0B_06_80046F14(2, 0);
                 do {
                     held = func_ovl0B_06_80049060();
                     pressed = func_ovl0B_06_80048268();
                     if ((held & 0x200) && side == 1) {
                         side = 0;
-                        func_ovl0B_06_80046F14(0, 0, 0, 1);
-                        func_ovl0B_06_80046F14(1, 0, 0, 2);
-                        func_ovl0B_06_80049230(0);
-                        func_ovl0B_06_80048CC8(5);
+                        func_ovl0B_06_80046F14(1, 0);
+                        func_ovl0B_06_80046F14(2, 1);
+                        SE(0, 5);
                     } else if ((held & 0x100) && side == 0) {
                         side = 1;
-                        func_ovl0B_06_80046F14(1, 0, 0, 1);
-                        func_ovl0B_06_80046F14(0, 0, 0, 2);
-                        func_ovl0B_06_80049230(0);
-                        func_ovl0B_06_80048CC8(5);
+                        func_ovl0B_06_80046F14(1, 1);
+                        func_ovl0B_06_80046F14(2, 0);
+                        SE(0, 5);
                     } else if ((pressed & 0x8000) || (pressed & 0x1000)) {
                         done = 1;
                         if (side == 0) {
@@ -862,8 +858,7 @@ static s32 func_ovl0B_06_80047030(void) {
                             keep = 0;
                             D_ovl0B_06_8004992C = 0x43C8;
                             func_ovl0B_06_80048CF0();
-                            func_ovl0B_06_80049230(1);
-                            func_ovl0B_06_80048CC8(0xF);
+                            SE(1, 15);
                             func_ovl0B_06_80049378(slot);
                             func_ovl0B_06_80049380(10);
                             if (func_ovl0B_06_80049390() != 0) {
@@ -871,8 +866,7 @@ static s32 func_ovl0B_06_80047030(void) {
                                 func_ovl0B_06_80048CF0();
                                 func_ovl0B_06_80046634(0);
                                 D_ovl0B_06_8004992C = 0x44C8;
-                                func_ovl0B_06_80049230(0x18);
-                                func_ovl0B_06_80048CC8(0x32);
+                                SE(0x18, 50);
                                 func_ovl0B_06_80048CC8(0xC8);
                                 func_ovl0B_06_80046634(1);
                             }
@@ -887,8 +881,7 @@ static s32 func_ovl0B_06_80047030(void) {
                         }
                     } else if (pressed & 0x4000) {
                         done = 1;
-                        func_ovl0B_06_80049230(2);
-                        func_ovl0B_06_80048CC8(0xA);
+                        SE(2, 10);
                     }
                     func_ovl0B_06_80048CF0();
                 } while (done == 0);
@@ -901,7 +894,7 @@ static s32 func_ovl0B_06_80047030(void) {
         func_ovl0B_06_80048CF0();
     } while (loop != 0);
     slot = sel & 0xF;
-    func_ovl0B_06_80045C24(&D_ovl0B_06_80049A44[0], &D_ovl0B_06_80049A44[5], D_ovl0B_06_80049480, 0, 0);
+    func_ovl0B_06_80045C24(&D_ovl0B_06_80049A44[0], &D_ovl0B_06_80049A44[5], 0, 0, D_ovl0B_06_80049A44[0].unk14, D_ovl0B_06_80049480, D_ovl0B_06_80049A44[5].unk14);
     func_ovl0B_06_800433B0(&D_ovl0B_06_80049A44[5]);
     D_ovl0B_06_8004992C = 0x400;
     func_ovl0B_06_800464C0(1);
@@ -915,12 +908,12 @@ static void func_ovl0B_06_80047028(void) {
 
 
 /* @80046F14 */
-static void func_ovl0B_06_80046F14(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
+static void func_ovl0B_06_80046F14(s32 arg3, s32 arg0) {
     Label_ovl0B_06 *label;
     f32 scale = 0.0f;
-    s16 dx = 0;
-    s16 dy = 0;
     u8 flag;
+    u16 dx = 0;
+    u16 dy = 0;
 
     switch (arg0 * 16 + arg3) {
         case 1:
@@ -979,10 +972,8 @@ static s32 func_ovl0B_06_80046868(s32 slot) {
     func_ovl0B_06_800464C0(0);
     label = &D_ovl0B_06_80049A44[slot];
     label[1].unk18->unkC |= 1;
-    for (i = 0; i < 2; i++) {
-        func_ovl0B_06_80043404(&D_ovl0B_06_80049AEC[i]);
-    }
-    func_ovl0B_06_80045C24(&D_ovl0B_06_80049A44[0], &D_ovl0B_06_80049A44[5], D_ovl0B_06_800494A4, -0x1C, 0);
+    func_ovl0B_06_80043450(D_ovl0B_06_80049AEC, 2);
+    func_ovl0B_06_80045C24(&D_ovl0B_06_80049A44[0], &D_ovl0B_06_80049A44[5], -0x1C, 0, D_ovl0B_06_80049A44[0].unk14, D_ovl0B_06_800494A4, D_ovl0B_06_80049A44[5].unk14);
     func_ovl0B_06_800433B0(&D_ovl0B_06_80049A44[5]);
     dy = slot * 40;
     loop = 0;
@@ -1027,27 +1018,22 @@ static s32 func_ovl0B_06_80046868(s32 slot) {
                 side = 0;
                 D_ovl0B_06_80049E44[5].unk0->unkC &= ~1;
                 D_ovl0B_06_80049E44[6].unk0->unkC |= 1;
-                func_ovl0B_06_80049230(0);
-                func_ovl0B_06_80048CC8(5);
+                SE(0, 5);
             } else if ((held & 0x100) && side == 0) {
                 t = 0.0f;
                 side = 1;
                 D_ovl0B_06_80049E44[5].unk0->unkC |= 1;
                 D_ovl0B_06_80049E44[6].unk0->unkC &= ~1;
-                func_ovl0B_06_80049230(0);
-                func_ovl0B_06_80048CC8(5);
+                SE(0, 5);
             } else if (pressed & 0x8000) {
                 result = 0x10;
-                func_ovl0B_06_80049230(1);
-                func_ovl0B_06_80048CC8(0xF);
+                SE(1, 15);
             } else if (pressed & 0x1000) {
                 result = 0x20;
-                func_ovl0B_06_80049230(1);
-                func_ovl0B_06_80048CC8(0xF);
+                SE(1, 15);
             } else if (pressed & 0x4000) {
                 result = 0x30;
-                func_ovl0B_06_80049230(2);
-                func_ovl0B_06_80048CC8(0xA);
+                SE(2, 10);
             }
             func_ovl0B_06_80048CF0();
             if (result != 0) {
@@ -1075,7 +1061,7 @@ static s32 func_ovl0B_06_80046868(s32 slot) {
         func_ovl0B_06_80048CF0();
     } while (loop != 0);
     if ((result & 0xF0) == 0x30) {
-        func_ovl0B_06_80045C24(&D_ovl0B_06_80049A44[0], &D_ovl0B_06_80049A44[5], D_ovl0B_06_80049480, 0, 0);
+        func_ovl0B_06_80045C24(&D_ovl0B_06_80049A44[0], &D_ovl0B_06_80049A44[5], 0, 0, D_ovl0B_06_80049A44[0].unk14, D_ovl0B_06_80049480, D_ovl0B_06_80049A44[5].unk14);
         func_ovl0B_06_800433B0(&D_ovl0B_06_80049A44[5]);
         func_ovl0B_06_800464C0(1);
         label[1].unk18->unkC &= ~1;
@@ -1112,8 +1098,8 @@ static void func_ovl0B_06_80046634(s32 arg0) {
         D_ovl0B_06_80049CAC[4].unk0->unk18 = 20.0f;
         func_ovl0B_06_80044BA0(4, &D_ovl0B_06_8004A284);
     }
-    FADE_LABELS(arg0, D_ovl0B_06_80049A44, 4);
-    FADE_LABELS(arg0, D_ovl0B_06_8004999C, 3);
+    func_ovl0B_06_80044B90(arg0, D_ovl0B_06_80049A44, 4);
+    func_ovl0B_06_80044B90(arg0, D_ovl0B_06_8004999C, 3);
     FADE_SLOTS(arg0)
     alpha = arg0 == 0 ? 0x3C : 0xFF;
     for (i = 0; i < 3; i++) {
@@ -1187,6 +1173,7 @@ void func_ovl0B_06_8004616C(void) {
     s32 sub;
     s32 slot;
 
+    func_ovl0B_06_80046164();
     loop = 1;
     sel = 0;
     do {
@@ -1198,7 +1185,7 @@ void func_ovl0B_06_8004616C(void) {
                 sel &= 0xF0;
                 func_ovl0B_06_80048CA8(func_ovl0B_06_8004473C, NULL, 0, 0, 0x130);
                 func_ovl0B_06_80044908(0);
-                func_ovl0B_06_80045C24(&D_ovl0B_06_80049B94[0], &D_ovl0B_06_80049B94[6], D_ovl0B_06_80049534, -0x28, 0);
+                func_ovl0B_06_80045C24(&D_ovl0B_06_80049B94[0], &D_ovl0B_06_80049B94[6], -0x28, 0, D_ovl0B_06_80049B94[0].unk14, D_ovl0B_06_80049534, D_ovl0B_06_80049B94[6].unk14);
                 func_ovl0B_06_800433B0(&D_ovl0B_06_80049B94[6]);
                 do {
                     sub = func_ovl0B_06_80045F20(sub & 0xF, &D_ovl0B_06_8004A264, &D_ovl0B_06_8004A244, 3);
@@ -1208,7 +1195,7 @@ void func_ovl0B_06_8004616C(void) {
                         slot = sub & 0xF;
                         if (func_ovl0B_06_80049368(slot, 0) == 10) {
                             D_ovl0B_06_8004992C = 0x1064;
-                            func_ovl0B_06_80046164(0x32);
+                            SE(0x18, 50);
                         } else {
                             D_ovl0B_06_8004992C = 0;
                             inner = 0;
@@ -1219,7 +1206,7 @@ void func_ovl0B_06_8004616C(void) {
                     func_ovl0B_06_80048CF0();
                 } while (inner != 0);
                 func_ovl0B_06_80044908(1);
-                func_ovl0B_06_80045C24(&D_ovl0B_06_80049B94[0], &D_ovl0B_06_80049B94[6], D_ovl0B_06_80049508, 0, 0);
+                func_ovl0B_06_80045C24(&D_ovl0B_06_80049B94[0], &D_ovl0B_06_80049B94[6], 0, 0, D_ovl0B_06_80049B94[0].unk14, D_ovl0B_06_80049508, D_ovl0B_06_80049B94[6].unk14);
                 func_ovl0B_06_800433B0(&D_ovl0B_06_80049B94[6]);
                 D_ovl0B_06_8004992C = 0x400;
                 sel |= sub & 0xF;
@@ -1228,7 +1215,7 @@ void func_ovl0B_06_8004616C(void) {
             } else {
                 slot = sel & 0xF;
                 if (func_ovl0B_06_80049368(slot, 0) == 10) {
-                    func_ovl0B_06_80046164(0x32);
+                    SE(0x18, 50);
                 } else {
                     loop = 0;
                     func_ovl0B_06_80049378(slot);
@@ -1257,9 +1244,7 @@ void func_ovl0B_06_8004616C(void) {
 
 
 /* @80046164 */
-static void func_ovl0B_06_80046164(s32 n) {
-    func_ovl0B_06_80049230(0x18);
-    func_ovl0B_06_80048CC8(n);
+static void func_ovl0B_06_80046164() {
 }
 
 
@@ -1279,8 +1264,7 @@ static s32 func_ovl0B_06_80045F20(s32 arg0, Col_ovl0B_06 *on, Col_ovl0B_06 *off,
                 func_ovl0B_06_80044BA0(sel, off);
                 sel++;
                 func_ovl0B_06_80044BA0(sel, on);
-                func_ovl0B_06_80049230(0);
-                func_ovl0B_06_80048CC8(5);
+                SE(0, 5);
             }
         } else if (held & 0x800) {
             if (sel > 0) {
@@ -1293,33 +1277,27 @@ static s32 func_ovl0B_06_80045F20(s32 arg0, Col_ovl0B_06 *on, Col_ovl0B_06 *off,
                     sel--;
                     func_ovl0B_06_80044BA0(sel, on);
                 }
-                func_ovl0B_06_80049230(0);
-                func_ovl0B_06_80048CC8(5);
+                SE(0, 5);
             }
         } else if (n == 5 && sel == 3 && (held & 0x100)) {
             func_ovl0B_06_80044BA0(sel, off);
             func_ovl0B_06_80044BA0(sel + 2, on);
             sel++;
-            func_ovl0B_06_80049230(0);
-            func_ovl0B_06_80048CC8(5);
+            SE(0, 5);
         } else if (n == 5 && sel == 4 && (held & 0x200)) {
             func_ovl0B_06_80044BA0(sel + 1, off);
             sel--;
             func_ovl0B_06_80044BA0(sel, on);
-            func_ovl0B_06_80049230(0);
-            func_ovl0B_06_80048CC8(5);
+            SE(0, 5);
         } else if (pressed & 0x8000) {
             ret = 0x10;
-            func_ovl0B_06_80049230(1);
-            func_ovl0B_06_80048CC8(0xF);
+            SE(1, 15);
         } else if (pressed & 0x1000) {
             ret = 0x20;
-            func_ovl0B_06_80049230(1);
-            func_ovl0B_06_80048CC8(0xF);
+            SE(1, 15);
         } else if (pressed & 0x4000) {
             ret = 0x30;
-            func_ovl0B_06_80049230(2);
-            func_ovl0B_06_80048CC8(0xA);
+            SE(2, 10);
         }
         func_ovl0B_06_80048CF0();
     } while (ret == 0);
@@ -1384,12 +1362,12 @@ static void func_ovl0B_06_80045D28(s32 arg0, s32 arg1) {
 static void func_ovl0B_06_80045D20(void) {
 }
 
-static void func_ovl0B_06_80045C24(Label_ovl0B_06 *a, Label_ovl0B_06 *b, u8 *str, s16 dx, s16 dy) {
+static void func_ovl0B_06_80045C24(Label_ovl0B_06 *a, Label_ovl0B_06 *b, s16 dx, s16 dy, u8 fa, u8 *str, u8 fb) {
     s32 ta;
     s32 tb;
 
-    ta = func_ovl0B_06_800490E8(str, a->unk8 + dx, a->unkA + dy, a->unkC, a->unk10, a->unk14);
-    tb = func_ovl0B_06_800490E8(str, b->unk8 + dx, b->unkA + dy, b->unkC, b->unk10, b->unk14);
+    ta = func_ovl0B_06_800490E8(str, a->unk8 + dx, a->unkA + dy, a->unkC, a->unk10, fa);
+    tb = func_ovl0B_06_800490E8(str, b->unk8 + dx, b->unkA + dy, b->unkC, b->unk10, fb);
     func_ovl0B_06_80049098(a->unk4);
     func_ovl0B_06_80049098(b->unk4);
     a->unk4 = ta;
@@ -1480,8 +1458,7 @@ static s32 func_ovl0B_06_80045794(s32 arg0, s32 arg1, s32 arg2, s32 mode) {
     func_ovl0B_06_80045340(mode, save);
     ret = 0;
     if (D_ovl0B_06_8004A404 != 0 && (func_ovl0B_06_8004518C() & 0x8000)) {
-        func_ovl0B_06_80049230(1);
-        func_ovl0B_06_80048CC8(0xF);
+        SE(1, 15);
         a = func_ovl0B_06_800490C8(D_ovl0B_06_8004A408);
         b = func_ovl0B_06_800490C8(D_ovl0B_06_8004A40C);
         a->unk36 = 0;
@@ -1525,8 +1502,7 @@ static s32 func_ovl0B_06_80045794(s32 arg0, s32 arg1, s32 arg2, s32 mode) {
                 break;
         }
     } else {
-        func_ovl0B_06_80049230(2);
-        func_ovl0B_06_80048CC8(0xA);
+        SE(2, 10);
     }
     func_ovl0B_06_80048CB0(D_ovl0B_06_8004A480[0]);
     func_ovl0B_06_800488D8(D_ovl0B_06_8004A47C);
@@ -1631,8 +1607,7 @@ static s32 func_ovl0B_06_8004518C(void) {
                 func_ovl0B_06_80049098(D_ovl0B_06_8004A40C);
                 D_ovl0B_06_8004A408 = a;
                 D_ovl0B_06_8004A40C = b;
-                func_ovl0B_06_80049230(0);
-                func_ovl0B_06_80048CC8(5);
+                SE(0, 5);
             } else if (D_ovl0B_06_8004A404 == 0 && (held & 0x200)) {
                 D_ovl0B_06_8004A404 = 1;
                 a = func_ovl0B_06_800490E8(D_ovl0B_06_800497BC, 0x4B, 0xA8, 1.5f, 1.5f, 0);
@@ -1641,8 +1616,7 @@ static s32 func_ovl0B_06_8004518C(void) {
                 func_ovl0B_06_80049098(D_ovl0B_06_8004A40C);
                 D_ovl0B_06_8004A408 = a;
                 D_ovl0B_06_8004A40C = b;
-                func_ovl0B_06_80049230(0);
-                func_ovl0B_06_80048CC8(5);
+                SE(0, 5);
             }
         }
         func_ovl0B_06_80048CF0();
@@ -1703,13 +1677,11 @@ static s32 func_ovl0B_06_80045054(void) {
     func_ovl0B_06_80044BE4(0);
     buttons = func_ovl0B_06_80044F70(5, 1, 0xC000, 0x78);
     if (buttons & 0x8000) {
-        func_ovl0B_06_80049230(1);
-        func_ovl0B_06_80048CC8(0xF);
+        SE(1, 15);
         func_ovl0B_06_80048CC8(5);
         ret = 1;
     } else if (buttons & 0x4000) {
-        func_ovl0B_06_80049230(1);
-        func_ovl0B_06_80048CC8(0xF);
+        SE(1, 15);
         func_ovl0B_06_80044F70(func_ovl0B_06_80048E18(), 0, 0, 0xB4);
     }
     func_ovl0B_06_80044BE4(1);
@@ -1744,11 +1716,7 @@ static s32 func_ovl0B_06_80044F70(s32 arg0, s32 arg1, s32 mask, s32 wait) {
     if (mask == 0) {
         func_ovl0B_06_80048CC8(wait);
     } else {
-        while (TRUE) {
-            buttons = func_ovl0B_06_80048268();
-            if (buttons & mask) {
-                break;
-            }
+        while (!((buttons = func_ovl0B_06_80048268()) & mask)) {
             func_ovl0B_06_80048CF0();
         }
     }
@@ -1767,27 +1735,18 @@ static void func_ovl0B_06_80044E48(s32 arg0, s32 arg1) {
     n = (arg0 & 0xFF) * 4;
     D_ovl0B_06_8004992C = arg0;
     if (arg1 != -1) {
-        if (arg1 == 0) {
-            func_ovl0B_06_80049230(0);
-            func_ovl0B_06_80048CC8(5);
-        } else if (arg1 == 1) {
-            func_ovl0B_06_80049230(1);
-            func_ovl0B_06_80048CC8(0xF);
-        } else if (arg1 == 2) {
-            func_ovl0B_06_80049230(2);
-            func_ovl0B_06_80048CC8(0xA);
-        } else if (arg1 == 0x18) {
-            func_ovl0B_06_80049230(0x18);
-            func_ovl0B_06_80048CC8(0x32);
-        } else {
-            func_ovl0B_06_80049230(arg1);
-        }
+    switch (arg1) {
+        case 0x18: SE(0x18, 50); break;
+        case 1: SE(1, 15); break;
+        case 2: SE(2, 10); break;
+        case 0: SE(0, 5); break;
+        default: func_ovl0B_06_80049230(arg1); break;
+    }
     }
     for (i = 0; i < n; i++) {
         buttons = func_ovl0B_06_80048268();
-        if ((buttons & 0x8000) || (buttons & 0x4000)) {
-            func_ovl0B_06_80049230(2);
-            func_ovl0B_06_80048CC8(0xA);
+        if ((buttons & 0x8000) | (buttons & 0x4000)) {
+            SE(2, 10);
             D_ovl0B_06_8004992C = 0;
             func_ovl0B_06_80048CF0();
             return;
@@ -1802,18 +1761,18 @@ static void func_ovl0B_06_80044E40(void) {
 }
 
 static void func_ovl0B_06_80044BE4(s32 arg0) {
-    Label_ovl0B_06 *label;
+    s32 i;
 
     if (arg0 & 1) {
         D_ovl0B_06_80049CAC[4].unk0->unkC |= 1;
         D_ovl0B_06_80049CAC[4].unk0->unk18 = -100.0f;
-        FADE_LABELS(arg0, D_ovl0B_06_80049B94, 4);
-        FADE_LABELS(arg0, D_ovl0B_06_8004999C, 3);
+        func_ovl0B_06_80044B90(arg0, D_ovl0B_06_80049B94, 4);
+        func_ovl0B_06_80044B90(arg0, D_ovl0B_06_8004999C, 3);
         FADE_SLOTS(arg0)
         if (arg0 == 3) {
             D_ovl0B_06_80049B94[6].unk18->unk36 = 100;
-            for (label = &D_ovl0B_06_80049B94[7]; label != (Label_ovl0B_06 *) D_ovl0B_06_80049CAC; label++) {
-                label->unk18->unk36 = 0x82;
+            for (i = 7; i < 10; i++) {
+                D_ovl0B_06_80049B94[i].unk18->unk36 = 0x82;
             }
             D_ovl0B_06_80049CAC[4].unk0->unkC &= ~0x400;
         }
@@ -1828,8 +1787,8 @@ static void func_ovl0B_06_80044BE4(s32 arg0) {
         D_ovl0B_06_80049CAC[4].unk0->unkC &= ~1;
         D_ovl0B_06_80049CAC[4].unk0->unk18 = 20.0f;
         func_ovl0B_06_80044BA0(4, &D_ovl0B_06_8004A284);
-        FADE_LABELS(arg0, D_ovl0B_06_80049B94, 4);
-        FADE_LABELS(arg0, D_ovl0B_06_8004999C, 3);
+        func_ovl0B_06_80044B90(arg0, D_ovl0B_06_80049B94, 4);
+        func_ovl0B_06_80044B90(arg0, D_ovl0B_06_8004999C, 3);
         FADE_SLOTS(arg0)
     }
 }
@@ -1839,7 +1798,6 @@ static void func_ovl0B_06_80044BE4(s32 arg0) {
 static void func_ovl0B_06_80044BA0(s32 arg0, Col_ovl0B_06 *col) {
     Box_ovl0B_06 *box = &D_ovl0B_06_80049CAC[arg0];
 
-    func_ovl0B_06_80044B90();
     func_ovl0B_06_80044B98();
     box->unk4 = col->unk0;
     box->unk8 = col->unk4;
@@ -1852,7 +1810,13 @@ static void func_ovl0B_06_80044BA0(s32 arg0, Col_ovl0B_06 *col) {
 static void func_ovl0B_06_80044B98(void) {
 }
 
-static void func_ovl0B_06_80044B90(void) {
+static void func_ovl0B_06_80044B90(s32 mode, Label_ovl0B_06 *labels, s32 n) {
+    s32 i;
+
+    for (i = 0; i < n; i++) {
+        func_ovl0B_06_80044B08(mode, labels);
+        labels++;
+    }
 }
 
 static void func_ovl0B_06_80044B08(s32 arg0, Label_ovl0B_06 *label) {
@@ -1861,9 +1825,10 @@ static void func_ovl0B_06_80044B08(s32 arg0, Label_ovl0B_06 *label) {
     switch (arg0) {
         case 0:
         case 2:
-            alpha = 0;
             if (arg0 == 0) {
                 alpha = 0x3C;
+            } else {
+                alpha = 0;
             }
             label->unk18->unkC |= 0x80;
             label->unk18->unk36 = alpha;
@@ -2091,9 +2056,7 @@ void func_ovl0B_06_80043C48(s32 arg0) {
             }
             break;
         case 5:
-            for (i = 0; i < 3; i++) {
-                func_ovl0B_06_80043404(&D_ovl0B_06_8004999C[i]);
-            }
+            func_ovl0B_06_80043450(D_ovl0B_06_8004999C, 3);
             switch (D_ovl0B_06_8004A668[0]) {
                 case 16:
                     func_ovl0B_06_80043480(1);
@@ -2121,9 +2084,7 @@ void func_ovl0B_06_80043C48(s32 arg0) {
                         }
                         name[8] = 0;
                     }
-                    for (i = 0; i < 10; i++) {
-                        func_ovl0B_06_80043404(&D_ovl0B_06_80049B94[i]);
-                    }
+                    func_ovl0B_06_80043450(D_ovl0B_06_80049B94, 10);
                     for (i = 0, label = D_ovl0B_06_80049B94, name = D_ovl0B_06_80049558; i != 3; i++, name += 9, label++) {
                         func_ovl0B_06_800490B0(label[1].unk4, -(s32) (func_ovl0B_06_800490E0(name) * 0.8f * 0.5f), 0);
                         if (func_ovl0B_06_80049368(i, 8) != 0) {
@@ -2203,8 +2164,9 @@ static void func_ovl0B_06_80043834(void) {
     s32 j;
     UnkStructA_40 *obj;
 
+    func_ovl0B_06_8004382C();
     func_ovl0B_06_800430F0(0);
-    func_ovl0B_06_8004382C(D_ovl0B_06_80049A44, 6);
+    func_ovl0B_06_80043450(D_ovl0B_06_80049A44, 6);
     func_ovl0B_06_800433B0(&D_ovl0B_06_80049A44[5]);
     for (i = 0; i < 3; i++) {
         j = func_ovl0B_06_80049368(i, 0);
@@ -2224,7 +2186,10 @@ static void func_ovl0B_06_80043834(void) {
 
 
 /* @80043480 */
-static void func_ovl0B_06_8004382C(Label_ovl0B_06 *p, s32 n) {
+static void func_ovl0B_06_8004382C() {
+}
+
+static void func_ovl0B_06_80043450(Label_ovl0B_06 *p, s32 n) {
     s32 i;
     for (i = 0; i < n; i++, p++) {
         func_ovl0B_06_80043404(p);
@@ -2236,13 +2201,13 @@ static void func_ovl0B_06_80043480(s32 arg0) {
     u8 buf[4];
     Unk24_ovl0B_06 *p;
     Label_ovl0B_06 *label;
+    Rect_ovl0B_06 *r;
     s32 state;
     s32 kind;
     f32 d;
     s32 i;
     s32 j;
 
-    func_ovl0B_06_80043450();
     func_ovl0B_06_80043458();
     func_ovl0B_06_80043460();
     func_ovl0B_06_80043468();
@@ -2284,8 +2249,9 @@ static void func_ovl0B_06_80043480(s32 arg0) {
                 for (j = 0; j < 6; j++) {
                     kind = func_ovl0B_06_80049368(i, j + 2);
                     if (kind != 0) {
-                        d = 0.0f;
-                        func_ovl0B_06_80043040(&D_ovl0B_06_80049F20[i][j + 1], &D_ovl0B_06_8004A0C4[j + 4], i * 40);
+                        d = 0;
+                        r = &D_ovl0B_06_80049F20[i][j + 1];
+                        func_ovl0B_06_80043040(r, &D_ovl0B_06_8004A0C4[j + 4], i * 40);
                         switch (kind) {
                             case 1:
                                 break;
@@ -2299,10 +2265,10 @@ static void func_ovl0B_06_80043480(s32 arg0) {
                                 d = 9.0f;
                                 break;
                         }
-                        D_ovl0B_06_80049F20[i][j + 1].unk0->unk10 -= d;
-                        D_ovl0B_06_80049F20[i][j + 1].unk0->unk14 -= d;
-                        D_ovl0B_06_80049F20[i][j + 1].unk0->unk18 += d;
-                        D_ovl0B_06_80049F20[i][j + 1].unk0->unk1C += d;
+                        r->unk0->unk10 -= d;
+                        r->unk0->unk14 -= d;
+                        r->unk0->unk18 += d;
+                        r->unk0->unk1C += d;
                         D_ovl0B_06_8004A5E0[i].unk[j] = 1;
                     } else {
                         D_ovl0B_06_8004A5E0[i].unk[j] = 0;
@@ -2335,8 +2301,6 @@ static void func_ovl0B_06_80043460(void) {
 static void func_ovl0B_06_80043458(void) {
 }
 
-static void func_ovl0B_06_80043450(void) {
-}
 
 static void func_ovl0B_06_80043404(Label_ovl0B_06 *label) {
     func_ovl0B_06_800433F4();
