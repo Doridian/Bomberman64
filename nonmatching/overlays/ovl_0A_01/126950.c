@@ -3,23 +3,30 @@
  * function and its .data/.bss; .text 0x40C0 as the original.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 38, eu 38, jp 38
+ * differing words: us 3, eu 3, jp 3
  *
  * What still differs in us (words; eu and jp the same):
- * - func_ovl0A_01_80043028 (6): `beq a0,s0` where the original has
+ * - func_ovl0A_01_80043028 (3): `beq a0,s0` where the original has
  *   `beq s0,a0`, in all three inlined 80043010 (-1 in s0). The order is
  *   uopt's (ugen already emits `beq $4,$16`): `-1 != task`, `== -1`
- *   with return/else, a local copy, u32/void * task and 0xFFFFFFFF don't
- *   change it. A pointer parameter (`*task != -1`) gives `beq s0,tN` but
- *   loads into a temporary and moves it to a0.
- * - func_ovl0A_01_8004609C (32): frame 8 bytes too big, so every slot
- *   above 0x64 is 8 higher, and 8004607C's `move v1,zero` placed one
- *   later. 8004607C's count parameter costs the 8: with a literal 1 the
- *   frame and every slot are the original's, but the loop ends on `bne`
- *   where the original has `slt v1,s1` (1 in s1). Other loop shapes, n's
- *   type, a third parameter, tbl[i] indexing, the count as the only
- *   parameter, dummy or block-scoped locals in 80046084 and the statics'
- *   definition order don't give both.
+ *   with return/else, `while`, a switch, a local copy, `task + 1 != 0`,
+ *   u32/void * task, 0xFFFFFFFF/~0/-1L, a K&R definition, the -1 as a
+ *   second parameter (either order, either side), a pointer parameter
+ *   (`*task`, or a local copy of it), and a dead `-1` compare ahead of the
+ *   switch don't change it. A pointer parameter (`*task != -1`) gives
+ *   `beq s0,tN` but loads into a temporary and moves it to a0.
+ *
+ * 8004609C (2026-11-03, 32 words to 0): its frame was 8 bytes too big.
+ * 80046084's locals and 8004607C's (n, tbl, i) share one area, rounded to
+ * 8 as a whole (an extra unused local in 80046084 costs nothing, two cost
+ * 8), so the original's 80046084 has one local fewer: `a` is its
+ * parameter (the call's value is dead: a = 255 before its first use;
+ * b, c or step as the parameter give the frame too, with more words).
+ * step declared last puts it at the original's 0x74. `c -= ...` after
+ * the unk36 = b store, and 8004607C numbered (#line 700) below 80046084's
+ * first statements so its `move v1,zero` (i = 0) schedules first. In
+ * 80043028, 80043020 numbered (#line 1670) below the switch puts case 17's
+ * `move v0,zero` first in the same way (3 words).
  *
  * 800442B4's counter: the original keeps the frame count in a stack word
  * (v, address-taken in dead code so calls may change it): stored 0, loaded
@@ -320,7 +327,7 @@ static void func_ovl0A_01_80045270(void);
 static void func_ovl0A_01_80046094(void);
 static void func_ovl0A_01_8004608C(void);
 static void func_ovl0A_01_8004607C(s32 n, Entry2 *tbl);
-static void func_ovl0A_01_80046084(void);
+static void func_ovl0A_01_80046084(f32 a);
 void func_ovl0A_01_80046C88(s32 arg0);
 void func_ovl0A_01_80046DB8(s32 arg0, UnkStruct_ovl0A_01_B04 *arg1);
 void func_ovl0A_01_80046DEC(f32 arg0);
@@ -379,7 +386,7 @@ static void func_ovl0A_01_80045270(void);
 static void func_ovl0A_01_80046094(void);
 static void func_ovl0A_01_8004608C(void);
 static void func_ovl0A_01_8004607C(s32 n, Entry2 *tbl);
-static void func_ovl0A_01_80046084(void);
+static void func_ovl0A_01_80046084(f32 a);
 void func_ovl0A_01_80046C88(s32 arg0);
 void func_ovl0A_01_80046DB8(s32 arg0, UnkStruct_ovl0A_01_B04 *arg1);
 void func_ovl0A_01_80046DEC(f32 arg0);
@@ -438,7 +445,7 @@ static void func_ovl0A_01_80045270(void);
 static void func_ovl0A_01_80046094(void);
 static void func_ovl0A_01_8004608C(void);
 static void func_ovl0A_01_8004607C(s32 n, Entry2 *tbl);
-static void func_ovl0A_01_80046084(void);
+static void func_ovl0A_01_80046084(f32 a);
 void func_ovl0A_01_80046C88(s32 arg0);
 void func_ovl0A_01_80046DB8(s32 arg0, UnkStruct_ovl0A_01_B04 *arg1);
 void func_ovl0A_01_80046DEC(f32 arg0);
@@ -497,7 +504,7 @@ static void func_ovl0A_01_80045270(void);
 static void func_ovl0A_01_80046094(void);
 static void func_ovl0A_01_8004608C(void);
 static void func_ovl0A_01_8004607C(s32 n, Entry2 *tbl);
-static void func_ovl0A_01_80046084(void);
+static void func_ovl0A_01_80046084(f32 a);
 void func_ovl0A_01_80046C88(s32 arg0);
 void func_ovl0A_01_80046DB8(s32 arg0, UnkStruct_ovl0A_01_B04 *arg1);
 void func_ovl0A_01_80046DEC(f32 arg0);
@@ -711,16 +718,16 @@ void func_ovl0A_01_8004694C(void) {
 void func_ovl0A_01_8004609C(void) {
     func_ovl0A_01_80046094();
     func_ovl0A_01_8004608C();
-    func_ovl0A_01_80046084();
+    func_ovl0A_01_80046084(0.0f);
 }
 
-static void func_ovl0A_01_80046084(void) {
+static void func_ovl0A_01_80046084(f32 a) {
     s32 i;
-    f32 a;
     f32 b;
     f32 c;
-    f32 step;
     f32 z;
+    f32 step;
+
     c = 0.0f;
     D_ovl0A_01_80048A38[3] = 0;
     z = 0.0f;
@@ -770,8 +777,8 @@ static void func_ovl0A_01_80046084(void) {
                 a -= 2.8333333f;
                 D_ovl0A_01_80048A38[3] = (u32) a;
                 b += step;
-                c -= 2.8333333f;
                 D_ovl0A_01_80048890[1].obj->unk40->unk36 = b;
+                c -= 2.8333333f;
                 D_ovl0A_01_80048770[5].obj->unk40->unk36 = D_ovl0A_01_80048770[7].obj->unk40->unk36 =
                     D_ovl0A_01_80048770[6].obj->unk40->unk36 = (s32) c;
                 D_ovl0A_01_80048770[0].obj->unk40->unk18 += 2.0f;
@@ -796,7 +803,7 @@ static void func_ovl0A_01_80046084(void) {
         func_ovl0A_01_80047FD0();
     }
 }
-
+#line 700
 static void func_ovl0A_01_8004607C(s32 n, Entry2 *tbl) {
     s32 i;
 
@@ -805,7 +812,7 @@ static void func_ovl0A_01_8004607C(s32 n, Entry2 *tbl) {
         tbl->unk0->unkC |= tbl->unk14;
     }
 }
-
+#line 795
 static void func_ovl0A_01_8004608C(void) {
     s32 i;
     f32 cz;
@@ -1751,7 +1758,7 @@ static void func_ovl0A_01_80043010(s32 task) {
         func_ovl0A_01_80047F90(task);
     }
 }
-
+#line 1670
 static void func_ovl0A_01_80043020(s32 n, Entry2 *tbl) {
     s32 i;
 
@@ -1762,7 +1769,7 @@ static void func_ovl0A_01_80043020(s32 n, Entry2 *tbl) {
         tbl++;
     }
 }
-
+#line 1724
 static void func_ovl0A_01_80043018(s32 n, Entry *tbl) {
     s32 i;
 
