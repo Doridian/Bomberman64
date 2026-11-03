@@ -55,6 +55,9 @@
  *   locals i, count, p) puts i right but count and p 12 low; pointer or
  *   value parameters for count/p, or i from its return value, change
  *   the code.
+ *   Also tried (2026-11-03): a fifth local before count (x, y, count, p,
+ *   i or obj, y, count, p, i: the slots right, frame 0xF0), pad[2], the
+ *   locals in a `case 2:` or `case 15:` block, with and without 80043428.
  * - func_ovl0F_10_80043CCC (2): `move s0,zero` (i = 0) fills the load
  *   delay after `lw t6` rather than the branch's delay slot. With `i = 0`
  *   before the `if` it goes in the delay slot, but i then loses s0.
@@ -63,6 +66,12 @@
  *   place in the block; it leaves it in the delay slot (the original)
  *   only when its block has a second predecessor (a dead `b` to it,
  *   which costs two words), so the original's code there likely differs.
+ *   Since (2026-11-03): an unreferenced label, `.file`, `.loc`, `.livereg`
+ *   or `volatile` on 800468AC change nothing; as1 removes a `b`/`beq` to
+ *   the next instruction before it schedules (no second predecessor); the
+ *   loop-head load in the preheader and at the loop's end (C: a variable
+ *   loaded at the end) lets uopt fold the stored 0 into it.  The original's
+ *   epilogue padding is six nops, so no dead branch hides there either.
  * The `#line N "205890.c"` lines are the physical line numbers (the file
  * named the same whatever path it is compiled by).
  */

@@ -39,6 +39,22 @@
  *   (packed value and vel, two one-axis statics, nesting) give t registers
  *   or reload unk64. Tried as well: a dead `if (0)` call (still inlined),
  *   fewer locals in 80043FEC (no change), the prototypes' order.
+ *   Measured since (2026-11-03, scratch/0F_05/w): 800440AC's 0x30-0x50 is
+ *   800440A4's area (16) and two ternary temporaries (8 each: the two
+ *   ternaries of one statement, reused by the next statements); 80043FEC's
+ *   area holds its four spilled locals (0x20-0x2C), and with two locals it
+ *   is 8.  So the original's 8 for 8004409C has to come out of 800440A4 or
+ *   a ternary.  800440A4(s32 v, Vec3f *vel) { vel->x = (s16)(v >> 16) *
+ *   0.002f; 8004409C(v & 0xFFFF, vel); } with 8004409C(s16 z, Vec3f *vel)
+ *   writing vel->z gives the frame and every stub right (80043B74 down to
+ *   its 3 words) and 800440AC differs only in registers (76 words: x and z
+ *   in t registers, the original's a0/a1 are what a static's own s16
+ *   params bound at a call from 800440AC get).  One ternary per statement
+ *   through vel.y (`if (dz != 0.0f) vel.y = 0.707f; else vel.y = 1.0f;`)
+ *   also gives the frame, with one `swc1` to vel.y too many per statement
+ *   (vel lives in memory).  Two one-axis statics (x, then z) called from
+ *   800440AC give the frame but reload unk64 after the vel.x store, with
+ *   or without a dead `&vel`.
  * - `cam->unkC = cam->unkE = 0x4000;` (3 words): the original's 0x4000 is
  *   in v1 (a uopt register), here in t5; separate stores, a variable, a
  *   static setter (as 80043B6C too) and casts give t registers.
