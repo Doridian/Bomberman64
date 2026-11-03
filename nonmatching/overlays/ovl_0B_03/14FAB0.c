@@ -6,7 +6,7 @@
  * tables, .bss 0x1140, as the original's sizes). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1685, eu 1685, jp 2643
+ * differing words: us 1636, eu 1636, jp 2643
  *
  * jp (`#if VERSION_JP`) has its own strings (80048AF4, 80048B60,
  * 80049144, and D_ovl0B_03_8004901C_jp for us's 80049168, with the
@@ -1876,7 +1876,7 @@ block_296:
 #else
 void func_ovl0B_03_8004386C(void) {
     s32 state;
-    s32 next;
+    s32 next = 0;
     s32 btn;
     s32 held;
     u8 *str;
@@ -1897,7 +1897,6 @@ void func_ovl0B_03_8004386C(void) {
     f32 w;
     s32 *p;
 
-    next = 0;
     D_ovl0B_03_8004A324 = func_ovl0B_03_80047938();
     func_ovl0B_03_80048060(0x7F);
     func_ovl0B_03_80047FD8(1);
@@ -2069,6 +2068,7 @@ void func_ovl0B_03_8004386C(void) {
                         next = 4;
                         if (D_ovl0B_03_8004A324->unk0 == 0) {
                             next = 5;
+                            break;
                         }
                         break;
                     }
@@ -2124,7 +2124,7 @@ void func_ovl0B_03_8004386C(void) {
                         break;
                     case 2:
                         if (D_ovl0B_03_8004A324->unk4[D_ovl0B_03_8004A328] == 2) {
-                            i = M2C_FIELD(((u8 *)D_ovl0B_03_8004A324 + (D_ovl0B_03_8004A328 * 4)), s32 *, 0x14);
+                            i = D_ovl0B_03_8004A324->unk4[D_ovl0B_03_8004A328 + 4];
                             if (btn & 0x200) {
                                 func_ovl0B_03_80048890(0);
                                 i--;
@@ -2138,7 +2138,7 @@ void func_ovl0B_03_8004386C(void) {
                                     i = 0;
                                 }
                             }
-                            M2C_FIELD(((u8 *)D_ovl0B_03_8004A324 + (D_ovl0B_03_8004A328 * 4)), s32 *, 0x14) = i;
+                            D_ovl0B_03_8004A324->unk4[D_ovl0B_03_8004A328 + 4] = i;
                         } else if (D_ovl0B_03_8004A324->unk4[D_ovl0B_03_8004A328] == 1) {
                             i = D_ovl0B_03_8004A324->unk40[D_ovl0B_03_8004A328];
                             if (((btn & 0x300) || (held & 0x2000)) && (i == 1)) {
