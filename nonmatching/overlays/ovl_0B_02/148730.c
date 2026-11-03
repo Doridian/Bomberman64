@@ -6,7 +6,7 @@
  * of it 800431C4's local table). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 105, eu 105, jp 105
+ * differing words: us 96, eu 96, jp 96
  * jp has its own strings, counts the characters itself in 80044424 (24
  * pixels each, as ovl_0B_03 does), draws through ZeroJump 0x2501
  * (DRAW_TEXT), puts the seconds one character further on and lays out the
@@ -35,6 +35,10 @@
  * ovl_0B_03's 80046E8C/80046F78; 80043018-80043150 and 80044424 are
  * ovl_0B_03's 80043134-80043340 and 80043234 with a 0x20-byte box;
  * 80046418 is ovl_12_05's 80046990.
+ * 800469C8 divides by 30.0f in the loop (`unk14 -= dy / 30.0f`, dy the
+ * converted sum): uopt hoists the quotient into $f20 and leaves the sum
+ * in its own register ($f2), as the original; divided before the loop,
+ * the sum was a ugen temporary and the divisor took the next one.
  *
  * What still differs (words, the same in every version):
  * - 800431C4 94: registers only. At the start the original gives the
@@ -43,8 +47,6 @@
  *   there, $s2 here); the 0x8000 exit stores its i = 0 to i's home before
  *   the 80049178 call where uopt hoists it to the top of the branch here;
  *   the page turns keep &marks[i] in $v1 (here $s0).
- * - 800469C8 9: the 30.0f divisor and the converted sum in $f8/$f2 (here
- *   $f10/$f8).
  * - 800454F0 2: the star's fade loop's j = 0 goes into the 0x2DC call's
  *   delay slot in the original, the call's li a0 into the branch's before
  *   it: ugen must emit `li a0` before `move s0,zero` (as1 fills the
@@ -818,9 +820,9 @@ void func_ovl0B_02_800469C8(void) {
     obj->unk40->unk18 = func_ovl0B_02_80049328(func_ovl0B_02_80049330() * 360.0) * 100.0f + -716.0f;
     obj->unk40->unk30 = 0.2f;
     obj->unk40->unk28 = obj->unk40->unk2C = obj->unk40->unk30;
-    dy = (f32) (func_ovl0B_02_80049330() * 40.0 + 80.0) / 30.0f;
+    dy = (f32) (func_ovl0B_02_80049330() * 40.0 + 80.0);
     for (i = 0; i != 30; i++) {
-        obj->unk40->unk14 -= dy;
+        obj->unk40->unk14 -= dy / 30.0f;
         obj->unk40->unk10 -= 1.6666666f;
         if (D_ovl0B_02_8004A448 != 0) {
             break;
