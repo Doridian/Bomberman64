@@ -6,7 +6,7 @@
  * of it 800431C4's local table). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3418, eu 3418, jp 3425
+ * differing words: us 2931, eu 2931, jp 2931
  * jp has no `#if VERSION_JP` yet.
  *
  * A first draft from m2c (with a context of the ZeroJump prototypes the
@@ -14,12 +14,13 @@
  * the logic is the original's, the big functions' schedules aren't.
  * Source order is the reverse of the address order. The statics take
  * arguments in their callers' registers: 80043018 and 800443DC (n in $s2),
- * 80043150 ($s2, $s3), 80043054 and 80043F4C (i in $s1), 80043EF8 ($a1,
- * with an unused first parameter), 800430C4 ($f12), 80044424 ($f20);
+ * 80043150 ($s2, $s3), 80043054 and 80043F4C (i in $s1), 80043EF8 (its one
+ * parameter in $a1), 800430C4 ($f12), 80044424 ($f20);
  * 800472C0 and 80043FC4 are static too (they use saved registers their
  * callers save, so the handler saves $s0-$fp and $f20-$f27). The 22 stubs
  * (two `jr ra` in a row): 80043010, 80043FBC, 800443D4 and 800472A0-B8 are
- * inlined-once statics before their callers; 80047C14-80047C7C are the 14
+ * inlined-once statics before their callers (80043010 is 800431C4's copy
+ * of 80043018's loop, its n kept in $s1 as inlined parameters are); 80047C14-80047C7C are the 14
  * unused stubs after the tail, and the four group tasks in
  * D_ovl0B_02_8004A150 (80047C84-800481E8, static, referred to only from
  * .data) come out after them in definition order, then 800482D0 (it
@@ -1091,7 +1092,7 @@ void func_ovl0B_02_800454F0(void) {
 static s32 func_ovl0B_02_80044424(u8 *str, f32 scale);
 static void func_ovl0B_02_80043018(Box_ovl0B_02 *boxes, s32 n);
 static void func_ovl0B_02_80043150(Box_ovl0B_02 *boxes, s32 n);
-static void func_ovl0B_02_80043EF8(s32 unused, s32 i);
+static void func_ovl0B_02_80043EF8(s32 i);
 static UnkStructA_40 *func_ovl0B_02_80043F4C(s32 i);
 
 void func_ovl0B_02_80044490(void) {
@@ -1111,9 +1112,17 @@ void func_ovl0B_02_80044490(void) {
     f32 x;
     f32 y;
 
+    if (0) {
+        func_ovl0B_02_80049198(1);
+        func_ovl0B_02_80049198(1);
+        func_ovl0B_02_80049198(1);
+        func_ovl0B_02_80049198(1);
+        func_ovl0B_02_80049198(1);
+        func_ovl0B_02_80049198(1);
+    }
     tbl = func_ovl0B_02_80049410(0x15);
     n = 0;
-    for (i = 0; i < 4; i++) {
+    for (i = 0; i != 4; i++) {
         if (tbl[i][0] != 0) {
             n++;
         }
@@ -1135,30 +1144,31 @@ void func_ovl0B_02_80044490(void) {
     if (D_ovl0B_02_8004A3E4 == 0) {
         D_ovl0B_02_8004A3D8 = 0;
         g = &D_ovl0B_02_8004A0EC[D_ovl0B_02_8004A3D4];
+        pieces = g->unk0;
         for (i = 0; i < g->unk8; i++) {
-            g->unk0[i].unk10->unk1C = D_ovl0B_02_8004A0EC[D_ovl0B_02_8004A3D4].unk0[i].unk28;
-            g->unk0[i].unk10->unk20 = D_ovl0B_02_8004A0EC[D_ovl0B_02_8004A3D4].unk0[i].unk2C;
+            pieces[i].unk10->unk1C = D_ovl0B_02_8004A0EC[D_ovl0B_02_8004A3D4].unk0[i].unk28;
+            pieces[i].unk10->unk20 = D_ovl0B_02_8004A0EC[D_ovl0B_02_8004A3D4].unk0[i].unk2C;
         }
         mark = func_ovl0B_02_80043F4C(D_ovl0B_02_8004A3D4);
         func_ovl0B_02_80049198(0xC);
         func_ovl0B_02_80043150(D_ovl0B_02_80049950, 5);
         task = func_ovl0B_02_80049178(func_ovl0B_02_800462C8, NULL, 0, 0, 0x130);
-        func_ovl0B_02_80043EF8(0, D_ovl0B_02_8004A3D4);
+        func_ovl0B_02_80043EF8(D_ovl0B_02_8004A3D4);
         func_ovl0B_02_800482F0(D_ovl0B_02_8004A3AC, "%02d", D_ovl0B_02_8004A3E0->unk38 / 3600);
         for (i = 0; i < 2; i++) {
             D_ovl0B_02_80049944[i] = D_ovl0B_02_8004A3AC[i] - 0x20;
         }
         func_ovl0B_02_800482F0(D_ovl0B_02_8004A3AC, "%02d", D_ovl0B_02_8004A3E0->unk38 % 3600 / 60);
-        for (i = 0; i < 2; i++) {
+        for (i = 0; i != 2; i++) {
             D_ovl0B_02_80049944[i + 4] = D_ovl0B_02_8004A3AC[i] - 0x20;
         }
         D_ovl0B_02_8004A39C[0] = func_ovl0B_02_800495B8(D_ovl0B_02_80049938, 0x2D, 0xAA, 0.6f, 0.6f, 5);
         D_ovl0B_02_8004A3A4[0] = func_ovl0B_02_800495B8(D_ovl0B_02_80049944, 0x2D, 0xBE, 0.6f, 0.6f, 5);
     }
     while (TRUE) {
+        buttons = func_ovl0B_02_80049530();
         g = &D_ovl0B_02_8004A0EC[D_ovl0B_02_8004A3D4];
         pieces = g->unk0;
-        buttons = func_ovl0B_02_80049530();
         if (D_ovl0B_02_8004A3E4 == 0) {
             if ((all && D_ovl0B_02_8004A3D4 < 4) ||
                 (D_ovl0B_02_8004A3D4 == 4 && tbl[4][3] != 0 && func_ovl0B_02_800493E0(0xA4) != 0)) {
@@ -1266,7 +1276,7 @@ void func_ovl0B_02_80044490(void) {
                     : t * t * 0.225f + x - 90.0f;
                 func_ovl0B_02_800491C0();
             }
-            func_ovl0B_02_80043EF8(0, D_ovl0B_02_8004A3D4);
+            func_ovl0B_02_80043EF8(D_ovl0B_02_8004A3D4);
             continue;
         }
         if ((buttons & 0x200) && D_ovl0B_02_8004A3D4 < 4) {
@@ -1285,7 +1295,7 @@ void func_ovl0B_02_80044490(void) {
                 D_ovl0B_02_80049A50[0].unk10->unk20 = WRAP(t * t * -0.225f + x + 90.0f);
                 func_ovl0B_02_800491C0();
             }
-            func_ovl0B_02_80043EF8(0, D_ovl0B_02_8004A3D4);
+            func_ovl0B_02_80043EF8(D_ovl0B_02_8004A3D4);
             continue;
         }
         if ((buttons & 0x800) && ((D_ovl0B_02_8004A3D4 < 4 && all) ||
@@ -1305,7 +1315,7 @@ void func_ovl0B_02_80044490(void) {
                     D_ovl0B_02_80049A50[0].unk10->unk18 = y - (t * t * 0.05f - 800.0f);
                     func_ovl0B_02_800491C0();
                 }
-                func_ovl0B_02_80043EF8(0, D_ovl0B_02_8004A3D4);
+                func_ovl0B_02_80043EF8(D_ovl0B_02_8004A3D4);
             } else {
                 D_ovl0B_02_8004A3DC = D_ovl0B_02_8004A3D4;
                 D_ovl0B_02_8004A3D4 = 4;
@@ -1318,7 +1328,7 @@ void func_ovl0B_02_80044490(void) {
                     D_ovl0B_02_80049A50[0].unk10->unk10 = (t * t * 0.075f - 120.0f) + y;
                     func_ovl0B_02_800491C0();
                 }
-                func_ovl0B_02_80043EF8(0, D_ovl0B_02_8004A3D4);
+                func_ovl0B_02_80043EF8(D_ovl0B_02_8004A3D4);
             }
             continue;
         }
@@ -1338,7 +1348,7 @@ void func_ovl0B_02_80044490(void) {
                     D_ovl0B_02_80049A50[0].unk10->unk18 = (t * t * 0.05f - 800.0f) + y;
                     func_ovl0B_02_800491C0();
                 }
-                func_ovl0B_02_80043EF8(0, D_ovl0B_02_8004A3D4);
+                func_ovl0B_02_80043EF8(D_ovl0B_02_8004A3D4);
             } else {
                 D_ovl0B_02_8004A3D4 = D_ovl0B_02_8004A3DC;
                 func_ovl0B_02_80043FC4();
@@ -1350,7 +1360,7 @@ void func_ovl0B_02_80044490(void) {
                     D_ovl0B_02_80049A50[0].unk10->unk10 = y - (t * t * 0.075f - 120.0f);
                     func_ovl0B_02_800491C0();
                 }
-                func_ovl0B_02_80043EF8(0, D_ovl0B_02_8004A3D4);
+                func_ovl0B_02_80043EF8(D_ovl0B_02_8004A3D4);
             }
             continue;
         }
@@ -1447,7 +1457,7 @@ static UnkStructA_40 *func_ovl0B_02_80043F4C(s32 i) {
 }
 
 /* Starts the group's task (D_ovl0B_02_8004A150). */
-static void func_ovl0B_02_80043EF8(s32 unused, s32 i) {
+static void func_ovl0B_02_80043EF8(s32 i) {
     D_ovl0B_02_8004A448 = 0;
     if (D_ovl0B_02_8004A150[i] != NULL) {
         D_ovl0B_02_8004A44C = func_ovl0B_02_80049178(D_ovl0B_02_8004A150[i], NULL, 0, 0, 0x130);
@@ -1473,9 +1483,31 @@ void func_ovl0B_02_80043E10(void) {
 }
 
 static UnkStructA_40 *func_ovl0B_02_80043054(s32 i);
+static void func_ovl0B_02_80043018(Box_ovl0B_02 *boxes, s32 n);
+
+static void func_ovl0B_02_80043010(Box_ovl0B_02 *boxes, s32 n) {
+    s32 i;
+
+    for (i = 0; i < n; i++) {
+        func_ovl0B_02_80048D10(boxes[i].unk1C);
+    }
+}
 
 /* The pages of a group. */
 void func_ovl0B_02_800431C4(void) {
+    f32 a;
+    f32 b;
+    f32 t;
+    s32 i;
+    s32 alpha;
+    s32 task;
+    Group_ovl0B_02 *g;
+    Piece_ovl0B_02 *pieces;
+    s32 buttons;
+    s32 n;
+    s32 (*tbl)[4];
+    UnkStructA_40 *m;
+    UnkStructA_40 *marks[5];
     s32 next[6][4] = {
         { 0x28, 0x31, 0x2D, 0x88 },
         { 0x38, 0x3E, 0x3C, 0x89 },
@@ -1484,24 +1516,13 @@ void func_ovl0B_02_800431C4(void) {
         { 0x68, 0x8C, 0x6E, 0x74 },
         { 0x78, 0x8D, 0x7B, 0x7E },
     };
-    UnkStructA_40 *marks[5];
-    UnkStructA_40 *m;
-    s32 task;
-    Group_ovl0B_02 *g;
-    Piece_ovl0B_02 *pieces;
-    s32 buttons;
-    s32 n;
-    s32 i;
-    s32 alpha;
-    f32 t;
-    f32 a;
-    f32 b;
 
     func_ovl0B_02_80043150(D_ovl0B_02_800499F0, 3);
     D_ovl0B_02_8004A3C8 = func_ovl0B_02_80049178(func_ovl0B_02_80046100, NULL, 0, 0, 0x130);
     D_ovl0B_02_8004A3E8[0] = func_ovl0B_02_80043054(D_ovl0B_02_8004A3D8);
+    tbl = func_ovl0B_02_80049410(0x15);
     for (n = 0; n != 4; n++) {
-        if (func_ovl0B_02_80049410(0x15)[D_ovl0B_02_8004A3D4][n] == 0) {
+        if (tbl[D_ovl0B_02_8004A3D4][n] == 0) {
             break;
         }
     }
@@ -1514,10 +1535,10 @@ void func_ovl0B_02_800431C4(void) {
             m->unk36 = 0x50;
         }
         m->unk1C = 315.0f;
+        m->unk10 = i * 20.0f + -78.5f;
         m->unk14 = 72.0f;
         m->unk18 = 123.0f;
         m->unk28 = m->unk2C = m->unk30 = 0.18f;
-        m->unk10 = i * 20.0f + -78.5f;
     }
     if (n >= 4) {
         D_ovl0B_02_8004A3C4 = 3;
@@ -1552,8 +1573,9 @@ void func_ovl0B_02_800431C4(void) {
                 b = pieces[0].unk10->unk20;
                 for (t = 40.0f; t >= 0.0f; t -= 1.0f) {
                     for (i = 0; i < g->unk8; i++) {
-                        pieces[i].unk10->unk1C = WRAP(g->unk4[D_ovl0B_02_8004A3D8 - 1][0] + (a + -g->unk4[D_ovl0B_02_8004A3D8 - 1][0] / 1600.0f * t * t));
-                        pieces[i].unk10->unk20 = WRAP(g->unk4[D_ovl0B_02_8004A3D8 - 1][1] + (b + -g->unk4[D_ovl0B_02_8004A3D8 - 1][1] / 1600.0f * t * t));
+                        m = pieces[i].unk10;
+                        m->unk1C = WRAP(g->unk4[D_ovl0B_02_8004A3D8 - 1][0] + (a + -g->unk4[D_ovl0B_02_8004A3D8 - 1][0] / 1600.0f * t * t));
+                        m->unk20 = WRAP(g->unk4[D_ovl0B_02_8004A3D8 - 1][1] + (b + -g->unk4[D_ovl0B_02_8004A3D8 - 1][1] / 1600.0f * t * t));
                     }
                     func_ovl0B_02_800491C0();
                 }
@@ -1580,12 +1602,13 @@ void func_ovl0B_02_800431C4(void) {
                 b = pieces[0].unk10->unk20;
                 for (t = 40.0f; t >= 0.0f; t -= 1.0f) {
                     for (i = 0; i < g->unk8; i++) {
-                        pieces[i].unk10->unk1C = (a + g->unk4[D_ovl0B_02_8004A3D8][0] / 1600.0f * t * t) - g->unk4[D_ovl0B_02_8004A3D8][0] >= 360.0f
+                        m = pieces[i].unk10;
+                        m->unk1C = (a + g->unk4[D_ovl0B_02_8004A3D8][0] / 1600.0f * t * t) - g->unk4[D_ovl0B_02_8004A3D8][0] >= 360.0f
                             ? (a + g->unk4[D_ovl0B_02_8004A3D8][0] / 1600.0f * t * t) - g->unk4[D_ovl0B_02_8004A3D8][0] - 360.0f
                             : (a + g->unk4[D_ovl0B_02_8004A3D8][0] / 1600.0f * t * t) < g->unk4[D_ovl0B_02_8004A3D8][0]
                             ? (a + g->unk4[D_ovl0B_02_8004A3D8][0] / 1600.0f * t * t) - g->unk4[D_ovl0B_02_8004A3D8][0] + 360.0f
                             : (a + g->unk4[D_ovl0B_02_8004A3D8][0] / 1600.0f * t * t) - g->unk4[D_ovl0B_02_8004A3D8][0];
-                        pieces[i].unk10->unk20 = (b + g->unk4[D_ovl0B_02_8004A3D8][1] / 1600.0f * t * t) - g->unk4[D_ovl0B_02_8004A3D8][1] >= 360.0f
+                        m->unk20 = (b + g->unk4[D_ovl0B_02_8004A3D8][1] / 1600.0f * t * t) - g->unk4[D_ovl0B_02_8004A3D8][1] >= 360.0f
                             ? (b + g->unk4[D_ovl0B_02_8004A3D8][1] / 1600.0f * t * t) - g->unk4[D_ovl0B_02_8004A3D8][1] - 360.0f
                             : (b + g->unk4[D_ovl0B_02_8004A3D8][1] / 1600.0f * t * t) < g->unk4[D_ovl0B_02_8004A3D8][1]
                             ? (b + g->unk4[D_ovl0B_02_8004A3D8][1] / 1600.0f * t * t) - g->unk4[D_ovl0B_02_8004A3D8][1] + 360.0f
@@ -1597,23 +1620,26 @@ void func_ovl0B_02_800431C4(void) {
         } else if (func_ovl0B_02_80048738() & 0x4000) {
             func_ovl0B_02_80049700(2);
             func_ovl0B_02_80049180(task);
-            func_ovl0B_02_80043018(D_ovl0B_02_800499F0, 3);
+if (0) { func_ovl0B_02_80043018(D_ovl0B_02_800499F0, 3); }
+            func_ovl0B_02_80043010(D_ovl0B_02_800499F0, 3);
             func_ovl0B_02_80049180(D_ovl0B_02_8004A3C8);
             func_ovl0B_02_80048D10(D_ovl0B_02_8004A3E8[0]);
-            for (i = 0; i < 5; i++) {
+            for (i = 0; i != 5; i++) {
                 func_ovl0B_02_80048D10(marks[i]);
             }
             D_ovl0B_02_80049A50[0].unk10->unkC &= ~1;
             for (i = 0; i < g->unk8; i++) {
-                pieces[i].unk10->unk36 = 0xFF;
-                pieces[i].unk10->unkC |= 0x1080;
+                m = pieces[i].unk10;
+                m->unk36 = 0xFF;
+                m->unkC |= 0x1080;
             }
             for (alpha = 0xFF; alpha > 0; alpha -= 4) {
                 D_ovl0B_02_80049A50[0].unk10->unk36 = 0xFF - alpha;
+                t = pieces[0].unk30;
                 for (i = 0; i < g->unk8; i++) {
-                    pieces[i].unk10->unk36 = alpha;
-                    pieces[i].unk10->unk28 = pieces[i].unk10->unk2C = pieces[i].unk10->unk30 =
-                        (alpha + 0x100) * pieces[0].unk30 * 0.001953125f;
+                    m = pieces[i].unk10;
+                    m->unk36 = alpha;
+                    m->unk28 = m->unk2C = m->unk30 = (alpha + 0x100) * t * 0.001953125f;
                 }
                 func_ovl0B_02_800491C0();
             }
@@ -1633,13 +1659,14 @@ void func_ovl0B_02_800431C4(void) {
             for (i = 0; i < 3; i++) {
                 func_ovl0B_02_80048D10(D_ovl0B_02_800499F0[i].unk1C);
             }
-            for (i = 0; i < 5; i++) {
+            for (i = 0; i != 5; i++) {
                 func_ovl0B_02_80048D10(marks[i]);
             }
             func_ovl0B_02_80049178(func_ovl0B_02_800470B0, NULL, 0, 0, 0x130);
             for (i = 0; i < g->unk8; i++) {
-                pieces[i].unk10->unk36 = 0xFF;
-                pieces[i].unk10->unkC |= 0x1080;
+                m = pieces[i].unk10;
+                m->unk36 = 0xFF;
+                m->unkC |= 0x1080;
             }
             for (alpha = 0xFF; alpha > 0; alpha -= 8) {
                 for (i = 0; i < g->unk8; i++) {
@@ -1696,14 +1723,10 @@ static UnkStructA_40 *func_ovl0B_02_80043054(s32 i) {
     return obj;
 }
 
-static void func_ovl0B_02_80043010(void) {
-}
-
 /* The original passes n in $s2 (its callers' register). */
 static void func_ovl0B_02_80043018(Box_ovl0B_02 *boxes, s32 n) {
     s32 i;
 
-    func_ovl0B_02_80043010();
     for (i = 0; i < n; i++) {
         func_ovl0B_02_80048D10(boxes[i].unk1C);
     }
