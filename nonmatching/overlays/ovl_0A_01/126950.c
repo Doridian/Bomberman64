@@ -3,31 +3,39 @@
  * function and its .data/.bss; .text 0x40C0 as the original.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 286, eu 286, jp 286
+ * differing words: us 237, eu 237, jp 237
  *
- * What still differs in us (words):
+ * What still differs in us (words; eu and jp the same):
  * - func_ovl0A_01_80043028 (6): `beq a0,s0` where the original has
- *   `beq s0,a0` (three compares), and a table address scheduled later.
- * - func_ovl0A_01_80043338 (2): `move s4,s2` and the `bnez` after it swap.
- * - func_ovl0A_01_8004364C (3): a table address built in v1, not a0.
- * - func_ovl0A_01_80043AA4 (17): the float constants' loads and an add.s
- *   scheduled differently ($f2 for $f0).
- * - func_ovl0A_01_800442B4 (144): frame 0x58, not 0x60: the original keeps
- *   a counter on the stack (sp+92), ours in s1, which renumbers the
- *   s registers after it; 5 words short.
- * - func_ovl0A_01_80044584 (25), in its static 80044A2C: the call to
- *   80047DC8 (inlined from 80044A24) gets its stores scheduled before its
- *   arguments, and `&fall` in s2 where the original has s1.
- * - func_ovl0A_01_80044F3C (41): constant loads scheduled differently,
- *   and the epilogue after its closing `while (1)` comes after 7 nops where
- *   the original has 2 (the code before is the same length; the padding
- *   keeps our epilogue at the object's offset 0x2200 whatever comes before).
- * - func_ovl0A_01_8004609C (48): $f24 where the original uses $f22, and
- *   the frame 8 bytes too big: 8004607C's count parameter gives the
- *   original's `slt` (with a constant 1 it was `bne`) but takes a slot the
- *   original doesn't have.
+ *   `beq s0,a0`, in all three inlined 80043010 (-1 in s0). The order is
+ *   uopt's: `-1 != task`, a local -1, u32/void * task, 0xFFFFFFFF don't
+ *   change it.
+ * - func_ovl0A_01_800442B4 (144): frame 0x58, not 0x60: the original
+ *   keeps i's home on the stack (sp+0x5C: `sw zero` early, loaded into s1
+ *   for the first loop, stored and copied to s0 for the second, stored
+ *   after it) and doesn't know i's start (both loops keep their entry
+ *   test and end on slti); ours keeps i in s1 throughout, 5 words short.
+ *   Taking &i (dead code, an inlined static's pointer) makes i memory
+ *   everywhere; i = 0 at any place, a second counter for the second loop,
+ *   the loops as inlined statics taking i don't give the split.
+ * - func_ovl0A_01_80044F3C (41): follows from 800442B4's size (the code
+ *   after its closing `while (1)` is padded to the same object offset).
+ * - func_ovl0A_01_8004609C (46): frame 8 bytes too big (8004607C's count
+ *   parameter: with a literal 1 the frame and every slot are the
+ *   original's, but the loop ends on `bne` where the original has
+ *   `slt v1,s1` with 1 in s1), and 80046084's a/b/lz in f20/f22/f24
+ *   permuted.
+ *
+ * Levers that fixed the rest: `#line` renumbering (80043380's `e = tbl`
+ * after the call's line; 80044A24 and 80046094 numbered below their
+ * callers, so their argument setup and stores schedule first), `k =
+ * D_ovl0A_01_80048D1C = ...` in 8004364C's switch, `base[0]` and
+ * `tgt[0]` computed separately in 80043AA4 (ugen then picks $f0), and a
+ * dead `if (fall) {}` at the top of 80044798 (its IPA registers: fall in
+ * s1, the table in s2).
  */
 #include "common.h"
+#line 31 "126950.c"
 
 typedef struct {
     /* 0x00 */ u8 unk0[4];
@@ -838,6 +846,7 @@ static void func_ovl0A_01_8004608C(void) {
     }
 }
 
+#line 50
 static void func_ovl0A_01_80046094(void) {
     while (D_ovl0A_01_80048770[2].obj->unk40->unk20 > 180.0f) {
         D_ovl0A_01_80048770[2].obj->unk40->unk20 -= 2.0f;
@@ -847,6 +856,7 @@ static void func_ovl0A_01_80046094(void) {
     D_ovl0A_01_80048770[2].obj->unk40->unk20 = 180.0f;
 }
 
+#line 850
 void func_ovl0A_01_80045EA0(void) {
     s32 wait;
     f32 pos[3];
@@ -1191,6 +1201,7 @@ static void func_ovl0A_01_80044A2C(void) {
     func_ovl0A_01_80043018(3, D_ovl0A_01_80048A84);
 }
 
+#line 100
 static void func_ovl0A_01_80044A24(Obj *obj, f32 *pos, f32 *tgt) {
     f32 ang[3];
     s32 u1;
@@ -1203,6 +1214,7 @@ static void func_ovl0A_01_80044A24(Obj *obj, f32 *pos, f32 *tgt) {
     obj->unk40->unk2C = ang[2] / 100.0f;
 }
 
+#line 1206
 static void func_ovl0A_01_80044968(s32 frame, f32 dx, f32 dy) {
     if (frame >= 0xC9 && frame < 0x190) {
         D_ovl0A_01_800488D8[5].obj->unk40->unk10 += 12.0f * dx;
@@ -1217,6 +1229,7 @@ static void func_ovl0A_01_80044798(f32 speed, f32 *fall) {
     Inner *m;
 
     func_ovl0A_01_80044790();
+    if (fall) {}
     m = D_ovl0A_01_800488D8[0].obj->unk40;
     if (m->unk20 > 72.0f) {
         m->unk10 += 12.0f * speed * 0.4f;
@@ -1467,7 +1480,8 @@ void func_ovl0A_01_80043AA4(void) {
     pos[0] = 600.0f;
     pos[2] = 2400.0f;
     func_ovl0A_01_80047F10(pos, obj);
-    tgt[0] = base[0] = pos[0] + 250.0f;
+    base[0] = pos[0] + 250.0f;
+    tgt[0] = pos[0] + 250.0f;
     tgt[1] = pos[1] - 1000.0f;
     tgt[2] = base[2] = pos[2] - 1500.0f;
     while (1) {
@@ -1507,7 +1521,7 @@ void func_ovl0A_01_8004364C(void) {
     s32 k;
 
     D_ovl0A_01_80048D20 = func_ovl0A_01_80047588();
-    switch (D_ovl0A_01_80048D1C = func_ovl0A_01_80047538()) {
+    switch (k = D_ovl0A_01_80048D1C = func_ovl0A_01_80047538()) {
         case 16:
             func_ovl0A_01_80043380(&D_ovl0A_01_80048770[0], 8);
             func_ovl0A_01_800435E4();
@@ -1609,8 +1623,11 @@ static void func_ovl0A_01_80043380(Entry *tbl, s32 n) {
     Entry *e;
 
     for (i = 0; i < n; i++) {
+#line 1614
         e = tbl;
+#line 1613
         tbl->obj = func_ovl0A_01_80047E60(tbl->unk4 == 0 ? tbl->unk8 : 0x320, 0x0D000000, 0xD0, NULL);
+#line 1614
         if (tbl->unk4 != 0) {
             func_ovl0A_01_80043378(tbl);
         }
