@@ -6,7 +6,7 @@
  * of it 800431C4's local table). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 106, eu 106, jp 106
+ * differing words: us 105, eu 105, jp 105
  * jp has its own strings, counts the characters itself in 80044424 (24
  * pixels each, as ovl_0B_03 does), draws through ZeroJump 0x2501
  * (DRAW_TEXT), puts the seconds one character further on and lays out the
@@ -45,8 +45,18 @@
  *   the page turns keep &marks[i] in $v1 (here $s0).
  * - 800469C8 9: the 30.0f divisor and the converted sum in $f8/$f2 (here
  *   $f10/$f8).
- * - 800454F0 3: the star's fade loop's j = 0 goes into the 0x2DC call's
- *   delay slot in the original.
+ * - 800454F0 2: the star's fade loop's j = 0 goes into the 0x2DC call's
+ *   delay slot in the original, the call's li a0 into the branch's before
+ *   it: ugen must emit `li a0` before `move s0,zero` (as1 fills the
+ *   branch's slot from the fall-through's first instruction and the
+ *   jal's from the last one before it), as if uopt hoisted j = 0 above
+ *   the call (as it does with next = 1 in ovl_0B_03). Here j = 0 is set
+ *   before the call and the loop is a do/while (3 to 2): with the
+ *   for's own j = 0 after the stores, j = 0 came after them; set before
+ *   the call with a for (;;) loop, uopt keeps 120 in a register
+ *   (bne s0,s2). Not `f(0x2DC); j = 0;` (not hoisted), `#line` on
+ *   j = 0, j = 0 in the argument ((j = 0, 0x2DC)), the constant through
+ *   another local (folded).
  * - Everything else matches.
  */
 #include "common.h"
@@ -1119,14 +1129,15 @@ void func_ovl0B_02_800454F0(void) {
             func_ovl0B_02_800491C0();
         }
         if (D_ovl0B_02_8004A3CC == 0x12 && i == 16) {
+            j = 0;
             func_ovl0B_02_80049700(0x2DC);
             star->unkC &= ~1;
             star->unkC |= 0x80;
             star->unk36 = 0;
-            for (j = 0; j < 120; j++) {
+            do {
                 star->unk36 += 1.0666667f;
                 func_ovl0B_02_800491C0();
-            }
+            } while (++j < 120);
             for (j = 0; j < 10; j++) {
                 star->unkC &= ~1;
                 func_ovl0B_02_80049198(3);
