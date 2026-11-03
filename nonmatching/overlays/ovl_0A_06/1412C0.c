@@ -9,12 +9,10 @@
  * goes through 0x2501 and 0x2503, with 0x2505 for 80043B5C's offsets.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 12, eu 12, jp 12
+ * differing words: us 10, eu 10, jp 10
  *
  * What still differs in us (words):
- * - func_ovl0A_06_80043010 (11; the statics up to 80043B5C): 8004311C's
- *   `ret = 2` comes before the wait's `li s0,15`, not after it (2: ret = 2
- *   on a later #line, or after the SE, moves it past the call); 80043250's
+ * - func_ovl0A_06_80043010 (9; the statics up to 80043B5C): 80043250's
  *   buffer at sp+40, not 32 (9): the original's frame has 12 bytes above
  *   the buffer and none below it for an inlined static (calling 0x101
  *   directly with three locals above the buffer gives that frame, but
@@ -69,7 +67,8 @@
  *   in s8 (the original's `li s7,1`), and both `ret = 1` are on a later
  *   line (#line 1700), which puts them after the wait's `li s0,10` (the
  *   #lines after them restore the file's numbering: keep them in step if
- *   lines are added above).
+ *   lines are added above); `ret = 2` sits between the SE's wait and its
+ *   call (the macro written out), which puts its `li` after the wait's.
  */
 #include "common.h"
 
@@ -1663,17 +1662,26 @@ static s32 func_ovl0A_06_8004311C(void) {
         } else if ((pressed & 0x8000) || (pressed & 0x1000)) {
 #line 1700
             ret = 1;
-#line 1665
+#line 1664
             if (D_ovl0A_06_80047018 == 0) {
+                /* SE(1, 1) with `ret = 2` between its wait and its call */
+                switch (1) {
+                    case 0: wait = 5; break;
+                    case 1: wait = 15; break;
+                    case 2: wait = 10; break;
+                    case 3: wait = 150; break;
+                    case 0x18: wait = 50; break;
+                    default: wait = 0; break;
+                }
                 ret = 2;
-                SE(1, 1);
+                func_ovl0A_06_80043018(1, wait);
             } else {
                 SE(2, 2);
             }
         } else if (pressed & 0x4000) {
 #line 1700
             ret = 1;
-#line 1673
+#line 1681
             SE(2, 2);
         }
         func_ovl0A_06_800465A0();
