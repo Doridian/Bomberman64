@@ -5,7 +5,7 @@
  * as the original; jp's .data is 0x1A0). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 713, eu 713, jp 719
+ * differing words: us 683, eu 683, jp 689
  *
  * IDO -O3: the functions are written last to first. The tail (80045438,
  * 800453F0, 800453BC, 80045494 and the twelve empty stubs) is ovl_17_10's;
@@ -26,13 +26,13 @@
  *   empty stub called from 8004359C); 80045FC8's result has its own
  *   local m (4th, spilled as in the original); the else branch's four
  *   player tests are a loop over j (IDO unrolls it: the original's
- *   `move v0,a0` copy); the endless button waits are `while (TRUE) { if
- *   (...) break; ... }` (test at the top, `b` back); the figures' loop
- *   sets i = 0 ahead of x. A dead read `if (!x) {}` in the 12-step loop
- *   sets uopt's register order: only $fs0 saved, 1.5f and the text
- *   height left out of registers, the frame 0x98 (jp 0x70; the inlined
- *   statics' areas count once anything below them, the spilled height,
- *   is used).
+ *   `move v0,a0` copy) counted in x, which also counts the second
+ *   object's two frames ($s7 there as in the original); the endless
+ *   button waits are `while (TRUE) { if (...) break; ... }` (test at the
+ *   top, `b` back); the figures' loop sets i = 0 ahead of x. Only $fs0 is
+ *   saved, 1.5f and the text height stay out of registers, and the frame
+ *   is 0x98 (jp 0x70; the inlined statics' areas count once anything
+ *   below them, the spilled height, is used).
  * - 8004400C: the trophy-colour test reads `unk50[F20[j]][k]` in place
  *   (no pointer p) with its own counter k, and v only inside `k == 4`;
  *   the winner's target x is a float local computed before the y branch
@@ -48,9 +48,9 @@
  *   original) for the same reason.
  *
  * What still differs:
- * - func_ovl0B_07_800435FC (us 37, jp 43): the original sets i ($fp) to
- *   0 before the confetti loop (a dead store ours drops) and at the end
- *   of both branches before the figures' loop.
+ * - func_ovl0B_07_800435FC (us 7, jp 13): the else branch's count is in
+ *   $s0 in the original (ours $s7: x); n is declared only for its slot
+ *   (m must be the 4th local).
  * - func_ovl0B_07_8004400C (658): one instruction longer; the original
  *   keeps the counter address in $fp and i in $s7 (ours the other way),
  *   one 0.0f constant in $fs4 for all its uses (ours two: the int-0 split
@@ -576,8 +576,8 @@ void func_ovl0B_07_800435FC(void) {
     D_ovl0B_07_80046E80[1]->unk18 = -36.0f;
     D_ovl0B_07_80046E80[1]->unkC |= 0x8080;
     func_ovl0B_07_80045F60(D_ovl0B_07_80046E80[1], 2);
-    for (j = 0; j < 2; j++) {
-        func_ovl0B_07_80045F68(D_ovl0B_07_80046E80[1], 0x3D, j, j);
+    for (x = 0; x < 2; x++) {
+        func_ovl0B_07_80045F68(D_ovl0B_07_80046E80[1], 0x3D, x, x);
     }
     if (D_ovl0B_07_80046F18->unk0 == 0) {
         D_ovl0B_07_80046F1C = 1;
@@ -594,11 +594,11 @@ void func_ovl0B_07_800435FC(void) {
                 break;
             }
         }
-        n = 0;
+        x = 0;
         for (j = 0; j < 4; j++) {
             if (D_ovl0B_07_80046F18->unk4[j] != 0 && i == D_ovl0B_07_80046F18->unk90[j]) {
-                D_ovl0B_07_80046F20[n] = j;
-                n++;
+                D_ovl0B_07_80046F20[x] = j;
+                x++;
                 D_ovl0B_07_80046F1C++;
             }
         }
@@ -616,8 +616,6 @@ void func_ovl0B_07_800435FC(void) {
         D_ovl0B_07_80046E80[i + 2]->unk28 = D_ovl0B_07_80046E80[i + 2]->unk2C = D_ovl0B_07_80046E80[i + 2]->unk30 = 1.5f;
         func_ovl0B_07_80045F60(D_ovl0B_07_80046E80[i + 2], 12);
         for (; j < 12; j++) {
-            if (!x) {
-            }
             func_ovl0B_07_80045F68(D_ovl0B_07_80046E80[i + 2], D_ovl0B_07_80046F20[i] + 0x4A, j, j);
         }
         if (D_ovl0B_07_80046F18->unk4[D_ovl0B_07_80046F20[i]] == 1 &&
