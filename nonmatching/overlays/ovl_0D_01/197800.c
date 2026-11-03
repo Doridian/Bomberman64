@@ -1,42 +1,55 @@
 /*
  * NON_MATCHING: ovl_0D_01's stage object, complete: all 47 functions and the
- * stubs the inlined statics leave in their places (every function and stub
- * at the original's address up to 80043134's group; the later ones within a
- * few words), .data 0x3E0 and .bss 0x70 as the original.
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
+ * stubs the inlined statics leave in their places, .data 0x3E0, .rodata
+ * 0x190 and .bss 0x70 as the original. It matches in us, eu and jp
+ * (nonmatching.py); not yet built into the ROM (docs/DECOMPILING.md,
+ * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 10, eu 10, jp 10
+ * differing words: us 0, eu 0, jp 0
  *
- * The sibling of ovl_0D_04 and ovl_0D_06 (nonmatching/overlays): the gate
- * code (800444E0, 800448D4), the model tables, the setup's loops and the
- * camera statics are theirs, renamed (scratch/0D_03/xlate.py). The layout
- * rules that placed every stub: a global the setup (or 80044F00, 800439CC)
- * calls comes out between its statics only when defined above it, so
- * 8004553C, 800454F8, 800455B8, 80044E2C, 80044EC4 and 800438C0 sit above
- * their callers; 80044D74 stays a call from the handler only with its two
- * stubs as empty statics called before each block (as statics holding the
- * blocks it was inlined, +27 words in the handler). What still differs in
- * us (fcmp counts a static with the function before it):
- * - func_ovl0D_01_80043134 (310): 2 words short; register allocation of the
- *   two probes and the fade loop (the loop's 1900.0 is hoisted into $fs2 in
- *   the original).
- * - func_ovl0D_01_800455E0 (253, the 7 loop statics with it): 4 words long.
- * - func_ovl0D_01_800448D4 (198, its 3 statics with it): 21 words short;
- *   the original indexes the gates at run time (i*8-i)*8 and steps the flags
- *   with a pointer; ours strength-reduces both.
- * - func_ovl0D_01_80044154 (134): 1 word long.
- * - func_ovl0D_01_80044F00 (92, the 5 loop statics with it): 2 words long.
- * - func_ovl0D_01_80044428 (67, 80044464 to 800444E0 with it), 8004363C
- *   (16, 800434BC with it; 800436C8 is 1 word short), 80043744 (9: 2 words
- *   long), 800439CC (4), 80043D3C (4), 80045A00 (2): register allocation.
+ * The sibling of ovl_0D_04 and ovl_0D_06 (src/overlays): the gate code
+ * (800444E0, 800448D4), the model tables, the setup's loops and the camera
+ * statics are theirs, renamed. The layout rules that placed every stub: a
+ * global the setup (or 80044F00, 800439CC) calls comes out between its
+ * statics only when defined above it, so 8004553C, 800454F8, 800455B8,
+ * 80044E2C, 80044EC4 and 800438C0 sit above their callers; 80044D74 stays a
+ * call from the handler only with its two stubs as empty statics called
+ * before each block. What fixed what (from 1089 words in us and jp):
+ * - 800436C8/800434BC: the fields compared with 0xFFFF (as the siblings).
+ * - 800448D4: the per-gate static 800448BC (Ent, flag) starts with the
+ *   flag test (`flag == 0x400 && !0x407` returns), so the loop's float
+ *   constants are hoisted into $fs0-$fs4 as the original; the macro's call
+ *   in a "panels.c" region (the static 80044D6C is defined there) keeps it
+ *   out of the prologue (the old fake read of D_ovl0D_01_80047560 stopped
+ *   the hoisting).
+ * - 80043134: the second probe's x is an int 2300 (its own .rodata
+ *   2300.0f, as the original's two), and an unused local above pos puts it
+ *   at sp+96 (a fake).
+ * - 800455E0: both 1600s of the camera static floats and its call in a
+ *   "panels.c" region (1600.0f in $f16); 80046C70 takes a u32 (with s32,
+ *   uopt kept the three 0x02000000s in s7); the empty static 800455D8
+ *   called after the 800455D0 rows (the frame); the 80046278 call in a
+ *   "panels.c" region (its a0 after the three stores); 80046460 returns s32
+ *   (v1, not v0, for the two inlined flag tests at the end).
+ * - 80044154: 15.0f through a local y, its store in a "panels.c" region,
+ *   and the model reached as D_ovl0D_01_800475D4[2] (the address of
+ *   D_ovl0D_01_8004760C[1]; a fake, so uopt doesn't keep &[1] in a
+ *   register for both the store and the load).
+ * - 80044464/800444D8/800444E0: ovl_0D_06's clamp (axis, v, size),
+ *   direction (takes the entity) and tiles (`len = x1 + z1` and case 0's
+ *   first statement in a "panels.c" region).
+ * - 800437C8: its parameters (id, x, n, z), as ovl_0D_06's 8004355C.
+ * - 80045A00: an empty `case 31` (the jump table runs to 31).
+ * - D_ovl0D_01_80047AFC is unused .bss: the dead stub 80045F14 refers to
+ *   it (a fake), so it keeps its word.
  */
 #include "common.h"
-#line 35 "197800.c"
+#line 48 "197800.c"
 
 /*
  * ovl_0D_01's stage object, IDO -O3: the functions are written last to first
  * (IDO -O3 emits a file's functions in reverse; docs/DECOMPILING.md).
- * ovl_0D_04 and ovl_0D_06 (nonmatching/overlays) are its siblings.
+ * ovl_0D_04 and ovl_0D_06 (src/overlays) are its siblings.
  */
 
 typedef struct {
@@ -328,7 +341,7 @@ s32 D_ovl0D_01_80047AEC;
 s32 D_ovl0D_01_80047AF0;
 s32 D_ovl0D_01_80047AF4;
 s32 D_ovl0D_01_80047AF8;
-u8 D_ovl0D_01_80047AFC[0x4]; /* unused */
+u8 D_ovl0D_01_80047AFC[0x4]; /* unused (func_ovl0D_01_80045F14) */
 Vec3f D_ovl0D_01_80047B00;
 Obj_0D01 *D_ovl0D_01_80047B0C;
 s32 D_ovl0D_01_80047B10;
@@ -394,8 +407,10 @@ Ent_0D01 D_ovl0D_01_800478C4[1] = {
 };
 Move_0D01 D_ovl0D_01_800478FC = { 0x708, 1, 0, 0.0f, 0.0f, 0.0f, { 0 }, -1.0f };
 
-/* (unused) */
+/* unused: the stub IDO -O3 leaves at the end of the object; it refers to the
+ * .bss nothing else uses, which would otherwise be misplaced (a fake) */
 static void func_ovl0D_01_80045F14(void) {
+    D_ovl0D_01_80047AFC[0] = 0;
 }
 
 void func_ovl0D_01_80045E18(void) {
@@ -516,6 +531,8 @@ void func_ovl0D_01_80045A00(s32 arg0) {
         case 1:
             func_ovl0D_01_80044F00();
             break;
+        case 31: /* nothing: the jump table runs to 31 */
+            break;
     }
 }
 
@@ -557,9 +574,10 @@ void func_ovl0D_01_800455E0(void) {
     D_ovl0D_01_80047B30.x = 32768.0f;
     D_ovl0D_01_80047B30.y = 32768.0f;
     D_ovl0D_01_80047B30.z = 32768.0f;
+    /* a fake (see the top): its a0 after the stores */
 #line 1 "panels.c"
     func_ovl0D_01_80046278(D_ovl0D_01_80047B18);
-#line 563 "197800.c"
+#line 581 "197800.c"
     D_ovl0D_01_80047B0C = func_ovl0D_01_80046CB0(-1, 0x80, 0.0f, 0.0f, 0.0f);
     D_ovl0D_01_80047B0C->unkC = 0x3FFFF;
     func_ovl0D_01_800463B0(0);
@@ -568,9 +586,10 @@ void func_ovl0D_01_800455E0(void) {
     func_ovl0D_01_80046350(func_ovl0D_01_80045CFC);
     func_ovl0D_01_800455B8();
     D_ovl0D_01_80047B2C = func_ovl0D_01_800463B8();
+    /* a fake (see the top): 1600.0f in $f16 */
 #line 1 "panels.c"
     func_ovl0D_01_800455B0();
-#line 574 "197800.c"
+#line 593 "197800.c"
     func_ovl0D_01_800448CC();
     func_ovl0D_01_800455A8();
     func_ovl0D_01_800455A0();
@@ -871,10 +890,11 @@ void func_ovl0D_01_80044D74(void) {
     }
 }
 
+/* in "panels.c" (a fake, see the top) */
 #line 1 "panels.c"
 static void func_ovl0D_01_80044D6C(void) {
 }
-#line 878 "197800.c"
+#line 898 "197800.c"
 
 static void func_ovl0D_01_80044D64(void) {
 }
@@ -908,7 +928,7 @@ void func_ovl0D_01_800448D4(void) {
     /* a fake: the region's .file keeps the first call out of the prologue */
 #line 1 "panels.c"
     func_ovl0D_01_800448CC();
-#line 912 "197800.c"
+#line 932 "197800.c"
     func_ovl0D_01_800448C4();
     for (i = 0; i < 2; i++) {
         func_ovl0D_01_800448BC(&D_ovl0D_01_800476EC[i], D_ovl0D_01_8004775C[i]);
@@ -1015,7 +1035,7 @@ static void func_ovl0D_01_800444E0(Ent_0D01 *e) {
             /* a fake (see the top) */
 #line 1 "panels.c"
             x0 = grid[0] - 1;
-#line 1019 "197800.c"
+#line 1039 "197800.c"
             x1 = x0 + 4;
             z1 = grid[2] + len;
             x2 = x0 + 1;
@@ -1126,7 +1146,7 @@ void func_ovl0D_01_80044154(void) {
          */
 #line 1 "panels.c"
         D_ovl0D_01_8004760C[1].unk18 = y;
-#line 1130 "197800.c"
+#line 1150 "197800.c"
         D_ovl0D_01_800475D4[2].obj->unk40->unk14 = y * 10.0f;
         func_ovl0D_01_80046C70(D_ovl0D_01_8004767C[0].obj, 0x01000000);
         func_ovl0D_01_80046C70(D_ovl0D_01_8004767C[1].obj, 0x01000000);
@@ -1224,7 +1244,7 @@ void func_ovl0D_01_80043DDC(void) {
 
 void func_ovl0D_01_80043D3C(void) {
     if (func_ovl0D_01_80047040(0x406) != 0) {
-        func_ovl0D_01_800437C8(7, 2, 0x1B, 0x26);
+        func_ovl0D_01_800437C8(0x26, 7, 2, 0x1B);
         func_ovl0D_01_80043CF8(D_ovl0D_01_8004779C[1].obj);
         func_ovl0D_01_80043944(&D_ovl0D_01_8004779C[1]);
         func_ovl0D_01_80043CF8(D_ovl0D_01_8004780C[0].obj);
@@ -1287,7 +1307,7 @@ void func_ovl0D_01_800439CC(void) {
             func_ovl0D_01_80046B80(60);
             func_ovl0D_01_80046DD8(60);
             func_ovl0D_01_80047340(0x2C);
-            func_ovl0D_01_800437C8(7, 2, 0x1B, 0x26);
+            func_ovl0D_01_800437C8(0x26, 7, 2, 0x1B);
             func_ovl0D_01_8004376C(315.0f, 45.0f, 1500.0f);
             func_ovl0D_01_80046C70(D_ovl0D_01_8004759C[0].obj, 0x01000000);
             func_ovl0D_01_80046E00();
@@ -1320,7 +1340,7 @@ static void func_ovl0D_01_80043868(Obj_0D01 *o) {
 }
 
 /* the camera: x tiles across, above the n rows' heights, z tiles down */
-static void func_ovl0D_01_800437C8(s32 x, s32 n, s32 z, s32 id) {
+static void func_ovl0D_01_800437C8(s32 id, s32 x, s32 n, s32 z) {
     s32 i;
 
     D_ovl0D_01_80047B00.x = x * 100.0f;
