@@ -6,7 +6,7 @@
  * of it 800431C4's local table). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1226, eu 1226, jp 1289
+ * differing words: us 963, eu 963, jp 1026
  * jp has no `#if VERSION_JP` yet.
  *
  * A first draft from m2c (with a context of the ZeroJump prototypes the
@@ -532,33 +532,45 @@ static void func_ovl0B_02_800472B0(void) {
 static void func_ovl0B_02_800472A8(void) {
 }
 
-static void func_ovl0B_02_800472A0(void) {
+static s32 func_ovl0B_02_800472A0(s32 *row) {
+    s32 n;
+    s32 j;
+
+    n = 0;
+    for (j = 0; j != 4; j++) {
+        if (row[j] != 0) {
+            n++;
+        }
+    }
+    return n;
 }
 
 static void func_ovl0B_02_800472C0(void) {
-    s32 (*tbl)[4];
     s32 i;
     s32 j;
     s32 n;
+    s32 (*tbl)[4];
 
-    func_ovl0B_02_800472A0();
     func_ovl0B_02_800472A8();
     func_ovl0B_02_800472B0();
     func_ovl0B_02_800472B8();
     func_ovl0B_02_80049020(0);
     func_ovl0B_02_80049340(45.0f, 50.0f);
     D_ovl0B_02_8004A3E0 = func_ovl0B_02_80048778();
+    n = 0;
     for (i = 0; i < 4; i++) {
         for (j = 0; j != 5; j++) {
-            D_ovl0B_02_8004A3F0[i * 5 + j] = func_ovl0B_02_80048D08(0x37, 0);
-            D_ovl0B_02_8004A3F0[i * 5 + j]->unk10 = j * 64.0f;
-            D_ovl0B_02_8004A3F0[i * 5 + j]->unk14 = i * 64.0f;
-            D_ovl0B_02_8004A3F0[i * 5 + j]->unk18 = j * 64.0f + 64.0f;
-            D_ovl0B_02_8004A3F0[i * 5 + j]->unk1C = i * 64.0f + 64.0f;
-            D_ovl0B_02_8004A3F0[i * 5 + j]->unkC |= 0x400;
+            D_ovl0B_02_8004A3F0[n] = func_ovl0B_02_80048D08(0x37, 0);
+            D_ovl0B_02_8004A3F0[n]->unk10 = j * 64.0f;
+            D_ovl0B_02_8004A3F0[n]->unk14 = i * 64.0f;
+            D_ovl0B_02_8004A3F0[n]->unk18 = j * 64.0f + 64.0f;
+            D_ovl0B_02_8004A3F0[n]->unk1C = i * 64.0f + 64.0f;
+            D_ovl0B_02_8004A3F0[n]->unkC |= 0x400;
+            n++;
         }
     }
-    for (i = 0; i < 2; i++) {
+    j = 2;
+    for (i = 0; i < j; i++) {
         D_ovl0B_02_80049A50[i].unk10 = func_ovl0B_02_80048D08(D_ovl0B_02_80049A50[i].unk0, 0);
         D_ovl0B_02_80049A50[i].unk10->unk10 = D_ovl0B_02_80049A50[i].unk4;
         D_ovl0B_02_80049A50[i].unk10->unk14 = D_ovl0B_02_80049A50[i].unk8;
@@ -579,13 +591,7 @@ static void func_ovl0B_02_800472C0(void) {
     }
     tbl = func_ovl0B_02_80049410(0x15);
     for (i = 0; i < 4; i++) {
-        n = 0;
-        for (j = 0; j != 4; j++) {
-            if (tbl[i][j] != 0) {
-                n++;
-            }
-        }
-        if (n == 4) {
+        if (func_ovl0B_02_800472A0(tbl[i]) == 4) {
             func_ovl0B_02_80048DA0(D_ovl0B_02_8004A440, D_ovl0B_02_8004A134[i], 0x4F);
         }
     }
@@ -1662,7 +1668,8 @@ if (0) { func_ovl0B_02_80043018(D_ovl0B_02_800499F0, 3); }
             func_ovl0B_02_80048788();
             func_ovl0B_02_80048D10(D_ovl0B_02_8004A3E8[0]);
             func_ovl0B_02_80049180(D_ovl0B_02_8004A3C8);
-            for (i = 0; i < 3; i++) {
+            buttons = 3;
+            for (i = 0; i < buttons; i++) {
                 func_ovl0B_02_80048D10(D_ovl0B_02_800499F0[i].unk1C);
             }
             for (i = 0; i != 5; i++) {
