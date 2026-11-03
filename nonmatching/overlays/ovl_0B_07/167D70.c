@@ -5,7 +5,7 @@
  * as the original; jp's .data is 0x1A0). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1171, eu 1171, jp 1121
+ * differing words: us 713, eu 713, jp 719
  *
  * IDO -O3: the functions are written last to first. The tail (80045438,
  * 800453F0, 800453BC, 80045494 and the twelve empty stubs) is ovl_17_10's;
@@ -13,35 +13,49 @@
  * common, so .bss is 0x120 where the original's is 0x150. The statics
  * 80043544 (the buttons of every controller; it uses its callers' $s0-$s2)
  * and 8004359C (arg0 in $s2, arg1 in $s1) are defined below the handler.
- * jp centres its two texts itself (func_ovl0B_07_80043594_jp, 24 pixels a
- * character, where us has the empty stub 80043594) and creates them with
- * ZeroJump 0x2707, its own strings (`#if VERSION_JP`).
+ * 80043594 is the x that centres a text at a scale: inlined in us (its
+ * stub; it asks ZeroJump 0x250B for the width), a real call in jp (24
+ * pixels a character); jp creates its texts with ZeroJump 0x2707 and its
+ * own strings (`#if VERSION_JP`).
  *
  * What fixed what (from us 1290, jp 1281):
  * - 80043010: case 2's first 800460B8 call passes an int 0 (`0, 350.0f,
  *   1494.0f`): int 0 and 0.0f are separate constants to uopt, so 350.0f
  *   is loaded first, as in the original.
- * - 8004400C: the players are counted in three loops over unk4[i] (and
- *   unk90[i] == 0, == 1), not hand-unrolled ifs: the first and third come
- *   out unrolled, the second stays a loop (the original's pointer and
- *   counter); `/ D_ovl0B_07_80046F1C / 2` divides by an int (with 2.0f
- *   IDO multiplies by 0.5f; the original divides by 2.0f in $fs1).
- * - jp's 80043594_jp and us's TEXT_X divide by an int 2 (div.s, as the
+ * - 800435FC: the text x is the static 80043594 (it was a macro, with an
+ *   empty stub called from 8004359C); 80045FC8's result has its own
+ *   local m (4th, spilled as in the original); the else branch's four
+ *   player tests are a loop over j (IDO unrolls it: the original's
+ *   `move v0,a0` copy); the endless button waits are `while (TRUE) { if
+ *   (...) break; ... }` (test at the top, `b` back); the figures' loop
+ *   sets i = 0 ahead of x. A dead read `if (!x) {}` in the 12-step loop
+ *   sets uopt's register order: only $fs0 saved, 1.5f and the text
+ *   height left out of registers, the frame 0x98 (jp 0x70; the inlined
+ *   statics' areas count once anything below them, the spilled height,
+ *   is used).
+ * - 8004400C: the trophy-colour test reads `unk50[F20[j]][k]` in place
+ *   (no pointer p) with its own counter k, and v only inside `k == 4`;
+ *   the winner's target x is a float local computed before the y branch
+ *   from unkA4[team], incremented with `++` (no cnt); `step = 720 /
+ *   (f32) F1C` (int 720/640: a constant of its own, so the loop's 720.0f
+ *   is loaded where the original loads it); every `/ 2` is by an int (the
+ *   original divides by 2.0f in $fs1; `/ 2.0f` becomes `* 0.5f`); off
+ *   and the first loop's unk10 are set from an int 0 (the other 0.0f
+ *   uses are floats), which gets uopt to hold 0.0f in a register as the
+ *   original does; the locals are ordered so n, step and m get the
+ *   original's slots (frame 0xA8 as the original).
+ * - jp's 80043594_jp and us's text x divide by an int 2 (div.s, as the
  *   original) for the same reason.
  *
- * What still differs (words, us; jp close):
- * - func_ovl0B_07_800435FC (490): the original's frame is 0x70 (ours
- *   0x58) and it saves only $fs0: it spills 80045FC8's result (sp+0x60)
- *   and the winner's text height (sp+0x50) where ours keeps them in
- *   registers, keeps 1.5f out of a register, and sets i ($fp) to 0 ahead
- *   of every loop (even the confetti loop, which walks a pointer).
- *   Tried: a separate local for 80045FC8's result, the four ifs of the
- *   else branch as a loop (worse).
- * - func_ovl0B_07_8004400C (658): the original's frame is 0xA8 (ours
- *   0xB8); it keeps 0.0f in $fs4 and `step` on the stack (sp+0x84), and
- *   the counter at D_ovl0B_07_80046F1C in $fp. Register allocation differs
- *   from the start. Every `/ 2.0f` vs `/ 2` combination was tried
- *   (scratch/0B_07/v6.py): no better than the one here.
+ * What still differs:
+ * - func_ovl0B_07_800435FC (us 37, jp 43): the original sets i ($fp) to
+ *   0 before the confetti loop (a dead store ours drops) and at the end
+ *   of both branches before the figures' loop.
+ * - func_ovl0B_07_8004400C (658): one instruction longer; the original
+ *   keeps the counter address in $fp and i in $s7 (ours the other way),
+ *   one 0.0f constant in $fs4 for all its uses (ours two: the int-0 split
+ *   above), team * 4 in $s1 saved around 80043544 (ours in $s6), and
+ *   tests the 60-frame loop with slti (ours holds 60 in $s0).
  * - func_ovl0B_07_80044D54: its last nops follow once the object's size
  *   matches (IDO pads the dead epilogue after its endless loop to 32
  *   bytes of the object).
@@ -116,14 +130,14 @@ void func_ovl0B_07_80044EF4(void);
 void func_ovl0B_07_800450D0(s32 arg0, Gfx_ovl0B_07 **arg1);
 static s32 func_ovl0B_07_80043544(void);
 #if VERSION_JP
-static s32 func_ovl0B_07_80043594_jp(u8 *str, f32 scale);
-/* jp centres its text itself (24 pixels a character) */
-#define TEXT_X(str, scale) func_ovl0B_07_80043594_jp(str, scale)
+#define func_ovl0B_07_80043594 func_ovl0B_07_80043594_jp
+#endif
+static s32 func_ovl0B_07_80043594(u8 *str, f32 scale);
+#define TEXT_X(str, scale) func_ovl0B_07_80043594(str, scale)
+#if VERSION_JP
 #define TEXT_NEW func_ovl0B_07_80046790
 #define TEXT_CONGRATS D_ovl0B_07_80046B3C_jp
 #else
-static void func_ovl0B_07_80043594(void);
-#define TEXT_X(str, scale) (s32) ((320.0f - func_ovl0B_07_800467E0(str) * (scale)) / 2)
 #define TEXT_NEW func_ovl0B_07_800467E8
 #define TEXT_CONGRATS D_ovl0B_07_80046C0C
 #endif
@@ -357,20 +371,20 @@ void func_ovl0B_07_80044C9C(void) {
 void func_ovl0B_07_8004400C(void) {
     s32 i;
     s32 j;
-    s32 n;
-    s32 m;
     s32 team;
-    s32 cnt;
     s32 v;
-    s32 *p;
+    s32 n;
+    s32 k;
     f32 off;
-    f32 step;
     f32 y;
+    f32 step;
     UnkStructA_40 *obj;
+    s32 m;
+    f32 x;
 
     func_ovl0B_07_80046940(0x20);
     func_ovl0B_07_80046930(0x1F0);
-    off = 0.0f;
+    off = 0;
     if (D_ovl0B_07_80046F18->unk0 == 0) {
         D_ovl0B_07_80046F1C = 0;
         j = 0;
@@ -401,9 +415,9 @@ void func_ovl0B_07_8004400C(void) {
         }
     }
     if (D_ovl0B_07_80046F18->unk0 == 0) {
-        step = 720.0f / D_ovl0B_07_80046F1C;
+        step = 720 / (f32) D_ovl0B_07_80046F1C;
     } else {
-        step = 640.0f / D_ovl0B_07_80046F1C;
+        step = 640 / (f32) D_ovl0B_07_80046F1C;
     }
     for (i = 0; i < D_ovl0B_07_80046F1C; i++) {
         if (D_ovl0B_07_80046F18->unk0 == 1 && i == n) {
@@ -411,7 +425,7 @@ void func_ovl0B_07_8004400C(void) {
         }
         D_ovl0B_07_80046E80[i] = func_ovl0B_07_80045F38(0x49, 0);
         m = func_ovl0B_07_80045FC8(D_ovl0B_07_80046E80[i], 0xF);
-        D_ovl0B_07_80046E80[i]->unk10 = 0.0f;
+        D_ovl0B_07_80046E80[i]->unk10 = 0;
         D_ovl0B_07_80046E80[i]->unk14 = 90.0f - 720.0f / D_ovl0B_07_80046F1C / 2 - off;
         D_ovl0B_07_80046E80[i]->unk18 = 0.0f;
         off += step;
@@ -441,10 +455,10 @@ void func_ovl0B_07_8004400C(void) {
                 D_ovl0B_07_80046E30[i][j] = obj = func_ovl0B_07_80045F38(0x40, 0);
                 obj->unk10 = j * 120.0f + 120.0f;
                 if (i == 0) {
-                    obj->unk14 = 170.0f - 720.0f / D_ovl0B_07_80046F1C / 2 - step * (n - 1) / 2.0f;
+                    obj->unk14 = 170.0f - 720.0f / D_ovl0B_07_80046F1C / 2 - step * (n - 1) / 2;
                 } else {
                     obj->unk14 = 170.0f - 720.0f / D_ovl0B_07_80046F1C / 2 -
-                                 step * (D_ovl0B_07_80046F1C - n - 1) / 2.0f - step * n -
+                                 step * (D_ovl0B_07_80046F1C - n - 1) / 2 - step * n -
                                  (180.0f * D_ovl0B_07_80046F1C - 160.0f * D_ovl0B_07_80046F1C);
                 }
                 obj->unk18 = 0.0f;
@@ -468,16 +482,16 @@ void func_ovl0B_07_8004400C(void) {
     obj->unk10 = 310.0f;
     obj->unk14 = -200.0f;
     obj->unk18 = 1200.0f;
-    cnt = D_ovl0B_07_80046F18->unkA4[team];
+    x = D_ovl0B_07_80046F18->unkA4[team] * 120.0f + 120.0f;
     if (D_ovl0B_07_80046F18->unk0 == 0) {
         y = 170.0f - 720.0f / D_ovl0B_07_80046F1C / 2 - step * j;
     } else if (team == 0) {
-        y = 170.0f - 720.0f / D_ovl0B_07_80046F1C / 2 - step * (n - 1) / 2.0f;
+        y = 170.0f - 720.0f / D_ovl0B_07_80046F1C / 2 - step * (n - 1) / 2;
     } else {
-        y = 170.0f - 720.0f / D_ovl0B_07_80046F1C / 2 - step * (D_ovl0B_07_80046F1C - n - 1) / 2.0f -
+        y = 170.0f - 720.0f / D_ovl0B_07_80046F1C / 2 - step * (D_ovl0B_07_80046F1C - n - 1) / 2 -
             step * n - (180.0f * D_ovl0B_07_80046F1C - 160.0f * D_ovl0B_07_80046F1C);
     }
-    D_ovl0B_07_80046F18->unkA4[team] = cnt + 1;
+    D_ovl0B_07_80046F18->unkA4[team]++;
     for (i = 0; i < 120; i++) {
         if (func_ovl0B_07_80043544() & 0xC000) {
             break;
@@ -485,7 +499,7 @@ void func_ovl0B_07_8004400C(void) {
         func_ovl0B_07_800463F0();
     }
     for (i = 0; i < 60; i++) {
-        obj->unk10 += (cnt * 120.0f + 120.0f - 310.0f) / 60.0f;
+        obj->unk10 += (x - 310.0f) / 60.0f;
         obj->unk14 += (y - -200.0f) / 60.0f;
         obj->unk18 += -20.0f;
         func_ovl0B_07_800463F0();
@@ -496,14 +510,13 @@ void func_ovl0B_07_8004400C(void) {
         func_ovl0B_07_80045F80(D_ovl0B_07_80046E80[j], 0x16, 0);
         if (D_ovl0B_07_80046F18->unk4[D_ovl0B_07_80046F20[j]] == 1 &&
             D_ovl0B_07_80046F18->unk40[D_ovl0B_07_80046F20[j]] == 1) {
-            p = D_ovl0B_07_80046F18->unk50[D_ovl0B_07_80046F20[j]];
-            v = p[0];
-            for (j = 1; j < 4; j++) {
-                if (p[j] != v) {
+            for (k = 1; k < 4; k++) {
+                if (D_ovl0B_07_80046F18->unk50[D_ovl0B_07_80046F20[j]][k] != D_ovl0B_07_80046F18->unk50[D_ovl0B_07_80046F20[j]][0]) {
                     break;
                 }
             }
-            if (j == 4) {
+            if (k == 4) {
+                v = D_ovl0B_07_80046F18->unk50[D_ovl0B_07_80046F20[j]][0];
                 if (v != 0) {
                     func_ovl0B_07_80046930(D_ovl0B_07_80046CC0[v]);
                 }
@@ -522,7 +535,10 @@ void func_ovl0B_07_8004400C(void) {
             func_ovl0B_07_80045F80(D_ovl0B_07_80046E80[j], 0x16, 0);
         }
     }
-    while (!(func_ovl0B_07_80043544() & 0xD000)) {
+    while (TRUE) {
+        if (func_ovl0B_07_80043544() & 0xD000) {
+            break;
+        }
         func_ovl0B_07_800463F0();
     }
     func_ovl0B_07_80046948();
@@ -539,14 +555,14 @@ void func_ovl0B_07_800435FC(void) {
     s32 i;
     s32 j;
     s32 n;
+    s32 m;
     s32 x;
     f32 scale;
 
     func_ovl0B_07_80046940(0x1F);
     for (i = 0; i < 32; i++) {
         D_ovl0B_07_80046E98[i] = func_ovl0B_07_80045FB8(func_ovl0B_07_800450D0, 0);
-        D_ovl0B_07_80046E98[i]->unk28 = 0.7f;
-        D_ovl0B_07_80046E98[i]->unk28 = D_ovl0B_07_80046E98[i]->unk28 = D_ovl0B_07_80046E98[i]->unk28;
+        D_ovl0B_07_80046E98[i]->unk28 = D_ovl0B_07_80046E98[i]->unk28 = D_ovl0B_07_80046E98[i]->unk28 = 0.7f;
         func_ovl0B_07_800463A8(func_ovl0B_07_80044EF4, D_ovl0B_07_80046E98[i], 0, 0, 0x130);
     }
     func_ovl0B_07_800463A8(func_ovl0B_07_80044D54, NULL, 0, 0, 0x130);
@@ -579,44 +595,34 @@ void func_ovl0B_07_800435FC(void) {
             }
         }
         n = 0;
-        if (D_ovl0B_07_80046F18->unk4[0] != 0 && i == D_ovl0B_07_80046F18->unk90[0]) {
-            D_ovl0B_07_80046F20[n] = 0;
-            n++;
-            D_ovl0B_07_80046F1C++;
-        }
-        if (D_ovl0B_07_80046F18->unk4[1] != 0 && i == D_ovl0B_07_80046F18->unk90[1]) {
-            D_ovl0B_07_80046F20[n] = 1;
-            n++;
-            D_ovl0B_07_80046F1C++;
-        }
-        if (D_ovl0B_07_80046F18->unk4[2] != 0 && i == D_ovl0B_07_80046F18->unk90[2]) {
-            D_ovl0B_07_80046F20[n] = 2;
-            n++;
-            D_ovl0B_07_80046F1C++;
-        }
-        if (D_ovl0B_07_80046F18->unk4[3] != 0 && i == D_ovl0B_07_80046F18->unk90[3]) {
-            D_ovl0B_07_80046F20[n] = 3;
-            n++;
-            D_ovl0B_07_80046F1C++;
+        for (j = 0; j < 4; j++) {
+            if (D_ovl0B_07_80046F18->unk4[j] != 0 && i == D_ovl0B_07_80046F18->unk90[j]) {
+                D_ovl0B_07_80046F20[n] = j;
+                n++;
+                D_ovl0B_07_80046F1C++;
+            }
         }
     }
+    i = 0;
     x = 390 - D_ovl0B_07_80046F1C * 80;
-    for (i = 0; i < D_ovl0B_07_80046F1C; i++) {
+    for (; i < D_ovl0B_07_80046F1C; i++) {
         D_ovl0B_07_80046E80[i + 2] = func_ovl0B_07_80045F38(0x49, 0);
-        n = func_ovl0B_07_80045FC8(D_ovl0B_07_80046E80[i + 2], 0xF);
+        j = 0;
+        m = func_ovl0B_07_80045FC8(D_ovl0B_07_80046E80[i + 2], 0xF);
         D_ovl0B_07_80046E80[i + 2]->unk10 = x;
         D_ovl0B_07_80046E80[i + 2]->unk14 = -440.0f;
         D_ovl0B_07_80046E80[i + 2]->unk18 = 160.0f;
         x += 160;
-        D_ovl0B_07_80046E80[i + 2]->unk30 = 1.5f;
-        D_ovl0B_07_80046E80[i + 2]->unk28 = D_ovl0B_07_80046E80[i + 2]->unk2C = D_ovl0B_07_80046E80[i + 2]->unk30;
+        D_ovl0B_07_80046E80[i + 2]->unk28 = D_ovl0B_07_80046E80[i + 2]->unk2C = D_ovl0B_07_80046E80[i + 2]->unk30 = 1.5f;
         func_ovl0B_07_80045F60(D_ovl0B_07_80046E80[i + 2], 12);
-        for (j = 0; j < 12; j++) {
+        for (; j < 12; j++) {
+            if (!x) {
+            }
             func_ovl0B_07_80045F68(D_ovl0B_07_80046E80[i + 2], D_ovl0B_07_80046F20[i] + 0x4A, j, j);
         }
         if (D_ovl0B_07_80046F18->unk4[D_ovl0B_07_80046F20[i]] == 1 &&
             D_ovl0B_07_80046F18->unk40[D_ovl0B_07_80046F20[i]] == 1) {
-            func_ovl0B_07_8004359C(n, D_ovl0B_07_80046F18->unk50[D_ovl0B_07_80046F20[i]]);
+            func_ovl0B_07_8004359C(m, D_ovl0B_07_80046F18->unk50[D_ovl0B_07_80046F20[i]]);
         }
     }
     func_ovl0B_07_800463A8(func_ovl0B_07_80044C9C, NULL, 0, 0, 0x130);
@@ -661,7 +667,10 @@ void func_ovl0B_07_800435FC(void) {
         func_ovl0B_07_800467B8(D_ovl0B_07_80046F30, 1.0f, 1.0f);
         func_ovl0B_07_800467B8(D_ovl0B_07_80046F34, 1.0f, 1.0f);
     }
-    while (!(func_ovl0B_07_80043544() & 0xD000)) {
+    while (TRUE) {
+        if (func_ovl0B_07_80043544() & 0xD000) {
+            break;
+        }
         func_ovl0B_07_800463F0();
     }
 end:
@@ -773,8 +782,10 @@ static s32 func_ovl0B_07_80043544(void) {
     return buttons;
 }
 
+/* The x that centres a text at this scale (jp counts 24 pixels a
+ * character; us asks the text code). */
+static s32 func_ovl0B_07_80043594(u8 *str, f32 scale) {
 #if VERSION_JP
-static s32 func_ovl0B_07_80043594_jp(u8 *str, f32 scale) {
     s32 len;
 
     len = 0;
@@ -782,18 +793,14 @@ static s32 func_ovl0B_07_80043594_jp(u8 *str, f32 scale) {
         len++;
     }
     return (320.0f - len * 24 * scale) / 2;
-}
 #else
-static void func_ovl0B_07_80043594(void) {
-}
+    return (320.0f - func_ovl0B_07_800467E0(str) * scale) / 2;
 #endif
+}
 
 static void func_ovl0B_07_8004359C(s32 arg0, s32 *arg1) {
     s32 i;
 
-#if !VERSION_JP
-    func_ovl0B_07_80043594();
-#endif
     for (i = 0; i < 4; i++) {
         if (arg1 == NULL) {
             func_ovl0B_07_80045A00(arg0, i, 0);
