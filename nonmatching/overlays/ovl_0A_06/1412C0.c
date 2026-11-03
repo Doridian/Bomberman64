@@ -9,7 +9,7 @@
  * goes through 0x2501 and 0x2503, with 0x2505 for 80043B5C's offsets.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 20, eu 20, jp 20
+ * differing words: us 16, eu 16, jp 16
  *
  * What still differs in us (words):
  * - func_ovl0A_06_80043010 (13; the statics up to 80043B5C): 8004311C's
@@ -22,15 +22,18 @@
  *   in an `if (0)`, costs 8 bytes again; 80043248 returning its own
  *   buffer gets the frame too, but moves 80043250's registers and so its
  *   callers'); 800432F8's spill slot, 0x18 for the original's 0x1C (2).
- * - func_ovl0A_06_80043B5C (7; with the statics after it): the two
- *   inlined 80043010 loops spill n one word high (4), a spill of s4 in
- *   80044620 is one word high too (2), and a branch is 4 off (1).
+ * - func_ovl0A_06_80043B5C (3; with the statics after it): a spill of s4
+ *   in 80044620 is one word high (2); the inner `== 2` test's `bne`
+ *   takes its delay slot's `li a0,0x20` from the fall-through, where
+ *   the original takes it from the target and branches past it (1).
  *
- * What still differs in jp (words): the same as us's. 80043E68's copy `m` of msg keeps msg in s1, as
- * the original passes it (without it, msg goes to t5 in jp and 80044620,
- * 8004423C and 80044BFC around it change).
+ * What still differs in jp (words): the same as us's. 80043E68's copy `m`
+ * of msg keeps msg in s1, as the original passes it (without it, msg goes
+ * to t5 in jp and 80044620, 8004423C and 80044BFC around it change).
  *
  * How the rest came to match:
+ * - 80043010 takes (n, handles): its inlined copies in 80043B5C spill n
+ *   at the original's offset.
  * - 80043E68: the D_ovl0A_06_80047748 loops are index loops (uopt turns
  *   them into pointer loops; the index keeps t3, jp t2, before it dies,
  *   so the addresses after it get the original's registers).
@@ -542,7 +545,7 @@ static void func_ovl0A_06_800434D4(void);
 static void func_ovl0A_06_800434DC(void);
 static void func_ovl0A_06_800434E4(s32 arg0);
 static void func_ovl0A_06_800436BC(void);
-static void func_ovl0A_06_80043010(s32 *handles, s32 n);
+static void func_ovl0A_06_80043010(s32 n, s32 *handles);
 void func_ovl0A_06_80043B5C(void);
 static void func_ovl0A_06_80043E68(s32 msg);
 static s32 func_ovl0A_06_8004423C(s32 state);
@@ -587,7 +590,7 @@ static void func_ovl0A_06_800434D4(void);
 static void func_ovl0A_06_800434DC(void);
 static void func_ovl0A_06_800434E4(s32 arg0);
 static void func_ovl0A_06_800436BC(void);
-static void func_ovl0A_06_80043010(s32 *handles, s32 n);
+static void func_ovl0A_06_80043010(s32 n, s32 *handles);
 void func_ovl0A_06_80043B5C(void);
 static void func_ovl0A_06_80043E68(s32 msg);
 static s32 func_ovl0A_06_8004423C(s32 state);
@@ -632,7 +635,7 @@ static void func_ovl0A_06_800434D4(void);
 static void func_ovl0A_06_800434DC(void);
 static void func_ovl0A_06_800434E4(s32 arg0);
 static void func_ovl0A_06_800436BC(void);
-static void func_ovl0A_06_80043010(s32 *handles, s32 n);
+static void func_ovl0A_06_80043010(s32 n, s32 *handles);
 void func_ovl0A_06_80043B5C(void);
 static void func_ovl0A_06_80043E68(s32 msg);
 static s32 func_ovl0A_06_8004423C(s32 state);
@@ -677,7 +680,7 @@ static void func_ovl0A_06_800434D4(void);
 static void func_ovl0A_06_800434DC(void);
 static void func_ovl0A_06_800434E4(s32 arg0);
 static void func_ovl0A_06_800436BC(void);
-static void func_ovl0A_06_80043010(s32 *handles, s32 n);
+static void func_ovl0A_06_80043010(s32 n, s32 *handles);
 void func_ovl0A_06_80043B5C(void);
 static void func_ovl0A_06_80043E68(s32 msg);
 static s32 func_ovl0A_06_8004423C(s32 state);
@@ -996,8 +999,8 @@ void func_ovl0A_06_80044BFC(void) {
         func_ovl0A_06_800465A0();
     } while (ret != 0);
     func_ovl0A_06_80045B00(0x20, 0x10, 2);
-    func_ovl0A_06_80043010(D_ovl0A_06_80047738, 4);
-    func_ovl0A_06_80043010(D_ovl0A_06_80047708, 4);
+    func_ovl0A_06_80043010(4, D_ovl0A_06_80047738);
+    func_ovl0A_06_80043010(4, D_ovl0A_06_80047708);
     func_ovl0A_06_80046568();
 }
 
@@ -1367,7 +1370,7 @@ void func_ovl0A_06_80043B5C(void) {
         if (func_ovl0A_06_8004311C() == 2) {
             erase = 0;
             err = func_ovl0A_06_80046C50(0x20);
-            func_ovl0A_06_80043010(D_ovl0A_06_80047728, 4);
+            func_ovl0A_06_80043010(4, D_ovl0A_06_80047728);
             if (err == 0) {
 #if VERSION_JP
                 msg = func_ovl0A_06_80046940(D_ovl0A_06_80046D60, 0x1E, 0x69, 1.0f, 1.0f, 0);
@@ -1395,12 +1398,12 @@ void func_ovl0A_06_80043B5C(void) {
     }
     func_ovl0A_06_80045B00(0x20, 0x10, 2);
     if (erase) {
-        func_ovl0A_06_80043010(D_ovl0A_06_80047728, 4);
+        func_ovl0A_06_80043010(4, D_ovl0A_06_80047728);
     }
     func_ovl0A_06_80046568();
 }
 
-static void func_ovl0A_06_80043010(s32 *handles, s32 n) {
+static void func_ovl0A_06_80043010(s32 n, s32 *handles) {
     s32 i;
     s32 *p = handles;
 
@@ -1657,7 +1660,7 @@ static s32 func_ovl0A_06_8004311C(void) {
         } else if ((pressed & 0x8000) || (pressed & 0x1000)) {
 #line 1700
             ret = 1;
-#line 1659
+#line 1662
             if (D_ovl0A_06_80047018 == 0) {
                 ret = 2;
                 SE(1, 1);
@@ -1667,7 +1670,7 @@ static s32 func_ovl0A_06_8004311C(void) {
         } else if (pressed & 0x4000) {
 #line 1700
             ret = 1;
-#line 1667
+#line 1670
             SE(2, 2);
         }
         func_ovl0A_06_800465A0();
