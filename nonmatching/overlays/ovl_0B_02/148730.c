@@ -6,7 +6,7 @@
  * of it 800431C4's local table). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2931, eu 2931, jp 2931
+ * differing words: us 1971, eu 1971, jp 1979
  * jp has no `#if VERSION_JP` yet.
  *
  * A first draft from m2c (with a context of the ZeroJump prototypes the
@@ -1096,21 +1096,22 @@ static void func_ovl0B_02_80043EF8(s32 i);
 static UnkStructA_40 *func_ovl0B_02_80043F4C(s32 i);
 
 void func_ovl0B_02_80044490(void) {
-    s32 (*tbl)[4];
-    s32 all;
-    s32 task;
-    UnkStructA_40 *mark;
-    Group_ovl0B_02 *g;
-    Piece_ovl0B_02 *pieces;
-    s32 buttons;
+    f32 t;
+    f32 x;
+    f32 y;
     s32 i;
     s32 n;
     s32 a;
     s32 b;
+    UnkStructA_40 *mark;
     s32 alpha;
-    f32 t;
-    f32 x;
-    f32 y;
+    Group_ovl0B_02 *g;
+    Piece_ovl0B_02 *pieces;
+    s32 (*tbl)[4];
+    s32 all;
+    s32 task;
+    s32 buttons;
+    UnkStructA_40 *m;
 
     if (0) {
         func_ovl0B_02_80049198(1);
@@ -1201,15 +1202,17 @@ void func_ovl0B_02_80044490(void) {
                 D_ovl0B_02_80049A50[0].unk10->unkC |= 0x80;
                 D_ovl0B_02_80049A50[0].unk10->unk36 = 0;
                 for (i = 0; i < g->unk8; i++) {
-                    pieces[i].unk10->unkC &= ~1;
-                    pieces[i].unk10->unkC |= 0x1080;
+                    m = pieces[i].unk10;
+                    m->unkC &= ~1;
+                    m->unkC |= 0x1080;
                 }
                 for (alpha = 0xFF; alpha != -1; alpha -= 4) {
                     D_ovl0B_02_80049A50[0].unk10->unk36 = alpha;
+                    t = pieces[0].unk30;
                     for (i = 0; i < g->unk8; i++) {
-                        pieces[i].unk10->unk36 = 0xFF - alpha;
-                        pieces[i].unk10->unk28 = pieces[i].unk10->unk2C = pieces[i].unk10->unk30 =
-                            (0x200 - alpha) * pieces[0].unk30 * 0.001953125f;
+                        m = pieces[i].unk10;
+                        m->unk36 = 0xFF - alpha;
+                        m->unk28 = m->unk2C = m->unk30 = (0x200 - alpha) * t * 0.001953125f;
                     }
                     func_ovl0B_02_800491C0();
                 }
@@ -1217,8 +1220,9 @@ void func_ovl0B_02_80044490(void) {
             D_ovl0B_02_8004A3E4 = 0;
             D_ovl0B_02_80049A50[0].unk10->unkC |= 1;
             for (i = 0; i < g->unk8; i++) {
-                pieces[i].unk10->unk36 = 0;
-                pieces[i].unk10->unkC &= ~0x1080;
+                m = pieces[i].unk10;
+                m->unk36 = 0;
+                m->unkC &= ~0x1080;
                 pieces[i].unk20 = 0xFF;
             }
             func_ovl0B_02_80049178(func_ovl0B_02_800431C4, NULL, 0, 0, 0x130);
