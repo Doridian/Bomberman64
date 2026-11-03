@@ -6,7 +6,7 @@
  * tables, .bss 0x1140, as the original's sizes). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1109, eu 1109, jp 2643
+ * differing words: us 1200, eu 1200, jp 2643
  *
  * jp (`#if VERSION_JP`) has its own strings (80048AF4, 80048B60,
  * 80049144, and D_ovl0B_03_8004901C_jp for us's 80049168, with the
@@ -62,6 +62,7 @@
  */
 
 #include "common.h"
+#line 66 "14FAB0.c"
 
 #define M2C_FIELD(expr, type, offset) (*(type)((u8 *)(expr) + (offset)))
 
@@ -398,6 +399,7 @@ s32 D_ovl0B_03_8004A410;
 s32 D_ovl0B_03_8004A414;
 u8 D_ovl0B_03_8004A418[8];
 
+#line 1 "panels.c"
 /* An unused empty static (the original keeps its stub). */
 static void func_ovl0B_03_80047464(void) {
 }
@@ -450,6 +452,7 @@ static void func_ovl0B_03_8004740C(void) {
 static void func_ovl0B_03_80047404(void) {
 }
 
+#line 456 "14FAB0.c"
 void func_ovl0B_03_800473FC(void) {
 
 }
@@ -1939,10 +1942,10 @@ void func_ovl0B_03_8004386C(void) {
                     }
                 } else if (held & 0x8000) {
                     func_ovl0B_03_80048890(1);
-                    next = 1;
                     if (D_ovl0B_03_8004A324->unk0 == 2) {
                         next = 2;
                     } else {
+                        next = 1;
                         func_ovl0B_03_80043060(1);
                     }
                     for (i = 0xF8; i > 0; i -= 8) {
@@ -2065,17 +2068,17 @@ void func_ovl0B_03_8004386C(void) {
                     }
                     if (j >= 2) {
                         func_ovl0B_03_80048890(1);
-                        next = 4;
                         if (D_ovl0B_03_8004A324->unk0 == 0) {
                             next = 5;
-                            break;
+                        } else {
+                            next = 4;
                         }
                         break;
                     }
                     func_ovl0B_03_80048890(0x18);
                 } else if (held & 0x4000) {
-                    next = 0;
                     func_ovl0B_03_80048890(2);
+                    next = 0;
                     break;
                 } else {
                     switch ((held & 3) ? 0 : D_ovl0B_03_8004A32C) {
