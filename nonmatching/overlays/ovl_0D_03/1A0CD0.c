@@ -1,37 +1,43 @@
 /*
  * NON_MATCHING: ovl_0D_03's stage object, complete: all 30 functions and the
- * stubs the inlined statics leave in their places (every function and stub
- * at the original's address up to 80043FA0's group; see below), .data and
- * .bss as the original.
+ * stubs the inlined statics leave in their places, .data and .bss as the
+ * original. It matches in us and jp (tools/nonmatching.py); not yet moved
+ * to src/ (its data not checked in a linked build).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 791, jp 791
+ * differing words: us 0, jp 0
  *
- * ovl_0D_02's sibling (nonmatching/overlays/ovl_0D_02, renamed by
- * scratch/0D_03/ren02.py): most functions are 0D_02's. What still differs
- * in us (fcmp counts a static with the function before it):
- * - 80043770 is split into a static body (the old code, named _body: a
- *   placeholder, since the address is the wrapper's) and the global wrapper
- *   at 80043770. The handler (case 3) now inlines the wrapper and the body
- *   with it, 0x3C0 bytes as in the original; the wrapper's own copy has the
- *   right words except its frame: 0xB0 here, 0xA8 in the original (2 words,
- *   also in the handler, which still differs in 2 words).
- *   Tried without gain: 80043770 as one global (small enough not to inline:
- *   handler 0x134), as one static (inlined, but its own copy is not emitted:
- *   handler 0x3C0 and 1385 words), without its fake (967 words), the
- *   body above the handler, the three locals of 80043758 in any order
- *   (799 to 807 words), the fake's condition in other forms (967 words).
- * - func_ovl0D_03_8004305C (432 with the gate statics after it): 26 words
- *   short; the original keeps the entity indices 1 and 2 in s0 (an
- *   inlined static's parameter, as it seems) and spills 175.0f * 10.0f.
- * - func_ovl0D_03_8004419C (193, with 800441C4 to 80044588): 80044588 is
- *   5 words short.
- * - func_ovl0D_03_80044AA8 (54): 3 words short.
- * - func_ovl0D_03_80043C44 (103): 1 word short.
- * - func_ovl0D_03_80045EF0 (5): as ovl_0D_02's 8004596C (the timer
- *   static's grid[] place).
+ * ovl_0D_02's sibling (src/overlays/ovl_0D_02); the levers of 0D_02, 04, 05
+ * and 06 ported. What fixed what (from 791 words in us and jp):
+ * - 8004305C: each array walked with i from 0, `f(A[i++].obj)` and a
+ *   separate `i++` (as ovl_0D_06's 8004305C): [1] at constant addresses,
+ *   [2] a run-time index (s0 * 56). The frame (0x58) takes five unused
+ *   locals (a fake).
+ * - 8004337C (the gate's tiles): ovl_0D_02's 8004311C: the direction static
+ *   80043374 takes the entity, the clamp 80043300 is (axis, v, size),
+ *   `len = x1 + z1` (dead) ahead of x0's set-up, and case 0's first
+ *   statement in a "panels.c" region.
+ * - 80043770: a global calling only the static 80043768 (the macro, the
+ *   0x424 static 80043760 and the loop over the per-gate static 80043758).
+ *   A global that small is inlined into the handler's case 3 (and still
+ *   emitted), as in the original; one with the three calls in it isn't
+ *   (handler 0x134). Nested this way the stubs come out 58, 60, 68 and the
+ *   frame is 0xA8.
+ * - 80043C44: the probe's 80047400 call in a "panels.c" region (it stayed
+ *   in the prologue).
+ * - 80044588: `unk34 = 200` (an int: with 200.0f uopt kept the constant in
+ *   $f22 for 8004449C's rows below), the EE4 loop's `i != 1` (bne, not
+ *   sltu), and 8004449C's `j = 0` at `#line 3000` (ovl_0D_02's 8004421C).
+ * - 80044AA8: the 80047A48 loop is the static 800441BC (Trio, count), as
+ *   ovl_0D_02's 800444F4 (slt and the count in s2), defined in "panels.c";
+ *   the call of 80044A3C in 80044AA0 in a "panels.c" region (the
+ *   D_ovl0D_03_800481A0 load after the store stays). The models changed at
+ *   0x407 are D_ovl0D_03_80047FDC[0] and [4] (the draft had [1]).
+ * - 80045EE8: grid[7] (not [6]) puts the timer static's grid at sp+168 (as
+ *   ovl_0D_02's 80045964).
  */
 #include "common.h"
+#line 41 "1A0CD0.c"
 
 /*
  * ovl_0D_03's stage object, IDO -O3: the functions are written last to first
@@ -239,7 +245,7 @@ void func_ovl0D_03_8004661C(f32, f32, f32);
 static void func_ovl0D_03_80043010(Obj_0D03 *);
 static void func_ovl0D_03_80043054(void);
 static void func_ovl0D_03_80043300(s32, s32 *, s32 *);
-static s32 func_ovl0D_03_80043374(f32);
+static s32 func_ovl0D_03_80043374(Ent_0D03 *);
 static void func_ovl0D_03_8004337C(Ent_0D03 *);
 static void func_ovl0D_03_80043758(Ent_0D03 *, s32);
 static void func_ovl0D_03_80043760(void);
@@ -253,7 +259,7 @@ static void func_ovl0D_03_80043C2C(void);
 static void func_ovl0D_03_80043C34(void);
 static void func_ovl0D_03_80043C3C(void);
 static void func_ovl0D_03_80043DDC(void);
-static void func_ovl0D_03_800441BC(void);
+static void func_ovl0D_03_800441BC(Trio_0D03 *, s32);
 static void func_ovl0D_03_800441C4(s32);
 static void func_ovl0D_03_80044314(s32);
 static void func_ovl0D_03_8004431C(Ent_0D03 *);
@@ -477,7 +483,7 @@ void func_ovl0D_03_80045EF0(void) {
 /* every few seconds, when the player is near, the model throws a bomb */
 static void func_ovl0D_03_80045EE8(Ent_0D03 *e, s32 *timer) {
     UnkStructA_40 *p;
-    s32 grid[6];
+    s32 grid[7];
 
     if (*timer == 0) {
         p = e->obj->unk40;
@@ -866,9 +872,6 @@ void func_ovl0D_03_80044A3C(void) {
 
 /* the stage's set-up (the handler's case 2) */
 void func_ovl0D_03_80044AA8(void) {
-    s32 i;
-    Trio_0D03 *t;
-
     func_ovl0D_03_800478A0(D_ovl0D_03_80047CE0);
     func_ovl0D_03_800478B8(D_ovl0D_03_80047D04);
     func_ovl0D_03_800469E8(0x13C);
@@ -891,23 +894,21 @@ void func_ovl0D_03_80044AA8(void) {
     func_ovl0D_03_80044588();
     func_ovl0D_03_8004305C();
     if (func_ovl0D_03_800477C0(0x407) != 0) {
-        D_ovl0D_03_80047FDC[1].unk4 = 0x24;
-        D_ovl0D_03_80047FDC[1].unk8 = 0xE8;
+        D_ovl0D_03_80047FDC[0].unk4 = 0x24;
+        D_ovl0D_03_80047FDC[0].unk8 = 0xE8;
         D_ovl0D_03_80047FDC[4].unk4 = 0xB;
         D_ovl0D_03_80047FDC[4].unk8 = 0xE9;
     }
-    t = D_ovl0D_03_80047FDC;
-    for (i = 0; i < 5; i++) {
-        func_ovl0D_03_80047A48(t->unk0, t->unk4, t->unk8);
-        t++;
-    }
+    func_ovl0D_03_800441BC(D_ovl0D_03_80047FDC, 5);
     func_ovl0D_03_80046A68();
 }
 
 static void func_ovl0D_03_80044AA0(void) {
     func_ovl0D_03_80044A88();
     D_ovl0D_03_800481A0 = func_ovl0D_03_80046B38();
+#line 1 "panels.c"
     func_ovl0D_03_80044A3C();
+#line 912 "1A0CD0.c"
 }
 
 /* the models, as the flags already set leave them */
@@ -922,7 +923,7 @@ static void func_ovl0D_03_80044588(void) {
     D_ovl0D_03_80048184 = 0;
     func_ovl0D_03_80044560();
     func_ovl0D_03_80044558();
-    for (i = 0; i < 1; i++) {
+    for (i = 0; i != 1; i++) {
         func_ovl0D_03_8004431C(&D_ovl0D_03_80047EE4[i]);
         func_ovl0D_03_800473F0(D_ovl0D_03_80047EE4[i].obj, 0x80000);
     }
@@ -933,7 +934,7 @@ static void func_ovl0D_03_80044588(void) {
             func_ovl0D_03_800473F0(D_ovl0D_03_80047F1C[i].obj, 0x80000);
             func_ovl0D_03_800473B8(D_ovl0D_03_80047F1C[i].obj, 0xC0);
             D_ovl0D_03_80047F1C[i].obj->unk30 = 4;
-            D_ovl0D_03_80047F1C[i].obj->unk34 = 200.0f;
+            D_ovl0D_03_80047F1C[i].obj->unk34 = 200; /* an int (see the top) */
             D_ovl0D_03_80047F1C[i].obj->unk38 = 300.0f;
             func_ovl0D_03_80047538(func_ovl0D_03_80045EF0, (void *) i, 0, 0, 0x110);
         } else {
@@ -942,7 +943,6 @@ static void func_ovl0D_03_80044588(void) {
     }
     func_ovl0D_03_800444AC();
     func_ovl0D_03_800444A4();
-    func_ovl0D_03_800441BC();
 }
 
 static void func_ovl0D_03_80044580(void) {
@@ -1000,7 +1000,11 @@ static void func_ovl0D_03_8004449C(Vec3f *corner, Vec3f (*rows)[4]) {
     s32 j;
     s32 k;
 
-    for (j = 0; j < 3; j++) {
+    /* a fake (as in ovl_0D_02): j = 0 after the loop's line */
+#line 3000 "1A0CD0.c"
+    j = 0;
+#line 1007 "1A0CD0.c"
+    for (; j < 3; j++) {
         for (k = 0; k < 4; k++) {
             rows[j][k].x = corner->x * 10.0f - k * 200.0f;
             rows[j][k].y = corner->y * 10.0f + j * 200.0f;
@@ -1088,8 +1092,17 @@ static void func_ovl0D_03_800441C4(s32 idx) {
 }
 
 
-static void func_ovl0D_03_800441BC(void) {
+/* in "panels.c" (a fake, see the top) */
+#line 1 "panels.c"
+static void func_ovl0D_03_800441BC(Trio_0D03 *t, s32 count) {
+    s32 i;
+
+    for (i = 0; i < count; i++) {
+        func_ovl0D_03_80047A48(t->unk0, t->unk4, t->unk8);
+        t++;
+    }
 }
+#line 1106 "1A0CD0.c"
 
 void func_ovl0D_03_8004419C(void) {
     func_ovl0D_03_80044138();
@@ -1242,7 +1255,10 @@ static void func_ovl0D_03_80043C1C(void) {
 static void func_ovl0D_03_80043C14(void) {
     Ent_0D03 *p;
 
+    /* a fake (see the top) */
+#line 1 "panels.c"
     func_ovl0D_03_80047400(D_ovl0D_03_8004817C);
+#line 1262 "1A0CD0.c"
     for (p = D_ovl0D_03_80047D1C; p < D_ovl0D_03_80047D1C + 3; p++) {
         if (p->obj != NULL) {
             func_ovl0D_03_80043B98(p);
@@ -1289,28 +1305,21 @@ static void func_ovl0D_03_80043A7C(void) {
 }
 
 /* the gates: each opens when something hits it */
-static void func_ovl0D_03_80043770_body(void) {
+void func_ovl0D_03_80043770(void) {
+    func_ovl0D_03_80043768();
+}
+
+static void func_ovl0D_03_80043768(void) {
     s32 i;
 
     /* a fake (as in ovl_0D_05's 80043210): keeps the first call out of the prologue */
     if (!D_ovl0D_03_80048180 && !D_ovl0D_03_80048180 && !D_ovl0D_03_80048180) {
     }
-    func_ovl0D_03_80043768();
+    UNK_MACRO_ovl0D_03_80043770();
     func_ovl0D_03_80043760();
     for (i = 0; i < 2; i++) {
         func_ovl0D_03_80043758(&D_ovl0D_03_80047E6C[i], D_ovl0D_03_80047EDC[i]);
     }
-}
-
-/* the global 80043770 is a one-call wrapper of the body above: small enough
- * for IDO to inline into case 3 (with the body in it), and its own copy is
- * still emitted (as in the original) */
-void func_ovl0D_03_80043770(void) {
-    func_ovl0D_03_80043770_body();
-}
-
-static void func_ovl0D_03_80043768(void) {
-    UNK_MACRO_ovl0D_03_80043770();
 }
 
 static void func_ovl0D_03_80043760(void) {
@@ -1351,14 +1360,14 @@ static void func_ovl0D_03_80043758(Ent_0D03 *e, s32 flag) {
     }
 }
 
-static s32 func_ovl0D_03_80043374(f32 a) {
-    if (a == 0.0f) {
+static s32 func_ovl0D_03_80043374(Ent_0D03 *e) {
+    if (e->obj->unk40->unk20 == 0.0f) {
         return 0;
-    } else if (a == 90.0f) {
+    } else if (e->obj->unk40->unk20 == 90.0f) {
         return 1;
-    } else if (a == 180.0f) {
+    } else if (e->obj->unk40->unk20 == 180.0f) {
         return 2;
-    } else if (a == 270.0f || a == -90.0f) {
+    } else if (e->obj->unk40->unk20 == 270.0f || e->obj->unk40->unk20 == -90.0f) {
         return 3;
     }
     return -1;
@@ -1378,11 +1387,11 @@ static void func_ovl0D_03_8004337C(Ent_0D03 *e) {
     s32 x3;
     s32 z3;
     s32 len;
-    s32 dir;
     UnkStructA_40 *p;
 
     p = e->obj->unk40;
     func_ovl0D_03_80046A40(p->unk10, p->unk14, p->unk18, grid, 0);
+    len = x1 + z1; /* a fake (see the top) */
     x0 = grid[0];
     y0 = grid[1];
     z0 = grid[2];
@@ -1401,10 +1410,12 @@ static void func_ovl0D_03_8004337C(Ent_0D03 *e) {
             }
     }
     y1 = grid[1] + 2;
-    dir = func_ovl0D_03_80043374(e->obj->unk40->unk20);
-    switch (dir) {
+    switch (func_ovl0D_03_80043374(e)) {
         case 0:
+            /* a fake (see the top) */
+#line 1 "panels.c"
             x0 = grid[0] - 1;
+#line 1419 "1A0CD0.c"
             x1 = x0 + 4;
             z1 = grid[2] + len;
             x2 = x0 + 1;
@@ -1442,16 +1453,16 @@ static void func_ovl0D_03_8004337C(Ent_0D03 *e) {
             x1 = grid[0];
             break;
     }
-    func_ovl0D_03_80043300(0, D_ovl0D_03_80048188, &x0);
-    func_ovl0D_03_80043300(1, D_ovl0D_03_80048188, &y0);
-    func_ovl0D_03_80043300(2, D_ovl0D_03_80048188, &z0);
-    func_ovl0D_03_80043300(0, D_ovl0D_03_80048188, &x1);
-    func_ovl0D_03_80043300(1, D_ovl0D_03_80048188, &y1);
-    func_ovl0D_03_80043300(2, D_ovl0D_03_80048188, &z1);
-    func_ovl0D_03_80043300(0, D_ovl0D_03_80048188, &x2);
-    func_ovl0D_03_80043300(2, D_ovl0D_03_80048188, &z2);
-    func_ovl0D_03_80043300(0, D_ovl0D_03_80048188, &x3);
-    func_ovl0D_03_80043300(2, D_ovl0D_03_80048188, &z3);
+    func_ovl0D_03_80043300(0, &x0, D_ovl0D_03_80048188);
+    func_ovl0D_03_80043300(1, &y0, D_ovl0D_03_80048188);
+    func_ovl0D_03_80043300(2, &z0, D_ovl0D_03_80048188);
+    func_ovl0D_03_80043300(0, &x1, D_ovl0D_03_80048188);
+    func_ovl0D_03_80043300(1, &y1, D_ovl0D_03_80048188);
+    func_ovl0D_03_80043300(2, &z1, D_ovl0D_03_80048188);
+    func_ovl0D_03_80043300(0, &x2, D_ovl0D_03_80048188);
+    func_ovl0D_03_80043300(2, &z2, D_ovl0D_03_80048188);
+    func_ovl0D_03_80043300(0, &x3, D_ovl0D_03_80048188);
+    func_ovl0D_03_80043300(2, &z3, D_ovl0D_03_80048188);
     func_ovl0D_03_80046A30(x0, y0, z0, x1, y1, z1, 0x10);
     func_ovl0D_03_80046A28(x0, y0 + 1, z0, x1, z1, 0x11);
     func_ovl0D_03_80046A28(x0, y0, z0, x1, z1, 0xF);
@@ -1459,7 +1470,7 @@ static void func_ovl0D_03_8004337C(Ent_0D03 *e) {
     func_ovl0D_03_80046A28(x2, y0 + 1, z2, x3, z3, 0x10);
 }
 
-static void func_ovl0D_03_80043300(s32 axis, s32 *size, s32 *v) {
+static void func_ovl0D_03_80043300(s32 axis, s32 *v, s32 *size) {
     s32 max;
 
     switch (axis) {
@@ -1483,26 +1494,34 @@ static void func_ovl0D_03_80043300(s32 axis, s32 *size, s32 *v) {
 
 /* the models' state from the flags already set */
 void func_ovl0D_03_8004305C(void) {
+    s32 i;
+    s32 pad[5]; /* a fake: the frame */
+
     if (func_ovl0D_03_800477C0(0x407) != 0) {
         func_ovl0D_03_80043054();
         func_ovl0D_03_80043010(D_ovl0D_03_80047EE4[0].obj);
-        func_ovl0D_03_800473F0(D_ovl0D_03_80047D1C[0].obj, 0x01000000);
-        D_ovl0D_03_80047D1C[1].unk18 = -105.0f;
-        D_ovl0D_03_80047D1C[1].obj->unk40->unk14 = -105.0f * 10.0f;
-        D_ovl0D_03_80047D1C[2].unk18 = 175.0f;
-        D_ovl0D_03_80047D1C[2].obj->unk40->unk14 = 175.0f * 10.0f;
-        func_ovl0D_03_800473F0(D_ovl0D_03_80047DC4[0].obj, 0x01000000);
-        func_ovl0D_03_800473F0(D_ovl0D_03_80047DC4[1].obj, 0x01000000);
-        func_ovl0D_03_800473F0(D_ovl0D_03_80047DC4[2].obj, 0x01000000);
+        i = 0;
+        func_ovl0D_03_800473F0(D_ovl0D_03_80047D1C[i++].obj, 0x01000000);
+        D_ovl0D_03_80047D1C[i].unk18 = -105.0f;
+        D_ovl0D_03_80047D1C[i].obj->unk40->unk14 = D_ovl0D_03_80047D1C[i].unk18 * 10.0f;
+        i++;
+        D_ovl0D_03_80047D1C[i].unk18 = 175.0f;
+        D_ovl0D_03_80047D1C[i].obj->unk40->unk14 = D_ovl0D_03_80047D1C[i].unk18 * 10.0f;
+        i = 0;
+        func_ovl0D_03_800473F0(D_ovl0D_03_80047DC4[i++].obj, 0x01000000);
+        func_ovl0D_03_800473F0(D_ovl0D_03_80047DC4[i++].obj, 0x01000000);
+        func_ovl0D_03_800473F0(D_ovl0D_03_80047DC4[i].obj, 0x01000000);
     }
     if (func_ovl0D_03_800477C0(0x408) != 0) {
-        func_ovl0D_03_800473F0(D_ovl0D_03_80047D1C[0].obj, 0x01000000);
-        func_ovl0D_03_800473F0(D_ovl0D_03_80047D1C[1].obj, 0x01000000);
-        D_ovl0D_03_80047D1C[2].unk18 = 175.0f;
-        D_ovl0D_03_80047D1C[2].obj->unk40->unk14 = 175.0f * 10.0f;
-        func_ovl0D_03_800473F0(D_ovl0D_03_80047DC4[0].obj, 0x01000000);
-        func_ovl0D_03_800473F0(D_ovl0D_03_80047DC4[1].obj, 0x01000000);
-        func_ovl0D_03_800473F0(D_ovl0D_03_80047DC4[2].obj, 0x01000000);
+        i = 0;
+        func_ovl0D_03_800473F0(D_ovl0D_03_80047D1C[i++].obj, 0x01000000);
+        func_ovl0D_03_800473F0(D_ovl0D_03_80047D1C[i++].obj, 0x01000000);
+        D_ovl0D_03_80047D1C[i].unk18 = 175.0f;
+        D_ovl0D_03_80047D1C[i].obj->unk40->unk14 = D_ovl0D_03_80047D1C[i].unk18 * 10.0f;
+        i = 0;
+        func_ovl0D_03_800473F0(D_ovl0D_03_80047DC4[i++].obj, 0x01000000);
+        func_ovl0D_03_800473F0(D_ovl0D_03_80047DC4[i++].obj, 0x01000000);
+        func_ovl0D_03_800473F0(D_ovl0D_03_80047DC4[i].obj, 0x01000000);
     }
 }
 
