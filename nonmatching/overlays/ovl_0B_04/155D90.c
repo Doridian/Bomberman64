@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1306, eu 1306, jp 1308
+ * differing words: us 1180, eu 1180, jp 1176
  *
  * Order (scratch/ord/search.py, hill-climb over definition order, scored by
  * the emitted sequence's edit distance from the original's address order):
@@ -1396,7 +1396,9 @@ static void func_ovl0B_04_80045540(u8 item, u16 buttons, u8 *ret) {
         c = p[0];
         D_ovl0B_04_8004A490.unk1 = 0;
         p[0] = 0;
-        if ((i == 7 && c == 0) || (i != 7 && i > 0)) {
+        if (i == 7 && c == 0) {
+            D_ovl0B_04_8004A490.unk0 = i - 1;
+        } else if (i != 7 && i > 0) {
             D_ovl0B_04_8004A490.unk0 = i - 1;
         }
         func_ovl0B_04_80044210();
