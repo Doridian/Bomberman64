@@ -19,50 +19,66 @@
  * before its switch.
  *
  * From m2c (wk/ in scratch/0B_03/ of the main checkout has the scripts,
- * p2/ the second pass's): functions written last to first. The helpers
- * 8004386C calls (80043010-80043834 but 80043060, 800431FC and 80043834)
- * and 800464B0 are static, with the original's own conventions (n in
- * $s2 and the like), and come out in the original's order once
- * 8004386C's last calls are in its order; 80043060, 800431FC and 80043834
- * are defined above 8004386C so that it pulls them out too. The handler's
- * stub at 80047190 is a static freeing n models, inlined twice, and its
- * jump table needs the empty case 17. The four turning tasks wrap the
- * expression itself and test t >= 0.0f before their first pass; the zoom
- * tasks compare t with an int; the display lists are one macro per
- * command. 8004386C (p3/ has the third pass's scripts) is a while (TRUE)
- * over switch (state), each case ending state = next, with a few shared
- * locals as the original's registers show (i in $fp for every counter and
- * spare value, the angle t in $f22 for every case, w the wrap's inner
- * result in $f28, its home loaded at entry); every case is a while (TRUE)
- * input loop with the redraw at its end. The 0x4000 exit of case 3/4
- * copies each model's own y (E9C[i].unk8), not a -10.0f (m2c's).
- * fcmp counts word by word, so a case one word long misaligns all the
- * rest (p3/drift.py shows where the calls' offsets drift). The ZeroJump
- * stubs are declared as other drafts declare the same codes. The .bss's unreferenced words (800492E0, 8004930C,
- * 8004A33C, 8004A3FC, 8004A418) are arrays, not yet kept in place.
+ * p2/ and p3/ the second and third passes', q/ the fourth's: sd.py is a
+ * register/symbol-normalized diff, batch.py and spb2.py variant runners).
+ * Functions written last to first. The helpers 8004386C calls
+ * (80043010-80043834 but 80043060, 800431FC and 80043834) and 800464B0
+ * are static, with the original's own conventions (n in $s2 and the
+ * like), and come out in the original's order once 8004386C's last calls
+ * are in its order; 80043060, 800431FC and 80043834 are defined above
+ * 8004386C so that it pulls them out too. The two fades (80043010,
+ * 800433BC) are for loops. The handler's stub at 80047190 is a static
+ * freeing n models, inlined twice, and its jump table needs the empty
+ * case 17. The four turning tasks wrap the expression itself and test
+ * t >= 0.0f before their first pass; the zoom tasks compare t with an
+ * int; the display lists are one macro per command. The ZeroJump stubs
+ * are declared as other drafts declare the same codes, but 80048890 (the
+ * sound) returns s32: as void, uopt kept 8004386C's temporaries in $v0
+ * where the original has $v1. The .bss's unreferenced words (800492E0,
+ * 8004930C, 8004A33C, 8004A3FC, 8004A418) are arrays, not yet kept in
+ * place.
  *
- * What still differs in us (words): 8004386C 1584 (the statics' two
- * misplaced relocations land in 800431FC; its frame is 8 bytes too big;
- * case 1's 0x8000 exit lacks the original's early i = 0, so it runs a word
- * short until its switch; cases 1-3 use $v0 where the original has $v1
- * for D_ovl0B_03_8004A32C/A328 temporaries; state and the 80047908 pointer
- * get $s1 where the original has $s3), 80046510 97 (register roles:
- * its first loop's i, pointer and column swapped, y0/y1's spill slots,
- * the tail loop's registers).
- * Everything else matches.
+ * 8004386C is a while (TRUE) over switch (state), each case ending
+ * state = next, every case a while (TRUE) input loop with the redraw at
+ * its end. Its locals are reused as the original's registers show: i in
+ * $fp for every counter; state ($s3) also holds case 0's handle, k ($s3)
+ * case 2's row, next ($s4) case 2's old label handle, j ($s7) case 2's
+ * step; t is the angle in $f22, w the wrap's inner value in $f28 (its
+ * home loaded at entry, so it is declared last, and p goes with the
+ * scalars above the cursor tables: that gives the original's frame).
+ * next is declared with its initializer (set before the tables are
+ * copied). A state picked right after a call is set after it, or inside
+ * the following if/else's arms (uopt hoists `next = c` above a call
+ * before it, and as1 then moves the call's argument into the previous
+ * branch's delay slot). Case 2's first label writes its digit before
+ * taking the string; case 3/4 indexes its first model by the
+ * D_ovl0B_03_8004A330 just stored; case 5 sets t after the second model
+ * and copies the box's y before setting its x. The 0x4000 exit of case
+ * 3/4 copies each model's own y (E9C[i].unk8), not a -10.0f (m2c's).
  *
- * jp still builds the second pass's 8004386C (#if VERSION_JP): the
- * rewrite comes out 0xC0 bytes short there and 2695 words off, and the
- * E9C[i].unk8 fix alone costs it 91 (fcmp is positional).
+ * 80046510's grid is a plain i/j loop writing D_ovl0B_03_8004A340[i][j]
+ * directly (through a pointer, uopt doesn't know the stores leave
+ * D_ovl0B_03_80049104 alone, and its loads stay below them), x = j * 64,
+ * the rows' y0/y1 steps in the for's increment; y0 and y1 stay in their
+ * homes (14 slots, the original's frame); the update loop takes the next
+ * step into a local.
  *
- * What still differs in jp (words): 8004386C 2542 (its size is the
- * original's; the original keeps 1.0f in $f30 throughout, 0.7f in $f28,
- * and doesn't keep &D_ovl0B_03_8004A324 in a register), 80046510 97,
- * 80043010 and 800431FC 2 each, as in us.
+ * What still differs in us (words): 8004386C 4 (case 1's two spills
+ * around 80043340 are at 128/132(sp), the original's at 132/136: one
+ * temporary fewer below them; tried: the wrap's and the switch's ternary
+ * forms, the locals' order), 80046510 6 (the grid's preheader: the
+ * original's la of D_ovl0B_03_8004A340 starts before y0/y1's li and ends
+ * after their stores; tried: the inits in the for, #line). Everything
+ * else matches.
+ *
+ * jp builds the same 8004386C (its #if VERSION_JP parts: the labels and
+ * strings). What still differs in jp (words): 8004386C 2533 (the original
+ * keeps &D_ovl0B_03_8004A324 out of a register throughout, so every use is
+ * a lui/lw and the state group gets $s0; its frame is 8 smaller, w at
+ * 144(sp); otherwise the code is the same), 80046510 6, as in us.
  */
 
 #include "common.h"
-#line 66 "14FAB0.c"
 
 #define M2C_FIELD(expr, type, offset) (*(type)((u8 *)(expr) + (offset)))
 
@@ -399,7 +415,6 @@ s32 D_ovl0B_03_8004A410;
 s32 D_ovl0B_03_8004A414;
 u8 D_ovl0B_03_8004A418[8];
 
-#line 1 "panels.c"
 /* An unused empty static (the original keeps its stub). */
 static void func_ovl0B_03_80047464(void) {
 }
@@ -452,7 +467,6 @@ static void func_ovl0B_03_8004740C(void) {
 static void func_ovl0B_03_80047404(void) {
 }
 
-#line 456 "14FAB0.c"
 void func_ovl0B_03_800473FC(void) {
 
 }
