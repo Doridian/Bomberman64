@@ -6,7 +6,7 @@
  * tables, .bss 0x1140, as the original's sizes). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 153, eu 153, jp 2640
+ * differing words: us 140, eu 140, jp 2640
  *
  * jp (`#if VERSION_JP`) has its own strings (80048AF4, 80048B60,
  * 80049144, and D_ovl0B_03_8004901C_jp for us's 80049168, with the
@@ -2251,16 +2251,16 @@ void func_ovl0B_03_8004386C(void) {
                     next = 0;
                     break;
                 }
+                j = ((D_ovl0B_03_8004A320 & 0x30) >> 4) - 1;
                 k = (D_ovl0B_03_8004A320 & 0xF) - 1;
-                dir = ((D_ovl0B_03_8004A320 & 0x30) >> 4) - 1;
                 switch (k) {
                 case 0:
-                    if (dir == 0) {
+                    if (j == 0) {
                         if (D_ovl0B_03_8004A324->unk24 >= 2) {
                             func_ovl0B_03_80048890(0);
                             D_ovl0B_03_8004A324->unk24--;
                         }
-                    } else if (dir == 1) {
+                    } else if (j == 1) {
                         if (D_ovl0B_03_8004A324->unk24 < 5) {
                             func_ovl0B_03_80048890(0);
                             D_ovl0B_03_8004A324->unk24++;
@@ -2268,12 +2268,12 @@ void func_ovl0B_03_8004386C(void) {
                     }
                     break;
                 case 1:
-                    if (dir == 0) {
+                    if (j == 0) {
                         if (M2C_FIELD(D_ovl0B_03_8004A324, s32 *, 0x28) >= 2) {
                             func_ovl0B_03_80048890(0);
                             M2C_FIELD(D_ovl0B_03_8004A324, s32 *, 0x28)--;
                         }
-                    } else if (dir == 1) {
+                    } else if (j == 1) {
                         if (M2C_FIELD(D_ovl0B_03_8004A324, s32 *, 0x28) < 6) {
                             func_ovl0B_03_80048890(0);
                             M2C_FIELD(D_ovl0B_03_8004A324, s32 *, 0x28)++;
@@ -2281,12 +2281,12 @@ void func_ovl0B_03_8004386C(void) {
                     }
                     break;
                 case 2:
-                    if (dir == 0) {
+                    if (j == 0) {
                         if (D_ovl0B_03_8004A324->unk38 > 0) {
                             func_ovl0B_03_80048890(0);
                             D_ovl0B_03_8004A324->unk38--;
                         }
-                    } else if (dir == 1) {
+                    } else if (j == 1) {
                         if (D_ovl0B_03_8004A324->unk38 <= 0) {
                             func_ovl0B_03_80048890(0);
                             D_ovl0B_03_8004A324->unk38++;
@@ -2294,12 +2294,12 @@ void func_ovl0B_03_8004386C(void) {
                     }
                     break;
                 case 3:
-                    if (dir == 0) {
+                    if (j == 0) {
                         if (M2C_FIELD(D_ovl0B_03_8004A324, s32 *, 0x3C) > 0) {
                             func_ovl0B_03_80048890(0);
                             M2C_FIELD(D_ovl0B_03_8004A324, s32 *, 0x3C)--;
                         }
-                    } else if (dir == 1) {
+                    } else if (j == 1) {
                         if (M2C_FIELD(D_ovl0B_03_8004A324, s32 *, 0x3C) <= 0) {
                             func_ovl0B_03_80048890(0);
                             M2C_FIELD(D_ovl0B_03_8004A324, s32 *, 0x3C)++;
