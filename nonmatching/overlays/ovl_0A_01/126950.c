@@ -3,27 +3,23 @@
  * function and its .data/.bss; .text 0x40C0 as the original.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 50, eu 50, jp 50
+ * differing words: us 38, eu 38, jp 38
  *
  * What still differs in us (words; eu and jp the same):
  * - func_ovl0A_01_80043028 (6): `beq a0,s0` where the original has
  *   `beq s0,a0`, in all three inlined 80043010 (-1 in s0). The order is
- *   uopt's: `-1 != task`, a local -1, u32/void * task, 0xFFFFFFFF don't
- *   change it.
- * - func_ovl0A_01_800442B4 (6): the start of 8004428C's inlined code:
- *   the original builds &D_ovl0A_01_80048A70 (lui, addiu) before loading
- *   i from v, ours puts the addiu after it and `lw a0`/`lui at` in the
- *   prologue swap (1 pair).
- * - func_ovl0A_01_80044F3C (6): `v = 0`'s `mtc1 zero` and pos[1]'s store
- *   scheduled before the 900.0f constant; no order of the first six
- *   statements changes it.
+ *   uopt's (ugen already emits `beq $4,$16`): `-1 != task`, `== -1`
+ *   with return/else, a local copy, u32/void * task and 0xFFFFFFFF don't
+ *   change it. A pointer parameter (`*task != -1`) gives `beq s0,tN` but
+ *   loads into a temporary and moves it to a0.
  * - func_ovl0A_01_8004609C (32): frame 8 bytes too big, so every slot
  *   above 0x64 is 8 higher, and 8004607C's `move v1,zero` placed one
  *   later. 8004607C's count parameter costs the 8: with a literal 1 the
  *   frame and every slot are the original's, but the loop ends on `bne`
  *   where the original has `slt v1,s1` (1 in s1). Other loop shapes, n's
- *   type, a third parameter, dummy locals and block-scoped locals in
- *   80046084 don't give both.
+ *   type, a third parameter, tbl[i] indexing, the count as the only
+ *   parameter, dummy or block-scoped locals in 80046084 and the statics'
+ *   definition order don't give both.
  *
  * 800442B4's counter: the original keeps the frame count in a stack word
  * (v, address-taken in dead code so calls may change it): stored 0, loaded
@@ -36,8 +32,9 @@
  * after the call's line; 80044A24 and 80046094 numbered below their
  * callers, so their argument setup and stores schedule first; 8004428C's
  * store and 800442B4's final `v = j` numbered after the call they precede,
- * so they land in its delay slot), `k = D_ovl0A_01_80048D1C = ...` in
- * 8004364C's switch, `base[0]` and `tgt[0]` computed separately in
+ * so they land in its delay slot; 800442AC and 80044294 renumbered for
+ * 800442B4's setup order; 80044F3C's `pos[2]` numbered before `v = 0`),
+ * `k = D_ovl0A_01_80048D1C = ...` in 8004364C's switch, `base[0]` and `tgt[0]` computed separately in
  * 80043AA4 (ugen then picks $f0), a dead `if (fall) {}` at the top of
  * 80044798 (its IPA registers: fall in s1, the table in s2), and in
  * 80046084 the variables shared between loops as the original's register
@@ -1082,7 +1079,9 @@ void func_ovl0A_01_80044F3C(void) {
     func_ovl0A_01_80044A2C();
     v = 0;
     pos[0] = 200.0f;
+#line 1063
     pos[2] = 900.0f;
+#line 1067
     pos[1] = v;
     played = 0;
     D_ovl0A_01_800488D8[2].obj->unk40->unk1C = 90.0f;
@@ -1382,9 +1381,11 @@ static void func_ovl0A_01_8004428C(void) {
     D_ovl0A_01_80048A64 = func_ovl0A_01_80047F88(func_ovl0A_01_80045EA0, NULL, 0, 0, 0x130);
 }
 
+#line 1157
 static void func_ovl0A_01_80044294(void) {
     func_ovl0A_01_80047E40(D_ovl0A_01_80048890[1].obj, 0x01000000);
 }
+#line 1360
 
 static void func_ovl0A_01_8004429C(void) {
     func_ovl0A_01_80047E40(D_ovl0A_01_80048890[0].obj, 0x01000000);
@@ -1394,11 +1395,13 @@ static void func_ovl0A_01_800442A4(void) {
     func_ovl0A_01_80047E38(D_ovl0A_01_80048770[4].obj, 0x80000);
 }
 
+#line 1329
 static void func_ovl0A_01_800442AC(void) {
     D_ovl0A_01_80048A1C = 0.0f;
     D_ovl0A_01_80048A20 = 0.0f;
     D_ovl0A_01_80048A24 = 0.0f;
 }
+#line 1374
 
 static void func_ovl0A_01_800441F8(void) {
     D_ovl0A_01_80048A1C += 2.0f;
