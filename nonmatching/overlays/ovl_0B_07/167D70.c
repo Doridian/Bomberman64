@@ -5,7 +5,7 @@
  * as the original; jp's .data is 0x1A0). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 648, eu 648, jp 650
+ * differing words: us 635, eu 635, jp 639
  *
  * IDO -O3: the functions are written last to first. The tail (80045438,
  * 800453F0, 800453BC, 80045494 and the twelve empty stubs) is ovl_17_10's;
@@ -45,12 +45,14 @@
  *   original divides by 2.0f in $fs1; `/ 2.0f` becomes `* 0.5f`); off
  *   and the first loop's unk10 are set from an int 0 (the other 0.0f
  *   uses are floats), which gets uopt to hold 0.0f in a register as the
- *   original does; the locals are ordered so n, step and m get the
- *   original's slots (frame 0xA8 as the original); the 120- and
+ *   original does; frame 0xA8 as the original; the 120- and
  *   60-frame waits count in k (the trophy test's counter; the
  *   original's $s5 there, not i's $s7), which puts the counter address
- *   in $fp as in the original, and a dead read of i in the winner's
- *   search loop puts i in $s7.
+ *   in $fp as in the original; the winner's team is i (the original's
+ *   $s7, team * 4 in $s1 saved around 80043544); dead reads of i in the
+ *   winner's search loop and ahead of the y branch set the register
+ *   order; eleven locals in this order give the original's slots (n,
+ *   step, m, and the induction temporaries' homes below them).
  * - jp's 80043594_jp and us's text x divide by an int 2 (div.s, as the
  *   original) for the same reason.
  *
@@ -58,11 +60,10 @@
  * - func_ovl0B_07_800435FC (jp 2): in the second text's creation the
  *   original loads 1.0f after the name's address (`mtc1 at,fv0` after
  *   `lw t7`), ours before.
- * - func_ovl0B_07_8004400C (630): one instruction longer; the original
- *   holds one 0.0f constant in $fs4 for all its uses (ours two: the
- *   int-0 split above), so the float registers differ; v1/a0 swapped in
- *   the first loops; team * 4 in $s1 saved around 80043544 (ours
- *   elsewhere); the 60-frame loop tests with slti.
+ * - func_ovl0B_07_8004400C (615): three instructions longer: the
+ *   original holds one 0.0f constant in $fs4 for all its uses (ours two:
+ *   the int-0 split above; with one, uopt keeps step in a register
+ *   instead), so the float registers differ.
  * - func_ovl0B_07_80044D54: its last nops follow once the object's size
  *   matches (IDO pads the dead epilogue after its endless loop to 32
  *   bytes of the object).
@@ -378,16 +379,15 @@ void func_ovl0B_07_80044C9C(void) {
 void func_ovl0B_07_8004400C(void) {
     s32 i;
     s32 j;
-    s32 team;
     s32 v;
-    s32 n;
     s32 k;
+    s32 n;
     f32 off;
     f32 y;
-    f32 step;
     UnkStructA_40 *obj;
-    s32 m;
+    f32 step;
     f32 x;
+    s32 m;
 
     func_ovl0B_07_80046940(0x20);
     func_ovl0B_07_80046930(0x1F0);
@@ -473,34 +473,36 @@ void func_ovl0B_07_8004400C(void) {
         }
     }
     if (D_ovl0B_07_80046F18->unk0 == 0) {
-        team = D_ovl0B_07_80046E2C - 0x11;
+        i = D_ovl0B_07_80046E2C - 0x11;
         for (j = 0; j < D_ovl0B_07_80046F1C; j++) {
             if (!i) { /* a dead read: uopt's register order */
             }
-            if (team == D_ovl0B_07_80046F20[j]) {
+            if (i == D_ovl0B_07_80046F20[j]) {
                 break;
             }
         }
         obj = func_ovl0B_07_80045F38(0x40, 0);
-        D_ovl0B_07_80046E30[j][D_ovl0B_07_80046F18->unkA4[team]] = obj;
+        D_ovl0B_07_80046E30[j][D_ovl0B_07_80046F18->unkA4[i]] = obj;
     } else {
-        team = D_ovl0B_07_80046E2C - 0x16;
+        i = D_ovl0B_07_80046E2C - 0x16;
         obj = func_ovl0B_07_80045F38(0x40, 0);
-        D_ovl0B_07_80046E30[team][D_ovl0B_07_80046F18->unkA4[team]] = obj;
+        D_ovl0B_07_80046E30[i][D_ovl0B_07_80046F18->unkA4[i]] = obj;
     }
     obj->unk10 = 310.0f;
     obj->unk14 = -200.0f;
     obj->unk18 = 1200.0f;
-    x = D_ovl0B_07_80046F18->unkA4[team] * 120.0f + 120.0f;
+    x = D_ovl0B_07_80046F18->unkA4[i] * 120.0f + 120.0f;
+    if (!i) { /* a dead read: uopt's register order */
+    }
     if (D_ovl0B_07_80046F18->unk0 == 0) {
         y = 170.0f - 720.0f / D_ovl0B_07_80046F1C / 2 - step * j;
-    } else if (team == 0) {
+    } else if (i == 0) {
         y = 170.0f - 720.0f / D_ovl0B_07_80046F1C / 2 - step * (n - 1) / 2;
     } else {
         y = 170.0f - 720.0f / D_ovl0B_07_80046F1C / 2 - step * (D_ovl0B_07_80046F1C - n - 1) / 2 -
             step * n - (180.0f * D_ovl0B_07_80046F1C - 160.0f * D_ovl0B_07_80046F1C);
     }
-    D_ovl0B_07_80046F18->unkA4[team]++;
+    D_ovl0B_07_80046F18->unkA4[i]++;
     for (k = 0; k < 120; k++) {
         if (func_ovl0B_07_80043544() & 0xC000) {
             break;
@@ -533,7 +535,7 @@ void func_ovl0B_07_8004400C(void) {
                 func_ovl0B_07_80046930(D_ovl0B_07_80046CC0[0]);
             }
         }
-    } else if (team == 0) {
+    } else if (i == 0) {
         for (j = 0; j < n; j++) {
             D_ovl0B_07_80046E80[j]->unkC |= 0x20;
             func_ovl0B_07_80045F80(D_ovl0B_07_80046E80[j], 0x16, 0);
@@ -552,7 +554,7 @@ void func_ovl0B_07_8004400C(void) {
     }
     func_ovl0B_07_80046948();
     func_ovl0B_07_80046998();
-    if (D_ovl0B_07_80046F18->unk24 == D_ovl0B_07_80046F18->unkA4[team]) {
+    if (D_ovl0B_07_80046F18->unk24 == D_ovl0B_07_80046F18->unkA4[i]) {
         func_ovl0B_07_80045950(0x22, 0x15, 0);
     } else {
         func_ovl0B_07_80045950(D_ovl0B_07_80046F18->unkA0 + 0x90, 0x10, 0);
