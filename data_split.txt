@@ -338,6 +338,10 @@ ovl_0F_08 1FF8F0 0x1F0 0x90 0x60
 ovl_0F_09 ovl_0F_09_entry 0 0 0
 ovl_0F_09 202690 0x220 0x90 0x70
 
+# ovl_0F_10: all C (-O3)
+ovl_0F_10 ovl_0F_10_entry 0 0 0
+ovl_0F_10 205890 0x310 0x120 0x60
+
 # ovl_10_01: all C (-O3); from 80043E14 on it is ovl_10_03's code
 ovl_10_01 ovl_10_01_entry 0 0 0
 ovl_10_01 209370 0x1A0 0x140 0x520

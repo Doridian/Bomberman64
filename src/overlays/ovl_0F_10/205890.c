@@ -1,9 +1,5 @@
 /*
- * NON_MATCHING: ovl_0F_10's game object, complete: every function and its data
- * (.data and .rodata as the original; .bss 0x60 with its unused words common).
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * ovl_0F_10's game object, IDO -O3; it matches in us, eu and jp.
  *
  * Measured in jp. What went right, from 826 words (ovl_0F_07/0F_08/0F_09's
  * fixes where the code is shared):
@@ -42,6 +38,8 @@
  *   80043428 is defined without a prototype (`static void f() {}`):
  *   inlined, a K&R-style empty static takes no frame, where `f(void)`
  *   takes 8 bytes.
+ * The fake `if (0)` in the empty stub 80044FF8 keeps the .bss nothing uses
+ * (80046B18, 80046B24, 80046B38) in place: unreferenced, it would be common.
  * The `#line N "205890.c"` lines are the physical line numbers (the file
  * named the same whatever path it is compiled by).
  */
@@ -236,7 +234,7 @@ static void func_ovl0F_10_80044FF0(void) {
     func_ovl0F_10_80043088(D_ovl0F_10_8004672C);
 }
 
-static void func_ovl0F_10_80044FF8(void) {
+static void func_ovl0F_10_80044FF8(void) { if (0) { D_ovl0F_10_80046B18[0] = D_ovl0F_10_80046B24[0] = D_ovl0F_10_80046B38[0] = 0; } /* the unused .bss keeps its place */
 }
 
 static void func_ovl0F_10_80045000(void) {
