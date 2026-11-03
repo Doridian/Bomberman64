@@ -3,18 +3,20 @@
  * function and its .data/.bss; .text 0x40C0 as the original.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3, eu 3, jp 3
+ * differing words: us 0, eu 0, jp 0
  *
- * What still differs in us (words; eu and jp the same):
- * - func_ovl0A_01_80043028 (3): `beq a0,s0` where the original has
- *   `beq s0,a0`, in all three inlined 80043010 (-1 in s0). The order is
- *   uopt's (ugen already emits `beq $4,$16`): `-1 != task`, `== -1`
- *   with return/else, `while`, a switch, a local copy, `task + 1 != 0`,
- *   u32/void * task, 0xFFFFFFFF/~0/-1L, a K&R definition, the -1 as a
- *   second parameter (either order, either side), a pointer parameter
- *   (`*task`, or a local copy of it), and a dead `-1` compare ahead of the
- *   switch don't change it. A pointer parameter (`*task != -1`) gives
- *   `beq s0,tN` but loads into a temporary and moves it to a0.
+ * Matches in all three versions (not moved to src/ yet).
+ *
+ * 80043010's `(task | 0) != -1` (2026-11-03, 3 words to 0): the original's
+ * three inlined copies in 80043028 compare `beq s0,a0` (-1 kept in s0),
+ * where `task != -1` gives `beq a0,s0`. An identity operation on task
+ * (`| 0`, `^ 0`, `& ~0`, `* 1`; not `+ 0`) puts it second while task still
+ * goes straight to a0 (the permuter found `^ 0`). What didn't: `-1 !=
+ * task`, `== -1` with return/else, `while`, a switch, `task + 1 != 0`,
+ * u32 casts and types, a K&R definition, the -1 as a parameter, a local
+ * copy. A pointer parameter (`*task != -1`) gives `beq s0,tN` too, but
+ * loads into a temporary and moves it to a0 (with a local `t = *task` for
+ * the argument it's a0, but 80043028's frame is 8 bigger).
  *
  * 8004609C (2026-11-03, 32 words to 0): its frame was 8 bytes too big.
  * 80046084's locals and 8004607C's (n, tbl, i) share one area, rounded to
@@ -1754,7 +1756,7 @@ void func_ovl0A_01_80043028(void) {
 }
 
 static void func_ovl0A_01_80043010(s32 task) {
-    if (task != -1) {
+    if ((task | 0) != -1) {
         func_ovl0A_01_80047F90(task);
     }
 }
