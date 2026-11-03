@@ -9,7 +9,7 @@
  * .bss 0x1F0 as the original). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3948, eu 3948, jp 3948
+ * differing words: us 3921, eu 3921, jp 3921
  *
  * A first draft from m2c (with the ZeroJump prototypes the other drafts give
  * the same codes), made to compile: vectors as Vec3f, the pointer loops over
@@ -17,9 +17,10 @@
  * given their arguments, 800430CC static (its argument comes in its callers'
  * $s0). Most functions are m2c's logic as it came; 8004636C and 80045F14 are
  * rewritten as loops, 800431D4's 300-frame move keeps 300.0f in a variable.
- * The 14 stubs (two `jr ra` in a row): 8004A200 and 8004A4AC-BC are
- * inlined-once statics before their callers; 8004A898-8004A8E0 are the ten
- * unused statics after the tail, defined first in ascending order.
+ * The 14 stubs (two `jr ra` in a row): 8004A200 is the camera reset
+ * 8004A208, 8004A2D4 and 8004A4C4 share (inlined in each), 8004A4AC-BC
+ * statics inlined in 8004A4C4; 8004A898-8004A8E0 are the ten unused
+ * statics after the tail, defined first in ascending order.
  *
  * Source order: every function comes out in .text in the original's order.
  * IDO processes definitions last to first and pulls a function's callees
@@ -39,10 +40,10 @@
  * 348, 80044160 331, 800477C0 299, 800450B4 282, 80045F14 237, 800431D4 230,
  * 800455D0 218, 80048E2C 142, 800491B4 131, 80047CB4 113, 800475EC 112,
  * 80048BB0 112, 800493EC 73, 800471D8 59; under 50 each: 80043608, 80043830,
- * 8004400C, 80045538, 80045B0C, 80045C60, 80045C9C, 80045DAC, 8004636C,
- * 800465FC, 80046800, 80046C2C, 80046DC4, 80046E00, 80046FA8, 80047144,
- * 800473A8, 80047F74, 800481D0, 80048418, 80048AF0, 8004956C, 800496E0,
- * 8004A088, 8004A208, 8004A2D4, 8004A4C4. The other 39 match.
+ * 8004400C, 80045538, 80045B0C, 80045C9C, 80045DAC, 8004636C, 800465FC,
+ * 80046800, 80046C2C, 80046DC4, 80046E00, 80046FA8, 80047144, 800473A8,
+ * 80047F74, 800481D0, 80048418, 8004956C, 800496E0, 8004A088, 8004A208,
+ * 8004A4C4. The other 42 match.
  */
 #include "common.h"
 
@@ -255,6 +256,7 @@ void func_ovl13_01_80043010(void);
 void func_ovl13_01_8004306C(s32 arg0);
 static void func_ovl13_01_800430CC(UnkStructA *arg0);
 static void func_ovl13_01_8004A4AC(void);
+static void func_ovl13_01_8004A200(void);
 void func_ovl13_01_80043124(s32 arg0, UnkStructA *arg1);
 void func_ovl13_01_80043158(void);
 void func_ovl13_01_800431D4(void);
@@ -442,9 +444,7 @@ void func_ovl13_01_8004A4C4(void) {
     D_ovl13_01_8004C27C->unk40 = 0.5f;
     D_ovl13_01_8004C27C->unk44 = D_ovl13_01_8004C27C->unk40 * 0.75f;
     D_ovl13_01_8004C27C->unk3C = D_ovl13_01_8004C27C->unk4C * 0.25f;
-    D_ovl13_01_8004C21C = func_ovl13_01_8004AE18();
-    func_ovl13_01_8004ADF8(&D_ovl13_01_8004C210.x);
-    func_ovl13_01_8004AE20(D_ovl13_01_8004C21C, &D_ovl13_01_8004C200.x);
+    func_ovl13_01_8004A200();
     func_ovl13_01_8004B770();
     func_ovl13_01_8004B9A8();
     func_ovl13_01_80049870();
@@ -489,9 +489,7 @@ void func_ovl13_01_8004A39C(void) {
 }
 
 void func_ovl13_01_8004A2D4(void) {
-    D_ovl13_01_8004C21C = func_ovl13_01_8004AE18();
-    func_ovl13_01_8004ADF8(&D_ovl13_01_8004C210.x);
-    func_ovl13_01_8004AE20(D_ovl13_01_8004C21C, &D_ovl13_01_8004C200.x);
+    func_ovl13_01_8004A200();
     func_ovl13_01_800431D4();
     func_ovl13_01_8004B9A0();
     func_ovl13_01_8004B768(&D_ovl13_01_8004C28C);
@@ -506,16 +504,16 @@ void func_ovl13_01_8004A2D4(void) {
 }
 
 static void func_ovl13_01_8004A200(void) {
+    D_ovl13_01_8004C21C = func_ovl13_01_8004AE18();
+    func_ovl13_01_8004ADF8(&D_ovl13_01_8004C210.x);
+    func_ovl13_01_8004AE20(D_ovl13_01_8004C21C, &D_ovl13_01_8004C200.x);
 }
 
 void func_ovl13_01_8004A208(void) {
     s32 temp_t7;
 
-    func_ovl13_01_8004A200();
     if ((func_ovl13_01_8004ACF8(func_ovl13_01_8004AE78(func_ovl13_01_8004AE18())->unk40) != 20000.0f) || !(D_ovl13_01_8004C200.y < 0.0f)) {
-        D_ovl13_01_8004C21C = func_ovl13_01_8004AE18();
-        func_ovl13_01_8004ADF8(&D_ovl13_01_8004C210.x);
-        func_ovl13_01_8004AE20(D_ovl13_01_8004C21C, &D_ovl13_01_8004C200.x);
+        func_ovl13_01_8004A200();
     }
     func_ovl13_01_8004BA00(0x420);
     temp_t7 = D_ovl13_01_8004C288 + 1;
@@ -1082,7 +1080,7 @@ void func_ovl13_01_80048B6C(UnkStructA *arg0) {
 
 void func_ovl13_01_80048AF0(UnkStructA *arg0) {
     UnkStructA_40 *temp_v0;
-    s16 temp_v1;
+    s32 temp_v1;
     s32 var_s0;
 
     func_ovl13_01_8004B638(arg0, 0x80000);
@@ -2008,10 +2006,8 @@ s32 func_ovl13_01_80046DC4(UnkStructA *arg0) {
             var_v1 = 2;
         }
         if (temp_v0 & 0x4000) {
-            return var_v1 + 1;
+            var_v1 += 1;
         }
-        /* Duplicate return node #5. Try simplifying control flow for better match */
-        return var_v1;
     }
     return var_v1;
 }
@@ -2388,14 +2384,12 @@ void func_ovl13_01_80045C9C(void) {
 f32 func_ovl13_01_80045C60(f32 arg0, f32 arg1) {
     f32 var_fa0;
 
-    var_fa0 = arg0;
-    if (arg1 <= var_fa0) {
-        return var_fa0 - arg1;
+    if (arg1 <= arg0) {
+        arg0 -= arg1;
+    } else if (arg0 < 0.0f) {
+        arg0 += arg1;
     }
-    if (var_fa0 < 0.0f) {
-        var_fa0 += arg1;
-    }
-    return var_fa0;
+    return arg0;
 }
 
 void func_ovl13_01_80045B0C(void) {
