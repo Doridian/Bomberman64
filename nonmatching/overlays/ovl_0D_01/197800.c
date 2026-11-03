@@ -5,7 +5,7 @@
  * few words), .data 0x3E0 and .bss 0x70 as the original.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 774, eu 774, jp 774
+ * differing words: us 211, eu 211, jp 211
  *
  * The sibling of ovl_0D_04 and ovl_0D_06 (nonmatching/overlays): the gate
  * code (800444E0, 800448D4), the model tables, the setup's loops and the
@@ -160,7 +160,7 @@ s32 func_ovl0D_01_80046438(s32, s32, s32, s32, s32); /* 0x1004 */
 s32 func_ovl0D_01_80046448(void); /* 0x1006 */
 void func_ovl0D_01_80046450(s32, void *); /* 0x1007 */
 void func_ovl0D_01_80046458(s32); /* 0x1008 */
-void func_ovl0D_01_80046460(s32); /* 0x1009 */
+s32 func_ovl0D_01_80046460(s32); /* 0x1009 */
 void func_ovl0D_01_80046468(s32, s32, f32, s32, s32, s32, s32); /* 0x100A */
 void func_ovl0D_01_80046470(const char *); /* 0x100B */
 void func_ovl0D_01_80046478(void); /* 0x100C */
@@ -195,7 +195,7 @@ void func_ovl0D_01_80046C00(f32 *, f32 *); /* 0x1804 */
 s32 func_ovl0D_01_80046C18(Obj_0D01 *, s32); /* 0x1807 */
 s32 func_ovl0D_01_80046C20(Obj_0D01 *, s32); /* 0x1808 */
 void func_ovl0D_01_80046C68(Obj_0D01 *, s32); /* 0x1811 */
-void func_ovl0D_01_80046C70(Obj_0D01 *, s32); /* 0x1812 */
+void func_ovl0D_01_80046C70(Obj_0D01 *, u32); /* 0x1812 */
 void func_ovl0D_01_80046C80(Obj_0D01 *); /* 0x1814 */
 Obj_0D01 *func_ovl0D_01_80046C90(s32, s32, s32, s32); /* 0x1816 */
 void func_ovl0D_01_80046CA0(Obj_0D01 *); /* 0x1818 */
@@ -539,7 +539,6 @@ void func_ovl0D_01_800455B8(void) {
 }
 
 void func_ovl0D_01_800455E0(void) {
-    func_ovl0D_01_800455D8();
     func_ovl0D_01_80047120(D_ovl0D_01_80047560);
     func_ovl0D_01_80047138(D_ovl0D_01_80047584);
     func_ovl0D_01_80046268(0x13A);
@@ -552,12 +551,15 @@ void func_ovl0D_01_800455E0(void) {
         D_ovl0D_01_80047844[3].unk8 = 0xE8;
     }
     func_ovl0D_01_800455D0(D_ovl0D_01_80047844, 6);
+    func_ovl0D_01_800455D8();
     func_ovl0D_01_800462E0(0x140);
     func_ovl0D_01_80046418();
     D_ovl0D_01_80047B30.x = 32768.0f;
     D_ovl0D_01_80047B30.y = 32768.0f;
     D_ovl0D_01_80047B30.z = 32768.0f;
+#line 1 "panels.c"
     func_ovl0D_01_80046278(D_ovl0D_01_80047B18);
+#line 563 "197800.c"
     D_ovl0D_01_80047B0C = func_ovl0D_01_80046CB0(-1, 0x80, 0.0f, 0.0f, 0.0f);
     D_ovl0D_01_80047B0C->unkC = 0x3FFFF;
     func_ovl0D_01_800463B0(0);
@@ -566,7 +568,9 @@ void func_ovl0D_01_800455E0(void) {
     func_ovl0D_01_80046350(func_ovl0D_01_80045CFC);
     func_ovl0D_01_800455B8();
     D_ovl0D_01_80047B2C = func_ovl0D_01_800463B8();
+#line 1 "panels.c"
     func_ovl0D_01_800455B0();
+#line 574 "197800.c"
     func_ovl0D_01_800448CC();
     func_ovl0D_01_800455A8();
     func_ovl0D_01_800455A0();
@@ -600,7 +604,7 @@ static void func_ovl0D_01_800455D0(Trio_0D01 *t, s32 count) {
 }
 
 static void func_ovl0D_01_800455B0(void) {
-    func_ovl0D_01_80046B58(2400.0f, 1600, 800.0f, 1600.0f);
+    func_ovl0D_01_80046B58(2400.0f, 1600.0f, 800.0f, 1600.0f);
     func_ovl0D_01_80046B68(1600.0f, 1600.0f, 3200.0f, 1600.0f);
 }
 
@@ -870,7 +874,7 @@ void func_ovl0D_01_80044D74(void) {
 #line 1 "panels.c"
 static void func_ovl0D_01_80044D6C(void) {
 }
-#line 874 "197800.c"
+#line 878 "197800.c"
 
 static void func_ovl0D_01_80044D64(void) {
 }
@@ -904,7 +908,7 @@ void func_ovl0D_01_800448D4(void) {
     /* a fake: the region's .file keeps the first call out of the prologue */
 #line 1 "panels.c"
     func_ovl0D_01_800448CC();
-#line 908 "197800.c"
+#line 912 "197800.c"
     func_ovl0D_01_800448C4();
     for (i = 0; i < 2; i++) {
         func_ovl0D_01_800448BC(&D_ovl0D_01_800476EC[i], D_ovl0D_01_8004775C[i]);
@@ -1372,9 +1376,10 @@ static void func_ovl0D_01_800434BC(Ent_0D01 *arg0) {
 
 /* a task: waits for something to hit the exit, then fades its model out */
 void func_ovl0D_01_80043134(void) {
-    Vec3f pos;
     s32 i;
     s32 n;
+    s32 pad; /* a fake: unused, its slot puts pos at sp+96 */
+    Vec3f pos;
 
     while (TRUE) {
         D_ovl0D_01_80047B0C->unk30 = 1;
@@ -1394,7 +1399,7 @@ void func_ovl0D_01_80043134(void) {
         D_ovl0D_01_80047B0C->unk30 = 1;
         D_ovl0D_01_80047B0C->unk34 = 75.0f;
         D_ovl0D_01_80047B0C->unk38 = 50.0f;
-        D_ovl0D_01_80047B0C->unk40->unk10 = 2300.0f;
+        D_ovl0D_01_80047B0C->unk40->unk10 = 2300; /* an int: its own .rodata 2300.0f */
         D_ovl0D_01_80047B0C->unk40->unk14 = 400.0f;
         D_ovl0D_01_80047B0C->unk40->unk18 = 2300.0f;
         D_ovl0D_01_80047B0C->unk14 = 0;
