@@ -6,7 +6,7 @@
  * of it 800431C4's local table). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 239, eu 239, jp 239
+ * differing words: us 133, eu 133, jp 133
  * jp counts the characters itself in 80044424 (24 pixels each, as
  * ovl_0B_03 does) and draws through ZeroJump 0x2501 (DRAW_TEXT).
  *
@@ -592,17 +592,7 @@ static void func_ovl0B_02_800472B0(void) {
 static void func_ovl0B_02_800472A8(void) {
 }
 
-static s32 func_ovl0B_02_800472A0(s32 *row) {
-    s32 n;
-    s32 j;
-
-    n = 0;
-    for (j = 0; j != 4; j++) {
-        if (row[j] != 0) {
-            n++;
-        }
-    }
-    return n;
+static void func_ovl0B_02_800472A0(void) {
 }
 
 static void func_ovl0B_02_800472C0(void) {
@@ -611,6 +601,7 @@ static void func_ovl0B_02_800472C0(void) {
     s32 n;
     s32 (*tbl)[4];
 
+    func_ovl0B_02_800472A0();
     func_ovl0B_02_800472A8();
     func_ovl0B_02_800472B0();
     func_ovl0B_02_800472B8();
@@ -651,12 +642,18 @@ static void func_ovl0B_02_800472C0(void) {
     }
     tbl = func_ovl0B_02_80049410(0x15);
     for (i = 0; i < 4; i++) {
-        if (func_ovl0B_02_800472A0(tbl[i]) == 4) {
+        n = 0;
+        for (j = 0; j != 4; j++) {
+            if (((s32 *) tbl)[i * 4 + j] != 0) {
+                n++;
+            }
+        }
+        if (n == 4) {
             func_ovl0B_02_80048DA0(D_ovl0B_02_8004A440, D_ovl0B_02_8004A134[i], 0x4F);
         }
     }
     for (i = 0; i < 16; i++) {
-        if (tbl[0][i] == 0) {
+        if (((s32 *) tbl)[i] == 0) {
             break;
         }
     }
