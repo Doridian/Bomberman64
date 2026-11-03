@@ -11,12 +11,16 @@
  * flags: -O3
  * differing words: us 914, eu 914, jp 914
  *
- * A first draft from m2c (with the ZeroJump prototypes the other drafts give
- * the same codes), made to compile: vectors as Vec3f, the pointer loops over
- * the link tables as index loops, the ZeroJump calls m2c left unprototyped
- * given their arguments, 800430CC static (its argument comes in its callers'
- * $s0). Most functions are m2c's logic as it came; 8004636C and 80045F14 are
- * rewritten as loops, 800431D4's 300-frame move keeps 300.0f in a variable.
+ * Drafted from m2c, then rewritten function by function: the angle
+ * normalisations are the original's ternaries (A180, and the 0-360 wrap
+ * `(v >= 360) ? v - 360 : (v < 0) ? v + 360 : v`), unrolled loops are index
+ * loops again, small globals m2c had expanded are calls (80045C60 in
+ * 80048418 and 80047CB4, 80048B6C in 80048BB0), object creation is
+ * chained (`obj = D_x = func_ovl13_01_8004B660(...)`), and the locals are
+ * declared in the order that gives the original's frame slots. 800431D4's
+ * thresholds are an `s32 thr[2]` the frame holds (the original spills
+ * them) with an int `frames`, which costs a `li`/`cvt.s.w` but is the
+ * closest found.
  * The 14 stubs (two `jr ra` in a row): 8004A200 is the camera reset
  * 8004A208, 8004A2D4 and 8004A4C4 share (inlined in each), 8004A4AC-BC
  * statics inlined in 8004A4C4; 8004A898-8004A8E0 are the ten unused
