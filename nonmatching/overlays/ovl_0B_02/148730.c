@@ -1004,9 +1004,9 @@ void func_ovl0B_02_80045C30(void) {
     D_ovl0B_02_8004A450[0]->unk3C = D_ovl0B_02_8004A450[0]->unk4C * 0.25f;
     func_ovl0B_02_80048E58(0);
     for (i = 0; i < 300; i++) {
-        y += 5.3333335f;
         obj->unk20 += 0.45f;
         obj->unk14 += 3.6666667f;
+        y += 5.3333335f;
         func_ovl0B_02_80048E68(0.0f, y, 0.0f);
         func_ovl0B_02_800491C0();
     }
@@ -1602,7 +1602,7 @@ void func_ovl0B_02_800431C4(void) {
     D_ovl0B_02_8004A3E8[0] = func_ovl0B_02_80043054(D_ovl0B_02_8004A3D8);
     tbl = func_ovl0B_02_80049410(0x15);
     for (n = 0; n != 4; n++) {
-        if (tbl[D_ovl0B_02_8004A3D4][n] == 0) {
+        if (((s32 *) tbl)[D_ovl0B_02_8004A3D4 * 4 + n] == 0) {
             break;
         }
     }
