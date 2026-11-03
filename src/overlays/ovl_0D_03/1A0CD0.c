@@ -1,11 +1,5 @@
 /*
- * NON_MATCHING: ovl_0D_03's stage object, complete: all 30 functions and the
- * stubs the inlined statics leave in their places, .data and .bss as the
- * original. It matches in us, eu and jp (tools/nonmatching.py); not yet moved
- * to src/ (its data not checked in a linked build).
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * ovl_0D_03's stage object, IDO -O3; it matches in us, eu and jp.
  *
  * ovl_0D_02's sibling (src/overlays/ovl_0D_02); the levers of 0D_02, 04, 05
  * and 06 ported. What fixed what (from 791 words in us and jp; eu was not
@@ -36,6 +30,8 @@
  *   0x407 are D_ovl0D_03_80047FDC[0] and [4] (the draft had [1]).
  * - 80045EE8: grid[7] (not [6]) puts the timer static's grid at sp+168 (as
  *   ovl_0D_02's 80045964).
+ * - D_ovl0D_03_80048160 is unused .bss: the dead stub 80046698 refers to it
+ *   (a fake) so it keeps its word and 80048164..8004816C their addresses.
  */
 #include "common.h"
 #line 42 "1A0CD0.c"
@@ -43,7 +39,7 @@
 /*
  * ovl_0D_03's stage object, IDO -O3: the functions are written last to first
  * (IDO -O3 emits a file's functions in reverse; docs/DECOMPILING.md).
- * ovl_0D_02 is its closest sibling (nonmatching/overlays), then 0D_04, 0D_05
+ * ovl_0D_02 is its closest sibling (src/overlays), then 0D_04, 0D_05
  * and 0D_06.
  */
 
@@ -291,6 +287,7 @@ static void func_ovl0D_03_80046698(void);
 Vec4f_0D03 D_ovl0D_03_80048140;
 Vec3f D_ovl0D_03_80048150;
 s32 D_ovl0D_03_8004815C;
+u8 D_ovl0D_03_80048160[0x4]; /* unused (func_ovl0D_03_80046698) */
 s32 D_ovl0D_03_80048164;
 s32 D_ovl0D_03_80048168;
 u8 D_ovl0D_03_8004816C[0x4]; /* unused (func_ovl0D_03_80046698) */
@@ -366,7 +363,7 @@ Cam_0D03 D_ovl0D_03_80048018 = { 0x708, 1, 1, 0.0f, 0.0f, 0.0f, { 0, 0, 0 }, 0.1
 /* unused: the stubs IDO -O3 leaves at the end of the object; one of them
  * refers to the .bss nothing else uses, which would otherwise be common */
 static void func_ovl0D_03_80046698(void) {
-    D_ovl0D_03_8004816C[0] = D_ovl0D_03_800481A4[0];
+    D_ovl0D_03_8004816C[0] = D_ovl0D_03_800481A4[0] + D_ovl0D_03_80048160[0];
 }
 
 static void func_ovl0D_03_80046690(void) {

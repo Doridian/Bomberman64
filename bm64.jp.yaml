@@ -855,11 +855,12 @@ segments:
     symbol_name_format: ovl0D_03_$VRAM
     dir: overlays/ovl_0D_03
     subsegments:
-      - [0x19FD10, asm, ovl_0D_03_entry]
-      - [0x19FD20, asm, 1A0CD0]
+      - [0x19FD10, c, ovl_0D_03_entry]
+      - [0x19FD20, c, 1A0CD0]
       - [0x1A33B0, hasm, ovl_0D_03_zerojmp]
-      - [0x1A49D0, rodata]
-      - {type: bss, vram: 0x80048120}
+      - [0x1A49D0, .data, 1A0CD0]
+      - [0x1A4D50, .rodata, 1A0CD0]
+      - {type: .bss, vram: 0x80048120, name: 1A0CD0}
   - name: ovl_0D_04
     type: code
     start: 0x1A4E30
