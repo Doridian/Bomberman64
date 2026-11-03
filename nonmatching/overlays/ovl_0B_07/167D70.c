@@ -5,7 +5,7 @@
  * as the original; jp's .data is 0x1A0). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 635, eu 635, jp 639
+ * differing words: us 517, eu 517, jp 519
  *
  * IDO -O3: the functions are written last to first. The tail (80045438,
  * 800453F0, 800453BC, 80045494 and the twelve empty stubs) is ovl_17_10's;
@@ -43,9 +43,9 @@
  *   (f32) F1C` (int 720/640: a constant of its own, so the loop's 720.0f
  *   is loaded where the original loads it); every `/ 2` is by an int (the
  *   original divides by 2.0f in $fs1; `/ 2.0f` becomes `* 0.5f`); off
- *   and the first loop's unk10 are set from an int 0 (the other 0.0f
- *   uses are floats), which gets uopt to hold 0.0f in a register as the
- *   original does; frame 0xA8 as the original; the 120- and
+ *   is set to 0.0f after the counting, ahead of step (set at the top,
+ *   0.0f's live range is too long for uopt to give it a register, and
+ *   step gets one in its place); frame 0xA8 as the original; the 120- and
  *   60-frame waits count in k (the trophy test's counter; the
  *   original's $s5 there, not i's $s7), which puts the counter address
  *   in $fp as in the original; the winner's team is i (the original's
@@ -60,10 +60,9 @@
  * - func_ovl0B_07_800435FC (jp 2): in the second text's creation the
  *   original loads 1.0f after the name's address (`mtc1 at,fv0` after
  *   `lw t7`), ours before.
- * - func_ovl0B_07_8004400C (615): three instructions longer: the
- *   original holds one 0.0f constant in $fs4 for all its uses (ours two:
- *   the int-0 split above; with one, uopt keeps step in a register
- *   instead), so the float registers differ.
+ * - func_ovl0B_07_8004400C (499): one instruction longer: the original
+ *   sets off (`mov.s fs3,fs4`) at the top; ours after the counting, and
+ *   off and 90.0f trade $fs3/$fs0 (f26/f20).
  * - func_ovl0B_07_80044D54: its last nops follow once the object's size
  *   matches (IDO pads the dead epilogue after its endless loop to 32
  *   bytes of the object).
@@ -391,7 +390,6 @@ void func_ovl0B_07_8004400C(void) {
 
     func_ovl0B_07_80046940(0x20);
     func_ovl0B_07_80046930(0x1F0);
-    off = 0;
     if (D_ovl0B_07_80046F18->unk0 == 0) {
         D_ovl0B_07_80046F1C = 0;
         j = 0;
@@ -421,6 +419,7 @@ void func_ovl0B_07_8004400C(void) {
             }
         }
     }
+    off = 0.0f;
     if (D_ovl0B_07_80046F18->unk0 == 0) {
         step = 720 / (f32) D_ovl0B_07_80046F1C;
     } else {
@@ -432,7 +431,7 @@ void func_ovl0B_07_8004400C(void) {
         }
         D_ovl0B_07_80046E80[i] = func_ovl0B_07_80045F38(0x49, 0);
         m = func_ovl0B_07_80045FC8(D_ovl0B_07_80046E80[i], 0xF);
-        D_ovl0B_07_80046E80[i]->unk10 = 0;
+        D_ovl0B_07_80046E80[i]->unk10 = 0.0f;
         D_ovl0B_07_80046E80[i]->unk14 = 90.0f - 720.0f / D_ovl0B_07_80046F1C / 2 - off;
         D_ovl0B_07_80046E80[i]->unk18 = 0.0f;
         off += step;
