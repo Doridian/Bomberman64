@@ -3,36 +3,46 @@
  * function and its .data/.bss; .text 0x40C0 as the original.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 237, eu 237, jp 237
+ * differing words: us 50, eu 50, jp 50
  *
  * What still differs in us (words; eu and jp the same):
  * - func_ovl0A_01_80043028 (6): `beq a0,s0` where the original has
  *   `beq s0,a0`, in all three inlined 80043010 (-1 in s0). The order is
  *   uopt's: `-1 != task`, a local -1, u32/void * task, 0xFFFFFFFF don't
  *   change it.
- * - func_ovl0A_01_800442B4 (144): frame 0x58, not 0x60: the original
- *   keeps i's home on the stack (sp+0x5C: `sw zero` early, loaded into s1
- *   for the first loop, stored and copied to s0 for the second, stored
- *   after it) and doesn't know i's start (both loops keep their entry
- *   test and end on slti); ours keeps i in s1 throughout, 5 words short.
- *   Taking &i (dead code, an inlined static's pointer) makes i memory
- *   everywhere; i = 0 at any place, a second counter for the second loop,
- *   the loops as inlined statics taking i don't give the split.
- * - func_ovl0A_01_80044F3C (41): follows from 800442B4's size (the code
- *   after its closing `while (1)` is padded to the same object offset).
- * - func_ovl0A_01_8004609C (46): frame 8 bytes too big (8004607C's count
- *   parameter: with a literal 1 the frame and every slot are the
- *   original's, but the loop ends on `bne` where the original has
- *   `slt v1,s1` with 1 in s1), and 80046084's a/b/lz in f20/f22/f24
- *   permuted.
+ * - func_ovl0A_01_800442B4 (6): the start of 8004428C's inlined code:
+ *   the original builds &D_ovl0A_01_80048A70 (lui, addiu) before loading
+ *   i from v, ours puts the addiu after it and `lw a0`/`lui at` in the
+ *   prologue swap (1 pair).
+ * - func_ovl0A_01_80044F3C (6): `v = 0`'s `mtc1 zero` and pos[1]'s store
+ *   scheduled before the 900.0f constant; no order of the first six
+ *   statements changes it.
+ * - func_ovl0A_01_8004609C (32): frame 8 bytes too big, so every slot
+ *   above 0x64 is 8 higher, and 8004607C's `move v1,zero` placed one
+ *   later. 8004607C's count parameter costs the 8: with a literal 1 the
+ *   frame and every slot are the original's, but the loop ends on `bne`
+ *   where the original has `slt v1,s1` (1 in s1). Other loop shapes, n's
+ *   type, a third parameter, dummy locals and block-scoped locals in
+ *   80046084 don't give both.
+ *
+ * 800442B4's counter: the original keeps the frame count in a stack word
+ * (v, address-taken in dead code so calls may change it): stored 0, loaded
+ * into the first loop's counter after the setup calls, stored before and
+ * after the second loop, whose counter is a copy (j). The `do {} while
+ * (0);` and the explicit `if` keep the loops' slti ends and put the store
+ * after the second loop's test.
  *
  * Levers that fixed the rest: `#line` renumbering (80043380's `e = tbl`
  * after the call's line; 80044A24 and 80046094 numbered below their
- * callers, so their argument setup and stores schedule first), `k =
- * D_ovl0A_01_80048D1C = ...` in 8004364C's switch, `base[0]` and
- * `tgt[0]` computed separately in 80043AA4 (ugen then picks $f0), and a
- * dead `if (fall) {}` at the top of 80044798 (its IPA registers: fall in
- * s1, the table in s2).
+ * callers, so their argument setup and stores schedule first; 8004428C's
+ * store and 800442B4's final `v = j` numbered after the call they precede,
+ * so they land in its delay slot), `k = D_ovl0A_01_80048D1C = ...` in
+ * 8004364C's switch, `base[0]` and `tgt[0]` computed separately in
+ * 80043AA4 (ugen then picks $f0), a dead `if (fall) {}` at the top of
+ * 80044798 (its IPA registers: fall in s1, the table in s2), and in
+ * 80046084 the variables shared between loops as the original's register
+ * allocation needs (c is the first loop's alpha, the fade's colour and
+ * the last loop's speed; z the first loop's level and the light's z).
  */
 #include "common.h"
 #line 31 "126950.c"
@@ -711,13 +721,12 @@ static void func_ovl0A_01_80046084(void) {
     s32 i;
     f32 a;
     f32 b;
-    f32 cz;
-    f32 fadeStep;
-    f32 lz;
-
-    a = 0.0f;
+    f32 c;
+    f32 step;
+    f32 z;
+    c = 0.0f;
     D_ovl0A_01_80048A38[3] = 0;
-    b = 0.0f;
+    z = 0.0f;
     func_ovl0A_01_8004607C(1, LIGHTS);
     LIGHTS[0].unk0->unk10 = 2300.0f;
     LIGHTS[0].unk0->unk14 = 60.0f;
@@ -739,19 +748,19 @@ static void func_ovl0A_01_80046084(void) {
         D_ovl0A_01_80048890[1].obj->unk40->unk28 += 0.008333334f;
         D_ovl0A_01_80048890[1].obj->unk40->unk2C += 0.008333334f;
         LIGHTS[0].unk0->unk2C += 0.016666668f;
-        b += 1.25f;
-        a += 2.125f;
-        D_ovl0A_01_80048890[1].obj->unk40->unk36 = b;
-        D_ovl0A_01_80048A38[3] = (u32) a;
+        c += 1.25f;
+        z += 2.125f;
+        D_ovl0A_01_80048890[1].obj->unk40->unk36 = c;
+        D_ovl0A_01_80048A38[3] = (u32) z;
         func_ovl0A_01_80047FD0();
     }
     func_ovl0A_01_80047FA8(60);
-    a = 255.0f;
-    lz = 1805.0f;
+    c = 255.0f;
+    z = 1805.0f;
     b = D_ovl0A_01_80048890[1].obj->unk40->unk36;
-    cz = 255.0f;
+    a = 255.0f;
     {
-        fadeStep = (a - b) / 90.0f;
+        step = (a - b) / 90.0f;
         func_ovl0A_01_80047B30(D_ovl0A_01_80048770[4].obj->unk40, 0x61);
         func_ovl0A_01_80047E38(D_ovl0A_01_80048770[6].obj, 0x80000);
         D_ovl0A_01_80048770[6].obj->unk40->unkC |= 0x1080;
@@ -763,16 +772,16 @@ static void func_ovl0A_01_80046084(void) {
             if (i >= 31) {
                 a -= 2.8333333f;
                 D_ovl0A_01_80048A38[3] = (u32) a;
-                b += fadeStep;
-                cz -= 2.8333333f;
+                b += step;
+                c -= 2.8333333f;
                 D_ovl0A_01_80048890[1].obj->unk40->unk36 = b;
                 D_ovl0A_01_80048770[5].obj->unk40->unk36 = D_ovl0A_01_80048770[7].obj->unk40->unk36 =
-                    D_ovl0A_01_80048770[6].obj->unk40->unk36 = (s32) cz;
+                    D_ovl0A_01_80048770[6].obj->unk40->unk36 = (s32) c;
                 D_ovl0A_01_80048770[0].obj->unk40->unk18 += 2.0f;
                 D_ovl0A_01_80048770[3].obj->unk40->unk18 += 2.0f;
             }
-            lz += -3.7916667f;
-            func_ovl0A_01_80047C98(32768.0f, 32768.0f, lz);
+            z += -3.7916667f;
+            func_ovl0A_01_80047C98(32768.0f, 32768.0f, z);
             func_ovl0A_01_80047FD0();
         }
     }
@@ -780,13 +789,13 @@ static void func_ovl0A_01_80046084(void) {
     D_ovl0A_01_80048890[1].obj->unk40->unkC |= 0x80;
     D_ovl0A_01_80048890[1].obj->unk40->unk36 = 0xFF;
     func_ovl0A_01_80047FA8(120);
-    a = 0.0f;
+    c = 0.0f;
     func_ovl0A_01_80048510(0x2CD);
     for (i = 0; i < 120; i++) {
         func_ovl0A_01_80048288(0xFF, 0xFF, 0xFF, ((f32) i / 120.0f) * 100.0f);
-        a += 0.15f;
-        lz -= a;
-        func_ovl0A_01_80047C98(32768.0f, 32768.0f, lz);
+        c += 0.15f;
+        z -= c;
+        func_ovl0A_01_80047C98(32768.0f, 32768.0f, z);
         func_ovl0A_01_80047FD0();
     }
 }
@@ -1305,13 +1314,16 @@ static void func_ovl0A_01_8004457C(void) {
 }
 
 void func_ovl0A_01_800442B4(void) {
+    s32 v;
     s32 i;
+    s32 j;
 
     func_ovl0A_01_800442AC();
-    i = 0;
+    v = 0;
     func_ovl0A_01_800442A4();
     func_ovl0A_01_8004429C();
     func_ovl0A_01_80044294();
+    i = v;
     func_ovl0A_01_8004428C();
     for (; i < 670; i++) {
         func_ovl0A_01_800441F8();
@@ -1344,18 +1356,29 @@ void func_ovl0A_01_800442B4(void) {
         }
         func_ovl0A_01_80047FD0();
     }
-    for (; i < 1370; i++) {
-        func_ovl0A_01_800441F8();
-        func_ovl0A_01_800440F4();
-        func_ovl0A_01_80043FF8(i);
-        func_ovl0A_01_80047FD0();
+    j = i;
+    do {} while (0);
+    if (j < 1370) {
+        v = i;
+        do {
+            func_ovl0A_01_800441F8();
+            func_ovl0A_01_800440F4();
+            func_ovl0A_01_80043FF8(j);
+            func_ovl0A_01_80047FD0();
+        } while (++j < 1370);
     }
+#line 1348
+    v = j;
+#line 1347
     func_ovl0A_01_80047530(0x1A, 0x12, 4);
     func_ovl0A_01_80047F98();
+    if (0) { s32 *p = &v; }
 }
 
 static void func_ovl0A_01_8004428C(void) {
+#line 1355
     D_ovl0A_01_80048A70 = 0;
+#line 1354
     D_ovl0A_01_80048A64 = func_ovl0A_01_80047F88(func_ovl0A_01_80045EA0, NULL, 0, 0, 0x130);
 }
 
