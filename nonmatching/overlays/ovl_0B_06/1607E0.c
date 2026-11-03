@@ -6,7 +6,7 @@
  * floats). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 3410, eu 3410, jp 3913
+ * differing words: us 3398, eu 3398, jp 3983
  * jp has no `#if VERSION_JP` yet: its strings, text positions and code
  * changes are not drafted (docs/DECOMPILING.md, "Versions", step 6).
  *
@@ -222,13 +222,12 @@ s32 func_ovl0B_06_80049390(void); /* 0x2F0E */
 /* The labels of a list fade in or out together. */
 #define FADE_LABELS(mode, labels, n) { s32 i_; for (i_ = 0; i_ < (n); i_++) { func_ovl0B_06_80044B08(mode, &(labels)[i_]); } }
 #define FADE_SLOTS(mode) { s32 *p_; Label_ovl0B_06 *l_; s32 *e_; p_ = D_ovl0B_06_8004A5D0; e_ = p_ + 3; for (l_ = D_ovl0B_06_800499F0; p_ < e_; p_++, l_++) { if (*p_ != 0) { func_ovl0B_06_80044B08(mode, l_); } } }
-#define STUBS() { func_ovl0B_06_80043010(); func_ovl0B_06_80043018(); func_ovl0B_06_80043020(); func_ovl0B_06_80043028(); func_ovl0B_06_80043030(); func_ovl0B_06_80043038(); func_ovl0B_06_800450F8(); func_ovl0B_06_80045184(); func_ovl0B_06_800459D0(); func_ovl0B_06_80046164(); func_ovl0B_06_80047028(); func_ovl0B_06_80047D00(); func_ovl0B_06_80047B38(); func_ovl0B_06_80047B40(); func_ovl0B_06_80047B48(); func_ovl0B_06_80047B50(); func_ovl0B_06_80047B58(); func_ovl0B_06_80047B60(); func_ovl0B_06_80047B68(); func_ovl0B_06_80047B70(); func_ovl0B_06_80047B78(); func_ovl0B_06_80047B80(); func_ovl0B_06_80047B88(); func_ovl0B_06_80047B90(); }
-static void func_ovl0B_06_80043010(void);
-static void func_ovl0B_06_80043018(void);
-static void func_ovl0B_06_80043020(void);
-static void func_ovl0B_06_80043028(void);
-static void func_ovl0B_06_80043030(void);
+#define STUBS() { func_ovl0B_06_80043038(); func_ovl0B_06_80043030(); func_ovl0B_06_80043028(); func_ovl0B_06_80043020(); func_ovl0B_06_80043018(); func_ovl0B_06_800450F8(); func_ovl0B_06_80045184(); func_ovl0B_06_800459D0(); func_ovl0B_06_80046164(); func_ovl0B_06_80047028(); func_ovl0B_06_80047D00(); func_ovl0B_06_80047B38(); func_ovl0B_06_80047B40(); func_ovl0B_06_80047B48(); func_ovl0B_06_80047B50(); func_ovl0B_06_80047B58(); func_ovl0B_06_80047B60(); func_ovl0B_06_80047B68(); func_ovl0B_06_80047B70(); func_ovl0B_06_80047B78(); func_ovl0B_06_80047B80(); func_ovl0B_06_80047B88(); func_ovl0B_06_80047B90(); }
 static void func_ovl0B_06_80043038(void);
+static void func_ovl0B_06_80043030(void);
+static void func_ovl0B_06_80043028(void);
+static void func_ovl0B_06_80043020(void);
+static void func_ovl0B_06_80043018(void);
 static void func_ovl0B_06_80043040(Rect_ovl0B_06 *rect, Spr_ovl0B_06 *spr, f32 dy);
 static void func_ovl0B_06_800430F0(s32 arg0);
 static void func_ovl0B_06_80043218(void);
@@ -247,6 +246,7 @@ static void func_ovl0B_06_80043470(void);
 static void func_ovl0B_06_80043478(void);
 static void func_ovl0B_06_80043480(s32 arg0);
 static void func_ovl0B_06_80043450(Label_ovl0B_06 *p, s32 n);
+static void func_ovl0B_06_80043010(Label_ovl0B_06 *p, s32 n);
 static void func_ovl0B_06_8004382C();
 static void func_ovl0B_06_80043834(void);
 static void func_ovl0B_06_800438FC(void);
@@ -774,9 +774,7 @@ void func_ovl0B_06_8004747C(void) {
             func_ovl0B_06_80048840(D_ovl0B_06_80049E44[5].unk0);
             func_ovl0B_06_80048840(D_ovl0B_06_80049E44[6].unk0);
             func_ovl0B_06_80048840(D_ovl0B_06_80049E44[7].unk0);
-            for (slot = 0; slot < 2; slot++) {
-                func_ovl0B_06_80049098(D_ovl0B_06_80049AEC[slot].unk4);
-            }
+            func_ovl0B_06_80043010(D_ovl0B_06_80049AEC, 2);
             func_ovl0B_06_80048250(0x1A, 0x10, 4);
             D_ovl0B_06_8004992C = 0x400;
             break;
@@ -798,14 +796,11 @@ void func_ovl0B_06_8004747C(void) {
 
 /* @80047030 */
 static s32 func_ovl0B_06_80047030(void) {
-    Label_ovl0B_06 *label;
     s32 loop;
     s32 sel;
-    s32 slot;
     s32 side;
     s32 done;
     s32 keep;
-    s32 n;
     s32 held;
     s32 pressed;
     s32 i;
@@ -822,8 +817,7 @@ static s32 func_ovl0B_06_80047030(void) {
         if ((sel & 0xF0) == 0x30) {
             loop = 0;
         } else {
-            slot = sel & 0xF;
-            if (func_ovl0B_06_80049368(slot, 0) == 10) {
+            if (func_ovl0B_06_80049368(sel & 0xF, 0) == 10) {
                 D_ovl0B_06_8004992C = 0x1064;
                 SE(0x18, 50);
             } else {
@@ -831,10 +825,9 @@ static s32 func_ovl0B_06_80047030(void) {
                 side = 1;
                 done = 0;
                 D_ovl0B_06_8004992C = 0;
-                n = 3;
                 loop = 0;
                 func_ovl0B_06_80043450(D_ovl0B_06_80049B40, 3);
-                func_ovl0B_06_80044BA0(slot, &D_ovl0B_06_8004A264);
+                func_ovl0B_06_80044BA0(sel & 0xF, &D_ovl0B_06_8004A264);
                 func_ovl0B_06_80046F14(2, 0);
                 do {
                     held = func_ovl0B_06_80049060();
@@ -852,14 +845,14 @@ static s32 func_ovl0B_06_80047030(void) {
                     } else if ((pressed & 0x8000) || (pressed & 0x1000)) {
                         done = 1;
                         if (side == 0) {
-                            for (label = D_ovl0B_06_80049B40; label != D_ovl0B_06_80049B94; label++) {
-                                label->unk18->unkC |= 1;
+                            for (i = 0; i < 3; i++) {
+                                D_ovl0B_06_80049B40[i].unk18->unkC |= 1;
                             }
                             keep = 0;
                             D_ovl0B_06_8004992C = 0x43C8;
                             func_ovl0B_06_80048CF0();
                             SE(1, 15);
-                            func_ovl0B_06_80049378(slot);
+                            func_ovl0B_06_80049378(sel & 0xF);
                             func_ovl0B_06_80049380(10);
                             if (func_ovl0B_06_80049390() != 0) {
                                 D_ovl0B_06_8004992C = 0;
@@ -871,9 +864,7 @@ static s32 func_ovl0B_06_80047030(void) {
                                 func_ovl0B_06_80046634(1);
                             }
                             func_ovl0B_06_80043280();
-                            for (i = 0; i < 6; i++) {
-                                func_ovl0B_06_80049098(D_ovl0B_06_80049A44[i].unk4);
-                            }
+                            func_ovl0B_06_80043010(D_ovl0B_06_80049A44, 6);
                             func_ovl0B_06_800430F0(1);
                             func_ovl0B_06_80043480(1);
                             done = 1;
@@ -885,20 +876,17 @@ static s32 func_ovl0B_06_80047030(void) {
                     }
                     func_ovl0B_06_80048CF0();
                 } while (done == 0);
-                func_ovl0B_06_80044BA0(slot, &D_ovl0B_06_8004A244);
-                for (i = 0; i < n; i++) {
-                    func_ovl0B_06_80049098(D_ovl0B_06_80049B40[i].unk4);
-                }
+                func_ovl0B_06_80044BA0(sel & 0xF, &D_ovl0B_06_8004A244);
+                func_ovl0B_06_80043010(D_ovl0B_06_80049B40, 3);
             }
         }
         func_ovl0B_06_80048CF0();
     } while (loop != 0);
-    slot = sel & 0xF;
     func_ovl0B_06_80045C24(&D_ovl0B_06_80049A44[0], &D_ovl0B_06_80049A44[5], 0, 0, D_ovl0B_06_80049A44[0].unk14, D_ovl0B_06_80049480, D_ovl0B_06_80049A44[5].unk14);
     func_ovl0B_06_800433B0(&D_ovl0B_06_80049A44[5]);
     D_ovl0B_06_8004992C = 0x400;
     func_ovl0B_06_800464C0(1);
-    return slot;
+    return sel & 0xF;
 }
 
 
@@ -1065,9 +1053,7 @@ static s32 func_ovl0B_06_80046868(s32 slot) {
         func_ovl0B_06_800433B0(&D_ovl0B_06_80049A44[5]);
         func_ovl0B_06_800464C0(1);
         label[1].unk18->unkC &= ~1;
-        for (i = 0; i < 2; i++) {
-            func_ovl0B_06_80049098(D_ovl0B_06_80049AEC[i].unk4);
-        }
+        func_ovl0B_06_80043010(D_ovl0B_06_80049AEC, 2);
     }
     return ret;
 }
@@ -2117,24 +2103,18 @@ void func_ovl0B_06_80043C48(s32 arg0) {
                 func_ovl0B_06_80048840(box->unk0);
                 func_ovl0B_06_80048CF0();
             }
-            for (i = 0; i < 3; i++) {
-                func_ovl0B_06_80049098(D_ovl0B_06_8004999C[i].unk4);
-            }
+            func_ovl0B_06_80043010(D_ovl0B_06_8004999C, 3);
             func_ovl0B_06_80043280();
             func_ovl0B_06_80043220();
             func_ovl0B_06_80048840(D_ovl0B_06_8004A660);
             func_ovl0B_06_80048840(D_ovl0B_06_8004A664);
             switch (D_ovl0B_06_8004A668[0]) {
                 case 16:
-                    for (i = 0; i < 6; i++) {
-                        func_ovl0B_06_80049098(D_ovl0B_06_80049A44[i].unk4);
-                    }
+                    func_ovl0B_06_80043010(D_ovl0B_06_80049A44, 6);
                     func_ovl0B_06_800430F0(1);
                     break;
                 case 17:
-                    for (i = 0; i < 10; i++) {
-                        func_ovl0B_06_80049098(D_ovl0B_06_80049B94[i].unk4);
-                    }
+                    func_ovl0B_06_80043010(D_ovl0B_06_80049B94, 10);
                     for (i = 0, box = &D_ovl0B_06_80049CAC[5]; i < 1; i++, box++) {
                         for (box->unk34 = box->unk24; box->unk34 > 0.0f; box->unk34 -= box->unk28) {
                             func_ovl0B_06_80048CF0();
@@ -2187,6 +2167,13 @@ static void func_ovl0B_06_80043834(void) {
 
 /* @80043480 */
 static void func_ovl0B_06_8004382C() {
+}
+
+static void func_ovl0B_06_80043010(Label_ovl0B_06 *p, s32 n) {
+    s32 i;
+    for (i = 0; i < n; i++, p++) {
+        func_ovl0B_06_80049098(p->unk4);
+    }
 }
 
 static void func_ovl0B_06_80043450(Label_ovl0B_06 *p, s32 n) {
@@ -2385,12 +2372,11 @@ static void func_ovl0B_06_800430F0(s32 arg0) {
 
 /* @80043040 */
 static void func_ovl0B_06_80043040(Rect_ovl0B_06 *rect, Spr_ovl0B_06 *spr, f32 dy) {
-    func_ovl0B_06_80043010();
-    func_ovl0B_06_80043018();
-    func_ovl0B_06_80043020();
-    func_ovl0B_06_80043028();
-    func_ovl0B_06_80043030();
     func_ovl0B_06_80043038();
+    func_ovl0B_06_80043030();
+    func_ovl0B_06_80043028();
+    func_ovl0B_06_80043020();
+    func_ovl0B_06_80043018();
     rect->unk0 = func_ovl0B_06_80048838(spr->unk8, spr->unk10);
     *(s32 *) rect->unk0->unk38 = spr->unkC;
     rect->unk0->unk28 = spr->unk0;
@@ -2404,21 +2390,19 @@ static void func_ovl0B_06_80043040(Rect_ovl0B_06 *rect, Spr_ovl0B_06 *spr, f32 d
 
 
 /* @80043010 */
-static void func_ovl0B_06_80043010(void) {
-}
-
-static void func_ovl0B_06_80043018(void) {
-}
-
-static void func_ovl0B_06_80043020(void) {
-}
-
-static void func_ovl0B_06_80043028(void) {
+static void func_ovl0B_06_80043038(void) {
 }
 
 static void func_ovl0B_06_80043030(void) {
 }
 
-static void func_ovl0B_06_80043038(void) {
+static void func_ovl0B_06_80043028(void) {
 }
+
+static void func_ovl0B_06_80043020(void) {
+}
+
+static void func_ovl0B_06_80043018(void) {
+}
+
 
