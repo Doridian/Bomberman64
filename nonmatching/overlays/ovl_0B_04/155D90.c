@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1582, eu 1582, jp 3267
+ * differing words: us 1340, eu 1340, jp 3056
  *
  * Order (scratch/ord/search.py, hill-climb over definition order, scored by
  * the emitted sequence's edit distance from the original's address order):
@@ -211,7 +211,7 @@ s32 func_ovl0B_04_800487D0(s32); /* 0x2B00 */
 void func_ovl0B_04_800487E0(s32); /* 0x2B02 */
 void func_ovl0B_04_800487E8(void); /* 0x2B03 */
 void func_ovl0B_04_800487F0(s32, f32, f32, f32); /* 0x2B04 */
-s32 func_ovl0B_04_80048910(u8 *); /* 0x2F0A */
+s32 func_ovl0B_04_80048910(void); /* 0x2F0A */
 
 /* The pages' handlers and set-ups (the page table refers to them). */
 u8 func_ovl0B_04_80044BE8(u8 arg0, u16 arg1);
@@ -715,7 +715,6 @@ s32 D_ovl0B_04_8004A1A0 = 0;
 s32 D_ovl0B_04_8004A1A4 = 0;
 s32 D_ovl0B_04_8004A1A8 = 0;
 s32 D_ovl0B_04_8004A1AC[14] = { 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 1, 1 };
-s32 D_ovl0B_04_8004A1E4 = 0;
 
 static void func_ovl0B_04_80043050(Entry *e, Desc *d);
 static void func_ovl0B_04_FreeEntries(Entry *e, s32 n);
@@ -1356,11 +1355,12 @@ static void func_ovl0B_04_80045540(u8 item, u16 buttons, u8 *ret) {
 /* Page 9: save the changes or not. */
 u8 func_ovl0B_04_80045214(u8 arg0, u16 arg1) {
     u8 ret = 1;
+    s32 i;
+    s32 pad;
     s32 ok;
     u8 *save;
     s32 id;
     s32 id2;
-    s32 i;
 
     if ((arg1 & 0x80) || (arg1 & 0x100)) {
         func_ovl0B_04_800438FC(0, D_ovl0B_04_8004A3B0[D_ovl0B_04_8004A174], &D_ovl0B_04_80049930[D_ovl0B_04_8004A174]);
@@ -1379,7 +1379,7 @@ u8 func_ovl0B_04_80045214(u8 arg0, u16 arg1) {
                 save[i] = D_ovl0B_04_80048A20[i];
             }
             save[8] = 0;
-            if (func_ovl0B_04_80048910(save) != 0) {
+            if (func_ovl0B_04_80048910() != 0) {
                 func_ovl0B_04_800487D0(0x18);
                 func_ovl0B_04_8004447C(id, 0);
                 id2 = func_ovl0B_04_80048688(D_ovl0B_04_80048A60, 80, 175, 0.8f, 0.8f, 0);
@@ -2052,15 +2052,14 @@ static void func_ovl0B_04_800438FC(u32 mode, s32 id, Item *it) {
 /* The bomber's task: turned with the C buttons, its animation picked from
  * D_ovl0B_04_8004A1AC each time one ends. */
 void func_ovl0B_04_800436C8(void) {
-    Obj *o;
+    static s32 D_ovl0B_04_8004A1E4 = 0;
     u16 buttons;
     s32 a;
     s32 b;
 
     while (TRUE) {
-        o = D_ovl0B_04_8004A164;
         buttons = func_ovl0B_04_80048320(0);
-        if (o->unkC & 0x40) {
+        if (D_ovl0B_04_8004A164->unkC & 0x40) {
             a = -1;
             b = -1;
             if (++D_ovl0B_04_8004A1E4 >= 14) {
@@ -2083,7 +2082,7 @@ void func_ovl0B_04_800436C8(void) {
                     b = 6;
                     break;
             }
-            func_ovl0B_04_80047E20(o, a, 0);
+            func_ovl0B_04_80047E20(D_ovl0B_04_8004A164, a, 0);
             func_ovl0B_04_80047E20(D_ovl0B_04_8004A164, b, 1);
             D_ovl0B_04_8004A164->unkC |= 0x20;
             D_ovl0B_04_8004A164->unkC &= ~0x40;
