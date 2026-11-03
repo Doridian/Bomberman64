@@ -1,45 +1,36 @@
 /*
  * NON_MATCHING: ovl_0C_02's game object, complete: every function and its
- * data (.data 0x640 and .bss 0x60 laid out as the original; .rodata is
- * 0xF0 where the original's is 0xD0).
+ * data (.data 0x640, .rodata 0xD0 and .bss 0x60 laid out as the
+ * original).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2, eu 2, jp 2
+ * differing words: us 0, eu 0, jp 0
  *
- * A first complete draft: the functions shared with bank 0x0C's and
- * 0x12/0x17's drafts are theirs (scratch/0C_02/sib.py), the rest m2c's
- * output with its types fixed, then reworked into plain C.  74 of
- * the 96 functions match.  ovl_0C_01 and ovl_0C_06 have most of the same
- * functions (80043338, 80043544-80043840, 80044914, 80044A68, 80045538,
- * 800475BC-80047E90 at ratio 1.00); 80043650, 80043840 and 80047E90 are
- * ovl_0C_06's 80043354, 80043544 and 80046CF0 ported (ovl_0C_06 has C for
- * them and they match there), and 80043544, 80044914 and 80044A68 still
- * wait on their ovl_0C_06 twins (80043248, 80044340, 80044494), which
- * don't match there yet.
- *
- * What still differs in us (words):
- * - func_ovl0C_02_800460B0 (87, the object set-up): the original keeps
- *   &D_ovl0C_02_80049EEC in s1 for the first call and the 0x41A block
- *   but addresses it absolutely in between (and -1 in s0); with `rec`
- *   all through (ovl_0C_06's form), IDO bases every access on it.  No
- *   mix of `rec` and the global found reproduces that.
- * - 80044914 (84), 80045538 (76), 80043544 (66), 80044A68 (55),
- *   800430D0 (50), 800431D4 and 80045A7C (17 each), 80045448 (15),
- *   8004460C (14), 800467D8 (13), 800454B4 (11), 8004797C (8):
- *   m2c's register use and loop shapes, not yet worked on.
- * - 80043E0C (5): pos[] sits 12 bytes too high (48 in the original)
- *   whatever the order of the locals, and `base + x * 1000.0f` puts
- *   its operands the other way round.
- * - 80046B68 (4): 20.0f in $f26 rather than $f24.  The extra saved
- *   float registers come from a dead `if (flag)` in each loop.
- * - 80043B64 (4), 80043A98, 80043C54, 80043FD8, 80045668 and
- *   80045780 (2 each); 80046DD0 (2): the 80047410 address is spilled
- *   at 124(sp), the original's 120.
- * - The record loops (UnkStruct_ovl0C_02_80049B84 lists, ending at unk2
- *   == 0) keep m2c's do-while; 80043544, 80044914 and 80044A68 keep two
- *   values in saved registers that the C doesn't explain yet (an
- *   `if (arg1 == 0) {}` m2c left where the original chooses between two
- *   equal flags).
+ * The first draft took the shared functions from bank 0x0C's and
+ * 0x12/0x17's drafts (scratch/0C_02/sib.py) and m2c's output for the
+ * rest.  What made it match in us, eu and jp (ovl_0C_01 is its twin):
+ * - The blocks and switches (80043544, 80044914, 80044A68) are ovl_0C_06's
+ *   matched 80043248, 80044340 and 80044494 (the s32/u32 union flag);
+ *   800430D0 is ovl_0C_06's 800430A8 (`dz * 50`); 80045A74 is ovl_12_03's
+ *   8004316C in "panels.c" (`D[1] = 0;`, an int, for 80046DD0's mtc1).
+ * - 800460B0 (the set-up): `rec->` for the first call, the -1 checks and
+ *   the stores, the global by name in the 0x41A block, and "panels.c"
+ *   regions (`#line`) around `rec = &...` and from the 0x41A block to the
+ *   end: their `.file`s end as1's blocks where the original's do (lui s1
+ *   before the mtc1; no `li a0` in the stores).
+ * - Stubs: empty statics 80043B14, 80043C4C, 8004408C and 80045530, each
+ *   inlined first in the function after it (as in ovl_0C_06); 80043B64
+ *   has the three set-up statements on one line.
+ * - 80043E0C: pos is a Vec3f declared after the scalars, and
+ *   `t = ... * 1000.0f; base + t` for the add.s operand order.
+ * - 80046DD0: inlines 80045A7C; its shake counter shares `alpha`, `fell`
+ *   is s16 and `pad[5]` sits on top (the frame).  80046B68: the dead
+ *   `if (flag)` code is split around `angle += 20.0f` (20.0f in $f24).
+ * - Plain `for` loops in 80045538, 80045668, 80045780 and 80043C54;
+ *   returns in each arm in 800431D4 and 80045448; 8004460C reads the
+ *   state for each test; 800467D8 goes through `(*p)->unk40` each time;
+ *   800454B4 declares obj before pos.
+ * - func_ovl0C_02_80049260 returns s32 (8004797C's v1, as in ovl_0C_07).
  */
 #include "common.h"
 #line 46 "1734E0.c"
@@ -1302,7 +1293,9 @@ void func_ovl0C_02_800460B0(void) {
     func_ovl0C_02_80045780();
     func_ovl0C_02_80045668();
     func_ovl0C_02_80045538();
+#line 1 "panels.c"
     rec = &D_ovl0C_02_80049EEC;
+#line 1308 "1734E0.c"
     rec->unk0 = func_ovl0C_02_80049110(rec->unk8, 0xD0, 0.0f, 0.0f, 0.0f);
     func_ovl0C_02_800490C8(rec->unk0, 0x01080000);
     func_ovl0C_02_800490D0(rec->unk0, 0x02000000);
@@ -1329,7 +1322,7 @@ void func_ovl0C_02_800460B0(void) {
     }
     func_ovl0C_02_800454B4();
 }
-#line 1339 "1734E0.c"
+#line 1335 "1734E0.c"
 
 void func_ovl0C_02_80046078(void) {
     func_ovl0C_02_80046038();
@@ -1440,7 +1433,7 @@ static void func_ovl0C_02_80045A74(f32 x, s32 z, s32 count) {
     D_ovl0C_02_8004A100[2] = z * 100.0f;
     D_ovl0C_02_8004A0F0 = func_ovl0C_02_80049670(0x28, D_ovl0C_02_8004A100, 0);
 }
-#line 1448 "1734E0.c"
+#line 1446 "1734E0.c"
 
 void func_ovl0C_02_80045898(void) {
     UnkStructA *obj;

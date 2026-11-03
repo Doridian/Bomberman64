@@ -4,42 +4,37 @@
  * words are the original's, though IDO puts the scripts' strings in .rodata).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2, eu 2, jp 2
+ * differing words: us 0, eu 0, jp 0
  *
- * A first complete draft: the functions with a ratio-1.00 sibling are that
- * sibling's C translated (scratch/0C_01/sib.py: ovl_0C_06 first, then
- * ovl_0C_07, 0C_09, 0C_04, 0C_02), the rest m2c's output with its types
- * fixed, and the tasks 80047338, 80047454 and 80047A60 and the stage's
- * place helpers 800450B0, 80045920 and 800459FC by hand.  Then
- * 80043E74, 80047CA8, 80047E9C and 800452F4 became ovl_0C_02's 80043338,
- * 800475BC, 800477B0 and 80043E0C translated; 80043E74's loop is `i < 8`
- * where its twin has `i < 4`.  The object movers (800439C0, 800441D4,
- * 800444DC, 80044D3C, 8004333C, 800436A0) and the eased moves (80043248,
- * 800435C4, 80044080, 800443A4) were rewritten as plain C, and
- * func_ovl0C_01_80049BA0 takes an argument (0x15).  84 of the 103 match.
- *
- * What still differs in us (words):
- * - 800468EC (90, the object set-up): ovl_0C_02's 800460B0 problem (the
- *   original keeps &D_ovl0C_01_8004A54C in s1 for the first call and the
- *   0x41A block, absolute in between).
- * - 80047074 (69, the handler) and 80047054 (10): IDO inlines 8004701C
- *   (three calls) into both; the original calls it.  The handler also
- *   lacks `case 0x53: break;` and reloads D_ovl0C_01_8004A9C8.unk0 in
- *   case 1, but either change alone makes the count worse while the
- *   inlining stays.
- * - 800452F4 (5): its twin's open problem (pos[] too high, operand order).
- * - 80047A60 (36): p and alpha swap s0/s1, dist and step f20/f22.  The
- *   0x01000000 is kept from being hoisted into s3 by writing it
- *   `p->unk28 ? 0x01000000 : 0x01000000`.
- * - 80044D3C (2): the frame is 8 bytes too big (locals end, pos, pad,
- *   obj, p, snd put everything else in place).
- * - From ovl_0C_02's draft: 800464F8 (76), whose twin 80045538 doesn't
- *   match there yet.
- * - From ovl_0C_06's, its known unsolved `arg ? 0x01000000 : 0x01000000`:
- *   80045E68 (84), 80045FBC (57), 8004476C (55).
- * - Not yet worked on: 80047338 (60, a task: loop shapes), 80043058 (17),
- *   800474FC (12), 80048068 (8), 800459FC and 800463E0 (7 each),
- *   80045194 (4), 800450B0 and 8004514C (2 each).
+ * The first draft took the ratio-1.00 siblings' C (scratch/0C_01/sib.py:
+ * ovl_0C_06, 0C_07, 0C_09, 0C_04, 0C_02) and m2c's output for the rest.
+ * What made it match in us, eu and jp (it is ovl_0C_02's twin for most of
+ * it; the C of 800463E0, 800464F8 and 800474FC was wrong, now as in the
+ * asm):
+ * - The blocks and switches (8004476C, 80045E68, 80045FBC) are ovl_0C_06's
+ *   matched 80043248, 80044340 and 80044494 (the s32/u32 union flag).
+ * - The handler's case 2 calls 80047054 (inlined, so 8004701C stays a
+ *   call), case 1 calls 80043058, and `case 0x53: break;` is kept (as in
+ *   ovl_0C_07).  80043058 reads D_ovl0C_01_8004A9C8.unk0 twice.
+ * - Stubs: the empty static 80045144 is inlined first in 8004514C (its
+ *   three statements on their own lines; 80045194 has them on one line,
+ *   UNK_MACRO_ovl0C_01_8004514C); 800452EC is an empty *external*
+ *   function, defined between 800452F4 and 80045194 and called by no one
+ *   (an inlined static would cost 800452F4 8 bytes of frame); 800468E4
+ *   is an empty static in "panels.c", inlined at the 0x41A block.
+ * - 800468EC (the set-up): `rec->` for the first call, the -1 checks and
+ *   the stores, the global by name in the 0x41A block, and "panels.c"
+ *   regions (`#line`) around `rec = &...` and from the 0x41A block to
+ *   800468E4: their `.file`s end as1's blocks where the original's do
+ *   (lui s1 before the mtc1; no `li a0` in the stores).
+ * - 800452F4: pos is a Vec3f declared after the scalars (an array goes on
+ *   top of the frame), and `t = ... * 1000.0f; base + t` for the add.s
+ *   operand order.  80044D3C has no `pos` local (its frame).
+ * - 80047338: the loop is a `goto`, the ternary goes through a local `b`.
+ * - 80047A60 is ovl_0C_04's 80043FC0 (its `do {} while (0);`) plus the
+ *   0x413 block; 800464F8 and 800463E0 are ovl_0C_02's plain `for` loops.
+ * - func_ovl0C_01_80049950 returns s32 (80048068's v1, as in ovl_0C_07).
+ * - 800459FC declares obj before pos.
  */
 #include "common.h"
 #line 46 "16BB60.c"
@@ -1259,7 +1254,9 @@ void func_ovl0C_01_800468EC(void) {
     func_ovl0C_01_80046740();
     func_ovl0C_01_800464F8();
     func_ovl0C_01_800463E0();
+#line 1 "panels.c"
     rec = &D_ovl0C_01_8004A54C;
+#line 1265 "16BB60.c"
     rec->unk0 = func_ovl0C_01_80049800(rec->unk8, 0xD0, 0.0f, 0.0f, 0.0f);
     func_ovl0C_01_800497B8(rec->unk0, 0x01080000);
     func_ovl0C_01_800497C0(rec->unk0, 0x02000000);
@@ -1291,7 +1288,7 @@ void func_ovl0C_01_800468EC(void) {
 static void func_ovl0C_01_800468E4(void) {
 
 }
-#line 1300 "16BB60.c"
+#line 1297 "16BB60.c"
 
 void func_ovl0C_01_80046740(void) {
     UnkStruct_ovl0C_01_8004A104 *p;
