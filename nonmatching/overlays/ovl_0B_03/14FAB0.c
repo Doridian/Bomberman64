@@ -6,7 +6,7 @@
  * tables, .bss 0x1140, as the original's sizes). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 134, eu 134, jp 2640
+ * differing words: us 132, eu 132, jp 2640
  *
  * jp (`#if VERSION_JP`) has its own strings (80048AF4, 80048B60,
  * 80049144, and D_ovl0B_03_8004901C_jp for us's 80049168, with the
@@ -1920,8 +1920,8 @@ void func_ovl0B_03_8004386C(void) {
     while (TRUE) {
         switch (state) {
         case 0:
-            t = 0.0f;
             func_ovl0B_03_80043340(D_ovl0B_03_80048D58, 3, 0x31);
+            t = 0.0f;
             func_ovl0B_03_80043170(&D_ovl0B_03_80048D58[D_ovl0B_03_8004A324->unk0], func_ovl0B_03_800484B8(WRAPW_ovl0B_03(t)) * 0.05f + 1.0f);
             for (i = 0; i != 0x108; i += 8) {
                 func_ovl0B_03_800436EC(3, D_ovl0B_03_80048D58, i);
