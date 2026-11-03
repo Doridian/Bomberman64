@@ -5,7 +5,7 @@
  * as the original; jp's .data is 0x1A0). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 683, eu 683, jp 689
+ * differing words: us 676, eu 676, jp 682
  *
  * IDO -O3: the functions are written last to first. The tail (80045438,
  * 800453F0, 800453BC, 80045494 and the twelve empty stubs) is ovl_17_10's;
@@ -25,9 +25,11 @@
  * - 800435FC: the text x is the static 80043594 (it was a macro, with an
  *   empty stub called from 8004359C); 80045FC8's result has its own
  *   local m (4th, spilled as in the original); the else branch's four
- *   player tests are a loop over j (IDO unrolls it: the original's
- *   `move v0,a0` copy) counted in x, which also counts the second
- *   object's two frames ($s7 there as in the original); the endless
+ *   player tests are a loop over n (IDO unrolls it: the original's
+ *   `move v0,a0` copy), counted in j, with a dead read of j
+ *   (`if (!j) {}`) at the top of its body that sets uopt's register
+ *   order (several dead reads do; this one also suits jp); x counts the
+ *   second object's two frames ($s7 there as in the original); the endless
  *   button waits are `while (TRUE) { if (...) break; ... }` (test at the
  *   top, `b` back); the figures' loop sets i = 0 ahead of x. Only $fs0 is
  *   saved, 1.5f and the text height stay out of registers, and the frame
@@ -48,9 +50,8 @@
  *   original) for the same reason.
  *
  * What still differs:
- * - func_ovl0B_07_800435FC (us 7, jp 13): the else branch's count is in
- *   $s0 in the original (ours $s7: x); n is declared only for its slot
- *   (m must be the 4th local).
+ * - func_ovl0B_07_800435FC (jp 6): jp's frame is 0x78 where the
+ *   original's is 0x70 (the spilled height at sp+0x54, not sp+0x50).
  * - func_ovl0B_07_8004400C (658): one instruction longer; the original
  *   keeps the counter address in $fp and i in $s7 (ours the other way),
  *   one 0.0f constant in $fs4 for all its uses (ours two: the int-0 split
@@ -594,11 +595,13 @@ void func_ovl0B_07_800435FC(void) {
                 break;
             }
         }
-        x = 0;
-        for (j = 0; j < 4; j++) {
-            if (D_ovl0B_07_80046F18->unk4[j] != 0 && i == D_ovl0B_07_80046F18->unk90[j]) {
-                D_ovl0B_07_80046F20[x] = j;
-                x++;
+        j = 0;
+        for (n = 0; n < 4; n++) {
+            if (!j) { /* a dead read: uopt's register order */
+            }
+            if (D_ovl0B_07_80046F18->unk4[n] != 0 && i == D_ovl0B_07_80046F18->unk90[n]) {
+                D_ovl0B_07_80046F20[j] = n;
+                j++;
                 D_ovl0B_07_80046F1C++;
             }
         }
