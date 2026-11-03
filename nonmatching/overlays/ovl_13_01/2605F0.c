@@ -9,7 +9,7 @@
  * .bss 0x1F0 as the original). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 976, eu 976, jp 976
+ * differing words: us 964, eu 964, jp 964
  *
  * A first draft from m2c (with the ZeroJump prototypes the other drafts give
  * the same codes), made to compile: vectors as Vec3f, the pointer loops over
@@ -41,10 +41,9 @@
  * reloads it with lui each time): check their .bss places at move time.
  *
  * What still differs in us (words): 80043878 271, 800446FC 226, 800431D4
- * 218, 800450B4 127; under 50 each: 80043608, 80043830, 8004400C, 800455D0,
- * 80045B0C, 80045C9C, 8004636C, 80046DC4, 80046E00, 80046FA8, 80047144,
- * 800473A8, 800477C0, 80047CB4, 80047F74, 80048418, 8004956C, 80049870,
- * 8004A208. The other 59 match.
+ * 218, 800450B4 127; under 50 each: 80043608, 8004400C, 800455D0, 80045B0C,
+ * 80045C9C, 8004636C, 80046DC4, 80046E00, 80046FA8, 80047144, 800477C0,
+ * 80047CB4, 80047F74, 80048418, 80049870, 8004A208. The other 62 match.
  */
 #include "common.h"
 
@@ -775,14 +774,11 @@ void func_ovl13_01_800497DC(UnkStructA *arg0, s32 *arg1, s32 *arg2) {
 }
 
 void func_ovl13_01_8004956C(void) {
-    s32 sp1C;
-    s32 var_v0;
+    s32 i;
 
     func_ovl13_01_8004AE28(1);
-    if (func_ovl13_01_8004BA10(0x420) == 0) {
-        do {
-            func_ovl13_01_8004B7D0();
-        } while (func_ovl13_01_8004BA10(0x420) == 0);
+    while (func_ovl13_01_8004BA10(0x420) == 0) {
+        func_ovl13_01_8004B7D0();
     }
     func_ovl13_01_8004AE28(1);
     func_ovl13_01_8004ADA0(0);
@@ -791,12 +787,9 @@ void func_ovl13_01_8004956C(void) {
         func_ovl13_01_8004AE40("WM1 WAP WG1 WSH M1 M6 ST1");
         func_ovl13_01_8004B7A8(0x1E);
         func_ovl13_01_8004AE40("WM1 WAP WG1 WSH WDE WB2 ST1");
-        var_v0 = 0;
-        do {
-            sp1C = var_v0;
+        for (i = 0; i < 2; i++) {
             func_ovl13_01_8004AE40("WM1 WAP WG1 WSH WDW WB4 ST1 WDE WB4 ST1");
-            var_v0 += 1;
-        } while (var_v0 != 2);
+        }
         func_ovl13_01_8004AE40("WM1 WAP WG1 WSH WDW WB2 ST1");
         if (D_ovl13_01_8004C388.z < D_ovl13_01_8004C260.z) {
             func_ovl13_01_8004AE40("WM1 WAP WG1 WSH WDN WB0 ST1");
@@ -1525,7 +1518,7 @@ block_4:
 }
 
 void func_ovl13_01_800473A8(void) {
-    f32 sp1C;
+    Vec3f sp1C;
 
     func_ovl13_01_800496E0(D_ovl13_01_8004C338, &D_ovl13_01_8004C28C, &D_ovl13_01_8004BF34, NULL);
     func_ovl13_01_800496E0(D_ovl13_01_8004C358, &D_ovl13_01_8004C290, &D_ovl13_01_8004BF38, func_ovl13_01_80046A50);
@@ -1534,24 +1527,24 @@ void func_ovl13_01_800473A8(void) {
     func_ovl13_01_800496E0(D_ovl13_01_8004C348[3], &D_ovl13_01_8004C29C, &D_ovl13_01_8004BF44, func_ovl13_01_800468A0);
     if ((func_ovl13_01_8004BA10(0x41E) == 0) && (D_ovl13_01_8004C290 == 0)) {
         func_ovl13_01_8004BA00(0x41E);
-        func_ovl13_01_8004B708(D_ovl13_01_8004C358, &sp1C);
-        func_ovl13_01_8004B9B8(&sp1C);
+        func_ovl13_01_8004B708(D_ovl13_01_8004C358, &sp1C.x);
+        func_ovl13_01_8004B9B8(&sp1C.x);
     }
     if ((func_ovl13_01_8004BA10(0x41D) == 0) && (D_ovl13_01_8004C294 == 0)) {
         func_ovl13_01_8004BA00(0x41D);
-        func_ovl13_01_8004B708(D_ovl13_01_8004C35C, &sp1C);
-        func_ovl13_01_8004B9B8(&sp1C);
+        func_ovl13_01_8004B708(D_ovl13_01_8004C35C, &sp1C.x);
+        func_ovl13_01_8004B9B8(&sp1C.x);
     }
     if ((func_ovl13_01_8004BA10(0x41C) == 0) && (D_ovl13_01_8004C298 == 0)) {
         func_ovl13_01_8004BA00(0x41C);
-        func_ovl13_01_8004B708(D_ovl13_01_8004C31C, &sp1C);
-        func_ovl13_01_8004B9B8(&sp1C);
+        func_ovl13_01_8004B708(D_ovl13_01_8004C31C, &sp1C.x);
+        func_ovl13_01_8004B9B8(&sp1C.x);
     }
     if (func_ovl13_01_8004BA10(0x41B) == 0) {
         if (D_ovl13_01_8004C29C == 0) {
             func_ovl13_01_8004BA00(0x41B);
-            func_ovl13_01_8004B708(D_ovl13_01_8004C348[3], &sp1C);
-            func_ovl13_01_8004B9B8(&sp1C);
+            func_ovl13_01_8004B708(D_ovl13_01_8004C348[3], &sp1C.x);
+            func_ovl13_01_8004B9B8(&sp1C.x);
         }
     }
 }
@@ -1614,15 +1607,12 @@ void func_ovl13_01_800496E0(UnkStructA *arg0, s32 *arg1, s32 *arg2, void (*arg3)
 }
 
 void func_ovl13_01_80047144(void) {
-    f32 sp18;
     UnkStructA_40 *temp_a0;
-    f32 temp_fv1;
+    f32 sp18;
 
     temp_a0 = D_ovl13_01_8004C338->unk40;
     sp18 = temp_a0->unk48->unk4->unk4;
-    temp_fv1 = func_ovl13_01_8004B930(360.0f * (1.0f - (sp18 / func_ovl13_01_8004B378(temp_a0, 0)))) * 300.0f;
-    D_ovl13_01_8004C35C->unk50 = temp_fv1;
-    D_ovl13_01_8004C358->unk50 = temp_fv1;
+    D_ovl13_01_8004C358->unk50 = D_ovl13_01_8004C35C->unk50 = func_ovl13_01_8004B930(360.0f * (1.0f - (sp18 / func_ovl13_01_8004B378(temp_a0, 0)))) * 300.0f;
 }
 
 void func_ovl13_01_80046FA8(f32 *arg0) {
@@ -2024,24 +2014,15 @@ void func_ovl13_01_80045D80(void *arg0, s32 arg1) {
 }
 
 void func_ovl13_01_80045C9C(void) {
-    f32 sp18;
     UnkStructA_40 *temp_a0;
-    f32 temp_fv0;
-    f32 temp_fv1;
-    f32 var_fa1;
+    f32 sp18;
+    f32 len;
 
     if (func_ovl13_01_8004BA10(0x416) != 0) {
         temp_a0 = D_ovl13_01_8004C338->unk40;
         sp18 = temp_a0->unk48->unk4->unk4;
-        temp_fv0 = func_ovl13_01_8004B378(temp_a0, 0);
-        temp_fv1 = sp18 - 13.0f;
-        var_fa1 = temp_fv1;
-        if (temp_fv0 <= temp_fv1) {
-            var_fa1 = temp_fv1 - temp_fv0;
-        } else if (temp_fv1 < 0.0f) {
-            var_fa1 = temp_fv1 + temp_fv0;
-        }
-        D_ovl13_01_8004C338->unk40->unk14 = (func_ovl13_01_8004B930(360.0f * (var_fa1 / temp_fv0)) * 100.0f) + D_ovl13_01_8004C388.y;
+        len = func_ovl13_01_8004B378(temp_a0, 0);
+        D_ovl13_01_8004C338->unk40->unk14 = (func_ovl13_01_8004B930((func_ovl13_01_80045C60(sp18 - 13.0f, len) / len) * 360.0f) * 100.0f) + D_ovl13_01_8004C388.y;
     }
 }
 
@@ -2744,17 +2725,15 @@ loop_55:
 }
 
 s32 func_ovl13_01_80043830(void) {
-    s32 sp1C;
-    s32 temp_v0;
-    s32 var_v1;
+    s32 a;
+    s32 b;
 
-    sp1C = func_ovl13_01_800437FC(D_ovl13_01_8004C31C);
-    temp_v0 = func_ovl13_01_800437FC(D_ovl13_01_8004C338);
-    var_v1 = sp1C;
-    if (var_v1 < temp_v0) {
-        var_v1 = temp_v0;
+    a = func_ovl13_01_800437FC(D_ovl13_01_8004C31C);
+    b = func_ovl13_01_800437FC(D_ovl13_01_8004C338);
+    if (a < b) {
+        a = b;
     }
-    return var_v1;
+    return a;
 }
 
 s32 func_ovl13_01_800437FC(UnkStructA *arg0) {
