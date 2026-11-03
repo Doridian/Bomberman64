@@ -9,7 +9,7 @@
  * goes through 0x2501 and 0x2503, with 0x2505 for 80043B5C's offsets.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 79, eu 79, jp 69
+ * differing words: us 66, eu 66, jp 56
  *
  * What still differs in us (words):
  * - func_ovl0A_06_80043010 (17; the statics up to 80043B5C): 8004311C's
@@ -24,8 +24,6 @@
  * - func_ovl0A_06_80043B5C (49; with the statics after it): 80043E68
  *   uses t3 where the original avoids it (42: every address it keeps
  *   in a register is one register on, in both arms).
- * - func_ovl0A_06_80044BFC (13): D_8004701C's value is in v1, not a0,
- *   and `status` in a0, not v1 (no order of the four locals swaps them).
  *
  * What still differs in jp (words): the same as us's, with 80043E68's
  * avoided register t2 instead of t3 (32); 80043B5C's two inlined
@@ -35,6 +33,10 @@
  * 80044BFC around it change: jp 373).
  *
  * How the rest came to match:
+ * - 80044BFC: D_8004701C's value in a0 and `status` in v1 come from a
+ *   dead `if (!D_ovl0A_06_800473DC && !D_ovl0A_06_800473DC) {}` in the
+ *   switch's case 1 (its loads survive uopt and are register-allocated,
+ *   then as1 deletes them; found by the permuter).
  * - 80044620: 8004423C is declared (and defined) `s32`, though it returns
  *   nothing: its callers then take v0 as clobbered, and
  *   D_ovl0A_06_800473F8 and the 1 stored into it go to v1 as in the
@@ -956,6 +958,8 @@ void func_ovl0A_06_80044BFC(void) {
                 break;
             case 1:
                 c = D_ovl0A_06_800473E0;
+                if (!D_ovl0A_06_800473DC && !D_ovl0A_06_800473DC) { /* fake: dead loads */
+                }
                 D_ovl0A_06_80047168[0] = 0;
                 D_ovl0A_06_80047168[2] = 0;
                 D_ovl0A_06_80047168[1] = c;
