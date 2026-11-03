@@ -9,7 +9,7 @@
  * .bss 0x1F0 as the original). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1035, eu 1035, jp 1035
+ * differing words: us 1006, eu 1006, jp 1006
  *
  * A first draft from m2c (with the ZeroJump prototypes the other drafts give
  * the same codes), made to compile: vectors as Vec3f, the pointer loops over
@@ -42,9 +42,9 @@
  *
  * What still differs in us (words): 80043878 271, 800446FC 226, 800431D4
  * 218, 800450B4 127; under 50 each: 80043608, 80043830, 8004400C, 800455D0,
- * 80045B0C, 80045C9C, 80045DAC, 8004636C, 80046DC4, 80046E00, 80046FA8,
- * 80047144, 800473A8, 800477C0, 80047CB4, 80047F74, 800481D0, 80048418,
- * 8004956C, 80049870, 8004A208, 8004A4C4. The other 56 match.
+ * 80045B0C, 80045C9C, 8004636C, 80046DC4, 80046E00, 80046FA8, 80047144,
+ * 800473A8, 800477C0, 80047CB4, 80047F74, 800481D0, 80048418, 8004956C,
+ * 80049870, 8004A208, 8004A4C4. The other 57 match.
  */
 #include "common.h"
 
@@ -2012,8 +2012,8 @@ void func_ovl13_01_80045DAC(UnkStructA **arg0, f32 *arg1, f32 *arg2) {
     func_ovl13_01_8004B340(temp_v0->unk40, 1);
     func_ovl13_01_8004B348(sp24->unk40, 0x119, 0, 0);
     arg2[0] = D_ovl13_01_8004C31C->unk40->unk20;
-    arg2[2] = 100.0f;
     arg2[1] = (f32) ((D_ovl13_01_8004C31C->unk40->unk1C * -1.0f) + -15.0f);
+    arg2[2] = 100.0f;
     func_ovl13_01_8004B5D0(arg2, arg1);
     arg1[0] += D_ovl13_01_8004C31C->unk40->unk10;
     arg1[1] = (f32) (arg1[1] + D_ovl13_01_8004C31C->unk40->unk14);
@@ -2780,15 +2780,16 @@ void func_ovl13_01_8004377C(f32 *arg0, f32 *arg1, f32 *arg2, f32 *arg3) {
 }
 
 void func_ovl13_01_80043608(void) {
+    f32 sp24;
     f32 sp20;
 
     if (func_ovl13_01_8004BA10(0x400) == 0) {
         D_ovl13_01_8004C388.x = D_ovl13_01_8004C368.x;
-        D_ovl13_01_8004C388.y = (f32) D_ovl13_01_8004C368.y;
-        D_ovl13_01_8004C388.z = (f32) D_ovl13_01_8004C368.z;
         D_ovl13_01_8004C398.x = D_ovl13_01_8004C388.x;
-        D_ovl13_01_8004C398.y = (f32) D_ovl13_01_8004C388.y;
-        D_ovl13_01_8004C398.z = (f32) D_ovl13_01_8004C388.z;
+        D_ovl13_01_8004C388.y = D_ovl13_01_8004C368.y;
+        D_ovl13_01_8004C398.y = D_ovl13_01_8004C388.y;
+        D_ovl13_01_8004C388.z = D_ovl13_01_8004C368.z;
+        D_ovl13_01_8004C398.z = D_ovl13_01_8004C388.z;
         func_ovl13_01_8004BA08(0x41A);
         func_ovl13_01_8004B540(D_ovl13_01_8004C31C);
         func_ovl13_01_8004B4D8(0x30);
@@ -2797,8 +2798,8 @@ void func_ovl13_01_80043608(void) {
         func_ovl13_01_8004B488(D_ovl13_01_8004C388.x + 1500.0f, D_ovl13_01_8004C388.y - 1000.0f, D_ovl13_01_8004C388.z + 4000.0f);
         sp20 = func_ovl13_01_8004B5E0(&D_ovl13_01_8004C260.x, &D_ovl13_01_8004C388.x);
         func_ovl13_01_8004B528(D_ovl13_01_8004C260.x, D_ovl13_01_8004C260.z, sp20, func_ovl13_01_8004B5E0(&D_ovl13_01_8004C260.x, &D_ovl13_01_8004C388.x) + 100.0f);
-        D_ovl13_01_8004C240.y = 90.0f;
         D_ovl13_01_8004C240.x = 0.0f;
+        D_ovl13_01_8004C240.y = 90.0f;
         D_ovl13_01_8004C240.z = 200.0f;
         func_ovl13_01_8004B518(&D_ovl13_01_8004C240.x);
         func_ovl13_01_8004BA88(0, 0, 0, 100.0f);
