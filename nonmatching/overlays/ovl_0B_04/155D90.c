@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1306, eu 1306, jp 3052
+ * differing words: us 1306, eu 1306, jp 1308
  *
  * Order (scratch/ord/search.py, hill-climb over definition order, scored by
  * the emitted sequence's edit distance from the original's address order):
@@ -205,13 +205,22 @@ void func_ovl0B_04_80048658(s32, f32, f32); /* 0x2506 */
 void func_ovl0B_04_80048660(s32, f32, f32); /* 0x2507 */
 Obj *func_ovl0B_04_80048668(s32); /* 0x2508 */
 s32 func_ovl0B_04_80048680(u8 *); /* 0x250B */
+#if !VERSION_JP
 s32 func_ovl0B_04_80048688(u8 *, u16, u16, f32, f32, s32); /* 0x250C */
 s32 func_ovl0B_04_80048690(s32, u8 *, s32); /* 0x250D */
+#endif
 s32 func_ovl0B_04_800487D0(s32); /* 0x2B00 */
 void func_ovl0B_04_800487E0(s32); /* 0x2B02 */
 void func_ovl0B_04_800487E8(void); /* 0x2B03 */
 void func_ovl0B_04_800487F0(s32, f32, f32, f32); /* 0x2B04 */
 s32 func_ovl0B_04_80048910(void); /* 0x2F0A */
+
+#if VERSION_JP
+/* jp's ZeroJump block ends at 0x250A: its calls of us's 0x250C and 0x250D
+ * go to 0x2501 and 0x2503 */
+#define func_ovl0B_04_80048688 func_ovl0B_04_80048630
+#define func_ovl0B_04_80048690 func_ovl0B_04_80048640
+#endif
 
 /* The pages' handlers and set-ups (the page table refers to them). */
 u8 func_ovl0B_04_80044BE8(u8 arg0, u16 arg1);
@@ -720,7 +729,9 @@ static void func_ovl0B_04_80043050(Entry *e, Desc *d);
 static void func_ovl0B_04_FreeEntries(Entry *e, s32 n);
 static void func_ovl0B_04_800438FC(u32 mode, s32 id, Item *it);
 static void func_ovl0B_04_80043A24(s32 n, s32 *ids, Item *items);
+#if !VERSION_JP
 static void func_ovl0B_04_80043A7C(s32 n, s32 *ids, Item *items);
+#endif
 void func_ovl0B_04_80043CD0(s32 arg0, Gfx0B04 **arg1);
 static void func_ovl0B_04_80043FA4(u8 *ret, s32 page, s32 item, s32 mode);
 static void func_ovl0B_04_8004401C(Fade *f);
@@ -807,8 +818,10 @@ static void func_ovl0B_04_80043F8C(void) {
 static void func_ovl0B_04_80043F94(void) {
 }
 
+#if !VERSION_JP
 static void func_ovl0B_04_80043F9C(void) {
 }
+#endif
 
 static void func_ovl0B_04_800441BC(void) {
 }
@@ -1093,12 +1106,32 @@ static void func_ovl0B_04_800468F0(s32 base) {
     D_ovl0B_04_8004A174 = D_ovl0B_04_8004A16C;
     func_ovl0B_04_80046294(D_ovl0B_04_8004A16C);
     func_ovl0B_04_80046600(D_ovl0B_04_8004A16C, 0);
+#if !VERSION_JP
     o = func_ovl0B_04_80048608();
     o->unk36 = 0;
     o->unkC |= 0x80;
+#endif
 }
 
 /* Pages 5-8's cursor. */
+#if VERSION_JP
+static void func_ovl0B_04_80046734(u8 item, u16 buttons) {
+    if ((buttons & 0x20) || (buttons & 0x40)) {
+        if (D_ovl0B_04_8004A480[D_ovl0B_04_8004A174]) {
+            func_ovl0B_04_800438FC(0, D_ovl0B_04_8004A404->unk4[HALF_IDX(D_ovl0B_04_8004A174, D_ovl0B_04_8004A1A4)],
+                                   &D_ovl0B_04_8004A404->unk8[HALF_IDX(D_ovl0B_04_8004A174, D_ovl0B_04_8004A1A4)]);
+        }
+        if (D_ovl0B_04_8004A480[item]) {
+            func_ovl0B_04_800438FC(1, D_ovl0B_04_8004A404->unk4[HALF_IDX(item, D_ovl0B_04_8004A1A8)],
+                                   &D_ovl0B_04_8004A404->unk8[HALF_IDX(item, D_ovl0B_04_8004A1A8)]);
+        }
+        D_ovl0B_04_8004A174 = item;
+    } else if ((buttons & 0x80) || (buttons & 0x100)) {
+        func_ovl0B_04_80046600(item, buttons);
+        D_ovl0B_04_8004A174 = item;
+    }
+}
+#else
 static void func_ovl0B_04_80046734(u8 item, u16 buttons) {
     if ((buttons & 0x20) || (buttons & 0x40)) {
         func_ovl0B_04_800438FC(0, D_ovl0B_04_8004A404->unk4[HALF_IDX(D_ovl0B_04_8004A174, D_ovl0B_04_8004A1A4)],
@@ -1111,6 +1144,7 @@ static void func_ovl0B_04_80046734(u8 item, u16 buttons) {
         D_ovl0B_04_8004A174 = item;
     }
 }
+#endif
 
 /* Pages 5-8: the other half of the choices, and its arrows. */
 static void func_ovl0B_04_80046600(u8 item, u16 buttons) {
@@ -1138,6 +1172,31 @@ static void func_ovl0B_04_80046600(u8 item, u16 buttons) {
 }
 
 /* Pages 5-8: the half's five choices written ("---" for a closed one). */
+#if VERSION_JP
+static void func_ovl0B_04_80046294(u8 item) {
+    s32 i;
+    s32 j;
+    s32 n;
+    s32 k;
+
+    D_ovl0B_04_80048B98[3] = D_ovl0B_04_8004A1A8 + 0x11;
+    func_ovl0B_04_80048690(D_ovl0B_04_8004A404->unk4[8], D_ovl0B_04_80048B98, 5);
+    i = D_ovl0B_04_8004A1A8 * 5;
+    n = i + 5;
+    for (j = 1; i < n; i++, j++) {
+        k = D_ovl0B_04_8004A404->unk4[j];
+        if (D_ovl0B_04_8004A480[i + 1] == 0) {
+            func_ovl0B_04_80048690(k, D_ovl0B_04_80048B88, 1);
+            D_ovl0B_04_8004A404->unk8[j].unk0 = D_ovl0B_04_80048B88;
+        } else {
+            func_ovl0B_04_80048690(k, D_ovl0B_04_800494C0[D_ovl0B_04_8004A168 - 5][i], 1);
+            D_ovl0B_04_8004A404->unk8[j].unk0 = D_ovl0B_04_800494C0[D_ovl0B_04_8004A168 - 5][i];
+        }
+    }
+    func_ovl0B_04_800438FC(D_ovl0B_04_8004A480[item] ? 3 : 4, D_ovl0B_04_8004A404->unk4[PAGE_IDX(item)],
+                           &D_ovl0B_04_8004A404->unk8[PAGE_IDX(item)]);
+}
+#else
 static void func_ovl0B_04_80046294(u8 item) {
     s32 i;
     s32 j;
@@ -1163,15 +1222,22 @@ static void func_ovl0B_04_80046294(u8 item) {
     }
     func_ovl0B_04_800438FC(3, D_ovl0B_04_8004A404->unk4[PAGE_IDX(item)], &D_ovl0B_04_8004A404->unk8[PAGE_IDX(item)]);
 }
+#endif
 
 /* Pages 1-4: the character sets; the R button goes to the next. */
 u8 func_ovl0B_04_80046180(u8 arg0, u16 arg1) {
     u8 ret = 1;
 
     if (arg1 & 0x10) {
+#if VERSION_JP
+        D_ovl0B_04_8004A490.unk2 = 1;
+        func_ovl0B_04_800487D0(0);
+        func_ovl0B_04_80043FA4(&ret, 1, arg0, 0);
+#else
         D_ovl0B_04_8004A490.unk2 = 3;
         func_ovl0B_04_800487D0(0);
         func_ovl0B_04_80043FA4(&ret, 3, arg0, 0);
+#endif
     } else {
         func_ovl0B_04_80045540(arg0, arg1, &ret);
     }
@@ -1216,7 +1282,11 @@ void func_ovl0B_04_80045E24(Obj *arg0) {
     func_ovl0B_04_80045850();
     func_ovl0B_04_80045958(D_ovl0B_04_8004A2E0[0], D_ovl0B_04_8004A2E0[1]);
     func_ovl0B_04_SetText(D_ovl0B_04_8004A468[3], D_ovl0B_04_80048A80, 5, 0.7f);
+#if VERSION_JP
+    func_ovl0B_04_SetText(D_ovl0B_04_8004A468[2], D_ovl0B_04_80048A7C, 6, 0.5f);
+#else
     func_ovl0B_04_SetText(D_ovl0B_04_8004A468[4], D_ovl0B_04_80048A84, 6, 0.5f);
+#endif
 }
 
 u8 func_ovl0B_04_80045D20(u8 arg0, u16 arg1) {
@@ -1384,7 +1454,11 @@ u8 func_ovl0B_04_80045214(u8 arg0, u16 arg1) {
             save = D_ovl0B_04_8004A188;
             func_ovl0B_04_8004447C(D_ovl0B_04_8004A3B0[4], 0);
             func_ovl0B_04_8004447C(D_ovl0B_04_8004A3B0[5], 0);
+            #if VERSION_JP
+            id = func_ovl0B_04_80048688(D_ovl0B_04_80048A54, 55, 175, 0.8f, 0.8f, 2);
+#else
             id = func_ovl0B_04_80048688(D_ovl0B_04_80048A54, 100, 175, 0.8f, 0.8f, 2);
+#endif
             func_ovl0B_04_80048268(3);
             for (i = 0; i < 8; i++) {
                 save[i] = D_ovl0B_04_80048A20[i];
@@ -1393,7 +1467,11 @@ u8 func_ovl0B_04_80045214(u8 arg0, u16 arg1) {
             if (func_ovl0B_04_80048910() != 0) {
                 func_ovl0B_04_800487D0(0x18);
                 func_ovl0B_04_8004447C(id, 0);
+                #if VERSION_JP
+                id2 = func_ovl0B_04_80048688(D_ovl0B_04_80048A60, 50, 175, 0.8f, 0.8f, 0);
+#else
                 id2 = func_ovl0B_04_80048688(D_ovl0B_04_80048A60, 80, 175, 0.8f, 0.8f, 0);
+#endif
                 func_ovl0B_04_80048268(120);
                 func_ovl0B_04_80048638(id2);
                 ok = 0;
@@ -1475,6 +1553,10 @@ u8 func_ovl0B_04_80044BE8(u8 arg0, u16 arg1) {
         switch (arg0) {
             case 1:
                 func_ovl0B_04_80044BE0();
+#if VERSION_JP
+                func_ovl0B_04_80043A24(8, D_ovl0B_04_8004A448, D_ovl0B_04_80049308);
+                func_ovl0B_04_80043A24(6, D_ovl0B_04_8004A468, D_ovl0B_04_800493A8);
+#else
                 func_ovl0B_04_80043A7C(8, D_ovl0B_04_8004A448, D_ovl0B_04_80049308);
                 func_ovl0B_04_80043A24(1, D_ovl0B_04_8004A468, D_ovl0B_04_800493A8);
                 func_ovl0B_04_80043A7C(5, &D_ovl0B_04_8004A468[1], D_ovl0B_04_800493BC);
@@ -1484,19 +1566,24 @@ u8 func_ovl0B_04_80044BE8(u8 arg0, u16 arg1) {
                 a->unkC |= 0x80;
                 b->unk36 = 0;
                 b->unkC |= 0x80;
+#endif
                 func_ovl0B_04_80044154();
                 func_ovl0B_04_800441C4();
                 for (i = 0; i < 5; i++) {
                     func_ovl0B_04_80043050(&D_ovl0B_04_8004A060[i], &D_ovl0B_04_80049C38[2 + i]);
                 }
+#if !VERSION_JP
                 D_ovl0B_04_8004A060[0].unk0->unkC |= 0x80;
                 D_ovl0B_04_8004A060[0].unk0->unk36 = 0;
+#endif
                 func_ovl0B_04_MakeEntries(&D_ovl0B_04_8004A060[5], 3, &D_ovl0B_04_80049C38[10]);
                 func_ovl0B_04_MakeEntries(&D_ovl0B_04_8004A060[8], 2, &D_ovl0B_04_80049C38[10]);
+#if !VERSION_JP
                 D_ovl0B_04_8004A060[5].unk0->unkC |= 0x80;
                 D_ovl0B_04_8004A060[5].unk0->unk36 = 0;
                 D_ovl0B_04_8004A060[6].unk0->unkC |= 0x80;
                 D_ovl0B_04_8004A060[6].unk0->unk36 = 0;
+#endif
                 func_ovl0B_04_800447DC(0, &ret);
                 func_ovl0B_04_8004430C(D_ovl0B_04_8004A490.unk3);
                 func_ovl0B_04_8004456C();
@@ -1752,9 +1839,11 @@ void func_ovl0B_04_800444E8(Obj *arg0) {
     o = func_ovl0B_04_80048668(D_ovl0B_04_8004A2A8[8]);
     o->unkC |= 0x480;
     o->unk36 = 100;
+#if !VERSION_JP
     o = func_ovl0B_04_80048608();
     o->unk36 = 0;
     o->unkC |= 0x80;
+#endif
     if (0) {
         func_ovl0B_04_800444E0();
         func_ovl0B_04_800444D8();
@@ -1775,7 +1864,9 @@ void func_ovl0B_04_800444E8(Obj *arg0) {
         func_ovl0B_04_800440C8(0);
         func_ovl0B_04_8004401C(0);
         func_ovl0B_04_80043FA4(0, 0, 0, 0);
+#if !VERSION_JP
         func_ovl0B_04_80043F9C();
+#endif
         func_ovl0B_04_80043F94();
         func_ovl0B_04_80043F8C();
         func_ovl0B_04_80043F84();
@@ -1805,7 +1896,11 @@ static void func_ovl0B_04_8004447C(s32 id, s32 alpha) {
 /* The name's two texts centred. */
 static void func_ovl0B_04_80044394(s32 a, s32 b) {
     s32 n;
+#if VERSION_JP
+    u16 x;
+#else
     s32 x;
+#endif
     Obj *o;
 
     n = 0;
@@ -1815,7 +1910,11 @@ static void func_ovl0B_04_80044394(s32 a, s32 b) {
     }
     n--;
     if (n != -1) {
+#if VERSION_JP
+        x = 56 - n * 8;
+#else
         x = -func_ovl0B_04_80048680(D_ovl0B_04_80048A20) * 0.65f / 2;
+#endif
         func_ovl0B_04_80048650(a, x, 0);
         if (b != -1) {
             func_ovl0B_04_80048650(b, x, 0);
@@ -1866,9 +1965,11 @@ static void func_ovl0B_04_800441C4(void) {
     if (set != 0) {
         D_ovl0B_04_8004A490.unk2 = set;
     }
+#if !VERSION_JP
     if (D_ovl0B_04_8004A490.unk2 < 3) {
         D_ovl0B_04_8004A490.unk2 = 3;
     }
+#endif
     D_ovl0B_04_8004A490.unk3 = D_ovl0B_04_80048F5C[D_ovl0B_04_8004A490.unk1];
 }
 
@@ -1963,12 +2064,16 @@ void func_ovl0B_04_80043ADC(void) {
     D_ovl0B_04_8004A168 = 0;
     while (D_ovl0B_04_8004A168 != 0xFF) {
         p = &D_ovl0B_04_800499B8[D_ovl0B_04_8004A168];
+#if VERSION_JP
+        func_ovl0B_04_80043A24(p->unk0, p->unk4, p->unk8);
+#else
         p3 = &D_ovl0B_04_800499B8[3];
         if (p == p3 || p == &D_ovl0B_04_800499B8[4]) {
             func_ovl0B_04_80043A7C(p->unk0, p->unk4, p->unk8);
         } else {
             func_ovl0B_04_80043A24(p->unk0, p->unk4, p->unk8);
         }
+#endif
         menu = func_ovl0B_04_800485D0(p->unkC, p->unk10, p->unk16, p->unk18, p->unk1A);
         if (p->unk1C != 2) {
             func_ovl0B_04_800438FC(1, p->unk4[D_ovl0B_04_8004A16C], &p->unk8[D_ovl0B_04_8004A16C]);
@@ -1986,13 +2091,16 @@ void func_ovl0B_04_80043ADC(void) {
     func_ovl0B_04_800477F0(0x1F, 0x11, 0);
     func_ovl0B_04_80048258();
     if (0) {
+#if !VERSION_JP
         func_ovl0B_04_80043A7C(0, 0, 0);
+#endif
         func_ovl0B_04_80043A24(0, 0, 0);
         func_ovl0B_04_800438FC(0, 0, 0);
         func_ovl0B_04_800438F4();
     }
 }
 
+#if !VERSION_JP
 /* A page's texts written (0x2501 for pages 3 and 4, 0x250C otherwise). */
 static void func_ovl0B_04_80043A7C(s32 n, s32 *ids, Item *items) {
     s32 i;
@@ -2001,6 +2109,7 @@ static void func_ovl0B_04_80043A7C(s32 n, s32 *ids, Item *items) {
         *ids = func_ovl0B_04_80048630(items->unk0, items->unk4, items->unk6, items->unk8, items->unkC, items->unk10);
     }
 }
+#endif
 
 static void func_ovl0B_04_80043A24(s32 n, s32 *ids, Item *items) {
     s32 i;
