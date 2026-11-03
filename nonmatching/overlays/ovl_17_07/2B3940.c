@@ -22,6 +22,14 @@
  *   statements and dead stores (uopt drops them), `if (obj + 1) {}`, a
  *   reload of obj, `arg0++; arg0--;`, a switch, swapped arms, arg1
  *   through a pointer, int/double 360s.
+ *   Also tried (2026-11-03): `*(f32 *)&arg1` at every use instead of the
+ *   dead `&arg1` call (the same 17 words; a volatile one, a pointer
+ *   local or a K&R definition are worse); dead-load or dead-address
+ *   fakes (`if (!(obj + 1) && !(obj + 1)) {}`, `!obj->unk40`, a global)
+ *   in place of `obj++; obj--;` (obj and the 60 lose s6/s7: 140+ words);
+ *   t or z set in the arms with the loop's fakes dropped (140+); the
+ *   permuter for 40 minutes (no better score). Every fake here holds up
+ *   the others: dropping any one costs 140 to 190 words.
  *
  * How the rest came to match:
  * - The original sets a zero in both arms of the `diff >= 360` test and
