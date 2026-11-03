@@ -5,7 +5,7 @@
  * as the original; jp's .data is 0x1A0). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 14, eu 14, jp 16
+ * differing words: us 10, eu 10, jp 12
  *
  * IDO -O3: the functions are written last to first. The tail (80045438,
  * 800453F0, 800453BC, 80045494 and the twelve empty stubs) is ovl_17_10's;
@@ -47,7 +47,10 @@
  *   0.0f's live range is too long for uopt to give it a register, and
  *   step gets one in its place); the new trophies are stored as
  *   `D_E30[..][..] = obj = f()` and the first y loop sets unk18 after
- *   unk14; frame 0xA8 as the original; the 120- and
+ *   unk14; the two counting loops start `for (D_F1C = 0, i = 0, j =
+ *   0; ...)` (all on the for's line: as1 orders the stores after
+ *   &F20's lui/addiu as in the original); frame 0xA8 as the original;
+ *   the 120- and
  *   60-frame waits count in k (the trophy test's counter; the
  *   original's $s5 there, not i's $s7), which puts the counter address
  *   in $fp as in the original; the winner's team is i (the original's
@@ -64,8 +67,9 @@
  *   `lw t7`), ours before.
  * - func_ovl0B_07_8004400C (14): the original sets off (`mov.s fs3,fs4`)
  *   at the top, ours after the counting, so off and 90.0f trade $fs3 and
- *   $fs0 (f26/f20); in the else branch's first loop the original
- *   schedules `sw zero` (F1C = 0) and j = 0 after &F20's lui/addiu.
+ *   $fs0 (f26/f20) and 170.0f takes $fs2 (f24) for 90.0f's. With off
+ *   set at the top (and a dead read keeping step to the end) ours holds
+ *   0.0f in $fs5 and 720.0f in $fs4 instead (30 words).
  */
 #include "common.h"
 
@@ -391,9 +395,7 @@ void func_ovl0B_07_8004400C(void) {
     func_ovl0B_07_80046940(0x20);
     func_ovl0B_07_80046930(0x1F0);
     if (D_ovl0B_07_80046F18->unk0 == 0) {
-        D_ovl0B_07_80046F1C = 0;
-        j = 0;
-        for (i = 0; i < 4; i++) {
+        for (D_ovl0B_07_80046F1C = 0, i = 0, j = 0; i < 4; i++) {
             if (D_ovl0B_07_80046F18->unk4[i] != 0) {
                 D_ovl0B_07_80046F1C++;
                 D_ovl0B_07_80046F20[j] = i;
@@ -401,9 +403,7 @@ void func_ovl0B_07_8004400C(void) {
             }
         }
     } else {
-        D_ovl0B_07_80046F1C = 0;
-        j = 0;
-        for (i = 0; i < 4; i++) {
+        for (D_ovl0B_07_80046F1C = 0, i = 0, j = 0; i < 4; i++) {
             if (D_ovl0B_07_80046F18->unk4[i] != 0 && D_ovl0B_07_80046F18->unk90[i] == 0) {
                 D_ovl0B_07_80046F1C++;
                 D_ovl0B_07_80046F20[j] = i;
