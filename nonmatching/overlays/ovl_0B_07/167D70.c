@@ -5,7 +5,7 @@
  * as the original; jp's .data is 0x1A0). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 676, eu 676, jp 678
+ * differing words: us 648, eu 648, jp 650
  *
  * IDO -O3: the functions are written last to first. The tail (80045438,
  * 800453F0, 800453BC, 80045494 and the twelve empty stubs) is ovl_17_10's;
@@ -46,7 +46,11 @@
  *   and the first loop's unk10 are set from an int 0 (the other 0.0f
  *   uses are floats), which gets uopt to hold 0.0f in a register as the
  *   original does; the locals are ordered so n, step and m get the
- *   original's slots (frame 0xA8 as the original).
+ *   original's slots (frame 0xA8 as the original); the 120- and
+ *   60-frame waits count in k (the trophy test's counter; the
+ *   original's $s5 there, not i's $s7), which puts the counter address
+ *   in $fp as in the original, and a dead read of i in the winner's
+ *   search loop puts i in $s7.
  * - jp's 80043594_jp and us's text x divide by an int 2 (div.s, as the
  *   original) for the same reason.
  *
@@ -54,11 +58,11 @@
  * - func_ovl0B_07_800435FC (jp 2): in the second text's creation the
  *   original loads 1.0f after the name's address (`mtc1 at,fv0` after
  *   `lw t7`), ours before.
- * - func_ovl0B_07_8004400C (658): one instruction longer; the original
- *   keeps the counter address in $fp and i in $s7 (ours the other way),
- *   one 0.0f constant in $fs4 for all its uses (ours two: the int-0 split
- *   above), team * 4 in $s1 saved around 80043544 (ours in $s6), and
- *   tests the 60-frame loop with slti (ours holds 60 in $s0).
+ * - func_ovl0B_07_8004400C (630): one instruction longer; the original
+ *   holds one 0.0f constant in $fs4 for all its uses (ours two: the
+ *   int-0 split above), so the float registers differ; v1/a0 swapped in
+ *   the first loops; team * 4 in $s1 saved around 80043544 (ours
+ *   elsewhere); the 60-frame loop tests with slti.
  * - func_ovl0B_07_80044D54: its last nops follow once the object's size
  *   matches (IDO pads the dead epilogue after its endless loop to 32
  *   bytes of the object).
@@ -471,6 +475,8 @@ void func_ovl0B_07_8004400C(void) {
     if (D_ovl0B_07_80046F18->unk0 == 0) {
         team = D_ovl0B_07_80046E2C - 0x11;
         for (j = 0; j < D_ovl0B_07_80046F1C; j++) {
+            if (!i) { /* a dead read: uopt's register order */
+            }
             if (team == D_ovl0B_07_80046F20[j]) {
                 break;
             }
@@ -495,13 +501,13 @@ void func_ovl0B_07_8004400C(void) {
             step * n - (180.0f * D_ovl0B_07_80046F1C - 160.0f * D_ovl0B_07_80046F1C);
     }
     D_ovl0B_07_80046F18->unkA4[team]++;
-    for (i = 0; i < 120; i++) {
+    for (k = 0; k < 120; k++) {
         if (func_ovl0B_07_80043544() & 0xC000) {
             break;
         }
         func_ovl0B_07_800463F0();
     }
-    for (i = 0; i < 60; i++) {
+    for (k = 0; k < 60; k++) {
         obj->unk10 += (x - 310.0f) / 60.0f;
         obj->unk14 += (y - -200.0f) / 60.0f;
         obj->unk18 += -20.0f;
