@@ -3,7 +3,7 @@
  * (.data and .rodata as the original; .bss 0x60 with its unused words common).
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4, eu 4, jp 4
+ * differing words: us 0, eu 0, jp 0
  *
  * Measured in jp. What went right, from 826 words (ovl_0F_07/0F_08/0F_09's
  * fixes where the code is shared):
@@ -29,49 +29,19 @@
  *   the frame's unused rest (a guess).
  * - func_ovl0F_10_80044B8C (97 to 0): the inlined 80044B84 is defined in
  *   "panels.c" (ovl_0F_07's 80044200).
- * - func_ovl0F_10_80043CCC (29 to 2): the bound is a variable n set in
- *   the outer `for (n = 90; ; )`: i gets s0 and &D_ovl0F_10_800468B0 s1,
- *   and `li s3, 90` comes after s2's address. 800448A0's extra nop came
- *   right with the rest.
- *
- * What still differs:
- * - func_ovl0F_10_80043430 (2): case 2's counter i is at sp+0xD4 in the
- *   original, below count (0xDC) and p (0xD8), with two words above them;
- *   here i is the first local (0xE4). A fifth local (e.g. case 15's object
- *   in a local) puts it right, but the frame grows by 8 unless one of case
- *   2's inlined statics goes; with 80043410's three calls in the handler
- *   (its stub only referenced by address from dead code) everything
- *   matches but that stub comes out after the handler. Tried: the loop
- *   in a static of its own (its locals 8 lower), the locals in every
- *   order and scope. Locals (count, p, i, y) with no 80043428 call give
- *   every slot right but a frame of 224; the call (8 bytes, wherever it
- *   is inlined, nested or before the switch) then moves the locals up 8,
- *   and the original wants those 8 bytes above count instead. An
- *   address-only reference to 80043428 (`if (0)`) costs no frame but
- *   puts its stub after the handler (or first, or after 80044780,
- *   depending on where it is defined); called from 8004338C (a real
- *   function) it is free but its stub comes before 8004338C. The loop in
- *   80043428 itself (called first, 80043420/18 and 80046270 nested,
- *   locals i, count, p) puts i right but count and p 12 low; pointer or
- *   value parameters for count/p, or i from its return value, change
- *   the code.
- *   Also tried (2026-11-03): a fifth local before count (x, y, count, p,
- *   i or obj, y, count, p, i: the slots right, frame 0xF0), pad[2], the
- *   locals in a `case 2:` or `case 15:` block, with and without 80043428.
- * - func_ovl0F_10_80043CCC (2): `move s0,zero` (i = 0) fills the load
- *   delay after `lw t6` rather than the branch's delay slot. With `i = 0`
- *   before the `if` it goes in the delay slot, but i then loses s0.
- *   Tried: #line on the for/if, while/do forms. In ugen's output as1
- *   hoists the move into the load delay whatever its .loc, .file or
- *   place in the block; it leaves it in the delay slot (the original)
- *   only when its block has a second predecessor (a dead `b` to it,
- *   which costs two words), so the original's code there likely differs.
- *   Since (2026-11-03): an unreferenced label, `.file`, `.loc`, `.livereg`
- *   or `volatile` on 800468AC change nothing; as1 removes a `b`/`beq` to
- *   the next instruction before it schedules (no second predecessor); the
- *   loop-head load in the preheader and at the loop's end (C: a variable
- *   loaded at the end) lets uopt fold the stored 0 into it.  The original's
- *   epilogue padding is six nops, so no dead branch hides there either.
+ * - func_ovl0F_10_80043CCC (29 to 0): the flag test is a `while`, not
+ *   an `if` (the body clears the flag, so it runs once): as1 then leaves
+ *   `move s0,zero` in the `beqz`'s delay slot, where with `if` it hoists
+ *   it into the load delay (hand-edited ugen output matches when the
+ *   load sits in the preheader and at the loop's end, so the `beqz`
+ *   starts a block with two predecessors, which the `while`'s rotation
+ *   likely gives). The bound is the constant 90 (no variable n).
+ * - func_ovl0F_10_80043430 (2 to 0): i is case 2's counter at sp+0xD4
+ *   below count and p because case 15's object is a local declared first
+ *   (obj, y, count, p, i), and the frame keeps its size because the empty
+ *   80043428 is defined without a prototype (`static void f() {}`):
+ *   inlined, a K&R-style empty static takes no frame, where `f(void)`
+ *   takes 8 bytes.
  * The `#line N "205890.c"` lines are the physical line numbers (the file
  * named the same whatever path it is compiled by).
  */
@@ -765,13 +735,12 @@ void func_ovl0F_10_80043E08(void) {
 
 void func_ovl0F_10_80043CCC(void) {
     s32 i;
-    s32 n;
 
     D_ovl0F_10_800468AC = 0;
     D_ovl0F_10_800468B0 = 0.0f;
-    for (n = 90; ; ) {
-        if (D_ovl0F_10_800468AC != 0) {
-            for (i = 0; i < n; i++) {
+    for (;;) {
+        while (D_ovl0F_10_800468AC != 0) {
+            for (i = 0; i < 90; i++) {
                 if (D_ovl0F_10_800468B4 != 0) {
                     D_ovl0F_10_800468B0 += 0.22222222f;
                 } else {
@@ -825,7 +794,7 @@ static void func_ovl0F_10_80043420(void) {
     }
 }
 
-static void func_ovl0F_10_80043428(void) {
+static void func_ovl0F_10_80043428() {
 }
 
 static void func_ovl0F_10_8004333C(void) {
@@ -901,10 +870,11 @@ static void func_ovl0F_10_80043068(void) {
 
 /* The overlay's handler: the entry returns it to the loader. */
 void func_ovl0F_10_80043430(s32 arg0) {
-    s32 i;
+    UnkStructA *obj;
     f32 y;
     s32 count;
     u32 (*p)[3];
+    s32 i;
 
     switch (arg0) {
         case 2:
@@ -982,7 +952,8 @@ void func_ovl0F_10_80043430(s32 arg0) {
         case 15:
             func_ovl0F_10_80043080();
             if (func_ovl0F_10_80045588(0xD, 0, 4, 0xD, 4) != 0) {
-                y = func_ovl0F_10_800455F8(func_ovl0F_10_80045598())->unk40->unk20;
+                obj = func_ovl0F_10_800455F8(func_ovl0F_10_80045598());
+                y = obj->unk40->unk20;
                 if (135.0f <= y && y <= 225.0f) {
                     if (func_ovl0F_10_80046170(0xA4) != 0) {
                         func_ovl0F_10_80045B20(0x291, 1);
