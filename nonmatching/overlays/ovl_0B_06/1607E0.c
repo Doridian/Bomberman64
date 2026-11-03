@@ -6,7 +6,7 @@
  * floats). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 3371, eu 3371, jp 3233
+ * differing words: us 3371, eu 3371, jp 3208
  * jp has no `#if VERSION_JP` yet: its strings, text positions and code
  * changes are not drafted (docs/DECOMPILING.md, "Versions", step 6).
  *
@@ -1615,6 +1615,9 @@ static s32 func_ovl0B_06_80045794(s32 arg0, s32 arg1, s32 arg2, s32 mode) {
                 ret = 3;
                 break;
             case 8:
+#if VERSION_JP
+                func_ovl0B_06_80044E48(0x2278, 0x18);
+#endif
                 ret = 1;
                 break;
             case 7:
