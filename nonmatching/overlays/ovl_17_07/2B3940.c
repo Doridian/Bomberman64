@@ -2,24 +2,24 @@
  * NON_MATCHING: ovl_17_07's game object, complete: every function and its data.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 53, eu 53, jp 53
+ * differing words: us 22, eu 22, jp 22
  *
  * What still differs in us (words):
- * - func_ovl17_07_8004376C (53): the frame, f26 and obj in s6 match now,
- *   but (1) the `cur - arg1` arm loads arg1 into $f12 (uopt's) where the
- *   original has the temporaries $f4/$f6 and 360.0f in $f12, (2) the fake
- *   `obj++; obj--;` leaves `addiu s6,s6,0` in the arm's `b` delay slot
- *   (the original has 360's `lui` there), (3) &D_ovl17_07_800457C0 and
- *   the 10 are in s5/s4 for the original's s4/s5, (4) every later
- *   integer temporary is one register early (t7 for the original's t8).
- *   Hand-edited ugen output shows (2) and (4) are one thing: the
- *   original's arm ends in a dead computation into a temporary ($15),
- *   which as1 drops (`addu $15,$22,116` alone gives the original's
- *   `bc1f`/`b`/`lui` shape). Tried for it: dead int and float ternaries
- *   (`x = (arg0 + 1 < 5) ? arg0 + 1 : 7`, an ANGLE_SUB-like one; their
- *   branch stays), expression statements, `if (obj + 1) {}`, a reload of
- *   obj, `arg0++; arg0--;`, a switch, swapped arms, arg1 through a
- *   pointer.
+ * - func_ovl17_07_8004376C (22): (1) the `cur - arg1` arm loads arg1 into
+ *   $f12 (uopt's) where the original has the temporaries $f4/$f6 and
+ *   360.0f in $f12; (2) the fake `obj++; obj--;` leaves `addiu s6,s6,0`
+ *   in the arm's `b` delay slot (the original has 360's `lui` there);
+ *   (3) &D_ovl17_07_800457C0 and the 10 are in s5/s4 for the original's
+ *   s4/s5 (the draft had them right before z existed). Hand-edited ugen
+ *   output says the original's arm ends in a dead computation into a
+ *   temporary, which as1 drops (`addu $15,$22,116` alone there gives the
+ *   original's `bc1f`/`b`/`lui` shape); moved there, the dead test below
+ *   breaks the arms. Tried for (2): dead int and float ternaries (their
+ *   branch stays), expression statements and dead stores (uopt drops
+ *   them), `if (obj + 1) {}`, a reload of obj, `arg0++; arg0--;`, a
+ *   switch, swapped arms, arg1 through a pointer. For (3): dead reads of
+ *   D_ovl17_07_800457C0 (they keep loads), the 10 in a local, the
+ *   declaration order, other forms of the abs.
  *
  * How the rest came to match:
  * - The original sets f26 to 0 in both arms of the `diff >= 360` test
@@ -31,6 +31,10 @@
  *   a block of its own (the original's `bc1f` to a `b`), and puts obj in
  *   s6 and the 60 in s7.
  * - y is set in each arm of the 0x401 test (the original's delay slot).
+ * - The dead `if (!obj->unk40->unk20 && !obj->unk40->unk20) {}` in z's
+ *   else arm survives uopt as two loads into temporaries, which as1
+ *   deletes as dead: it takes t7, so every later temporary is the
+ *   original's (t8 on).
  * - arg1 lives in its home slot (the original's `sw a1,0x64(sp)` and
  *   `lwc1` at each use): its address is taken in dead code; 80043A70
  *   matches with it. `diff = 360.0f + diff` is the original's operand
@@ -361,6 +365,8 @@ void func_ovl17_07_8004376C(s32 arg0, f32 arg1) {
         z = 0.0f;
     } else {
         z = 0; /* an int 0, so that uopt doesn't fold the two arms */
+        if (!obj->unk40->unk20 && !obj->unk40->unk20) { /* fake: dead loads */
+        }
     }
     t = z;
     if (arg0 != 0xC0) {
