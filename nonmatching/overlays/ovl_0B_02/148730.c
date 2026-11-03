@@ -6,7 +6,7 @@
  * of it 800431C4's local table). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1971, eu 1971, jp 1979
+ * differing words: us 1664, eu 1664, jp 1727
  * jp has no `#if VERSION_JP` yet.
  *
  * A first draft from m2c (with a context of the ZeroJump prototypes the
@@ -1391,23 +1391,11 @@ static void func_ovl0B_02_800443DC(Piece_ovl0B_02 *pieces, s32 n) {
     }
 }
 
-static void func_ovl0B_02_80043FBC(void) {
-}
-
-/* Makes the current group's pieces and turns them to the current page. */
-static void func_ovl0B_02_80043FC4(void) {
-    Group_ovl0B_02 *g;
-    Piece_ovl0B_02 *pieces;
+static void func_ovl0B_02_80043FBC(Piece_ovl0B_02 *pieces, s32 n) {
     UnkStructA_40 *obj;
     u32 dl;
-    s32 n;
     s32 i;
-    s32 j;
 
-    func_ovl0B_02_80043FBC();
-    g = &D_ovl0B_02_8004A0EC[D_ovl0B_02_8004A3D4];
-    n = g->unk8;
-    pieces = g->unk0;
     for (i = 0; i < n; i++) {
         dl = func_ovl0B_02_80048CF8(pieces[i].unk0);
         if (pieces[i].unk18 == -1) {
@@ -1416,25 +1404,38 @@ static void func_ovl0B_02_80043FC4(void) {
         } else {
             obj = pieces[i].unk10 = func_ovl0B_02_80048D88(func_ovl0B_02_80046EFC, 0);
             pieces[i].unk14 = dl;
-            M2C_FIELD(obj, Piece_ovl0B_02 **, 0x40) = &pieces[i];
             M2C_FIELD(obj, s32 *, 0x38) = pieces[i].unk18;
+            M2C_FIELD(obj, Piece_ovl0B_02 **, 0x40) = &pieces[i];
         }
         obj->unk10 = pieces[i].unk4;
         obj->unk14 = pieces[i].unk8;
         obj->unk18 = pieces[i].unkC;
         obj->unk1C = pieces[i].unk28;
         obj->unk20 = pieces[i].unk2C;
-        obj->unkC |= 0x10000;
         obj->unk28 = obj->unk2C = obj->unk30 = pieces[i].unk30;
+        obj->unkC |= 0x10000;
     }
+}
+static void func_ovl0B_02_80043FC4(void) {
+    Group_ovl0B_02 *g;
+    Piece_ovl0B_02 *pieces;
+    s32 n;
+    UnkStructA_40 *obj;
+    s32 i;
+    s32 j;
+
+    g = &D_ovl0B_02_8004A0EC[D_ovl0B_02_8004A3D4];
+    n = g->unk8;
+    pieces = g->unk0;
+    func_ovl0B_02_80043FBC(pieces, n);
     if (D_ovl0B_02_8004A3D4 == 2 && D_ovl0B_02_8004A3D8 > 0) {
         pieces[4].unk10->unk48->unk4->unk4 = func_ovl0B_02_80048D68(pieces[4].unk10, 0) - 0.01f;
     }
     if (D_ovl0B_02_8004A3D8 != 0) {
         for (j = 0; j < D_ovl0B_02_8004A3D8; j++) {
-            for (i = 0; i != n; i++) {
-                pieces[i].unk10->unk1C = WRAP(g->unk4[j][0] + pieces[i].unk10->unk1C);
-                pieces[i].unk10->unk20 = WRAP(g->unk4[j][1] + pieces[i].unk10->unk20);
+            for (i = 0; i < n; i++) {
+                pieces[i].unk10->unk1C = WRAP(pieces[i].unk10->unk1C + g->unk4[j][0]);
+                pieces[i].unk10->unk20 = WRAP(pieces[i].unk10->unk20 + g->unk4[j][1]);
             }
         }
     }
