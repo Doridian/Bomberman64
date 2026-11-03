@@ -9,7 +9,7 @@
  * .bss 0x1F0 as the original). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1006, eu 1006, jp 1006
+ * differing words: us 976, eu 976, jp 976
  *
  * A first draft from m2c (with the ZeroJump prototypes the other drafts give
  * the same codes), made to compile: vectors as Vec3f, the pointer loops over
@@ -43,8 +43,8 @@
  * What still differs in us (words): 80043878 271, 800446FC 226, 800431D4
  * 218, 800450B4 127; under 50 each: 80043608, 80043830, 8004400C, 800455D0,
  * 80045B0C, 80045C9C, 8004636C, 80046DC4, 80046E00, 80046FA8, 80047144,
- * 800473A8, 800477C0, 80047CB4, 80047F74, 800481D0, 80048418, 8004956C,
- * 80049870, 8004A208, 8004A4C4. The other 57 match.
+ * 800473A8, 800477C0, 80047CB4, 80047F74, 80048418, 8004956C, 80049870,
+ * 8004A208. The other 59 match.
  */
 #include "common.h"
 
@@ -431,8 +431,8 @@ void func_ovl13_01_8004A4C4(void) {
     func_ovl13_01_8004AE78(func_ovl13_01_8004AE18())->unk40->unk20 = 180.0f;
     func_ovl13_01_8004A088();
     func_ovl13_01_8004AC48(D_ovl13_01_8004C270);
-    D_ovl13_01_8004C260.y = 0.0f;
     D_ovl13_01_8004C260.x = ((f32) ((s32) D_ovl13_01_8004C270[0] / 2) * 100.0f) - 50.0f;
+    D_ovl13_01_8004C260.y = 0.0f;
     D_ovl13_01_8004C260.z = (f32) (((f32) ((s32) D_ovl13_01_8004C270[2] / 2) * 100.0f) - 50.0f);
     func_ovl13_01_8004A4AC();
     func_ovl13_01_8004AD18(func_ovl13_01_800493EC, 5);
@@ -1194,8 +1194,6 @@ loop_1:
 
 void func_ovl13_01_800481D0(void) {
     f32 var_fv1;
-    f32 var_fv1_2;
-    f32 var_fv1_3;
 
     switch (D_ovl13_01_8004C2AC) {                  /* switch 1; irregular */
     case 0:                                         /* switch 1 */
@@ -1240,21 +1238,21 @@ void func_ovl13_01_800481D0(void) {
         D_ovl13_01_8004C3A8.x -= 360.0f;
     } else {
         if (D_ovl13_01_8004C3A8.x < 0.0f) {
-            var_fv1_2 = D_ovl13_01_8004C3A8.x + 360.0f;
+            var_fv1 = D_ovl13_01_8004C3A8.x + 360.0f;
         } else {
-            var_fv1_2 = D_ovl13_01_8004C3A8.x;
+            var_fv1 = D_ovl13_01_8004C3A8.x;
         }
-        D_ovl13_01_8004C3A8.x = var_fv1_2;
+        D_ovl13_01_8004C3A8.x = var_fv1;
     }
     if (D_ovl13_01_8004C3A8.z >= 360.0f) {
         D_ovl13_01_8004C3A8.z = (f32) (D_ovl13_01_8004C3A8.z - 360.0f);
     } else {
         if (D_ovl13_01_8004C3A8.z < 0.0f) {
-            var_fv1_3 = D_ovl13_01_8004C3A8.z + 360.0f;
+            var_fv1 = D_ovl13_01_8004C3A8.z + 360.0f;
         } else {
-            var_fv1_3 = D_ovl13_01_8004C3A8.z;
+            var_fv1 = D_ovl13_01_8004C3A8.z;
         }
-        D_ovl13_01_8004C3A8.z = var_fv1_3;
+        D_ovl13_01_8004C3A8.z = var_fv1;
     }
     D_ovl13_01_8004C338->unk40->unk1C = D_ovl13_01_8004C3A8.y;
     D_ovl13_01_8004C338->unk40->unk20 = D_ovl13_01_8004C3A8.x;
