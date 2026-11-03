@@ -9,7 +9,7 @@
  * goes through 0x2501 and 0x2503, with 0x2505 for 80043B5C's offsets.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 92, eu 92, jp 82
+ * differing words: us 79, eu 79, jp 69
  *
  * What still differs in us (words):
  * - func_ovl0A_06_80043010 (17; the statics up to 80043B5C): 8004311C's
@@ -21,11 +21,9 @@
  *   in an `if (0)`, costs 8 bytes again; 80043248 returning its own
  *   buffer gets the frame too, but moves 80043250's registers and so its
  *   callers'); 800432F8's spill slot, 0x18 for the original's 0x1C (2).
- * - func_ovl0A_06_80043B5C (62; with the statics after it): 80043E68
+ * - func_ovl0A_06_80043B5C (49; with the statics after it): 80043E68
  *   uses t3 where the original avoids it (42: every address it keeps
- *   in a register is one register on, in both arms); 80044620 (13:
- *   D_ovl0A_06_800473F8 and the 1 stored into it in v0 where the
- *   original has v1, in cases 10 and 15).
+ *   in a register is one register on, in both arms).
  * - func_ovl0A_06_80044BFC (13): D_8004701C's value is in v1, not a0,
  *   and `status` in a0, not v1 (no order of the four locals swaps them).
  *
@@ -37,6 +35,10 @@
  * 80044BFC around it change: jp 373).
  *
  * How the rest came to match:
+ * - 80044620: 8004423C is declared (and defined) `s32`, though it returns
+ *   nothing: its callers then take v0 as clobbered, and
+ *   D_ovl0A_06_800473F8 and the 1 stored into it go to v1 as in the
+ *   original (cases 10 and 15).
  * - 80044F68: the handler's empty cases are only `case 15: case 16:`
  *   (the jump table is the same): with every case from 4 to 16 listed,
  *   uopt keeps the inlined destroy loop's i and n in v0/v1 and spills
@@ -536,7 +538,7 @@ static void func_ovl0A_06_800436BC(void);
 static void func_ovl0A_06_80043010(s32 *handles, s32 n);
 void func_ovl0A_06_80043B5C(void);
 static void func_ovl0A_06_80043E68(s32 msg);
-static void func_ovl0A_06_8004423C(s32 state);
+static s32 func_ovl0A_06_8004423C(s32 state);
 static s32 func_ovl0A_06_8004439C(s32 status);
 static s32 func_ovl0A_06_80044400(s32 mask);
 static s32 func_ovl0A_06_80044468(s32 reload);
@@ -581,7 +583,7 @@ static void func_ovl0A_06_800436BC(void);
 static void func_ovl0A_06_80043010(s32 *handles, s32 n);
 void func_ovl0A_06_80043B5C(void);
 static void func_ovl0A_06_80043E68(s32 msg);
-static void func_ovl0A_06_8004423C(s32 state);
+static s32 func_ovl0A_06_8004423C(s32 state);
 static s32 func_ovl0A_06_8004439C(s32 status);
 static s32 func_ovl0A_06_80044400(s32 mask);
 static s32 func_ovl0A_06_80044468(s32 reload);
@@ -626,7 +628,7 @@ static void func_ovl0A_06_800436BC(void);
 static void func_ovl0A_06_80043010(s32 *handles, s32 n);
 void func_ovl0A_06_80043B5C(void);
 static void func_ovl0A_06_80043E68(s32 msg);
-static void func_ovl0A_06_8004423C(s32 state);
+static s32 func_ovl0A_06_8004423C(s32 state);
 static s32 func_ovl0A_06_8004439C(s32 status);
 static s32 func_ovl0A_06_80044400(s32 mask);
 static s32 func_ovl0A_06_80044468(s32 reload);
@@ -671,7 +673,7 @@ static void func_ovl0A_06_800436BC(void);
 static void func_ovl0A_06_80043010(s32 *handles, s32 n);
 void func_ovl0A_06_80043B5C(void);
 static void func_ovl0A_06_80043E68(s32 msg);
-static void func_ovl0A_06_8004423C(s32 state);
+static s32 func_ovl0A_06_8004423C(s32 state);
 static s32 func_ovl0A_06_8004439C(s32 status);
 static s32 func_ovl0A_06_80044400(s32 mask);
 static s32 func_ovl0A_06_80044468(s32 reload);
@@ -1218,7 +1220,7 @@ static s32 func_ovl0A_06_8004439C(s32 status) {
     return ret;
 }
 
-static void func_ovl0A_06_8004423C(s32 state) {
+static s32 func_ovl0A_06_8004423C(s32 state) {
     if (state >= 10) {
         if (D_ovl0A_06_8004701C < 10) {
             D_ovl0A_06_800473E8 = D_ovl0A_06_8004701C;
