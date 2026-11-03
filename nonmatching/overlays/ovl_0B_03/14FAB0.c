@@ -6,7 +6,7 @@
  * tables, .bss 0x1140, as the original's sizes). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1636, eu 1636, jp 2643
+ * differing words: us 1109, eu 1109, jp 2643
  *
  * jp (`#if VERSION_JP`) has its own strings (80048AF4, 80048B60,
  * 80049144, and D_ovl0B_03_8004901C_jp for us's 80049168, with the
@@ -1957,14 +1957,14 @@ void func_ovl0B_03_8004386C(void) {
                         }
                         if (j & 1) {
 #if VERSION_JP
-                            h = func_ovl0B_03_800486F0(D_ovl0B_03_80049144, 0x42, 0x6E, 0.6f, 0.6f, 2);
+                            state = func_ovl0B_03_800486F0(D_ovl0B_03_80049144, 0x42, 0x6E, 0.6f, 0.6f, 2);
 #else
-                            h = func_ovl0B_03_80048748(D_ovl0B_03_80049144, 0x42, 0x6E, 0.6f, 0.6f, 2);
+                            state = func_ovl0B_03_80048748(D_ovl0B_03_80049144, 0x42, 0x6E, 0.6f, 0.6f, 2);
 #endif
                             func_ovl0B_03_80048328(2);
                             func_ovl0B_03_80048448();
                             func_ovl0B_03_80048328(2);
-                            func_ovl0B_03_800486F8(h);
+                            func_ovl0B_03_800486F8(state);
                             func_ovl0B_03_80048328(4);
                         }
                         for (i = 0; i != 4; i++) {
@@ -1974,14 +1974,14 @@ void func_ovl0B_03_8004386C(void) {
 #if VERSION_JP
                                     D_ovl0B_03_8004901C_jp[0] = i + 0x11;
                                     func_ovl0B_03_80048890(0x18);
-                                    h = func_ovl0B_03_800486F0(D_ovl0B_03_8004901C_jp, 0x42, 0x6E, 0.6f, 0.6f, 3);
+                                    state = func_ovl0B_03_800486F0(D_ovl0B_03_8004901C_jp, 0x42, 0x6E, 0.6f, 0.6f, 3);
 #else
                                     D_ovl0B_03_80049168[0x26] = i + 0x11;
                                     func_ovl0B_03_80048890(0x18);
-                                    h = func_ovl0B_03_80048748(D_ovl0B_03_80049168, 0x42, 0x6E, 0.6f, 0.6f, 3);
+                                    state = func_ovl0B_03_80048748(D_ovl0B_03_80049168, 0x42, 0x6E, 0.6f, 0.6f, 3);
 #endif
                                     func_ovl0B_03_80048328(0xB4);
-                                    func_ovl0B_03_800486F8(h);
+                                    func_ovl0B_03_800486F8(state);
                                     func_ovl0B_03_80048328(4);
                                 }
                             }
@@ -2308,7 +2308,7 @@ void func_ovl0B_03_8004386C(void) {
 #if VERSION_JP
                 func_ovl0B_03_800486F8(lab->unk18);
 #else
-                h = lab->unk18;
+                next = lab->unk18;
 #endif
                 switch (sel) {
                 case 0:
@@ -2344,7 +2344,7 @@ void func_ovl0B_03_8004386C(void) {
                 lab->unk18 = func_ovl0B_03_800486F0(str, lab->unk6, lab->unkA, lab->unkC, lab->unk10, lab->unk14);
 #else
                 lab->unk18 = func_ovl0B_03_80048748(str, func_ovl0B_03_80043234(str, 0.6f) + 42.0f, lab->unkA, lab->unkC, lab->unk10, lab->unk14);
-                func_ovl0B_03_800486F8(h);
+                func_ovl0B_03_800486F8(next);
 #endif
                 func_ovl0B_03_80048350();
             }
