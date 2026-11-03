@@ -5,7 +5,7 @@
  * as the original; jp's .data is 0x1A0). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 10, eu 10, jp 12
+ * differing words: us 10, eu 10, jp 10
  *
  * IDO -O3: the functions are written last to first. The tail (80045438,
  * 800453F0, 800453BC, 80045494 and the twelve empty stubs) is ovl_17_10's;
@@ -32,7 +32,8 @@
  *   second object's two frames ($s7 there as in the original); the endless
  *   button waits are `while (TRUE) { if (...) break; ... }` (test at the
  *   top, `b` back); the figures' loop sets i = 0 ahead of x; each text
- *   x goes through x before its call (jp's frame needs it). Only $fs0 is
+ *   x goes through x before its call (jp's frame needs it; the second
+ *   name's x and creation share a line, for jp's schedule). Only $fs0 is
  *   saved, 1.5f and the text height stay out of registers, and the frame
  *   is 0x98 (jp 0x70; the inlined statics' areas count once anything
  *   below them, the spilled height, is used).
@@ -62,10 +63,7 @@
  *   original) for the same reason.
  *
  * What still differs:
- * - func_ovl0B_07_800435FC (jp 2): in the second text's creation the
- *   original loads 1.0f after the name's address (`mtc1 at,fv0` after
- *   `lw t7`), ours before.
- * - func_ovl0B_07_8004400C (14): the original sets off (`mov.s fs3,fs4`)
+ * - func_ovl0B_07_8004400C (10): the original sets off (`mov.s fs3,fs4`)
  *   at the top, ours after the counting, so off and 90.0f trade $fs3 and
  *   $fs0 (f26/f20) and 170.0f takes $fs2 (f24) for 90.0f's. With off
  *   set at the top (and a dead read keeping step to the end) ours holds
@@ -656,8 +654,7 @@ void func_ovl0B_07_800435FC(void) {
     if (D_ovl0B_07_80046F18->unk0 == 0 && D_ovl0B_07_80046F18->unk40[D_ovl0B_07_80046F20[0]] == 1) {
         x = TEXT_X(TEXT_CONGRATS, 1.0f);
         D_ovl0B_07_80046F30 = TEXT_NEW(TEXT_CONGRATS, x, 30, 1.0f, 1.0f, 3);
-        x = TEXT_X(D_ovl0B_07_80046F18->unkC4[D_ovl0B_07_80046F20[0]], 1.0f);
-        D_ovl0B_07_80046F34 = TEXT_NEW(D_ovl0B_07_80046F18->unkC4[D_ovl0B_07_80046F20[0]], x, 190, 1.0f, 1.0f, 5);
+        x = TEXT_X(D_ovl0B_07_80046F18->unkC4[D_ovl0B_07_80046F20[0]], 1.0f); /* one line: jp's schedule */ D_ovl0B_07_80046F34 = TEXT_NEW(D_ovl0B_07_80046F18->unkC4[D_ovl0B_07_80046F20[0]], x, 190, 1.0f, 1.0f, 5);
         scale = 0.0f;
         for (i = 0; i < 40; i++) {
             scale += 0.025f;
