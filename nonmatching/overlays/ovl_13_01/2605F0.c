@@ -9,7 +9,7 @@
  * .bss 0x1F0 as the original). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 798, eu 798, jp 798
+ * differing words: us 560, eu 560, jp 560
  *
  * Drafted from m2c, then rewritten function by function: the angle
  * normalisations are the original's ternaries (A180, and the 0-360 wrap
@@ -18,9 +18,10 @@
  * 80048418 and 80047CB4, 80048B6C in 80048BB0), object creation is
  * chained (`obj = D_x = func_ovl13_01_8004B660(...)`), and the locals are
  * declared in the order that gives the original's frame slots. 800431D4's
- * thresholds are an `s32 thr[3]` the frame holds (the original spills
- * them; [1] and [2] used) with an int `frames`, which costs a `li`/`cvt.s.w` but is the
- * closest found.
+ * thresholds are `(s32)(frames * 0.25f)` and `* 0.95f` written in the
+ * loop's conditions with an f32 `frames`: the compiler hoists them into
+ * its own frame slots below the locals, as the original does, once the
+ * early `return` and the `for` loop keep them out of saved registers.
  * The 14 stubs (two `jr ra` in a row): 8004A200 is the camera reset
  * 8004A208, 8004A2D4 and 8004A4C4 share (inlined in each), 8004A4AC-BC
  * statics inlined in 8004A4C4; 8004A898-8004A8E0 are the ten unused
@@ -46,13 +47,12 @@
  * original reloads it with lui each time): check their .bss places at
  * move time.
  *
- * What still differs in us (words): 80043878 271, 800446FC 226, 800431D4
- * 218; under 50 each: 80043608, 800455D0, 80045B0C, 80045C9C, 80046DC4,
- * 80046E00, 80047144, 800477C0, 80047CB4, 80048418, 80049870. The
- * other 68 match. 80048418's 20 are no instruction of its own: they came
- * when 800450B4 shrank to its size, and its compared range then holds a
- * word more (.text is 4 bytes short in all: 80043878, 800446FC, 800431D4 4
- * short, 80046E00 8 long). 8004636C matched with the static 80043124
+ * What still differs in us (words): 80043878 271, 800446FC 226;
+ * under 50 each: 80043608, 800455D0, 80045B0C, 80045C9C, 80046DC4,
+ * 80046E00, 80047144, 800477C0, 80047CB4, 80049870. The other 70 match
+ * (80048418 ends in an endless loop, padded to alignment, so its size
+ * follows the code before it: 80043878 and 800446FC are 4 bytes short,
+ * 80046E00 8 long). 8004636C matched with the static 80043124
  * declared s32 ($v1 for its caller's loads, as in 0B_03).
  * 800450B4 matched once `dx /= (f32)arg0` came after dy's normalisation:
  * the conversion's place follows its first use. 800477C0's case 1 wrap
@@ -2740,13 +2740,13 @@ void func_ovl13_01_800431D4(void) {
     f32 pe;
     Vec3f sp108;
     Vec3f spFC;
-    s32 frames;
-    f32 dx0;
-    f32 dy0;
-    f32 dz0;
-    f32 dx1;
-    f32 dy1;
-    f32 dz1;
+    f32 frames;
+    f32 pf0;
+    f32 pf1;
+    f32 pf2;
+    f32 pf3;
+    f32 pf4;
+    f32 pf5;
     f32 fade;
     s32 i;
     s32 started;
@@ -2754,86 +2754,75 @@ void func_ovl13_01_800431D4(void) {
     s32 p1;
     s32 p2;
     s32 p3;
+    s32 p4;
+    s32 p5;
+    s32 p6;
     Move_ovl13_01 sp74;
-    s32 thr[3];
 
-    if (func_ovl13_01_8004BA10(0x400) == 0) {
-        func_ovl13_01_8004B788(func_ovl13_01_80043010, NULL, 0, 0, 0x150);
-        fade = 100.0f;
-        moved = 0;
-        started = 0;
-        i = 0;
-        frames = 300;
-        step = (D_ovl13_01_8004C378.z - D_ovl13_01_8004C368.z) / frames;
-        if (D_ovl13_01_8004C388.z < D_ovl13_01_8004C378.z) {
-            thr[2] = frames * 0.95f;
-            thr[1] = frames * 0.25f;
-            do {
-            func_ovl13_01_8004BA88(0, 0, 0, fade);
-            D_ovl13_01_8004C388.z += step;
-            if (fade > 0.0f) {
-                fade -= 2.5f;
-            }
-            if (fade <= 0.0f) {
-                fade = 0.0f;
-            }
-            if (thr[1] < i) {
-                if (started == 0) {
-                    started = 1;
-                    func_ovl13_01_8004B788(func_ovl13_01_80043158, NULL, 0, 0, 0x150);
-                }
-            }
-            if ((thr[2] < i) && (moved == 0)) {
-                moved = 1;
-                se = 0xBF;
-                func_ovl13_01_8004B540(NULL);
-                func_ovl13_01_8004B4E0(0x30);
-                func_ovl13_01_8004B570(&spFC.x);
-                func_ovl13_01_8004B580(&sp108.x);
-                dx0 = (2300.0f - spFC.x) / 60.0f;
-                dy0 = (856.0f - spFC.y) / 60.0f;
-                dz0 = (1500.0f - spFC.z) / 60.0f;
-                dx1 = (2300.0f - sp108.x) / 60.0f;
-                dy1 = (1772.0f - sp108.y) / 60.0f;
-                dz1 = (3900.0f - sp108.z) / 60.0f;
-                sp74.unk0 = 0x78;
-                sp74.unk4 = 1;
-                sp74.unk8 = 0;
-                sp74.unk3C = 0;
-                sp74.unk40 = 0;
-                sp74.unkC[0] = dx0;
-                sp74.unkC[1] = dy0;
-                sp74.unkC[2] = dz0;
-                sp74.unk18[0] = (dx0 / 120.0f) * -1.0f;
-                sp74.unk18[1] = (dy0 / 120.0f) * -1.0f;
-                sp74.unk18[2] = (dz0 / 120.0f) * -1.0f;
-                sp74.unk24[0] = dx1;
-                sp74.unk24[1] = dy1;
-                sp74.unk24[2] = dz1;
-                sp74.unk30[0] = (dx1 / 120.0f) * -1.0f;
-                sp74.unk30[1] = (dy1 / 120.0f) * -1.0f;
-                sp74.unk30[2] = (dz1 / 120.0f) * -1.0f;
-                func_ovl13_01_8004B4B0(&sp74, 0x170, 0);
-                func_ovl13_01_8004BAE0(1);
-                func_ovl13_01_8004BAE8(0xBF);
-            }
-            func_ovl13_01_8004B7D0();
-            i++;
-            } while (D_ovl13_01_8004C388.z < D_ovl13_01_8004C378.z);
+    if (func_ovl13_01_8004BA10(0x400) != 0) {
+        return;
+    }
+    func_ovl13_01_8004B788(func_ovl13_01_80043010, NULL, 0, 0, 0x150);
+    fade = 100.0f;
+    moved = 0;
+    started = 0;
+    frames = 300.0f;
+    step = (D_ovl13_01_8004C378.z - D_ovl13_01_8004C368.z) / frames;
+    for (i = 0; D_ovl13_01_8004C388.z < D_ovl13_01_8004C378.z; i++) {
+        func_ovl13_01_8004BA88(0, 0, 0, fade);
+        D_ovl13_01_8004C388.z += step;
+        if (fade > 0.0f) {
+            fade -= 2.5f;
         }
-        func_ovl13_01_8004B4D0();
-        func_ovl13_01_8004B488(2300.0f, 1772.0f, 3900.0f);
-        D_ovl13_01_8004C24C = 1.0f;
-        func_ovl13_01_8004B468(1);
-        func_ovl13_01_8004BA00(0x41A);
-        for (; se >= 0; se -= 8) {
-            func_ovl13_01_8004BAE8(se);
-            func_ovl13_01_8004B7D0();
+        if (fade <= 0.0f) {
+            fade = 0.0f;
         }
-        func_ovl13_01_8004BAE0(0);
-        if (func_ovl13_01_8004B9F0(0xA4) != 0) {
-            func_ovl13_01_8004B7A8(0xA);
+        if ((i > (s32)(frames * 0.25f)) && (started == 0)) {
+            func_ovl13_01_8004B788(func_ovl13_01_80043158, NULL, 0, 0, 0x150);
+            started = 1;
         }
+        if ((i > (s32)(frames * 0.95f)) && (moved == 0)) {
+            moved = 1;
+            se = 0xBF;
+            func_ovl13_01_8004B540(NULL);
+            func_ovl13_01_8004B4E0(0x30);
+            func_ovl13_01_8004B570(&spFC.x);
+            func_ovl13_01_8004B580(&sp108.x);
+            sp74.unk0 = 0x78;
+            sp74.unk4 = 1;
+            sp74.unk8 = 0;
+            sp74.unk3C = 0;
+            sp74.unk40 = 0;
+            sp74.unkC[0] = (2300.0f - spFC.x) / 60.0f;
+            sp74.unkC[1] = (856.0f - spFC.y) / 60.0f;
+            sp74.unkC[2] = (1500.0f - spFC.z) / 60.0f;
+            sp74.unk18[0] = (sp74.unkC[0] / 120.0f) * -1.0f;
+            sp74.unk18[1] = (sp74.unkC[1] / 120.0f) * -1.0f;
+            sp74.unk18[2] = (sp74.unkC[2] / 120.0f) * -1.0f;
+            sp74.unk24[0] = (2300.0f - sp108.x) / 60.0f;
+            sp74.unk24[1] = (1772.0f - sp108.y) / 60.0f;
+            sp74.unk24[2] = (3900.0f - sp108.z) / 60.0f;
+            sp74.unk30[0] = (sp74.unk24[0] / 120.0f) * -1.0f;
+            sp74.unk30[1] = (sp74.unk24[1] / 120.0f) * -1.0f;
+            sp74.unk30[2] = (sp74.unk24[2] / 120.0f) * -1.0f;
+            func_ovl13_01_8004B4B0(&sp74, 0x170, 0);
+            func_ovl13_01_8004BAE0(1);
+            func_ovl13_01_8004BAE8(0xBF);
+        }
+        func_ovl13_01_8004B7D0();
+    }
+    func_ovl13_01_8004B4D0();
+    func_ovl13_01_8004B488(2300.0f, 1772.0f, 3900.0f);
+    D_ovl13_01_8004C24C = 1.0f;
+    func_ovl13_01_8004B468(1);
+    func_ovl13_01_8004BA00(0x41A);
+    for (; se >= 0; se -= 8) {
+        func_ovl13_01_8004BAE8(se);
+        func_ovl13_01_8004B7D0();
+    }
+    func_ovl13_01_8004BAE0(0);
+    if (func_ovl13_01_8004B9F0(0xA4) != 0) {
+        func_ovl13_01_8004B7A8(0xA);
     }
 }
 
