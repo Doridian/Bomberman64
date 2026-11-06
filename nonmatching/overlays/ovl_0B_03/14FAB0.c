@@ -6,7 +6,7 @@
  * tables, .bss 0x1140, as the original's sizes). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4, eu 4, jp 66
+ * differing words: us 4, eu 4, jp 33
  *
  * jp (`#if VERSION_JP`) has its own strings (80048AF4, 80048B60,
  * 80049144, and D_ovl0B_03_8004901C_jp for us's 80049168, with the
@@ -75,19 +75,19 @@
  * Everything else matches.
  *
  * jp builds the same 8004386C but for its #if VERSION_JP parts: the
- * labels and strings, and the second option-label loop, which keeps the
- * old label's handle in state (`state = lab->unk18;` before freeing it)
- * where us keeps it in next until after the new label. That one variable
- * is what keeps &D_ovl0B_03_8004A324 out of a register in jp: uopt's
- * priority for the address is at the edge in this function, and with the
- * handle in next (or freed straight from lab->unk18) it still takes $s0.
- * What still differs in jp (words): 8004386C 66, all stack offsets: the
- * original's frame is 8 smaller (w at 144(sp), the cursor tables and the
- * locals above w 8 lower). w sits 4 nearer the top than in us, so jp has
- * one local fewer between the tables and w (lab, likely: the original jp
- * reaches the label through D_ovl0B_03_80048C90[k], its address in $s3),
- * and its spills are 4 nearer w, as in us; without lab in jp alone the
- * frame stays 312 until that gap is found, so lab stays.
+ * labels and strings; case 0's two message handles are held in k (us:
+ * state), which is what gives k the original's $s0 (shared with state)
+ * for case 2's row and case 3/4's count; and the second option-label
+ * loop has no lab: it frees D_ovl0B_03_80048C90[k].unk18 straight away
+ * and indexes the table by k (its address CSE'd into $s3), as the
+ * original's frame shows (one local fewer between the tables and w).
+ * With the handles in state instead, k takes $s3, and freeing through
+ * a local held in state/next, or k merged into state, lets
+ * &D_ovl0B_03_8004A324 take $s0 (its priority is at the edge).
+ * What still differs in jp (words): 8004386C 33, all stack offsets: the
+ * same extra uopt temporary as in us (below); with lab gone it pushes the
+ * frame from 304 to 312 (w at 152, not 144; the locals above it 8 too
+ * high) and the spills to 132/136 (128/132).
  *
  * The frame, measured (scratch/lastmile3/ of the main checkout: sp.py,
  * sp2.py, gap.py and the v*.py variant lists): below the locals uopt
@@ -806,7 +806,9 @@ void func_ovl0B_03_8004386C(void) {
     MenuPos_ovl0B_03 spA4[5] = { { 172, 78, 0, 2, 0, 0 }, { 172, 108, 1, 3, 0, 0 }, { 172, 138, 2, 4, 0, 0 }, { 172, 168, 3, 5, 0, 0 }, { 172, 198, 4, 0, 0, 0 } };
     s32 i;
     f32 t;
+#if !VERSION_JP
     Label_ovl0B_03 *lab;
+#endif
     f32 w;
 
     D_ovl0B_03_8004A324 = func_ovl0B_03_80047938();
@@ -869,14 +871,18 @@ void func_ovl0B_03_8004386C(void) {
                         }
                         if (j & 1) {
 #if VERSION_JP
-                            state = func_ovl0B_03_800486F0(D_ovl0B_03_80049144, 0x42, 0x6E, 0.6f, 0.6f, 2);
+                            k = func_ovl0B_03_800486F0(D_ovl0B_03_80049144, 0x42, 0x6E, 0.6f, 0.6f, 2);
+                            func_ovl0B_03_80048328(2);
+                            func_ovl0B_03_80048448();
+                            func_ovl0B_03_80048328(2);
+                            func_ovl0B_03_800486F8(k);
 #else
                             state = func_ovl0B_03_80048748(D_ovl0B_03_80049144, 0x42, 0x6E, 0.6f, 0.6f, 2);
-#endif
                             func_ovl0B_03_80048328(2);
                             func_ovl0B_03_80048448();
                             func_ovl0B_03_80048328(2);
                             func_ovl0B_03_800486F8(state);
+#endif
                             func_ovl0B_03_80048328(4);
                         }
                         for (i = 0; i != 4; i++) {
@@ -886,14 +892,16 @@ void func_ovl0B_03_8004386C(void) {
 #if VERSION_JP
                                     D_ovl0B_03_8004901C_jp[0] = i + 0x11;
                                     func_ovl0B_03_80048890(0x18);
-                                    state = func_ovl0B_03_800486F0(D_ovl0B_03_8004901C_jp, 0x42, 0x6E, 0.6f, 0.6f, 3);
+                                    k = func_ovl0B_03_800486F0(D_ovl0B_03_8004901C_jp, 0x42, 0x6E, 0.6f, 0.6f, 3);
+                                    func_ovl0B_03_80048328(0xB4);
+                                    func_ovl0B_03_800486F8(k);
 #else
                                     D_ovl0B_03_80049168[0x26] = i + 0x11;
                                     func_ovl0B_03_80048890(0x18);
                                     state = func_ovl0B_03_80048748(D_ovl0B_03_80049168, 0x42, 0x6E, 0.6f, 0.6f, 3);
-#endif
                                     func_ovl0B_03_80048328(0xB4);
                                     func_ovl0B_03_800486F8(state);
+#endif
                                     func_ovl0B_03_80048328(4);
                                 }
                             }
@@ -1215,11 +1223,10 @@ void func_ovl0B_03_8004386C(void) {
                     }
                     break;
                 }
-                lab = &D_ovl0B_03_80048C90[k];
 #if VERSION_JP
-                state = lab->unk18;
-                func_ovl0B_03_800486F8(state);
+                func_ovl0B_03_800486F8(D_ovl0B_03_80048C90[k].unk18);
 #else
+                lab = &D_ovl0B_03_80048C90[k];
                 next = lab->unk18;
 #endif
                 switch (k) {
@@ -1238,22 +1245,38 @@ void func_ovl0B_03_8004386C(void) {
                 case 2:
                     str = D_ovl0B_03_80048D00[D_ovl0B_03_8004A324->unk38];
                     if (D_ovl0B_03_8004A324->unk38 != 0) {
+#if VERSION_JP
+                        D_ovl0B_03_80048C90[k].unk14 = 0;
+#else
                         lab->unk14 = 0;
+#endif
                     } else {
+#if VERSION_JP
+                        D_ovl0B_03_80048C90[k].unk14 = 1;
+#else
                         lab->unk14 = 1;
+#endif
                     }
                     break;
                 case 3:
                     str = D_ovl0B_03_80048D00[M2C_FIELD(D_ovl0B_03_8004A324, s32 *, 0x3C)];
                     if (M2C_FIELD(D_ovl0B_03_8004A324, s32 *, 0x3C) != 0) {
+#if VERSION_JP
+                        D_ovl0B_03_80048C90[k].unk14 = 0;
+#else
                         lab->unk14 = 0;
+#endif
                     } else {
+#if VERSION_JP
+                        D_ovl0B_03_80048C90[k].unk14 = 1;
+#else
                         lab->unk14 = 1;
+#endif
                     }
                     break;
                 }
 #if VERSION_JP
-                lab->unk18 = func_ovl0B_03_800486F0(str, lab->unk6, lab->unkA, lab->unkC, lab->unk10, lab->unk14);
+                D_ovl0B_03_80048C90[k].unk18 = func_ovl0B_03_800486F0(str, D_ovl0B_03_80048C90[k].unk6, D_ovl0B_03_80048C90[k].unkA, D_ovl0B_03_80048C90[k].unkC, D_ovl0B_03_80048C90[k].unk10, D_ovl0B_03_80048C90[k].unk14);
 #else
                 lab->unk18 = func_ovl0B_03_80048748(str, func_ovl0B_03_80043234(str, 0.6f) + 42.0f, lab->unkA, lab->unkC, lab->unk10, lab->unk14);
                 func_ovl0B_03_800486F8(next);
