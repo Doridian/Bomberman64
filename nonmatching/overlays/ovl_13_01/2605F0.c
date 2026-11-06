@@ -9,7 +9,7 @@
  * .bss 0x1F0 as the original). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 309, eu 309, jp 309
+ * differing words: us 92, eu 92, jp 92
  *
  * Drafted from m2c, then rewritten function by function: the angle
  * normalisations are the original's ternaries (A180, and the 0-360 wrap
@@ -47,12 +47,15 @@
  * original reloads it with lui each time): check their .bss places at
  * move time.
  *
- * What still differs in us (words): 800446FC 226; under 50 each:
- * 80043608, 800455D0, 80045B0C, 80045C9C, 80046DC4, 80046E00, 80047144,
- * 800477C0, 80047CB4, 80048418, 80049870. The other 70 match.
- * 80048418's 20 are no code of its own: it ends in an endless loop,
- * padded to alignment, so its size follows the code before it (800446FC
- * is 4 bytes short, 80046E00 8 long).
+ * What still differs in us (words), all under 25: 80043608, 800446FC,
+ * 800455D0, 80045B0C, 80045C9C, 80046DC4, 80046E00, 80047144, 800477C0,
+ * 80047CB4, 80048418, 80049870. The other 70 match. 80048418's 21 are
+ * no code of its own: it ends in an endless loop, padded to alignment,
+ * so its size follows the code before it (80046E00 is 8 bytes long).
+ * 800446FC's lone `c.le.s` after the second loop's wrap is a clamp of d
+ * whose result is never used (uopt keeps the if, as1 drops the branch);
+ * what is left there is 90.0f's register (f12 for f14) in that loop and
+ * a reload of it in the first wrap.
  * 80043878's register allocation turns on its zeros: `D_ovl13_01_8004C2A8
  * = 0` as an int in both places, 0.0f everywhere else. 8004636C matched with the static 80043124
  * declared s32 ($v1 for its caller's loads, as in 0B_03).
@@ -2234,19 +2237,17 @@ void func_ovl13_01_800446FC(void) {
     f32 cur;
     f32 d;
     f32 z;
-    f32 x;
+    f32 step;
     Vec3f sp84;
     f32 pad80;
     f32 sp7C;
     s32 i;
     s32 n;
-    f32 step;
 
     D_ovl13_01_8004C2A8 = 1.0f;
     func_ovl13_01_8004B5C8(&D_ovl13_01_8004C260.x, &D_ovl13_01_8004C388.x, &spB4.x);
     a = spB4.x + 90.0f;
-    a = (a >= 360.0f) ? a - 360.0f : ((a < 0.0f) ? a + 360.0f : a);
-    if (a < 180.0f) {
+    if (((a >= 360.0f) ? a - 360.0f : ((a < 0.0f) ? a + 360.0f : a)) < 180.0f) {
         spB4.x = 0.0f;
     } else {
         spB4.x = 180.0f;
@@ -2282,25 +2283,39 @@ void func_ovl13_01_800446FC(void) {
         } while (i != n);
     }
     func_ovl13_01_8004BA00(0x414);
-    z = 0.0f;
     a = spB4.x + 180.0f;
     a = (a >= 360.0f) ? a - 360.0f : ((a < 0.0f) ? a + 360.0f : a);
+    z = 0.0f;
     sp7C = D_ovl13_01_8004C338->unk70 * 0.2f;
     while (func_ovl13_01_8004B5E0(&D_ovl13_01_8004C260.x, &D_ovl13_01_8004C388.x) > 100.0f) {
         if (func_ovl13_01_80043830() >= 2) {
             break;
         }
         func_ovl13_01_8004B5C8(&D_ovl13_01_8004C388.x, &D_ovl13_01_8004C260.x, &spA8.x);
-        spA8.y = W(spA8.y);
-        d = S(a) - S(D_ovl13_01_8004C3A8.x);
+        if (spA8.y - 90.0f >= 360.0f) {
+            spA8.y = spA8.y - 90.0f - 360.0f;
+        } else {
+            spA8.y = (spA8.y < 90.0f) ? spA8.y - 90.0f + 360.0f : spA8.y - 90.0f;
+            if (spA8.y) {}
+        }
+        b = S(a);
+        cur = S(D_ovl13_01_8004C3A8.x);
+        d = b - cur;
         if (d > 180.0f) {
             d -= 360.0f;
         }
         if (d < -180.0f) {
             d += 360.0f;
         }
+        /* the clamp's result is never used: only the compare is left */
         if (d >= 0.0f) {
-            d = d;
+            if (D_ovl13_01_8004C2A8 < d) {
+                d = D_ovl13_01_8004C2A8;
+            }
+        } else {
+            if (d < D_ovl13_01_8004C2A8 * -1.0f) {
+                d = D_ovl13_01_8004C2A8 * -1.0f;
+            }
         }
         spA8.z = z;
         z += sp7C;
