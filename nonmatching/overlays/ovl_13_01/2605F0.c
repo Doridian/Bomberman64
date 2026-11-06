@@ -9,7 +9,7 @@
  * .bss 0x1F0 as the original). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 802, eu 802, jp 802
+ * differing words: us 798, eu 798, jp 798
  *
  * Drafted from m2c, then rewritten function by function: the angle
  * normalisations are the original's ternaries (A180, and the 0-360 wrap
@@ -47,11 +47,13 @@
  * move time.
  *
  * What still differs in us (words): 80043878 271, 800446FC 226, 800431D4
- * 218; under 50 each: 80043608, 800455D0, 80045B0C, 80045C9C, 8004636C,
- * 80046DC4, 80046E00, 80047144, 800477C0, 80047CB4, 80048418, 80049870. The
- * other 67 match. Many of the small counts (80048418's 20 among them) are
- * only `%lo` signs: .text is 4 bytes short in all (80043878, 800446FC,
- * 800431D4 short, 80046E00 8 long), which moves .rodata and .bss.
+ * 218; under 50 each: 80043608, 800455D0, 80045B0C, 80045C9C, 80046DC4,
+ * 80046E00, 80047144, 800477C0, 80047CB4, 80048418, 80049870. The
+ * other 68 match. 80048418's 20 are no instruction of its own: they came
+ * when 800450B4 shrank to its size, and its compared range then holds a
+ * word more (.text is 4 bytes short in all: 80043878, 800446FC, 800431D4 4
+ * short, 80046E00 8 long). 8004636C matched with the static 80043124
+ * declared s32 ($v1 for its caller's loads, as in 0B_03).
  * 800450B4 matched once `dx /= (f32)arg0` came after dy's normalisation:
  * the conversion's place follows its first use. 800477C0's case 1 wrap
  * is the macro W360 on the whole expression (a local for it gets copied
@@ -269,7 +271,7 @@ void func_ovl13_01_8004306C(s32 arg0);
 static void func_ovl13_01_800430CC(UnkStructA *arg0);
 static void func_ovl13_01_8004A4AC(void);
 static void func_ovl13_01_8004A200(void);
-void func_ovl13_01_80043124(s32 arg0, UnkStructA *arg1);
+s32 func_ovl13_01_80043124(s32 arg0, UnkStructA *arg1);
 void func_ovl13_01_80043158(void);
 void func_ovl13_01_800431D4(void);
 void func_ovl13_01_80043608(void);
@@ -2835,7 +2837,7 @@ void func_ovl13_01_800431D4(void) {
     }
 }
 
-void func_ovl13_01_80043124(s32 arg0, UnkStructA *arg1) {
+s32 func_ovl13_01_80043124(s32 arg0, UnkStructA *arg1) {
     UnkStructA_40 *temp_v0;
 
     temp_v0 = arg1->unk40;
