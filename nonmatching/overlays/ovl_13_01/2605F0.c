@@ -9,7 +9,7 @@
  * .bss 0x1F0 as the original). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 914, eu 914, jp 914
+ * differing words: us 807, eu 807, jp 807
  *
  * Drafted from m2c, then rewritten function by function: the angle
  * normalisations are the original's ternaries (A180, and the 0-360 wrap
@@ -47,9 +47,13 @@
  * move time.
  *
  * What still differs in us (words): 80043878 271, 800446FC 226, 800431D4
- * 218, 800450B4 127; under 50 each: 80043608, 800455D0, 80045B0C, 80045C9C,
- * 8004636C, 80046DC4, 80046E00, 80047144, 800477C0, 80047CB4, 80049870. The
- * other 67 match.
+ * 218; under 50 each: 80043608, 800455D0, 80045B0C, 80045C9C, 8004636C,
+ * 80046DC4, 80046E00, 80047144, 800477C0, 80047CB4, 80048418, 80049870. The
+ * other 67 match. Many of the small counts (80048418's 20 among them) are
+ * only `%lo` signs: .text is 4 bytes short in all (80043878, 800446FC,
+ * 800431D4 short, 80046E00 8 long), which moves .rodata and .bss.
+ * 800450B4 matched once `dx /= (f32)arg0` came after dy's normalisation:
+ * the conversion's place follows its first use.
  */
 #include "common.h"
 
@@ -2166,7 +2170,6 @@ void func_ovl13_01_800450B4(s32 arg0) {
         arg0 += 90;
     }
     ang = A180(pitch) - A180(sp78.y);
-    dx /= (f32)arg0;
     dy = ang;
     if (ang > 180.0f) {
         dy = ang - 360.0f;
@@ -2174,6 +2177,7 @@ void func_ovl13_01_800450B4(s32 arg0) {
     if (dy < -180.0f) {
         dy += 360.0f;
     }
+    dx /= (f32)arg0;
     dy /= (f32)arg0;
     dz = (dist - sp78.z) / (f32)arg0;
     i = 0;
