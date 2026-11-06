@@ -6,7 +6,7 @@
  * of it 800431C4's local table). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 86, eu 86, jp 86
+ * differing words: us 2, eu 2, jp 2
  * jp has its own strings, counts the characters itself in 80044424 (24
  * pixels each, as ovl_0B_03 does), draws through ZeroJump 0x2501
  * (DRAW_TEXT), puts the seconds one character further on and lays out the
@@ -43,11 +43,17 @@
  * in its own register ($f2), as the original; divided before the loop,
  * the sum was a ugen temporary and the divisor took the next one.
  *
+ * 800431C4's exits count their piece loops with k, declared in i's place
+ * (its home is the one the 0x8000 exit stores k = 0 to), with i declared
+ * after marks: k gets no s register there, as in the original. Their
+ * marks loops count with n, the 0x8000 exit's box loop with task (bound
+ * buttons = 3), and its alpha loop goes through m. The dead `t = 0.0f`
+ * before the final infinite loop stops uopt reloading t (40.0f) into
+ * $f20 ahead of it (it treats every variable as live in a loop with no
+ * exit, and rematerialises the constant ones; any constant but 40.0f
+ * does).
+ *
  * What still differs (words, the same in every version):
- * - 800431C4 84: registers only. The original frees no s register for the 0x4000 exit's piece loops (i in $t0
- *   there, $s2 here); the 0x8000 exit stores its i = 0 to i's home before
- *   the 80049178 call where uopt hoists it to the top of the branch here;
- *   the page turns keep &marks[i] in $v1 (here $s0).
  * - 800454F0 2: the star's fade loop's j = 0 goes into the 0x2DC call's
  *   delay slot in the original, the call's li a0 into the branch's before
  *   it: ugen must emit `li a0` before `move s0,zero` (as1 fills the
@@ -59,7 +65,10 @@
  *   the call with a for (;;) loop, uopt keeps 120 in a register
  *   (bne s0,s2). Not `f(0x2DC); j = 0;` (not hoisted), `#line` on
  *   j = 0, j = 0 in the argument ((j = 0, 0x2DC)), the constant through
- *   another local (folded).
+ *   another local (folded). Also not: the loop counting with i, dir or
+ *   another local; a for over j with j = 0 after the call and the stores
+ *   (uopt leaves it in the preheader); dead statements between j = 0 and
+ *   the call.
  * - Everything else matches.
  */
 #include "common.h"
@@ -1590,7 +1599,7 @@ void func_ovl0B_02_800431C4(void) {
     f32 a;
     f32 b;
     f32 t;
-    s32 i;
+    s32 k;
     s32 alpha;
     s32 task;
     Group_ovl0B_02 *g;
@@ -1608,6 +1617,7 @@ void func_ovl0B_02_800431C4(void) {
         { 0x68, 0x8C, 0x6E, 0x74 },
         { 0x78, 0x8D, 0x7B, 0x7E },
     };
+    s32 i;
 
     func_ovl0B_02_80043150(D_ovl0B_02_800499F0, 3);
     D_ovl0B_02_8004A3C8 = func_ovl0B_02_80049178(func_ovl0B_02_80046100, NULL, 0, 0, 0x130);
@@ -1718,28 +1728,28 @@ void func_ovl0B_02_800431C4(void) {
             func_ovl0B_02_80043010(D_ovl0B_02_800499F0, 3);
             func_ovl0B_02_80049180(D_ovl0B_02_8004A3C8);
             func_ovl0B_02_80048D10(D_ovl0B_02_8004A3E8[0]);
-            for (i = 0; i != 5; i++) {
-                func_ovl0B_02_80048D10(marks[i]);
+            for (n = 0; n != 5; n++) {
+                func_ovl0B_02_80048D10(marks[n]);
             }
             D_ovl0B_02_80049A50[0].unk10->unkC &= ~1;
-            for (i = 0; i < g->unk8; i++) {
-                m = pieces[i].unk10;
+            for (k = 0; k < g->unk8; k++) {
+                m = pieces[k].unk10;
                 m->unk36 = 0xFF;
                 m->unkC |= 0x1080;
             }
             for (alpha = 0xFF; alpha > 0; alpha -= 4) {
                 D_ovl0B_02_80049A50[0].unk10->unk36 = 0xFF - alpha;
                 t = pieces[0].unk30;
-                for (i = 0; i < g->unk8; i++) {
-                    m = pieces[i].unk10;
+                for (k = 0; k < g->unk8; k++) {
+                    m = pieces[k].unk10;
                     m->unk36 = alpha;
                     m->unk28 = m->unk2C = m->unk30 = (alpha + 0x100) * t * 0.001953125f;
                 }
                 func_ovl0B_02_800491C0();
             }
             D_ovl0B_02_80049A50[0].unk10->unkC &= ~0x80;
-            for (i = 0; i < g->unk8; i++) {
-                pieces[i].unk10->unkC |= 1;
+            for (k = 0; k < g->unk8; k++) {
+                pieces[k].unk10->unkC |= 1;
             }
             func_ovl0B_02_80049178(func_ovl0B_02_80044490, NULL, 0, 0, 0x130);
             func_ovl0B_02_80049188();
@@ -1751,28 +1761,30 @@ void func_ovl0B_02_800431C4(void) {
             func_ovl0B_02_80048D10(D_ovl0B_02_8004A3E8[0]);
             func_ovl0B_02_80049180(D_ovl0B_02_8004A3C8);
             buttons = 3;
-            for (i = 0; i < buttons; i++) {
-                func_ovl0B_02_80048D10(D_ovl0B_02_800499F0[i].unk1C);
+            for (task = 0; task < buttons; task++) {
+                func_ovl0B_02_80048D10(D_ovl0B_02_800499F0[task].unk1C);
             }
             for (n = 0; n != 5; n++) {
                 func_ovl0B_02_80048D10(marks[n]);
             }
             func_ovl0B_02_80049178(func_ovl0B_02_800470B0, NULL, 0, 0, 0x130);
-            for (i = 0; i < g->unk8; i++) {
-                m = pieces[i].unk10;
+            for (k = 0; k < g->unk8; k++) {
+                m = pieces[k].unk10;
                 m->unk36 = 0xFF;
                 m->unkC |= 0x1080;
             }
             for (alpha = 0xFF; alpha > 0; alpha -= 8) {
-                for (i = 0; i < g->unk8; i++) {
-                    pieces[i].unk10->unk36 = alpha;
+                for (k = 0; k < g->unk8; k++) {
+                    m = pieces[k].unk10;
+                    m->unk36 = alpha;
                 }
                 func_ovl0B_02_800491C0();
             }
-            for (i = 0; i < g->unk8; i++) {
-                pieces[i].unk10->unkC |= 1;
+            for (k = 0; k < g->unk8; k++) {
+                pieces[k].unk10->unkC |= 1;
             }
             func_ovl0B_02_80048720(next[D_ovl0B_02_8004A3D4][D_ovl0B_02_8004A3D8], 0x10, 0);
+            t = 0.0f;
             while (TRUE) {
                 func_ovl0B_02_800491C0();
             }
