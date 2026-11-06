@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1172, eu 1172, jp 1168
+ * differing words: us 791, eu 791, jp 759
  *
  * The pages are a table (D_ovl0B_04_800499B8: texts, handler, cursor
  * table, set-up) that func_ovl0B_04_80043ADC runs in turn; pages 1-4 are
@@ -25,9 +25,11 @@
  * of its calls (each after its own callees); the `if (0)` call lists at
  * the end of 800444E8, 800459C4, 80046AA0 and the others pull the
  * original's runs of statics and stubs into place. An indirect call pulls
- * every function whose address the code takes: 80043ADC's pulls
- * 80043CD0 in front of it wherever it is defined, so it is defined last
- * (then it comes out first, counted with 80043110's lead statics).
+ * every function whose address the code takes: 80043ADC's would pull
+ * 80043CD0 in front of it, so 80043CD0 ends with a dead call to
+ * 80043ADC and is defined just after it: 80043CD0's turn comes first and
+ * puts 80043ADC (with its statics) out before it. FreeEntries is named
+ * for the first stub, 80043010, so nonmatching.py compares the lead run.
  * 800436C8's counter D_ovl0B_04_8004A1E4 is a function-scope static (as a
  * file-scope one uopt keeps its address in a register).
  *
@@ -41,28 +43,23 @@
  * still us's (nonmatching.py doesn't compare them; jp's strings and its
  * .bss layout, e.g. its fade pointer at 8004A4A4, are to do).
  *
- * What still differs in us (words; the comparison counts a global with
+ * What still differs (words us/jp; the comparison counts a global with
  * the statics after it, so a static of the wrong size costs the rest of
  * its run):
- * - 80043CD0 153, 80043ADC 131: 80043CD0 comes out first (see above), so
- *   80043ADC is compared with 80043CD0 appended and 80043CD0 with
- *   80043110's lead. Read through D_ovl0B_04_8004A3E4 each time (no local
- *   fade) it matches on its own (scratch/0B_04/cd0_fix_C4.c in the main
- *   checkout), but then 800436C8's trailing nops (they pad to an
- *   alignment) come out 3 short until the order is right, a net loss.
- * - 80043110 287: its frame (184) and registers: the original keeps only
- *   $s0/$s1, the MakeEntries pointer in $s0 spilled around 80043050 and
- *   case 5's counter in $a2; the FreeEntries count (li 20) stays live in
- *   the original. 0x10 short.
- * - 800444E8 303: 800447DC 4 short and its registers (the original gets
- *   buttons in $t1, d1 in $t0 then $s2, d2/d3 copied to $v1/$v0 before use,
- *   unk1 stored by its own lui); 8004462C/8004471C 4 long each (their
- *   return block: the original's branches into it keep nop delay slots).
- * - 80045214 163: 80045214's copy loop registers; 80045540's rub-out
- *   (the original copies the cursor to $v1 and stores unk3 by its own lui).
- * - 800450C0 57: uopt makes a base register for page 9's fade fields.
- * - 80044BE8 26 (its frame is 8 bigger), 800436C8 25 (a1 = -1 hoisted),
- *   80043F24 19 (8004426C's case 4 through $v1), 80046180 8.
+ * - 80043110 287/287: its frame (184) and registers: the original keeps
+ *   only $s0/$s1, the MakeEntries pointer in $s0 spilled around 80043050
+ *   and case 5's counter in $a2; the FreeEntries count (li 20) stays live
+ *   in the original. 0x10 short, so 800436C8 149/127 (its padding after
+ *   the endless loop follows the offset; 25 words with the size right).
+ * - 800444E8 167/167: 800447DC's registers (the original gets buttons in
+ *   $t1, d1 in $t0 then $s2, d2/d3 copied to $v1/$v0 before use, unk1
+ *   stored by its own lui).
+ * - 80045214 145/145: 80045214's copy loop registers; 80045540's rub-out
+ *   (the original keeps the cursor in $s1, copies it to $v1, and stores
+ *   unk3 by its own lui).
+ * - 80043ADC 30/0 (us keeps 36 in $s8 and multiplies; the original keeps
+ *   &tbl[3] there), 80044BE8 9/17 (the MakeEntries homes 12 bytes off),
+ *   80043F24 4/5 (80044394's n - 1 in $v0), 80046180 0/11 (jp 800468F0).
  * Everything else matches.
  */
 #include "common.h"
@@ -191,7 +188,7 @@ void func_ovl0B_04_80047FA0(s32); /* 0x1711 */
 s32 func_ovl0B_04_80048248(void (*)(void), void *, s32, s32, s32); /* 0x1900 */
 void func_ovl0B_04_80048250(s32); /* 0x1901 */
 void func_ovl0B_04_80048258(void); /* 0x1902 */
-void func_ovl0B_04_80048268(s32); /* 0x1904 */
+s32 func_ovl0B_04_80048268(s32); /* 0x1904 */
 s32 func_ovl0B_04_80048290(void); /* 0x1909 */
 s32 func_ovl0B_04_80048320(s32); /* 0x1B06 */
 s32 func_ovl0B_04_800484B0(s32); /* 0x1E04 */
@@ -732,7 +729,7 @@ s32 D_ovl0B_04_8004A1A8 = 0;
 s32 D_ovl0B_04_8004A1AC[14] = { 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 1, 1 };
 
 static void func_ovl0B_04_80043050(Entry *e, Desc *d);
-static void func_ovl0B_04_FreeEntries(Entry *e, s32 n);
+static void func_ovl0B_04_80043010(Entry *e, s32 n);
 static void func_ovl0B_04_800438FC(u32 mode, s32 id, Item *it);
 static void func_ovl0B_04_80043A24(s32 n, s32 *ids, Item *items);
 #if !VERSION_JP
@@ -751,8 +748,8 @@ static void func_ovl0B_04_80044394(s32 a, s32 b);
 static void func_ovl0B_04_8004447C(s32 id, s32 alpha);
 static void func_ovl0B_04_8004456C(void);
 static void func_ovl0B_04_800445C4(void);
-static s32 func_ovl0B_04_8004462C(u8 set, u8 c);
-static s32 func_ovl0B_04_8004471C(u8 set, u8 c);
+static s8 func_ovl0B_04_8004462C(u8 set, u8 c);
+static s8 func_ovl0B_04_8004471C(u8 set, u8 c);
 static void func_ovl0B_04_800447DC(u16 buttons, u8 *ret);
 static void func_ovl0B_04_80046294(u8 item);
 static void func_ovl0B_04_80046600(u8 item, u16 buttons);
@@ -856,19 +853,24 @@ static void func_ovl0B_04_800444D8(void) {
 static void func_ovl0B_04_800444E0(void) {
 }
 
-static void func_ovl0B_04_800445BC(void) {
+static void func_ovl0B_04_800445BC() {
 }
 
+#if VERSION_JP
+static void func_ovl0B_04_8004461C() {
+#else
 static void func_ovl0B_04_8004461C(void) {
+#endif
 }
 
-static void func_ovl0B_04_80044624(void) {
+static void func_ovl0B_04_80044624() {
 }
 
 /* Page 9's fade in, over the page (inlined). */
 static void func_ovl0B_04_800450B8(Fade *f) {
     f32 step;
 
+    if (!D_ovl0B_04_8004A3E4) {}
     step = (f->unk18 - f->unk14) / f->unk1C;
     D_ovl0B_04_8004A3E4 = f;
     f->unk0 = func_ovl0B_04_80047E58(func_ovl0B_04_80043CD0, 0);
@@ -889,8 +891,8 @@ static void func_ovl0B_04_80045530(void) {
     for (i = 0; i < 5; i++) {
         func_ovl0B_04_80047DE0(D_ovl0B_04_8004A060[i].unk0);
     }
-    func_ovl0B_04_FreeEntries(&D_ovl0B_04_8004A060[5], 3);
-    func_ovl0B_04_FreeEntries(&D_ovl0B_04_8004A060[8], 2);
+    func_ovl0B_04_80043010(&D_ovl0B_04_8004A060[5], 3);
+    func_ovl0B_04_80043010(&D_ovl0B_04_8004A060[8], 2);
 }
 
 static void func_ovl0B_04_80045538(void) {
@@ -922,6 +924,9 @@ static void func_ovl0B_04_800468E8(void) {
 static void func_ovl0B_04_80046CE4(void) {
 }
 
+static void func_ovl0B_04_80046A98(void) {
+}
+
 static void func_ovl0B_04_80046F18(void) {
 }
 
@@ -937,7 +942,7 @@ static void func_ovl0B_04_MakeEntries(Entry *e, s32 n, Desc *d) {
     }
 }
 
-static void func_ovl0B_04_FreeEntries(Entry *e, s32 n) {
+static void func_ovl0B_04_80043010(Entry *e, s32 n) {
     s32 i;
     s32 pad;
     s32 pad2;
@@ -973,8 +978,8 @@ u8 func_ovl0B_04_800471F4(u8 arg0, u16 arg1) {
     } else if (arg1 & 2) {
         func_ovl0B_04_800487D0(2);
         func_ovl0B_04_80043FA4(&ret, 0, 5, 0);
-        func_ovl0B_04_FreeEntries(&D_ovl0B_04_8004A060[10], 1);
-        func_ovl0B_04_FreeEntries(&D_ovl0B_04_8004A060[11], 1);
+        func_ovl0B_04_80043010(&D_ovl0B_04_8004A060[10], 1);
+        func_ovl0B_04_80043010(&D_ovl0B_04_8004A060[11], 1);
     }
     return ret;
 }
@@ -1004,8 +1009,8 @@ u8 func_ovl0B_04_80046FA8(u8 arg0, u16 arg1) {
     } else if (arg1 & 2) {
         func_ovl0B_04_800487D0(2);
         func_ovl0B_04_80043FA4(&ret, 0, 4, 0);
-        func_ovl0B_04_FreeEntries(&D_ovl0B_04_8004A060[10], 1);
-        func_ovl0B_04_FreeEntries(&D_ovl0B_04_8004A060[11], 1);
+        func_ovl0B_04_80043010(&D_ovl0B_04_8004A060[10], 1);
+        func_ovl0B_04_80043010(&D_ovl0B_04_8004A060[11], 1);
     }
     return ret;
 }
@@ -1034,8 +1039,8 @@ u8 func_ovl0B_04_80046D74(u8 arg0, u16 arg1) {
     } else if (arg1 & 2) {
         func_ovl0B_04_800487D0(2);
         func_ovl0B_04_80043FA4(&ret, 0, 3, 0);
-        func_ovl0B_04_FreeEntries(&D_ovl0B_04_8004A060[10], 1);
-        func_ovl0B_04_FreeEntries(&D_ovl0B_04_8004A060[11], 1);
+        func_ovl0B_04_80043010(&D_ovl0B_04_8004A060[10], 1);
+        func_ovl0B_04_80043010(&D_ovl0B_04_8004A060[11], 1);
     }
     return ret;
 }
@@ -1065,13 +1070,16 @@ u8 func_ovl0B_04_80046B28(u8 arg0, u16 arg1) {
     } else if (arg1 & 2) {
         func_ovl0B_04_800487D0(2);
         func_ovl0B_04_80043FA4(&ret, 0, 2, 0);
-        func_ovl0B_04_FreeEntries(&D_ovl0B_04_8004A060[10], 1);
-        func_ovl0B_04_FreeEntries(&D_ovl0B_04_8004A060[11], 1);
+        func_ovl0B_04_80043010(&D_ovl0B_04_8004A060[10], 1);
+        func_ovl0B_04_80043010(&D_ovl0B_04_8004A060[11], 1);
     }
     return ret;
 }
 
 void func_ovl0B_04_80046AA0(Obj *arg0) {
+    if (0) {
+        func_ovl0B_04_80046A98();
+    }
     func_ovl0B_04_800468F0(0);
     if (0) {
         func_ovl0B_04_800468E8();
@@ -1099,6 +1107,10 @@ static void func_ovl0B_04_800468F0(s32 base) {
         D_ovl0B_04_8004A480[i + 10] = 1;
     }
     for (i = 1; i < 11; i++) {
+        if (!o) {}
+#if !VERSION_JP
+        if (!o) {}
+#endif
         if (func_ovl0B_04_800484B0(base + i) == 0) {
             D_ovl0B_04_8004A480[i] = 0;
         } else {
@@ -1683,6 +1695,7 @@ static void func_ovl0B_04_800447DC(u16 buttons, u8 *ret) {
         if (n != 0) {
             D_ovl0B_04_80048A70[0] = c;
             if (d1) {
+                if (!c) {}
                 D_ovl0B_04_80048A70[2] = c + d1;
             } else if (d2) {
                 D_ovl0B_04_80048A70[2] = c + d2;
@@ -1759,25 +1772,24 @@ static void func_ovl0B_04_800447DC(u16 buttons, u8 *ret) {
     func_ovl0B_04_80048640(D_ovl0B_04_8004A468[5], D_ovl0B_04_80048A70, 5);
 }
 
-static s32 func_ovl0B_04_8004471C(u8 set, u8 c) {
-    u8 r = 0;
+static s8 func_ovl0B_04_8004471C(u8 set, u8 c) {
+    s8 r = 0;
 
     switch (set) {
         default:
-            return 0;
+            r = 0;
+            break;
         case 1:
             if (c >= 0xB5 && c < 0xC4) {
-                return 0x27;
-            }
-            if (c >= 0xC9 && c < 0xCE) {
-                return 0x22;
+                r = 0x27;
+            } else if (c >= 0xC9 && c < 0xCE) {
+                r = 0x22;
             }
             break;
         case 2:
             if (c >= 0x65 && c < 0x74) {
-                return 0x27;
-            }
-            if (c >= 0x79 && c < 0x7E) {
+                r = 0x27;
+            } else if (c >= 0x79 && c < 0x7E) {
                 r = 0x22;
             }
             break;
@@ -1788,31 +1800,28 @@ static s32 func_ovl0B_04_8004471C(u8 set, u8 c) {
     return r;
 }
 
-static s32 func_ovl0B_04_8004462C(u8 set, u8 c) {
-    s32 r = 0;
+static s8 func_ovl0B_04_8004462C(u8 set, u8 c) {
+    s8 r = 0;
 
     switch (set) {
         default:
-            return 0;
+            r = 0;
+            break;
         case 1:
             if (c >= 0xB0 && c < 0xB5) {
-                return -0xB;
-            }
-            if (c >= 0xD3 && c < 0xD6) {
-                return -0x28;
-            }
-            if (c == 0xC1) {
-                return -0x17;
+                r = -0xB;
+            } else if (c >= 0xD3 && c < 0xD6) {
+                r = -0x28;
+            } else if (c == 0xC1) {
+                r = -0x17;
             }
             break;
         case 2:
             if (c >= 0x60 && c < 0x65) {
-                return -0xB;
-            }
-            if (c >= 0x83 && c < 0x86) {
-                return -0x28;
-            }
-            if (c == 0x71) {
+                r = -0xB;
+            } else if (c >= 0x83 && c < 0x86) {
+                r = -0x28;
+            } else if (c == 0x71) {
                 r = -0x17;
             }
             break;
@@ -1912,12 +1921,13 @@ static void func_ovl0B_04_80044394(s32 a, s32 b) {
 #endif
     Obj *o;
 
-    n = 0;
     D_ovl0B_04_80048A20[8] = 0;
+    n = 0;
     while (D_ovl0B_04_80048A20[n] != 0) {
         n++;
     }
     n--;
+    if (!n) {}
     if (n != -1) {
 #if VERSION_JP
         x = 56 - n * 8;
@@ -1947,18 +1957,26 @@ static void func_ovl0B_04_8004430C(u8 item) {
 
 /* A character set's character. */
 static u8 func_ovl0B_04_8004426C(u8 set, u8 idx) {
+    u8 r;
+
     switch (set) {
         default:
-            return 0;
+            r = 0;
+            break;
         case 1:
-            return D_ovl0B_04_8004915C[idx];
+            r = D_ovl0B_04_8004915C[idx];
+            break;
         case 2:
-            return D_ovl0B_04_80049190[idx];
+            r = D_ovl0B_04_80049190[idx];
+            break;
         case 3:
-            return D_ovl0B_04_800491C4[idx];
+            r = D_ovl0B_04_800491C4[idx];
+            break;
         case 4:
-            return D_ovl0B_04_800491F8[idx];
+            r = D_ovl0B_04_800491F8[idx];
+            break;
     }
+    return r;
 }
 
 /* The character at the cursor written. */
@@ -2107,6 +2125,18 @@ void func_ovl0B_04_80043ADC(void) {
         func_ovl0B_04_800438FC(0, 0, 0);
         func_ovl0B_04_800438F4();
     }
+}
+
+/* The fade's display list (ovl_0B_05's 80044DD8). */
+void func_ovl0B_04_80043CD0(s32 arg0, Gfx0B04 **arg1) {
+    Gfx0B04 *gfx = *arg1;
+
+    { Gfx0B04 *g = gfx++; g->w0 = 0xFA000000; g->w1 = ((D_ovl0B_04_8004A3E4->unk4 & 0xFF) << 24) | ((D_ovl0B_04_8004A3E4->unk8 & 0xFF) << 16) | ((D_ovl0B_04_8004A3E4->unkC & 0xFF) << 8) | (D_ovl0B_04_8004A3E4->unk10 & 0xFF); }
+    { Gfx0B04 *g = gfx++; g->w0 = 0xFCFFFFFF; g->w1 = 0xFFFDF6FB; }
+    { Gfx0B04 *g = gfx++; g->w0 = 0xF7000000; g->w1 = 0x10001; }
+    { Gfx0B04 *g = gfx++; g->w0 = 0xF6000000 | (((D_ovl0B_04_8004A3E4->unk2C + (s32) D_ovl0B_04_8004A3E4->unk34) & 0x3FF) << 14) | (((D_ovl0B_04_8004A3E4->unk30 + (s32) (D_ovl0B_04_8004A3E4->unk34 * D_ovl0B_04_8004A3E4->unk20)) & 0x3FF) << 2); g->w1 = (((D_ovl0B_04_8004A3E4->unk2C - (s32) D_ovl0B_04_8004A3E4->unk34) & 0x3FF) << 14) | (((D_ovl0B_04_8004A3E4->unk30 - (s32) (D_ovl0B_04_8004A3E4->unk34 * D_ovl0B_04_8004A3E4->unk20)) & 0x3FF) << 2); }
+    *arg1 = gfx;
+    if (0) { func_ovl0B_04_80043ADC(); }
 }
 
 #if !VERSION_JP
@@ -2315,8 +2345,8 @@ static void func_ovl0B_04_H1(void) {
     func_ovl0B_04_80048250(D_ovl0B_04_8004A4A0);
     func_ovl0B_04_80047E78(D_ovl0B_04_8004A170);
     func_ovl0B_04_80047DE0(D_ovl0B_04_8004A164);
-    func_ovl0B_04_FreeEntries(D_ovl0B_04_80049D40, 20);
-    func_ovl0B_04_FreeEntries(D_ovl0B_04_80049ED0, 20);
+    func_ovl0B_04_80043010(D_ovl0B_04_80049D40, 20);
+    func_ovl0B_04_80043010(D_ovl0B_04_80049ED0, 20);
     func_ovl0B_04_80047DE0(D_ovl0B_04_8004A060[12].unk0);
 }
 
@@ -2351,18 +2381,6 @@ void func_ovl0B_04_80043110(s32 arg0) {
         case 16:
             break;
     }
-}
-
-/* The fade's display list (ovl_0B_05's 80044DD8). */
-void func_ovl0B_04_80043CD0(s32 arg0, Gfx0B04 **arg1) {
-    Fade *fade = D_ovl0B_04_8004A3E4;
-    Gfx0B04 *gfx = *arg1;
-
-    { Gfx0B04 *g = gfx++; g->w0 = 0xFA000000; g->w1 = ((fade->unk4 & 0xFF) << 24) | ((fade->unk8 & 0xFF) << 16) | ((fade->unkC & 0xFF) << 8) | (fade->unk10 & 0xFF); }
-    { Gfx0B04 *g = gfx++; g->w0 = 0xFCFFFFFF; g->w1 = 0xFFFDF6FB; }
-    { Gfx0B04 *g = gfx++; g->w0 = 0xF7000000; g->w1 = 0x10001; }
-    { Gfx0B04 *g = gfx++; g->w0 = 0xF6000000 | (((fade->unk2C + (s32) fade->unk34) & 0x3FF) << 14) | (((fade->unk30 + (s32) (fade->unk34 * fade->unk20)) & 0x3FF) << 2); g->w1 = (((fade->unk2C - (s32) fade->unk34) & 0x3FF) << 14) | (((fade->unk30 - (s32) (fade->unk34 * fade->unk20)) & 0x3FF) << 2); }
-    *arg1 = gfx;
 }
 
 /* An entry's object made as its Desc says. */
