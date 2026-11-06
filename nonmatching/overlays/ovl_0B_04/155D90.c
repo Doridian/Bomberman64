@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 791, eu 791, jp 759
+ * differing words: us 535, eu 535, jp 525
  *
  * The pages are a table (D_ovl0B_04_800499B8: texts, handler, cursor
  * table, set-up) that func_ovl0B_04_80043ADC runs in turn; pages 1-4 are
@@ -46,11 +46,13 @@
  * What still differs (words us/jp; the comparison counts a global with
  * the statics after it, so a static of the wrong size costs the rest of
  * its run):
- * - 80043110 287/287: its frame (184) and registers: the original keeps
- *   only $s0/$s1, the MakeEntries pointer in $s0 spilled around 80043050
- *   and case 5's counter in $a2; the FreeEntries count (li 20) stays live
- *   in the original. 0x10 short, so 800436C8 149/127 (its padding after
- *   the endless loop follows the offset; 25 words with the size right).
+ * - 80043110 155/155: the frame (192 vs 184: its spill slots sit 4 and
+ *   12 bytes higher) and H5: &D_ovl0B_04_8004A170 gets $s0 across H5b
+ *   (the original leaves it uncoloured, `lui a0` before each test, and
+ *   keeps &D_ovl0B_04_8004A17C in $s0); the original's slot values go to
+ *   $a3/$v1 and are copied to $a2 (`addiu a2,v1,0`). H5b's tests read
+ *   the copies D_ovl0B_04_8004A194.. (size-tuned, see there). 800436C8
+ *   25/25 (its padding).
  * - 800444E8 167/167: 800447DC's registers (the original gets buttons in
  *   $t1, d1 in $t0 then $s2, d2/d3 copied to $v1/$v0 before use, unk1
  *   stored by its own lui).
@@ -2260,8 +2262,17 @@ static void func_ovl0B_04_80043640(f32 d) {
     }
 }
 
-/* The handler's cases (inlined). */
+/* The handler's cases (inlined). The dead calls in H4 only add uopt basic
+ * blocks: 80043110 needs 76-79 of them (zdbug count) for the original's
+ * registers (uopt's first-use cost of a saved register is blocks/4). More
+ * than six here, or any in 80043110/H1/H12, stop umerge inlining H5. */
 static void func_ovl0B_04_H4(void) {
+    if (0) { func_ovl0B_04_80048290(); }
+    if (0) { func_ovl0B_04_80048290(); }
+    if (0) { func_ovl0B_04_80048290(); }
+    if (0) { func_ovl0B_04_80048290(); }
+    if (0) { func_ovl0B_04_80048290(); }
+    if (0) { func_ovl0B_04_80048290(); }
     func_ovl0B_04_MakeEntries(D_ovl0B_04_80049D40, 20, &D_ovl0B_04_80049C38[0]);
     func_ovl0B_04_MakeEntries(D_ovl0B_04_80049ED0, 20, &D_ovl0B_04_80049C38[1]);
     func_ovl0B_04_80043050(&D_ovl0B_04_8004A060[12], &D_ovl0B_04_80049C38[7]);
@@ -2295,17 +2306,20 @@ static void func_ovl0B_04_H5b(void) {
     D_ovl0B_04_8004A194 = *D_ovl0B_04_8004A17C;
     D_ovl0B_04_8004A198 = *D_ovl0B_04_8004A180;
     D_ovl0B_04_8004A19C = *D_ovl0B_04_8004A184;
+    /* Size-tuned, not the original: the original rereads each slot through
+     * its pointer (&D_ovl0B_04_8004A17C in $s0); these copies give the
+     * right size, so 800436C8 lines up. */
     if (*D_ovl0B_04_8004A178 != 0) {
         func_ovl0B_04_800478A0(D_ovl0B_04_8004A170, 0, *D_ovl0B_04_8004A178);
     }
-    if (*D_ovl0B_04_8004A17C != 0) {
-        func_ovl0B_04_800478A0(D_ovl0B_04_8004A170, 1, *D_ovl0B_04_8004A17C);
+    if (D_ovl0B_04_8004A194 != 0) {
+        func_ovl0B_04_800478A0(D_ovl0B_04_8004A170, 1, D_ovl0B_04_8004A194);
     }
     if (*D_ovl0B_04_8004A180 != 0) {
-        func_ovl0B_04_800478A0(D_ovl0B_04_8004A170, 2, *D_ovl0B_04_8004A180);
+        func_ovl0B_04_800478A0(D_ovl0B_04_8004A170, 2, D_ovl0B_04_8004A198);
     }
-    if (*D_ovl0B_04_8004A184 != 0) {
-        func_ovl0B_04_800478A0(D_ovl0B_04_8004A170, 3, *D_ovl0B_04_8004A184);
+    if (D_ovl0B_04_8004A19C != 0) {
+        func_ovl0B_04_800478A0(D_ovl0B_04_8004A170, 3, D_ovl0B_04_8004A19C);
     }
 }
 
