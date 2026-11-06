@@ -9,7 +9,7 @@
  * .bss 0x1F0 as the original). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 53, eu 53, jp 53
+ * differing words: us 15, eu 15, jp 15
  *
  * Drafted from m2c, then rewritten function by function: the angle
  * normalisations are the original's ternaries (A180, and the 0-360 wrap
@@ -48,9 +48,13 @@
  * move time.
  *
  * What still differs (words, the same in every version): 800446FC 8,
- * 80046DC4 5, 80046E00 17, 80048418 21, 80049870 2. The other 77 match. 80048418's 21 are
- * no code of its own: it ends in an endless loop, padded to alignment,
- * so its size follows the code before it (80046E00 is 8 bytes long).
+ * 80046DC4 5, 80049870 2. The other 79 match.
+ * 80046E00's lone second `c.lt.s` (no branch) is an `||` if whose body
+ * is two more nested ifs, the innermost testing a global: uopt empties
+ * one level per pass, so the outer if survives with nothing in it and
+ * as1 drops the branch to the next instruction. Its y is sp34.y itself,
+ * assigned in both arms (the local's stores are dead, so it stays in one
+ * register); an unused `f32 y` and a dead `if (a) {}` give the rest.
  * 800446FC's lone `c.le.s` after the second loop's wrap is a clamp of d
  * whose result is never used (uopt keeps the if, as1 drops the branch);
  * what is left there is 90.0f's register (f12 for f14) in that loop and
@@ -1621,21 +1625,24 @@ void func_ovl13_01_80046E00(void) {
     if (func_ovl13_01_8004BA10(0x414) != 0) {
         func_ovl13_01_8004B5C8(&D_ovl13_01_8004C398.x, &D_ovl13_01_8004C388.x, &sp34.x);
         if (sp34.z <= 1.0f) {
-            y = D_ovl13_01_8004C3A8.y * -1.0f;
+            sp34.y = D_ovl13_01_8004C3A8.y * -1.0f;
+            if (a) {}
         } else {
-            y = sp34.y;
-            b = y - 90.0f;
-            y = (b >= 360.0f) ? b - 360.0f : (y < 90.0f) ? b + 360.0f : b;
+            sp34.y = (sp34.y - 90.0f >= 360.0f) ? sp34.y - 90.0f - 360.0f : (sp34.y < 90.0f) ? sp34.y - 90.0f + 360.0f : sp34.y - 90.0f;
         }
         a = (sp34.x >= 0.0f && sp34.x <= 180.0f) ? sp34.x : (360.0f - sp34.x) * -1.0f;
         b = (D_ovl13_01_8004C3A8.x >= 0.0f && D_ovl13_01_8004C3A8.x <= 180.0f) ? D_ovl13_01_8004C3A8.x : (360.0f - D_ovl13_01_8004C3A8.x) * -1.0f;
         d = a - b;
+        /* only the two compares are left: the inner ifs are dead */
         if ((d > 10.0f) || (d < -10.0f)) {
-            a = 0.0f;
+            if (d > 0.0f) {
+                if (D_ovl13_01_8004C2A8 < d) {
+                    d = 10.0f;
+                }
+            }
         }
-        if (a) {}
         D_ovl13_01_8004C3A8.x = sp34.x;
-        D_ovl13_01_8004C3A8.y = y * -1.0f;
+        D_ovl13_01_8004C3A8.y = sp34.y * -1.0f;
     }
 }
 
