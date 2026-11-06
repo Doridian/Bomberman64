@@ -9,7 +9,7 @@
  * .bss 0x1F0 as the original). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 15, eu 15, jp 15
+ * differing words: us 6, eu 6, jp 6
  *
  * Drafted from m2c, then rewritten function by function: the angle
  * normalisations are the original's ternaries (A180, and the 0-360 wrap
@@ -47,8 +47,15 @@
  * original reloads it with lui each time): check their .bss places at
  * move time.
  *
- * What still differs (words, the same in every version): 800446FC 8,
- * 80046DC4 5, 80049870 2. The other 79 match.
+ * What still differs (words, the same in every version): 800446FC 6.
+ * The other 81 match. In 800446FC's loop wrap the original has 90.0f in
+ * $f14 and the else arm's ternary in $f12; ours has $f12 and $f2 (the
+ * ternary sharing spA8.y's register). Its first wrap's 90s are ints
+ * (W), which keeps uopt from reloading 90.0f partway through it.
+ * 80046DC4's non-final `return` (`jr ra; move v0,v1`, a nop in the
+ * beqz slot) is one return after a `goto done` and a redundant `else
+ * var_v1 = 0`, so the +1 path ends in a real branch. 80049870's
+ * C2D8 stores share one source line.
  * 80046E00's lone second `c.lt.s` (no branch) is an `||` if whose body
  * is two more nested ifs, the innermost testing a global: uopt empties
  * one level per pass, so the outer if survives with nothing in it and
@@ -56,9 +63,7 @@
  * assigned in both arms (the local's stores are dead, so it stays in one
  * register); an unused `f32 y` and a dead `if (a) {}` give the rest.
  * 800446FC's lone `c.le.s` after the second loop's wrap is a clamp of d
- * whose result is never used (uopt keeps the if, as1 drops the branch);
- * what is left there is 90.0f's register (f12 for f14) in that loop and
- * a reload of it in the first wrap.
+ * whose result is never used (uopt keeps the if, as1 drops the branch).
  * 80043878's register allocation turns on its zeros: `D_ovl13_01_8004C2A8
  * = 0` as an int in both places, 0.0f everywhere else. 8004636C matched with the static 80043124
  * declared s32 ($v1 for its caller's loads, as in 0B_03).
@@ -74,12 +79,6 @@
  * 80047144 and 80045C9C get the original's `mul.s K, expr` operand
  * order only from `360.0f * t` with the quotient in a local t (IDO
  * orders `K * (expr)` the same whichever way it's written).
- * 80046DC4's last block is a non-final `return var_v1` in the original
- * (`jr ra; move v0,v1` with a nop in the second beqz's slot); every form
- * tried makes it the final return, and as1 then copies the move into
- * the beqz slot. 80049870's 2 are the 0.45f's lui scheduled before
- * `swc1 $fs0,8(s3)` in the C2C0/C2D8 init (no reordering of that block
- * gives it).
  */
 #include "common.h"
 
@@ -693,12 +692,7 @@ void func_ovl13_01_80049870(void) {
     D_ovl13_01_8004C2C0.unk0 = 0x10002;
     D_ovl13_01_8004C2C0.unk8 = 0.0f;
     D_ovl13_01_8004C2D8.unk0 = 0x10002;
-    D_ovl13_01_8004C2D8.unk8 = 0.0f;
-    D_ovl13_01_8004C2C0.unk10 = 0.9f;
-    D_ovl13_01_8004C2C0.unk4 = 70.0f;
-    D_ovl13_01_8004C2C0.unkC = 1.0f;
-    D_ovl13_01_8004C2D8.unk4 = 5.0f;
-    D_ovl13_01_8004C2D8.unkC = 0.45f;
+    D_ovl13_01_8004C2D8.unk8 = 0.0f; D_ovl13_01_8004C2C0.unk10 = 0.9f; D_ovl13_01_8004C2C0.unk4 = 70.0f; D_ovl13_01_8004C2C0.unkC = 1.0f; D_ovl13_01_8004C2D8.unk4 = 5.0f; D_ovl13_01_8004C2D8.unkC = 0.45f;
     D_ovl13_01_8004C2D8.unk10 = 0.9f;
     D_ovl13_01_8004C2BC = D_ovl13_01_8004C2C0.unkC;
     D_ovl13_01_8004C2F0.unk0 = 0x10002;
@@ -1656,12 +1650,14 @@ s32 func_ovl13_01_80046DC4(UnkStructA *arg0) {
             var_v1 = 2;
         }
         if (temp_v0 & 0x4000) {
-            goto plus;
+            var_v1++;
+            goto done;
         }
+    } else {
+        var_v1 = 0;
     }
+done:
     return var_v1;
-plus:
-    return var_v1 + 1;
 }
 
 void func_ovl13_01_80046C2C(void) {
@@ -2258,7 +2254,7 @@ void func_ovl13_01_800446FC(void) {
     n = func_ovl13_01_80043F88(1);
     func_ovl13_01_8004B638(D_ovl13_01_8004C338, 0x04000000);
     func_ovl13_01_8004B5C8(&D_ovl13_01_8004C388.x, &D_ovl13_01_8004C260.x, &spA8.x);
-#define W(y) (((y) - 90.0f >= 360.0f) ? (y) - 90.0f - 360.0f : (((y) < 90.0f) ? (y) - 90.0f + 360.0f : (y) - 90.0f))
+#define W(y) (((y) - 90 >= 360.0f) ? (y) - 90 - 360.0f : (((y) < 90) ? (y) - 90 + 360.0f : (y) - 90))
 #define S(x) ((((x) >= 0.0f) && ((x) <= 180.0f)) ? (x) : (360.0f - (x)) * -1.0f)
     spA8.y = S(W(spA8.y)) * -1.0f;
     b = S(spA8.y);
