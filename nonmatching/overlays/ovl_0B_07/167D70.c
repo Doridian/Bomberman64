@@ -5,7 +5,7 @@
  * as the original; jp's .data is 0x1A0). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 10, eu 10, jp 10
+ * differing words: us 0, eu 0, jp 0
  *
  * IDO -O3: the functions are written last to first. The tail (80045438,
  * 800453F0, 800453BC, 80045494 and the twelve empty stubs) is ovl_17_10's;
@@ -417,12 +417,12 @@ void func_ovl0B_07_8004400C(void) {
             }
         }
     }
-    off = 0.0f;
     if (D_ovl0B_07_80046F18->unk0 == 0) {
         step = 720 / (f32) D_ovl0B_07_80046F1C;
     } else {
         step = 640 / (f32) D_ovl0B_07_80046F1C;
     }
+    off = 0.0f;
     for (i = 0; i < D_ovl0B_07_80046F1C; i++) {
         if (D_ovl0B_07_80046F18->unk0 == 1 && i == n) {
             off += 180.0f * D_ovl0B_07_80046F1C - 160.0f * D_ovl0B_07_80046F1C;
@@ -443,15 +443,15 @@ void func_ovl0B_07_8004400C(void) {
         }
     }
     if (D_ovl0B_07_80046F18->unk0 == 0) {
-        y = 0.0f;
+        off = 0.0f;
         for (i = 0; i < D_ovl0B_07_80046F1C; i++) {
             for (j = 0; j < D_ovl0B_07_80046F18->unkA4[D_ovl0B_07_80046F20[i]]; j++) {
                 D_ovl0B_07_80046E30[i][j] = obj = func_ovl0B_07_80045F38(0x40, 0);
                 obj->unk10 = j * 120.0f + 120.0f;
-                obj->unk14 = 170.0f - 720.0f / D_ovl0B_07_80046F1C / 2 - y;
+                obj->unk14 = 170.0f - 720.0f / D_ovl0B_07_80046F1C / 2 - off;
                 obj->unk18 = 0.0f;
             }
-            y += step;
+            off += step;
         }
     } else {
         for (i = 0; i < 2; i++) {

@@ -9,7 +9,7 @@
  * goes through 0x2501 and 0x2503, with 0x2505 for 80043B5C's offsets.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1, eu 1, jp 1
+ * differing words: us 0, eu 0, jp 0
  *
  * What still differs in us (words):
  * - func_ovl0A_06_80043B5C (1; with the statics after it): the inner
@@ -196,7 +196,7 @@ s32 func_ovl0A_06_80046998(u8 *, u16, u16, f32, f32, s32); /* 0x250C */
 void func_ovl0A_06_800469A0(s32, u8 *, s32); /* 0x250D */
 void func_ovl0A_06_80046AE0(s32); /* 0x2B00 */
 void func_ovl0A_06_80046B00(s32, s32, s32, s32); /* 0x2B04 */
-s32 func_ovl0A_06_80046C50(s32); /* 0x2F10 */
+s32 func_ovl0A_06_80046C50(); /* 0x2F10 */
 
 void func_ovl0A_06_80045524(s32 arg0, UnkStruct_ovl0A_06_800452B8 **arg1);
 void func_ovl0A_06_8004554C(s32 arg0, UnkStruct_ovl0A_06_800452B8 **arg1);
@@ -1389,7 +1389,7 @@ void func_ovl0A_06_80043B5C(void) {
         func_ovl0A_06_80046968(D_ovl0A_06_80047728[3], 1.0f, 1.0f);
         if (func_ovl0A_06_8004311C() == 2) {
             erase = 0;
-            err = func_ovl0A_06_80046C50(0x20);
+            err = func_ovl0A_06_80046C50();
             func_ovl0A_06_80043010(4, D_ovl0A_06_80047728);
             if (err == 0) {
 #if VERSION_JP
