@@ -9,7 +9,7 @@
  * .bss 0x1F0 as the original). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 67, eu 67, jp 67
+ * differing words: us 53, eu 53, jp 53
  *
  * Drafted from m2c, then rewritten function by function: the angle
  * normalisations are the original's ternaries (A180, and the 0-360 wrap
@@ -47,9 +47,8 @@
  * original reloads it with lui each time): check their .bss places at
  * move time.
  *
- * What still differs in us (words), all under 25: 80043608, 800446FC,
- * 800455D0, 80045B0C, 80045C9C, 80046DC4, 80046E00, 80047144, 80048418,
- * 80049870. The other 72 match. 80048418's 21 are
+ * What still differs (words, the same in every version): 800446FC 8,
+ * 80046DC4 5, 80046E00 17, 80048418 21, 80049870 2. The other 77 match. 80048418's 21 are
  * no code of its own: it ends in an endless loop, padded to alignment,
  * so its size follows the code before it (80046E00 is 8 bytes long).
  * 800446FC's lone `c.le.s` after the second loop's wrap is a clamp of d
@@ -68,6 +67,15 @@
  * `angle + 1.0f`, not a local: written twice, with no pad locals, and
  * with 80045C60 (inlined into it) declaring no unused local, whose slot
  * in the caller's frame would move the temporary by 4.
+ * 80047144 and 80045C9C get the original's `mul.s K, expr` operand
+ * order only from `360.0f * t` with the quotient in a local t (IDO
+ * orders `K * (expr)` the same whichever way it's written).
+ * 80046DC4's last block is a non-final `return var_v1` in the original
+ * (`jr ra; move v0,v1` with a nop in the second beqz's slot); every form
+ * tried makes it the final return, and as1 then copies the move into
+ * the beqz slot. 80049870's 2 are the 0.45f's lui scheduled before
+ * `swc1 $fs0,8(s3)` in the C2C0/C2D8 init (no reordering of that block
+ * gives it).
  */
 #include "common.h"
 
@@ -1566,10 +1574,12 @@ void func_ovl13_01_800496E0(UnkStructA *arg0, s32 *arg1, s32 *arg2, void (*arg3)
 void func_ovl13_01_80047144(void) {
     UnkStructA_40 *temp_a0;
     f32 sp18;
+    f32 t;
 
     temp_a0 = D_ovl13_01_8004C338->unk40;
     sp18 = temp_a0->unk48->unk4->unk4;
-    D_ovl13_01_8004C358->unk50 = D_ovl13_01_8004C35C->unk50 = func_ovl13_01_8004B930(360.0f * (1.0f - (sp18 / func_ovl13_01_8004B378(temp_a0, 0)))) * 300.0f;
+    t = 1.0f - (sp18 / func_ovl13_01_8004B378(temp_a0, 0));
+    D_ovl13_01_8004C358->unk50 = D_ovl13_01_8004C35C->unk50 = func_ovl13_01_8004B930(360.0f * t) * 300.0f;
 }
 
 void func_ovl13_01_80046FA8(f32 *arg0) {
@@ -1948,12 +1958,14 @@ void func_ovl13_01_80045C9C(void) {
     UnkStructA_40 *temp_a0;
     f32 sp18;
     f32 len;
+    f32 t;
 
     if (func_ovl13_01_8004BA10(0x416) != 0) {
         temp_a0 = D_ovl13_01_8004C338->unk40;
         sp18 = temp_a0->unk48->unk4->unk4;
         len = func_ovl13_01_8004B378(temp_a0, 0);
-        D_ovl13_01_8004C338->unk40->unk14 = (func_ovl13_01_8004B930((func_ovl13_01_80045C60(sp18 - 13.0f, len) / len) * 360.0f) * 100.0f) + D_ovl13_01_8004C388.y;
+        t = func_ovl13_01_80045C60(sp18 - 13.0f, len) / len;
+        D_ovl13_01_8004C338->unk40->unk14 = (func_ovl13_01_8004B930(360.0f * t) * 100.0f) + D_ovl13_01_8004C388.y;
     }
 }
 
@@ -1971,7 +1983,6 @@ void func_ovl13_01_80045B0C(void) {
     UnkStructA_40 *temp_v0_2;
     UnkStructA_40 *temp_v1;
     f32 temp_fv0;
-    f32 temp_fv1;
     f32 var_fv1;
     s32 *temp_s0;
 
@@ -1979,9 +1990,9 @@ void func_ovl13_01_80045B0C(void) {
     temp_v0 = func_ovl13_01_8004B660(0x116, 0x01200000, 0xD0, D_ovl13_01_8004C31C);
     temp_v0->unk40->unk30 = 3.0f;
     temp_v1 = temp_v0->unk40;
-    temp_fv1 = temp_v1->unk30;
-    temp_v1->unk2C = temp_fv1;
-    temp_v0->unk40->unk28 = temp_fv1;
+    var_fv1 = temp_v1->unk30;
+    temp_v1->unk2C = var_fv1;
+    temp_v0->unk40->unk28 = var_fv1;
     temp_v0->unk50 = 0;
     func_ovl13_01_80043124(0xD9, D_ovl13_01_8004C31C);
     if (*temp_s0 != 0) {
@@ -2009,8 +2020,8 @@ void func_ovl13_01_800455D0(s32 arg0) {
     Vec3f sp6C;
     Vec3f sp60;
     Vec3f sp54;
-    f32 sp4C;
     f32 pad;
+    f32 sp4C;
     f32 speed;
     s32 i;
     static s32 D_ovl13_01_8004C3D0;
@@ -2028,8 +2039,7 @@ void func_ovl13_01_800455D0(s32 arg0) {
     }
     func_ovl13_01_80043124(0xBF, D_ovl13_01_8004C31C);
     sp54.x = (func_ovl13_01_8004B940() * 120.0) + 120.0;
-    if (func_ovl13_01_8004B948(1) != 0) {
-        sp54.x += 180.0f;
+    if (func_ovl13_01_8004B948(1) != 0) { sp54.x += 180.0f;
     }
     sp54.x = (sp54.x >= 360.0f) ? sp54.x - 360.0f : (sp54.x < 0.0f) ? sp54.x + 360.0f : sp54.x;
     sp54.y = 20.0f;
@@ -2044,8 +2054,7 @@ void func_ovl13_01_800455D0(s32 arg0) {
     sp4C = (speed / 90) * -1.0f;
     D_ovl13_01_8004C2A8 = 4.0f;
     D_ovl13_01_8004C2A4 = 4.0f;
-    i = 0;
-loop:
+    i = 0; loop:
     if ((func_ovl13_01_80043830() >= 2) || (D_ovl13_01_8004C28C <= 0)) {
         D_ovl13_01_8004C2A8 = 0.5f;
     } else {
@@ -2637,8 +2646,7 @@ void func_ovl13_01_80043608(void) {
         func_ovl13_01_8004B478(D_ovl13_01_8004C388.x, D_ovl13_01_8004C388.y, D_ovl13_01_8004C388.z);
         func_ovl13_01_8004B468(0);
         func_ovl13_01_8004B488(D_ovl13_01_8004C388.x + 1500.0f, D_ovl13_01_8004C388.y - 1000.0f, D_ovl13_01_8004C388.z + 4000.0f);
-        sp20 = func_ovl13_01_8004B5E0(&D_ovl13_01_8004C260.x, &D_ovl13_01_8004C388.x);
-        func_ovl13_01_8004B528(D_ovl13_01_8004C260.x, D_ovl13_01_8004C260.z, sp20, func_ovl13_01_8004B5E0(&D_ovl13_01_8004C260.x, &D_ovl13_01_8004C388.x) + 100.0f);
+        sp20 = func_ovl13_01_8004B5E0(&D_ovl13_01_8004C260.x, &D_ovl13_01_8004C388.x); func_ovl13_01_8004B528(D_ovl13_01_8004C260.x, D_ovl13_01_8004C260.z, sp20, func_ovl13_01_8004B5E0(&D_ovl13_01_8004C260.x, &D_ovl13_01_8004C388.x) + 100.0f);
         D_ovl13_01_8004C240.x = 0.0f;
         D_ovl13_01_8004C240.y = 90.0f;
         D_ovl13_01_8004C240.z = 200.0f;
