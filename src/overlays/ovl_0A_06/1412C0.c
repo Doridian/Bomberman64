@@ -1,46 +1,18 @@
 /*
- * NON_MATCHING: ovl_0A_06's game object, complete: every function and its data
- * (.data 0x700, .rodata 0xF0, .bss 0x270 and the bss layout as the
- * original; .data differs only in callback pointers and .rodata only in
- * jump tables, both from the text's shift). eu is us. jp (`#if
- * VERSION_JP`) has its own strings and an extra unreferenced word after
- * D_ovl0A_06_80047024 in .data, no D_ovl0A_06_80047538 (the 0x43 sprite)
- * in .bss, other text positions, and no ZeroJump 0x250B-0x250D: its text
- * goes through 0x2501 and 0x2503, with 0x2505 for 80043B5C's offsets.
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * ovl_0A_06's game object, IDO -O3; it matches in us, eu and jp. Its data:
+ * .data 0x700, .rodata 0xF0, .bss 0x270. eu is us. jp (`#if VERSION_JP`)
+ * has its own strings and an extra unreferenced word after
+ * D_ovl0A_06_80047024 in .data (0x620), no D_ovl0A_06_80047538 (the 0x43
+ * sprite) in .bss, other text positions, and no ZeroJump 0x250B-0x250D:
+ * its text goes through 0x2501 and 0x2503, with 0x2505 for 80043B5C's
+ * offsets.
  *
- * What still differs in us (words):
- * - func_ovl0A_06_80043B5C (1; with the statics after it): the inner
- *   `== 2` test's `bne` takes its delay slot's `li a0,0x20` from the
- *   fall-through, where the original takes it from the target and
- *   branches past it (not #line on `erase = 0` or the call, nor the
- *   argument ahead of the store in hand-edited ugen output). The
- *   original's fall-through has no `li a0,0x20` of its own: the delay
- *   slot's serves the 0x2F10 call, and the target skips the join's copy,
- *   as if uopt kept the 0x20 in a0 over the branch for both calls (a
- *   variable for it, set before the test and on the other paths into
- *   the join, only adds a frame slot). With the `li` moved ahead of the
- *   store, or a `.file` between them, as1 fills from the target but the
- *   fall-through keeps its own `li` (a word more). Not the callees'
- *   parameter types (u32/s16/u8/unprototyped), `erase = 0` in the test,
- *   the call's result in a variable, `if (... != 2) goto`. The permuter
- *   (40 min) found nothing. Hand-edited ugen output: `li a0,0x20` ahead
- *   of the bne (and none in the fall-through) puts the li in the slot
- *   but keeps the target (as1 retargets only when it fills from the
- *   target); no li at all leaves a nop. Nor: a local x = 0x20 (before
- *   the test or in it, declared last) passed as x, (x | 0), (x ^ 0),
- *   (x & ~0), (x * 1) to one or both calls (x takes a slot, frame +8);
- *   the test as (f() | 0) == 2, 2 == f(), f() - 2 == 0, (u32), 2U, or
- *   (2 | 0); erase cleared as erase--, ^= 1, &= 0, -= erase, FALSE; the
- *   argument as 32, 0x20 | 0, (s16)/(u8) 0x20, 0x10 * 2, 0x40 >> 1.
- *
- * What still differs in jp (words): the same as us's. 80043E68's copy `m`
- * of msg keeps msg in s1, as the original passes it (without it, msg goes
- * to t5 in jp and 80044620, 8004423C and 80044BFC around it change).
- *
- * How the rest came to match:
+ * How it came to match:
+ * - 80043B5C (1 to 0): 80046C50 (ZeroJump 0x2F10) takes no argument: the
+ *   `li a0,0x20` in the inner `== 2` test's delay slot is the next call's.
+ * - 80043E68's copy `m` of msg keeps msg in s1, as the original passes it
+ *   (without it, msg goes to t5 in jp and 80044620, 8004423C and 80044BFC
+ *   around it change).
  * - 80043250 (9 to 0): its buffer is at sp+32 under three locals (i and
  *   two unused ones) and the frame stays 48 because 80043248, the stub
  *   before it, is an empty static defined without a prototype
@@ -86,8 +58,15 @@
  *   #lines after them restore the file's numbering: keep them in step if
  *   lines are added above); `ret = 2` sits between the SE's wait and its
  *   call (the macro written out), which puts its `li` after the wait's.
+ * - jp: 80044534's 0x250D call and 80043020's two 0x250C calls are 0x2503
+ *   and 0x2501 (`#if VERSION_JP`; the jal targets are all a draft's
+ *   comparison didn't check).
+ *
+ * The `#line`s keep the numbering the file had as a draft (its header was
+ * longer), which the scheduling above depends on.
  */
 #include "common.h"
+#line 91
 
 /* what ZeroJump 0x1500 and 0x1510 return, and 0x2508 */
 typedef struct {
@@ -1197,7 +1176,14 @@ static s32 func_ovl0A_06_80044534(s32 arg0) {
     }
     if (ret == 1 || ret == 9) {
         ret = func_ovl0A_06_80044468(1);
+#if VERSION_JP
+#line 1200
+        func_ovl0A_06_80046950(D_ovl0A_06_80047738[3], D_ovl0A_06_80046DE0, 0);
+#else
+#line 1200
         func_ovl0A_06_800469A0(D_ovl0A_06_80047738[3], D_ovl0A_06_80046DE0, 0);
+#endif
+#line 1201
         D_ovl0A_06_80047748[3] = func_ovl0A_06_80046978(D_ovl0A_06_80047738[3]);
     }
     return ret;
@@ -1737,8 +1723,16 @@ static void func_ovl0A_06_80043020(s32 sfx, s32 sel) {
         noFlag = 1;
         yesScale = scale + 0.5f;
     }
+#if VERSION_JP
+#line 1740
+    no = func_ovl0A_06_80046940(D_ovl0A_06_80046D2C, noX, noY, noScale, noScale, noFlag);
+    yes = func_ovl0A_06_80046940(D_ovl0A_06_80046D24, yesX, yesY, yesScale, yesScale, yesFlag);
+#else
+#line 1740
     no = func_ovl0A_06_80046998(D_ovl0A_06_80046D2C, noX, noY, noScale, noScale, noFlag);
     yes = func_ovl0A_06_80046998(D_ovl0A_06_80046D24, yesX, yesY, yesScale, yesScale, yesFlag);
+#endif
+#line 1742
     func_ovl0A_06_80046948(D_ovl0A_06_80047728[3]);
     func_ovl0A_06_80046948(D_ovl0A_06_80047728[2]);
     D_ovl0A_06_80047728[3] = no;

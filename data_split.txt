@@ -56,6 +56,11 @@ ovl_0A_04 137330 0 0xC0 0x50
 ovl_0A_05 ovl_0A_05_entry 0 0 0
 ovl_0A_05 13A9F0 0x1B0 0x1B0 0xB0
 
+# ovl_0A_06: all C (-O3); jp has its own strings
+ovl_0A_06 ovl_0A_06_entry 0 0 0
+ovl_0A_06 1412C0 0x700 0xF0 0x270
+ovl_0A_06 @jp 1412C0 sizes=0x620,0xE0,0x270
+
 # main_code: RSP code (0x2320 bytes, rspboot and microcode) comes first, as
 # asm data; the objects' .data start after it.  The .data/.rodata boundary
 # isn't shown yet: 40040 and 40300 have no .rodata.
@@ -181,6 +186,11 @@ ovl_0B_01 @jp 1457B0 sizes=0xB0,0x60,0x70
 ovl_0B_05 ovl_0B_05_entry 0 0 0
 ovl_0B_05 15D020 0x140 0xE0 0xA0
 ovl_0B_05 @jp 15D020 sizes=0x110,0xE0,0xA0
+
+# ovl_0B_07: all C (-O3), the battle results; jp has its own strings
+ovl_0B_07 ovl_0B_07_entry 0 0 0
+ovl_0B_07 167D70 0x1E0 0xC0 0x150
+ovl_0B_07 @jp 167D70 sizes=0x1A0,0xC0,0x150
 
 # ovl_0C_01: all C (-O3)
 ovl_0C_01 ovl_0C_01_entry 0 0 0

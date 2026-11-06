@@ -1,18 +1,16 @@
 /*
- * NON_MATCHING: ovl_0B_07's game object (the battle results: confetti, the
- * players' figures and their trophies, "Congratulations" and the winner's
- * name), complete: every function and its data (.data 0x1E0, .rodata 0xC0
- * as the original; jp's .data is 0x1A0). Not built into the ROM
- * (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * ovl_0B_07's game object (the battle results: confetti, the players'
+ * figures and their trophies, "Congratulations" and the winner's name),
+ * IDO -O3; it matches in us, eu and jp. .data 0x1E0 (jp 0x1A0), .rodata
+ * 0xC0, .bss 0x150.
  *
  * IDO -O3: the functions are written last to first. The tail (80045438,
  * 800453F0, 800453BC, 80045494 and the twelve empty stubs) is ovl_17_10's;
- * the .bss nothing here uses (D_ovl0B_07_80046DF0, ..E1C, ..F38) comes out
- * common, so .bss is 0x120 where the original's is 0x150. The statics
- * 80043544 (the buttons of every controller; it uses its callers' $s0-$s2)
- * and 8004359C (arg0 in $s2, arg1 in $s1) are defined below the handler.
+ * the .bss nothing here uses (D_ovl0B_07_80046DF0, ..E1C, ..F38) would
+ * come out common (.bss 0x120): a dead `if (0)` in the stub 80045504
+ * keeps it in place. The statics 80043544 (the buttons of every
+ * controller; it uses its callers' $s0-$s2) and 8004359C (arg0 in $s2,
+ * arg1 in $s1) are defined below the handler.
  * 80043594 is the x that centres a text at a scale: inlined in us (its
  * stub; it asks ZeroJump 0x250B for the width), a real call in jp (24
  * pixels a character); jp creates its texts with ZeroJump 0x2707 and its
@@ -44,9 +42,12 @@
  *   (f32) F1C` (int 720/640: a constant of its own, so the loop's 720.0f
  *   is loaded where the original loads it); every `/ 2` is by an int (the
  *   original divides by 2.0f in $fs1; `/ 2.0f` becomes `* 0.5f`); off
- *   is set to 0.0f after the counting, ahead of step (set at the top,
- *   0.0f's live range is too long for uopt to give it a register, and
- *   step gets one in its place); the new trophies are stored as
+ *   is set to 0.0f after step, and the first y loop's offset is off too
+ *   (one variable, in $fs3 as the original; with off set ahead of step
+ *   and a y of its own, off and 90.0f traded $fs3 and $fs0, 10 words;
+ *   set at the top, 0.0f's live range is too long for uopt to give it a
+ *   register, and step gets one in its place); the new trophies are
+ *   stored as
  *   `D_E30[..][..] = obj = f()` and the first y loop sets unk18 after
  *   unk14; the two counting loops start `for (D_F1C = 0, i = 0, j =
  *   0; ...)` (all on the for's line: as1 orders the stores after
@@ -61,13 +62,6 @@
  *   step, m, and the induction temporaries' homes below them).
  * - jp's 80043594_jp and us's text x divide by an int 2 (div.s, as the
  *   original) for the same reason.
- *
- * What still differs:
- * - func_ovl0B_07_8004400C (10): the original sets off (`mov.s fs3,fs4`)
- *   at the top, ours after the counting, so off and 90.0f trade $fs3 and
- *   $fs0 (f26/f20) and 170.0f takes $fs2 (f24) for 90.0f's. With off
- *   set at the top (and a dead read keeping step to the end) ours holds
- *   0.0f in $fs5 and 720.0f in $fs4 instead (30 words).
  */
 #include "common.h"
 
@@ -243,8 +237,13 @@ Vtx_ovl0B_07 D_ovl0B_07_80046CF0[4] = {
     { { { -8, -2, 0 }, 0, { 0, 0 }, { 0xFF, 0x00, 0x00, 0xFF } } },
 };
 
-/* unused: the stubs IDO -O3 leaves at the end of the object */
+/* unused: the stubs IDO -O3 leaves at the end of the object; the dead
+ * `if (0)` in this one refers to the .bss nothing else uses, which would
+ * otherwise be common */
 static void func_ovl0B_07_80045504(void) {
+    if (0) {
+        D_ovl0B_07_80046DF0[0] = D_ovl0B_07_80046E1C[0] = D_ovl0B_07_80046F38[0] = 0;
+    }
 }
 
 static void func_ovl0B_07_800454FC(void) {
