@@ -9,7 +9,7 @@
  * .bss 0x1F0 as the original). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 92, eu 92, jp 92
+ * differing words: us 67, eu 67, jp 67
  *
  * Drafted from m2c, then rewritten function by function: the angle
  * normalisations are the original's ternaries (A180, and the 0-360 wrap
@@ -48,8 +48,8 @@
  * move time.
  *
  * What still differs in us (words), all under 25: 80043608, 800446FC,
- * 800455D0, 80045B0C, 80045C9C, 80046DC4, 80046E00, 80047144, 800477C0,
- * 80047CB4, 80048418, 80049870. The other 70 match. 80048418's 21 are
+ * 800455D0, 80045B0C, 80045C9C, 80046DC4, 80046E00, 80047144, 80048418,
+ * 80049870. The other 72 match. 80048418's 21 are
  * no code of its own: it ends in an endless loop, padded to alignment,
  * so its size follows the code before it (80046E00 is 8 bytes long).
  * 800446FC's lone `c.le.s` after the second loop's wrap is a clamp of d
@@ -60,10 +60,14 @@
  * = 0` as an int in both places, 0.0f everywhere else. 8004636C matched with the static 80043124
  * declared s32 ($v1 for its caller's loads, as in 0B_03).
  * 800450B4 matched once `dx /= (f32)arg0` came after dy's normalisation:
- * the conversion's place follows its first use. 800477C0's case 1 wrap
- * is the macro W360 on the whole expression (a local for it gets copied
- * to its own register); its last two wraps still swap $f0/$f2 (n and the
- * result) with every variable, ternary or if/else form tried.
+ * the conversion's place follows its first use. 800477C0's wraps are
+ * the macro W360 on the whole expression (a local for it gets copied to
+ * its own register), with a dead `if (!diff) {}` after the first of the
+ * last two, which puts n and the result in the original's $f0/$f2.
+ * 80047CB4's spill at 0x1C is the compiler's temporary for the repeated
+ * `angle + 1.0f`, not a local: written twice, with no pad locals, and
+ * with 80045C60 (inlined into it) declaring no unused local, whose slot
+ * in the caller's frame would move the temporary by 4.
  */
 #include "common.h"
 
@@ -1323,18 +1327,11 @@ block_31:
 
 void func_ovl13_01_80047CB4(void *arg0) {
     f32 angle;
-    f32 a;
-    f32 b;
-    f32 c;
-    f32 d;
-    f32 e;
-    f32 x;
 
     if (func_ovl13_01_8004BA10(0x413) != 0) {
         angle = D_ovl13_01_8004C338->unk40->unk48->unk4->unk4;
-        x = M2C_FIELD(arg0, f32 *, 4);
-        if (x >= 0.0f) {
-            if (x > 67.5f) {
+        if (M2C_FIELD(arg0, f32 *, 4) >= 0.0f) {
+            if (M2C_FIELD(arg0, f32 *, 4) > 67.5f) {
                 if (angle <= 45.0f && angle + 2.0f > 45.0f) {
                     func_ovl13_01_80043124(0xD4, D_ovl13_01_8004C338);
                 }
@@ -1345,15 +1342,14 @@ void func_ovl13_01_80047CB4(void *arg0) {
                 }
                 angle += 1.0f;
             }
-        } else if (x < -10.0f) {
+        } else if (M2C_FIELD(arg0, f32 *, 4) < -10.0f) {
             if (angle <= 40.0f && angle + 1.0f >= 40.0f) {
                 angle = 40.0f;
             } else {
-                x = angle + 1.0f;
-                if (angle <= 48.0f && x > 48.0f) {
+                if (angle <= 48.0f && angle + 1.0f > 48.0f) {
                     func_ovl13_01_80043124(0xD3, D_ovl13_01_8004C338);
                 }
-                angle = x;
+                angle += 1.0f;
             }
         } else {
             if (angle <= 48.0f && angle + 1.0f > 48.0f) {
@@ -1372,7 +1368,6 @@ void func_ovl13_01_800477C0(void) {
     f32 n;
     Vec3f pos;
     Vec3f target;
-    f32 w;
 
     switch (D_ovl13_01_8004C2A0) {
     case 0:
@@ -1417,17 +1412,8 @@ void func_ovl13_01_800477C0(void) {
             diff = D_ovl13_01_8004C2A4 * -1.0f;
         }
     }
-    n = D_ovl13_01_8004C328->unk4C + diff;
-    if (n >= 360.0f) {
-        D_ovl13_01_8004C328->unk4C = n - 360.0f;
-    } else {
-        if (n < 0.0f) {
-            w = n + 360.0f;
-        } else {
-            w = n;
-        }
-        D_ovl13_01_8004C328->unk4C = w;
-    }
+    D_ovl13_01_8004C328->unk4C = W360(D_ovl13_01_8004C328->unk4C + diff);
+    if (!diff) {}
     cur = (rot.y >= 0.0f && rot.y <= 180.0f) ? rot.y : (360.0f - rot.y) * -1.0f;
     n = (D_ovl13_01_8004C328->unk50 >= 0.0f && D_ovl13_01_8004C328->unk50 <= 180.0f) ? D_ovl13_01_8004C328->unk50 : (360.0f - D_ovl13_01_8004C328->unk50) * -1.0f;
     diff = cur - n;
@@ -1446,17 +1432,7 @@ void func_ovl13_01_800477C0(void) {
             diff = D_ovl13_01_8004C2A4 * -1.0f;
         }
     }
-    n = D_ovl13_01_8004C328->unk50 + diff;
-    if (n >= 360.0f) {
-        D_ovl13_01_8004C328->unk50 = n - 360.0f;
-    } else {
-        if (n < 0.0f) {
-            w = n + 360.0f;
-        } else {
-            w = n;
-        }
-        D_ovl13_01_8004C328->unk50 = w;
-    }
+    D_ovl13_01_8004C328->unk50 = W360(D_ovl13_01_8004C328->unk50 + diff);
 }
 
 void func_ovl13_01_800475EC(UnkStructA *arg0, f32 arg1, f32 arg2, f32 arg3) {
@@ -1982,8 +1958,6 @@ void func_ovl13_01_80045C9C(void) {
 }
 
 f32 func_ovl13_01_80045C60(f32 arg0, f32 arg1) {
-    f32 var_fa0;
-
     if (arg1 <= arg0) {
         arg0 -= arg1;
     } else if (arg0 < 0.0f) {
