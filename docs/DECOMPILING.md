@@ -110,7 +110,11 @@ does: `git mv` it, drop the header's NON_MATCHING lines, add it to the
 Makefile's `O3_C_FILES` (and `MIPS2_C_FILES` if `-mips2`), regenerate the
 configs (`tools/layout.py`) and extract again, then give it its data
 (below). Until then `data_split.txt` doesn't list it: its data stays in the
-module's asm blocks, though the draft defines it.
+module's asm blocks, though the draft defines it. A 0-word draft can still
+fail to link or to match a version's sha1: the comparison doesn't check
+call targets, so a call through a ZeroJump stub a version lacks (jp has
+fewer) only shows up when it is built. ovl_0A_06's jp calls 0x2501/0x2503
+where us calls 0x250C/0x250D.
 
 ## Compiler flags: the evidence
 
