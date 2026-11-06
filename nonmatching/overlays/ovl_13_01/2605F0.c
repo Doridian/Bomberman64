@@ -9,7 +9,7 @@
  * .bss 0x1F0 as the original). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 807, eu 807, jp 807
+ * differing words: us 802, eu 802, jp 802
  *
  * Drafted from m2c, then rewritten function by function: the angle
  * normalisations are the original's ternaries (A180, and the 0-360 wrap
@@ -53,11 +53,15 @@
  * only `%lo` signs: .text is 4 bytes short in all (80043878, 800446FC,
  * 800431D4 short, 80046E00 8 long), which moves .rodata and .bss.
  * 800450B4 matched once `dx /= (f32)arg0` came after dy's normalisation:
- * the conversion's place follows its first use.
+ * the conversion's place follows its first use. 800477C0's case 1 wrap
+ * is the macro W360 on the whole expression (a local for it gets copied
+ * to its own register); its last two wraps still swap $f0/$f2 (n and the
+ * result) with every variable, ternary or if/else form tried.
  */
 #include "common.h"
 
 #define A180(v) (((v) >= 0.0f && (v) <= 180.0f) ? (v) : (360.0f - (v)) * -1.0f)
+#define W360(v) (((v) >= 360.0f) ? (v) - 360.0f : ((v) < 0.0f) ? (v) + 360.0f : (v))
 #define M2C_FIELD(expr, type, offset) (*(type)((u8 *)(expr) + (offset)))
 
 /* What func_ovl13_01_8004B620 links two models with (D_ovl13_01_8004C2C0-8004C308). */
@@ -1380,17 +1384,7 @@ void func_ovl13_01_800477C0(void) {
         }
         target.z = D_ovl13_01_8004C200.z;
         func_ovl13_01_8004B5C8(&pos.x, &target.x, &rot.x);
-        cur = rot.y - 90.0f + -7.5f;
-        if (cur >= 360.0f) {
-            rot.y = cur - 360.0f;
-        } else {
-            if (cur < 0.0f) {
-                w = cur + 360.0f;
-            } else {
-                w = cur;
-            }
-            rot.y = w;
-        }
+        rot.y = W360(rot.y - 90.0f + -7.5f);
         break;
     case 2:
         rot.x = D_ovl13_01_8004C324->unk40->unk20;
