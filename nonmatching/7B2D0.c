@@ -7,21 +7,22 @@
  * drawer. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 936, eu 936, jp 936
+ * differing words: us 98, eu 98, jp 98
  *
- * What still differs in us: the drawer's body is 5 words longer
- * (0x1200 against 0x11EC), so every word after the first difference is
- * counted. The shape is the original's (same blocks, frame 0x210, vertex
- * homes and store order). Left:
- * - the entry pointer: the original reuses $v1 for e++ (addiu v1,v1,12);
- *   this keeps the base in $v1 and puts e+1 in $t1.
- * - the TLUT cases load gfx and base before the entry's offset.
- * - uls = x - 1 is hoisted by PRE to the inner loop's top; the original
- *   computes it after the th clamp.
- * - ult/lrt: the original's are if-forms kept in $t1/$t4; ternaries add a
- *   branch and reloads, if-forms change the colouring further.
- * - colouring: vtx in $t5 (original $t3), 0xFF in $s6 (original $s7),
- *   and gSPVertex scheduled into the vertex stores.
+ * func_80260AD8 has the original's size (0x11EC) and frame (0x210); the
+ * rest is colouring and slots. What still differs in us:
+ * - the entry pointer: the original reuses $v1 for e++ (lw t1,12(v1);
+ *   addiu v1,v1,12); this puts e in $t1 and the type in $t2.
+ * - colouring: vtx in $t4 and lrt in $t3 (the original has them the other
+ *   way round).
+ * - switch (mode) case 0 stores th before tw (as in 7C4D0).
+ * - the flip block's homes sit 4 bytes low (x0 at 236(sp), original
+ *   240(sp)): the original has one word less in the scopes before the
+ *   flip block (the GBI macros' _g homes) and one more after it. The
+ *   block declares x0 last so the other seven line up with the original.
+ * The vertex stores' cn[1] = cn[0] chain is there for uopt: it splits
+ * the store run into blocks by size, and the chain moves the split so the
+ * gSPVertex temporaries keep the original's priority.
  */
 #include "common.h"
 #define F3DEX_GBI
@@ -105,16 +106,22 @@ static void func_80260AD0(Gfx **gfxp, Vtx *vtx, s32 mode, u8 *img, u32 width, u3
             }
             xend = x + tw;
             yend = y + th;
-            uls = x - 1;
-            lrs = xend + 1;
-            if (uls < 0) {
+            uls = x;
+            ult = y;
+            lrs = xend;
+            lrt = yend;
+            if (--uls < 0) {
                 uls = 0;
             }
-            if (lrs >= width) {
+            if (++lrs >= width) {
                 lrs = width - 1;
             }
-            ult = (y - 1 < 0) ? 0 : y - 1;
-            lrt = (yend + 1 >= height) ? height - 1 : yend + 1;
+            if (--ult < 0) {
+                ult = 0;
+            }
+            if (++lrt >= height) {
+                lrt = height - 1;
+            }
             switch (mode) {
                 case 0:
                     gDPLoadTextureTile_4b(gfx++, img, G_IM_FMT_CI, width, height, uls, ult, lrs, lrt, 0, G_TX_CLAMP, G_TX_CLAMP, G_TX_NOMASK, G_TX_NOMASK, G_TX_NOLOD, G_TX_NOLOD);
@@ -130,7 +137,6 @@ static void func_80260AD0(Gfx **gfxp, Vtx *vtx, s32 mode, u8 *img, u32 width, u3
                     break;
             }
             {
-                s32 x0;
                 s32 x1;
                 s32 y0;
                 s32 y1;
@@ -138,6 +144,7 @@ static void func_80260AD0(Gfx **gfxp, Vtx *vtx, s32 mode, u8 *img, u32 width, u3
                 s32 s1;
                 s32 t0;
                 s32 t1;
+                s32 x0;
 
                 switch (flip) {
                     case 0:
@@ -209,8 +216,7 @@ static void func_80260AD0(Gfx **gfxp, Vtx *vtx, s32 mode, u8 *img, u32 width, u3
                 vtx[2].v.flag = 0;
                 vtx[2].v.tc[0] = s1 & 0xFFFF;
                 vtx[2].v.tc[1] = t1 & 0xFFFF;
-                vtx[2].v.cn[0] = 0xFF;
-                vtx[2].v.cn[1] = 0xFF;
+                vtx[2].v.cn[1] = vtx[2].v.cn[0] = 0xFF;
                 vtx[2].v.cn[2] = 0xFF;
                 vtx[2].v.cn[3] = 0xFF;
                 vtx[3].v.ob[1] = y1 & 0xFFFF;
@@ -233,23 +239,28 @@ static void func_80260AD0(Gfx **gfxp, Vtx *vtx, s32 mode, u8 *img, u32 width, u3
     *gfxp = gfx;
 }
 
-void func_80260AD8(Gfx **gdl, Vtx *vtx, u8 *base, s32 idx, u8 flip) {
-    Gfx *gfx = *gdl;
-    TexEntry *e = &((TexFile *) base)->entries[idx];
-    s32 offset = e->offset;
-    u32 width = e->width;
-    u32 height = e->height;
+void func_80260AD8(Gfx **gdl, Vtx *vtx, TexFile *base, s32 idx, u8 flip) {
+    Gfx *gfx;
+    TexEntry *e;
+    s32 offset;
+    u32 width;
+    u32 height;
     u8 *pal;
     s32 dummy2;
     s32 mode;
 
+    e = &base->entries[idx];
+    gfx = *gdl;
+    offset = e->offset;
+    width = e->width;
+    height = e->height;
     switch (e->type) {
         case 0x12:
             e++;
             if (e->type != 0x1A) {
                 return;
             }
-            pal = base + e->offset;
+            pal = (u8 *) base + e->offset;
             gDPLoadTLUT_pal16(gfx++, 0, pal);
             mode = 0;
             break;
@@ -258,7 +269,7 @@ void func_80260AD8(Gfx **gdl, Vtx *vtx, u8 *base, s32 idx, u8 flip) {
             if (e->type != 0x1A) {
                 return;
             }
-            pal = base + e->offset;
+            pal = (u8 *) base + e->offset;
             gDPLoadTLUT_pal256(gfx++, pal);
             mode = 1;
             break;
@@ -271,6 +282,6 @@ void func_80260AD8(Gfx **gdl, Vtx *vtx, u8 *base, s32 idx, u8 flip) {
         default:
             return;
     }
-    func_80260AD0(&gfx, vtx, mode, base + offset, width, height, flip);
+    func_80260AD0(&gfx, vtx, mode, (u8 *) base + offset, width, height, flip);
     *gdl = gfx;
 }
