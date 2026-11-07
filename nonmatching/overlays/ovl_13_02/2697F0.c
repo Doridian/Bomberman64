@@ -1,13 +1,13 @@
 /*
  * NON_MATCHING: ovl_13_02's game object, complete; not in the ROM.
  * flags: -O3
- * differing words: us 2601, eu 2601, jp 2601
- * 53 of 81 functions match (fcmp folds each static into the function
+ * differing words: us 2231, eu 2231, jp 2231
+ * 54 of 81 functions match (fcmp folds each static into the function
  * before it; the text is the same in every version).
  * Still differs: 80049F68, 80046E10, 80045AB8 and 8004A8E0 are m2c
  * output (a structured rewrite loses the frame layout of the first
- * three); 800499A0, 8004640C and 80043E64 are rewritten but keep
- * register and frame differences. 80043970, 80049400, 8004BBE4 and
+ * three); 8004640C and 80043E64 are rewritten but keep register
+ * (and, in 8004640C, frame) differences. 80043970, 80049400, 8004BBE4 and
  * 8004BD28 are static and come out in the original's order: 80043970
  * and 80049400 each hold a dead call to their referrer, and 8004BD28 a
  * dead use of its own address (so it is first in the reverse order the
@@ -1226,6 +1226,7 @@ void func_ovl13_02_80049D50(void) {
 }
 
 void func_ovl13_02_800499A0(void) {
+    s32 pad;
     D_ovl13_02_8004D4F8[0].unk24[0] = (M2C_FIELD(&D_ovl13_02_8004DF70, f32 *, 0 * 4) - M2C_FIELD(&D_ovl13_02_8004DD58, f32 *, 0 * 4)) / D_ovl13_02_8004D4F8[0].unk0;
     D_ovl13_02_8004D4F8[0].unk24[1] = (M2C_FIELD(&D_ovl13_02_8004DF70, f32 *, 1 * 4) - M2C_FIELD(&D_ovl13_02_8004DD58, f32 *, 1 * 4)) / D_ovl13_02_8004D4F8[0].unk0;
     D_ovl13_02_8004D4F8[0].unk24[2] = (M2C_FIELD(&D_ovl13_02_8004DF70, f32 *, 2 * 4) - M2C_FIELD(&D_ovl13_02_8004DD58, f32 *, 2 * 4)) / D_ovl13_02_8004D4F8[0].unk0;
@@ -1267,9 +1268,9 @@ void func_ovl13_02_800499A0(void) {
     D_ovl13_02_8004D8B0.unk24[0] = (M2C_FIELD(&D_ovl13_02_8004DFD0, f32 *, 0 * 4) - M2C_FIELD(&D_ovl13_02_8004DD58, f32 *, 0 * 4)) / 30.0f;
     D_ovl13_02_8004D8B0.unk24[1] = (M2C_FIELD(&D_ovl13_02_8004DFD0, f32 *, 1 * 4) - M2C_FIELD(&D_ovl13_02_8004DD58, f32 *, 1 * 4)) / 30.0f;
     D_ovl13_02_8004D8B0.unk24[2] = (M2C_FIELD(&D_ovl13_02_8004DFD0, f32 *, 2 * 4) - M2C_FIELD(&D_ovl13_02_8004DD58, f32 *, 2 * 4)) / 30.0f;
-    D_ovl13_02_8004D8F4.unk24[0] = D_ovl13_02_8004D8B0.unk24[0] * -1.0f;
-    D_ovl13_02_8004D8F4.unk24[1] = D_ovl13_02_8004D8B0.unk24[1] * -1.0f;
-    D_ovl13_02_8004D8F4.unk24[2] = D_ovl13_02_8004D8B0.unk24[2] * -1.0f;
+    (&D_ovl13_02_8004D8B0)[1].unk24[0] = D_ovl13_02_8004D8B0.unk24[0] * -1.0f;
+    (&D_ovl13_02_8004D8B0)[1].unk24[1] = D_ovl13_02_8004D8B0.unk24[1] * -1.0f;
+    (&D_ovl13_02_8004D8B0)[1].unk24[2] = D_ovl13_02_8004D8B0.unk24[2] * -1.0f;
 }
 
 void func_ovl13_02_8004980C(void) {
@@ -2239,13 +2240,14 @@ void func_ovl13_02_8004640C(void) {
     f32 da;
     UnkStructA *obj;
     f32 a;
+    f32 y;
     f32 r;
     f32 rad;
     s32 i;
 
     func_ovl13_02_8004D2E8();
     func_ovl13_02_8004CC00(D_ovl13_02_8004DE3C, 0x04000000);
-    ry = M2C_FIELD(&D_ovl13_02_8004DED8, f32 *, 4);
+    y = M2C_FIELD(&D_ovl13_02_8004DED8, f32 *, 4);
     D_ovl13_02_8004DE80.unk0 = 2;
     D_ovl13_02_8004DE98.unk0 = 2;
     D_ovl13_02_8004DEB0.unk0 = 2;
@@ -2261,7 +2263,7 @@ void func_ovl13_02_8004640C(void) {
     r = 0.0f;
     func_ovl13_02_8004D2D0(0xE7);
     for (i = 0; i < 20; i++) {
-        M2C_FIELD(&D_ovl13_02_8004DED8, f32 *, 4) = ry - r;
+        M2C_FIELD(&D_ovl13_02_8004DED8, f32 *, 4) = y - r;
         M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 4) += -10.0f;
         r += 4.0f;
         func_ovl13_02_8004CD90();
@@ -2296,10 +2298,8 @@ void func_ovl13_02_8004640C(void) {
         M2C_FIELD(&D_ovl13_02_8004DED8, f32 *, 4) = ry + r;
         M2C_FIELD(&D_ovl13_02_8004DED8, f32 *, 0) = func_ovl13_02_8004CEF0(a) * rad + x;
         M2C_FIELD(&D_ovl13_02_8004DED8, f32 *, 8) = func_ovl13_02_8004CEF0(a) * rad + z;
-        a += da;
-        a = W360(a);
-        r += dr;
-        r = W360(r);
+        a = W360(a + da);
+        r = W360(r + dr);
         func_ovl13_02_8004CD90();
     }
     func_ovl13_02_8004CC00(obj, 0x04000000);
@@ -2932,14 +2932,12 @@ void func_ovl13_02_80043E64(void) {
     Vec3f cam;
     f32 cur[3];
     f32 want[3];
-    f32 top;
-    f32 bottom;
     s32 i;
     s32 best;
     f32 min;
+    f32 top;
+    f32 bottom;
     f32 d;
-    f32 f;
-    f32 a;
     u8 c;
 
     top = M2C_FIELD(&D_ovl13_02_8004DD10, f32 *, 8) + 9000.0f;
@@ -2958,13 +2956,13 @@ void func_ovl13_02_80043E64(void) {
         ph[i] = 0.0f;
     }
     tgt.x = objs[0]->unk40->unk10;
+    tgt.y = objs[0]->unk40->unk14;
     cur[1] = 0.0f;
     want[1] = 0.0f;
     cur[0] = 270.0f;
     want[0] = 270.0f;
     cur[2] = 2000.0f;
     want[2] = 2000.0f;
-    tgt.y = objs[0]->unk40->unk14;
     while (TRUE) {
         for (i = 0; i < 5; i++) {
             objs[i]->unk40->unk18 -= D_ovl13_02_8004DD3C * 5.0f;
@@ -2980,9 +2978,9 @@ void func_ovl13_02_80043E64(void) {
         }
         min = 10000.0f;
         best = 0;
-        cam.z = M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 8) + 1000.0f;
         cam.x = M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 0);
         cam.y = M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 4);
+        cam.z = M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 8) + 1000.0f;
         for (i = 0; i < 5; i++) {
             if (objs[i]->unk40->unk18 <= cam.z) {
                 d = cam.z - objs[i]->unk40->unk18;
@@ -2997,18 +2995,16 @@ void func_ovl13_02_80043E64(void) {
         func_ovl13_02_8004CCC8(objs[best], &tgt.x);
         func_ovl13_02_80043B64(&cam.x, cur, 10.0f, &tgt.x);
         func_ovl13_02_8004CB88(&cam.x, &tgt.x, want);
-        a = want[1] - 90.0f;
         cur[2] += (want[2] - cur[2]) * 0.1f;
-        cur[1] = (a >= 360.0f) ? a - 360.0f : (want[1] < 90.0f) ? a + 360.0f : a;
+        d = want[1] - 90.0f;
+        cur[1] = (d >= 360.0f) ? d - 360.0f : (want[1] < 90.0f) ? d + 360.0f : d;
         func_ovl13_02_8004CF10(cur[0], cur[1]);
-        d = cur[2];
-        if (d > 2000.0f) {
-            d = 2000.0f;
+        if (cur[2] > 2000.0f) {
+            cur[2] = 2000.0f;
         }
-        f = 1.0f - (d / 2000.0f);
-        c = (1.0f - f) * 128.0f;
-        cur[2] = d;
-        func_ovl13_02_8004D078((s32) (127.0f * f) + 0x80, c, c);
+        d = 1.0f - (cur[2] / 2000.0f);
+        c = (1.0f - d) * 128.0f;
+        func_ovl13_02_8004D078((s32) (127.0f * d) + 0x80, c, c);
         func_ovl13_02_8004CD90();
     }
 }
