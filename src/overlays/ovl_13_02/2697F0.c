@@ -1,14 +1,8 @@
 /*
- * NON_MATCHING: ovl_13_02's game object, complete; not in the ROM.
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
- * 80 of 80 functions match (fcmp folds each static into the function
- * before it; the text is the same in every version).
- * Still differs: 800458D8 swaps $v0 and $v1 between its flags and
- * the 0x40 test (the count reuses arg0, which the original has in $a0);
- * 80046E10 colours DE80/DE98/DEB0 into $s1-$s3 in the opposite order
- * of the first stores; 80048FBC only in its folded static 80049400
- * ($v0 for $v1 as the base of the DEC8 loads).
+ * ovl_13_02's game object, IDO -O3; it matches in us, eu and jp (the text
+ * is the same in every version). Its data: .data 0x460, .rodata 0x340,
+ * .bss 0x3A0, the same in every version.
+ *
  * 80043040, 80043970, 80049400, 8004BBE4 and 8004BD28 are static and
  * come out in the original's order: 80043040 (its argument in $s0),
  * 80043970 and 80049400 each hold a dead call to their referrer
@@ -17,7 +11,20 @@
  * statics are flushed in). 8004521C, 800460C0 and 8004A8E0 are
  * global, as static they break that order or their temporaries. The
  * inlined stubs 8004B524, 8004B820/28/30 and the ten at
- * 8004BE60-8004BEA8 are empty statics.
+ * 8004BE60-8004BEA8 are empty statics. The .bss nothing uses would be
+ * common: a dead `if (0)` in 8004BE60 refers to it.
+ *
+ * What it took, function by function:
+ * - 80043E64: the phase step is `0.1f + 0.1f * ...` (a double from
+ *   8004CF00): .rodata has (f64)0.1f, not 0.1.
+ * - 800458D8: r = 0 and a dead read of it give r its bit in uopt's order
+ *   before flags, so the 0x40 test gets $v0 and flags $v1; the count
+ *   reuses arg0's register.
+ * - 80046E10: dead tests of DE80, DE98 and DEB0 at the top of the loop,
+ *   and their first stores in the order DEB0, DE98, DE80, colour them
+ *   into $s1-$s3 as the original does.
+ * - 80049400 (folded into 80048FBC): a dead test of DEC8 puts the base
+ *   of its loads in $v1.
  */
 #include "common.h"
 
@@ -176,7 +183,8 @@ u8 D_ovl13_02_8004DCD4[0x4];
 s32 D_ovl13_02_8004DCD8;
 s32 * D_ovl13_02_8004DCDC;
 f32 D_ovl13_02_8004DCE0;
-u8 D_ovl13_02_8004DCE4[0x8];
+u8 D_ovl13_02_8004DCE4[0x4];
+u8 D_ovl13_02_8004DCE8[0x4];
 f32 D_ovl13_02_8004DCEC;
 f32 D_ovl13_02_8004DCF0;
 UnkStructA * D_ovl13_02_8004DCF4;
@@ -360,8 +368,14 @@ Move_ovl13_02 D_ovl13_02_8004D8B0 = { 0x1E, 1, 0, { 0.0f, 0.0f, 0.0f }, { 0.0f, 
 Move_ovl13_02 D_ovl13_02_8004D8F4 = { 0x1E, 1, 0, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, NULL, NULL };
 f32 D_ovl13_02_8004D938[6] = { -200.0f, -100.0f, -0.0f, 200.0f, 100.0f, 0.0f };
 
-/* unused: the stubs IDO -O3 leaves after the tail */
+/* unused: the stubs IDO -O3 leaves after the tail; the dead `if (0)` in
+ * the first refers to the .bss words nothing else uses, which would
+ * otherwise be common and leave .bss short */
 static void func_ovl13_02_8004BE60(void) {
+    if (0) {
+        D_ovl13_02_8004DC9C[0] = D_ovl13_02_8004DCB0[0] = D_ovl13_02_8004DCBC[0] = D_ovl13_02_8004DCD4[0] = D_ovl13_02_8004DCE4[0] = D_ovl13_02_8004DCE8[0] = D_ovl13_02_8004DD04[0] = D_ovl13_02_8004DD0C[0] = D_ovl13_02_8004DD18[0] = D_ovl13_02_8004DE7C[0] = D_ovl13_02_8004DED0[0] = D_ovl13_02_8004DEE0[0] = D_ovl13_02_8004DF14[0] = 0;
+        D_ovl13_02_8004DEDC = 0.0f;
+    }
 }
 
 static void func_ovl13_02_8004BE68(void) {
@@ -2835,7 +2849,7 @@ void func_ovl13_02_80043E64(void) {
             if (objs[i]->unk40->unk18 < bottom) {
                 objs[i]->unk40->unk18 = top;
             }
-            ph[i] += 0.1 + 0.1 * func_ovl13_02_8004CF00() * (f32) (i + 1);
+            ph[i] += 0.1f + 0.1f * func_ovl13_02_8004CF00() * (f32) (i + 1);
             if (ph[i] > 4.0f) {
                 ph[i] -= 4.0f;
             }

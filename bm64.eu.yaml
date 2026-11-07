@@ -1605,16 +1605,17 @@ segments:
     type: code
     start: 0x2697E0
     vram: 0x80043000
-    bss_size: 0x360
+    bss_size: 0x3A0
     exclusive_ram_id: overlay
     symbol_name_format: ovl13_02_$VRAM
     dir: overlays/ovl_13_02
     subsegments:
-      - [0x2697E0, asm, ovl_13_02_entry]
-      - [0x2697F0, asm]
+      - [0x2697E0, c, ovl_13_02_entry]
+      - [0x2697F0, c]
       - [0x272690, hasm, ovl_13_02_zerojmp]
-      - [0x273CD0, rodata]
-      - {type: bss, vram: 0x8004DC90}
+      - [0x273CD0, .data, 2697F0]
+      - [0x274130, .rodata, 2697F0]
+      - {type: .bss, vram: 0x8004DC90, name: 2697F0}
   - name: ovl_14_01
     type: code
     start: 0x274470
