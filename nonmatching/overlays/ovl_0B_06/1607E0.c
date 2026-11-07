@@ -6,7 +6,7 @@
  * floats). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 819, eu 819, jp 375
+ * differing words: us 553, eu 553, jp 351
  * jp's code differences are drafted (`#if VERSION_JP`), its .data is not:
  * its five own strings are only declared, and its text tables and
  * positions are us's.
@@ -86,9 +86,22 @@
  *   uopt registers one off (t1/t2/t3 for t2/t3/t4; the dead read in its
  *   loop is a lever, not the original), 80045794's frame (40 vs 32).
  * - 8004616C (800464C0-80047030; jp 80046170): COPY_FILE's frame (112 vs
- *   104), us LEVEL 2 words short (its y/fy, frame 184 vs 216), us ERASE
- *   2 short (the original rematerialises &D_8004992C in $fp after the
- *   loop). Every jp size is right. 80048268 returns u16 (pressed is s32 in
+ *   104), us ERASE 2 words short (the original rematerialises
+ *   &D_8004992C in $fp after the loop: a split of its live range there;
+ *   neighbour forms for the stores only give a `lui at`). us LEVEL is the
+ *   right size: the original reads the first 80045C24 call's two unk14
+ *   bytes by absolute address (lui each) where ours used the
+ *   &D_80049A44 base, so they are written through the neighbouring
+ *   arrays, D_800499F0[3].unk14 and D_8004999C[11].unk14 (flagged: the
+ *   same bytes, out-of-bounds indexing as a lever; the second call does
+ *   the same in the original, but written so it is a word too long, as
+ *   the rest of LEVEL still differs: y/fy hoisted out of LEVEL_FILE's
+ *   loop, 0.0f kept in a register for t, 1 and -2 not in $s6/$at, the
+ *   result's home store). LEVEL_FILE's locals are declared loop, result,
+ *   ret (their homes top down in the original, us and jp), and its
+ *   `s32 pad` is size-tuned (flagged): jp's LEVEL_FILE frame 80 as the
+ *   original, cause unknown (us LEVEL is still 192 vs 216). Every jp
+ *   size is right. 80048268 returns u16 (pressed is s32 in
  *   ERASE_ASK, LEVEL_ASK and 80045F20, u16 only in 8004518C, which returns
  *   it): the zero-extension is the original's `move v1,v0` for the later
  *   button tests. ERASE_FILE's loop-top argument is `sel & 0xFU` (flagged:
@@ -98,8 +111,12 @@
  *   ERASE_FILE frame 40 as the original, us keeps sel in memory (-8).
  *   jp: LEVEL_ASK (80046868) is the right size, its side a local
  *   copy of the parameter (the first if tests the parameter, $s3; the
- *   loop the copy, $s4; ours has the two registers swapped); ERASE_ASK's
- *   frame 96 vs 112.
+ *   loop the copy, $s4; ours has the two registers swapped). ERASE_ASK's
+ *   `s32 pad[4]` is size-tuned (flagged): jp's frame 112 as the original
+ *   (was 96; the homes were right top-relative, so 16 bytes of unknown
+ *   areas are missing in the middle); jp's ERASE_ASK then differs only
+ *   in keep = 0's schedule and 80046634's mode register. us ERASE's
+ *   frame is still 184 vs 200 (pad[8] fixes us and breaks jp).
  *   80046634's second alpha loop tests `i != 3` (flagged: a lever, not
  *   necessarily the original; it puts 3 in $s1 for both loops as the
  *   original has, `bne` for `slti`, and fixes its size); its mode is still
@@ -984,6 +1001,7 @@ static s32 ERASE_ASK(s32 slot, Col_ovl0B_06 *off, Col_ovl0B_06 *on) {
     s32 held;
     s32 pressed;
     s32 i;
+    s32 pad[4];
 
     keep = 1;
     side = 1;
@@ -1106,10 +1124,11 @@ static void func_ovl0B_06_80046F14(s32 arg3, s32 arg0) {
 
 /* @80046868 */
 static s32 LEVEL_FILE(s32 slot) {
-    Label_ovl0B_06 *label;
-    s32 ret;
     s32 loop;
     s32 result;
+    s32 ret;
+    Label_ovl0B_06 *label;
+    s32 pad;
 
     ret = 10;
     func_ovl0B_06_800464C0(0);
@@ -1122,7 +1141,7 @@ static s32 LEVEL_FILE(s32 slot) {
     SET_TEXT(D_ovl0B_06_80049A44[5].unk4, D_ovl0B_06_8004937C_jp, D_ovl0B_06_80049A44[5].unk14);
     func_ovl0B_06_800490B0(D_ovl0B_06_80049A44[5].unk4, -40, 0);
 #else
-    func_ovl0B_06_80045C24(&D_ovl0B_06_80049A44[0], &D_ovl0B_06_80049A44[5], -0x1C, 0, D_ovl0B_06_80049A44[0].unk14, D_ovl0B_06_800494A4, D_ovl0B_06_80049A44[5].unk14);
+    func_ovl0B_06_80045C24(&D_ovl0B_06_80049A44[0], &D_ovl0B_06_80049A44[5], -0x1C, 0, D_ovl0B_06_800499F0[3].unk14, D_ovl0B_06_800494A4, D_ovl0B_06_8004999C[11].unk14);
 #endif
     func_ovl0B_06_800433B0(&D_ovl0B_06_80049A44[5]);
     loop = 0;
