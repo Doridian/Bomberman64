@@ -1,10 +1,10 @@
 /*
  * NON_MATCHING: ovl_14_01's game object, complete; not in the ROM.
  * flags: -O3
- * differing words: us 360, eu 360, jp 360
+ * differing words: us 221, eu 221, jp 221
  *
  * The text is the same in every version (only jp's ZeroJump numbers
- * differ). 78 of 89 functions match. m2c output (with the ZeroJump
+ * differ). 79 of 89 functions match. m2c output (with the ZeroJump
  * prototypes of the other drafts, scratch/newovl2/protos.h, and the
  * file's own in own.h) made to compile, then tuned by hand
  * (scratch/newovl2/r/).
@@ -48,20 +48,28 @@
  * own home. 80049368's wrap is two statements, `y = WRAP360(y - 90)` and
  * `y -= 5`, which gives the original's registers (y in f2, 90 in f12).
  *
- * What still differs (11 functions):
- * - 80049814 (106): the original keeps the D_8004D190/1CC address in v0
- *   (ours v1: v0 still holds the call's result in the same block), and
- *   reloads D_8004D4DC with its own lui at the end (ours keeps
- *   &D_8004D4DC in v1, one word longer, which shifts 8004A11C's nops).
+ * Pass 7 (scratch/newovl2/r6/): 800488B0 calls 800476F8(home.x, home.z,
+ * 30) and 8004769C(60), which IDO inlines (same file): their Vec3fs are
+ * the original's sp 2C/1C, below uopt's temps; `low` is built from `home`
+ * (home stored first). 80049814 stores D_8004D4DC at the end as
+ * `((Vec3f **) &D_8004D4E0)[-1]` (same address; uopt then doesn't keep
+ * &D_8004D4DC in a register), and `if (v) {}` sits in the else arm only.
+ * That also fixes 8004A11C's alignment.
+ *
+ * What still differs (10 functions):
+ * - 80049814 (22): the if arm's D_8004D190 address is a ugen temp (t8),
+ *   the original's v0 (shifts the t-register numbering until the volatile
+ *   `l++`, whose load goes to v0 where the original has t7; `l += 1`
+ *   gives t-numbering but leaves the if arm). Making v live in the if arm
+ *   (`if (v) {}` there) emits a real test.
  *   `l` is `volatile` (semantics unchanged): the original keeps it in its
- *   frame slot, which gives the 40-byte frame. `if (v) {}` (no code) after
- *   the if/else keeps v live across the join, which colours it.
- * - 800488B0 (49): the inner Vec3fs at sp 2C/1C, 7 unexplained words
- *   between n and a.
+ *   frame slot, which gives the 40-byte frame.
+ * - 800488B0 (13): n in a1 and m in v1 (ours v1 and v0).
  * - 800467C0 (44), 8004654C (4): the store to D_8004D6A0.y in each
  *   loop goes through its own lui (%lo(D_8004D6A4)) in the original
  *   (uncoloured address; struct, separate f32s, casts, (&x)[1], volatile
- *   all give the same or worse). 8004654C uses one counter for both
+ *   all give the same or worse; D_8004D6A0 has other users, so a
+ *   function-scope static is not an option). 8004654C uses one counter for both
  *   loops (that keeps the first one's slti).
  * - 800437B8 (40): one word short (the original's a0 load of
  *   D_8004D5DC->unk40 waits a nop, `move a1,zero` is in the jal slot),
@@ -75,8 +83,6 @@
  *   arg1++), which shifts the schedule; the store order (unk0, unk10, ...)
  *   follows once that is right.
  * - 80048ABC (23): v0 vs t0 for the 2 stored to unk0.
- * - 8004A11C (19): the infinite loop's trailing alignment nops (size
- *   follows the functions before it, 80049814 among them).
  * - 800432D8 (15): the original keeps 1.0 and 100.0 in $fs regs in the
  *   first loop and reloads 120.0, ours hoists 120.0.
  * - 8004A760 (10): 0.0 in f14 (original f2), and t copied to f2 before
@@ -1166,8 +1172,8 @@ void func_ovl14_01_80049814(s32 id, UnkStructA **parts, Link_ovl14_01 *links) {
     } else {
         (*parts)->unk4C = 498.0f;
         D_ovl14_01_8004D4DC = v = D_ovl14_01_8004D1CC;
+        if (v) {}
     }
-    if (v) {}
     M2C_FIELD(*parts, Link_ovl14_01 **, 0x3C) = links;
     parts++;
     *parts = func_ovl14_01_8004C8F0(-1, 0x500000, parts[-1]);
@@ -1207,7 +1213,7 @@ void func_ovl14_01_80049814(s32 id, UnkStructA **parts, Link_ovl14_01 *links) {
         v++;
         parts++;
     }
-    D_ovl14_01_8004D4DC = v;
+    ((Vec3f **) &D_ovl14_01_8004D4E0)[-1] = v;
 }
 
 void func_ovl14_01_80049618(void) {
@@ -1473,15 +1479,13 @@ void func_ovl14_01_800488B0(void) {
     Vec3f low;
     s32 n;
     s32 m;
-    Vec3f a;
-    Vec3f b;
 
-    low.x = D_ovl14_01_8004D690.x;
-    low.y = D_ovl14_01_8004D690.y + -300.0f;
-    low.z = D_ovl14_01_8004D690.z;
     home.x = D_ovl14_01_8004D690.x;
     home.y = D_ovl14_01_8004D690.y;
     home.z = D_ovl14_01_8004D690.z;
+    low.x = home.x;
+    low.y = home.y + -300.0f;
+    low.z = home.z;
     func_ovl14_01_80047594(&low, 30);
     n = 0;
     if (D_ovl14_01_8004D554 != 0) {
@@ -1510,16 +1514,9 @@ void func_ovl14_01_800488B0(void) {
         }
         if (n != m) {
             func_ovl14_01_80047730(30);
-            a.x = home.x;
-            a.y = D_ovl14_01_8004D690.y;
-            a.z = home.z;
-            func_ovl14_01_80047594(&a, 30);
+            func_ovl14_01_800476F8(home.x, home.z, 30);
             func_ovl14_01_80044B38(&D_ovl14_01_8004D518, 10);
-            b.x = D_ovl14_01_8004D690.x;
-            b.y = D_ovl14_01_8004D6B0.y;
-            b.z = D_ovl14_01_8004D690.z;
-            func_ovl14_01_800431C4(0xFD, D_ovl14_01_8004D5DC);
-            func_ovl14_01_80047594(&b, 60);
+            func_ovl14_01_8004769C(60);
         } else {
             func_ovl14_01_80044B38(&D_ovl14_01_8004D518, 10);
             func_ovl14_01_80047594(&home, 30);
