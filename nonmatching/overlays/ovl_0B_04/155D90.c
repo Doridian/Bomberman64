@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 90, eu 90, jp 87
+ * differing words: us 80, eu 80, jp 77
  *
  * The pages are a table (D_ovl0B_04_800499B8: texts, handler, cursor
  * table, set-up) that func_ovl0B_04_80043ADC runs in turn; pages 1-4 are
@@ -51,19 +51,21 @@
  * What still differs (words us/jp; the comparison counts a global with
  * the statics after it, so a static of the wrong size costs the rest of
  * its run):
- * - 80043110 24/24: H5b's slot tests read *ptr as the original does, and
+ * - 80043110 22/22: H5b's slot tests read *ptr as the original does, and
  *   its accesses are spelled so &D_ovl0B_04_8004A17C sits in $s0 as in the
  *   original ((&A17C)[-1], (&A178)[1], (&A16C)[1]; found by trying every
  *   neighbour form of each access). Left: the frame homes of H5a's i (124
  *   vs 132) and the FreeEntries n's (76/60 vs 80/64); A178's value read as
- *   -4($s0) where the original has its own lui; the A170 store not in the
- *   jal's delay slot; A164 in $v0 (the original: $v1). H5b's calls pass
- *   `(x += 1, x - 1)` for the original's `addiu a2,v1,0` copy.
+ *   -4($s0) where the original has its own lui; A164 in $v0 (the original: $v1).
+ *   H5b's calls pass `(x += 1, x - 1)` for the original's `addiu a2,v1,0` copy. H5a's
+ *   last store (A170) is numbered below the line after it (`#line`,
+ *   TRICK) for its place in the jal's delay slot.
  *   Pad locals in any inlined static (one or two, pairs of sites), stub
  *   calls and dead reads in H4..H5b don't move these without costing more.
- * - 800436C8 6/6: its `li a1,-1`/`andi s2` order before the test (the
- *   original has the li right after the jal; any C with the -1 outside
- *   the if hoists it to an s-register). 800438FC's cases set d before col
+ * - 800436C8 0/0 (matches): `b = a = -1` is numbered above the loop head (`#line`,
+ *   TRICK), so as1 hoists its `li a1,-1` into the head's load delay, right
+ *   after the jal, as the original has it (any C with the -1 outside the
+ *   if hoists it to an s-register instead). 800438FC's cases set d before col
  *   for the original's schedule.
  * - 800444E8 8/8: 800447DC's registers. 80044714 returns s32 (s8 made a
  *   sll/sra pair whose temp put the ugen temps one ahead, and gave d1 $s3
@@ -96,9 +98,11 @@
  * - 80043ADC 16/0 (us keeps 36 in $s8 and multiplies; the original keeps
  *   &tbl[3] in $s7 and the table in $s8; p3 set before the loop with a
  *   dead read gets &tbl[3] a register, but only $v0 on entry), 80044BE8 8/16 (the MakeEntries homes 8 bytes high),
- *   80043F24 2/2 (80044394: `n - 1` in its own m with a dead read, TRICK,
- *   gives the original's addiu v0,v1,-1; left is `move v1,zero` scheduled
- *   after the `sw ra`), 80046180 0/5 (jp 80046734's `li a0,1` order;
+ *   80043F24 0/0 (matches; 80044394: `n - 1` in its own m with a dead read, TRICK,
+ *   gives the original's addiu v0,v1,-1; its header line numbered after
+ *   the body's (`#line`, TRICK) lets as1 put the `sw ra` in the first
+ *   branch's delay slot, and `n = 0` numbered before the [8] store puts
+ *   `move v1,zero` where the original has it), 80046180 0/5 (jp 80046734's `li a0,1` order;
  *   jp 800468F0's loop takes the paired dead reads `if (!o) {} if (!base) {}`).
  * Everything else matches.
  */
@@ -1978,7 +1982,9 @@ static void func_ovl0B_04_8004447C(s32 id, s32 alpha) {
 }
 
 /* The name's two texts centred. */
+#line 2005
 static void func_ovl0B_04_80044394(s32 a, s32 b) {
+#line 1982
     s32 n;
 #if VERSION_JP
     u16 x;
@@ -1988,8 +1994,11 @@ static void func_ovl0B_04_80044394(s32 a, s32 b) {
     Obj *o;
     s32 m;
 
+#line 1991
     D_ovl0B_04_80048A20[8] = 0;
+#line 1990
     n = 0;
+#line 1993
     while (D_ovl0B_04_80048A20[n] != 0) {
         n++;
     }
@@ -2283,10 +2292,12 @@ void func_ovl0B_04_800436C8(void) {
     while (TRUE) {
         buttons = func_ovl0B_04_80048320(0);
         if (D_ovl0B_04_8004A164->unkC & 0x40) {
-            a = b = -1;
             if (++D_ovl0B_04_8004A1E4 >= 14) {
                 D_ovl0B_04_8004A1E4 = 0;
             }
+#line 2270
+            b = a = -1; /* TRICK: numbered above the loop head so as1 hoists li a1 into its load delay */
+#line 2290
             switch (D_ovl0B_04_8004A1AC[D_ovl0B_04_8004A1E4]) {
                 case 0:
                     a = 0;
@@ -2365,8 +2376,10 @@ static void func_ovl0B_04_H5a(void) {
     }
     func_ovl0B_04_80047E28(D_ovl0B_04_8004A164, -1, i);
     D_ovl0B_04_8004A164->unkC |= 0x20;
+#line 2395
     D_ovl0B_04_8004A170 = func_ovl0B_04_80047E68(D_ovl0B_04_8004A164, 0xF);
 }
+#line 2377
 
 /* The tests reread each slot through its pointer, as the original does.
  * Tuned, not the original: x takes the value in $v1, copied with `move`
