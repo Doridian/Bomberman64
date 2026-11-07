@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 80, eu 80, jp 77
+ * differing words: us 77, eu 77, jp 74
  *
  * The pages are a table (D_ovl0B_04_800499B8: texts, handler, cursor
  * table, set-up) that func_ovl0B_04_80043ADC runs in turn; pages 1-4 are
@@ -51,12 +51,14 @@
  * What still differs (words us/jp; the comparison counts a global with
  * the statics after it, so a static of the wrong size costs the rest of
  * its run):
- * - 80043110 22/22: H5b's slot tests read *ptr as the original does, and
+ * - 80043110 19/19: H5b's slot tests read *ptr as the original does, and
  *   its accesses are spelled so &D_ovl0B_04_8004A17C sits in $s0 as in the
  *   original ((&A17C)[-1], (&A178)[1], (&A16C)[1]; found by trying every
  *   neighbour form of each access). Left: the frame homes of H5a's i (124
  *   vs 132) and the FreeEntries n's (76/60 vs 80/64); A178's value read as
- *   -4($s0) where the original has its own lui; A164 in $v0 (the original: $v1).
+ *   -4($s0) where the original has its own lui. 0x150A (80047E28) is
+ *   `s32 (Obj *, s32)` as 0B_06's 80048888, which puts H5a's object in
+ *   $v1 as in the original.
  *   H5b's calls pass `(x += 1, x - 1)` for the original's `addiu a2,v1,0` copy. H5a's
  *   last store (A170) is numbered below the line after it (`#line`,
  *   TRICK) for its place in the jal's delay slot.
@@ -218,7 +220,7 @@ void func_ovl0B_04_80047DF0(Obj *, s32); /* 0x1503 */
 void func_ovl0B_04_80047E00(Obj *, s32); /* 0x1505 */
 void func_ovl0B_04_80047E08(Obj *, s32, s32, s32); /* 0x1506 */
 void func_ovl0B_04_80047E20(Obj *, s32, s32); /* 0x1509 */
-void func_ovl0B_04_80047E28(Obj *, s32, s32); /* 0x150A */
+s32 func_ovl0B_04_80047E28(Obj *, s32); /* 0x150A */
 Obj *func_ovl0B_04_80047E58(void (*)(s32, Gfx0B04 **), s32); /* 0x1510 */
 s32 func_ovl0B_04_80047E68(Obj *, s32); /* 0x1512 */
 void func_ovl0B_04_80047E70(s32, s32, s32); /* 0x1513 */
@@ -2374,7 +2376,7 @@ static void func_ovl0B_04_H5a(void) {
     for (i = 0; i < 12; i++) {
         func_ovl0B_04_80047E08(D_ovl0B_04_8004A164, 0x4A, i, i);
     }
-    func_ovl0B_04_80047E28(D_ovl0B_04_8004A164, -1, i);
+    func_ovl0B_04_80047E28(D_ovl0B_04_8004A164, -1);
     D_ovl0B_04_8004A164->unkC |= 0x20;
 #line 2395
     D_ovl0B_04_8004A170 = func_ovl0B_04_80047E68(D_ovl0B_04_8004A164, 0xF);
