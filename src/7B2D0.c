@@ -1,16 +1,15 @@
 /*
- * NON_MATCHING: main_code's 7B2D0, complete (no data): func_80260AD8 draws
- * a texture-file entry (CI4 with a 16-colour TLUT, CI8 with a 256-colour
- * one, or two direct formats) as a grid of textured quads, loading each
- * tile with a one-texel border, flipped per its last argument.
- * func_80260AD0 is the 8-byte stub IDO -O3 leaves of the inlined static
- * drawer. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
- * drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * main_code's 7B2D0, IDO -O3; it matches in us, eu and jp. It has no
+ * .data, .rodata or .bss.
  *
- * Both functions match (us and eu measured; jp = us). The drawer is
- * 7C4D0's func_80261CD0 without the alignment, written the same way:
+ * func_80260AD8 draws a texture-file entry (CI4 with a 16-colour TLUT,
+ * CI8 with a 256-colour one, or two direct formats) as a grid of
+ * textured quads, loading each tile with a one-texel border, flipped per
+ * its last argument. func_80260AD0 is the 8-byte stub IDO -O3 leaves of
+ * the inlined static drawer. The code is the same in every version.
+ *
+ * Both functions match. The drawer is 7C4D0's func_80261CD0 without the
+ * alignment, written the same way:
  * vertices through vtx-> with vtx++ after each, x + tw / y + th written
  * out (pad0 keeps the frame), tw = th = 56, the for heads. Here:
  * - each vertex's fields in offset order (ob[0..2], flag, tc[0], tc[1],

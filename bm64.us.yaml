@@ -337,7 +337,7 @@ segments:
       - [0x5E3F0, asm]
       - [0x6BBE0, asm]
       - [0x78CA0, asm]
-      - [0x7B2D0, asm]
+      - [0x7B2D0, c]
       - [0x7C4D0, c]
       - [0x7D840, asm]
       - [0x80420, c]
