@@ -6,7 +6,7 @@
  * floats). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 1723, eu 1723, jp 1354
+ * differing words: us 1493, eu 1493, jp 1107
  * jp's code differences are drafted (`#if VERSION_JP`), its .data is not:
  * its five own strings are only declared, and its text tables and
  * positions are us's.
@@ -59,18 +59,29 @@
  * - 80043220 8 (jp 0): one lbu in 80043480 scheduled too late.
  * - 80043C48 587 (jp 550): the handler. Its box loops are inlined
  *   statics in the original (frame 280 here 192, 32 bytes short; the
- *   80043450 loops' counters are spilled to their homes there); written as
- *   statics they aren't inlined.
+ *   80043450 loops' counters are spilled to their homes there, 212, 180
+ *   and 188(sp)). One open and one close static, each called twice, aren't
+ *   inlined; four statics (open 5, open 6, close 5, close 1) each called
+ *   once are (frame 224, 16 bytes short), but their four new stubs land
+ *   elsewhere (before 80043010, 800433A8 and 80043904), so they must take
+ *   over placeholder stubs, which is not done yet.
  * - 8004473C 49 (80044908-80045F20; jp's 800445BC_jp 140): 80044BE4's
  *   uopt registers one off (t1/t2/t3 for t2/t3/t4; the dead read in its
  *   loop is a lever, not the original), 80045794's frame (40 vs 32).
  * - 8004616C 809 (800464C0-80047030; jp 389): COPY_FILE's frame (112 vs
  *   104), 80046634 4 bytes long, LEVEL 8 short (its y/fy), ERASE 24 short
  *   (its sel in memory).
- * - 8004747C 243 (jp 244; 24 bytes long, frame 184 vs 240): the original
- *   keeps &D_80049E44 in $s1 for the four 800465E0 and 80048840 calls
- *   (lw 80(s1)..) and slot in $s0, the 80043010 count in $s1; here every
- *   one is a lui/lw and slot and the count are spilled.
+ * - 8004747C 13 (jp 13): the loop-top `li s5,4` scheduled before the
+ *   jal (ours after), &D_80049924 not held in $v0 for the else arm's
+ *   store and reload (the original's `sw s0,0(v0); move a0,s0` is as1
+ *   forwarding the reload), and 80046634's mode in $t1 for $t2. Levers,
+ *   not the original (flagged): `s32 pad[14]` (size-tuned: the frame is 56
+ *   bytes bigger in the original, cause unknown), the dead read
+ *   `if (!loop) {}` in the state != 10 arm, 80049098 declared s32 (its
+ *   loop counter in $v1). The rest is real: the 80049368 argument is
+ *   D_80049924 reloaded after storing slot (that use gives slot $s0 ahead of
+ *   sel, so sel gets $s1 and &D_80049E44 is coloured with it), a `while`
+ *   loop, 80046558's parameters swapped (flag first, in $s0).
  * - 80043010 12 (the stubs and 80043040-800430F0), 800478D4 15 (only the
  *   padding after its endless loop, which follows the sizes above).
  * - 8004390C, 80043B20, 80047A48-80047B20 and the callbacks
@@ -227,7 +238,7 @@ void func_ovl0B_06_80048EF0(void); /* 0x1E00 */
 void func_ovl0B_06_80048FF8(s32, s32, s32); /* 0x2201 */
 s32 func_ovl0B_06_80049060(void); /* 0x2406 */
 s32 func_ovl0B_06_80049090(u8 *, u16, u16, f32, f32, u8); /* 0x2501 */
-void func_ovl0B_06_80049098(s32); /* 0x2502 */
+s32 func_ovl0B_06_80049098(s32); /* 0x2502 */
 void func_ovl0B_06_800490A0(s32, u8 *, s32); /* 0x2503 */
 void func_ovl0B_06_800490A8(s32, u16, u16); /* 0x2504 */
 void func_ovl0B_06_800490B0(s32, u16, u16); /* 0x2505 */
@@ -333,7 +344,7 @@ static s32 func_ovl0B_06_80045F20(s32 arg0, Col_ovl0B_06 *on, Col_ovl0B_06 *off,
 static s32 COPY_ASK(void);
 void COPY_FILE(void);
 static void func_ovl0B_06_800464C0(s32 arg0);
-static void func_ovl0B_06_80046558(s32 arg0, s32 arg1);
+static void func_ovl0B_06_80046558(s32 arg1, s32 arg0);
 static void func_ovl0B_06_800465E0(s16 alpha, UnkStructA_40 *obj);
 static void func_ovl0B_06_80046624(void);
 static void func_ovl0B_06_8004662C(void);
@@ -782,12 +793,13 @@ void func_ovl0B_06_8004747C(void) {
     s32 state;
     s32 r;
     s32 slot;
+    s32 pad[14];
 
     loop = 1;
     sel = 0;
     state = 10;
     D_ovl0B_06_80049924 = -1;
-    do {
+    while (loop != 0) {
         r = func_ovl0B_06_80045F20(sel & 0xF, &D_ovl0B_06_8004A254, &D_ovl0B_06_8004A244, 4);
         sel = r;
         if ((r & 0xF0) != 0x30) {
@@ -798,7 +810,7 @@ void func_ovl0B_06_8004747C(void) {
             } else {
                 loop = 0;
                 D_ovl0B_06_80049924 = slot;
-                state = func_ovl0B_06_80049368(slot, 0);
+                state = func_ovl0B_06_80049368(D_ovl0B_06_80049924, 0);
                 if (state == 10) {
                     state = LEVEL_FILE(D_ovl0B_06_80049924);
                     if (state == 10) {
@@ -808,6 +820,7 @@ void func_ovl0B_06_8004747C(void) {
                     }
                 } else {
                     D_ovl0B_06_80049924 = slot;
+                    if (!loop) {}
                     sel = 2;
                 }
             }
@@ -816,7 +829,7 @@ void func_ovl0B_06_8004747C(void) {
             sel = 3;
         }
         func_ovl0B_06_80048CF0();
-    } while (loop != 0);
+    }
     switch (sel) {
         case 1:
             func_ovl0B_06_80048CA8(MSG_TASK, NULL, 0, 0, 0x130);
@@ -828,7 +841,7 @@ void func_ovl0B_06_8004747C(void) {
             func_ovl0B_06_80048EF0();
             func_ovl0B_06_80049380(state);
             if (func_ovl0B_06_80049388() != 0) {
-                func_ovl0B_06_80046558(state, 0);
+                func_ovl0B_06_80046558(0, state);
             }
             func_ovl0B_06_800482B0(0);
             if (func_ovl0B_06_80049370() != 0) {
@@ -856,7 +869,7 @@ void func_ovl0B_06_8004747C(void) {
         case 2:
             func_ovl0B_06_80049378(D_ovl0B_06_80049924);
             if (func_ovl0B_06_80049388() != 0) {
-                func_ovl0B_06_80046558(0, 1);
+                func_ovl0B_06_80046558(1, 0);
             }
             func_ovl0B_06_800482B0(1);
             func_ovl0B_06_80048250(0x21, 0x10, 0);
@@ -1254,7 +1267,7 @@ static void func_ovl0B_06_800465E0(s16 alpha, UnkStructA_40 *obj) {
 
 
 /* @80046558 */
-static void func_ovl0B_06_80046558(s32 arg0, s32 arg1) {
+static void func_ovl0B_06_80046558(s32 arg1, s32 arg0) {
     func_ovl0B_06_80049380(arg0);
     if (arg1 != 0) {
         func_ovl0B_06_80048CA8(MSG_TASK, NULL, 0, 0, 0x130);
