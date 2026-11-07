@@ -1,10 +1,10 @@
 /*
  * NON_MATCHING: ovl_14_01's game object, complete; not in the ROM.
  * flags: -O3
- * differing words: us 373, eu 373, jp 373
+ * differing words: us 360, eu 360, jp 360
  *
  * The text is the same in every version (only jp's ZeroJump numbers
- * differ). 75 of 89 functions match. m2c output (with the ZeroJump
+ * differ). 78 of 89 functions match. m2c output (with the ZeroJump
  * prototypes of the other drafts, scratch/newovl2/protos.h, and the
  * file's own in own.h) made to compile, then tuned by hand
  * (scratch/newovl2/r/).
@@ -40,7 +40,15 @@
  * 0`: the inner global is stored first through a coloured address (v1,
  * t0), and the D_8004D6F0 index after it is the stored 0 in $zero.
  *
- * What still differs (14 functions):
+ * Pass 6 (scratch/newovl2/r5/): 800438D8 matches with 8004C8B0
+ * declared s32 (the original keeps &D_8004D53C in v1, as if v0 held a
+ * result; no other function changes). 80043CC0 has no local: the
+ * quotient is written out three times, and uopt's CSE temporary is spilled
+ * at the top of the frame (sp+1C) where a named `t` pushed it below its
+ * own home. 80049368's wrap is two statements, `y = WRAP360(y - 90)` and
+ * `y -= 5`, which gives the original's registers (y in f2, 90 in f12).
+ *
+ * What still differs (11 functions):
  * - 80049814 (106): the original keeps the D_8004D190/1CC address in v0
  *   (ours v1: v0 still holds the call's result in the same block), and
  *   reloads D_8004D4DC with its own lui at the end (ours keeps
@@ -57,15 +65,22 @@
  *   loops (that keeps the first one's slti).
  * - 800437B8 (40): one word short (the original's a0 load of
  *   D_8004D5DC->unk40 waits a nop, `move a1,zero` is in the jal slot),
- *   which makes 80043B20 one alignment nop longer (13).
- * - 80043010 (37): store order of the link triples.
+ *   which makes 80043B20 one alignment nop longer (13). The original has
+ *   as1 block boundaries after `lw s0,D_8004D5DC` and after the unk4
+ *   store: the store statement as a static inlined from another `#line`
+ *   file matches the function exactly, but leaves its 8-byte stub right
+ *   before 800437B8, where the original has none.
+ * - 80043010 (37): ours copies arg1 into a2 at the start (the original
+ *   stores through a1 and keeps the dead `addiu a1,a1,40` of the two
+ *   arg1++), which shifts the schedule; the store order (unk0, unk10, ...)
+ *   follows once that is right.
  * - 80048ABC (23): v0 vs t0 for the 2 stored to unk0.
  * - 8004A11C (19): the infinite loop's trailing alignment nops (size
  *   follows the functions before it, 80049814 among them).
  * - 800432D8 (15): the original keeps 1.0 and 100.0 in $fs regs in the
  *   first loop and reloads 120.0, ours hoists 120.0.
- * - 8004A760 (10), 80049368 (6), 800438D8 (4), 80043CC0 (3): register
- *   choice or one local's slot.
+ * - 8004A760 (10): 0.0 in f14 (original f2), and t copied to f2 before
+ *   the 360 test's branch.
  * Several functions need an unused `pad` local for the original's frame.
  */
 #include "common.h"
@@ -124,7 +139,7 @@ void func_ovl14_01_8004C880(UnkStructA *, UnkStructA *, Link_ovl14_01 *, s32); /
 void func_ovl14_01_8004C890(s32); /* 0x1810 */
 void func_ovl14_01_8004C898(UnkStructA *, s32); /* 0x1811 */ /* also: void (Obj02 *, s32) x1; void (Obj03 *, s32) x1; void (UnkStruct_ovl0A_05_80048CA0 *, s32) x1 */
 void func_ovl14_01_8004C8A0(UnkStructA *, s32); /* 0x1812 */ /* also: void (Obj02 *, s32) x1; void (Obj03 *, s32) x1; void (UnkStruct_ovl0A_05_80048CA0 *, s32) x1 */
-void func_ovl14_01_8004C8B0(UnkStructA *); /* 0x1814 */ /* also: void (Obj02 *) x1; void (Obj03 *) x1; void (UnkStruct_ovl0A_05_80048CA0 *) x1 */
+s32 func_ovl14_01_8004C8B0(UnkStructA *); /* 0x1814 */ /* also: void (Obj02 *) x1; void (Obj03 *) x1; void (UnkStruct_ovl0A_05_80048CA0 *) x1 */
 UnkStructA *func_ovl14_01_8004C8C0(s32, s32, s32, UnkStructA *); /* 0x1816 */ /* also: Obj02 * (s32, s32, s32, Obj02 *) x1; Obj03 * (s32, s32, s32, Obj03 *) x1; UnkStruct_ovl0A_05_80048CA0 *(s32, s32, s32, UnkStruct_ovl0A_05_80048CA0 *) x1 */
 UnkStructA *func_ovl14_01_8004C8D0(UnkStructA *); /* 0x1818 */ /* also: void (Obj02 *) x1; void (Obj03 *) x1; Obj_0D02 *(Obj_0D02 *) x1 */
 UnkStructA *func_ovl14_01_8004C8F0(s32, s32, UnkStructA *); /* 0x181C */
@@ -1265,7 +1280,8 @@ void func_ovl14_01_80049368(s32 arg0) {
     sp2C_v.z = D_ovl14_01_8004D690.z;
     func_ovl14_01_800431C4(0xC2, D_ovl14_01_8004D5DC);
     func_ovl14_01_8004C828(&D_ovl14_01_8004D6B0, &D_ovl14_01_8004D690, &sp38);
-    sp38.y = ((sp38.y - 90.0f >= 360.0f) ? sp38.y - 90.0f - 360.0f : ((sp38.y < 90.0f) ? sp38.y - 90.0f + 360.0f : sp38.y - 90.0f)) - 5.0f;
+    sp38.y = WRAP360(sp38.y - 90.0f);
+    sp38.y -= 5.0f;
     sp38.z += 200.0f;
     func_ovl14_01_8004C830(&sp38, &sp44);
     sp44.x = sp44.x + D_ovl14_01_8004D6B0.x;
@@ -3042,12 +3058,9 @@ void func_ovl14_01_80043D98(void) {
 }
 
 void func_ovl14_01_80043CC0(UnkStructA *arg0, s32 arg1, s32 arg2, f32 arg3, f32 arg4) {
-    f32 t;
-
-    t = (f32) arg1 / (f32) arg2;
-    arg0->unk40->unk28 = func_ovl14_01_8004CB90(t * 90.0f) * arg3;
-    arg0->unk40->unk2C = func_ovl14_01_8004CB90(t * 180.0f) * arg4;
-    arg0->unk40->unk36 = (s32) ((1.0f - t) * 193.0f) + 0x40;
+    arg0->unk40->unk28 = func_ovl14_01_8004CB90(((f32) arg1 / (f32) arg2) * 90.0f) * arg3;
+    arg0->unk40->unk2C = func_ovl14_01_8004CB90(((f32) arg1 / (f32) arg2) * 180.0f) * arg4;
+    arg0->unk40->unk36 = (s32) ((1.0f - ((f32) arg1 / (f32) arg2)) * 193.0f) + 0x40;
 }
 
 void func_ovl14_01_80043B20(void) {
