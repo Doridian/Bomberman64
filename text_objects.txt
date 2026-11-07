@@ -31,3 +31,12 @@ main_code AD5B0
 # their .data (0x802A1570) and .bss (0x802B0180) start on 16-byte
 # boundaries where the one ends and the other begins.
 main_code 97610
+
+# 78CA0 is a subtractive random number generator alone (Knuth's, as in
+# Numerical Recipes' ran3: seed, refill, next int, next double); 78F60 is
+# texture-drawing code.  Neither half calls the other, and the
+# generator's data ends in its object's padding: its .rodata (1e-9, one
+# double) is followed by 8 zero bytes before 78F60's floats at 0x802A3A20,
+# and its .bss (index and table, 0xE8 bytes) by 8 bytes before
+# 0x802AD0D0.
+main_code 78F60
