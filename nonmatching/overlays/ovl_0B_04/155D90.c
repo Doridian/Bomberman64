@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 535, eu 535, jp 525
+ * differing words: us 453, eu 453, jp 457
  *
  * The pages are a table (D_ovl0B_04_800499B8: texts, handler, cursor
  * table, set-up) that func_ovl0B_04_80043ADC runs in turn; pages 1-4 are
@@ -30,6 +30,8 @@
  * 80043ADC and is defined just after it: 80043CD0's turn comes first and
  * puts 80043ADC (with its statics) out before it. FreeEntries is named
  * for the first stub, 80043010, so nonmatching.py compares the lead run.
+ * 800447DC's D_ovl0B_04_8004A1A0 is one too (as a file-scope one its
+ * address took $a0, where the original uses lui each time).
  * 800436C8's counter D_ovl0B_04_8004A1E4 is a function-scope static (as a
  * file-scope one uopt keeps its address in a register).
  *
@@ -53,14 +55,18 @@
  *   $a3/$v1 and are copied to $a2 (`addiu a2,v1,0`). H5b's tests read
  *   the copies D_ovl0B_04_8004A194.. (size-tuned, see there). 800436C8
  *   25/25 (its padding).
- * - 800444E8 167/167: 800447DC's registers (the original gets buttons in
- *   $t1, d1 in $t0 then $s2, d2/d3 copied to $v1/$v0 before use, unk1
- *   stored by its own lui).
- * - 80045214 145/145: 80045214's copy loop registers; 80045540's rub-out
+ * - 800444E8 102/102: 800447DC's registers (d1 in $t0 then $s2, d2/d3
+ *   copied to $v1/$v0 before use, unk1 stored by its own lui; its counter
+ *   D_ovl0B_04_8004A1A0, a function-scope static, is promoted to $t0
+ *   where the original reloads it), and its frame (40 vs 24: the dead read
+ *   of the not yet set t costs a spill, but gives buttons $t1 and the
+ *   rest of the original's registers).
+ * - 80045214 143/143: 80045214's copy loop registers; 80045540's rub-out
  *   (the original keeps the cursor in $s1, copies it to $v1, and stores
  *   unk3 by its own lui).
- * - 80043ADC 30/0 (us keeps 36 in $s8 and multiplies; the original keeps
- *   &tbl[3] there), 80044BE8 9/17 (the MakeEntries homes 12 bytes off),
+ * - 80043ADC 16/0 (us keeps 36 in $s8 and multiplies; the original keeps
+ *   &tbl[3] in $s7 and the table in $s8; p3 set before the loop with a
+ *   dead read gets &tbl[3] a register, but only $v0 on entry), 80044BE8 8/16 (the MakeEntries homes 12 bytes off),
  *   80043F24 4/5 (80044394's n - 1 in $v0), 80046180 0/11 (jp 800468F0).
  * Everything else matches.
  */
@@ -725,7 +731,6 @@ s32 D_ovl0B_04_8004A190 = 0;
 s32 D_ovl0B_04_8004A194 = 0;
 s32 D_ovl0B_04_8004A198 = 0;
 s32 D_ovl0B_04_8004A19C = 0;
-s32 D_ovl0B_04_8004A1A0 = 0;
 s32 D_ovl0B_04_8004A1A4 = 0;
 s32 D_ovl0B_04_8004A1A8 = 0;
 s32 D_ovl0B_04_8004A1AC[14] = { 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 1, 1 };
@@ -1661,6 +1666,7 @@ static u8 func_ovl0B_04_80044714(u8 set, u8 c) {
 }
 
 static void func_ovl0B_04_800447DC(u16 buttons, u8 *ret) {
+    static s32 D_ovl0B_04_8004A1A0 = 0; /* function-scope: its .data place to check */
     u8 set;
     u8 idx;
     u8 c;
@@ -1673,6 +1679,7 @@ static void func_ovl0B_04_800447DC(u16 buttons, u8 *ret) {
     if (D_ovl0B_04_8004A490.unk0 == 0) {
         c = 0;
     } else if (D_ovl0B_04_8004A490.unk0 == 7 && D_ovl0B_04_8004A290[D_ovl0B_04_8004A490.unk0][0] != 0) {
+        if (!D_ovl0B_04_8004A1A0) {}
         c = D_ovl0B_04_8004A290[D_ovl0B_04_8004A490.unk0][0];
     } else {
         c = D_ovl0B_04_8004A290[D_ovl0B_04_8004A490.unk0 - 1][0];
@@ -1710,6 +1717,7 @@ static void func_ovl0B_04_800447DC(u16 buttons, u8 *ret) {
                 D_ovl0B_04_8004A060[9].unk0->unk18 = D_ovl0B_04_8004A060[9].unkC;
                 D_ovl0B_04_8004A060[9].unk0->unk1C = D_ovl0B_04_8004A060[9].unk10;
                 if (d2) {
+                    if (!t) {} /* t isn't set yet: a dead read that only moves registers */
                     D_ovl0B_04_80048A70[4] = c + d2;
                 } else if (d3) {
                     D_ovl0B_04_80048A70[4] = c + d3;
@@ -1728,6 +1736,7 @@ static void func_ovl0B_04_800447DC(u16 buttons, u8 *ret) {
                 } else {
                     D_ovl0B_04_8004A1A0++;
                     if (D_ovl0B_04_8004A1A0 == 1) {
+                        if (!D_ovl0B_04_8004A1A0) {}
                         if (d1) {
                             c += d1;
                         } else if (d2) {
@@ -1764,6 +1773,7 @@ static void func_ovl0B_04_800447DC(u16 buttons, u8 *ret) {
                 D_ovl0B_04_8004A1A0 = 0;
             }
         } else {
+            if (!D_ovl0B_04_8004A1A0) {}
             func_ovl0B_04_800445C4();
             D_ovl0B_04_8004A1A0 = 0;
         }
@@ -2089,6 +2099,10 @@ void func_ovl0B_04_80043ADC(void) {
     Obj *menu;
     s32 i;
 
+#if !VERSION_JP
+    p3 = &D_ovl0B_04_800499B8[3];
+    if (!p3) {}
+#endif
     D_ovl0B_04_8004A16C = 1;
     D_ovl0B_04_8004A168 = 0;
     while (D_ovl0B_04_8004A168 != 0xFF) {
@@ -2096,7 +2110,6 @@ void func_ovl0B_04_80043ADC(void) {
 #if VERSION_JP
         func_ovl0B_04_80043A24(p->unk0, p->unk4, p->unk8);
 #else
-        p3 = &D_ovl0B_04_800499B8[3];
         if (p == p3 || p == &D_ovl0B_04_800499B8[4]) {
             func_ovl0B_04_80043A7C(p->unk0, p->unk4, p->unk8);
         } else {
