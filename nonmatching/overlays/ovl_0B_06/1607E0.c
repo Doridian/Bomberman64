@@ -6,7 +6,7 @@
  * floats). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 919, eu 919, jp 648
+ * differing words: us 842, eu 842, jp 623
  * jp's code differences are drafted (`#if VERSION_JP`), its .data is not:
  * its five own strings are only declared, and its text tables and
  * positions are us's.
@@ -85,9 +85,18 @@
  * - 8004473C 49 (80044908-80045F20; jp's 800445BC_jp 140): 80044BE4's
  *   uopt registers one off (t1/t2/t3 for t2/t3/t4; the dead read in its
  *   loop is a lever, not the original), 80045794's frame (40 vs 32).
- * - 8004616C 810 (800464C0-80047030; jp 389): COPY_FILE's frame (112 vs
- *   104), 80046634 4 bytes long, LEVEL 8 short (its y/fy), ERASE 24 short
- *   (its sel in memory).
+ * - 8004616C 748 (800464C0-80047030; jp 364): COPY_FILE's frame (112 vs
+ *   104), LEVEL 8 short (its y/fy, frame 184 vs 216), ERASE 24 short
+ *   (its sel in memory; erase.c in scratch has ERASE_FILE's fix, see
+ *   below). jp: LEVEL_ASK (80046868) is the right size, its side a local
+ *   copy of the parameter (the first if tests the parameter, $s3; the
+ *   loop the copy, $s4; ours has the two registers swapped); ERASE_ASK
+ *   (80047030) is one word short (the original's `move v1,v0` copies
+ *   pressed for the 0x4000 test) and its frame 96 vs 112.
+ *   80046634's second alpha loop tests `i != 3` (flagged: a lever, not
+ *   necessarily the original; it puts 3 in $s1 for both loops as the
+ *   original has, `bne` for `slti`, and fixes its size); its mode is still
+ *   in $t1 for $t2.
  * - 8004747C 13 (jp 13): the loop-top `li s5,4` scheduled before the
  *   jal (ours after), &D_80049924 not held in $v0 for the else arm's
  *   store and reload (the original's `sw s0,0(v0); move a0,s0` is as1
@@ -369,7 +378,7 @@ static void func_ovl0B_06_8004662C(void);
 static void func_ovl0B_06_80046634(s32 arg0);
 static void func_ovl0B_06_80046850(void);
 static void func_ovl0B_06_80046858(void);
-static s32 LEVEL_ASK(s32 slot, s32 side);
+static s32 LEVEL_ASK(s32 slot, s32 arg1);
 static s32 LEVEL_FILE(s32 slot);
 static void func_ovl0B_06_80046F14(s32 arg3, s32 arg0);
 static s32 ERASE_ASK(s32 slot, Col_ovl0B_06 *off, Col_ovl0B_06 *on);
@@ -1131,7 +1140,8 @@ static s32 LEVEL_FILE(s32 slot) {
 
 
 /* @80046860: a file's level, normal or hard (inlined in us, not in jp) */
-static s32 LEVEL_ASK(s32 slot, s32 side) {
+static s32 LEVEL_ASK(s32 slot, s32 arg1) {
+    s32 side = arg1;
     s32 result;
     s32 held;
     s32 pressed;
@@ -1151,7 +1161,7 @@ static s32 LEVEL_ASK(s32 slot, s32 side) {
     func_ovl0B_06_80043040(&D_ovl0B_06_80049E44[6], &D_ovl0B_06_8004A0C4[13], dy);
     func_ovl0B_06_80043040(&D_ovl0B_06_80049E44[7], &D_ovl0B_06_8004A0C4[11], dy);
     func_ovl0B_06_80044BA0(slot, &D_ovl0B_06_8004A274);
-    if (side == 0) {
+    if (arg1 == 0) {
         D_ovl0B_06_80049E44[5].unk0->unkC &= ~1;
         D_ovl0B_06_80049E44[6].unk0->unkC |= 1;
     } else {
@@ -1251,7 +1261,7 @@ static void func_ovl0B_06_80046634(s32 arg0) {
     func_ovl0B_06_80044B90(arg0, D_ovl0B_06_8004999C, 3);
     FADE_SLOTS(arg0)
     alpha = arg0 == 0 ? 0x3C : 0xFF;
-    for (i = 0; i < 3; i++) {
+    for (i = 0; i != 3; i++) {
         if (D_ovl0B_06_8004A5D0[i] == 1) {
             func_ovl0B_06_800465E0(alpha, D_ovl0B_06_80049F20[i][0].unk0);
         }
