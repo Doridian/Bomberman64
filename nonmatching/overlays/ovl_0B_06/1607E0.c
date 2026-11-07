@@ -6,7 +6,7 @@
  * floats). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 39, eu 39, jp 15
+ * differing words: us 24, eu 24, jp 13
  * jp's code differences are drafted (`#if VERSION_JP`), its .data is not:
  * its five own strings are only declared, and its text tables and
  * positions are us's.
@@ -177,10 +177,8 @@
  *   size-tuned, flagged). COPY_ASK's SE is written out with slot as its
  *   wait (flagged).
  * - LEVEL_ASK's loop is `while (result == 0)`: y/fy are no longer hoisted
- *   out of LEVEL_FILE's loop. us LEVEL_FILE takes &result in a dead
- *   `if (0)` (flagged, us only: result in memory gives the size; the
- *   original keeps it in $s0 and stores it once after the loop, jp alike),
- *   and its second 80045C24 call reads the unk14 bytes through the
+ *   out of LEVEL_FILE's loop. LEVEL_FILE keeps result in $s0 and stores
+ *   it once after the loop into a volatile local X (wAI), and its second 80045C24 call reads the unk14 bytes through the
  *   neighbours as the first.
  * - 80046634's first alpha loop counts with j (`j < 3`, the `i != 3`
  *   lever is gone); a dead `if (i) {}` after the inner call (flagged).
@@ -318,6 +316,21 @@
  *   t1 (original t2, with &B94 in t4). The stub order suggests 80044B90
  *   is a FADE static and 80044B98 the label loop, but a FADE(mode, n)
  *   static is emitted out of line (us 205).
+ *
+ * wAI (us 39 -> 24, eu 39 -> 24, jp 15 -> 13):
+ * - LEVEL_FILE's `sw s0,208(sp)` after the loop (us; jp 72) is an
+ *   explicit store of result into a memory local: `volatile s32 X;`
+ *   declared between loop and ret, `X = result;` right after the
+ *   do-while (flagged; a 1-element array gives the same code). The
+ *   `&result` trick is gone, and with it the 0x30 arm's li a0,2. us
+ *   LEVEL_FILE's part of 8004616C now matches (20 -> 5; jp 80046170
+ *   4 -> 2).
+ * - jp: a dead `if (result) {}` after the 0x30 arm's first 800490B0
+ *   call swaps loop and result into the original's $s0/$s1 (flagged).
+ * - Left: us 8004616C 5 is COPY_ASK reloading sub into v0, not s7
+ *   (slot's register), before `slot = sub & 0xF` (rewrites of that
+ *   line: no gain), and ERASE's tail (`(&D_80049928)[1]` in s7, original
+ *   &D_8004992C in s8). jp 80046170 2 is the label temp's slot.
  *
  * Loops: a loop with a constant count and no call in it is unrolled
  * (80044BE4's four unk36 = 0), and 80045340 copies the name with an index
@@ -1410,8 +1423,9 @@ static s32 LEVEL_ASK(s32 slot, s32 arg1) {
 /* @80046868 */
 static s32 LEVEL_FILE(s32 slot) {
     s32 loop;
-    s32 result;
+    volatile s32 X;
     s32 ret;
+    s32 result;
     Label_ovl0B_06 *label;
 #if VERSION_JP
     s32 pad;
@@ -1435,9 +1449,6 @@ static s32 LEVEL_FILE(s32 slot) {
     func_ovl0B_06_800433B0(&D_ovl0B_06_80049A44[5]);
     loop = 0; do { /* one line: the store's schedule */
         result = LEVEL_ASK(slot, 0);
-#if !VERSION_JP
-        if (0) { D_ovl0B_06_8004A5B4 = (s32) &result; } /* TRICK: result kept in memory (us) */
-#endif
         if ((result & 0xF0) != 0x30) {
             if (!(result & 0xF)) {
                 ret = 0;
@@ -1447,10 +1458,12 @@ static s32 LEVEL_FILE(s32 slot) {
         }
         func_ovl0B_06_80048CF0();
     } while (loop != 0);
+    X = result;
     if ((result & 0xF0) == 0x30) {
 #if VERSION_JP
         SET_TEXT(D_ovl0B_06_80049A44[0].unk4, D_ovl0B_06_80049480, D_ovl0B_06_80049A44[0].unk14);
         func_ovl0B_06_800490B0(D_ovl0B_06_80049A44[0].unk4, 40, 0);
+        if (result) {} /* lever: dead read (jp) */
         SET_TEXT(D_ovl0B_06_80049A44[5].unk4, D_ovl0B_06_80049480, D_ovl0B_06_80049A44[5].unk14);
         func_ovl0B_06_800490B0(D_ovl0B_06_80049A44[5].unk4, 40, 0);
 #else
