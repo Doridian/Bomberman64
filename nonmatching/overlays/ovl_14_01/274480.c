@@ -1,10 +1,10 @@
 /*
  * NON_MATCHING: ovl_14_01's game object, complete; not in the ROM.
  * flags: -O3
- * differing words: us 197, eu 197, jp 197
+ * differing words: us 79, eu 79, jp 79
  *
  * The text is the same in every version (only jp's ZeroJump numbers
- * differ). 80 of 89 functions match. m2c output (with the ZeroJump
+ * differ). 84 of 89 functions match. m2c output (with the ZeroJump
  * prototypes of the other drafts, scratch/newovl2/protos.h, and the
  * file's own in own.h) made to compile, then tuned by hand
  * (scratch/newovl2/r/).
@@ -63,7 +63,24 @@
  * `x + 0.1f` is written out at each use (uopt's CSE keeps it in f0 and
  * 0.0 gets f2).
  *
- * What still differs (9 functions):
+ * Pass 9 (scratch/newovl2/r8/): uopt's live ranges and interference
+ * are per basic block, and an empty `do {} while (0);` starts a new uopt
+ * block without emitting code (TRICK). 80048ABC has one after the first
+ * link (the 2 stored to unk0 no longer shares a block with the
+ * D_8004D5F4 load, so both take v0); 80043010 has one after `arg0++`
+ * (arg1 stays in a1, not forbidden by the call's a1, with the dead `addiu
+ * a1,a1,40`), and its first two links store unk10, unkC, unk8, unk4 as
+ * the third does. 800437B8 alternates `#line N "x.c"` / `#line N "y.c"`
+ * before the 80043250 call, the D_8004D5DC load, the store and the 0x414
+ * call (TRICK): as1 ends a scheduling block where the source switches back
+ * to a file it has seen (a first switch to a new name does nothing), which
+ * gives the original's two block boundaries; the rest of the file is then
+ * "y.c" to the compiler (debug info only). That also fixes 80043B20's
+ * alignment. 800432D8 writes `(-((f32) i / 120.0f) + 1.0f) * 100.0f`
+ * (the same value as `100 * (1 - i / 120)` in IEEE arithmetic): 120.0 is
+ * then the first constant seen and 1.0 gets f22 as in the original.
+ *
+ * What still differs (5 functions):
  * - 80049814 (8): the arms' addresses are in v1, the original's v0 (v,
  *   the loop pointer, is live there through the dead read and takes v0
  *   first). A separate variable for the arms does the same; one whose
@@ -77,25 +94,17 @@
  * - 800467C0 (44), 8004654C (4): the store to D_8004D6A0.y in each
  *   loop goes through its own lui (%lo(D_8004D6A4)) in the original
  *   (uncoloured address; struct, separate f32s, casts, (&x)[1], volatile
- *   all give the same or worse; D_8004D6A0 has other users, so a
- *   function-scope static is not an option). 8004654C uses one counter for both
- *   loops (that keeps the first one's slti).
- * - 800437B8 (40): one word short (the original's a0 load of
- *   D_8004D5DC->unk40 waits a nop, `move a1,zero` is in the jal slot),
- *   which makes 80043B20 one alignment nop longer (13). The original has
- *   as1 block boundaries after `lw s0,D_8004D5DC` and after the unk4
- *   store: the store statement as a static inlined from another `#line`
- *   file matches the function exactly, but leaves its 8-byte stub right
- *   before 800437B8, where the original has none.
- * - 80043010 (37): ours copies arg1 into a2 at the start (the original
- *   stores through a1 and keeps the dead `addiu a1,a1,40` of the two
- *   arg1++), which shifts the schedule; the store order (unk0, unk10, ...)
- *   follows once that is right.
- * - 80048ABC (23): v0 vs t0 for the 2 stored to unk0.
- * - 800432D8 (15): the original keeps 1.0 and 100.0 in $fs regs in the
- *   first loop and reloads 120.0, ours hoists 120.0. The three constants
- *   tie at priority 5 and go in bit order (1.0, 120.0, 100.0); int
- *   literals, operand orders and a variable for 100 don't move it.
+ *   all give the same or worse; a scalar f32 D_8004D6A4 for the store is
+ *   still an indirect store whose address uopt colours into s2; D_8004D6A0
+ *   has other users, so a function-scope static is not an option).
+ *   8004654C uses one counter for both loops (that keeps the first one's
+ *   slti).
+ * - 800432D8 (10): the original keeps 100.0 in f20 and reloads 120.0 in
+ *   the first loop; ours keeps 120.0 in f20 and reloads 100.0. The three
+ *   constants tie (priority 5) and are coloured in order of first
+ *   appearance; 100.0 would have to appear before 1.0 and 120.0, but the
+ *   multiplication puts the constant last whatever the source order, and
+ *   a `pad = 100.0f` before the loop is propagated without effect.
  * Several functions need an unused `pad` local for the original's frame.
  */
 #include "common.h"
@@ -1436,6 +1445,7 @@ void func_ovl14_01_80048ABC(UnkStructA **arg0, Link_ovl14_01 *arg1) {
     arg1->unk10 = 0.0f;
     arg1->unk8 = 0.0f;
     arg1->unk4 = 60.0f;
+    do {} while (0); /* TRICK: a uopt block boundary (no code) */
     arg1++;
     arg1->unk0 = 0x10002;
     arg1->unkC = 1.0f;
@@ -3146,9 +3156,14 @@ void func_ovl14_01_800437B8(void) {
         D_ovl14_01_8004D688 = 1.0f;
         func_ovl14_01_80043688(D_ovl14_01_8004D600, D_ovl14_01_8004D560);
         func_ovl14_01_80043688(D_ovl14_01_8004D618, D_ovl14_01_8004D5A0);
+/* TRICK: alternating #line files end as1 scheduling blocks */
+#line 3150 "x.c"
         func_ovl14_01_80043250(0);
+#line 3151 "y.c"
         temp_s0 = D_ovl14_01_8004D5DC;
+#line 3152 "x.c"
         temp_s0->unk40->unk48->unk4->unk4 = func_ovl14_01_8004C5D8(temp_s0->unk40, 0) - 0.001f;
+#line 3153 "y.c"
         func_ovl14_01_8004CC60(0x414);
         D_ovl14_01_8004D4F8.y = 8.0f;
         func_ovl14_01_8004C790(D_ovl14_01_8004D4F8.y, D_ovl14_01_8004D4F8.y);
@@ -3235,7 +3250,8 @@ void func_ovl14_01_800432D8(void) {
         func_ovl14_01_8004C9E8(func_ovl14_01_80043624, NULL, 0, 0, 0x150);
         for (i = 0; i < 120; i++) {
             func_ovl14_01_8004CA30();
-            func_ovl14_01_8004CCE8(0, 0, 0, 100.0f * (1.0f - (f32) i / 120.0f));
+            /* TRICK: 1 - i / 120 written so 120.0 is seen first */
+            func_ovl14_01_8004CCE8(0, 0, 0, (-((f32) i / 120.0f) + 1.0f) * 100.0f);
         }
         func_ovl14_01_8004CCE8(0, 0, 0, 0.0f);
         func_ovl14_01_800431C4(0x10D, D_ovl14_01_8004D5DC);
@@ -3308,16 +3324,16 @@ void func_ovl14_01_80043010(UnkStructA **arg0, Link_ovl14_01 *arg1) {
         return;
     }
     arg1->unk0 = 2;
-    arg1->unk4 = 250.0f;
+    arg1->unk10 = 0.0f;
     arg1->unkC = 0.1f;
     arg1->unk8 = 0.0f;
-    arg1->unk10 = 0.0f;
+    arg1->unk4 = 250.0f;
     arg1++;
     arg1->unk0 = 2;
-    arg1->unk4 = 60.0f;
-    arg1->unk8 = 0.0f;
-    arg1->unkC = 0.0f;
     arg1->unk10 = 0.0f;
+    arg1->unkC = 0.0f;
+    arg1->unk8 = 0.0f;
+    arg1->unk4 = 60.0f;
     arg1++;
     arg1->unk0 = 0x10002;
     arg1->unk10 = 0.9f;
@@ -3325,6 +3341,7 @@ void func_ovl14_01_80043010(UnkStructA **arg0, Link_ovl14_01 *arg1) {
     arg1->unk8 = 0.01f;
     arg1->unk4 = 420.0f;
     arg0++;
+    do {} while (0); /* TRICK: a uopt block boundary (no code) */
     func_ovl14_01_8004C8A0(*arg0, 0x300000);
     func_ovl14_01_8004C898(*arg0, 0x500000);
     (*arg0)->unk50 = -85.0f;
