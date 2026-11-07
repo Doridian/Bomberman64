@@ -6,7 +6,7 @@
  * floats). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 553, eu 553, jp 351
+ * differing words: us 525, eu 525, jp 264
  * jp's code differences are drafted (`#if VERSION_JP`), its .data is not:
  * its five own strings are only declared, and its text tables and
  * positions are us's.
@@ -85,10 +85,16 @@
  * - 8004473C 49 (80044908-80045F20; jp's 800445BC_jp 140): 80044BE4's
  *   uopt registers one off (t1/t2/t3 for t2/t3/t4; the dead read in its
  *   loop is a lever, not the original), 80045794's frame (40 vs 32).
+ *   80045794 tests `(u16)i & 0x8000` on 8004518C's result (flagged: a
+ *   lever; the cast's dropped `andi 0xFFFF` takes the temporary the
+ *   original's t-registers are one off by; a u16 `i` or a u16 return type
+ *   is worse).
  * - 8004616C (800464C0-80047030; jp 80046170): COPY_FILE's frame (112 vs
  *   104), us ERASE 2 words short (the original rematerialises
  *   &D_8004992C in $fp after the loop: a split of its live range there;
- *   neighbour forms for the stores only give a `lui at`). us LEVEL is the
+ *   neighbour forms for the stores only give a `lui at`; the final
+ *   0x400 store is written `(&D_80049928)[1]` (flagged: a lever, the original's store goes through the
+ *   reloaded $fp), one word of the two, us 546 -> 541). us LEVEL is the
  *   right size: the original reads the first 80045C24 call's two unk14
  *   bytes by absolute address (lui each) where ours used the
  *   &D_80049A44 base, so they are written through the neighbouring
@@ -109,6 +115,12 @@
  *   `slot = sel & 0xF` into a saved register; the original recomputes it
  *   at the top), and `loop = 0` follows the ERASE_ASK call: jp's
  *   ERASE_FILE frame 40 as the original, us keeps sel in memory (-8).
+ *   LEVEL_ASK passes `slot * 40 + 0x3E` and `(f32)(slot * 40 + 0x32)`
+ *   straight to the calls (no y/fy locals), its x is 0x69 in jp (LEVEL_X;
+ *   0x5D in us/eu), and a dead `if (side) {}` follows `side = 0` in the
+ *   0x200 arm (flagged: a lever; it gives jp's side/arg1/pos registers).
+ *   us still hoists y/fy out of LEVEL_FILE's loop (the original computes
+ *   them from the spilled slot * 40 before the inner loop).
  *   jp: LEVEL_ASK (80046868) is the right size, its side a local
  *   copy of the parameter (the first if tests the parameter, $s3; the
  *   loop the copy, $s4; ours has the two registers swapped). ERASE_ASK's
@@ -325,6 +337,7 @@ s32 func_ovl0B_06_80049390(void); /* 0x2F0E */
 #define COPY_ASK func_ovl0B_06_80045EE0_jp
 #define ERASE_FILE func_ovl0B_06_80047184_jp
 #define ERASE_ASK func_ovl0B_06_80047030
+#define LEVEL_X 0x69
 #else
 #define MSG_TASK func_ovl0B_06_8004473C
 #define COPY_FILE func_ovl0B_06_8004616C
@@ -333,6 +346,7 @@ s32 func_ovl0B_06_80049390(void); /* 0x2F0E */
 #define COPY_ASK func_ovl0B_06_80046164
 #define ERASE_FILE func_ovl0B_06_80047030
 #define ERASE_ASK func_ovl0B_06_80047028
+#define LEVEL_X 0x5D
 #endif
 
 
@@ -987,7 +1001,7 @@ static s32 ERASE_FILE(void) {
     func_ovl0B_06_80045C24(&D_ovl0B_06_80049A44[0], &D_ovl0B_06_80049A44[5], 0, 0, D_ovl0B_06_80049A44[0].unk14, D_ovl0B_06_80049480, D_ovl0B_06_80049A44[5].unk14);
 #endif
     func_ovl0B_06_800433B0(&D_ovl0B_06_80049A44[5]);
-    D_ovl0B_06_8004992C = 0x400;
+    (&D_ovl0B_06_80049928)[1] = 0x400; /* lever: D_8004992C through its neighbour */
     func_ovl0B_06_800464C0(1);
     return slot;
 }
@@ -1180,9 +1194,7 @@ static s32 LEVEL_ASK(s32 slot, s32 arg1) {
     s32 result;
     s32 held;
     s32 pressed;
-    s32 y;
     f32 dy;
-    f32 fy;
     f32 t;
     f32 s;
 
@@ -1203,8 +1215,6 @@ static s32 LEVEL_ASK(s32 slot, s32 arg1) {
         D_ovl0B_06_80049E44[5].unk0->unkC |= 1;
         D_ovl0B_06_80049E44[6].unk0->unkC &= ~1;
     }
-    y = slot * 40 + 0x3E;
-    fy = slot * 40 + 0x32;
     while (TRUE) {
         held = func_ovl0B_06_80049060();
         pressed = func_ovl0B_06_80048268();
@@ -1215,22 +1225,23 @@ static s32 LEVEL_ASK(s32 slot, s32 arg1) {
                 t -= 360.0f;
             }
             func_ovl0B_06_800490B8(D_ovl0B_06_80049AEC[0].unk4, 0.55f, (s * 0.5f + 1.1f) * 0.7f);
-            func_ovl0B_06_800490A8(D_ovl0B_06_80049AEC[0].unk4, 0x5D, (u32) (fy + 12.0f * (1.0f - s * 0.8f)));
+            func_ovl0B_06_800490A8(D_ovl0B_06_80049AEC[0].unk4, LEVEL_X, (u32) ((f32)(slot * 40 + 0x32) + 12.0f * (1.0f - s * 0.8f)));
             func_ovl0B_06_800490B8(D_ovl0B_06_80049AEC[1].unk4, 0.55f, 0.7f);
-            func_ovl0B_06_800490A8(D_ovl0B_06_80049AEC[1].unk4, 0xF5, y);
+            func_ovl0B_06_800490A8(D_ovl0B_06_80049AEC[1].unk4, 0xF5, slot * 40 + 0x3E);
         } else {
             t += 7.0f;
             if (t >= 360.0f) {
                 t -= 360.0f;
             }
             func_ovl0B_06_800490B8(D_ovl0B_06_80049AEC[0].unk4, 0.55f, 0.7f);
-            func_ovl0B_06_800490A8(D_ovl0B_06_80049AEC[0].unk4, 0x5D, y);
+            func_ovl0B_06_800490A8(D_ovl0B_06_80049AEC[0].unk4, LEVEL_X, slot * 40 + 0x3E);
             func_ovl0B_06_800490B8(D_ovl0B_06_80049AEC[1].unk4, 0.55f, (s * 0.7f + 1.1f) * 0.7f);
-            func_ovl0B_06_800490A8(D_ovl0B_06_80049AEC[1].unk4, 0xF5, (u32) (fy + 12.0f * (1.0f - s)));
+            func_ovl0B_06_800490A8(D_ovl0B_06_80049AEC[1].unk4, 0xF5, (u32) ((f32)(slot * 40 + 0x32) + 12.0f * (1.0f - s)));
         }
         if ((held & 0x200) && side == 1) {
             t = 0.0f;
             side = 0;
+            if (side) {} /* lever: dead read */
             D_ovl0B_06_80049E44[5].unk0->unkC &= ~1;
             D_ovl0B_06_80049E44[6].unk0->unkC |= 1;
             SE(0, 5);
@@ -1685,7 +1696,7 @@ static s32 func_ovl0B_06_80045794(s32 arg0, s32 mode, s32 arg2) {
     func_ovl0B_06_80045340(mode, save);
     if (0) { func_ovl0B_06_80048E28(0, &arg0); }
     i = func_ovl0B_06_8004518C();
-    if (D_ovl0B_06_8004A404 != 0 && (i & 0x8000)) {
+    if (D_ovl0B_06_8004A404 != 0 && ((u16)i & 0x8000)) { /* lever: the cast */
         SE(1, 15);
         a = func_ovl0B_06_800490C8(D_ovl0B_06_8004A408);
         b = func_ovl0B_06_800490C8(D_ovl0B_06_8004A40C);
