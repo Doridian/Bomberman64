@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 77, eu 77, jp 74
+ * differing words: us 61, eu 61, jp 74
  *
  * The pages are a table (D_ovl0B_04_800499B8: texts, handler, cursor
  * table, set-up) that func_ovl0B_04_80043ADC runs in turn; pages 1-4 are
@@ -97,9 +97,23 @@
  *   (no i, no p, no dead reads: tests on D_ovl0B_04_8004A490.unk0, one
  *   `unk0--`), exact in the block but for the `li a2,7` order and the
  *   ugen temps being one behind from there on (170 words as a whole).
- * - 80043ADC 16/0 (us keeps 36 in $s8 and multiplies; the original keeps
- *   &tbl[3] in $s7 and the table in $s8; p3 set before the loop with a
- *   dead read gets &tbl[3] a register, but only $v0 on entry), 80044BE8 8/16 (the MakeEntries homes 8 bytes high),
+ * - 80043ADC 0/0 (matches; w5): us's loop is `if (A168 != 0xFF) { p3 =
+ *   &tbl[3]; if (!p3) {} do { ... } while (A168 != 0xFF); }` with p4 =
+ *   &tbl[4] set at the top and one more dead read of p3 after the else
+ *   arm's 80043A24 call. p3/p4 are copy-propagated to the constants
+ *   tbl+108/tbl+144, which then stay separate uopt candidates instead of
+ *   folding into the table base (a literal &tbl[3] in the test becomes
+ *   base+108 once the base has a register). The second dead read gives
+ *   tbl+108 two loop uses (save 20/8 = 2.5) so it is coloured before the
+ *   table base (10/7) and the stride 36 (10/7, which then gets no register,
+ *   so the multiply is shifts again); tbl+144 keeps one use and is reloaded
+ *   with lui each time as in the original. The dead read must be in that
+ *   arm: anywhere else adds a uopt block (the base's n grows and A168's
+ *   address wins its register) or extends the range before the loop. The
+ *   if/do shape puts p3's load at its own statement in the preheader, and
+ *   writing that statement on the `if` line gives both preheader la's one
+ *   .loc, so as1 orders them lui s7, lui fp, addiu fp, addiu s7 (TRICK).
+ * - 80044BE8 8/16 (the MakeEntries homes 8 bytes high),
  *   80043F24 0/0 (matches; 80044394: `n - 1` in its own m with a dead read, TRICK,
  *   gives the original's addiu v0,v1,-1; its header line numbered after
  *   the body's (`#line`, TRICK) lets as1 put the `sw ra` in the first
@@ -107,6 +121,15 @@
  *   `move v1,zero` where the original has it), 80046180 0/5 (jp 80046734's `li a0,1` order;
  *   jp 800468F0's loop takes the paired dead reads `if (!o) {} if (!base) {}`).
  * Everything else matches.
+ * w5, tried without gain: every plain/neighbour spelling of H5b's three
+ * A178 accesses (125 forms; plain A178 makes &A178 the $s0 base with A17C
+ * at 4($s0)); jp 80046734's mode-1 argument as 1U/(u8)/TRUE/!0/a local and
+ * the indices in locals (ugen emits the `li a0,1` first in the join block
+ * and as1 takes it into the branch slot; the original's slot has the
+ * ids index's sll); 80044BE8 with a/b/i block-scoped or #if'd out, no
+ * `changed`, hand-written MakeEntries loops or an unrolled 80044BE0 (the
+ * homes are counted from the bottom of the frame: dropping a/b in jp
+ * shrinks the frame by 8 but leaves them at 84/96/112).
  */
 #include "common.h"
 
@@ -2166,25 +2189,33 @@ void func_ovl0B_04_80043E4C(s32 arg0, UnkStructA *arg1) {
 /* The menu task: each page in turn until one leaves with 0xFF. */
 void func_ovl0B_04_80043ADC(void) {
     Page *p;
+#if !VERSION_JP
     Page *p3;
+    Page *p4;
+#endif
     Obj *menu;
     s32 i;
 
 #if !VERSION_JP
-    p3 = &D_ovl0B_04_800499B8[3];
-    if (!p3) {}
+    p4 = &D_ovl0B_04_800499B8[4];
 #endif
     D_ovl0B_04_8004A16C = 1;
     D_ovl0B_04_8004A168 = 0;
+#if VERSION_JP
     while (D_ovl0B_04_8004A168 != 0xFF) {
+#else
+    /* p3's load and the table's on one line: as1 orders them as the original (TRICK) */
+    if (D_ovl0B_04_8004A168 != 0xFF) { p3 = &D_ovl0B_04_800499B8[3]; if (!p3) {} do {
+#endif
         p = &D_ovl0B_04_800499B8[D_ovl0B_04_8004A168];
 #if VERSION_JP
         func_ovl0B_04_80043A24(p->unk0, p->unk4, p->unk8);
 #else
-        if (p == p3 || p == &D_ovl0B_04_800499B8[4]) {
+        if (p == p3 || p == p4) {
             func_ovl0B_04_80043A7C(p->unk0, p->unk4, p->unk8);
         } else {
             func_ovl0B_04_80043A24(p->unk0, p->unk4, p->unk8);
+            if (!p3) {}
         }
 #endif
         menu = func_ovl0B_04_800485D0(p->unkC, p->unk10, p->unk16, p->unk18, p->unk1A);
@@ -2200,7 +2231,12 @@ void func_ovl0B_04_80043ADC(void) {
         func_ovl0B_04_80043AD4(p->unk4, p->unk0);
         func_ovl0B_04_800485E8();
         func_ovl0B_04_80048268(2);
+#if VERSION_JP
     }
+#else
+    } while (D_ovl0B_04_8004A168 != 0xFF);
+    }
+#endif
     func_ovl0B_04_800477F0(0x1F, 0x11, 0);
     func_ovl0B_04_80048258();
     if (0) {
