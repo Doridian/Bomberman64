@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 453, eu 453, jp 457
+ * differing words: us 336, eu 336, jp 340
  *
  * The pages are a table (D_ovl0B_04_800499B8: texts, handler, cursor
  * table, set-up) that func_ovl0B_04_80043ADC runs in turn; pages 1-4 are
@@ -61,9 +61,12 @@
  *   where the original reloads it), and its frame (40 vs 24: the dead read
  *   of the not yet set t costs a spill, but gives buttons $t1 and the
  *   rest of the original's registers).
- * - 80045214 143/143: 80045214's copy loop registers; 80045540's rub-out
- *   (the original keeps the cursor in $s1, copies it to $v1, and stores
- *   unk3 by its own lui).
+ * - 80045214 26/26: 80045214's `ok` reloaded to $t8 (the original: $v0);
+ *   80045540's frame (40 vs 24: the dead reads of c in its else branch,
+ *   where c isn't set, spill it) and rub-out registers (the original loads
+ *   the cursor to $s1 with a $v1 copy and tests `i != 7` directly; ours
+ *   compares p with &D_ovl0B_04_8004A290[7]), unk3 stored through $s0
+ *   (the original by its own lui).
  * - 80043ADC 16/0 (us keeps 36 in $s8 and multiplies; the original keeps
  *   &tbl[3] in $s7 and the table in $s8; p3 set before the loop with a
  *   dead read gets &tbl[3] a register, but only $v0 on entry), 80044BE8 8/16 (the MakeEntries homes 12 bytes off),
@@ -1421,12 +1424,13 @@ static void func_ovl0B_04_80045540(u8 item, u16 buttons, u8 *ret) {
         c = p[0];
         D_ovl0B_04_8004A490.unk1 = 0;
         p[0] = 0;
-        if (i == 7 && c == 0) {
-            D_ovl0B_04_8004A490.unk0 = i - 1;
-        } else if (i != 7 && i > 0) {
-            D_ovl0B_04_8004A490.unk0 = i - 1;
+        /* i and the cursor mixed only for registers (the same value: p
+         * points into D_ovl0B_04_8004A290). */
+        if ((i == 7 && c == 0) || (i != 7 && D_ovl0B_04_8004A490.unk0 > 0)) {
+            D_ovl0B_04_8004A490.unk0 = D_ovl0B_04_8004A490.unk0 - 1;
         }
         func_ovl0B_04_80044210();
+        if (!c) {}
         func_ovl0B_04_80044154();
         func_ovl0B_04_800487D0(2);
     } else {
@@ -1440,14 +1444,17 @@ static void func_ovl0B_04_80045540(u8 item, u16 buttons, u8 *ret) {
                 func_ovl0B_04_80045530();
             } else {
                 D_ovl0B_04_8004A490.unk1 = func_ovl0B_04_8004426C(D_ovl0B_04_8004A490.unk2, item);
+                if (!c) {} /* c isn't set in this branch: dead reads that only move registers */
                 D_ovl0B_04_8004A490.unk3 = item;
                 func_ovl0B_04_80044210();
                 D_ovl0B_04_8004A290[D_ovl0B_04_8004A490.unk0][0] = D_ovl0B_04_8004A490.unk1;
                 D_ovl0B_04_8004A490.unk0++;
+                if (!c) {}
                 D_ovl0B_04_8004A290[D_ovl0B_04_8004A490.unk0][0] = 0;
                 func_ovl0B_04_800487D0(1);
                 if (D_ovl0B_04_8004A490.unk0 == 8) {
                     D_ovl0B_04_8004A490.unk0--;
+                    if (!i) {}
                     D_ovl0B_04_8004A490.unk1 = 0;
                     func_ovl0B_04_800441C4();
                     func_ovl0B_04_800485F8(D_ovl0B_04_8004A490.unk3);
