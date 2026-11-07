@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 336, eu 336, jp 340
+ * differing words: us 205, eu 205, jp 209
  *
  * The pages are a table (D_ovl0B_04_800499B8: texts, handler, cursor
  * table, set-up) that func_ovl0B_04_80043ADC runs in turn; pages 1-4 are
@@ -48,15 +48,17 @@
  * What still differs (words us/jp; the comparison counts a global with
  * the statics after it, so a static of the wrong size costs the rest of
  * its run):
- * - 80043110 155/155: the frame (192 vs 184: its spill slots sit 4 and
- *   12 bytes higher) and H5: &D_ovl0B_04_8004A170 gets $s0 across H5b
- *   (the original leaves it uncoloured, `lui a0` before each test, and
- *   keeps &D_ovl0B_04_8004A17C in $s0); the original's slot values go to
- *   $a3/$v1 and are copied to $a2 (`addiu a2,v1,0`: only `x++; x--;`
- *   on a local x = *ptr reproduces an `addiu r,r,0` copy; see
- *   scratch/0B_04/wV/notes.md). H5b's tests read
- *   the copies D_ovl0B_04_8004A194.. (size-tuned, see there). 800436C8
- *   25/25 (its padding).
+ * - 80043110 35/35: H5b's slot tests now read *ptr as the original does
+ *   (no size-tuned copies). Left: the frame homes of H5a's i (124 vs 132)
+ *   and the FreeEntries n's (76/60 vs 80/64); &D_ovl0B_04_8004A178 in $s0
+ *   where the original has &D_ovl0B_04_8004A17C (the test's A17C reload
+ *   is written (&D_ovl0B_04_8004A178)[1]: plain, uopt's PRE drops it and
+ *   &A17C is left with too few uses); the A170 store not in the jal's delay
+ *   slot; A164 in $v0 (the original: $v1); the slot values copied to $a2
+ *   with `move` (the original: `addiu a2,v1,0`; `(x++, --x)` gives the
+ *   addiu but keeps x in $a2 itself).
+ * - 800436C8 14/14: its `li a1,-1`/`andi s2` order before the test (the
+ *   rest is 800438FC's rodata relocations).
  * - 800444E8 102/102: 800447DC's registers (d1 in $t0 then $s2, d2/d3
  *   copied to $v1/$v0 before use, unk1 stored by its own lui; its counter
  *   D_ovl0B_04_8004A1A0, a function-scope static, is promoted to $t0
@@ -79,7 +81,7 @@
  *   ugen temps being one behind from there on (170 words as a whole).
  * - 80043ADC 16/0 (us keeps 36 in $s8 and multiplies; the original keeps
  *   &tbl[3] in $s7 and the table in $s8; p3 set before the loop with a
- *   dead read gets &tbl[3] a register, but only $v0 on entry), 80044BE8 8/16 (the MakeEntries homes 12 bytes off),
+ *   dead read gets &tbl[3] a register, but only $v0 on entry), 80044BE8 8/16 (the MakeEntries homes 8 bytes high),
  *   80043F24 4/5 (80044394's n - 1 in $v0), 80046180 0/11 (jp 800468F0).
  * Everything else matches.
  */
@@ -954,7 +956,9 @@ static void func_ovl0B_04_80047164(void) {
 }
 
 /* The objects of a run of entries, and their removal (inlined). */
-static void func_ovl0B_04_MakeEntries(Entry *e, s32 n, Desc *d) {
+/* n first: its home is at the top of the inlined copy's slots, as in the
+ * original's 80043110 (with (e, n, d) it sits 4 bytes higher). */
+static void func_ovl0B_04_MakeEntries(s32 n, Entry *e, Desc *d) {
     s32 i;
 
     for (i = 0; i < n; i++) {
@@ -964,8 +968,7 @@ static void func_ovl0B_04_MakeEntries(Entry *e, s32 n, Desc *d) {
 
 static void func_ovl0B_04_80043010(Entry *e, s32 n) {
     s32 i;
-    s32 pad;
-    s32 pad2;
+    s32 pad0; /* frame-tuned: one slot in each inlined copy (80043110's FreeEntries homes) */
 
     for (i = 0; i < n; i++) {
         func_ovl0B_04_80047DE0(e[i].unk0);
@@ -982,6 +985,7 @@ static void func_ovl0B_04_SetText(s32 id, u8 *str, s32 col, f32 scale) {
  * open), in two halves of five. */
 u8 func_ovl0B_04_800471F4(u8 arg0, u16 arg1) {
     u8 ret = 1;
+    s32 pad[4]; /* frame-tuned (FreeEntries' second pad moved here) */
 
     func_ovl0B_04_80046734(arg0, arg1);
     if (arg1 & 1) {
@@ -1013,6 +1017,7 @@ void func_ovl0B_04_8004716C(Obj *arg0) {
 
 u8 func_ovl0B_04_80046FA8(u8 arg0, u16 arg1) {
     u8 ret = 1;
+    s32 pad[4]; /* frame-tuned (FreeEntries' second pad moved here) */
 
     func_ovl0B_04_80046734(arg0, arg1);
     if (arg1 & 1) {
@@ -1044,6 +1049,7 @@ void func_ovl0B_04_80046F20(Obj *arg0) {
 
 u8 func_ovl0B_04_80046D74(u8 arg0, u16 arg1) {
     u8 ret = 1;
+    s32 pad[4]; /* frame-tuned (FreeEntries' second pad moved here) */
 
     func_ovl0B_04_80046734(arg0, arg1);
     if (arg1 & 1) {
@@ -1074,6 +1080,7 @@ void func_ovl0B_04_80046CEC(Obj *arg0) {
 
 u8 func_ovl0B_04_80046B28(u8 arg0, u16 arg1) {
     u8 ret = 1;
+    s32 pad[4]; /* frame-tuned (FreeEntries' second pad moved here) */
 
     func_ovl0B_04_80046734(arg0, arg1);
     if (arg1 & 1) {
@@ -1137,8 +1144,8 @@ static void func_ovl0B_04_800468F0(s32 base) {
             D_ovl0B_04_8004A480[i] = 1;
         }
     }
-    func_ovl0B_04_MakeEntries(&D_ovl0B_04_8004A060[10], 1, &D_ovl0B_04_80049C38[8]);
-    func_ovl0B_04_MakeEntries(&D_ovl0B_04_8004A060[11], 1, &D_ovl0B_04_80049C38[9]);
+    func_ovl0B_04_MakeEntries(1, &D_ovl0B_04_8004A060[10], &D_ovl0B_04_80049C38[8]);
+    func_ovl0B_04_MakeEntries(1, &D_ovl0B_04_8004A060[11], &D_ovl0B_04_80049C38[9]);
     D_ovl0B_04_8004A1A8 = 0;
     D_ovl0B_04_8004A1A4 = 0;
     D_ovl0B_04_8004A174 = D_ovl0B_04_8004A16C;
@@ -1620,8 +1627,8 @@ u8 func_ovl0B_04_80044BE8(u8 arg0, u16 arg1) {
                 D_ovl0B_04_8004A060[0].unk0->unkC |= 0x80;
                 D_ovl0B_04_8004A060[0].unk0->unk36 = 0;
 #endif
-                func_ovl0B_04_MakeEntries(&D_ovl0B_04_8004A060[5], 3, &D_ovl0B_04_80049C38[10]);
-                func_ovl0B_04_MakeEntries(&D_ovl0B_04_8004A060[8], 2, &D_ovl0B_04_80049C38[10]);
+                func_ovl0B_04_MakeEntries(3, &D_ovl0B_04_8004A060[5], &D_ovl0B_04_80049C38[10]);
+                func_ovl0B_04_MakeEntries(2, &D_ovl0B_04_8004A060[8], &D_ovl0B_04_80049C38[10]);
 #if !VERSION_JP
                 D_ovl0B_04_8004A060[5].unk0->unkC |= 0x80;
                 D_ovl0B_04_8004A060[5].unk0->unk36 = 0;
@@ -2192,9 +2199,9 @@ static void func_ovl0B_04_80043A24(s32 n, s32 *ids, Item *items) {
 
 /* An item lit (1), unlit (0), or set without growing (2-4). */
 static void func_ovl0B_04_800438FC(u32 mode, s32 id, Item *it) {
-    s32 grow = 1;
     f32 d;
     u8 col;
+    s32 grow = 1;
 
     switch (mode) {
         case 1:
@@ -2240,8 +2247,8 @@ void func_ovl0B_04_800436C8(void) {
     while (TRUE) {
         buttons = func_ovl0B_04_80048320(0);
         if (D_ovl0B_04_8004A164->unkC & 0x40) {
-            a = -1;
             b = -1;
+            a = -1;
             if (++D_ovl0B_04_8004A1E4 >= 14) {
                 D_ovl0B_04_8004A1E4 = 0;
             }
@@ -2303,8 +2310,8 @@ static void func_ovl0B_04_H4(void) {
     if (0) { func_ovl0B_04_80048290(); }
     if (0) { func_ovl0B_04_80048290(); }
     if (0) { func_ovl0B_04_80048290(); }
-    func_ovl0B_04_MakeEntries(D_ovl0B_04_80049D40, 20, &D_ovl0B_04_80049C38[0]);
-    func_ovl0B_04_MakeEntries(D_ovl0B_04_80049ED0, 20, &D_ovl0B_04_80049C38[1]);
+    func_ovl0B_04_MakeEntries(20, D_ovl0B_04_80049D40, &D_ovl0B_04_80049C38[0]);
+    func_ovl0B_04_MakeEntries(20, D_ovl0B_04_80049ED0, &D_ovl0B_04_80049C38[1]);
     func_ovl0B_04_80043050(&D_ovl0B_04_8004A060[12], &D_ovl0B_04_80049C38[7]);
     D_ovl0B_04_8004A060[12].unk0->unk36 = 90;
 }
@@ -2326,7 +2333,17 @@ static void func_ovl0B_04_H5a(void) {
     D_ovl0B_04_8004A170 = func_ovl0B_04_80047E68(D_ovl0B_04_8004A164, 0xF);
 }
 
+/* The tests reread each slot through its pointer, as the original does.
+ * Tuned, not the original: x (and z, always 0: `x + z` is x) take the two
+ * frame slots that put 80043110's homes in place and keep the value out of
+ * $a2 (in $v1, copied with `move`; the original copies with `addiu`).
+ * (&D_ovl0B_04_8004A16C)[1] is D_ovl0B_04_8004A170 and
+ * (&D_ovl0B_04_8004A178)[1] is D_ovl0B_04_8004A17C, written as neighbours
+ * so uopt doesn't hold &A170 in $s0 nor PRE away the A17C reload. */
 static void func_ovl0B_04_H5b(void) {
+    s32 x;
+    s32 z = 0;
+
     D_ovl0B_04_8004A178 = func_ovl0B_04_800484E0(8);
     D_ovl0B_04_8004A17C = func_ovl0B_04_800484E0(9);
     D_ovl0B_04_8004A180 = func_ovl0B_04_800484E0(10);
@@ -2336,20 +2353,21 @@ static void func_ovl0B_04_H5b(void) {
     D_ovl0B_04_8004A194 = *D_ovl0B_04_8004A17C;
     D_ovl0B_04_8004A198 = *D_ovl0B_04_8004A180;
     D_ovl0B_04_8004A19C = *D_ovl0B_04_8004A184;
-    /* Size-tuned, not the original: the original rereads each slot through
-     * its pointer (&D_ovl0B_04_8004A17C in $s0); these copies give the
-     * right size, so 800436C8 lines up. */
-    if (*D_ovl0B_04_8004A178 != 0) {
-        func_ovl0B_04_800478A0(D_ovl0B_04_8004A170, 0, *D_ovl0B_04_8004A178);
+    x = *D_ovl0B_04_8004A178;
+    if (x != 0) {
+        func_ovl0B_04_800478A0((&D_ovl0B_04_8004A16C)[1], 0, x + z);
     }
-    if (D_ovl0B_04_8004A194 != 0) {
-        func_ovl0B_04_800478A0(D_ovl0B_04_8004A170, 1, D_ovl0B_04_8004A194);
+    x = *(&D_ovl0B_04_8004A178)[1];
+    if (x != 0) {
+        func_ovl0B_04_800478A0(D_ovl0B_04_8004A170, 1, x + z);
     }
-    if (*D_ovl0B_04_8004A180 != 0) {
-        func_ovl0B_04_800478A0(D_ovl0B_04_8004A170, 2, D_ovl0B_04_8004A198);
+    x = *D_ovl0B_04_8004A180;
+    if (x != 0) {
+        func_ovl0B_04_800478A0(D_ovl0B_04_8004A170, 2, x + z);
     }
-    if (D_ovl0B_04_8004A19C != 0) {
-        func_ovl0B_04_800478A0(D_ovl0B_04_8004A170, 3, D_ovl0B_04_8004A19C);
+    x = *D_ovl0B_04_8004A184;
+    if (x != 0) {
+        func_ovl0B_04_800478A0(D_ovl0B_04_8004A170, 3, x + z);
     }
 }
 
