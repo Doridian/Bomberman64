@@ -1,7 +1,6 @@
 /*
- * NON_MATCHING: ovl_14_01's game object, complete; not in the ROM.
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * ovl_14_01's game object, IDO -O3; it matches in us, eu and jp. Its
+ * data: .data 0x80, .rodata 0x290, .bss 0x2C0, the same in every version.
  *
  * The text is the same in every version (only jp's ZeroJump numbers
  * differ). All 89 functions match. m2c output (with the ZeroJump
@@ -116,6 +115,12 @@
  *   address is used only once. s32 and u32 work, void * / f32 * don't.
  *
  * Several functions need an unused `pad` local for the original's frame.
+ *
+ * -O3 drops unreferenced .bss, so a dead `if (0)` in the unused stub
+ * 8004BB04 stores to every filler and to the unused 8004D614 and
+ * 8004D66C (scratch/bsscheck.sh: every symbol at its address, .bss
+ * 0x2C0). No filler needs splitting: none is 8 bytes or more but
+ * 8004D750[4], which is 8-aligned already.
  */
 #include "common.h"
 
@@ -414,6 +419,7 @@ Vec3f D_ovl14_01_8004D1CC[5] = {
 
 /* unused: the stubs IDO -O3 leaves after the tail */
 static void func_ovl14_01_8004BB04(void) {
+    if (0) { D_ovl14_01_8004D4AC[0] = 0; D_ovl14_01_8004D4C0[0] = 0; D_ovl14_01_8004D4CC[0] = 0; D_ovl14_01_8004D4F4[0] = 0; D_ovl14_01_8004D504[0] = 0; D_ovl14_01_8004D514[0] = 0; D_ovl14_01_8004D524[0] = 0; D_ovl14_01_8004D52C[0] = 0; D_ovl14_01_8004D55C[0] = 0; D_ovl14_01_8004D59C[0] = 0; D_ovl14_01_8004D5FC[0] = 0; D_ovl14_01_8004D654[0] = 0; D_ovl14_01_8004D68C[0] = 0; D_ovl14_01_8004D69C[0] = 0; D_ovl14_01_8004D6AC[0] = 0; D_ovl14_01_8004D6EC[0] = 0; D_ovl14_01_8004D750[0] = 0; D_ovl14_01_8004D614 = 0; D_ovl14_01_8004D66C = 0; }
 }
 
 static void func_ovl14_01_8004BB0C(void) {
