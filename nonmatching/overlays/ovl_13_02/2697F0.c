@@ -1,20 +1,24 @@
 /*
  * NON_MATCHING: ovl_13_02's game object, complete; not in the ROM.
  * flags: -O3
- * differing words: us 2231, eu 2231, jp 2231
- * 54 of 81 functions match (fcmp folds each static into the function
+ * differing words: us 1264, eu 1264, jp 1264
+ * 68 of 81 functions match (fcmp folds each static into the function
  * before it; the text is the same in every version).
- * Still differs: 80049F68, 80046E10, 80045AB8 and 8004A8E0 are m2c
- * output (a structured rewrite loses the frame layout of the first
- * three); 8004640C and 80043E64 are rewritten but keep register
- * (and, in 8004640C, frame) differences. 80043970, 80049400, 8004BBE4 and
- * 8004BD28 are static and come out in the original's order: 80043970
- * and 80049400 each hold a dead call to their referrer, and 8004BD28 a
- * dead use of its own address (so it is first in the reverse order the
- * deferred address-taken statics are flushed in). 8004521C, 800460C0,
- * 8004A8E0 and 80043040 are global, as static they break that order
- * or their temporaries. The inlined stubs 8004B524, 8004B820/28/30 and
- * the ten at 8004BE60-8004BEA8 are empty statics.
+ * Still differs: 80049F68, 80046E10, 80045AB8 are m2c output (a
+ * structured rewrite loses the frame layout); 8004640C and 80043E64
+ * are rewritten but keep register (and, in 8004640C, frame)
+ * differences; 800430CC, 800439DC, 80044F0C, 800458D8, 80049D50 and
+ * 8004AF1C differ in registers or schedule; 80048FBC only in its
+ * folded static 80049400 and 8004ACF8 only in its alignment nops.
+ * 80043040, 80043970, 80049400, 8004BBE4 and 8004BD28 are static and
+ * come out in the original's order: 80043040 (its argument in $s0),
+ * 80043970 and 80049400 each hold a dead call to their referrer
+ * (80043098 for 80043040), and 8004BD28 a dead use of its own address
+ * (so it is first in the reverse order the deferred address-taken
+ * statics are flushed in). 8004521C, 800460C0 and 8004A8E0 are
+ * global, as static they break that order or their temporaries. The
+ * inlined stubs 8004B524, 8004B820/28/30 and the ten at
+ * 8004BE60-8004BEA8 are empty statics.
  */
 #include "common.h"
 
@@ -247,7 +251,7 @@ s32 D_ovl13_02_8004DFD0[4];
 Move_ovl13_02 D_ovl13_02_8004DFE0;
 
 void func_ovl13_02_80043010(void);
-void func_ovl13_02_80043040(UnkStructA *arg0);
+static void func_ovl13_02_80043040(UnkStructA *arg0);
 void func_ovl13_02_80043098(s32 arg0, UnkStructA *arg1);
 void func_ovl13_02_800430CC(f32 *arg0, s32 arg1, s32 arg2);
 void func_ovl13_02_800434C0(f32 *arg0);
@@ -407,6 +411,7 @@ void func_ovl13_02_8004BDA4(f32 arg0) {
 }
 
 void func_ovl13_02_80048FBC(s32 arg0) {
+    s32 pad[8];
     f32 *p;
     f32 dx;
     f32 dy;
@@ -440,7 +445,7 @@ void func_ovl13_02_80048FBC(s32 arg0) {
         D_ovl13_02_8004DEF4 = 0.0f;
         D_ovl13_02_8004DE3C->unk40->unk48->unk4->unk4 = 0.0f;
         func_ovl13_02_8004CBF8(D_ovl13_02_8004DE3C, 0x04000000);
-        p = (f32 *) D_ovl13_02_8004DF18 + k * 3;
+        p = (f32 *) ((Vec3f *) D_ovl13_02_8004DF18 + k);
         dx = (p[0] - M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 0)) / D_ovl13_02_8004DEF0;
         dy = (p[1] - M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 4)) / D_ovl13_02_8004DEF0;
         dz = (p[2] - M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 8)) / D_ovl13_02_8004DEF0;
@@ -831,30 +836,24 @@ void func_ovl13_02_8004AF1C(void) {
 }
 
 void func_ovl13_02_8004ACF8(void) {
-    UnkStructA_40_48_4 *temp_v0;
-    UnkStructA_40_48_4 *temp_v0_2;
     f32 temp_fs0;
-    f32 temp_fv0;
 
     temp_fs0 = func_ovl13_02_8004C938(D_ovl13_02_8004DCFC->unk40, 0) - 0.001f;
     if (func_ovl13_02_8004C940(D_ovl13_02_8004DD00->unk40, 0, 0, 0x400, 0x20, 0x400) == -1) {
         func_ovl13_02_8004BEB8("shift entry err\n");
     }
 loop_3:
-    D_ovl13_02_8004DCFC->unk40->unk10 = M2C_FIELD(&D_ovl13_02_8004DD30, f32 *, 0) + M2C_FIELD(&D_ovl13_02_8004DD10, f32 *, 0);
+    D_ovl13_02_8004DCFC->unk40->unk10 = M2C_FIELD(&D_ovl13_02_8004DD10, f32 *, 0) + M2C_FIELD(&D_ovl13_02_8004DD30, f32 *, 0);
     D_ovl13_02_8004DCFC->unk40->unk14 = M2C_FIELD(&D_ovl13_02_8004DD30, f32 *, 4);
-    D_ovl13_02_8004DCFC->unk40->unk18 = M2C_FIELD(&D_ovl13_02_8004DD30, f32 *, 8) + M2C_FIELD(&D_ovl13_02_8004DD10, f32 *, 8);
+    D_ovl13_02_8004DCFC->unk40->unk18 = M2C_FIELD(&D_ovl13_02_8004DD10, f32 *, 8) + M2C_FIELD(&D_ovl13_02_8004DD30, f32 *, 8);
     D_ovl13_02_8004DCFC->unk40->unk1C = M2C_FIELD(&D_ovl13_02_8004DD20, f32 *, 4);
-    D_ovl13_02_8004DD00->unk40->unk10 = M2C_FIELD(&D_ovl13_02_8004DD30, f32 *, 0) + M2C_FIELD(&D_ovl13_02_8004DD10, f32 *, 0);
+    D_ovl13_02_8004DD00->unk40->unk10 = M2C_FIELD(&D_ovl13_02_8004DD10, f32 *, 0) + M2C_FIELD(&D_ovl13_02_8004DD30, f32 *, 0);
     D_ovl13_02_8004DD00->unk40->unk14 = M2C_FIELD(&D_ovl13_02_8004DD30, f32 *, 4);
-    D_ovl13_02_8004DD00->unk40->unk18 = M2C_FIELD(&D_ovl13_02_8004DD30, f32 *, 8) + M2C_FIELD(&D_ovl13_02_8004DD10, f32 *, 8);
+    D_ovl13_02_8004DD00->unk40->unk18 = M2C_FIELD(&D_ovl13_02_8004DD10, f32 *, 8) + M2C_FIELD(&D_ovl13_02_8004DD30, f32 *, 8);
     D_ovl13_02_8004DD00->unk40->unk1C = M2C_FIELD(&D_ovl13_02_8004DD20, f32 *, 4);
-    temp_v0 = D_ovl13_02_8004DCFC->unk40->unk48->unk4;
-    temp_v0->unk4 += D_ovl13_02_8004DD3C;
-    temp_v0_2 = D_ovl13_02_8004DCFC->unk40->unk48->unk4;
-    temp_fv0 = temp_v0_2->unk4;
-    if (temp_fs0 < temp_fv0) {
-        temp_v0_2->unk4 = temp_fv0 - temp_fs0;
+    D_ovl13_02_8004DCFC->unk40->unk48->unk4->unk4 += D_ovl13_02_8004DD3C;
+    if (temp_fs0 < D_ovl13_02_8004DCFC->unk40->unk48->unk4->unk4) {
+        D_ovl13_02_8004DCFC->unk40->unk48->unk4->unk4 -= temp_fs0;
     }
     func_ovl13_02_8004CD90();
     goto loop_3;
@@ -885,92 +884,60 @@ void func_ovl13_02_8004AB3C(void) {
 }
 
 void func_ovl13_02_8004A8E0(void) {
-    s32 sp78[3];
-    UnkStructA **sp60;
-    UnkStructA **temp_a1;
-    UnkStructA *temp_s1;
-    UnkStructA_40 *temp_v0_2;
-    UnkStructA_40 *temp_v0_3;
-    UnkStructA_40 *temp_v0_4;
-    UnkStructA_40 *temp_v0_5;
-    UnkStructA_40 *temp_v0_6;
-    UnkStructA_40 *temp_v0_7;
-    UnkStructA_40 *temp_v0_8;
-    f32 var_fs2;
-    f32 var_fs4;
-    s32 temp_v0;
-    s32 var_s0;
-    s32 var_s0_2;
+    s32 pad[3];
+    s32 p[3];
+    UnkStructA *obj;
+    s32 i;
+    s32 n;
+    f32 dx;
+    f32 dz;
 
-    temp_v0 = func_ovl13_02_8004CD70();
-    temp_a1 = &D_ovl13_02_8004DD68[temp_v0];
-    if (D_ovl13_02_8004DD68[temp_v0] != NULL) {
-        temp_s1 = *temp_a1;
-        temp_v0_2 = temp_s1->unk40;
-        sp60 = temp_a1;
-        func_ovl13_02_8004C250(temp_v0_2->unk10, temp_v0_2->unk14, temp_v0_2->unk18, sp78, 0);
-        var_s0 = 0;
-        do {
-            temp_v0_3 = temp_s1->unk40;
-            temp_v0_3->unk14 -= 1.0f;
-            temp_v0_4 = temp_s1->unk40;
-            temp_v0_4->unk18 += 2.0f;
+    n = func_ovl13_02_8004CD70();
+    if (D_ovl13_02_8004DD68[n] != NULL) {
+        obj = D_ovl13_02_8004DD68[n];
+        func_ovl13_02_8004C250(obj->unk40->unk10, obj->unk40->unk14, obj->unk40->unk18, p, 0);
+        for (i = 0; i < 30; i++) {
+            obj->unk40->unk14 -= 1.0f;
+            obj->unk40->unk18 += 2.0f;
             func_ovl13_02_8004CD90();
-            var_s0 += 1;
-        } while (var_s0 < 0x1E);
-        func_ovl13_02_8004C238(sp78[0], sp78[1], sp78[2] - 3, sp78[0], sp78[2] + 2, 0);
-        if (func_ovl13_02_8004CF08(1) != 0) {
-            var_fs4 = 5.0f;
-        } else {
-            var_fs4 = -5.0f;
         }
-        var_s0_2 = 0;
-        if (func_ovl13_02_8004CF08(1) != 0) {
-            var_fs2 = 5.0f;
-        } else {
-            var_fs2 = -5.0f;
-        }
-        do {
-            temp_v0_5 = temp_s1->unk40;
-            temp_v0_5->unk1C += var_fs4;
-            temp_v0_6 = temp_s1->unk40;
-            temp_v0_6->unk20 += var_fs2;
-            temp_v0_7 = temp_s1->unk40;
-            temp_v0_7->unk14 -= 1.0f;
-            temp_v0_8 = temp_s1->unk40;
-            temp_v0_8->unk18 += 15.0f;
-            if ((f64) var_s0_2 > 60.0) {
-                func_ovl13_02_8004CBF8(temp_s1, 0x40000);
+        func_ovl13_02_8004C238(p[0], p[1], p[2] - 3, p[0], p[2] + 2, 0);
+        dx = func_ovl13_02_8004CF08(1) ? 5.0f : -5.0f;
+        dz = func_ovl13_02_8004CF08(1) ? 5.0f : -5.0f;
+        for (i = 0; i < 120; i++) {
+            obj->unk40->unk1C += dx;
+            obj->unk40->unk20 += dz;
+            obj->unk40->unk14 -= 1.0f;
+            obj->unk40->unk18 += 15.0f;
+            if (i > 60.0) {
+                func_ovl13_02_8004CBF8(obj, 0x40000);
             }
             func_ovl13_02_8004CD90();
-            var_s0_2 += 1;
-        } while (var_s0_2 != 0x78);
-        func_ovl13_02_8004CC10(temp_s1);
-        *sp60 = NULL;
+        }
+        func_ovl13_02_8004CC10(obj);
+        D_ovl13_02_8004DD68[n] = NULL;
     }
     func_ovl13_02_8004CD58();
 }
 
 s32 func_ovl13_02_8004A844(void) {
-    s32 sp40[3];
-    s32 var_s0;
-    s32 var_s1;
-    s32 var_v0;
+    Vec3f pad;
+    s32 p[3];
+    s32 i;
+    s32 n;
+    s32 r;
 
-    func_ovl13_02_8004C250(M2C_FIELD(&D_ovl13_02_8004DC90, f32 *, 0), M2C_FIELD(&D_ovl13_02_8004DC90, f32 *, 4), M2C_FIELD(&D_ovl13_02_8004DC90, f32 *, 8), sp40, 2);
-    var_s1 = 0;
-    var_s0 = -2;
-    do {
-        var_s0 += 1;
-        if (func_ovl13_02_8004C268(sp40[0] + var_s0, sp40[1], sp40[2]) & 0xF) {
-            var_s1 += 1;
+    func_ovl13_02_8004C250(M2C_FIELD(&D_ovl13_02_8004DC90, f32 *, 0), M2C_FIELD(&D_ovl13_02_8004DC90, f32 *, 4), M2C_FIELD(&D_ovl13_02_8004DC90, f32 *, 8), p, 2);
+    n = 0;
+    for (i = -2; i < 3; i++) {
+        if (func_ovl13_02_8004C268(p[0] + i, p[1], p[2]) & 0xF) {
+            n++;
         }
-    } while (var_s0 != 3);
-    var_v0 = 0;
-    if (var_s1 >= 3) {
-        var_v0 = 1;
     }
-    return var_v0;
+    if (n >= 3) {
+        return 1;
+    }
+    return 0;
 }
 
 void func_ovl13_02_80049F68(void) {
@@ -1310,12 +1277,12 @@ void func_ovl13_02_8004980C(void) {
 }
 
 void func_ovl13_02_800496A0(s32 *arg0, s32 *arg1) {
-    s32 list[6];
+    s32 list[8];
     s32 n;
     s32 i;
 
     if (D_ovl13_02_8004DE24 > 0) {
-        for (i = 0; i < 6; i++) {
+        for (i = 0; i < 8; i++) {
             list[i] = -1;
         }
         n = 0;
@@ -1334,7 +1301,8 @@ void func_ovl13_02_800496A0(s32 *arg0, s32 *arg1) {
                 list[n++] = 3;
             }
         }
-        switch (list[func_ovl13_02_8004CF08(n - 1)]) {
+        n--;
+        switch (list[func_ovl13_02_8004CF08(n)]) {
         case 2:
             func_ovl13_02_80049564(arg0, arg1);
             return;
@@ -1419,17 +1387,19 @@ static void func_ovl13_02_80049400(void) {
 }
 
 void func_ovl13_02_800489C0(s32 arg0) {
+    s32 padt[1];
     f32 spA0[3];
     f32 sp94[3];
+    f32 pad[7];
     s32 var_s0;
     s32 var_s1;
     s32 var_s5;
 
     func_ovl13_02_8004CBF8(D_ovl13_02_8004DE3C, 0x08000000);
     func_ovl13_02_8004511C();
-    spA0[2] = M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 8) + 1000.0f;
     spA0[0] = M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 0);
     spA0[1] = M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 4);
+    spA0[2] = M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 8) + 1000.0f;
     func_ovl13_02_800430CC(&spA0[0], 0x1E, 1);
     func_ovl13_02_8004CA70(D_ovl13_02_8004D4F8, 0x170, 0);
     spA0[0] = M2C_FIELD(&D_ovl13_02_8004DF60, f32 *, 0);
@@ -1439,9 +1409,9 @@ void func_ovl13_02_800489C0(s32 arg0) {
     func_ovl13_02_8004CBF8(D_ovl13_02_8004DE3C, 0x04000000);
     func_ovl13_02_8004CB00(NULL);
     func_ovl13_02_8004CAA0(0x20);
-    spA0[2] = M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 8) + 1000.0f;
     spA0[0] = M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 0);
     spA0[1] = M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 4);
+    spA0[2] = M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 8) + 1000.0f;
     func_ovl13_02_800434C0(&spA0[0]);
     func_ovl13_02_8004CC00(D_ovl13_02_8004DE3C, 0x08000000);
     if (!(D_ovl13_02_8004DE3C->unk40->unkC & 0x40)) {
@@ -1558,12 +1528,12 @@ loop_5:
 }
 
 void func_ovl13_02_80048504(void) {
+    UnkStructA *obj;
+    UnkStructA *spr;
     UnkStructA *shadow;
     f32 vel[3];
     f32 pos[3];
     f32 ang[3];
-    UnkStructA *obj;
-    UnkStructA *spr;
     s32 i;
     f32 t;
 
@@ -1587,13 +1557,13 @@ void func_ovl13_02_80048504(void) {
     ang[1] = 0.0f;
     ang[2] = 300.0f;
     func_ovl13_02_8004CB90(ang, vel);
-    spr->unk40->unk10 = vel[0] + pos[0];
+    spr->unk40->unk10 = pos[0] + vel[0];
     spr->unk40->unk14 = pos[1];
-    spr->unk40->unk18 = vel[2] + pos[2];
+    spr->unk40->unk18 = pos[2] + vel[2];
     spr->unk40->unk36 = 0xFF;
-    obj->unk40->unk10 = vel[0] + pos[0];
+    obj->unk40->unk10 = pos[0] + vel[0];
     obj->unk40->unk14 = pos[1];
-    obj->unk40->unk18 = vel[2] + pos[2];
+    obj->unk40->unk18 = pos[2] + vel[2];
     obj->unk40->unk36 = 0x80;
     obj->unk68 = func_ovl13_02_8004CF00() * 30.0 + 30.0;
     ang[2] = func_ovl13_02_8004CF00() * 5.0 + 5.0;
@@ -1649,13 +1619,14 @@ void func_ovl13_02_800484B4(arg0) UnkStructA *arg0; {
 void func_ovl13_02_800480EC(s32 arg0) {
     f32 sp44[3];
     f32 sp38[3];
+    f32 pad[3];
 
     func_ovl13_02_8004CBF8(D_ovl13_02_8004DE3C, 0x08000000);
     func_ovl13_02_8004511C();
     func_ovl13_02_8004CA70(D_ovl13_02_8004D608, 0x170, 0);
     sp44[0] = M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 0);
-    sp44[2] = M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 8) + 1000.0f;
     sp44[1] = M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 4);
+    sp44[2] = M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 8) + 1000.0f;
     func_ovl13_02_800430CC(sp44, 0x1E, 1);
     sp44[0] = M2C_FIELD(&D_ovl13_02_8004DF80, f32 *, 0);
     sp44[1] = 500.0f;
@@ -1706,8 +1677,8 @@ void func_ovl13_02_800480EC(s32 arg0) {
     func_ovl13_02_8004362C(0);
     func_ovl13_02_8004CBF8(D_ovl13_02_8004DE3C, 0x0C000000);
     sp44[0] = M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 0);
-    sp44[2] = M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 8) + 1000.0f;
     sp44[1] = M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 4);
+    sp44[2] = M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 8) + 1000.0f;
     func_ovl13_02_800430CC(sp44, 0x3C, 1);
     sp44[0] = M2C_FIELD(&D_ovl13_02_8004DF18, f32 *, 0);
     sp44[1] = 500.0f;
@@ -1731,43 +1702,29 @@ void func_ovl13_02_800480EC(s32 arg0) {
 }
 
 void func_ovl13_02_80047EEC(void) {
-    f32 temp_fs3;
-    f32 temp_fv1;
-    f32 var_fs0;
-    f32 var_fv0;
-    s32 var_s0;
-    s32 var_s1;
+    f32 y;
+    f32 a;
+    s32 i;
+    s32 done;
+    f32 t;
 
     func_ovl13_02_8004362C(2);
     func_ovl13_02_8004CBF8(D_ovl13_02_8004DE3C, 0x04000000);
     D_ovl13_02_8004DEE4 = 55.0f;
     D_ovl13_02_8004DEE8 = 0.0f;
-    temp_fs3 = D_ovl13_02_8004DED8;
-    var_s0 = 0;
-    var_s1 = 0;
-    var_fs0 = 0.0f;
-    do {
-        D_ovl13_02_8004DED8 = (func_ovl13_02_8004CEF0(var_fs0) * (((f32) var_s0 / 60.0f) * 45.0f)) + temp_fs3;
-        temp_fv1 = var_fs0 + 12.0f;
-        if (temp_fv1 >= 360.0f) {
-            var_fs0 = temp_fv1 - 360.0f;
-        } else {
-            if (temp_fv1 < 0.0f) {
-                var_fv0 = temp_fv1 + 360.0f;
-            } else {
-                var_fv0 = temp_fv1;
-            }
-            var_fs0 = var_fv0;
-        }
-        if ((func_ovl13_02_8004C220() <= D_ovl13_02_8004DE3C->unk40->unk14) && (var_s1 == 0)) {
-            var_s1 = 1;
+    y = D_ovl13_02_8004DED8;
+    for (i = 0, done = 0, a = 0.0f; i < 60; i++) {
+        t = (f32) i / 60.0f;
+        D_ovl13_02_8004DED8 = func_ovl13_02_8004CEF0(a) * (t * 45.0f) + y;
+        a = W360(a + 12.0f);
+        if (func_ovl13_02_8004C220() <= D_ovl13_02_8004DE3C->unk40->unk14 && done == 0) {
             func_ovl13_02_8004CD48(func_ovl13_02_80045460, NULL, 0, 0, 0x150);
+            done = 1;
             func_ovl13_02_80043098(0xE6, D_ovl13_02_8004DE3C);
         }
         func_ovl13_02_8004CD90();
-        var_s0 += 1;
-    } while (var_s0 != 0x3C);
-    D_ovl13_02_8004DED8 = temp_fs3;
+    }
+    D_ovl13_02_8004DED8 = y;
 }
 
 void func_ovl13_02_80047C60(s32 arg0) {
@@ -2619,10 +2576,11 @@ void func_ovl13_02_8004564C(UnkStructA *arg0, s32 arg1, s32 arg2, f32 arg3, f32 
 }
 
 void func_ovl13_02_80045460(void) {
+    s32 i;
     UnkStructA *objs[24];
+    UnkStructA *obj;
     Vec3f a;
     Vec3f pos;
-    s32 i;
 
     for (i = 0; i < 24; i++) {
         objs[i] = func_ovl13_02_8004CC20(-1, 0, 0xD0, NULL);
@@ -2631,18 +2589,19 @@ void func_ovl13_02_80045460(void) {
     a.x = 0.0f;
     a.z = 800.0f;
     for (i = 0; i < 24; i++) {
+        obj = objs[i];
         pos.x = 0.0f;
         pos.y = 0.0f;
         pos.z = 0.0f;
         func_ovl13_02_8004CB90(&a.x, &pos.x);
-        objs[i]->unk40->unk10 = D_ovl13_02_8004DC90.x + pos.x;
-        objs[i]->unk40->unk14 = D_ovl13_02_8004DC90.y + pos.y;
-        objs[i]->unk40->unk18 = D_ovl13_02_8004DC90.z + pos.z;
-        objs[i]->unk40->unk10 = M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 0) + pos.x;
-        objs[i]->unk40->unk14 = M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 4) + pos.y;
-        objs[i]->unk40->unk14 = func_ovl13_02_8004C220();
-        objs[i]->unk40->unk18 = M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 8) + pos.z;
-        func_ovl13_02_8004CD48(func_ovl13_02_800460C0, objs[i], 0, 0, 0x150);
+        obj->unk40->unk10 = D_ovl13_02_8004DC90.x + pos.x;
+        obj->unk40->unk14 = D_ovl13_02_8004DC90.y + pos.y;
+        obj->unk40->unk18 = D_ovl13_02_8004DC90.z + pos.z;
+        obj->unk40->unk10 = M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 0) + pos.x;
+        obj->unk40->unk14 = M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 4) + pos.y;
+        obj->unk40->unk14 = func_ovl13_02_8004C220();
+        obj->unk40->unk18 = M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 8) + pos.z;
+        func_ovl13_02_8004CD48(func_ovl13_02_800460C0, obj, 0, 0, 0x150);
         a.x += 15.0f;
     }
     func_ovl13_02_8004CD90();
@@ -2653,13 +2612,15 @@ void func_ovl13_02_80045460(void) {
 }
 
 void func_ovl13_02_8004521C(void) {
+    s32 pad[2];
     UnkStructA *objs[24];
+    s32 i;
     Vec3f a;
     Vec3f pos[24];
     s32 n;
-    s32 i;
     s32 k;
     s32 wait;
+    UnkStructA *obj;
 
     n = (s32) func_ovl13_02_8004CD70();
     a.y = 0.0f;
@@ -2673,16 +2634,17 @@ void func_ovl13_02_8004521C(void) {
         func_ovl13_02_8004CB90(&a.x, &pos[i].x);
         a.x += 15.0f;
     }
-    k = 0;
-    for (i = 0, wait = 4; i != n; i++, wait++) {
+    for (i = 0, k = 0, wait = 3; i < n; i++) {
+        wait++;
         if (wait >= 4) {
-            objs[k]->unk40->unk10 = pos[k].x + D_ovl13_02_8004DC90.x;
-            objs[k]->unk40->unk14 = pos[k].y + D_ovl13_02_8004DC90.y;
-            objs[k]->unk40->unk18 = pos[k].z + D_ovl13_02_8004DC90.z;
-            objs[k]->unk40->unk10 = pos[k].x + M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 0);
-            objs[k]->unk40->unk14 = pos[k].y + M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 4);
-            objs[k]->unk40->unk18 = pos[k].z + M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 8);
-            func_ovl13_02_8004CD48(func_ovl13_02_800460C0, objs[k], 0, 0, 0x150);
+            obj = objs[k];
+            obj->unk40->unk10 = pos[k].x + D_ovl13_02_8004DC90.x;
+            obj->unk40->unk14 = pos[k].y + D_ovl13_02_8004DC90.y;
+            obj->unk40->unk18 = pos[k].z + D_ovl13_02_8004DC90.z;
+            obj->unk40->unk10 = pos[k].x + ((Vec3f *) &D_ovl13_02_8004DEC8)->x;
+            obj->unk40->unk14 = pos[k].y + ((Vec3f *) &D_ovl13_02_8004DEC8)->y;
+            obj->unk40->unk18 = pos[k].z + ((Vec3f *) &D_ovl13_02_8004DEC8)->z;
+            func_ovl13_02_8004CD48(func_ovl13_02_800460C0, obj, 0, 0, 0x150);
             k = func_ovl13_02_8004CF08(0x17);
             wait = 0;
         }
@@ -2796,11 +2758,14 @@ void func_ovl13_02_80044AB4(void) {
     obj->unk40->unk18 = M2C_FIELD(&D_ovl13_02_8004DF80, f32 *, 8);
     obj->unk40->unk20 = 180.0f;
     dx = D_ovl13_02_8004DDB8[idx].x - M2C_FIELD(&D_ovl13_02_8004DF80, f32 *, 0);
-    dy = (func_ovl13_02_8004C220() - obj->unk40->unk14) / 120.0f;
-    dz = (D_ovl13_02_8004DDB8[idx].z - M2C_FIELD(&D_ovl13_02_8004DF80, f32 *, 8)) / 120.0f;
+    dy = func_ovl13_02_8004C220() - obj->unk40->unk14;
+    dz = D_ovl13_02_8004DDB8[idx].z - M2C_FIELD(&D_ovl13_02_8004DF80, f32 *, 8);
+    dx /= 120.0f;
+    dy /= 120.0f;
+    dz /= 120.0f;
     func_ovl13_02_80043098(0xE1, obj);
     for (i = 0; i < 180; i++) {
-        obj->unk40->unk10 += dx / 120.0f;
+        obj->unk40->unk10 += dx;
         obj->unk40->unk14 += dy;
         obj->unk40->unk18 += dz;
         obj->unk40->unk2C += 0.041666668f;
@@ -2817,20 +2782,21 @@ void func_ovl13_02_80044990(s32 arg0) {
     s32 step;
     s32 i;
     s32 said;
+    s32 j;
 
     if (D_ovl13_02_8004DC90.x <= D_ovl13_02_8004DDB8[arg0].x) {
         step = 1;
-        i = arg0 + 1;
+        j = arg0 + 1;
     } else {
         step = -1;
-        i = arg0;
+        j = arg0;
     }
     said = 0;
-    for (; i < 10 && i >= 0; i += step) {
+    for (i = j; i < 10 && i >= 0; i += step) {
         if (D_ovl13_02_8004DD90[i] == 0) {
             if (said == 0) {
-                said = 1;
                 func_ovl13_02_80043098(0xE8, D_ovl13_02_8004DD68[i]);
+                said = 1;
             }
             func_ovl13_02_8004CD48(func_ovl13_02_8004A8E0, (void *) i, 0, 0, 0x150);
             D_ovl13_02_8004DD90[i] = 1;
@@ -3013,11 +2979,12 @@ void func_ovl13_02_80043B64(f32 *arg0, f32 *arg1, f32 arg2, f32 *arg3) {
     f32 ang[3];
     f32 dx;
     f32 dy;
-    f32 pad[2];
+    f32 pad[1];
 
     func_ovl13_02_8004CB88(arg0, arg3, ang);
     ang[1] = ((ang[1] - 90.0f) >= 360.0f) ? (ang[1] - 90.0f) - 360.0f : (ang[1] < 90.0f) ? (ang[1] - 90.0f) + 360.0f : (ang[1] - 90.0f);
-    dx = A180(ang[0]) - A180(arg1[0]);
+    dx = ((0 <= ang[0] && ang[0] <= 180.0f) ? ang[0] : (360.0f - ang[0]) * -1.0f)
+       - ((0 <= arg1[0] && arg1[0] <= 180.0f) ? arg1[0] : (360.0f - arg1[0]) * -1.0f);
     if (dx > 180.0f) {
         dx -= 360.0f;
     }
@@ -3031,7 +2998,8 @@ void func_ovl13_02_80043B64(f32 *arg0, f32 *arg1, f32 arg2, f32 *arg3) {
     } else if (dx < arg2 * -1.0f) {
         dx = arg2 * -1.0f;
     }
-    dy = A180(ang[1]) - A180(arg1[1]);
+    dy = ((0 <= ang[1] && ang[1] <= 180.0f) ? ang[1] : (360.0f - ang[1]) * -1.0f)
+       - ((0 <= arg1[1] && arg1[1] <= 180.0f) ? arg1[1] : (360.0f - arg1[1]) * -1.0f);
     if (dy > 180.0f) {
         dy -= 360.0f;
     }
@@ -3243,9 +3211,10 @@ void func_ovl13_02_80043098(s32 arg0, UnkStructA *arg1) {
 
     temp_v0 = arg1->unk40;
     func_ovl13_02_8004D2F0(arg0, temp_v0->unk10, temp_v0->unk14, temp_v0->unk18);
+    if (0) { func_ovl13_02_80043040(D_ovl13_02_8004DE3C); }
 }
 
-void func_ovl13_02_80043040(UnkStructA *arg0) {
+static void func_ovl13_02_80043040(UnkStructA *arg0) {
     if (!(M2C_FIELD(M2C_FIELD(arg0, void **, 0x40), s32 *, 0xC) & 0x40)) {
         do {
             func_ovl13_02_8004CD90();
