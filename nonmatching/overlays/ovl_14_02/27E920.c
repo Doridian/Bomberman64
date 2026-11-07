@@ -1,7 +1,7 @@
 /*
  * NON_MATCHING: ovl_14_02's game object, complete; not in the ROM.
  * flags: -O3
- * differing words: us 391, eu 391, jp 391
+ * differing words: us 383, eu 383, jp 383
  *
  * 132 of 138 functions match (the same in every version). A first draft:
  * m2c output (with the ZeroJump prototypes of the other drafts and the
@@ -113,11 +113,18 @@
  * the hit arm). 8004C240 105 -> 62 (`list[n + 1] = 1` and two flagged
  * dead reads). Tricks are marked `trick` in the code.
  *
+ * Pass 14: 800438D4 108 -> 100 (flagged dead reads of at[1], eye.z and
+ * eye.x around ev.x, which reorder the float colouring a little).
+ * 8004BDE8 declares marks after prev, cur and i, which puts it at
+ * sp+0x3C as in the original (no word change yet).
+ *
  * What still differs, in large: 800438D4 (the original loads eye.z and
- * at[] into $f12-$f18 early and keeps ev in fs0-fs2; ours fs3-fs5),
+ * at[] into $f12-$f18 early and keeps ev in fs0-fs2; ours mostly not),
  * 8004D640 ((s32)dx in $v1, not $a2; obj copied to $a3 first; hit
  * loaded into $v0), 8004C240 (the constant 1 shared in $a1), 80046374
- * (loop 3's F4 store through $s3, ours through `lui at`), 8004BDE8
+ * (loop 3's F4 store through $s3, ours through `lui at`: uopt's
+ * &D_800503F0 range stays live there, but the store doesn't use it),
+ * 8004BDE8
  * (&D_800503C0 kept in $s3; the original reloads it and passes the
  * loaded value to 80043358 in $a1). The infinite loop 8004BF90, and
  * 8004BDE8 before it, also differ in their trailing alignment nops.
@@ -1444,10 +1451,10 @@ loop_1:
 }
 
 void func_ovl14_02_8004BDE8(void) {
-    f32 marks[2] = { 20.0f, 60.0f };
     f32 prev;
     f32 cur;
     s32 i;
+    f32 marks[2] = { 20.0f, 60.0f };
     s32 hit;
 
     prev = D_ovl14_02_800503C0->unk40->unk48->unk4->unk4;
@@ -4249,8 +4256,11 @@ void func_ovl14_02_800438D4(void) {
         func_ovl14_02_80043834();
         func_ovl14_02_8004F540(&eye.x);
         func_ovl14_02_8004F550(at);
+        if (at[1]) {} /* trick: dead read (float colouring order) */
         ev.x = (2300.0f - eye.x) / 30;
-        do {} while (0);
+        if (eye.z) {} /* trick: dead read (float colouring order) */
+        do {} while (0); /* trick: uopt block boundary */
+        if (eye.x) {} /* trick: dead read (float colouring order) */
         ev.y = (3287.938f - eye.y) / 30;
         ev.z = (2068.404f - eye.z) / 30;
         ea[0] = ev.x / 60.0f * -1.0f;
