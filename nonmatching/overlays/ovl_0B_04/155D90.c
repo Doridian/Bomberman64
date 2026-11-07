@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 140, eu 140, jp 137
+ * differing words: us 90, eu 90, jp 87
  *
  * The pages are a table (D_ovl0B_04_800499B8: texts, handler, cursor
  * table, set-up) that func_ovl0B_04_80043ADC runs in turn; pages 1-4 are
@@ -51,35 +51,34 @@
  * What still differs (words us/jp; the comparison counts a global with
  * the statics after it, so a static of the wrong size costs the rest of
  * its run):
- * - 80043110 32/32: H5b's slot tests now read *ptr as the original does
- *   (no size-tuned copies). Left: the frame homes of H5a's i (124 vs 132)
- *   and the FreeEntries n's (76/60 vs 80/64); &D_ovl0B_04_8004A178 in $s0
- *   where the original has &D_ovl0B_04_8004A17C (the test's A17C reload
- *   is written (&D_ovl0B_04_8004A178)[1]: plain, uopt's PRE drops it and
- *   &A17C is left with too few uses); the A170 store not in the jal's delay
- *   slot; A164 in $v0 (the original: $v1). H5b's calls pass
+ * - 80043110 24/24: H5b's slot tests read *ptr as the original does, and
+ *   its accesses are spelled so &D_ovl0B_04_8004A17C sits in $s0 as in the
+ *   original ((&A17C)[-1], (&A178)[1], (&A16C)[1]; found by trying every
+ *   neighbour form of each access). Left: the frame homes of H5a's i (124
+ *   vs 132) and the FreeEntries n's (76/60 vs 80/64); A178's value read as
+ *   -4($s0) where the original has its own lui; the A170 store not in the
+ *   jal's delay slot; A164 in $v0 (the original: $v1). H5b's calls pass
  *   `(x += 1, x - 1)` for the original's `addiu a2,v1,0` copy.
- *   Pad locals in any inlined static (one or two, pairs of sites) don't
- *   move the homes without costing more.
+ *   Pad locals in any inlined static (one or two, pairs of sites), stub
+ *   calls and dead reads in H4..H5b don't move these without costing more.
  * - 800436C8 6/6: its `li a1,-1`/`andi s2` order before the test (the
  *   original has the li right after the jal; any C with the -1 outside
  *   the if hoists it to an s-register). 800438FC's cases set d before col
  *   for the original's schedule.
- * - 800444E8 50/50: 800447DC's registers. 80044714 returns s8 (as
- *   8004471C does; u8 coloured the inlined result in $v0) and d2/d3 are
- *   tested `!= 0` (the int-promoted test makes cvt(d2)/cvt(d3) expressions
- *   that uopt colours $v1/$v0: the original's `move v1,s4`/`move v0,s5`
- *   before each use; d1 keeps plain `if (d1)`, as the original has no copy
- *   for it). Left: d1 is $s3 and n $s2 where the original has d1 in $t0
- *   up to the first chain's test, then `move s2,t0` (a split; no form found
- *   that splits it) and n in $s3; ugen temps one ahead from the inlined
- *   80044714 on (`andi t7,v1` vs t6); unk1 is stored through the neighbour,
- *   (&D_ovl0B_04_8004A480)[1][1] (TRICK), for the original's own lui; its
- *   counter D_ovl0B_04_8004A1A0, a function-scope static, is promoted to
- *   $t0 where the original reloads it; and its frame (40 vs 24: the two
- *   dead reads of the not yet set t (TRICK), after 80048A70[0]'s store and
- *   in the n >= 2 d2 arm, cost a spill, but give buttons $t1 and the rest
- *   of the original's registers; without them 73).
+ * - 800444E8 8/8: 800447DC's registers. 80044714 returns s32 (s8 made a
+ *   sll/sra pair whose temp put the ugen temps one ahead, and gave d1 $s3
+ *   and n $s2) and d2/d3 are tested `!= 0` (the int-promoted test makes
+ *   cvt(d2)/cvt(d3) expressions that uopt colours $v1/$v0: the original's
+ *   `move v1,s4`/`move v0,s5`); d1 keeps plain `if (d1)`. The frame (24)
+ *   comes from `do {} while (0);` first in the `if (d1)` arm, with the dead
+ *   reads `if (d1) {}` and one `if (!t) {}` after 80048A70[0]'s store
+ *   (TRICK). The unk1 test is written `c != X` for the beq's operand order;
+ *   unk1 is stored through the neighbour, (&D_ovl0B_04_8004A480)[1][1]
+ *   (TRICK), for the original's own lui. Left: d1 is $s2 throughout where
+ *   the original has it in $t0 up to the first chain's test, then
+ *   `move s2,t0` (a split; no form found that splits it), and the counter
+ *   D_ovl0B_04_8004A1A0, a function-scope static, is promoted to $t0 where
+ *   the original reloads it into $v1.
  * - 80045214 26/26: 80045214's `ok` reloaded to $t8 (the original: $v0);
  *   80045540's frame (40 vs 24: the dead reads of c in its else branch,
  *   where c isn't set, spill it) and rub-out registers (the original loads
@@ -811,7 +810,7 @@ static void func_ovl0B_04_800458F4(s32 id0, s32 id1);
 static void func_ovl0B_04_80045958(s32 id0, s32 id1);
 static void func_ovl0B_04_80045850(void);
 static void func_ovl0B_04_80043640(f32 d);
-static s8 func_ovl0B_04_80044714(u8 set, u8 c);
+static s32 func_ovl0B_04_80044714(u8 set, u8 c);
 
 /* A text drawn centred on an item (its string evaluated twice). */
 #define DRAW_ITEM(str, it) \
@@ -1700,7 +1699,7 @@ u8 func_ovl0B_04_80044BE8(u8 arg0, u16 arg1) {
 
 /* The character before the cursor: the marks it can take (the 0x1E00
  * buttons put them on in turn), shown in D_ovl0B_04_80048A70. */
-static s8 func_ovl0B_04_80044714(u8 set, u8 c) {
+static s32 func_ovl0B_04_80044714(u8 set, u8 c) {
     s32 r = 0;
 
     switch (set) {
@@ -1759,8 +1758,9 @@ static void func_ovl0B_04_800447DC(u16 buttons, u8 *ret) {
         }
         if (n != 0) {
             D_ovl0B_04_80048A70[0] = c;
-            if (!t) {} /* TRICK: t isn't set yet: a dead read that only moves registers */
+            if (d1) {} /* TRICK: dead read, with the one below: frame 24 */
             if (d1) {
+                do {} while (0); /* TRICK: frame 24 and the original's registers */
                 D_ovl0B_04_80048A70[2] = c + d1;
             } else if (d2 != 0) {
                 D_ovl0B_04_80048A70[2] = c + d2;
@@ -1773,7 +1773,6 @@ static void func_ovl0B_04_800447DC(u16 buttons, u8 *ret) {
                 D_ovl0B_04_8004A060[9].unk0->unk18 = D_ovl0B_04_8004A060[9].unkC;
                 D_ovl0B_04_8004A060[9].unk0->unk1C = D_ovl0B_04_8004A060[9].unk10;
                 if (d2 != 0) {
-                    if (!t) {} /* TRICK: t isn't set yet: a dead read that only moves registers */
                     D_ovl0B_04_80048A70[4] = c + d2;
                 } else if (d3 != 0) {
                     D_ovl0B_04_80048A70[4] = c + d3;
@@ -1811,7 +1810,7 @@ static void func_ovl0B_04_800447DC(u16 buttons, u8 *ret) {
                         D_ovl0B_04_8004A1A0 = 0;
                     }
                 }
-                if (D_ovl0B_04_8004A490.unk1 != c) {
+                if (c != D_ovl0B_04_8004A490.unk1) {
                     (&D_ovl0B_04_8004A480)[1][1] = c; /* TRICK: through the neighbour, for its own lui */
                     t = 0;
                     if ((D_ovl0B_04_8004A490.unk0 == 7 && D_ovl0B_04_8004A290[7][0] == 0) || D_ovl0B_04_8004A490.unk0 != 7) {
@@ -2370,12 +2369,11 @@ static void func_ovl0B_04_H5a(void) {
 }
 
 /* The tests reread each slot through its pointer, as the original does.
- * Tuned, not the original: x (and z, always 0: `x + z` is x) take the two
- * frame slots that put 80043110's homes in place and keep the value out of
- * $a2 (in $v1, copied with `move`; the original copies with `addiu`).
- * (&D_ovl0B_04_8004A16C)[1] is D_ovl0B_04_8004A170 and
- * (&D_ovl0B_04_8004A178)[1] is D_ovl0B_04_8004A17C, written as neighbours
- * so uopt doesn't hold &A170 in $s0 nor PRE away the A17C reload. */
+ * Tuned, not the original: x takes the value in $v1, copied with `move`
+ * (the original copies with `addiu`). The neighbour spellings
+ * ((&D_ovl0B_04_8004A17C)[-1] for A178, (&D_ovl0B_04_8004A178)[1] for A17C,
+ * (&D_ovl0B_04_8004A16C)[1] for A170) were picked by trying every form of
+ * each access: they leave &D_ovl0B_04_8004A17C in $s0 as in the original. */
 static void func_ovl0B_04_H5b(void) {
     s32 x;
 
@@ -2384,15 +2382,15 @@ static void func_ovl0B_04_H5b(void) {
     D_ovl0B_04_8004A180 = func_ovl0B_04_800484E0(10);
     D_ovl0B_04_8004A184 = func_ovl0B_04_800484E0(11);
     D_ovl0B_04_8004A188 = func_ovl0B_04_800484E0(12);
-    D_ovl0B_04_8004A190 = *D_ovl0B_04_8004A178;
-    D_ovl0B_04_8004A194 = *D_ovl0B_04_8004A17C;
+    D_ovl0B_04_8004A190 = *(&D_ovl0B_04_8004A17C)[-1];
+    D_ovl0B_04_8004A194 = *(&D_ovl0B_04_8004A178)[1];
     D_ovl0B_04_8004A198 = *D_ovl0B_04_8004A180;
     D_ovl0B_04_8004A19C = *D_ovl0B_04_8004A184;
-    x = *D_ovl0B_04_8004A178;
+    x = *(&D_ovl0B_04_8004A17C)[-1];
     if (x != 0) {
         func_ovl0B_04_800478A0((&D_ovl0B_04_8004A16C)[1], 0, (x += 1, x - 1));
     }
-    x = *(&D_ovl0B_04_8004A178)[1];
+    x = *D_ovl0B_04_8004A17C;
     if (x != 0) {
         func_ovl0B_04_800478A0(D_ovl0B_04_8004A170, 1, (x += 1, x - 1));
     }
