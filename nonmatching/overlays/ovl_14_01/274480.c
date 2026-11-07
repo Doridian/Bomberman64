@@ -1,10 +1,10 @@
 /*
  * NON_MATCHING: ovl_14_01's game object, complete; not in the ROM.
  * flags: -O3
- * differing words: us 8, eu 8, jp 8
+ * differing words: us 0, eu 0, jp 0
  *
  * The text is the same in every version (only jp's ZeroJump numbers
- * differ). 88 of 89 functions match. m2c output (with the ZeroJump
+ * differ). All 89 functions match. m2c output (with the ZeroJump
  * prototypes of the other drafts, scratch/newovl2/protos.h, and the
  * file's own in own.h) made to compile, then tuned by hand
  * (scratch/newovl2/r/).
@@ -103,21 +103,18 @@
  * hoisted by uopt) and dy0 is declared where `pad` was: the spill homes
  * of dy0/sdy then land at 72/68 as in the original.
  *
- * What still differs (1 function):
- * - 80049814 (8): the arms' addresses are in v1, the original's v0 (v,
- *   the loop pointer, is live there through the dead read and takes v0
- *   first). A separate variable for the arms does the same; one whose
- *   dead read is after the next call gets v1 and frees v0 for the
- *   addresses, but spills. `l` is `volatile` (semantics unchanged): the
- *   original keeps it in its frame slot, which gives the 40-byte frame.
- *   Plain `D_8004D4DC = D_8004D190` arms (no v) give 82.
- *   The original's address is materialised after the swc1 (as a value
- *   first stored, like a variable), not at the arm's start like our
- *   coloured LDA range: `v = ADDR;` in the arms with one
- *   `D_8004D4DC = v;` after the join gives exactly the original's arms
- *   in v0, but one store instead of two (192, misaligned). Every form
- *   that stores in the arm lets copy propagation turn the store's value
- *   into the LDA again (pass 11, scratch/newovl2/r9/w*.py).
+ * 80049814 (pass 12, scratch/newovl2/r10/) (TRICK): each arm writes
+ *   `a = (uintptr_t) ADDR; D_8004D4DC = (Vec3f *) a;` with `a` a new
+ *   uintptr_t local (u32 under IDO, pointer-sized in the port) and the
+ *   dead read `if (a) {}` after the join. In uopt, a read of a variable
+ *   assigned earlier in the same block is replaced by the assigned value,
+ *   and copy propagation replaces one assigned in another block, so with
+ *   a pointer variable both stores used the LDA itself: two uses in the
+ *   arm, coloured as a constant and loaded at the arm's start (v1, as v
+ *   held v0). The pointer-to-integer conversion stops that: the store
+ *   reads `a` (v0, set after the swc1 as the original does) and the
+ *   address is used only once. s32 and u32 work, void * / f32 * don't.
+ *
  * Several functions need an unused `pad` local for the original's frame.
  */
 #include "common.h"
@@ -1189,6 +1186,7 @@ void func_ovl14_01_80049814(s32 id, UnkStructA **parts, Link_ovl14_01 *links) {
     Link_ovl14_01 * volatile l;
     UnkStructA *o;
     Vec3f *v;
+    uintptr_t a;
     f32 s;
     s32 i;
 
@@ -1196,12 +1194,14 @@ void func_ovl14_01_80049814(s32 id, UnkStructA **parts, Link_ovl14_01 *links) {
     *parts = func_ovl14_01_8004C8F0(-1, 0x400000, D_ovl14_01_8004D5E0);
     if (id == 0x1C8) {
         (*parts)->unk4C = -498.0f;
-        D_ovl14_01_8004D4DC = v = D_ovl14_01_8004D190;
+        a = (uintptr_t) D_ovl14_01_8004D190;
+        D_ovl14_01_8004D4DC = (Vec3f *) a;
     } else {
         (*parts)->unk4C = 498.0f;
-        D_ovl14_01_8004D4DC = v = D_ovl14_01_8004D1CC;
+        a = (uintptr_t) D_ovl14_01_8004D1CC;
+        D_ovl14_01_8004D4DC = (Vec3f *) a;
     }
-    if (v) {}
+    if (a) {}
     M2C_FIELD(*parts, Link_ovl14_01 **, 0x3C) = links;
     parts++;
     *parts = func_ovl14_01_8004C8F0(-1, 0x500000, parts[-1]);
