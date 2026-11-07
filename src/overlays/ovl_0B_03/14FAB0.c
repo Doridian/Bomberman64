@@ -1,22 +1,19 @@
 /*
- * NON_MATCHING: ovl_0B_03's game object (a four-player set-up screen:
- * three rows of animated background pieces, the players' bombers and
- * their option boxes, driven by one big task, 8004386C), complete: every
- * function and its data (.data 0x770 with the big task's two local cursor
- * tables, .bss 0x1140, as the original's sizes). Not built into the ROM
- * (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * ovl_0B_03's game object, IDO -O3; it matches in us, eu and jp. A
+ * four-player set-up screen: three rows of animated background pieces,
+ * the players' bombers and their option boxes, driven by one big task,
+ * 8004386C. Its data: .data 0x770 (jp 0x710) with the big task's two
+ * local cursor tables, .rodata 0xC0, .bss 0x1140.
  *
  * jp (`#if VERSION_JP`) has its own strings (80048AF4, 80048B60,
  * 80049144, and D_ovl0B_03_8004901C_jp for us's 80049168, with the
  * player's digit first) and the label tables' positions that go with
  * them; its text is fixed-width, so 80043234 counts the characters
  * itself (24 pixels each) where us asks ZeroJump 0x250B, and it draws
- * through 0x2501 (800486F0) where us has 0x250C (80048748). The two
- * option-label loops in 8004386C don't centre their text in jp (the
- * label's own x, no 80043234 call), and the second frees the old label
- * before its switch.
+ * through 0x2501 (800486F0) where us has 0x250C (80048748), 80043464's
+ * labels too. The two option-label loops in 8004386C don't centre their
+ * text in jp (the label's own x, no 80043234 call), and the second frees
+ * the old label before its switch.
  *
  * From m2c (wk/ in scratch/0B_03/ of the main checkout has the scripts,
  * p2/ and p3/ the second and third passes', q/ the fourth's: sd.py is a
@@ -35,8 +32,9 @@
  * are declared as other drafts declare the same codes, but 80048890 (the
  * sound) returns s32: as void, uopt kept 8004386C's temporaries in $v0
  * where the original has $v1. The .bss's unreferenced words (800492E0,
- * 8004930C, 8004A33C, 8004A3FC, 8004A418) are arrays, not yet kept in
- * place.
+ * 8004930C, 8004A33C, 8004A3FC, 8004A418) are arrays, which would be
+ * common: the dead `if (0)` in the stub 80047464 refers to them, and they
+ * take their places in definition order.
  *
  * 8004386C is a while (TRUE) over switch (state), each case ending
  * state = next, every case a while (TRUE) input loop with the redraw at
@@ -429,8 +427,13 @@ s32 D_ovl0B_03_8004A410;
 s32 D_ovl0B_03_8004A414;
 u8 D_ovl0B_03_8004A418[8];
 
-/* An unused empty static (the original keeps its stub). */
+/* An unused empty static (the original keeps its stub). Its dead `if (0)`
+ * refers to the .bss words nothing else uses, which would otherwise be
+ * common and leave .bss short. */
 static void func_ovl0B_03_80047464(void) {
+    if (0) {
+        D_ovl0B_03_800492E0[0] = D_ovl0B_03_8004930C[0] = D_ovl0B_03_8004A33C[0] = D_ovl0B_03_8004A3FC[0] = D_ovl0B_03_8004A418[0] = 0;
+    }
 }
 
 /* An unused empty static (the original keeps its stub). */
@@ -1672,8 +1675,13 @@ static void func_ovl0B_03_80043464(Label_ovl0B_03 *labels, s32 n) {
     s32 i;
 
     for (i = 0; i < n; i++) {
+#if VERSION_JP
+        labels[i].unk18 = func_ovl0B_03_800486F0(labels[i].unk0, labels[i].unk6, labels[i].unkA, labels[i].unkC,
+                                                 labels[i].unk10, labels[i].unk14);
+#else
         labels[i].unk18 = func_ovl0B_03_80048748(labels[i].unk0, labels[i].unk6, labels[i].unkA, labels[i].unkC,
                                                  labels[i].unk10, labels[i].unk14);
+#endif
     }
 }
 

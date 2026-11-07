@@ -182,6 +182,11 @@ ovl_0B_01 ovl_0B_01_entry 0 0 0
 ovl_0B_01 1457B0 0x110 0x70 0x70
 ovl_0B_01 @jp 1457B0 sizes=0xB0,0x60,0x70
 
+# ovl_0B_03: all C (-O3), a four-player set-up screen; jp has its own strings
+ovl_0B_03 ovl_0B_03_entry 0 0 0
+ovl_0B_03 14FAB0 0x770 0xC0 0x1140
+ovl_0B_03 @jp 14FAB0 sizes=0x710,0xC0,0x1140
+
 # ovl_0B_05: all C (-O3); jp has its own strings
 ovl_0B_05 ovl_0B_05_entry 0 0 0
 ovl_0B_05 15D020 0x140 0xE0 0xA0
