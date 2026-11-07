@@ -6,7 +6,7 @@
  * of it 800431C4's local table). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2, eu 2, jp 2
+ * differing words: us 0, eu 0, jp 0
  * jp has its own strings, counts the characters itself in 80044424 (24
  * pixels each, as ovl_0B_03 does), draws through ZeroJump 0x2501
  * (DRAW_TEXT), puts the seconds one character further on and lays out the
@@ -53,23 +53,17 @@
  * exit, and rematerialises the constant ones; any constant but 40.0f
  * does).
  *
- * What still differs (words, the same in every version):
- * - 800454F0 2: the star's fade loop's j = 0 goes into the 0x2DC call's
- *   delay slot in the original, the call's li a0 into the branch's before
- *   it: ugen must emit `li a0` before `move s0,zero` (as1 fills the
- *   branch's slot from the fall-through's first instruction and the
- *   jal's from the last one before it), as if uopt hoisted j = 0 above
- *   the call (as it does with next = 1 in ovl_0B_03). Here j = 0 is set
- *   before the call and the loop is a do/while (3 to 2): with the
- *   for's own j = 0 after the stores, j = 0 came after them; set before
- *   the call with a for (;;) loop, uopt keeps 120 in a register
- *   (bne s0,s2). Not `f(0x2DC); j = 0;` (not hoisted), `#line` on
- *   j = 0, j = 0 in the argument ((j = 0, 0x2DC)), the constant through
- *   another local (folded). Also not: the loop counting with i, dir or
- *   another local; a for over j with j = 0 after the call and the stores
- *   (uopt leaves it in the preheader); dead statements between j = 0 and
- *   the call.
- * - Everything else matches.
+ * 800454F0's middle section counts its three model spots with i and the
+ * five sparks in each with j, and the star's loops at the end count with
+ * i (plain for loops). Its `i = 0` is then partially available at the
+ * star's loops (the table search `for (i = 0; i < 16; i++)` can leave on
+ * its first pass), so uopt's PRE moves the fade loop's store into the end
+ * of the 0x2DC call's block, after the argument: `li a0` comes before
+ * `move s0,zero` as in the original (a store hoisted by code motion is
+ * emitted after the call's outpars, uoptemit.c). Counting the middle's
+ * outer loop with j instead merged i's ranges and swapped s0/s1.
+ *
+ * Nothing differs in code; .data and .rodata match the original's bytes.
  */
 #include "common.h"
 
@@ -1092,19 +1086,19 @@ void func_ovl0B_02_800454F0(void) {
             anim = func_ovl0B_02_80048D98(model, 5);
             task = func_ovl0B_02_80049178(func_ovl0B_02_8004686C, model, 0, 0, 0x130);
             func_ovl0B_02_80049198(0x3C);
-            for (j = 0; j < 3; j++) {
-                for (i = 0; i != 5; i++) {
+            for (i = 0; i < 3; i++) {
+                for (j = 0; j != 5; j++) {
                     if (func_ovl0B_02_80049338(0x100) & 1) {
                         func_ovl0B_02_80049700(0x34);
                     } else {
                         func_ovl0B_02_80049700(0x33);
                     }
-                    func_ovl0B_02_800495C8(0x14, D_ovl0B_02_8004A168[j].x + (0.5 - func_ovl0B_02_80049330()) * 100.0,
-                                           D_ovl0B_02_8004A168[j].y + (0.5 - func_ovl0B_02_80049330()) * 100.0,
-                                           D_ovl0B_02_8004A168[j].z, 0);
+                    func_ovl0B_02_800495C8(0x14, D_ovl0B_02_8004A168[i].x + (0.5 - func_ovl0B_02_80049330()) * 100.0,
+                                           D_ovl0B_02_8004A168[i].y + (0.5 - func_ovl0B_02_80049330()) * 100.0,
+                                           D_ovl0B_02_8004A168[i].z, 0);
                     func_ovl0B_02_80049198(10);
                 }
-                func_ovl0B_02_80048DA0(anim, D_ovl0B_02_8004A144[j], 0x4F);
+                func_ovl0B_02_80048DA0(anim, D_ovl0B_02_8004A144[i], 0x4F);
                 func_ovl0B_02_800491C0();
             }
             func_ovl0B_02_80049700(0x35);
@@ -1141,16 +1135,15 @@ void func_ovl0B_02_800454F0(void) {
             func_ovl0B_02_800491C0();
         }
         if (D_ovl0B_02_8004A3CC == 0x12 && i == 16) {
-            j = 0;
             func_ovl0B_02_80049700(0x2DC);
             star->unkC &= ~1;
             star->unkC |= 0x80;
             star->unk36 = 0;
-            do {
+            for (i = 0; i < 120; i++) {
                 star->unk36 += 1.0666667f;
                 func_ovl0B_02_800491C0();
-            } while (++j < 120);
-            for (j = 0; j < 10; j++) {
+            }
+            for (i = 0; i < 10; i++) {
                 star->unkC &= ~1;
                 func_ovl0B_02_80049198(3);
                 star->unkC |= 1;
@@ -1160,7 +1153,7 @@ void func_ovl0B_02_800454F0(void) {
             func_ovl0B_02_80049490(0xFF, 0xFF, 0xFF, 8);
             func_ovl0B_02_80049470();
             func_ovl0B_02_80049700(0x2DF);
-            for (j = 0; j != 24; j++) {
+            for (i = 0; i != 24; i++) {
                 func_ovl0B_02_80049178(func_ovl0B_02_80046418, NULL, 0, 0, 0x130);
             }
             func_ovl0B_02_80049180(starTask);
