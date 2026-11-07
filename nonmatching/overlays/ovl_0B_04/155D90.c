@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 205, eu 205, jp 209
+ * differing words: us 200, eu 200, jp 203
  *
  * The pages are a table (D_ovl0B_04_800499B8: texts, handler, cursor
  * table, set-up) that func_ovl0B_04_80043ADC runs in turn; pages 1-4 are
@@ -59,8 +59,11 @@
  *   addiu but keeps x in $a2 itself).
  * - 800436C8 14/14: its `li a1,-1`/`andi s2` order before the test (the
  *   rest is 800438FC's rodata relocations).
- * - 800444E8 102/102: 800447DC's registers (d1 in $t0 then $s2, d2/d3
- *   copied to $v1/$v0 before use, unk1 stored by its own lui; its counter
+ * - 800444E8 99/99: 800447DC's registers (d1 in $t0 then $s2, d2/d3
+ *   copied to $v1/$v0 before use: the original splits these ranges (uopt
+ *   split() when the best register costs more than the range saves); unk1
+ *   is stored through the neighbour, (&D_ovl0B_04_8004A480)[1][1] (TRICK),
+ *   for the original's own lui; its counter
  *   D_ovl0B_04_8004A1A0, a function-scope static, is promoted to $t0
  *   where the original reloads it), and its frame (40 vs 24: the dead read
  *   of the not yet set t costs a spill, but gives buttons $t1 and the
@@ -82,7 +85,10 @@
  * - 80043ADC 16/0 (us keeps 36 in $s8 and multiplies; the original keeps
  *   &tbl[3] in $s7 and the table in $s8; p3 set before the loop with a
  *   dead read gets &tbl[3] a register, but only $v0 on entry), 80044BE8 8/16 (the MakeEntries homes 8 bytes high),
- *   80043F24 4/5 (80044394's n - 1 in $v0), 80046180 0/11 (jp 800468F0).
+ *   80043F24 2/2 (80044394: `n - 1` in its own m with a dead read, TRICK,
+ *   gives the original's addiu v0,v1,-1; left is `move v1,zero` scheduled
+ *   after the `sw ra`), 80046180 0/11 (jp 800468F0 and 80046734's
+ *   `sll t8,a1,2` scheduling).
  * Everything else matches.
  */
 #include "common.h"
@@ -1781,7 +1787,7 @@ static void func_ovl0B_04_800447DC(u16 buttons, u8 *ret) {
                     }
                 }
                 if (D_ovl0B_04_8004A490.unk1 != c) {
-                    D_ovl0B_04_8004A490.unk1 = c;
+                    (&D_ovl0B_04_8004A480)[1][1] = c; /* TRICK: through the neighbour, for its own lui */
                     t = 0;
                     if ((D_ovl0B_04_8004A490.unk0 == 7 && D_ovl0B_04_8004A290[7][0] == 0) || D_ovl0B_04_8004A490.unk0 != 7) {
                         D_ovl0B_04_8004A490.unk0--;
@@ -1956,17 +1962,18 @@ static void func_ovl0B_04_80044394(s32 a, s32 b) {
     s32 x;
 #endif
     Obj *o;
+    s32 m;
 
     D_ovl0B_04_80048A20[8] = 0;
     n = 0;
     while (D_ovl0B_04_80048A20[n] != 0) {
         n++;
     }
-    n--;
-    if (!n) {}
-    if (n != -1) {
+    m = n - 1;
+    if (!m) {} /* TRICK: dead read; m = n - 1 its own variable (the original: addiu v0,v1,-1) */
+    if (m != -1) {
 #if VERSION_JP
-        x = 56 - n * 8;
+        x = 56 - m * 8;
 #else
         x = -func_ovl0B_04_80048680(D_ovl0B_04_80048A20) * 0.65f / 2;
 #endif
