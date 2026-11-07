@@ -7,22 +7,19 @@
  * drawer. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 98, eu 98, jp 98
+ * differing words: us 0, eu 0, jp 0
  *
- * func_80260AD8 has the original's size (0x11EC) and frame (0x210); the
- * rest is colouring and slots. What still differs in us:
- * - the entry pointer: the original reuses $v1 for e++ (lw t1,12(v1);
- *   addiu v1,v1,12); this puts e in $t1 and the type in $t2.
- * - colouring: vtx in $t4 and lrt in $t3 (the original has them the other
- *   way round).
- * - switch (mode) case 0 stores th before tw (as in 7C4D0).
- * - the flip block's homes sit 4 bytes low (x0 at 236(sp), original
- *   240(sp)): the original has one word less in the scopes before the
- *   flip block (the GBI macros' _g homes) and one more after it. The
- *   block declares x0 last so the other seven line up with the original.
- * The vertex stores' cn[1] = cn[0] chain is there for uopt: it splits
- * the store run into blocks by size, and the chain moves the split so the
- * gSPVertex temporaries keep the original's priority.
+ * Both functions match (us and eu measured; jp = us). The drawer is
+ * 7C4D0's func_80261CD0 without the alignment, written the same way:
+ * vertices through vtx-> with vtx++ after each, x + tw / y + th written
+ * out (pad0 keeps the frame), tw = th = 56, the for heads. Here:
+ * - each vertex's fields in offset order (ob[0..2], flag, tc[0], tc[1],
+ *   cn[0..3]), one statement per line (7C4D0's order is different);
+ * - the outer loop steps y += th before j++;
+ * - the entry pointer is e = base->entries; e += idx; (the original
+ *   steps $v1 in place for e++), and width, height are read before
+ *   offset;
+ * - the clamps use width - 1 / height - 1 (7C4D0 has - 2).
  */
 #include "common.h"
 #define F3DEX_GBI
@@ -54,20 +51,18 @@ static void func_80260AD0(Gfx **gfxp, Vtx *vtx, s32 mode, u8 *img, u32 width, u3
     s32 j;
     s32 x;
     s32 y;
-    s32 xend;
-    s32 yend;
+    s32 pad0;
     s32 uls;
     s32 ult;
+    s32 lrs;
     s32 tw;
     s32 th;
     s32 tileW;
-    s32 lrs;
     s32 lrt;
 
     switch (mode) {
         case 0:
-            tw = 56;
-            th = 56;
+            tw = th = 56;
             break;
         case 1:
         case 2:
@@ -88,10 +83,9 @@ static void func_80260AD0(Gfx **gfxp, Vtx *vtx, s32 mode, u8 *img, u32 width, u3
     if (ny * th < height) {
         ny++;
     }
-    y = 0;
-    for (j = 0; j < ny; j++) {
+    for (j = 0, y = 0; j < ny; y += th, j++) {
         tw = tileW;
-        for (i = 0, x = 0; i < nx; i++) {
+        for (i = 0, x = 0; i < nx; i++, x += tileW) {
             if (width < x + tw) {
                 tw = width - x;
             }
@@ -104,12 +98,10 @@ static void func_80260AD0(Gfx **gfxp, Vtx *vtx, s32 mode, u8 *img, u32 width, u3
             if (th < 0) {
                 th = 1;
             }
-            xend = x + tw;
-            yend = y + th;
             uls = x;
             ult = y;
-            lrs = xend;
-            lrt = yend;
+            lrs = x + tw;
+            lrt = y + th;
             if (--uls < 0) {
                 uls = 0;
             }
@@ -137,6 +129,7 @@ static void func_80260AD0(Gfx **gfxp, Vtx *vtx, s32 mode, u8 *img, u32 width, u3
                     break;
             }
             {
+                s32 x0;
                 s32 x1;
                 s32 y0;
                 s32 y1;
@@ -144,13 +137,12 @@ static void func_80260AD0(Gfx **gfxp, Vtx *vtx, s32 mode, u8 *img, u32 width, u3
                 s32 s1;
                 s32 t0;
                 s32 t1;
-                s32 x0;
 
                 switch (flip) {
                     case 0:
                         x0 = x;
-                        y0 = height - yend;
-                        x1 = xend;
+                        y0 = height - (y + th);
+                        x1 = x + tw;
                         y1 = height - y;
                         s0 = TC(x0 - 0.5);
                         t0 = TC(height - (y0 - 0.5));
@@ -158,8 +150,8 @@ static void func_80260AD0(Gfx **gfxp, Vtx *vtx, s32 mode, u8 *img, u32 width, u3
                         t1 = TC(height - (y1 - 0.5));
                         break;
                     case 1:
-                        x0 = width - xend;
-                        y0 = height - yend;
+                        x0 = width - (x + tw);
+                        y0 = height - (y + th);
                         x1 = width - x;
                         y1 = height - y;
                         s0 = TC(width - (x0 - 0.5));
@@ -170,71 +162,73 @@ static void func_80260AD0(Gfx **gfxp, Vtx *vtx, s32 mode, u8 *img, u32 width, u3
                     case 2:
                         x0 = x;
                         y0 = y;
-                        x1 = xend;
-                        y1 = yend;
+                        x1 = x + tw;
+                        y1 = y + th;
                         s0 = TC(x0 - 0.5);
                         t0 = TC(y0 - 0.5);
                         s1 = TC(x1 - 0.5);
                         t1 = TC(y1 - 0.5);
                         break;
                     case 3:
-                        x0 = width - xend;
+                        x0 = width - (x + tw);
                         y0 = y;
                         x1 = width - x;
-                        y1 = yend;
+                        y1 = y + th;
                         s0 = TC(width - (x0 - 0.5));
                         t0 = TC(y0 - 0.5);
                         s1 = TC(width - (x1 - 0.5));
                         t1 = TC(y1 - 0.5);
                         break;
                 }
-                vtx[0].v.ob[0] = x0 & 0xFFFF;
-                vtx[0].v.ob[1] = y0 & 0xFFFF;
-                vtx[0].v.tc[0] = s0 & 0xFFFF;
-                vtx[0].v.tc[1] = t0 & 0xFFFF;
-                vtx[1].v.ob[1] = y0 & 0xFFFF;
-                vtx[1].v.tc[1] = t0 & 0xFFFF;
-                vtx[3].v.ob[0] = x0 & 0xFFFF;
-                vtx[3].v.tc[0] = s0 & 0xFFFF;
-                vtx[0].v.ob[2] = 0;
-                vtx[0].v.flag = 0;
-                vtx[0].v.cn[0] = 0xFF;
-                vtx[0].v.cn[1] = 0xFF;
-                vtx[0].v.cn[2] = 0xFF;
-                vtx[0].v.cn[3] = 0xFF;
-                vtx[1].v.ob[0] = x1 & 0xFFFF;
-                vtx[1].v.ob[2] = 0;
-                vtx[1].v.flag = 0;
-                vtx[1].v.tc[0] = s1 & 0xFFFF;
-                vtx[1].v.cn[0] = 0xFF;
-                vtx[1].v.cn[1] = 0xFF;
-                vtx[1].v.cn[2] = 0xFF;
-                vtx[1].v.cn[3] = 0xFF;
-                vtx[2].v.ob[0] = x1 & 0xFFFF;
-                vtx[2].v.ob[1] = y1 & 0xFFFF;
-                vtx[2].v.ob[2] = 0;
-                vtx[2].v.flag = 0;
-                vtx[2].v.tc[0] = s1 & 0xFFFF;
-                vtx[2].v.tc[1] = t1 & 0xFFFF;
-                vtx[2].v.cn[1] = vtx[2].v.cn[0] = 0xFF;
-                vtx[2].v.cn[2] = 0xFF;
-                vtx[2].v.cn[3] = 0xFF;
-                vtx[3].v.ob[1] = y1 & 0xFFFF;
-                vtx[3].v.ob[2] = 0;
-                vtx[3].v.flag = 0;
-                vtx[3].v.tc[1] = t1 & 0xFFFF;
-                vtx[3].v.cn[0] = 0xFF;
-                vtx[3].v.cn[1] = 0xFF;
-                vtx[3].v.cn[2] = 0xFF;
-                vtx[3].v.cn[3] = 0xFF;
-                vtx += 4;
+                vtx->v.ob[0] = x0 & 0xFFFF;
+                vtx->v.ob[1] = y0 & 0xFFFF;
+                vtx->v.ob[2] = 0;
+                vtx->v.flag = 0;
+                vtx->v.tc[0] = s0 & 0xFFFF;
+                vtx->v.tc[1] = t0 & 0xFFFF;
+                vtx->v.cn[0] = 0xFF;
+                vtx->v.cn[1] = 0xFF;
+                vtx->v.cn[2] = 0xFF;
+                vtx->v.cn[3] = 0xFF;
+                vtx++;
+                vtx->v.ob[0] = x1 & 0xFFFF;
+                vtx->v.ob[1] = y0 & 0xFFFF;
+                vtx->v.ob[2] = 0;
+                vtx->v.flag = 0;
+                vtx->v.tc[0] = s1 & 0xFFFF;
+                vtx->v.tc[1] = t0 & 0xFFFF;
+                vtx->v.cn[0] = 0xFF;
+                vtx->v.cn[1] = 0xFF;
+                vtx->v.cn[2] = 0xFF;
+                vtx->v.cn[3] = 0xFF;
+                vtx++;
+                vtx->v.ob[0] = x1 & 0xFFFF;
+                vtx->v.ob[1] = y1 & 0xFFFF;
+                vtx->v.ob[2] = 0;
+                vtx->v.flag = 0;
+                vtx->v.tc[0] = s1 & 0xFFFF;
+                vtx->v.tc[1] = t1 & 0xFFFF;
+                vtx->v.cn[0] = 0xFF;
+                vtx->v.cn[1] = 0xFF;
+                vtx->v.cn[2] = 0xFF;
+                vtx->v.cn[3] = 0xFF;
+                vtx++;
+                vtx->v.ob[0] = x0 & 0xFFFF;
+                vtx->v.ob[1] = y1 & 0xFFFF;
+                vtx->v.ob[2] = 0;
+                vtx->v.flag = 0;
+                vtx->v.tc[0] = s0 & 0xFFFF;
+                vtx->v.tc[1] = t1 & 0xFFFF;
+                vtx->v.cn[0] = 0xFF;
+                vtx->v.cn[1] = 0xFF;
+                vtx->v.cn[2] = 0xFF;
+                vtx->v.cn[3] = 0xFF;
+                vtx++;
                 gSPVertex(gfx++, vtx - 4, 4, 0);
                 gSP1Triangle(gfx++, 0, 1, 2, 0);
                 gSP1Triangle(gfx++, 0, 2, 3, 0);
             }
-            x += tileW;
         }
-        y += th;
     }
     *gfxp = gfx;
 }
@@ -249,11 +243,12 @@ void func_80260AD8(Gfx **gdl, Vtx *vtx, TexFile *base, s32 idx, u8 flip) {
     s32 dummy2;
     s32 mode;
 
-    e = &base->entries[idx];
+    e = base->entries;
+    e += idx;
     gfx = *gdl;
-    offset = e->offset;
     width = e->width;
     height = e->height;
+    offset = e->offset;
     switch (e->type) {
         case 0x12:
             e++;
