@@ -1,7 +1,6 @@
 /*
- * NON_MATCHING: ovl_15_02's game object, complete; not in the ROM.
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * ovl_15_02's game object, IDO -O3; it matches in us, eu and jp. Its
+ * data: .data 0x1D0, .rodata 0x2A0, .bss 0x230, the same in every version.
  *
  * A first draft: m2c output (ZeroJump prototypes from the other drafts,
  * scratch/newovl5/protos.h, and the file's own signatures, own.h) made to
@@ -117,6 +116,10 @@
  * of the f64 constants 900.0 and 1900.0. D_80051498 and D_800514B8
  * are Vec3f (80051498 has a 4-byte filler after it). 80043688 matches with dead reads
  * (`if (r == 60) {}` etc.) that make uopt colour each loop's divisor.
+ * -O3 drops unreferenced .bss, so a dead `if (0)` in the unused stub
+ * 8004F820 stores to every filler; the 12- and 8-byte fillers are split
+ * (800513BC/C0/C4, 800513EC/F0) because IDO 8-aligns arrays of 8 bytes
+ * or more (scratch/bsscheck.sh: every symbol at its address, .bss 0x230).
  */
 #include "common.h"
 
@@ -281,13 +284,16 @@ s32 D_ovl15_02_80051368[17];
 s32 * D_ovl15_02_800513AC;
 UnkStructA * D_ovl15_02_800513B0[2];
 f32 D_ovl15_02_800513B8;
-u8 D_ovl15_02_800513BC[12];
+u8 D_ovl15_02_800513BC[4];
+u8 D_ovl15_02_800513C0[4];
+u8 D_ovl15_02_800513C4[4];
 Vec3f D_ovl15_02_800513C8;
 u8 D_ovl15_02_800513D4[4];
 Vec3f D_ovl15_02_800513D8;
 u8 D_ovl15_02_800513E4[4];
 s32 D_ovl15_02_800513E8;
-u8 D_ovl15_02_800513EC[8];
+u8 D_ovl15_02_800513EC[4];
+u8 D_ovl15_02_800513F0[4];
 UnkStructA * D_ovl15_02_800513F4;
 UnkStructC * D_ovl15_02_800513F8;
 s32 D_ovl15_02_800513FC;
@@ -585,6 +591,7 @@ u32 D_ovl15_02_8005102C[5] = { 0x00020001, 0x42AE0000, 0x3DCCCCCD, 0x3D4CCCCD, 0
 
 /* unused: the stubs IDO -O3 leaves after the tail */
 static void func_ovl15_02_8004F820(void) {
+    if (0) { D_ovl15_02_80051324[0] = 0; D_ovl15_02_80051334[0] = 0; D_ovl15_02_80051348[0] = 0; D_ovl15_02_80051354[0] = 0; D_ovl15_02_80051364[0] = 0; D_ovl15_02_800513BC[0] = 0; D_ovl15_02_800513C0[0] = 0; D_ovl15_02_800513C4[0] = 0; D_ovl15_02_800513D4[0] = 0; D_ovl15_02_800513E4[0] = 0; D_ovl15_02_800513EC[0] = 0; D_ovl15_02_800513F0[0] = 0; D_ovl15_02_80051494[0] = 0; D_ovl15_02_800514A4[0] = 0; D_ovl15_02_800514B4[0] = 0; D_ovl15_02_800514EC[0] = 0; D_ovl15_02_800514FC[0] = 0; D_ovl15_02_8005150C[0] = 0; D_ovl15_02_80051534[0] = 0; D_ovl15_02_80051548[0] = 0; }
 }
 
 static void func_ovl15_02_8004F828(void) {

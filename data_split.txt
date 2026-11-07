@@ -460,6 +460,10 @@ ovl_13_02 2697F0 0x460 0x340 0x3A0
 ovl_15_01 ovl_15_01_entry 0 0 0
 ovl_15_01 28BB90 0x30 0x230 0x1B0
 
+# ovl_15_02: all C (-O3)
+ovl_15_02 ovl_15_02_entry 0 0 0
+ovl_15_02 296AC0 0x1D0 0x2A0 0x230
+
 # ovl_16_01: all C (-g); .rodata is its debug messages, a float and the
 # handler's jump table
 ovl_16_01 ovl_16_01_entry 0 0 0
