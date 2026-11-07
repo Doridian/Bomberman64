@@ -6,7 +6,7 @@
  * floats). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 70, eu 70, jp 61
+ * differing words: us 51, eu 51, jp 50
  * jp's code differences are drafted (`#if VERSION_JP`), its .data is not:
  * its five own strings are only declared, and its text tables and
  * positions are us's.
@@ -253,6 +253,23 @@
  *   it un-inlines the loop) and dead reads around ERASE's 800464C0(1)
  *   call (the neighbour candidate still ties to $s7, owned by `done`,
  *   coloured first).
+ *
+ * wAF (us/eu 70 -> 51, jp 61 -> 50): the menus' inner statics, by order.
+ * - COPY_ASK (us): `loop = 1; sub = 0;` ahead of the 8004473C call (the
+ *   original's `li s8,1` before its store), and 80049368's slot as
+ *   `(u32)slot`. The original still loads sub into s7 where this has v0.
+ * - LEVEL_FILE is defined after LEVEL_ASK (a static's definition order
+ *   sets its .loc lines, and so the schedule where the two are inlined
+ *   together), with `loop = 0; do {` on one line (the store's place).
+ * - LEVEL_ASK: `result = 0; side = arg1;` as statements, not initialisers,
+ *   and each sound ahead of its result (`SE(1, 15); result = 0x10;`).
+ * - ERASE_ASK: `keep = 0;` after the 80043010(6, ...) call.
+ * - Left: LEVEL_FILE's dead `sw s0,208(sp)` of result after the loop
+ *   (jp `sw s1,72(sp)`; dead uses keep it but take s5/s6 instead of
+ *   splitting), ERASE's tail address in s7 not fp (no static clobbers one
+ *   without the other, so cupcosts tie), 80044BE4's t4/t2 (a FADE count
+ *   variable un-inlines it), 8004518C's `move v0,s6` (ours v1: casts,
+ *   loop-test forms and copies of `pressed` change nothing).
  *
  * Loops: a loop with a constant count and no call in it is unrolled
  * (80044BE4's four unk36 = 0), and 80045340 copies the name with an index
@@ -1157,7 +1174,6 @@ static s32 ERASE_ASK(s32 slot, Col_ovl0B_06 *off, Col_ovl0B_06 *on) {
                 for (i = 0; i < 3; i++) {
                     D_ovl0B_06_80049B40[i].unk18->unkC |= 1;
                 }
-                keep = 0;
                 D_ovl0B_06_8004992C = 0x43C8;
                 func_ovl0B_06_80048CF0();
                 SEF(1, 15);
@@ -1174,6 +1190,7 @@ static s32 ERASE_ASK(s32 slot, Col_ovl0B_06 *off, Col_ovl0B_06 *on) {
                 }
                 func_ovl0B_06_80043280();
                 func_ovl0B_06_80043010(6, D_ovl0B_06_80049A44);
+                keep = 0;
                 func_ovl0B_06_800430F0(1);
                 func_ovl0B_06_80043480(1);
                 done = 1;
@@ -1250,71 +1267,9 @@ static void func_ovl0B_06_80046F14(s32 arg3, s32 arg0) {
 }
 
 
-/* @80046868 */
-static s32 LEVEL_FILE(s32 slot) {
-    s32 loop;
-    s32 result;
-    s32 ret;
-    Label_ovl0B_06 *label;
-#if VERSION_JP
-    s32 pad;
-#else
-    s32 pad[9];
-#endif
-
-    ret = 10;
-    func_ovl0B_06_800464C0(0);
-    label = &D_ovl0B_06_80049A44[slot];
-    label[1].unk18->unkC |= 1;
-    func_ovl0B_06_80043450(2, D_ovl0B_06_80049AEC);
-#if VERSION_JP
-    SET_TEXT(D_ovl0B_06_80049A44[0].unk4, D_ovl0B_06_8004937C_jp, D_ovl0B_06_80049A44[0].unk14);
-    func_ovl0B_06_800490B0(D_ovl0B_06_80049A44[0].unk4, -40, 0);
-    SET_TEXT(D_ovl0B_06_80049A44[5].unk4, D_ovl0B_06_8004937C_jp, D_ovl0B_06_80049A44[5].unk14);
-    func_ovl0B_06_800490B0(D_ovl0B_06_80049A44[5].unk4, -40, 0);
-#else
-    func_ovl0B_06_80045C24(&D_ovl0B_06_80049A44[0], D_ovl0B_06_800494A4, -0x1C, 0, D_ovl0B_06_800499F0[3].unk14, &D_ovl0B_06_80049A44[5], D_ovl0B_06_8004999C[11].unk14);
-#endif
-    func_ovl0B_06_800433B0(&D_ovl0B_06_80049A44[5]);
-    loop = 0;
-    do {
-        result = LEVEL_ASK(slot, 0);
-#if !VERSION_JP
-        if (0) { D_ovl0B_06_8004A5B4 = (s32) &result; } /* TRICK: result kept in memory (us) */
-#endif
-        if ((result & 0xF0) != 0x30) {
-            if (!(result & 0xF)) {
-                ret = 0;
-            } else {
-                ret = 1;
-            }
-        }
-        func_ovl0B_06_80048CF0();
-    } while (loop != 0);
-    if ((result & 0xF0) == 0x30) {
-#if VERSION_JP
-        SET_TEXT(D_ovl0B_06_80049A44[0].unk4, D_ovl0B_06_80049480, D_ovl0B_06_80049A44[0].unk14);
-        func_ovl0B_06_800490B0(D_ovl0B_06_80049A44[0].unk4, 40, 0);
-        SET_TEXT(D_ovl0B_06_80049A44[5].unk4, D_ovl0B_06_80049480, D_ovl0B_06_80049A44[5].unk14);
-        func_ovl0B_06_800490B0(D_ovl0B_06_80049A44[5].unk4, 40, 0);
-#else
-        func_ovl0B_06_80045C24(&D_ovl0B_06_80049A44[0], D_ovl0B_06_80049480, 0, 0, D_ovl0B_06_800499F0[3].unk14, &D_ovl0B_06_80049A44[5], D_ovl0B_06_8004999C[11].unk14);
-#endif
-        func_ovl0B_06_800433B0(&D_ovl0B_06_80049A44[5]);
-        func_ovl0B_06_800464C0(1);
-        label[1].unk18->unkC &= ~1;
-        func_ovl0B_06_80043010(2, D_ovl0B_06_80049AEC);
-#if !VERSION_JP
-func_ovl0B_06_80046858();
-#endif
-    }
-    return ret;
-}
-
-
 /* @80046860: a file's level, normal or hard (inlined in us, not in jp) */
 static s32 LEVEL_ASK(s32 slot, s32 arg1) {
-    s32 side = arg1;
+    s32 side;
     s32 result;
     s32 held;
     s32 pressed;
@@ -1326,6 +1281,7 @@ static s32 LEVEL_ASK(s32 slot, s32 arg1) {
     func_ovl0B_06_80046858();
     t = 0.0f;
     result = 0;
+    side = arg1;
     dy = slot * 40;
     func_ovl0B_06_80043040(&D_ovl0B_06_80049E44[4], &D_ovl0B_06_8004A0C4[10], dy);
     func_ovl0B_06_80043040(&D_ovl0B_06_80049E44[5], &D_ovl0B_06_8004A0C4[12], dy);
@@ -1376,14 +1332,14 @@ static s32 LEVEL_ASK(s32 slot, s32 arg1) {
             D_ovl0B_06_80049E44[6].unk0->unkC &= ~1;
             SE(0, 5);
         } else if (pressed & 0x8000) {
+            SE(1, 15);
             result = 0x10;
-            SE(1, 15);
         } else if (pressed & 0x1000) {
-            result = 0x20;
             SE(1, 15);
+            result = 0x20;
         } else if (pressed & 0x4000) {
-            result = 0x30;
             SE(2, 10);
+            result = 0x30;
         }
         func_ovl0B_06_80048CF0();
     }
@@ -1398,6 +1354,67 @@ static s32 LEVEL_ASK(s32 slot, s32 arg1) {
         D_ovl0B_06_80049928 = 1;
     }
     return result | side;
+}
+
+
+/* @80046868 */
+static s32 LEVEL_FILE(s32 slot) {
+    s32 loop;
+    s32 result;
+    s32 ret;
+    Label_ovl0B_06 *label;
+#if VERSION_JP
+    s32 pad;
+#else
+    s32 pad[9];
+#endif
+
+    ret = 10;
+    func_ovl0B_06_800464C0(0);
+    label = &D_ovl0B_06_80049A44[slot];
+    label[1].unk18->unkC |= 1;
+    func_ovl0B_06_80043450(2, D_ovl0B_06_80049AEC);
+#if VERSION_JP
+    SET_TEXT(D_ovl0B_06_80049A44[0].unk4, D_ovl0B_06_8004937C_jp, D_ovl0B_06_80049A44[0].unk14);
+    func_ovl0B_06_800490B0(D_ovl0B_06_80049A44[0].unk4, -40, 0);
+    SET_TEXT(D_ovl0B_06_80049A44[5].unk4, D_ovl0B_06_8004937C_jp, D_ovl0B_06_80049A44[5].unk14);
+    func_ovl0B_06_800490B0(D_ovl0B_06_80049A44[5].unk4, -40, 0);
+#else
+    func_ovl0B_06_80045C24(&D_ovl0B_06_80049A44[0], D_ovl0B_06_800494A4, -0x1C, 0, D_ovl0B_06_800499F0[3].unk14, &D_ovl0B_06_80049A44[5], D_ovl0B_06_8004999C[11].unk14);
+#endif
+    func_ovl0B_06_800433B0(&D_ovl0B_06_80049A44[5]);
+    loop = 0; do { /* one line: the store's schedule */
+        result = LEVEL_ASK(slot, 0);
+#if !VERSION_JP
+        if (0) { D_ovl0B_06_8004A5B4 = (s32) &result; } /* TRICK: result kept in memory (us) */
+#endif
+        if ((result & 0xF0) != 0x30) {
+            if (!(result & 0xF)) {
+                ret = 0;
+            } else {
+                ret = 1;
+            }
+        }
+        func_ovl0B_06_80048CF0();
+    } while (loop != 0);
+    if ((result & 0xF0) == 0x30) {
+#if VERSION_JP
+        SET_TEXT(D_ovl0B_06_80049A44[0].unk4, D_ovl0B_06_80049480, D_ovl0B_06_80049A44[0].unk14);
+        func_ovl0B_06_800490B0(D_ovl0B_06_80049A44[0].unk4, 40, 0);
+        SET_TEXT(D_ovl0B_06_80049A44[5].unk4, D_ovl0B_06_80049480, D_ovl0B_06_80049A44[5].unk14);
+        func_ovl0B_06_800490B0(D_ovl0B_06_80049A44[5].unk4, 40, 0);
+#else
+        func_ovl0B_06_80045C24(&D_ovl0B_06_80049A44[0], D_ovl0B_06_80049480, 0, 0, D_ovl0B_06_800499F0[3].unk14, &D_ovl0B_06_80049A44[5], D_ovl0B_06_8004999C[11].unk14);
+#endif
+        func_ovl0B_06_800433B0(&D_ovl0B_06_80049A44[5]);
+        func_ovl0B_06_800464C0(1);
+        label[1].unk18->unkC &= ~1;
+        func_ovl0B_06_80043010(2, D_ovl0B_06_80049AEC);
+#if !VERSION_JP
+func_ovl0B_06_80046858();
+#endif
+    }
+    return ret;
 }
 
 
@@ -1514,8 +1531,10 @@ void COPY_FILE(void) {
         sel = func_ovl0B_06_80045F20(&D_ovl0B_06_8004A244, &D_ovl0B_06_8004A254, 5, sel & 0xF);
         if ((sel & 0xF0) != 0x30) {
             if ((sel & 0xF) == 3) {
+#line 9000
                 sel &= 0xF0;
                 sel |= COPY_ASK();
+#line 1520
             } else if ((sel & 0xF) == 4) {
                 func_ovl0B_06_800459D8(0);
             } else {
@@ -1617,9 +1636,9 @@ static s32 COPY_ASK(void) {
     s32 sub;
     s32 slot;
 
+    loop = 1;
     sub = 0;
     func_ovl0B_06_80048CA8(MSG_TASK, NULL, 0, 0, 0x130);
-    loop = 1;
     func_ovl0B_06_80044908(0);
 #if VERSION_JP
     SET_TEXT(D_ovl0B_06_80049B94[0].unk4, D_ovl0B_06_800493EC_jp, D_ovl0B_06_80049B94[0].unk14);
@@ -1641,7 +1660,7 @@ static s32 COPY_ASK(void) {
             loop = 0;
         } else {
             slot = sub & 0xF;
-            if (func_ovl0B_06_80049368(slot, 0) == 10) {
+            if (func_ovl0B_06_80049368((u32)slot, 0) == 10) {
                 D_ovl0B_06_8004992C = 0x1064;
                 /* TRICK: SE written out with slot as its wait (us: slot and the wait share $s7) */
                 slot = 50;
