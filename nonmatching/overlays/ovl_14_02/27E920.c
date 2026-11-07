@@ -1,7 +1,7 @@
 /*
  * NON_MATCHING: ovl_14_02's game object, complete; not in the ROM.
  * flags: -O3
- * differing words: us 100, eu 100, jp 100
+ * differing words: us 7, eu 7, jp 7
  *
  * 135 of 138 functions match (the same in every version). A first draft:
  * m2c output (with the ZeroJump prototypes of the other drafts and the
@@ -137,13 +137,21 @@
  * ucode, the CSE and the temp numbering; pass 13's empty loop after
  * the 8004F630 call is gone (size right again), and pos is a Vec3f.
  *
- * What still differs, in large: 8004D640 ((s32)dx in $v1, not $a2; one
- * beq's operand order; hit loaded into $t9, not $v0), 8004BDE8 (&D_800503C0 kept
- * in $s3; in the original only &D_8005038C gets a saved register: uopt
- * sums &D_800503C0's two loop uses to 20 against &D_8005038C's 10, so
- * no ordering of the two follows from the source as written). The
- * infinite loop 8004BF90, and 8004BDE8 before it, also differ in their
- * trailing alignment nops (8004BF90's 8 words are only that).
+ * Pass 17: 8004BDE8 matches (84 -> 0; 8004BF90's alignment follows,
+ * 8 -> 0). No `cur` local: the full D_800503C0 chain is repeated in each
+ * inner-loop test, and the outer body is `if (hit) call(); prev =
+ * chain;`, so PRE inserts or hoists those loads, and PRE-inserted
+ * computations add no LDA live unit (uoptreg1 func_0045FBB4): only
+ * &D_8005038C gets a saved register, as in the original. 8004D640
+ * 8 -> 7: ints ix and iz (taking two of pad3's words) assigned inside
+ * the first compare, `(s32) step[0] != (ix = dx)`, then used in the
+ * two tests; they are copy-propagated (frame unchanged) and fix the
+ * dz beq's operand order.
+ *
+ * What still differs: 8004D640 only. (s32)dx sits in $v1, not $a2 (5
+ * words; in the original $v1 is busy in the unpack block, with no
+ * visible occupant), and hit is reloaded into $t9 for its test where
+ * the original has $v0 (2 words).
  */
 #include "common.h"
 
@@ -815,7 +823,9 @@ void func_ovl14_02_8004D640(UnkStructA *obj) {
     s32 id;
     s32 packed;
     s32 hi;
-    s32 pad3[4];
+    s32 ix;
+    s32 iz;
+    s32 pad3[2];
 
     func_ovl14_02_8004D638();
     func_ovl14_02_8004D630();
@@ -842,16 +852,16 @@ void func_ovl14_02_8004D640(UnkStructA *obj) {
         packed = (s16) packed;
         step[0] = hi * 0.002f;
         step[2] = packed * 0.002f;
-        if ((s32) step[0] != (s32) dx) {
+        if ((s32) step[0] != (ix = dx)) {
             if (hi) {} /* dead read: keeps hi out of $v1 (a0 like the original) */
             obj->unk40->unk10 = obj->unk58;
-            if ((s32) dx < (s32) step[0]) {
+            if (ix < (s32) step[0]) {
                 step[0] -= (dz != 0.0f ? 0.707f : 1.0f) * (dx != 0.0f ? D_ovl14_02_8004FF04 : D_ovl14_02_8004FF00);
                 if (step[0] < dx) {
                     step[0] = dx;
                 }
                 func_ovl14_02_8004D580(dx);
-            } else if ((s32) step[0] < (s32) dx) {
+            } else if ((s32) step[0] < ix) {
                 step[0] += (dz != 0.0f ? 0.707f : 1.0f) * (dx != 0.0f ? D_ovl14_02_8004FF04 : D_ovl14_02_8004FF00);
                 if (dx < step[0]) {
                     step[0] = dx;
@@ -861,15 +871,15 @@ void func_ovl14_02_8004D640(UnkStructA *obj) {
             }
             obj->unk40->unk10 += step[0];
         }
-        if ((s32) step[2] != (s32) dz) {
+        if ((s32) step[2] != (iz = dz)) {
             obj->unk40->unk18 = obj->unk60;
-            if ((s32) dz < (s32) step[2]) {
+            if (iz < (s32) step[2]) {
                 step[2] -= (dx != 0.0f ? 0.707f : 1.0f) * (dz != 0.0f ? D_ovl14_02_8004FF04 : D_ovl14_02_8004FF00);
                 if (step[2] < dz) {
                     step[2] = dz;
                 }
                 func_ovl14_02_8004D580(dz);
-            } else if ((s32) step[2] < (s32) dz) {
+            } else if ((s32) step[2] < iz) {
                 step[2] += (dx != 0.0f ? 0.707f : 1.0f) * (dz != 0.0f ? D_ovl14_02_8004FF04 : D_ovl14_02_8004FF00);
                 if (dz < step[2]) {
                     step[2] = dz;
@@ -1467,32 +1477,30 @@ loop_1:
 
 void func_ovl14_02_8004BDE8(void) {
     f32 prev;
-    f32 cur;
     s32 i;
-    f32 marks[2] = { 20.0f, 60.0f };
     s32 hit;
+    f32 marks[2] = { 20.0f, 60.0f };
 
     prev = D_ovl14_02_800503C0->unk40->unk48->unk4->unk4;
     while (TRUE) {
         if (D_ovl14_02_8005038C == 0) {
+            i = 0;
             hit = FALSE;
-            cur = D_ovl14_02_800503C0->unk40->unk48->unk4->unk4;
-            for (i = 0; i < 2; i++) {
-                if (prev < cur) {
-                    if (marks[i] <= cur && prev < marks[i]) {
+            for (; i < 2; i++) {
+                if (prev < D_ovl14_02_800503C0->unk40->unk48->unk4->unk4) {
+                    if (marks[i] <= D_ovl14_02_800503C0->unk40->unk48->unk4->unk4 && prev < marks[i]) {
                         hit = TRUE;
                     }
                 } else {
-                    if (cur < marks[i] && marks[i] <= prev) {
+                    if (D_ovl14_02_800503C0->unk40->unk48->unk4->unk4 < marks[i] && marks[i] <= prev) {
                         hit = TRUE;
                     }
                 }
             }
             if (hit) {
                 func_ovl14_02_80043358(0x125, D_ovl14_02_800503C0);
-                cur = D_ovl14_02_800503C0->unk40->unk48->unk4->unk4;
             }
-            prev = cur;
+            prev = D_ovl14_02_800503C0->unk40->unk48->unk4->unk4;
         }
         func_ovl14_02_8004F7A0();
     }
