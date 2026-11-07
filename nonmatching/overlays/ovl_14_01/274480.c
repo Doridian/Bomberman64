@@ -1,10 +1,10 @@
 /*
  * NON_MATCHING: ovl_14_01's game object, complete; not in the ROM.
  * flags: -O3
- * differing words: us 670, eu 670, jp 670
+ * differing words: us 373, eu 373, jp 373
  *
  * The text is the same in every version (only jp's ZeroJump numbers
- * differ). 74 of 89 functions match. m2c output (with the ZeroJump
+ * differ). 75 of 89 functions match. m2c output (with the ZeroJump
  * prototypes of the other drafts, scratch/newovl2/protos.h, and the
  * file's own in own.h) made to compile, then tuned by hand
  * (scratch/newovl2/r/).
@@ -35,22 +35,32 @@
  * down to unk4 where that is the original's store order); 80046648 walks
  * arg1 and keeps a copy for the D_8004D560 test.
  *
- * What still differs (15 functions):
- * - 8004A914 (212): clean C; the original keeps &D_8004D4F0 in v1 for
- *   one store and indexes D_8004D6F0 with $zero (D_8004D6C8 just stored
- *   0), which shifts every register after it.
- * - 80049814 (185): clean C; frame 64 vs 40 (the original keeps links
- *   in its home slot, l at sp+0x20, p in $s0 and parts in $s1 only).
+ * Pass 5 (scratch/newovl2/r4/): 8004A914 matches with two chained
+ * stores, `D_8004D4EC = D_8004D4F0 = -1` and `D_8004D6CC = D_8004D6C8 =
+ * 0`: the inner global is stored first through a coloured address (v1,
+ * t0), and the D_8004D6F0 index after it is the stored 0 in $zero.
+ *
+ * What still differs (14 functions):
+ * - 80049814 (106): the original keeps the D_8004D190/1CC address in v0
+ *   (ours v1: v0 still holds the call's result in the same block), and
+ *   reloads D_8004D4DC with its own lui at the end (ours keeps
+ *   &D_8004D4DC in v1, one word longer, which shifts 8004A11C's nops).
+ *   `l` is `volatile` (semantics unchanged): the original keeps it in its
+ *   frame slot, which gives the 40-byte frame. `if (v) {}` (no code) after
+ *   the if/else keeps v live across the join, which colours it.
  * - 800488B0 (49): the inner Vec3fs at sp 2C/1C, 7 unexplained words
  *   between n and a.
- * - 800467C0 (44), 8004654C (12): the store to D_8004D6A0.y in each
- *   loop goes through its own lui (%lo(D_8004D6A4)) in the original.
+ * - 800467C0 (44), 8004654C (4): the store to D_8004D6A0.y in each
+ *   loop goes through its own lui (%lo(D_8004D6A4)) in the original
+ *   (uncoloured address; struct, separate f32s, casts, (&x)[1], volatile
+ *   all give the same or worse). 8004654C uses one counter for both
+ *   loops (that keeps the first one's slti).
  * - 800437B8 (40): one word short (the original's a0 load of
  *   D_8004D5DC->unk40 waits a nop, `move a1,zero` is in the jal slot),
  *   which makes 80043B20 one alignment nop longer (13).
  * - 80043010 (37): store order of the link triples.
  * - 80048ABC (23): v0 vs t0 for the 2 stored to unk0.
- * - 8004A11C (17): the infinite loop's trailing alignment nops (size
+ * - 8004A11C (19): the infinite loop's trailing alignment nops (size
  *   follows the functions before it, 80049814 among them).
  * - 800432D8 (15): the original keeps 1.0 and 100.0 in $fs regs in the
  *   first loop and reloads 120.0, ours hoists 120.0.
@@ -657,14 +667,13 @@ void func_ovl14_01_8004AF68(void) {
 }
 
 void func_ovl14_01_8004A914(void) {
+    s32 pad;
     Vec3f angle;
     s32 i;
-    s32 pad;
 
     D_ovl14_01_8004D4E4 = -1;
     D_ovl14_01_8004D4E8 = -1;
-    D_ovl14_01_8004D4F0 = -1;
-    D_ovl14_01_8004D4EC = -1;
+    D_ovl14_01_8004D4EC = D_ovl14_01_8004D4F0 = -1;
     D_ovl14_01_8004D6C0 = 0;
     D_ovl14_01_8004D6C4 = 0;
     D_ovl14_01_8004D53C = 0;
@@ -696,8 +705,7 @@ void func_ovl14_01_8004A914(void) {
         D_ovl14_01_8004D6F0[i].z += D_ovl14_01_8004D6B0.z;
         angle.x = WRAP360(angle.x + 45.0f);
     }
-    D_ovl14_01_8004D6C8 = 0;
-    D_ovl14_01_8004D6CC = 0;
+    D_ovl14_01_8004D6CC = D_ovl14_01_8004D6C8 = 0;
     D_ovl14_01_8004D690.x = D_ovl14_01_8004D6F0[D_ovl14_01_8004D6C8].x;
     D_ovl14_01_8004D690.y = D_ovl14_01_8004D6F0[D_ovl14_01_8004D6C8].y;
     D_ovl14_01_8004D690.z = D_ovl14_01_8004D6F0[D_ovl14_01_8004D6C8].z;
@@ -1128,60 +1136,61 @@ void func_ovl14_01_80049B70(void) {
 }
 
 void func_ovl14_01_80049814(s32 id, UnkStructA **parts, Link_ovl14_01 *links) {
-    UnkStructA **p;
-    Link_ovl14_01 *l;
+    UnkStructA **base;
+    Link_ovl14_01 * volatile l;
     UnkStructA *o;
     Vec3f *v;
     f32 s;
     s32 i;
 
-    p = parts;
-    *p = func_ovl14_01_8004C8F0(-1, 0x400000, D_ovl14_01_8004D5E0);
+    base = parts;
+    *parts = func_ovl14_01_8004C8F0(-1, 0x400000, D_ovl14_01_8004D5E0);
     if (id == 0x1C8) {
-        (*p)->unk4C = -498.0f;
-        D_ovl14_01_8004D4DC = D_ovl14_01_8004D190;
+        (*parts)->unk4C = -498.0f;
+        D_ovl14_01_8004D4DC = v = D_ovl14_01_8004D190;
     } else {
-        (*p)->unk4C = 498.0f;
-        D_ovl14_01_8004D4DC = D_ovl14_01_8004D1CC;
+        (*parts)->unk4C = 498.0f;
+        D_ovl14_01_8004D4DC = v = D_ovl14_01_8004D1CC;
     }
-    M2C_FIELD(*p, Link_ovl14_01 **, 0x3C) = links;
-    p++;
-    *p = func_ovl14_01_8004C8F0(-1, 0x500000, p[-1]);
-    (*p)->unk50 = 0.0f;
-    (*p)->unk54 = 60.0f;
-    p++;
-    M2C_FIELD(p[-1], Link_ovl14_01 **, 0x3C) = links;
-    *p = func_ovl14_01_8004C8F0(0x1C7, 0x01000000, p[-1]);
-    func_ovl14_01_8004C880(p[-1], *p, links, 0x150);
-    func_ovl14_01_8004C8D0(*p);
+    if (v) {}
+    M2C_FIELD(*parts, Link_ovl14_01 **, 0x3C) = links;
+    parts++;
+    *parts = func_ovl14_01_8004C8F0(-1, 0x500000, parts[-1]);
+    (*parts)->unk50 = 0.0f;
+    (*parts)->unk54 = 60.0f;
+    parts++;
+    M2C_FIELD(parts[-1], Link_ovl14_01 **, 0x3C) = links;
+    *parts = func_ovl14_01_8004C8F0(0x1C7, 0x01000000, parts[-1]);
+    func_ovl14_01_8004C880(parts[-1], *parts, links, 0x150);
+    func_ovl14_01_8004C8D0(*parts);
     l = links + 1;
-    p++;
-    *p = func_ovl14_01_8004C8F0(-1, 0, p[-1]);
-    (*p)->unk50 = 0.0f;
-    (*p)->unk54 = 60.0f;
-    func_ovl14_01_8004C880(p[-1], *p, l, 0x150);
+    parts++;
+    *parts = func_ovl14_01_8004C8F0(-1, 0, parts[-1]);
+    (*parts)->unk50 = 0.0f;
+    (*parts)->unk54 = 60.0f;
+    func_ovl14_01_8004C880(parts[-1], *parts, l, 0x150);
     l++;
-    p++;
-    *p = func_ovl14_01_8004C8F0(id, 0x01008000, p[-1]);
-    (*p)->unk54 = 420.0f;
-    (*p)->unk50 = 0.0f;
-    (*p)->unk30 = 1;
-    (*p)->unk34 = 160.0f;
-    (*p)->unk38 = 0.0f;
-    func_ovl14_01_8004C880(p[-1], *p, l, 0x150);
-    o = func_ovl14_01_8004C8D0(*p);
-    s = (*p)->unk34 / 50.0f;
+    parts++;
+    *parts = func_ovl14_01_8004C8F0(id, 0x01008000, parts[-1]);
+    (*parts)->unk54 = 420.0f;
+    (*parts)->unk50 = 0.0f;
+    (*parts)->unk30 = 1;
+    (*parts)->unk34 = 160.0f;
+    (*parts)->unk38 = 0.0f;
+    func_ovl14_01_8004C880(parts[-1], *parts, l, 0x150);
+    o = func_ovl14_01_8004C8D0(*parts);
+    s = (*parts)->unk34 / 50.0f;
     o->unk54 = s;
     o->unk4C = s;
-    func_ovl14_01_80043010(parts, links);
+    func_ovl14_01_80043010(base, links);
     v = D_ovl14_01_8004D4DC;
-    p = parts;
+    parts = base;
     for (i = 0; i < 5; i++) {
-        (*p)->unk40->unk10 = v->x;
-        (*p)->unk40->unk14 = v->y;
-        (*p)->unk40->unk18 = v->z;
+        (*parts)->unk40->unk10 = v->x;
+        (*parts)->unk40->unk14 = v->y;
+        (*parts)->unk40->unk18 = v->z;
         v++;
-        p++;
+        parts++;
     }
     D_ovl14_01_8004D4DC = v;
 }
@@ -2237,6 +2246,7 @@ void func_ovl14_01_80046648(UnkStructA **arg0, Link_ovl14_01 *arg1) {
 }
 
 void func_ovl14_01_8004654C(void) {
+    f32 pad;
     f32 sp38;
     s32 var_s0;
     s32 var_s0_2;
@@ -2252,12 +2262,12 @@ void func_ovl14_01_8004654C(void) {
         var_s0 += 1;
     } while (var_s0 < 0xA);
     func_ovl14_01_8004CA08(0x1E);
-    var_s0_2 = 0;
+    var_s0 = 0;
     do {
         D_ovl14_01_8004D6A0.y = D_ovl14_01_8004D6A0.y + 0.6666667f;
         func_ovl14_01_8004CA30();
-        var_s0_2 += 1;
-    } while (var_s0_2 != 0x1E);
+        var_s0 += 1;
+    } while (var_s0 != 0x1E);
     D_ovl14_01_8004D6A0.y = sp38;
 }
 
