@@ -23,3 +23,11 @@ main_code 9A5F0 jp=9A340
 # the decoder's ring buffer pointer and position are the last .bss before
 # AFBF0's.
 main_code AD5B0
+
+# 97610 (-O2: nothing is inlined, as in its sibling 93850) is the
+# tile-hazard code (its own list at 0x80090440, its own ZeroJump table
+# 0x23 at 0x802A15AC); 96540, the controller-pak code before it, ends
+# with func_8027CDA4 on a 16-byte boundary. Neither calls the other, and
+# their .data (0x802A1570) and .bss (0x802B0180) start on 16-byte
+# boundaries where the one ends and the other begins.
+main_code 97610
