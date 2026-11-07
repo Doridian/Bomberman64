@@ -6,7 +6,7 @@
  * floats). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 505, eu 505, jp 242
+ * differing words: us 193, eu 193, jp 232
  * jp's code differences are drafted (`#if VERSION_JP`), its .data is not:
  * its five own strings are only declared, and its text tables and
  * positions are us's.
@@ -95,8 +95,8 @@
  *   lever; the cast's dropped `andi 0xFFFF` takes the temporary the
  *   original's t-registers are one off by; a u16 `i` or a u16 return type
  *   is worse).
- * - 8004616C (800464C0-80047030; jp 80046170): COPY_FILE's frame (112 vs
- *   104), us ERASE 2 words short (the original rematerialises
+ * - 8004616C (800464C0-80047030; jp 80046170): (COPY_FILE's frame is
+ *   right since wAA) us ERASE a word short (the original rematerialises
  *   &D_8004992C in $fp after the loop: a split of its live range there;
  *   neighbour forms for the stores only give a `lui at`; the final
  *   0x400 store is written `(&D_80049928)[1]` (flagged: a lever, the original's store goes through the
@@ -135,10 +135,7 @@
  *   areas are missing in the middle); jp's ERASE_ASK then differs only
  *   in keep = 0's schedule and 80046634's mode register. us ERASE's
  *   frame is still 184 vs 200 (pad[8] fixes us and breaks jp).
- *   80046634's second alpha loop tests `i != 3` (flagged: a lever, not
- *   necessarily the original; it puts 3 in $s1 for both loops as the
- *   original has, `bne` for `slti`, and fixes its size); its mode is in $t2
- *   (the dead reads below).
+ *   80046634: see wAA below (its first alpha loop counts with j).
  * - 8004747C 0 (jp 0; wZ): 80045F20's parameters are (off, on, n, sel)
  *   (flagged: ugen sets a static callee's register parameters in argument
  *   order, and every call in the original loads off, on, n, then sel; the
@@ -168,6 +165,25 @@
  * - 8004390C, 80043B20, 80047A48-80047B20 and the callbacks
  *   match; so do 80044F70, 80045054, 80045340, 80045C24 and 80046F14 by
  *   themselves, and 80044E48 with a switch in SE.
+ *
+ * wAA (us 505 -> 193, jp 242 -> 232):
+ * - SE is the static 80044E40 (its stub sits right before 80044E48, its
+ *   lowest-address caller), `SEF(id, wait)`, `if (w && w == 1) w = 0`, in
+ *   80044E48, COPY_FILE and ERASE_ASK. Elsewhere it stays the SE macro:
+ *   as a static everywhere, jp's LEVEL_ASK/ERASE_ASK get inlined into
+ *   their callers (umerge sees them smaller). In COPY_FILE it gives the
+ *   original's frame (104), with no `slot` local there (sel & 0xF at the
+ *   two calls); in ERASE it gives us's frame 200 with pad[3] (jp pad[2],
+ *   size-tuned, flagged). COPY_ASK's SE is written out with slot as its
+ *   wait (flagged).
+ * - LEVEL_ASK's loop is `while (result == 0)`: y/fy are no longer hoisted
+ *   out of LEVEL_FILE's loop. us LEVEL_FILE takes &result in a dead
+ *   `if (0)` (flagged, us only: result in memory gives the size; the
+ *   original keeps it in $s0 and stores it once after the loop, jp alike),
+ *   and its second 80045C24 call reads the unk14 bytes through the
+ *   neighbours as the first.
+ * - 80046634's first alpha loop counts with j (`j < 3`, the `i != 3`
+ *   lever is gone); a dead `if (i) {}` after the inner call (flagged).
  *
  * Loops: a loop with a constant count and no call in it is unrolled
  * (80044BE4's four unk36 = 0), and 80045340 copies the name with an index
@@ -408,7 +424,8 @@ static void func_ovl0B_06_80044B90(s32 mode, Label_ovl0B_06 *labels, s32 n);
 static void func_ovl0B_06_80044B98(void);
 static void func_ovl0B_06_80044BA0(s32 arg0, Col_ovl0B_06 *col);
 static void func_ovl0B_06_80044BE4(s32 arg0);
-static void func_ovl0B_06_80044E40(void);
+static void func_ovl0B_06_80044E40(s32 id, s32 w);
+#define SEF func_ovl0B_06_80044E40 /* SE as the static 80044E40 (wAA) */
 static void func_ovl0B_06_80044E48(s32 arg0, s32 arg1);
 static s32 func_ovl0B_06_80044F70(s32 arg0, s32 arg1, s32 wait, s32 mask);
 static s32 func_ovl0B_06_80045054(void);
@@ -1030,7 +1047,12 @@ static s32 ERASE_ASK(s32 slot, Col_ovl0B_06 *off, Col_ovl0B_06 *on) {
     s32 held;
     s32 pressed;
     s32 i;
-    s32 pad[4];
+    /* size-tuned (flagged): jp frame 112, us ERASE 200 as the originals */
+#if VERSION_JP
+    s32 pad[2];
+#else
+    s32 pad[3];
+#endif
 
     keep = 1;
     side = 1;
@@ -1046,12 +1068,12 @@ static s32 ERASE_ASK(s32 slot, Col_ovl0B_06 *off, Col_ovl0B_06 *on) {
             side = 0;
             func_ovl0B_06_80046F14(1, 0);
             func_ovl0B_06_80046F14(2, 1);
-            SE(0, 5);
+            SEF(0, 5);
         } else if ((held & 0x100) && side == 0) {
             side = 1;
             func_ovl0B_06_80046F14(1, 1);
             func_ovl0B_06_80046F14(2, 0);
-            SE(0, 5);
+            SEF(0, 5);
         } else if ((pressed & 0x8000) || (pressed & 0x1000)) {
             done = 1;
             if (side == 0) {
@@ -1061,7 +1083,7 @@ static s32 ERASE_ASK(s32 slot, Col_ovl0B_06 *off, Col_ovl0B_06 *on) {
                 keep = 0;
                 D_ovl0B_06_8004992C = 0x43C8;
                 func_ovl0B_06_80048CF0();
-                SE(1, 15);
+                SEF(1, 15);
                 func_ovl0B_06_80049378(slot);
                 func_ovl0B_06_80049380(10);
                 if (func_ovl0B_06_80049390() != 0) {
@@ -1069,7 +1091,7 @@ static s32 ERASE_ASK(s32 slot, Col_ovl0B_06 *off, Col_ovl0B_06 *on) {
                     func_ovl0B_06_80048CF0();
                     func_ovl0B_06_80046634(0);
                     D_ovl0B_06_8004992C = 0x44C8;
-                    SE(0x18, 50);
+                    SEF(0x18, 50);
                     func_ovl0B_06_80048CC8(0xC8);
                     func_ovl0B_06_80046634(1);
                 }
@@ -1082,7 +1104,7 @@ static s32 ERASE_ASK(s32 slot, Col_ovl0B_06 *off, Col_ovl0B_06 *on) {
             }
         } else if (pressed & 0x4000) {
             done = 1;
-            SE(2, 10);
+            SEF(2, 10);
         }
         func_ovl0B_06_80048CF0();
     } while (done == 0);
@@ -1176,6 +1198,9 @@ static s32 LEVEL_FILE(s32 slot) {
     loop = 0;
     do {
         result = LEVEL_ASK(slot, 0);
+#if !VERSION_JP
+        if (0) { D_ovl0B_06_8004A5B4 = (s32) &result; } /* TRICK: result kept in memory (us) */
+#endif
         if ((result & 0xF0) != 0x30) {
             if (!(result & 0xF)) {
                 ret = 0;
@@ -1192,7 +1217,7 @@ static s32 LEVEL_FILE(s32 slot) {
         SET_TEXT(D_ovl0B_06_80049A44[5].unk4, D_ovl0B_06_80049480, D_ovl0B_06_80049A44[5].unk14);
         func_ovl0B_06_800490B0(D_ovl0B_06_80049A44[5].unk4, 40, 0);
 #else
-        func_ovl0B_06_80045C24(&D_ovl0B_06_80049A44[0], &D_ovl0B_06_80049A44[5], 0, 0, D_ovl0B_06_80049A44[0].unk14, D_ovl0B_06_80049480, D_ovl0B_06_80049A44[5].unk14);
+        func_ovl0B_06_80045C24(&D_ovl0B_06_80049A44[0], &D_ovl0B_06_80049A44[5], 0, 0, D_ovl0B_06_800499F0[3].unk14, D_ovl0B_06_80049480, D_ovl0B_06_8004999C[11].unk14);
 #endif
         func_ovl0B_06_800433B0(&D_ovl0B_06_80049A44[5]);
         func_ovl0B_06_800464C0(1);
@@ -1230,7 +1255,7 @@ static s32 LEVEL_ASK(s32 slot, s32 arg1) {
         D_ovl0B_06_80049E44[5].unk0->unkC |= 1;
         D_ovl0B_06_80049E44[6].unk0->unkC &= ~1;
     }
-    while (TRUE) {
+    while (result == 0) {
         held = func_ovl0B_06_80049060();
         pressed = func_ovl0B_06_80048268();
         s = func_ovl0B_06_80048E50(t);
@@ -1277,9 +1302,6 @@ static s32 LEVEL_ASK(s32 slot, s32 arg1) {
             SE(2, 10);
         }
         func_ovl0B_06_80048CF0();
-        if (result != 0) {
-            break;
-        }
     }
     if (result == 0x30) {
         func_ovl0B_06_80048840(D_ovl0B_06_80049E44[4].unk0);
@@ -1322,10 +1344,9 @@ static void func_ovl0B_06_80046634(s32 arg0) {
     func_ovl0B_06_80044B90(arg0, D_ovl0B_06_8004999C, 3);
     FADE_SLOTS(arg0)
     alpha = arg0 == 0 ? 0x3C : 0xFF;
-    for (i = 0; i != 3; i++) {
-        if (i) {} /* TRICK: dead read; alpha gets $t1 here */
-        if (D_ovl0B_06_8004A5D0[i] == 1) {
-            func_ovl0B_06_800465E0(alpha, D_ovl0B_06_80049F20[i][0].unk0);
+    for (j = 0; j < 3; j++) {
+        if (D_ovl0B_06_8004A5D0[j] == 1) {
+            func_ovl0B_06_800465E0(alpha, D_ovl0B_06_80049F20[j][0].unk0);
         }
     }
     alpha = arg0 == 0 ? 0x3C : 0xFF;
@@ -1334,6 +1355,7 @@ static void func_ovl0B_06_80046634(s32 arg0) {
             if (alpha) {} /* TRICK: dead read; arg0 gets $t2 */
             if (D_ovl0B_06_8004A5E0[i].unk[j] == 1) {
                 func_ovl0B_06_800465E0(alpha, D_ovl0B_06_80049F20[i][j + 1].unk0);
+                if (i) {} /* TRICK: dead read; 140/alpha/i in t0/t1 */
             }
         }
     }
@@ -1391,7 +1413,6 @@ static void func_ovl0B_06_800464C0(s32 arg0) {
 void COPY_FILE(void) {
     s32 loop;
     s32 sel;
-    s32 slot;
 
     loop = 1;
     sel = 0;
@@ -1404,12 +1425,11 @@ void COPY_FILE(void) {
             } else if ((sel & 0xF) == 4) {
                 func_ovl0B_06_800459D8(0);
             } else {
-                slot = sel & 0xF;
-                if (func_ovl0B_06_80049368(slot, 0) == 10) {
-                    SE(0x18, 50);
+                if (func_ovl0B_06_80049368(sel & 0xF, 0) == 10) {
+                    SEF(0x18, 50);
                 } else {
                     loop = 0;
-                    func_ovl0B_06_80049378(slot);
+                    func_ovl0B_06_80049378(sel & 0xF);
                     if (func_ovl0B_06_80049388() != 0) {
                         func_ovl0B_06_80049380(NULL);
                         func_ovl0B_06_80048CA8(MSG_TASK, NULL, 0, 0, 0x130);
@@ -1466,7 +1486,11 @@ static s32 COPY_ASK(void) {
             slot = sub & 0xF;
             if (func_ovl0B_06_80049368(slot, 0) == 10) {
                 D_ovl0B_06_8004992C = 0x1064;
-                SE(0x18, 50);
+                /* TRICK: SE written out with slot as its wait (us: slot and the wait share $s7) */
+                slot = 50;
+                if (slot && slot == 1) slot = 0;
+                func_ovl0B_06_80049230(0x18);
+                func_ovl0B_06_80048CC8(slot);
             } else {
                 D_ovl0B_06_8004992C = 0;
                 loop = 0;
@@ -2024,22 +2048,21 @@ static void func_ovl0B_06_80044E48(s32 arg0, s32 arg1) {
     s32 i;
     s32 buttons;
 
-    func_ovl0B_06_80044E40();
     n = (arg0 & 0xFF) * 4;
     D_ovl0B_06_8004992C = arg0;
     if (arg1 != -1) {
     switch (arg1) {
-        case 0x18: SE(0x18, 50); break;
-        case 1: SE(1, 15); break;
-        case 2: SE(2, 10); break;
-        case 0: SE(0, 5); break;
+        case 0x18: SEF(0x18, 50); break;
+        case 1: SEF(1, 15); break;
+        case 2: SEF(2, 10); break;
+        case 0: SEF(0, 5); break;
         default: func_ovl0B_06_80049230(arg1); break;
     }
     }
     for (i = 0; i < n; i++) {
         buttons = func_ovl0B_06_80048268();
         if ((buttons & 0x8000) | (buttons & 0x4000)) {
-            SE(2, 10);
+            SEF(2, 10);
             D_ovl0B_06_8004992C = 0;
             func_ovl0B_06_80048CF0();
             return;
@@ -2050,7 +2073,10 @@ static void func_ovl0B_06_80044E48(s32 arg0, s32 arg1) {
 
 
 /* @80044BE4 */
-static void func_ovl0B_06_80044E40(void) {
+static void func_ovl0B_06_80044E40(s32 id, s32 w) {
+    if (w && w == 1) w = 0;
+    func_ovl0B_06_80049230(id);
+    func_ovl0B_06_80048CC8(w);
 }
 
 static void func_ovl0B_06_80044BE4(s32 arg0) {
