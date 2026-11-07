@@ -1,8 +1,7 @@
 /*
- * NON_MATCHING: main_code's A2840, complete (every function and its
- * .data); not in the ROM.
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * main_code's A2840, IDO -O3; it matches in us, eu and jp. Its data:
+ * .data 0x90 (D_802A1B70 and the four tables), its .rodata placed where
+ * the ROM has it.
  *
  * All 37 functions match, the same in every version (the code is the
  * same in all three). Function order is reversed, as -O3 emits it. The
