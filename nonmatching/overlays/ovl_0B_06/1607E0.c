@@ -6,7 +6,7 @@
  * floats). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 842, eu 842, jp 623
+ * differing words: us 819, eu 819, jp 375
  * jp's code differences are drafted (`#if VERSION_JP`), its .data is not:
  * its five own strings are only declared, and its text tables and
  * positions are us's.
@@ -85,31 +85,42 @@
  * - 8004473C 49 (80044908-80045F20; jp's 800445BC_jp 140): 80044BE4's
  *   uopt registers one off (t1/t2/t3 for t2/t3/t4; the dead read in its
  *   loop is a lever, not the original), 80045794's frame (40 vs 32).
- * - 8004616C 748 (800464C0-80047030; jp 364): COPY_FILE's frame (112 vs
- *   104), LEVEL 8 short (its y/fy, frame 184 vs 216), ERASE 24 short
- *   (its sel in memory; erase.c in scratch has ERASE_FILE's fix, see
- *   below). jp: LEVEL_ASK (80046868) is the right size, its side a local
+ * - 8004616C (800464C0-80047030; jp 80046170): COPY_FILE's frame (112 vs
+ *   104), us LEVEL 2 words short (its y/fy, frame 184 vs 216), us ERASE
+ *   2 short (the original rematerialises &D_8004992C in $fp after the
+ *   loop). Every jp size is right. 80048268 returns u16 (pressed is s32 in
+ *   ERASE_ASK, LEVEL_ASK and 80045F20, u16 only in 8004518C, which returns
+ *   it): the zero-extension is the original's `move v1,v0` for the later
+ *   button tests. ERASE_FILE's loop-top argument is `sel & 0xFU` (flagged:
+ *   unsigned only so uopt doesn't PRE it with the post-loop
+ *   `slot = sel & 0xF` into a saved register; the original recomputes it
+ *   at the top), and `loop = 0` follows the ERASE_ASK call: jp's
+ *   ERASE_FILE frame 40 as the original, us keeps sel in memory (-8).
+ *   jp: LEVEL_ASK (80046868) is the right size, its side a local
  *   copy of the parameter (the first if tests the parameter, $s3; the
- *   loop the copy, $s4; ours has the two registers swapped); ERASE_ASK
- *   (80047030) is one word short (the original's `move v1,v0` copies
- *   pressed for the 0x4000 test) and its frame 96 vs 112.
+ *   loop the copy, $s4; ours has the two registers swapped); ERASE_ASK's
+ *   frame 96 vs 112.
  *   80046634's second alpha loop tests `i != 3` (flagged: a lever, not
  *   necessarily the original; it puts 3 in $s1 for both loops as the
  *   original has, `bne` for `slti`, and fixes its size); its mode is still
  *   in $t1 for $t2.
- * - 8004747C 13 (jp 13): the loop-top `li s5,4` scheduled before the
- *   jal (ours after), &D_80049924 not held in $v0 for the else arm's
- *   store and reload (the original's `sw s0,0(v0); move a0,s0` is as1
- *   forwarding the reload), and 80046634's mode in $t1 for $t2. Levers,
+ * - 8004747C 8 (jp 8): the loop-top `li s5,4` scheduled before the
+ *   jal (ours after) and 80046634's mode in $t1 for $t2. The else arm
+ *   stores `D_80049924 = sel & 0xF` itself (no slot temporary there):
+ *   that gives the original's &D_80049924 in $v0 and the forwarded
+ *   reload. Levers,
  *   not the original (flagged): `s32 pad[14]` (size-tuned: the frame is 56
  *   bytes bigger in the original, cause unknown), the dead read
  *   `if (!loop) {}` in the state != 10 arm, 80049098 declared s32 (its
  *   loop counter in $v1). The rest is real: the 80049368 argument is
- *   D_80049924 reloaded after storing slot (that use gives slot $s0 ahead of
+ *   D_80049924 reloaded after storing it (that use gives the value $s0 ahead of
  *   sel, so sel gets $s1 and &D_80049E44 is coloured with it), a `while`
  *   loop, 80046558's parameters swapped (flag first, in $s0).
- * - 80043010 12 (the stubs and 80043040-800430F0), 800478D4 15 (only the
- *   padding after its endless loop, which follows the sizes above).
+ * - 80043010 matches (800430F0's case 1 reads the rect pointer into a
+ *   local, `r = D_8004A238[i]; 80048840(r->unk0)`: that is its $v0).
+ *   us 800478D4 differs only by the padding after its endless loop,
+ *   which follows the sizes above; jp's matches.
+ * - jp has no 80047D00 stub (80047D08 doesn't call it there).
  * - 8004390C, 80043B20, 80047A48-80047B20 and the callbacks
  *   match; so do 80044F70, 80045054, 80045340, 80045C24 and 80046F14 by
  *   themselves, and 80044E48 with a switch in SE.
@@ -226,7 +237,7 @@ typedef struct {
 s32 func_ovl0B_06_80047E20(u8 *, const char *, s32); /* 0x0101 */
 void func_ovl0B_06_80048250(s32, s32, s32); /* 0x0F00 */
 s32 func_ovl0B_06_80048258(void); /* 0x0F01 */
-s32 func_ovl0B_06_80048268(void); /* 0x0F03 */
+u16 func_ovl0B_06_80048268(void); /* 0x0F03 */
 void func_ovl0B_06_800482B0(s32); /* 0x0F0C */
 void func_ovl0B_06_80048300(s32, s32, s32); /* 0x0F16 */
 UnkStructA_40 *func_ovl0B_06_80048838(s32, s32); /* 0x1500 */
@@ -403,7 +414,9 @@ static void func_ovl0B_06_80047B80(void);
 static void func_ovl0B_06_80047B88(void);
 static void func_ovl0B_06_80047B90(void);
 static void func_ovl0B_06_80047B98(s32 x, Gfx_ovl0B_06 **arg0, Box_ovl0B_06 *box);
+#if !VERSION_JP
 static void func_ovl0B_06_80047D00(void);
+#endif
 void func_ovl0B_06_80047D08(s32 arg0, Gfx_ovl0B_06 **arg1);
 void func_ovl0B_06_80047D34(s32 arg0, Gfx_ovl0B_06 **arg1);
 void func_ovl0B_06_80047D60(s32 arg0, Gfx_ovl0B_06 **arg1);
@@ -666,14 +679,18 @@ void func_ovl0B_06_80047D34(s32 arg0, Gfx_ovl0B_06 **arg1) {
 
 /* @80047D08 */
 void func_ovl0B_06_80047D08(s32 arg0, Gfx_ovl0B_06 **arg1) {
+#if !VERSION_JP
     func_ovl0B_06_80047D00();
+#endif
     func_ovl0B_06_80047B98(arg0, arg1, &D_ovl0B_06_80049CAC[0]);
 }
 
 
+#if !VERSION_JP
 /* @80047D00 */
 static void func_ovl0B_06_80047D00(void) {
 }
+#endif
 
 
 /* @80047B98 */
@@ -830,13 +847,12 @@ void func_ovl0B_06_8004747C(void) {
         r = func_ovl0B_06_80045F20(sel & 0xF, &D_ovl0B_06_8004A254, &D_ovl0B_06_8004A244, 4);
         sel = r;
         if ((r & 0xF0) != 0x30) {
-            slot = sel & 0xF;
             if ((r & 0xF) == 3) {
                 sel &= 0xF0;
                 sel |= ERASE_FILE();
             } else {
                 loop = 0;
-                D_ovl0B_06_80049924 = slot;
+                D_ovl0B_06_80049924 = sel & 0xF;
                 state = func_ovl0B_06_80049368(D_ovl0B_06_80049924, 0);
                 if (state == 10) {
                     state = LEVEL_FILE(D_ovl0B_06_80049924);
@@ -846,7 +862,7 @@ void func_ovl0B_06_8004747C(void) {
                         sel = 1;
                     }
                 } else {
-                    D_ovl0B_06_80049924 = slot;
+                    D_ovl0B_06_80049924 = sel & 0xF;
                     if (!loop) {}
                     sel = 2;
                 }
@@ -929,7 +945,7 @@ static s32 ERASE_FILE(void) {
 #endif
     func_ovl0B_06_800433B0(&D_ovl0B_06_80049A44[5]);
     do {
-        sel = func_ovl0B_06_80045F20(sel & 0xF, &D_ovl0B_06_8004A264, &D_ovl0B_06_8004A244, 3);
+        sel = func_ovl0B_06_80045F20(sel & 0xFU, &D_ovl0B_06_8004A264, &D_ovl0B_06_8004A244, 3);
         if ((sel & 0xF0) == 0x30) {
             loop = 0;
         } else {
@@ -938,8 +954,8 @@ static s32 ERASE_FILE(void) {
                 D_ovl0B_06_8004992C = 0x1064;
                 SE(0x18, 50);
             } else {
-                loop = 0;
                 ERASE_ASK(slot, &D_ovl0B_06_8004A244, &D_ovl0B_06_8004A264);
+                loop = 0;
             }
         }
         func_ovl0B_06_80048CF0();
@@ -1436,7 +1452,7 @@ static s32 COPY_ASK(void) {
 /* @80045F20 */
 static s32 func_ovl0B_06_80045F20(s32 arg0, Col_ovl0B_06 *on, Col_ovl0B_06 *off, s32 n) {
     s32 held;
-    u16 pressed;
+    s32 pressed;
     s32 ret = 0;
     s32 sel = arg0;
 
@@ -2619,6 +2635,7 @@ static void func_ovl0B_06_80043278(void) {
 
 static void func_ovl0B_06_800430F0(s32 arg0) {
     s32 i;
+    Rect_ovl0B_06 *r;
 
     switch (arg0) {
         case 0:
@@ -2628,7 +2645,8 @@ static void func_ovl0B_06_800430F0(s32 arg0) {
             break;
         case 1:
             for (i = 0; i < 3; i++) {
-                func_ovl0B_06_80048840(D_ovl0B_06_8004A238[i]->unk0);
+                r = D_ovl0B_06_8004A238[i];
+                func_ovl0B_06_80048840(r->unk0);
             }
             break;
         case 2:
