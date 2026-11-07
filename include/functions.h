@@ -31,7 +31,7 @@ void func_8026CCBC(s32 id);
 /* not yet C */
 void func_8022A1E8(void *);
 void *func_8022A6C4(void *, s32);
-void func_80292BD0(struct UnkStruct_80225CC0 *file, void *dst, s32 size);
+void func_80292BD0(struct UnkStruct_80225CC0 *file, u8 *dst, s32 size);
 
 /* B3B70 on: not yet C */
 void func_80297D30(s32, void *);

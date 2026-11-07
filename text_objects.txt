@@ -16,3 +16,10 @@ main_code 4E030
 # 9A5F0 (-O3): jp moved two functions to the end of the file (func_8028124C,
 # func_80280DB4), so jp's object starts with them, at its own 0x9A340.
 main_code 9A5F0 jp=9A340
+
+# AD3D0 is the LZSS file decoder alone (called from 40FB0 and 87190);
+# AD5B0, the EEPROM code, has none of its data: its .data starts on the
+# 16-byte boundary after the decoder's one flag word (0x802A1DA0), and
+# the decoder's ring buffer pointer and position are the last .bss before
+# AFBF0's.
+main_code AD5B0
