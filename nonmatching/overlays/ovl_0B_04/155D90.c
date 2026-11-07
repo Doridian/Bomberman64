@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 200, eu 200, jp 203
+ * differing words: us 151, eu 151, jp 154
  *
  * The pages are a table (D_ovl0B_04_800499B8: texts, handler, cursor
  * table, set-up) that func_ovl0B_04_80043ADC runs in turn; pages 1-4 are
@@ -62,15 +62,21 @@
  *   addiu but keeps x in $a2 itself).
  * - 800436C8 14/14: its `li a1,-1`/`andi s2` order before the test (the
  *   rest is 800438FC's rodata relocations).
- * - 800444E8 99/99: 800447DC's registers (d1 in $t0 then $s2, d2/d3
- *   copied to $v1/$v0 before use: the original splits these ranges (uopt
- *   split() when the best register costs more than the range saves); unk1
- *   is stored through the neighbour, (&D_ovl0B_04_8004A480)[1][1] (TRICK),
- *   for the original's own lui; its counter
- *   D_ovl0B_04_8004A1A0, a function-scope static, is promoted to $t0
- *   where the original reloads it), and its frame (40 vs 24: the dead read
- *   of the not yet set t costs a spill, but gives buttons $t1 and the
- *   rest of the original's registers).
+ * - 800444E8 50/50: 800447DC's registers. 80044714 returns s8 (as
+ *   8004471C does; u8 coloured the inlined result in $v0) and d2/d3 are
+ *   tested `!= 0` (the int-promoted test makes cvt(d2)/cvt(d3) expressions
+ *   that uopt colours $v1/$v0: the original's `move v1,s4`/`move v0,s5`
+ *   before each use; d1 keeps plain `if (d1)`, as the original has no copy
+ *   for it). Left: d1 is $s3 and n $s2 where the original has d1 in $t0
+ *   up to the first chain's test, then `move s2,t0` (a split; no form found
+ *   that splits it) and n in $s3; ugen temps one ahead from the inlined
+ *   80044714 on (`andi t7,v1` vs t6); unk1 is stored through the neighbour,
+ *   (&D_ovl0B_04_8004A480)[1][1] (TRICK), for the original's own lui; its
+ *   counter D_ovl0B_04_8004A1A0, a function-scope static, is promoted to
+ *   $t0 where the original reloads it; and its frame (40 vs 24: the two
+ *   dead reads of the not yet set t (TRICK), after 80048A70[0]'s store and
+ *   in the n >= 2 d2 arm, cost a spill, but give buttons $t1 and the rest
+ *   of the original's registers; without them 73).
  * - 80045214 26/26: 80045214's `ok` reloaded to $t8 (the original: $v0);
  *   80045540's frame (40 vs 24: the dead reads of c in its else branch,
  *   where c isn't set, spill it) and rub-out registers (the original loads
@@ -802,7 +808,7 @@ static void func_ovl0B_04_800458F4(s32 id0, s32 id1);
 static void func_ovl0B_04_80045958(s32 id0, s32 id1);
 static void func_ovl0B_04_80045850(void);
 static void func_ovl0B_04_80043640(f32 d);
-static u8 func_ovl0B_04_80044714(u8 set, u8 c);
+static s8 func_ovl0B_04_80044714(u8 set, u8 c);
 
 /* A text drawn centred on an item (its string evaluated twice). */
 #define DRAW_ITEM(str, it) \
@@ -1688,7 +1694,7 @@ u8 func_ovl0B_04_80044BE8(u8 arg0, u16 arg1) {
 
 /* The character before the cursor: the marks it can take (the 0x1E00
  * buttons put them on in turn), shown in D_ovl0B_04_80048A70. */
-static u8 func_ovl0B_04_80044714(u8 set, u8 c) {
+static s8 func_ovl0B_04_80044714(u8 set, u8 c) {
     s32 r = 0;
 
     switch (set) {
@@ -1738,21 +1744,21 @@ static void func_ovl0B_04_800447DC(u16 buttons, u8 *ret) {
             n = 1;
         }
         d2 = func_ovl0B_04_80044714(set, c);
-        if (d2) {
+        if (d2 != 0) {
             n++;
         }
         d3 = func_ovl0B_04_8004462C(set, c);
-        if (d3) {
+        if (d3 != 0) {
             n++;
         }
         if (n != 0) {
             D_ovl0B_04_80048A70[0] = c;
+            if (!t) {} /* TRICK: t isn't set yet: a dead read that only moves registers */
             if (d1) {
-                if (!c) {}
                 D_ovl0B_04_80048A70[2] = c + d1;
-            } else if (d2) {
+            } else if (d2 != 0) {
                 D_ovl0B_04_80048A70[2] = c + d2;
-            } else if (d3) {
+            } else if (d3 != 0) {
                 D_ovl0B_04_80048A70[2] = c + d3;
             }
             D_ovl0B_04_8004A060[8].unk0->unk18 = D_ovl0B_04_8004A060[8].unkC;
@@ -1760,10 +1766,10 @@ static void func_ovl0B_04_800447DC(u16 buttons, u8 *ret) {
             if (n >= 2) {
                 D_ovl0B_04_8004A060[9].unk0->unk18 = D_ovl0B_04_8004A060[9].unkC;
                 D_ovl0B_04_8004A060[9].unk0->unk1C = D_ovl0B_04_8004A060[9].unk10;
-                if (d2) {
-                    if (!t) {} /* t isn't set yet: a dead read that only moves registers */
+                if (d2 != 0) {
+                    if (!t) {} /* TRICK: t isn't set yet: a dead read that only moves registers */
                     D_ovl0B_04_80048A70[4] = c + d2;
-                } else if (d3) {
+                } else if (d3 != 0) {
                     D_ovl0B_04_80048A70[4] = c + d3;
                 } else if (d1) {
                     D_ovl0B_04_80048A70[4] = c + d1;
@@ -1780,19 +1786,18 @@ static void func_ovl0B_04_800447DC(u16 buttons, u8 *ret) {
                 } else {
                     D_ovl0B_04_8004A1A0++;
                     if (D_ovl0B_04_8004A1A0 == 1) {
-                        if (!D_ovl0B_04_8004A1A0) {}
                         if (d1) {
                             c += d1;
-                        } else if (d2) {
+                        } else if (d2 != 0) {
                             c += d2;
-                        } else if (d3) {
+                        } else if (d3 != 0) {
                             c += d3;
                         } else {
                             D_ovl0B_04_8004A1A0 = 0;
                         }
-                    } else if (d2) {
+                    } else if (d2 != 0) {
                         c += d2;
-                    } else if (d3) {
+                    } else if (d3 != 0) {
                         c += d3;
                     } else if (d1) {
                         c += d1;
