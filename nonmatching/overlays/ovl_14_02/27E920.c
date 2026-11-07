@@ -1,7 +1,7 @@
 /*
  * NON_MATCHING: ovl_14_02's game object, complete; not in the ROM.
  * flags: -O3
- * differing words: us 199, eu 199, jp 199
+ * differing words: us 100, eu 100, jp 100
  *
  * 135 of 138 functions match (the same in every version). A first draft:
  * m2c output (with the ZeroJump prototypes of the other drafts and the
@@ -128,8 +128,17 @@
  * constant 1 with the list's, one range in $a1), and pass 13's two dead
  * reads are gone.
  *
- * What still differs, in large: 8004D640 ((s32)dx in $v1, not $a2; obj
- * copied to $a3 first; hit loaded into $v0), 8004BDE8 (&D_800503C0 kept
+ * Pass 16: 8004D640 107 -> 8. The stubs 8004D638/30/28 sit in their own
+ * #line file ("w.c") and 8004D640 in another ("v.c"), so the stubs'
+ * inlining switches back to a seen name at the top of 8004D640, an as1
+ * boundary that keeps `move a3,a0` first (build.sh). Both unk64 packs
+ * cast each half to (s16) (`(s16)(dx * 500.0f) << 16 | (s16)(dz *
+ * 500.0f) & 0xFFFF`, the else arm low half first), which changes the
+ * ucode, the CSE and the temp numbering; pass 13's empty loop after
+ * the 8004F630 call is gone (size right again), and pos is a Vec3f.
+ *
+ * What still differs, in large: 8004D640 ((s32)dx in $v1, not $a2; one
+ * beq's operand order; hit loaded into $t9, not $v0), 8004BDE8 (&D_800503C0 kept
  * in $s3; in the original only &D_8005038C gets a saved register: uopt
  * sums &D_800503C0's two loop uses to 20 against &D_8005038C's 10, so
  * no ordering of the two follows from the source as written). The
@@ -778,6 +787,7 @@ void func_ovl14_02_8004DE28(UnkStructA *arg0) {
     } while (var_s0 != 0x3C);
 }
 
+#line 1 "w.c"
 static void func_ovl14_02_8004D638() {
 }
 
@@ -787,10 +797,11 @@ static void func_ovl14_02_8004D630() {
 static void func_ovl14_02_8004D628() {
 }
 
+#line 1 "v.c"
 void func_ovl14_02_8004D640(UnkStructA *obj) {
     UnkStructA *spark;
     f32 pad0;
-    f32 pos[3];
+    Vec3f pos;
     Vec3f dir;
     f32 pad1[4];
     f32 step[3];
@@ -894,36 +905,35 @@ void func_ovl14_02_8004D640(UnkStructA *obj) {
 #line 1 "x.c"
             dx = 0.0f;
             dz = 0.0f;
-            obj->unk64 = ((s32) (dz * 500.0f) & 0xFFFF) | ((s32) (dx * 500.0f) << 16);
+            obj->unk64 = ((s16) (dx * 500.0f) << 16) | ((s16) (dz * 500.0f) & 0xFFFF);
             obj->unk40->unk10 = save.x;
             obj->unk40->unk14 = save.y;
             obj->unk40->unk18 = save.z;
         } else {
-            obj->unk64 = ((s32) (step[2] * 500.0f) & 0xFFFF) | ((s32) (step[0] * 500.0f) << 16);
+            obj->unk64 = ((s16) (step[2] * 500.0f) & 0xFFFF) | ((s16) (step[0] * 500.0f) << 16);
         }
     }
     if (obj->unk8 & 1) {
-        pos[0] = D_ovl14_02_80050270.x;
-        pos[1] = D_ovl14_02_800502EC->y;
-        pos[2] = D_ovl14_02_80050270.z;
-        func_ovl14_02_8004F598(D_ovl14_02_800502EC, (Vec3f *) pos, &dir);
+        pos.x = D_ovl14_02_80050270.x;
+        pos.y = D_ovl14_02_800502EC->y;
+        pos.z = D_ovl14_02_80050270.z;
+        func_ovl14_02_8004F598(D_ovl14_02_800502EC, &pos, &dir);
         dir.y = 0.0f;
         if (dir.z > 1450.0f) {
             dir.z = 1449.0f;
-            func_ovl14_02_8004F5A0(&dir, (Vec3f *) pos);
+            func_ovl14_02_8004F5A0(&dir, &pos);
             spark = func_ovl14_02_8004EE48(func_ovl14_02_8004EDE8());
-            D_ovl14_02_80050270.x = spark->unk40->unk10 = D_ovl14_02_800502EC->x + pos[0];
-            D_ovl14_02_80050270.z = spark->unk40->unk18 = D_ovl14_02_800502EC->z + pos[2];
+            D_ovl14_02_80050270.x = spark->unk40->unk10 = D_ovl14_02_800502EC->x + pos.x;
+            D_ovl14_02_80050270.z = spark->unk40->unk18 = D_ovl14_02_800502EC->z + pos.z;
         }
         if (func_ovl14_02_8004F9E0(0x417)) {
             spark = func_ovl14_02_8004F630(-1, 0x800, 0x60, NULL);
-            do {} while (0); /* trick: uopt block boundary */
             dir.z = 10.0f;
-            func_ovl14_02_8004F5A0(&dir, (Vec3f *) pos);
+            func_ovl14_02_8004F5A0(&dir, &pos);
             do {} while (0); /* trick: uopt block boundary */
             func_ovl14_02_8004F6E0((UnkStructA *) &D_ovl14_02_80050270, spark);
-            spark->unk40->unk10 += pos[0];
-            spark->unk40->unk18 += pos[2];
+            spark->unk40->unk10 += pos.x;
+            spark->unk40->unk18 += pos.z;
             func_ovl14_02_8004F5B8(spark, 1);
             func_ovl14_02_8004F620(spark);
             func_ovl14_02_8004F9D8(0x417);
