@@ -6,7 +6,7 @@
  * floats). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 193, eu 193, jp 232
+ * differing words: us 193, eu 193, jp 96
  * jp's code differences are drafted (`#if VERSION_JP`), its .data is not:
  * its five own strings are only declared, and its text tables and
  * positions are us's.
@@ -184,6 +184,24 @@
  *   neighbours as the first.
  * - 80046634's first alpha loop counts with j (`j < 3`, the `i != 3`
  *   lever is gone); a dead `if (i) {}` after the inner call (flagged).
+ *
+ * wAB (jp 232 -> 96; us/eu 193 unchanged):
+ * - jp handler 80043C48 76 -> 26: frame 408 and every home as the
+ *   original. jp LABELS walks the labels by index (its pointer becomes
+ *   the uopt temporary at 124(sp)) with a referenced `s32 pj2 = 0`;
+ *   case 1 calls the (void) stub 80043218 where us frees D_8004A660/664
+ *   (+8 at its place); CLOSE_B has `s32 k[15]` taken by a dead
+ *   `if (0) D_8004A5B8 = (s32)k;` after its loop (+64 at the bottom;
+ *   before the loop its test becomes bne). All size-tuned (flagged).
+ *   Left: OPEN_A/OPEN_B's counter in v0 for v1, the 368/364 store order,
+ *   80043040's `mtc1 zero,f20` schedule, case 2's D_8004A668 store.
+ * - jp MSG_TASK group (800445BC_jp) 115 -> 29: jp COPY_ASK is its own
+ *   arm: its D_8004992C stores through `(&D_80049928)[1]` (flagged:
+ *   keeps &D_80049B94 in $s7), 80045F20's argument `sub & 0xFU`
+ *   (flagged: against PRE), `loop = 1; sub = 0;` after the 80048CA8 call.
+ *   Left: the original sets $s4/$s6 before 80048CA8's arguments.
+ * - Both: 80045794's frame is still 40 vs 32 (the locals, SE and waits
+ *   aren't it); 80044BE4's temporaries; `addiu a1,sp,96` vs 88.
  *
  * Loops: a loop with a constant count and no call in it is unrolled
  * (80044BE4's four unk36 = 0), and 80045340 copies the name with an index
@@ -1455,6 +1473,69 @@ void COPY_FILE(void) {
 
 
 /* @80046164: copying, the file to copy from (inlined in us, not in jp) */
+#if VERSION_JP
+static s32 COPY_ASK(void) {
+    s32 loop;
+    s32 sub;
+    s32 slot;
+
+    func_ovl0B_06_80048CA8(MSG_TASK, NULL, 0, 0, 0x130);
+    loop = 1;
+    sub = 0;
+    func_ovl0B_06_80044908(0);
+#if VERSION_JP
+    SET_TEXT(D_ovl0B_06_80049B94[0].unk4, D_ovl0B_06_800493EC_jp, D_ovl0B_06_80049B94[0].unk14);
+    func_ovl0B_06_800490B0(D_ovl0B_06_80049B94[0].unk4, 10, 0);
+    D_ovl0B_06_80049B94[0].unk18 = func_ovl0B_06_800490C8(D_ovl0B_06_80049B94[0].unk4);
+    SET_TEXT(D_ovl0B_06_80049B94[6].unk4, D_ovl0B_06_800493EC_jp, D_ovl0B_06_80049B94[6].unk14);
+    func_ovl0B_06_800490B0(D_ovl0B_06_80049B94[6].unk4, 10, 0);
+    D_ovl0B_06_80049B94[6].unk18 = func_ovl0B_06_800490C8(D_ovl0B_06_80049B94[6].unk4);
+#else
+    func_ovl0B_06_80045C24(&D_ovl0B_06_80049B94[0], &D_ovl0B_06_80049B94[6], -0x28, 0, D_ovl0B_06_80049B94[0].unk14, D_ovl0B_06_80049534, D_ovl0B_06_80049B94[6].unk14);
+#endif
+    func_ovl0B_06_800433B0(&D_ovl0B_06_80049B94[6]);
+    do {
+        sub = func_ovl0B_06_80045F20(&D_ovl0B_06_8004A244, &D_ovl0B_06_8004A264, 3, sub & 0xFU);
+#if !VERSION_JP
+        if (0) { D_ovl0B_06_8004A5B4 = (s32) &sub; }
+#endif
+        if ((sub & 0xF0) == 0x30) {
+            loop = 0;
+        } else {
+            slot = sub & 0xF;
+            if (func_ovl0B_06_80049368(slot, 0) == 10) {
+                (&D_ovl0B_06_80049928)[1] = 0x1064;
+                /* TRICK: SE written out with slot as its wait (us: slot and the wait share $s7) */
+                slot = 50;
+                if (slot && slot == 1) slot = 0;
+                func_ovl0B_06_80049230(0x18);
+                func_ovl0B_06_80048CC8(slot);
+            } else {
+                D_ovl0B_06_8004992C = 0;
+                loop = 0;
+                func_ovl0B_06_80048CF0();
+                func_ovl0B_06_80045D28(slot, 0);
+            }
+        }
+        func_ovl0B_06_80048CF0();
+    } while (loop != 0);
+    func_ovl0B_06_80044908(1);
+    slot = sub & 0xF;
+#if VERSION_JP
+    SET_TEXT(D_ovl0B_06_80049B94[0].unk4, D_ovl0B_06_80049508, D_ovl0B_06_80049B94[0].unk14);
+    func_ovl0B_06_800490B0(D_ovl0B_06_80049B94[0].unk4, -10, 0);
+    D_ovl0B_06_80049B94[0].unk18 = func_ovl0B_06_800490C8(D_ovl0B_06_80049B94[0].unk4);
+    SET_TEXT(D_ovl0B_06_80049B94[6].unk4, D_ovl0B_06_80049508, D_ovl0B_06_80049B94[6].unk14);
+    func_ovl0B_06_800490B0(D_ovl0B_06_80049B94[6].unk4, -10, 0);
+    D_ovl0B_06_80049B94[6].unk18 = func_ovl0B_06_800490C8(D_ovl0B_06_80049B94[6].unk4);
+#else
+    func_ovl0B_06_80045C24(&D_ovl0B_06_80049B94[0], &D_ovl0B_06_80049B94[6], 0, 0, D_ovl0B_06_80049B94[0].unk14, D_ovl0B_06_80049508, D_ovl0B_06_80049B94[6].unk14);
+#endif
+    func_ovl0B_06_800433B0(&D_ovl0B_06_80049B94[6]);
+    D_ovl0B_06_8004992C = 0x400;
+    return slot;
+}
+#else
 static s32 COPY_ASK(void) {
     s32 loop;
     s32 sub;
@@ -1516,6 +1597,7 @@ static s32 COPY_ASK(void) {
     D_ovl0B_06_8004992C = 0x400;
     return slot;
 }
+#endif
 
 
 
@@ -2381,6 +2463,8 @@ void func_ovl0B_06_80043C48(s32 arg0) {
 #if !VERSION_JP
             func_ovl0B_06_80048840(D_ovl0B_06_8004A660);
             func_ovl0B_06_80048840(D_ovl0B_06_8004A664);
+#else
+            func_ovl0B_06_80043218();
 #endif
             switch (D_ovl0B_06_8004A668[0]) {
                 case 16:
@@ -2437,6 +2521,25 @@ static void NAMES(void) {
 static void LABELS_0(void) {
 }
 
+#if VERSION_JP
+static void LABELS(void) {
+    s32 i;
+    Label_ovl0B_06 *label;
+    u8 *name;
+    s32 pj2;
+
+    pj2 = 0;
+    LABELS_0();
+    for (i = 0, name = D_ovl0B_06_80049558, label = D_ovl0B_06_80049B94; i != 3; i++, name += 9, label++) {
+        if (func_ovl0B_06_80049368(i, 8) != 0) {
+            func_ovl0B_06_800433B0(&D_ovl0B_06_80049B94[i + 7]);
+            D_ovl0B_06_80049B94[i + 7].unk18->unk36 = 0x82;
+        } else {
+            D_ovl0B_06_80049B94[i + 7].unk18->unkC |= 1;
+        }
+    }
+}
+#else
 static void LABELS(void) {
     s32 i;
     Label_ovl0B_06 *label;
@@ -2458,6 +2561,7 @@ static void LABELS(void) {
         }
     }
 }
+#endif
 
 static void OPEN_A(s32 n, Box_ovl0B_06 *box) {
     s32 i;
@@ -2504,6 +2608,9 @@ static void OPEN_B(s32 n, Box_ovl0B_06 *box) {
 
 static void CLOSE_B(s32 n, Box_ovl0B_06 *box) {
     s32 i;
+#if VERSION_JP
+    s32 k[15];
+#endif
     for (i = 0; i < n; i++, box++) {
         for (box->unk34 = box->unk24; box->unk34 > 0.0f; box->unk34 -= box->unk28) {
             func_ovl0B_06_80048CF0();
@@ -2511,6 +2618,9 @@ static void CLOSE_B(s32 n, Box_ovl0B_06 *box) {
         func_ovl0B_06_80048840(box->unk0);
         func_ovl0B_06_80048CF0();
     }
+#if VERSION_JP
+    if (0) { D_ovl0B_06_8004A5B8 = (s32) k; }
+#endif
 }
 
 static void func_ovl0B_06_80043834(void) {
