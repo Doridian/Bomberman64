@@ -1,7 +1,7 @@
 /*
  * NON_MATCHING: ovl_15_02's game object, complete; not in the ROM.
  * flags: -O3
- * differing words: us 52, eu 52, jp 52
+ * differing words: us 22, eu 22, jp 22
  *
  * A first draft: m2c output (ZeroJump prototypes from the other drafts,
  * scratch/newovl5/protos.h, and the file's own signatures, own.h) made to
@@ -75,6 +75,18 @@
  * spans loop 3, and 0x01080000 keeps s3 from the 800431AC call on), and
  * its inner loop is the index loop `D_80051538[i]` like loops 1 and 3
  * (one pointer range, s0); left: 1.0f and b swap f22/f24.
+ * Pass 15: 800468A0 39 -> 9: the original's first `objs[0]->unk4C`
+ * store goes through $v0 with no temporary used up (ugen's next temp
+ * is t6), so uopt knew objs[0] there: a fake keeps the call result in
+ * `i` (`objs[0] = (UnkStructA *) (i = (s32) f(...)); ((UnkStructA *)
+ * i)->unk4C = ...`; flagged, not 64-bit safe). A new pointer local does
+ * the same but costs 8 bytes of frame (front end 52 + four uopt spill
+ * temps = 68 > 64), a chain `(objs[0] = f())->unk4C` a front-end temp.
+ * Left: 80051040/44/48 each get their own `lui at` (orig: one shared,
+ * so one symbol), but as one f32[5][3] uopt colours its address (3
+ * uses in one block, save 2.0, v1); a function-scope static, dead
+ * float loads of it later (they split the range, {bb2,bb3} still +1)
+ * don't help.
  *
  * jp: 8004B6E4's first loop scales the beam's 0x2C by i / 20 (us sets it
  * to 0), and its second loop leaves it alone; 8004C400 picks a different
@@ -96,7 +108,7 @@
  * each (mkdraft.py MERGE, merge.py). 8005118C/8005120C are the low words
  * of the f64 constants 900.0 and 1900.0. D_80051498 and D_800514B8
  * are Vec3f (80051498 has a 4-byte filler after it). Left:
- * 80045A58 (13), 800468A0 (39). 80043688 matches with dead reads
+ * 80045A58 (13), 800468A0 (9). 80043688 matches with dead reads
  * (`if (r == 60) {}` etc.) that make uopt colour each loop's divisor.
  */
 #include "common.h"
@@ -3381,8 +3393,11 @@ void func_ovl15_02_800468A0() {
     s32 i;
 
     flag = func_ovl15_02_80050730();
-    objs[0] = func_ovl15_02_800505E0(0x30D, 0x01480000, 0x50, D_ovl15_02_8005142C);
-    objs[0]->unk4C = D_ovl15_02_80051040 * 10.0f;
+    /* fake: i carries objs[0] for its first store (the original's store goes
+     * through $v0 and costs no temporary; a new pointer local costs 8 bytes of
+     * frame). Not 64-bit safe: a port needs a pointer local here. */
+    objs[0] = (UnkStructA *) (i = (s32) func_ovl15_02_800505E0(0x30D, 0x01480000, 0x50, D_ovl15_02_8005142C));
+    ((UnkStructA *) i)->unk4C = D_ovl15_02_80051040 * 10.0f;
     objs[0]->unk50 = D_ovl15_02_80051044 * 10.0f;
     objs[0]->unk54 = D_ovl15_02_80051048 * 10.0f;
     objs[0]->unk38 = 0.0f;
