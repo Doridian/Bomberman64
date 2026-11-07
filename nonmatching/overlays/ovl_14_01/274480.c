@@ -1,10 +1,10 @@
 /*
  * NON_MATCHING: ovl_14_01's game object, complete; not in the ROM.
  * flags: -O3
- * differing words: us 13, eu 13, jp 13
+ * differing words: us 8, eu 8, jp 8
  *
  * The text is the same in every version (only jp's ZeroJump numbers
- * differ). 87 of 89 functions match. m2c output (with the ZeroJump
+ * differ). 88 of 89 functions match. m2c output (with the ZeroJump
  * prototypes of the other drafts, scratch/newovl2/protos.h, and the
  * file's own in own.h) made to compile, then tuned by hand
  * (scratch/newovl2/r/).
@@ -94,11 +94,16 @@
  * result in `r` and a dead `if (r == m) {}` (m not yet set) at the top
  * of the then-arm: m's range reaches the block where v0 holds the
  * result, so m can't take v0 (m v1, n a1, as in the original).
- * 800432D8 has `if (pad == 100.0f) {} do {} while (0);` at the top of the
- * first loop (TRICK): 100.0 is then the first constant seen and gets f20
- * (the `-(a) + 1.0f` form is no longer needed).
+ * 800432D8 (pass 11, scratch/newovl2/r9/): `(0, 100.0f) * (1.0f - ...)`
+ * (TRICK): cfe and copy propagation put a constant operand last in a
+ * multiply, but the comma expression keeps 100.0 first (mul.s f6,f20,f4)
+ * and makes 100.0 the first constant seen (f20), so the old dead read and
+ * empty loop are gone. The comma's cfe temporary takes a frame word below
+ * the locals, so sdy is written at its use (`dy += dy0 / 60.0f * -1.0f`,
+ * hoisted by uopt) and dy0 is declared where `pad` was: the spill homes
+ * of dy0/sdy then land at 72/68 as in the original.
  *
- * What still differs (2 functions):
+ * What still differs (1 function):
  * - 80049814 (8): the arms' addresses are in v1, the original's v0 (v,
  *   the loop pointer, is live there through the dead read and takes v0
  *   first). A separate variable for the arms does the same; one whose
@@ -106,10 +111,13 @@
  *   addresses, but spills. `l` is `volatile` (semantics unchanged): the
  *   original keeps it in its frame slot, which gives the 40-byte frame.
  *   Plain `D_8004D4DC = D_8004D190` arms (no v) give 82.
- * - 800432D8 (5): `mul.s f6,f20,f4` (100.0 first) where ours has the
- *   product first, and dy0/sdy's homes are 4 bytes lower than the
- *   original's (72/68); a variable for 100.0 is propagated, and no
- *   declaration order moves the homes.
+ *   The original's address is materialised after the swc1 (as a value
+ *   first stored, like a variable), not at the arm's start like our
+ *   coloured LDA range: `v = ADDR;` in the arms with one
+ *   `D_8004D4DC = v;` after the join gives exactly the original's arms
+ *   in v0, but one store instead of two (192, misaligned). Every form
+ *   that stores in the arm lets copy propagation turn the store's value
+ *   into the LDA again (pass 11, scratch/newovl2/r9/w*.py).
  * Several functions need an unused `pad` local for the original's frame.
  */
 #include "common.h"
@@ -3253,18 +3261,15 @@ void func_ovl14_01_800432D8(void) {
     f32 sdz;
     f32 dz;
     f32 dy;
-    f32 pad;
-    Vec3f a;
     f32 dy0;
-    f32 sdy;
+    Vec3f a;
 
     if (func_ovl14_01_8004CC70(0x400) == 0) {
         func_ovl14_01_8004C9E8(func_ovl14_01_80043624, NULL, 0, 0, 0x150);
         for (i = 0; i < 120; i++) {
-            if (pad == 100.0f) {} /* TRICK: 100.0 seen first (f20) */
-            do {} while (0); /* TRICK: uopt block boundary */
             func_ovl14_01_8004CA30();
-            func_ovl14_01_8004CCE8(0, 0, 0, (1.0f - (f32) i / 120.0f) * 100.0f);
+            /* TRICK: the comma keeps 100.0 the mul.s's first operand */
+            func_ovl14_01_8004CCE8(0, 0, 0, (0, 100.0f) * (1.0f - (f32) i / 120.0f));
         }
         func_ovl14_01_8004CCE8(0, 0, 0, 0.0f);
         func_ovl14_01_800431C4(0x10D, D_ovl14_01_8004D5DC);
@@ -3292,13 +3297,12 @@ void func_ovl14_01_800432D8(void) {
         func_ovl14_01_8004CD40(1);
         c = 0xBF;
         func_ovl14_01_8004CD48(0xBF);
-        sdy = dy0 / 60.0f * -1.0f;
         for (i = 0; i != 60; i++) {
             D_ovl14_01_8004D4F8.y += dy;
             func_ovl14_01_8004C790(D_ovl14_01_8004D4F8.y, D_ovl14_01_8004D4F8.y);
             a.z += dz;
             a.y += dy;
-            dy += sdy;
+            dy += dy0 / 60.0f * -1.0f;
             dz += sdz;
             func_ovl14_01_8004C6F8(32768.0f, a.y, a.z);
             func_ovl14_01_8004C790(a.y, a.y);

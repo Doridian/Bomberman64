@@ -6,7 +6,7 @@
  * floats). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 530, eu 530, jp 265
+ * differing words: us 505, eu 505, jp 242
  * jp's code differences are drafted (`#if VERSION_JP`), its .data is not:
  * its five own strings are only declared, and its text tables and
  * positions are us's.
@@ -137,10 +137,19 @@
  *   frame is still 184 vs 200 (pad[8] fixes us and breaks jp).
  *   80046634's second alpha loop tests `i != 3` (flagged: a lever, not
  *   necessarily the original; it puts 3 in $s1 for both loops as the
- *   original has, `bne` for `slti`, and fixes its size); its mode is still
- *   in $t1 for $t2.
- * - 8004747C 8 (jp 8): the loop-top `li s5,4` scheduled before the
- *   jal (ours after) and 80046634's mode in $t1 for $t2. The else arm
+ *   original has, `bne` for `slti`, and fixes its size); its mode is in $t2
+ *   (the dead reads below).
+ * - 8004747C 0 (jp 0; wZ): 80045F20's parameters are (off, on, n, sel)
+ *   (flagged: ugen sets a static callee's register parameters in argument
+ *   order, and every call in the original loads off, on, n, then sel; the
+ *   registers follow the callee's colouring, so `lui s3` (off) now comes
+ *   first as in the original, us 530 -> 512, jp 265 -> 249). 80046634's
+ *   two dead reads `if (i) {}` (top of the first alpha loop) and
+ *   `if (alpha) {}` (top of the inner loop) are levers (flagged): they put
+ *   its parameter in $t2 (callers' `move t2,zero`/`li t2,1`) and the first
+ *   alpha in $t1 as the original (us 512 -> 505, jp 249 -> 242); its loop
+ *   counter/pointer/140 are still a2/a3/t0 there for t0/a2/a3.
+ *   The else arm
  *   stores `D_80049924 = sel & 0xF` itself (no slot temporary there):
  *   that gives the original's &D_80049924 in $v0 and the forwarded
  *   reload. Levers,
@@ -414,7 +423,7 @@ static void func_ovl0B_06_800459D8(s32 arg0);
 static void func_ovl0B_06_80045C24(Label_ovl0B_06 *a, Label_ovl0B_06 *b, s16 dx, s16 dy, u8 fa, u8 *str, u8 fb);
 static void func_ovl0B_06_80045D20(s32 a);
 static void func_ovl0B_06_80045D28(s32 arg0, s32 arg1);
-static s32 func_ovl0B_06_80045F20(s32 arg0, Col_ovl0B_06 *on, Col_ovl0B_06 *off, s32 n);
+static s32 func_ovl0B_06_80045F20(Col_ovl0B_06 *off, Col_ovl0B_06 *on, s32 n, s32 arg0);
 #define SE(id, w) { s32 n_ = (w); if (n_ && n_ == 1) n_ = 0; func_ovl0B_06_80049230(id); func_ovl0B_06_80048CC8(n_); }
 static s32 COPY_ASK(void);
 void COPY_FILE(void);
@@ -881,7 +890,7 @@ void func_ovl0B_06_8004747C(void) {
     state = 10;
     D_ovl0B_06_80049924 = -1;
     while (loop != 0) {
-        r = func_ovl0B_06_80045F20(sel & 0xF, &D_ovl0B_06_8004A254, &D_ovl0B_06_8004A244, 4);
+        r = func_ovl0B_06_80045F20(&D_ovl0B_06_8004A244, &D_ovl0B_06_8004A254, 4, sel & 0xF);
         sel = r;
         if ((r & 0xF0) != 0x30) {
             if ((r & 0xF) == 3) {
@@ -982,7 +991,7 @@ static s32 ERASE_FILE(void) {
 #endif
     func_ovl0B_06_800433B0(&D_ovl0B_06_80049A44[5]);
     do {
-        sel = func_ovl0B_06_80045F20(sel & 0xFU, &D_ovl0B_06_8004A264, &D_ovl0B_06_8004A244, 3);
+        sel = func_ovl0B_06_80045F20(&D_ovl0B_06_8004A244, &D_ovl0B_06_8004A264, 3, sel & 0xFU);
         if ((sel & 0xF0) == 0x30) {
             loop = 0;
         } else {
@@ -1314,6 +1323,7 @@ static void func_ovl0B_06_80046634(s32 arg0) {
     FADE_SLOTS(arg0)
     alpha = arg0 == 0 ? 0x3C : 0xFF;
     for (i = 0; i != 3; i++) {
+        if (i) {} /* TRICK: dead read; alpha gets $t1 here */
         if (D_ovl0B_06_8004A5D0[i] == 1) {
             func_ovl0B_06_800465E0(alpha, D_ovl0B_06_80049F20[i][0].unk0);
         }
@@ -1321,6 +1331,7 @@ static void func_ovl0B_06_80046634(s32 arg0) {
     alpha = arg0 == 0 ? 0x3C : 0xFF;
     for (i = 0; i < 3; i++) {
         for (j = 0; j < 6; j++) {
+            if (alpha) {} /* TRICK: dead read; arg0 gets $t2 */
             if (D_ovl0B_06_8004A5E0[i].unk[j] == 1) {
                 func_ovl0B_06_800465E0(alpha, D_ovl0B_06_80049F20[i][j + 1].unk0);
             }
@@ -1385,7 +1396,7 @@ void COPY_FILE(void) {
     loop = 1;
     sel = 0;
     do {
-        sel = func_ovl0B_06_80045F20(sel & 0xF, &D_ovl0B_06_8004A254, &D_ovl0B_06_8004A244, 5);
+        sel = func_ovl0B_06_80045F20(&D_ovl0B_06_8004A244, &D_ovl0B_06_8004A254, 5, sel & 0xF);
         if ((sel & 0xF0) != 0x30) {
             if ((sel & 0xF) == 3) {
                 sel &= 0xF0;
@@ -1445,7 +1456,7 @@ static s32 COPY_ASK(void) {
 #endif
     func_ovl0B_06_800433B0(&D_ovl0B_06_80049B94[6]);
     do {
-        sub = func_ovl0B_06_80045F20(sub & 0xF, &D_ovl0B_06_8004A264, &D_ovl0B_06_8004A244, 3);
+        sub = func_ovl0B_06_80045F20(&D_ovl0B_06_8004A244, &D_ovl0B_06_8004A264, 3, sub & 0xF);
 #if !VERSION_JP
         if (0) { D_ovl0B_06_8004A5B4 = (s32) &sub; }
 #endif
@@ -1486,7 +1497,10 @@ static s32 COPY_ASK(void) {
 
 
 /* @80045F20 */
-static s32 func_ovl0B_06_80045F20(s32 arg0, Col_ovl0B_06 *on, Col_ovl0B_06 *off, s32 n) {
+/* TRICK: parameters reordered (off, on, n, sel). ugen sets up a static callee's
+ * register parameters in argument order, and the original loads off, on,
+ * n, then sel at every call. The registers follow the callee's colouring. */
+static s32 func_ovl0B_06_80045F20(Col_ovl0B_06 *off, Col_ovl0B_06 *on, s32 n, s32 arg0) {
     s32 held;
     s32 pressed;
     s32 ret = 0;
