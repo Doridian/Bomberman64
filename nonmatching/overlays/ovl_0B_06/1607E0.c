@@ -6,7 +6,7 @@
  * floats). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 1493, eu 1493, jp 1107
+ * differing words: us 919, eu 919, jp 648
  * jp's code differences are drafted (`#if VERSION_JP`), its .data is not:
  * its five own strings are only declared, and its text tables and
  * positions are us's.
@@ -21,10 +21,19 @@
  * second in $a3), 80047880 ($s0). An unused parameter is passed in the
  * caller's 0(sp) (80043480's, 80047B98's first) and an unused float one not
  * at all. The stubs (two `jr ra` in a row) are statics inlined into every
- * caller: 80043010 frees a run of labels, 80043450 shows one, 80044B90
- * fades one (their counts kept in registers, as inlined parameters are),
- * 80043478 draws a slot's number (us only); most others are still empty
- * here, their code written into the caller.
+ * caller: 80043010 frees a run of labels, 80043450 shows one (both take
+ * (count, labels): the count is the lower home in the frame and is set
+ * first), 80044B90 fades one (their counts kept in registers, as inlined
+ * parameters are), 80043478 draws a slot's number (us only); most others
+ * are still empty here, their code written into the caller.
+ *
+ * The handler 80043C48's switch cases are statics inlined once each,
+ * whose stubs take the place of placeholders: CLOSE_B 80043010, CLOSE_A
+ * 800433A8, LABELS_0/LABELS 800433F4/FC, NAMES 80043458, OPEN_B/OPEN_A
+ * 800438FC/80043904 (box loops (count, boxes); the names copied for the
+ * copy menu; the copy menu's labels). Each inlined call gets a frame area
+ * in call order, and the original's homes of the uncoloured loop counters
+ * (212, 188/180, 124) fix them: that is how NAMES and LABELS were found.
  *
  * Every sound with its wait is SE(id, wait), and the original keeps the
  * wait in a saved register, set at the start of the block (`li $s0,15`
@@ -57,18 +66,26 @@
  * What still differs in us (words; each with the statics after it up to
  * the next global, so a function the wrong size shifts the rest):
  * - 80043220 8 (jp 0): one lbu in 80043480 scheduled too late.
- * - 80043C48 587 (jp 550): the handler. Its box loops are inlined
- *   statics in the original (frame 280 here 192, 32 bytes short; the
- *   80043450 loops' counters are spilled to their homes there, 212, 180
- *   and 188(sp)). One open and one close static, each called twice, aren't
- *   inlined; four statics (open 5, open 6, close 5, close 1) each called
- *   once are (frame 224, 16 bytes short), but their four new stubs land
- *   elsewhere (before 80043010, 800433A8 and 80043904), so they must take
- *   over placeholder stubs, which is not done yet.
+ * - 80043C48 12 (jp 76): case 2's `sw v0,D_8004A668` is scheduled before
+ *   the jal (the original has it in the delay slot), and the six 80043040
+ *   calls set their 0.0f ($fs0) one instruction early. jp's frame is 408
+ *   (here 328): from LABELS down every home is 8, later 16 bytes too high
+ *   (CLOSE_A -136, 80043010s -156/-188/-204, CLOSE_B -220 from the top),
+ *   and LABELS's label pointer is a uopt temporary there (-284), not a
+ *   home: LABELS probably walks D_80049B94 by index, and us's
+ *   800490E0 result goes through a local rather than a cfe temporary.
+ *   Size-tuned (flagged): OPEN_A/OPEN_B's two unused locals a, b (jp's
+ *   homes of n/i at -16/-20 and -40/-44 need 24-byte areas), the
+ *   handler has no locals of its own, and 80043480's `s32 pad[2]` (its
+ *   frame lost the 8 bytes of the placeholder NAMES took over). Case 2/4's
+ *   0.0f arguments are written `0` so they are not the 0.0f constant
+ *   that holds $fs0 for 80043040: then 10.0f gets $fs0 in case 2.
+ *   Fixed bugs: the copy menu labels &D_80049B94[6] (was [5]) and moves
+ *   D_80049E44[0..1]'s unk4/unkC (was unk8/unk10) by 18.
  * - 8004473C 49 (80044908-80045F20; jp's 800445BC_jp 140): 80044BE4's
  *   uopt registers one off (t1/t2/t3 for t2/t3/t4; the dead read in its
  *   loop is a lever, not the original), 80045794's frame (40 vs 32).
- * - 8004616C 809 (800464C0-80047030; jp 389): COPY_FILE's frame (112 vs
+ * - 8004616C 810 (800464C0-80047030; jp 389): COPY_FILE's frame (112 vs
  *   104), 80046634 4 bytes long, LEVEL 8 short (its y/fy), ERASE 24 short
  *   (its sel in memory).
  * - 8004747C 13 (jp 13): the loop-top `li s5,4` scheduled before the
@@ -283,7 +300,6 @@ s32 func_ovl0B_06_80049390(void); /* 0x2F0E */
 
 
 #define FADE_SLOTS(mode) { s32 *p_; Label_ovl0B_06 *l_; s32 n_; n_ = 3; for (p_ = D_ovl0B_06_8004A5D0, l_ = D_ovl0B_06_800499F0; p_ < D_ovl0B_06_8004A5D0 + n_; p_++, l_++) { if (*p_ != 0) { func_ovl0B_06_80044B08(l_, mode); } } }
-static void func_ovl0B_06_80043038(void);
 static void func_ovl0B_06_80043030(void);
 static void func_ovl0B_06_80043028(void);
 static void func_ovl0B_06_80043020(void);
@@ -294,12 +310,8 @@ static void func_ovl0B_06_80043218(void);
 void func_ovl0B_06_80043220(void);
 static void func_ovl0B_06_80043278(void);
 static void func_ovl0B_06_80043280(void);
-static void func_ovl0B_06_800433A8(void);
 static void func_ovl0B_06_800433B0(Label_ovl0B_06 *label);
-static void func_ovl0B_06_800433F4(void);
-static void func_ovl0B_06_800433FC(void);
 static void func_ovl0B_06_80043404(Label_ovl0B_06 *label);
-static void func_ovl0B_06_80043458(void);
 static void func_ovl0B_06_80043460(void);
 static void func_ovl0B_06_80043468(void);
 static void func_ovl0B_06_80043470(void);
@@ -307,15 +319,21 @@ static void func_ovl0B_06_80043470(void);
 static void func_ovl0B_06_80043478(Label_ovl0B_06 *label);
 #endif
 static void func_ovl0B_06_80043480(s32 arg0);
-static void func_ovl0B_06_80043450(Label_ovl0B_06 *p, s32 n);
-static void func_ovl0B_06_80043010(Label_ovl0B_06 *p, s32 n);
+static void func_ovl0B_06_80043450(s32 n, Label_ovl0B_06 *p);
+static void func_ovl0B_06_80043010(s32 n, Label_ovl0B_06 *p);
 static void func_ovl0B_06_8004382C();
 static void func_ovl0B_06_80043834(void);
-static void func_ovl0B_06_800438FC(void);
-static void func_ovl0B_06_80043904(void);
 void func_ovl0B_06_8004390C(void);
 void func_ovl0B_06_80043B20(void);
-static void func_ovl0B_06_80043C40(void);
+static void func_ovl0B_06_80043C40();
+static void NAMES(void);
+static void LABELS(void);
+static void LABELS_0(void);
+static void OPEN_A(s32 n, Box_ovl0B_06 *box);
+static void OPEN_B(s32 n, Box_ovl0B_06 *box);
+static void CLOSE_A(s32 n, Box_ovl0B_06 *box);
+static void CLOSE_B(s32 n, Box_ovl0B_06 *box);
+
 void func_ovl0B_06_80043C48(s32 arg0);
 void MSG_TASK(void);
 static void func_ovl0B_06_80044908(s32 arg0);
@@ -862,7 +880,7 @@ void func_ovl0B_06_8004747C(void) {
             func_ovl0B_06_80048840(D_ovl0B_06_80049E44[5].unk0);
             func_ovl0B_06_80048840(D_ovl0B_06_80049E44[6].unk0);
             func_ovl0B_06_80048840(D_ovl0B_06_80049E44[7].unk0);
-            func_ovl0B_06_80043010(D_ovl0B_06_80049AEC, 2);
+            func_ovl0B_06_80043010(2, D_ovl0B_06_80049AEC);
             func_ovl0B_06_80048250(0x1A, 0x10, 4);
             D_ovl0B_06_8004992C = 0x400;
             break;
@@ -946,7 +964,7 @@ static s32 ERASE_ASK(s32 slot, Col_ovl0B_06 *off, Col_ovl0B_06 *on) {
     side = 1;
     done = 0;
     D_ovl0B_06_8004992C = 0;
-    func_ovl0B_06_80043450(D_ovl0B_06_80049B40, 3);
+    func_ovl0B_06_80043450(3, D_ovl0B_06_80049B40);
     func_ovl0B_06_80044BA0(slot, on);
     func_ovl0B_06_80046F14(2, 0);
     do {
@@ -984,7 +1002,7 @@ static s32 ERASE_ASK(s32 slot, Col_ovl0B_06 *off, Col_ovl0B_06 *on) {
                     func_ovl0B_06_80046634(1);
                 }
                 func_ovl0B_06_80043280();
-                func_ovl0B_06_80043010(D_ovl0B_06_80049A44, 6);
+                func_ovl0B_06_80043010(6, D_ovl0B_06_80049A44);
                 func_ovl0B_06_800430F0(1);
                 func_ovl0B_06_80043480(1);
                 done = 1;
@@ -997,7 +1015,7 @@ static s32 ERASE_ASK(s32 slot, Col_ovl0B_06 *off, Col_ovl0B_06 *on) {
         func_ovl0B_06_80048CF0();
     } while (done == 0);
     func_ovl0B_06_80044BA0(slot, off);
-    func_ovl0B_06_80043010(D_ovl0B_06_80049B40, 3);
+    func_ovl0B_06_80043010(3, D_ovl0B_06_80049B40);
     return keep;
 }
 
@@ -1072,7 +1090,7 @@ static s32 LEVEL_FILE(s32 slot) {
     func_ovl0B_06_800464C0(0);
     label = &D_ovl0B_06_80049A44[slot];
     label[1].unk18->unkC |= 1;
-    func_ovl0B_06_80043450(D_ovl0B_06_80049AEC, 2);
+    func_ovl0B_06_80043450(2, D_ovl0B_06_80049AEC);
 #if VERSION_JP
     SET_TEXT(D_ovl0B_06_80049A44[0].unk4, D_ovl0B_06_8004937C_jp, D_ovl0B_06_80049A44[0].unk14);
     func_ovl0B_06_800490B0(D_ovl0B_06_80049A44[0].unk4, -40, 0);
@@ -1106,7 +1124,7 @@ static s32 LEVEL_FILE(s32 slot) {
         func_ovl0B_06_800433B0(&D_ovl0B_06_80049A44[5]);
         func_ovl0B_06_800464C0(1);
         label[1].unk18->unkC &= ~1;
-        func_ovl0B_06_80043010(D_ovl0B_06_80049AEC, 2);
+        func_ovl0B_06_80043010(2, D_ovl0B_06_80049AEC);
     }
     return ret;
 }
@@ -2148,8 +2166,6 @@ void func_ovl0B_06_80043B20(void) {
 
 /* @8004390C */
 void func_ovl0B_06_8004390C(void) {
-    func_ovl0B_06_800438FC();
-    func_ovl0B_06_80043904();
     D_ovl0B_06_8004A628->unk10 = 71.0f;
     D_ovl0B_06_8004A628->unk14 = 13.0f;
     D_ovl0B_06_8004A628->unk18 = D_ovl0B_06_8004A628->unk10 + D_ovl0B_06_8004A628->unk28;
@@ -2177,20 +2193,7 @@ void func_ovl0B_06_8004390C(void) {
 
 
 /* @80043834 */
-static void func_ovl0B_06_80043904(void) {
-}
-
-static void func_ovl0B_06_800438FC(void) {
-}
-
 void func_ovl0B_06_80043C48(s32 arg0) {
-    Box_ovl0B_06 *box;
-    Label_ovl0B_06 *label;
-    u8 *name;
-    u8 *src;
-    f32 step;
-    s32 i;
-    s32 j;
 
     func_ovl0B_06_80043C40();
     switch (arg0) {
@@ -2200,12 +2203,12 @@ void func_ovl0B_06_80043C48(s32 arg0) {
             D_ovl0B_06_8004A668[0] = func_ovl0B_06_80048258();
             func_ovl0B_06_80048A00(0x7F);
             func_ovl0B_06_80048978(1);
-            func_ovl0B_06_80048998(0.0f, 10.0f, 0.0f);
+            func_ovl0B_06_80048998(0, 10.0f, 0);
             func_ovl0B_06_80048988(1);
             func_ovl0B_06_800489B8(32768.0f, 10.0f, 2200.0f);
             break;
         case 4:
-            func_ovl0B_06_800489B8(0.0f, 10.0f, 2200.0f);
+            func_ovl0B_06_800489B8(0, 10.0f, 2200.0f);
             func_ovl0B_06_80043B20();
             func_ovl0B_06_8004390C();
             D_ovl0B_06_8004A628->unkC |= 0x480;
@@ -2234,30 +2237,14 @@ void func_ovl0B_06_80043C48(s32 arg0) {
 #endif
             break;
         case 16:
-            for (i = 0, box = D_ovl0B_06_80049CAC; i < 5; i++, box++) {
-                step = (box->unk18 - box->unk14) / box->unk1C;
-                box->unk0 = func_ovl0B_06_800488B8(box->unk40, box->unk38);
-                box->unk0->unkC |= box->unk3C;
-                for (box->unk34 = box->unk14; box->unk34 < box->unk18; box->unk34 += step) {
-                    func_ovl0B_06_80048CF0();
-                }
-                func_ovl0B_06_80048CF0();
-            }
+            OPEN_A(5, D_ovl0B_06_80049CAC);
             break;
         case 17:
             D_ovl0B_06_80049CAC[3].unk2C += 0x12;
-            for (i = 0, box = D_ovl0B_06_80049CAC; i < 6; i++, box++) {
-                step = (box->unk18 - box->unk14) / box->unk1C;
-                box->unk0 = func_ovl0B_06_800488B8(box->unk40, box->unk38);
-                box->unk0->unkC |= box->unk3C;
-                for (box->unk34 = box->unk14; box->unk34 < box->unk18; box->unk34 += step) {
-                    func_ovl0B_06_80048CF0();
-                }
-                func_ovl0B_06_80048CF0();
-            }
+            OPEN_B(6, D_ovl0B_06_80049CAC);
             break;
         case 5:
-            func_ovl0B_06_80043450(D_ovl0B_06_8004999C, 3);
+            func_ovl0B_06_80043450(3, D_ovl0B_06_8004999C);
             switch (D_ovl0B_06_8004A668[0]) {
                 case 16:
                     func_ovl0B_06_80043480(1);
@@ -2267,44 +2254,14 @@ void func_ovl0B_06_80043C48(s32 arg0) {
                 case 17:
                     func_ovl0B_06_80043480(0);
                     func_ovl0B_06_80048CA8(COPY_FILE, NULL, D_ovl0B_06_8004A670, 0x1000, 0x130);
-                    for (i = 0, name = D_ovl0B_06_80049558; i < 3; i++, name += 9) {
-                        src = (u8 *) func_ovl0B_06_80049368(i, 8);
-                        if (src != NULL) {
-                            for (j = 0; j < 8; j++) {
-                                D_ovl0B_06_80049558[i * 9 + j] = src[j];
-                            }
-                        } else {
-                            name[0] = 0x27;
-                            name[1] = 0x48;
-                            name[2] = 0xF;
-                            name[3] = 0x1D;
-                            name[4] = 0x3A;
-                            name[5] = 0x4D;
-                            name[6] = 0x3A;
-                            name[7] = 0xF;
-                        }
-                        name[8] = 0;
-                    }
-                    func_ovl0B_06_80043450(D_ovl0B_06_80049B94, 10);
-                    for (i = 0, label = D_ovl0B_06_80049B94, name = D_ovl0B_06_80049558; i != 3; i++, name += 9, label++) {
-#if !VERSION_JP
-                        func_ovl0B_06_800490B0(label[1].unk4, -(s32) (func_ovl0B_06_800490E0(name) * 0.8f * 0.5f), 0);
-#endif
-                        if (func_ovl0B_06_80049368(i, 8) != 0) {
-                            func_ovl0B_06_800433B0(&label[7]);
-                            label[7].unk18->unk36 = 0x82;
-#if !VERSION_JP
-                            func_ovl0B_06_800490B0(label[7].unk4, -(s32) (func_ovl0B_06_800490E0(name) * 0.8f * 0.5f), 0);
-#endif
-                        } else {
-                            label[7].unk18->unkC |= 1;
-                        }
-                    }
-                    func_ovl0B_06_800433B0(&D_ovl0B_06_80049B94[5]);
-                    D_ovl0B_06_80049E44[0].unk8 += 18.0f;
-                    D_ovl0B_06_80049E44[0].unk10 += 18.0f;
-                    D_ovl0B_06_80049E44[1].unk8 += 18.0f;
-                    D_ovl0B_06_80049E44[1].unk10 += 18.0f;
+                    NAMES();
+                    func_ovl0B_06_80043450(10, D_ovl0B_06_80049B94);
+                    LABELS();
+                    func_ovl0B_06_800433B0(&D_ovl0B_06_80049B94[6]);
+                    D_ovl0B_06_80049E44[0].unk4 += 18.0f;
+                    D_ovl0B_06_80049E44[0].unkC += 18.0f;
+                    D_ovl0B_06_80049E44[1].unk4 += 18.0f;
+                    D_ovl0B_06_80049E44[1].unkC += 18.0f;
                     func_ovl0B_06_80043040(&D_ovl0B_06_80049E44[0], &D_ovl0B_06_8004A0C4[1], 0.0f);
                     func_ovl0B_06_80043040(&D_ovl0B_06_80049E44[1], &D_ovl0B_06_8004A0C4[0], 0.0f);
                     func_ovl0B_06_80043040(&D_ovl0B_06_80049E44[3], &D_ovl0B_06_8004A0C4[3], 0.0f);
@@ -2315,14 +2272,8 @@ void func_ovl0B_06_80043C48(s32 arg0) {
             }
             break;
         case 1:
-            for (i = 0, box = D_ovl0B_06_80049CAC; i < 5; i++, box++) {
-                for (box->unk34 = box->unk24; box->unk34 > 0.0f; box->unk34 -= box->unk28) {
-                    func_ovl0B_06_80048CF0();
-                }
-                func_ovl0B_06_80048840(box->unk0);
-                func_ovl0B_06_80048CF0();
-            }
-            func_ovl0B_06_80043010(D_ovl0B_06_8004999C, 3);
+            CLOSE_A(5, D_ovl0B_06_80049CAC);
+            func_ovl0B_06_80043010(3, D_ovl0B_06_8004999C);
             func_ovl0B_06_80043280();
             func_ovl0B_06_80043220();
 #if !VERSION_JP
@@ -2331,18 +2282,12 @@ void func_ovl0B_06_80043C48(s32 arg0) {
 #endif
             switch (D_ovl0B_06_8004A668[0]) {
                 case 16:
-                    func_ovl0B_06_80043010(D_ovl0B_06_80049A44, 6);
+                    func_ovl0B_06_80043010(6, D_ovl0B_06_80049A44);
                     func_ovl0B_06_800430F0(1);
                     break;
                 case 17:
-                    func_ovl0B_06_80043010(D_ovl0B_06_80049B94, 10);
-                    for (i = 0, box = &D_ovl0B_06_80049CAC[5]; i < 1; i++, box++) {
-                        for (box->unk34 = box->unk24; box->unk34 > 0.0f; box->unk34 -= box->unk28) {
-                            func_ovl0B_06_80048CF0();
-                        }
-                        func_ovl0B_06_80048840(box->unk0);
-                        func_ovl0B_06_80048CF0();
-                    }
+                    func_ovl0B_06_80043010(10, D_ovl0B_06_80049B94);
+                    CLOSE_B(1, &D_ovl0B_06_80049CAC[5]);
                     func_ovl0B_06_80048840(D_ovl0B_06_80049E44[0].unk0);
                     func_ovl0B_06_80048840(D_ovl0B_06_80049E44[1].unk0);
                     func_ovl0B_06_80048840(D_ovl0B_06_80049E44[3].unk0);
@@ -2357,7 +2302,113 @@ void func_ovl0B_06_80043C48(s32 arg0) {
 
 
 /* @80043B20 */
-static void func_ovl0B_06_80043C40(void) {
+static void func_ovl0B_06_80043C40() {
+}
+
+static void NAMES(void) {
+    s32 i;
+    s32 j;
+    u8 *name;
+    u8 *src;
+
+    for (i = 0, name = D_ovl0B_06_80049558; i < 3; i++, name += 9) {
+        src = (u8 *) func_ovl0B_06_80049368(i, 8);
+        if (src != NULL) {
+            for (j = 0; j < 8; j++) {
+                D_ovl0B_06_80049558[i * 9 + j] = src[j];
+            }
+            name[8] = 0;
+        } else {
+            name[0] = 0x27;
+            name[1] = 0x48;
+            name[2] = 0xF;
+            name[3] = 0x1D;
+            name[4] = 0x3A;
+            name[5] = 0x4D;
+            name[6] = 0x3A;
+            name[7] = 0xF;
+            name[8] = 0;
+        }
+    }
+}
+
+static void LABELS_0(void) {
+}
+
+static void LABELS(void) {
+    s32 i;
+    Label_ovl0B_06 *label;
+    u8 *name;
+
+    LABELS_0();
+    for (i = 0, name = D_ovl0B_06_80049558, label = D_ovl0B_06_80049B94; i != 3; i++, name += 9, label++) {
+#if !VERSION_JP
+        func_ovl0B_06_800490B0(label[1].unk4, -(s32) (func_ovl0B_06_800490E0(name) * 0.8f * 0.5f), 0);
+#endif
+        if (func_ovl0B_06_80049368(i, 8) != 0) {
+            func_ovl0B_06_800433B0(&label[7]);
+            label[7].unk18->unk36 = 0x82;
+#if !VERSION_JP
+            func_ovl0B_06_800490B0(label[7].unk4, -(s32) (func_ovl0B_06_800490E0(name) * 0.8f * 0.5f), 0);
+#endif
+        } else {
+            label[7].unk18->unkC |= 1;
+        }
+    }
+}
+
+static void OPEN_A(s32 n, Box_ovl0B_06 *box) {
+    s32 i;
+    f32 step;
+    s32 a;
+    s32 b;
+    for (i = 0; i < n; i++, box++) {
+        step = (box->unk18 - box->unk14) / box->unk1C;
+        box->unk0 = func_ovl0B_06_800488B8(box->unk40, box->unk38);
+        box->unk0->unkC |= box->unk3C;
+        for (box->unk34 = box->unk14; box->unk34 < box->unk18; box->unk34 += step) {
+            func_ovl0B_06_80048CF0();
+        }
+        func_ovl0B_06_80048CF0();
+    }
+}
+
+static void CLOSE_A(s32 n, Box_ovl0B_06 *box) {
+    s32 i;
+    for (i = 0; i < n; i++, box++) {
+        for (box->unk34 = box->unk24; box->unk34 > 0.0f; box->unk34 -= box->unk28) {
+            func_ovl0B_06_80048CF0();
+        }
+        func_ovl0B_06_80048840(box->unk0);
+        func_ovl0B_06_80048CF0();
+    }
+}
+
+static void OPEN_B(s32 n, Box_ovl0B_06 *box) {
+    s32 i;
+    f32 step;
+    s32 a;
+    s32 b;
+    for (i = 0; i < n; i++, box++) {
+        step = (box->unk18 - box->unk14) / box->unk1C;
+        box->unk0 = func_ovl0B_06_800488B8(box->unk40, box->unk38);
+        box->unk0->unkC |= box->unk3C;
+        for (box->unk34 = box->unk14; box->unk34 < box->unk18; box->unk34 += step) {
+            func_ovl0B_06_80048CF0();
+        }
+        func_ovl0B_06_80048CF0();
+    }
+}
+
+static void CLOSE_B(s32 n, Box_ovl0B_06 *box) {
+    s32 i;
+    for (i = 0; i < n; i++, box++) {
+        for (box->unk34 = box->unk24; box->unk34 > 0.0f; box->unk34 -= box->unk28) {
+            func_ovl0B_06_80048CF0();
+        }
+        func_ovl0B_06_80048840(box->unk0);
+        func_ovl0B_06_80048CF0();
+    }
 }
 
 static void func_ovl0B_06_80043834(void) {
@@ -2367,7 +2418,7 @@ static void func_ovl0B_06_80043834(void) {
 
     func_ovl0B_06_8004382C();
     func_ovl0B_06_800430F0(0);
-    func_ovl0B_06_80043450(D_ovl0B_06_80049A44, 6);
+    func_ovl0B_06_80043450(6, D_ovl0B_06_80049A44);
     func_ovl0B_06_800433B0(&D_ovl0B_06_80049A44[5]);
     for (i = 0; i < 3; i++) {
         j = func_ovl0B_06_80049368(i, 0);
@@ -2390,14 +2441,14 @@ static void func_ovl0B_06_80043834(void) {
 static void func_ovl0B_06_8004382C() {
 }
 
-static void func_ovl0B_06_80043010(Label_ovl0B_06 *p, s32 n) {
+static void func_ovl0B_06_80043010(s32 n, Label_ovl0B_06 *p) {
     s32 i;
     for (i = 0; i < n; i++, p++) {
         func_ovl0B_06_80049098(p->unk4);
     }
 }
 
-static void func_ovl0B_06_80043450(Label_ovl0B_06 *p, s32 n) {
+static void func_ovl0B_06_80043450(s32 n, Label_ovl0B_06 *p) {
     s32 i;
     for (i = 0; i < n; i++, p++) {
         func_ovl0B_06_80043404(p);
@@ -2415,8 +2466,8 @@ static void func_ovl0B_06_80043480(s32 arg0) {
     u8 buf[4];
     s32 i;
     s32 j;
+    s32 pad[2];
 
-    func_ovl0B_06_80043458();
     func_ovl0B_06_80043460();
     func_ovl0B_06_80043468();
     func_ovl0B_06_80043470();
@@ -2514,27 +2565,15 @@ static void func_ovl0B_06_80043468(void) {
 static void func_ovl0B_06_80043460(void) {
 }
 
-static void func_ovl0B_06_80043458(void) {
-}
-
 
 static void func_ovl0B_06_80043404(Label_ovl0B_06 *label) {
-    func_ovl0B_06_800433F4();
-    func_ovl0B_06_800433FC();
     label->unk4 = DRAW_TEXT(label->unk0, label->unk8, label->unkA, label->unkC, label->unk10, label->unk14);
     label->unk18 = func_ovl0B_06_800490C8(label->unk4);
 }
 
 
 /* @800433B0 */
-static void func_ovl0B_06_800433FC(void) {
-}
-
-static void func_ovl0B_06_800433F4(void) {
-}
-
 static void func_ovl0B_06_800433B0(Label_ovl0B_06 *label) {
-    func_ovl0B_06_800433A8();
     label->unk18 = func_ovl0B_06_800490C8(label->unk4);
     label->unk18->unkC |= 0x480;
     label->unk18->unk36 = 100;
@@ -2542,9 +2581,6 @@ static void func_ovl0B_06_800433B0(Label_ovl0B_06 *label) {
 
 
 /* @80043280 */
-static void func_ovl0B_06_800433A8(void) {
-}
-
 static void func_ovl0B_06_80043280(void) {
     s32 i;
     s32 j;
@@ -2601,7 +2637,6 @@ static void func_ovl0B_06_800430F0(s32 arg0) {
 
 /* @80043040 */
 static void func_ovl0B_06_80043040(Rect_ovl0B_06 *rect, Spr_ovl0B_06 *spr, f32 dy) {
-    func_ovl0B_06_80043038();
     func_ovl0B_06_80043030();
     func_ovl0B_06_80043028();
     func_ovl0B_06_80043020();
@@ -2619,9 +2654,6 @@ static void func_ovl0B_06_80043040(Rect_ovl0B_06 *rect, Spr_ovl0B_06 *spr, f32 d
 
 
 /* @80043010 */
-static void func_ovl0B_06_80043038(void) {
-}
-
 static void func_ovl0B_06_80043030(void) {
 }
 
