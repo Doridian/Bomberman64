@@ -1,7 +1,6 @@
 /*
- * NON_MATCHING: ovl_15_01's game object, complete; not in the ROM.
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * ovl_15_01's game object, IDO -O3; it matches in us, eu and jp. Its
+ * data: .data 0x30, .rodata 0x230, .bss 0x1B0, the same in every version.
  *
  * The text is the same in every version (only jp's ZeroJump numbers
  * differ). All 87 functions match. A first draft: m2c output (with the
@@ -64,8 +63,8 @@
  * `if (0) { func_ovl15_01_8004ABE0(); }` keeps ABE0 emitted in its
  * place, just before AC68), 800483AC (an empty `if (cnt) {}` after the
  * loop), 8004391C (the wrap's ternary into its own local `w`).
- * Pass 9, matching: 80044730 (`E004 = E008 = 0; if (E00C) {} ...;
- * E008 = E004 = E00C = 0;`: the chains keep both stores of each global;
+ * Pass 9, matching: 80044730 (`E008 = E004 = 0; if (E00C) {} ...;
+ * E004 = E008 = E00C = 0;`: the chains keep both stores of each global;
  * the fourth call's object through a local, `p = E030; f(..., p, ...)`,
  * which puts its `lui a1` in the branch's delay slot).
  * Pass 10/11, matching: 80047270 (`base = X; t = 1.6666666f - X;`, the
@@ -100,8 +99,9 @@
  * E084/E088) because IDO 8-aligns arrays of 8 bytes or more
  * (scratch/bsscheck.sh: every symbol at its address, .bss 0x1B0).
  *
- * Nothing differs in code; .data and .rodata match the original's bytes
- * (scratch/rodcheck/rod.py).
+ * Two references named the wrong global, which fcmp (relocated bits
+ * masked) doesn't see: 80049F38's 8004362C calls take 8004E020, not
+ * 8004E018, and in 80044730's two chains 8004E004 and 8004E008 trade places.
  */
 #include "common.h"
 
@@ -1214,11 +1214,11 @@ void func_ovl15_01_80049F38(void) {
     func_ovl15_01_8004D528(func_ovl15_01_80049ADC, D_ovl15_01_8004E018, 0, 0, 0x110);
     func_ovl15_01_800436BC(D_ovl15_01_8004E020);
     func_ovl15_01_800436BC(D_ovl15_01_8004E018);
-    func_ovl15_01_8004362C(D_ovl15_01_8004E018);
+    func_ovl15_01_8004362C(D_ovl15_01_8004E020);
     func_ovl15_01_8004D570();
     func_ovl15_01_80043684(D_ovl15_01_8004E020);
     func_ovl15_01_80043684(D_ovl15_01_8004E018);
-    func_ovl15_01_8004362C(D_ovl15_01_8004E018);
+    func_ovl15_01_8004362C(D_ovl15_01_8004E020);
 }
 
 void func_ovl15_01_80049ADC(void) {
@@ -2837,13 +2837,13 @@ void func_ovl15_01_80044730(void) {
     func_ovl15_01_8004D3D8(D_ovl15_01_8004E01C, 0x80000);
     func_ovl15_01_8004D3D8(D_ovl15_01_8004E024, 0x80000);
     func_ovl15_01_8004D7A0(0x415);
-    D_ovl15_01_8004E004 = D_ovl15_01_8004E008 = 0;
+    D_ovl15_01_8004E008 = D_ovl15_01_8004E004 = 0;
     if (D_ovl15_01_8004E00C) {}
     c0 = 120;
     c1 = 119;
     c2 = 118;
     c3 = 117;
-    D_ovl15_01_8004E008 = D_ovl15_01_8004E004 = D_ovl15_01_8004E00C = 0;
+    D_ovl15_01_8004E004 = D_ovl15_01_8004E008 = D_ovl15_01_8004E00C = 0;
     func_ovl15_01_8004DAC8();
     func_ovl15_01_80043010(0x13F, D_ovl15_01_8004E010);
     for (i = 0; i < 240; i++) {

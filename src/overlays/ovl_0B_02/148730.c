@@ -1,12 +1,10 @@
 /*
- * NON_MATCHING: ovl_0B_02's game object (a picture book of six groups of
- * models turned page by page, with a timer, a set of option boxes and the
- * groups' background tasks; the ending's camera move 80045C30), complete:
- * every function and its data (.data 0x8E0 as the original, the last 0x60
- * of it 800431C4's local table). Not built into the ROM
- * (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * ovl_0B_02's game object (a picture book of six groups of models turned
+ * page by page, with a timer, a set of option boxes and the groups'
+ * background tasks; the ending's camera move 80045C30), IDO -O3; it
+ * matches in us, eu and jp. Its data: .data 0x8E0 (the last 0x60 of it
+ * 800431C4's local table), .rodata 0x180, .bss 0xE0, the same in every
+ * version.
  * jp has its own strings, counts the characters itself in 80044424 (24
  * pixels each, as ovl_0B_03 does), draws through ZeroJump 0x2501
  * (DRAW_TEXT), puts the seconds one character further on and lays out the
@@ -62,8 +60,6 @@
  * `move s0,zero` as in the original (a store hoisted by code motion is
  * emitted after the call's outpars, uoptemit.c). Counting the middle's
  * outer loop with j instead merged i's ranges and swapped s0/s1.
- *
- * Nothing differs in code; .data and .rodata match the original's bytes.
  */
 #include "common.h"
 
