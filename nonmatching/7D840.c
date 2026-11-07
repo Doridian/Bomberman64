@@ -6,16 +6,20 @@
  * with the original's stubs. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 834, eu 834, jp 834
+ * differing words: us 52, eu 52, jp 52
  *
- * Left: func_8026437C (the float main: written as four explicit blocks,
- * the original's `i = 1; p = &rects[i]` index shape; fw/fh are spilled and
- * dead in the original, with dead float-to-int conversions in their ifs
- * and in the first block that ours don't all keep; frame offsets 8-12
- * off) and func_80265274 (the integer main, 0x78 bytes short: the
- * original's assert path re-stores the rectangles and recomputes
- * (v0 + h - 1) % height before its `while (1) {}`, and keeps
- * info.width/height in copies for the switch).
+ * func_80265274 matches: the wrap is the inlined static func_80264F98
+ * (a switch writing through r++, called with info.width/height, which
+ * gives the original's t1/t2 copies and its 8 bytes of frame), the loop
+ * indexes rects[i], and the X dir block assigns scale before dir.
+ *
+ * Left: func_8026437C (size 0x710 and frame 344 match; 52 words of
+ * register choice and schedule): `save` is loaded into v1 (original v0),
+ * fw/fh live in $f2 (original $f0), and block 1 loads rects[0].b and
+ * orders its multiplies and the info.y0 store differently. The dead
+ * float-to-int conversions are kept by `if (func_80263904(fw)) {}` (costs
+ * 8 bytes of frame, which the pads account for) and
+ * `if (fh - (s32) fh && fh - (s32) fh) {}` (costs none).
  */
 #include "common.h"
 #define F3DEX_GBI
@@ -297,6 +301,7 @@ static s32 func_80263E6C(f32 u, f32 v, f32 du, f32 dv, f32 w, f32 h, RectF *r) {
     f32 wm;
     f32 hm;
     s32 flags;
+    s32 pad5;
     RectF *p;
 
     u0 = func_80263DC8(u, w);
@@ -498,8 +503,68 @@ u32 func_80264F68(u32 a, u32 b) {
     return a - (a / b) * b;
 }
 
-static u32 func_80264F98(u32 a, u32 b) {
-    return func_80264F68(a, b);
+static void func_80264F98(RectI *r, u32 u, u32 v, u32 w, u32 h, u32 width, u32 height) {
+    u32 u0;
+    u32 v0;
+    u32 u1;
+    u32 v1;
+
+    u0 = func_80264F68(u, width);
+    v0 = func_80264F68(v, height);
+    u1 = func_80264F68(u0 + w - 1, width);
+    v1 = func_80264F68(v0 + h - 1, height);
+    switch ((u1 < u0) | ((v1 < v0) << 1)) {
+        case 0:
+            r->a = u0;
+            r->b = v0;
+            r->c = u1;
+            r->d = v1;
+            break;
+        case 1:
+            r->a = u0;
+            r->b = v0;
+            r->c = width - 1;
+            r->d = v1;
+            r++;
+            r->a = 0;
+            r->b = v0;
+            r->c = u1;
+            r->d = v1;
+            break;
+        case 2:
+            r->a = u0;
+            r->b = v0;
+            r->c = u1;
+            r->d = height - 1;
+            r++;
+            r++;
+            r->a = u0;
+            r->b = 0;
+            r->c = u1;
+            r->d = v1;
+            break;
+        case 3:
+            r->a = u0;
+            r->b = v0;
+            r->c = width - 1;
+            r->d = height - 1;
+            r++;
+            r->a = 0;
+            r->b = v0;
+            r->c = u1;
+            r->d = height - 1;
+            r++;
+            r->a = u0;
+            r->b = 0;
+            r->c = width - 1;
+            r->d = v1;
+            r++;
+            r->a = 0;
+            r->b = 0;
+            r->c = u1;
+            r->d = v1;
+            break;
+    }
 }
 
 s32 func_80264FA0(Gfx **gfxp, TexFile *file, s32 idx, DrawI *info) {
@@ -595,13 +660,7 @@ void func_80265274(Gfx **gfxp, TexFile *file, s32 x0, s32 y0, s32 x1, s32 y1, u3
     DrawI info;
     f32 dxt;
     f32 dyt;
-    u32 u0;
-    u32 v0;
-    u32 u1;
-    u32 v1;
-    RectI *p;
-    s32 pad1;
-    s32 pad2;
+    s32 i;
 
     if (x0 == x1 || w == 0 || y0 == y1 || h == 0) {
         return;
@@ -610,65 +669,16 @@ void func_80265274(Gfx **gfxp, TexFile *file, s32 x0, s32 y0, s32 x1, s32 y1, u3
     if (!func_80264FA0(&gfx, file, idx, &info)) {
         return;
     }
-    u0 = func_80264F98(u, info.width);
-    v0 = func_80264F98(v, info.height);
-    u1 = func_80264F98(u0 + w - 1, info.width);
-    v1 = func_80264F98(v0 + h - 1, info.height);
-    switch ((u1 < u0) | ((v1 < v0) << 1)) {
-        case 0:
-            rects[0].a = u0;
-            rects[0].b = v0;
-            rects[0].c = u1;
-            rects[0].d = v1;
-            break;
-        case 1:
-            rects[0].a = u0;
-            rects[0].b = v0;
-            rects[0].c = info.width - 1;
-            rects[0].d = v1;
-            rects[1].a = 0;
-            rects[1].b = v0;
-            rects[1].c = u1;
-            rects[1].d = v1;
-            break;
-        case 2:
-            rects[0].a = u0;
-            rects[0].b = v0;
-            rects[0].c = u1;
-            rects[0].d = info.height - 1;
-            rects[2].a = u0;
-            rects[2].b = 0;
-            rects[2].c = u1;
-            rects[2].d = v1;
-            break;
-        case 3:
-            rects[0].a = u0;
-            rects[0].b = v0;
-            rects[0].c = info.width - 1;
-            rects[0].d = info.height - 1;
-            rects[1].a = 0;
-            rects[1].b = v0;
-            rects[1].c = u1;
-            rects[1].d = info.height - 1;
-            rects[2].a = u0;
-            rects[2].b = 0;
-            rects[2].c = info.width - 1;
-            rects[2].d = v1;
-            rects[3].a = 0;
-            rects[3].b = 0;
-            rects[3].c = u1;
-            rects[3].d = v1;
-            break;
-    }
+    func_80264F98(rects, u, v, w, h, info.width, info.height);
     if (info.width < w || info.height < h) {
         while (1) {}
     }
     if (x1 >= x0) {
-        info.dirX = 1;
         info.scaleX = (f32) (x1 - x0) / (f32) w;
+        info.dirX = 1;
     } else {
-        info.dirX = -1;
         info.scaleX = (f32) (x0 - x1) / (f32) w;
+        info.dirX = -1;
     }
     if (y1 >= y0) {
         info.dirY = 1;
@@ -679,16 +689,16 @@ void func_80265274(Gfx **gfxp, TexFile *file, s32 x0, s32 y0, s32 x1, s32 y1, u3
     }
     dxt = (f32) (rects[0].c - rects[0].a) * (f32) info.dirX * info.scaleX;
     dyt = (f32) (rects[0].d - rects[0].b) * (f32) info.dirY * info.scaleY;
-    for (p = rects; p != &rects[4]; p++) {
-        if (p->a != -1 && p->b != -1 && p->c != -1 && p->d != -1) {
-            info.x0 = ((p == &rects[1] || p == &rects[3]) ? dxt : 0.0f) + (f32) x0;
-            info.y0 = ((p == &rects[2] || p == &rects[3]) ? dyt : 0.0f) + (f32) y0;
-            info.x1 = func_80264EF8((f32) (p->c - p->a + 1) * (f32) info.dirX * info.scaleX) + info.x0;
-            info.y1 = func_80264EF8((f32) (p->d - p->b + 1) * (f32) info.dirY * info.scaleY) + info.y0;
-            info.s0 = p->a;
-            info.t0 = p->b;
-            info.s1 = p->c;
-            info.t1 = p->d;
+    for (i = 0; i < 4; i++) {
+        if (rects[i].a != -1 && rects[i].b != -1 && rects[i].c != -1 && rects[i].d != -1) {
+            info.x0 = ((i == 1 || i == 3) ? dxt : 0.0f) + (f32) x0;
+            info.y0 = ((i == 2 || i == 3) ? dyt : 0.0f) + (f32) y0;
+            info.x1 = func_80264EF8((f32) (rects[i].c - rects[i].a + 1) * (f32) info.dirX * info.scaleX) + info.x0;
+            info.y1 = func_80264EF8((f32) (rects[i].d - rects[i].b + 1) * (f32) info.dirY * info.scaleY) + info.y0;
+            info.s0 = rects[i].a;
+            info.t0 = rects[i].b;
+            info.s1 = rects[i].c;
+            info.t1 = rects[i].d;
             func_80264A98(&gfx, &info);
         }
     }
@@ -705,10 +715,13 @@ void func_8026437C(Gfx **gfxp, TexFile *file, f32 x0, f32 y0, f32 x1, f32 y1, f3
     f32 fw;
     f32 fh;
     s32 i;
-    RectF *p;
+    s32 pad0;
+    s32 pad1;
+    s32 pad2;
     s32 pad3;
     s32 pad4;
     s32 flags;
+    s32 pad5;
     RectF rects[4] = { { 32768.0f, 32768.0f, 32768.0f, 32768.0f }, { 32768.0f, 32768.0f, 32768.0f, 32768.0f }, { 32768.0f, 32768.0f, 32768.0f, 32768.0f }, { 32768.0f, 32768.0f, 32768.0f, 32768.0f } };
     DrawF info;
     Gfx *save;
@@ -730,80 +743,79 @@ void func_8026437C(Gfx **gfxp, TexFile *file, f32 x0, f32 y0, f32 x1, f32 y1, f3
         while (1) {}
     }
     if (func_802337EC(x1 - x0) != -1) {
-        info.dirX = 1.0f;
         info.scaleX = (x1 - x0) / w;
+        info.dirX = 1;
     } else {
-        info.dirX = -1.0f;
         info.scaleX = (x0 - x1) / w;
+        info.dirX = -1;
     }
     if (func_802337EC(y1 - y0) != -1) {
-        info.dirY = 1.0f;
         info.scaleY = (y1 - y0) / h;
+        info.dirY = 1;
     } else {
-        info.dirY = -1.0f;
         info.scaleY = (y0 - y1) / h;
+        info.dirY = -1;
     }
     fw = (rects[0].c - rects[0].a) - 1.0f;
-    if (func_802336E4(func_80263904(rects[0].c)) == 0) {
-        func_80263904(fw);
+    if (func_802336E4(rects[0].c - (f32) (s32) rects[0].c) == 0) {
+        if (func_80263904(fw)) {}
     }
     fh = (rects[0].d - rects[0].b) - 1.0f;
-    if (func_802336E4(func_80263904(rects[0].d)) == 0) {
-        func_80263904(fh);
+    if (func_802336E4(rects[0].d - (f32) (s32) rects[0].d) == 0) {
+        if (fh - (s32) fh && fh - (s32) fh) {}
     }
-    p = &rects[0];
-    if (p->a != 32768.0f && p->b != 32768.0f && p->c != 32768.0f && p->d != 32768.0f) {
-        func_80263904(fw);
+    i = 0;
+    if (rects[i].a != 32768.0f && rects[i].b != 32768.0f && rects[i].c != 32768.0f && rects[i].d != 32768.0f) {
+        if (fh - (s32) fh && fh - (s32) fh) {}
         info.y0 = y0;
         info.x0 = x0;
-        info.x1 = (p->c - p->a) * (info.dirX * info.scaleX) + x0;
-        info.y1 = (p->d - p->b) * (info.dirY * info.scaleY) + y0;
+        info.x1 = (rects[i].c - rects[i].a) * (info.dirX * info.scaleX) + x0;
+        info.y1 = (rects[i].d - rects[i].b) * (info.dirY * info.scaleY) + y0;
         if (x1 < info.x1) {
             info.x1 = x1;
         }
         if (y1 < info.y1) {
             info.y1 = y1;
         }
-        info.s0 = p->a;
-        info.t0 = p->b;
-        info.s1 = p->c;
-        info.t1 = p->d;
+        info.s0 = rects[i].a;
+        info.t0 = rects[i].b;
+        info.s1 = rects[i].c;
+        info.t1 = rects[i].d;
         func_802639E4(&gfx, &info);
     }
-    i = 1;
-    p = &rects[i];
-    if (p->a != 32768.0f && p->b != 32768.0f && p->c != 32768.0f && p->d != 32768.0f) {
+    i++;
+    if (rects[i].a != 32768.0f && rects[i].b != 32768.0f && rects[i].c != 32768.0f && rects[i].d != 32768.0f) {
         info.x0 = info.x1;
         info.y0 = y0;
         info.x1 = x1;
-        info.s0 = p->a;
-        info.t0 = p->b;
-        info.s1 = p->c;
-        info.t1 = p->d;
+        info.s0 = rects[i].a;
+        info.t0 = rects[i].b;
+        info.s1 = rects[i].c;
+        info.t1 = rects[i].d;
         func_802639E4(&gfx, &info);
     }
-    p++;
-    if (p->a != 32768.0f && p->b != 32768.0f && p->c != 32768.0f && p->d != 32768.0f) {
+    i++;
+    if (rects[i].a != 32768.0f && rects[i].b != 32768.0f && rects[i].c != 32768.0f && rects[i].d != 32768.0f) {
         if (flags == 3) {
             info.x1 = info.x0;
         }
         info.x0 = x0;
         info.y0 = info.y1;
         info.y1 = y1;
-        info.s0 = p->a;
-        info.t0 = p->b;
-        info.s1 = p->c;
-        info.t1 = p->d;
+        info.s0 = rects[i].a;
+        info.t0 = rects[i].b;
+        info.s1 = rects[i].c;
+        info.t1 = rects[i].d;
         func_802639E4(&gfx, &info);
     }
-    p++;
-    if (p->a != 32768.0f && p->b != 32768.0f && p->c != 32768.0f && p->d != 32768.0f) {
+    i++;
+    if (rects[i].a != 32768.0f && rects[i].b != 32768.0f && rects[i].c != 32768.0f && rects[i].d != 32768.0f) {
         info.x0 = info.x1;
         info.x1 = x1;
-        info.s0 = p->a;
-        info.t0 = p->b;
-        info.s1 = p->c;
-        info.t1 = p->d;
+        info.s0 = rects[i].a;
+        info.t0 = rects[i].b;
+        info.s1 = rects[i].c;
+        info.t1 = rects[i].d;
         func_802639E4(&gfx, &info);
     }
     gDPSetTexturePersp(gfx++, G_TP_PERSP);
