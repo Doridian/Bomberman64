@@ -1,8 +1,8 @@
 /*
  * NON_MATCHING: ovl_13_02's game object, complete; not in the ROM.
  * flags: -O3
- * differing words: us 17, eu 17, jp 17
- * 77 of 80 functions match (fcmp folds each static into the function
+ * differing words: us 0, eu 0, jp 0
+ * 80 of 80 functions match (fcmp folds each static into the function
  * before it; the text is the same in every version).
  * Still differs: 800458D8 swaps $v0 and $v1 between its flags and
  * the 0x40 test (the count reuses arg0, which the original has in $a0);
@@ -1325,6 +1325,7 @@ static void func_ovl13_02_80049400(void) {
 
     if (0) { func_ovl13_02_80048FBC(0); }
     sp1C = func_ovl13_02_8004CD70();
+    if (M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 0) == 0.0f) {}
     func_ovl13_02_8004CD68((func_ovl13_02_8004CF08(2) * 0xA) + 0xA);
     func_ovl13_02_8004D2F0((s32) sp1C, M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 0), M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 4), M2C_FIELD(&D_ovl13_02_8004DEC8, f32 *, 8));
     func_ovl13_02_8004CD58();
@@ -1793,6 +1794,9 @@ void func_ovl13_02_80046E10(s32 arg0) {
         D_ovl13_02_8004DE50[6]->unk34 *= 0.6f;
     }
     for (i = 0; i < arg0; i++) {
+        if (D_ovl13_02_8004DE80.unk0 == 0) {}
+        if (D_ovl13_02_8004DE98.unk0 == 0) {}
+        if (D_ovl13_02_8004DEB0.unk0 == 0) {}
         if (M2C_FIELD(&D_ovl13_02_8004DED8, f32 *, 0) >= 360.0f) {
             M2C_FIELD(&D_ovl13_02_8004DED8, f32 *, 0) -= 360.0f;
         } else {
@@ -1809,15 +1813,15 @@ void func_ovl13_02_80046E10(s32 arg0) {
         D_ovl13_02_8004DEF4 = 0.0f;
         ang = M2C_FIELD(&D_ovl13_02_8004DED8, f32 *, 4);
         save = D_ovl13_02_8004DE50[0]->unk50;
-        D_ovl13_02_8004DE80.unkC = 0.5f;
-        D_ovl13_02_8004DE80.unk8 = 0.5f;
-        D_ovl13_02_8004DE80.unk0 = 2;
-        D_ovl13_02_8004DE98.unkC = 0.5f;
-        D_ovl13_02_8004DE98.unk8 = 0.5f;
-        D_ovl13_02_8004DE98.unk0 = 2;
         D_ovl13_02_8004DEB0.unkC = 0.5f;
         D_ovl13_02_8004DEB0.unk8 = 0.5f;
         D_ovl13_02_8004DEB0.unk0 = 2;
+        D_ovl13_02_8004DE98.unkC = 0.5f;
+        D_ovl13_02_8004DE98.unk8 = 0.5f;
+        D_ovl13_02_8004DE98.unk0 = 2;
+        D_ovl13_02_8004DE80.unkC = 0.5f;
+        D_ovl13_02_8004DE80.unk8 = 0.5f;
+        D_ovl13_02_8004DE80.unk0 = 2;
         D_ovl13_02_8004DEB0.unk10 = 0.999f;
         D_ovl13_02_8004DE98.unk10 = 0.999f;
         D_ovl13_02_8004DE80.unk10 = 0.999f;
@@ -2413,10 +2417,15 @@ s32 func_ovl13_02_800458D8(UnkStructA *arg0) {
     s32 flags;
     s32 r;
 
+    /* r's variable must come before flags in uopt's bit order (unconstrained
+       ranges are coloured in bit order): r = 0 and the dead read give r its
+       bit first, so the 0x40 test gets $v0 and flags $v1 */
+    r = 0;
     flags = arg0->unk10;
-    r = flags & 0x40;
+    if (r) {}
+    r = arg0->unk10 & 0x40;
     if (r == 0) {
-        return r;
+        return 0;
     }
     /* the count lives in arg0's register: the parameter is reused */
     arg0 = (UnkStructA *) 1;
