@@ -1,15 +1,12 @@
 /*
- * NON_MATCHING: ovl_13_01's game object (a boss fight, as far as the code
- * shows: a body (D_ovl13_01_8004C338) with two side parts, two jointed
- * chains of links ending in heads (D_ovl13_01_8004C31C and
- * D_ovl13_01_8004C348[3]), a hit counter per part (8004C28C-8004C29C,
- * doubled-up with event flag 0x41F), the attack moves 80043878-800455D0
- * chosen by 8004899C, the camera (8004C388/8004C3A8) and the intro and
- * end scripts), complete: every function and its data (.data 0x20,
- * .bss 0x1F0 as the original). Not built into the ROM
- * (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * ovl_13_01's game object, IDO -O3; it matches in us, eu and jp. As far as
+ * the code shows it is a boss fight: a body (D_ovl13_01_8004C338) with two
+ * side parts, two jointed chains of links ending in heads
+ * (D_ovl13_01_8004C31C and D_ovl13_01_8004C348[3]), a hit counter per part
+ * (8004C28C-8004C29C, doubled-up with event flag 0x41F), the attack moves
+ * 80043878-800455D0 chosen by 8004899C, the camera (8004C388/8004C3A8) and
+ * the intro and end scripts. Its data: .data 0x20, .rodata 0x2B0, .bss
+ * 0x1F0, the same in every version.
  *
  * Drafted from m2c, then rewritten function by function: the angle
  * normalisations are the original's ternaries (A180, and the 0-360 wrap
@@ -17,15 +14,7 @@
  * loops again, small globals m2c had expanded are calls (80045C60 in
  * 80048418 and 80047CB4, 80048B6C in 80048BB0), object creation is
  * chained (`obj = D_x = func_ovl13_01_8004B660(...)`), and the locals are
- * declared in the order that gives the original's frame slots. 800431D4's
- * thresholds are `(s32)(frames * 0.25f)` and `* 0.95f` written in the
- * loop's conditions with an f32 `frames`: the compiler hoists them into
- * its own frame slots below the locals, as the original does, once the
- * early `return` and the `for` loop keep them out of saved registers.
- * The 14 stubs (two `jr ra` in a row): 8004A200 is the camera reset
- * 8004A208, 8004A2D4 and 8004A4C4 share (inlined in each), 8004A4AC-BC
- * statics inlined in 8004A4C4; 8004A898-8004A8E0 are the ten unused
- * statics after the tail, defined first in ascending order.
+ * declared in the order that gives the original's frame slots.
  *
  * Source order: every function comes out in .text in the original's order.
  * IDO processes definitions last to first and pulls a function's callees
@@ -41,44 +30,55 @@
  * 80049158, 800490DC, 80048E2C, 80048BB0, 80048B6C, 8004899C, 80048418,
  * 800471D8 is the order their addresses must first appear in.
  *
- * D_ovl13_01_8004C3D0/C3D4 (800455D0) and C3D8 (80045538) are
- * function-scope statics, the last three words of .bss but for C3DC-C3EC
- * (as file-scope globals uopt keeps their address in a register; the
- * original reloads it with lui each time): check their .bss places at
- * move time.
+ * The 14 stubs (two `jr ra` in a row): 8004A200 is the camera reset
+ * 8004A208, 8004A2D4 and 8004A4C4 share (inlined in each), 8004A4AC-BC
+ * statics inlined in 8004A4C4; 8004A898-8004A8E0 are the ten unused
+ * statics after the tail, defined first in ascending order.
  *
- * What still differs (words, the same in every version): 800446FC 6.
- * The other 81 match. In 800446FC's loop wrap the original has 90.0f in
- * $f14 and the else arm's ternary in $f12; ours has $f12 and $f2 (the
- * ternary sharing spA8.y's register). Its first wrap's 90s are ints
- * (W), which keeps uopt from reloading 90.0f partway through it.
- * 80046DC4's non-final `return` (`jr ra; move v0,v1`, a nop in the
- * beqz slot) is one return after a `goto done` and a redundant `else
- * var_v1 = 0`, so the +1 path ends in a real branch. 80049870's
- * C2D8 stores share one source line.
- * 80046E00's lone second `c.lt.s` (no branch) is an `||` if whose body
- * is two more nested ifs, the innermost testing a global: uopt empties
- * one level per pass, so the outer if survives with nothing in it and
- * as1 drops the branch to the next instruction. Its y is sp34.y itself,
- * assigned in both arms (the local's stores are dead, so it stays in one
- * register); an unused `f32 y` and a dead `if (a) {}` give the rest.
- * 800446FC's lone `c.le.s` after the second loop's wrap is a clamp of d
- * whose result is never used (uopt keeps the if, as1 drops the branch).
- * 80043878's register allocation turns on its zeros: `D_ovl13_01_8004C2A8
- * = 0` as an int in both places, 0.0f everywhere else. 8004636C matched with the static 80043124
- * declared s32 ($v1 for its caller's loads, as in 0B_03).
- * 800450B4 matched once `dx /= (f32)arg0` came after dy's normalisation:
- * the conversion's place follows its first use. 800477C0's wraps are
- * the macro W360 on the whole expression (a local for it gets copied to
- * its own register), with a dead `if (!diff) {}` after the first of the
- * last two, which puts n and the result in the original's $f0/$f2.
- * 80047CB4's spill at 0x1C is the compiler's temporary for the repeated
- * `angle + 1.0f`, not a local: written twice, with no pad locals, and
- * with 80045C60 (inlined into it) declaring no unused local, whose slot
- * in the caller's frame would move the temporary by 4.
- * 80047144 and 80045C9C get the original's `mul.s K, expr` operand
- * order only from `360.0f * t` with the quotient in a local t (IDO
- * orders `K * (expr)` the same whichever way it's written).
+ * D_ovl13_01_8004C3D0/C3D4 (800455D0) and C3D8 (80045538) are
+ * function-scope statics, the last three words of .bss but for C3DC-C3EC:
+ * as file-scope globals uopt keeps their address in a register, where the
+ * original reloads it with lui each time. The .bss nothing uses would be
+ * common: dead `if (0)`s refer to it (8004A898, and 80043010 for C3DC).
+ *
+ * What it took, function by function:
+ * - 800431D4: its thresholds are `(s32)(frames * 0.25f)` and `* 0.95f`
+ *   written in the loop's conditions with an f32 `frames`: the compiler
+ *   hoists them into its own frame slots below the locals, as the original
+ *   does, once the early `return` and the `for` loop keep them out of
+ *   saved registers.
+ * - 800446FC: its first wrap's 90s are ints, which keeps uopt from
+ *   reloading 90.0f partway through it. The lone `c.le.s` after the second
+ *   loop's wrap is a clamp of d whose result is never used (uopt keeps the
+ *   if, as1 drops the branch).
+ * - 80046DC4's non-final `return` (`jr ra; move v0,v1`, a nop in the beqz
+ *   slot) is one return after a `goto done` and a redundant `else var_v1 =
+ *   0`, so the +1 path ends in a real branch.
+ * - 80046E00's lone second `c.lt.s` (no branch) is an `||` if whose body
+ *   is two more nested ifs, the innermost testing a global: uopt empties
+ *   one level per pass, so the outer if survives with nothing in it and
+ *   as1 drops the branch to the next instruction. Its y is sp34.y itself,
+ *   assigned in both arms (the local's stores are dead, so it stays in one
+ *   register); an unused `f32 y` and a dead `if (a) {}` give the rest.
+ * - 80049870's C2D8 stores share one source line.
+ * - 80043878's register allocation turns on its zeros:
+ *   `D_ovl13_01_8004C2A8 = 0` as an int in both places, 0.0f everywhere
+ *   else.
+ * - 8004636C: the static 80043124 is declared s32 ($v1 for its caller's
+ *   loads, as in 0B_03).
+ * - 800450B4: `dx /= (f32)arg0` comes after dy's normalisation: the
+ *   conversion's place follows its first use.
+ * - 800477C0's wraps are the macro W360 on the whole expression (a local
+ *   for it gets copied to its own register), with a dead `if (!diff) {}`
+ *   after the first of the last two, which puts n and the result in the
+ *   original's $f0/$f2.
+ * - 80047CB4's spill at 0x1C is the compiler's temporary for the repeated
+ *   `angle + 1.0f`, not a local: written twice, with no pad locals, and
+ *   with 80045C60 (inlined into it) declaring no unused local, whose slot
+ *   in the caller's frame would move the temporary by 4.
+ * - 80047144 and 80045C9C get the original's `mul.s K, expr` operand
+ *   order only from `360.0f * t` with the quotient in a local t (IDO
+ *   orders `K * (expr)` the same whichever way it's written).
  */
 #include "common.h"
 
@@ -94,6 +94,12 @@ typedef struct {
     /* 0x0C */ f32 unkC;
     /* 0x10 */ f32 unk10;
 } Link_ovl13_01;
+
+/* D_ovl13_01_8004C3E0 and the unused word after it (8004C3EC). */
+typedef struct {
+    /* 0x00 */ Vec3f v;
+    /* 0x0C */ u8 unkC[4];
+} Vec3fPad_ovl13_01;
 
 /* The camera move ZeroJump 0x170B takes: two vectors' steps and their changes. */
 typedef struct {
@@ -282,9 +288,8 @@ s32 D_ovl13_01_8004C3C0;
 s32 D_ovl13_01_8004C3C4;
 u32 D_ovl13_01_8004C3C8;
 s32 D_ovl13_01_8004C3CC;
-u8 D_ovl13_01_8004C3DC[4];
-Vec3f D_ovl13_01_8004C3E0;
-u8 D_ovl13_01_8004C3EC[4];
+/* defined after 80045538: see there */
+extern Vec3fPad_ovl13_01 D_ovl13_01_8004C3E0;
 
 void func_ovl13_01_80043010(void);
 void func_ovl13_01_8004306C(s32 arg0);
@@ -380,8 +385,13 @@ s32 D_ovl13_01_8004BF3C = 0;
 s32 D_ovl13_01_8004BF40 = 0;
 s32 D_ovl13_01_8004BF44 = 0;
 
-/* unused: the stubs IDO -O3 leaves after the tail */
+/* unused: the stubs IDO -O3 leaves after the tail; the dead `if (0)` in
+ * the first refers to the .bss words nothing else uses (but C3DC), which
+ * would otherwise be common and leave .bss short */
 static void func_ovl13_01_8004A898(void) {
+    if (0) {
+        D_ovl13_01_8004C20C[0] = D_ovl13_01_8004C220[0] = D_ovl13_01_8004C22C[0] = D_ovl13_01_8004C26C[0] = D_ovl13_01_8004C2D4[0] = D_ovl13_01_8004C2EC[0] = D_ovl13_01_8004C304[0] = D_ovl13_01_8004C32C[0] = D_ovl13_01_8004C344[0] = D_ovl13_01_8004C364[0] = D_ovl13_01_8004C374[0] = D_ovl13_01_8004C384[0] = D_ovl13_01_8004C394[0] = D_ovl13_01_8004C3A4[0] = 0;
+    }
 }
 
 static void func_ovl13_01_8004A8A0(void) {
@@ -612,8 +622,8 @@ void func_ovl13_01_800493EC(UnkStructA *arg0) {
             if (arg0->unk68 == 0.0f && arg0->unk6C == 0.0f) {
                 if (D_ovl13_01_8004C288 == D_ovl13_01_8004C284 && D_ovl13_01_8004C280 < 10) {
                     D_ovl13_01_8004C280++;
-                    func_ovl13_01_8004B708(arg0, &(&D_ovl13_01_8004C3E0)[D_ovl13_01_8004C288].x);
-                    temp_a1 = &(&D_ovl13_01_8004C3E0)[D_ovl13_01_8004C288];
+                    func_ovl13_01_8004B708(arg0, &(&D_ovl13_01_8004C3E0.v)[D_ovl13_01_8004C288].x);
+                    temp_a1 = &(&D_ovl13_01_8004C3E0.v)[D_ovl13_01_8004C288];
                     temp_a1->y += 25.0f;
                     func_ovl13_01_8004B788(func_ovl13_01_80048E2C, temp_a1, 0, 0, 0x150);
                 }
@@ -2115,6 +2125,15 @@ void func_ovl13_01_80045538(void) {
     D_ovl13_01_8004C3D8 = 0;
 }
 
+/* The last of .bss, after the function-scope statics C3D0-C3D8, so defined
+ * after their functions. C3DC is kept out of common by the dead `if (0)` in
+ * 80043010, the last function (a reference earlier in the source puts it
+ * before the statics; one in 800450B4 changes that function's code). IDO
+ * puts C3E0, used before its definition, after everything else, so the
+ * unused word after it is part of it. */
+u8 D_ovl13_01_8004C3DC[4];
+Vec3fPad_ovl13_01 D_ovl13_01_8004C3E0;
+
 void func_ovl13_01_800450B4(s32 arg0) {
     s32 i;
     f32 ang;
@@ -2791,6 +2810,10 @@ void func_ovl13_01_8004306C(s32 arg0) {
 }
 
 void func_ovl13_01_80043010(void) {
+    /* keeps D_ovl13_01_8004C3DC out of common (see its definition) */
+    if (0) {
+        D_ovl13_01_8004C3DC[0] = 0;
+    }
     if (!(*D_ovl13_01_8004C23C & 2)) {
         if (func_ovl13_01_8004B9F0(0xA4) == 0) {
             func_ovl13_01_8004B7A8(0x73);

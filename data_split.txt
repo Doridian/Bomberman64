@@ -439,6 +439,10 @@ ovl_12_05 255A80 0x10 0x240 0xA0
 ovl_12_06 ovl_12_06_entry 0 0 0
 ovl_12_06 25D670 0x30 0xC0 0x50
 
+# ovl_13_01: all C (-O3), a boss fight
+ovl_13_01 ovl_13_01_entry 0 0 0
+ovl_13_01 2605F0 0x20 0x2B0 0x1F0
+
 # ovl_16_01: all C (-g); .rodata is its debug messages, a float and the
 # handler's jump table
 ovl_16_01 ovl_16_01_entry 0 0 0
