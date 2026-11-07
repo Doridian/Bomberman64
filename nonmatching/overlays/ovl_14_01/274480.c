@@ -1,10 +1,10 @@
 /*
  * NON_MATCHING: ovl_14_01's game object, complete; not in the ROM.
  * flags: -O3
- * differing words: us 221, eu 221, jp 221
+ * differing words: us 197, eu 197, jp 197
  *
  * The text is the same in every version (only jp's ZeroJump numbers
- * differ). 79 of 89 functions match. m2c output (with the ZeroJump
+ * differ). 80 of 89 functions match. m2c output (with the ZeroJump
  * prototypes of the other drafts, scratch/newovl2/protos.h, and the
  * file's own in own.h) made to compile, then tuned by hand
  * (scratch/newovl2/r/).
@@ -56,15 +56,24 @@
  * &D_8004D4DC in a register), and `if (v) {}` sits in the else arm only.
  * That also fixes 8004A11C's alignment.
  *
- * What still differs (10 functions):
- * - 80049814 (22): the if arm's D_8004D190 address is a ugen temp (t8),
- *   the original's v0 (shifts the t-register numbering until the volatile
- *   `l++`, whose load goes to v0 where the original has t7; `l += 1`
- *   gives t-numbering but leaves the if arm). Making v live in the if arm
- *   (`if (v) {}` there) emits a real test.
- *   `l` is `volatile` (semantics unchanged): the original keeps it in its
- *   frame slot, which gives the 40-byte frame.
- * - 800488B0 (13): n in a1 and m in v1 (ours v1 and v0).
+ * Pass 8 (scratch/newovl2/r7/): 80049814's arms both store `v` and the
+ * dead read `if (v) {}` sits after the join, so each arm's address is a
+ * coloured two-use range (no t-register used up in the if arm); `l += 1`
+ * then gives the original's t7 for the volatile load. 8004A760 has no `t`:
+ * `x + 0.1f` is written out at each use (uopt's CSE keeps it in f0 and
+ * 0.0 gets f2).
+ *
+ * What still differs (9 functions):
+ * - 80049814 (8): the arms' addresses are in v1, the original's v0 (v,
+ *   the loop pointer, is live there through the dead read and takes v0
+ *   first). A separate variable for the arms does the same; one whose
+ *   dead read is after the next call gets v1 and frees v0 for the
+ *   addresses, but spills. `l` is `volatile` (semantics unchanged): the
+ *   original keeps it in its frame slot, which gives the 40-byte frame.
+ * - 800488B0 (13): n in a1 and m in v1 (ours v1 and v0). m is coloured
+ *   first and takes v0; in the original v0 is forbidden for it. `if ((m =
+ *   80044FDC()) == 0)` with no `m = 0` (m live through the inlined
+ *   result) gives exactly a1/v1 but spills m across 8004CA08.
  * - 800467C0 (44), 8004654C (4): the store to D_8004D6A0.y in each
  *   loop goes through its own lui (%lo(D_8004D6A4)) in the original
  *   (uncoloured address; struct, separate f32s, casts, (&x)[1], volatile
@@ -84,9 +93,9 @@
  *   follows once that is right.
  * - 80048ABC (23): v0 vs t0 for the 2 stored to unk0.
  * - 800432D8 (15): the original keeps 1.0 and 100.0 in $fs regs in the
- *   first loop and reloads 120.0, ours hoists 120.0.
- * - 8004A760 (10): 0.0 in f14 (original f2), and t copied to f2 before
- *   the 360 test's branch.
+ *   first loop and reloads 120.0, ours hoists 120.0. The three constants
+ *   tie at priority 5 and go in bit order (1.0, 120.0, 100.0); int
+ *   literals, operand orders and a variable for 100 don't move it.
  * Several functions need an unused `pad` local for the original's frame.
  */
 #include "common.h"
@@ -782,7 +791,6 @@ void func_ovl14_01_8004A914(void) {
 void func_ovl14_01_8004A760(void) {
     f32 sb;
     f32 sa;
-    f32 t;
     f32 y;
     f32 x;
     f64 r;
@@ -790,18 +798,16 @@ void func_ovl14_01_8004A760(void) {
     y = 0.0f;
     x = 0.0f;
     for (;;) {
-        t = x + 0.1f;
-        if (t >= 360.0f) {
-            x = t - 360.0f;
+        if (x + 0.1f >= 360.0f) {
+            x = (x + 0.1f) - 360.0f;
         } else {
-            sb = (t < 0.0f) ? t + 360.0f : t;
+            sb = (x + 0.1f < 0.0f) ? (x + 0.1f) + 360.0f : x + 0.1f;
             x = sb;
         }
-        t = y + 0.2f;
-        if (t >= 360.0f) {
-            y = t - 360.0f;
+        if (y + 0.2f >= 360.0f) {
+            y = (y + 0.2f) - 360.0f;
         } else {
-            sb = (t < 0.0f) ? t + 360.0f : t;
+            sb = (y + 0.2f < 0.0f) ? (y + 0.2f) + 360.0f : y + 0.2f;
             y = sb;
         }
         sa = func_ovl14_01_8004CB90(x);
@@ -1172,8 +1178,8 @@ void func_ovl14_01_80049814(s32 id, UnkStructA **parts, Link_ovl14_01 *links) {
     } else {
         (*parts)->unk4C = 498.0f;
         D_ovl14_01_8004D4DC = v = D_ovl14_01_8004D1CC;
-        if (v) {}
     }
+    if (v) {}
     M2C_FIELD(*parts, Link_ovl14_01 **, 0x3C) = links;
     parts++;
     *parts = func_ovl14_01_8004C8F0(-1, 0x500000, parts[-1]);
@@ -1190,7 +1196,7 @@ void func_ovl14_01_80049814(s32 id, UnkStructA **parts, Link_ovl14_01 *links) {
     (*parts)->unk50 = 0.0f;
     (*parts)->unk54 = 60.0f;
     func_ovl14_01_8004C880(parts[-1], *parts, l, 0x150);
-    l++;
+    l += 1;
     parts++;
     *parts = func_ovl14_01_8004C8F0(id, 0x01008000, parts[-1]);
     (*parts)->unk54 = 420.0f;
