@@ -1,10 +1,10 @@
 /*
  * NON_MATCHING: ovl_14_01's game object, complete; not in the ROM.
  * flags: -O3
- * differing words: us 81, eu 81, jp 81
+ * differing words: us 13, eu 13, jp 13
  *
  * The text is the same in every version (only jp's ZeroJump numbers
- * differ). 83 of 89 functions match (8004515C: two swapped globals, found by the relocation check). m2c output (with the ZeroJump
+ * differ). 87 of 89 functions match. m2c output (with the ZeroJump
  * prototypes of the other drafts, scratch/newovl2/protos.h, and the
  * file's own in own.h) made to compile, then tuned by hand
  * (scratch/newovl2/r/).
@@ -80,31 +80,36 @@
  * (the same value as `100 * (1 - i / 120)` in IEEE arithmetic): 120.0 is
  * then the first constant seen and 1.0 gets f22 as in the original.
  *
- * What still differs (5 functions):
+ * Pass 10 (scratch/wrongfix/): fcmp's relocation check found
+ * 8004515C's chain storing D_8004D548 and D_8004D550 the wrong way round:
+ * the innermost global is stored first, so the chain is `D554 = D548 =
+ * D54C = D550 = 0`. 8004654C and 800467C0 match (TRICK): the original
+ * stores D_8004D6A0.y with its own lui (%lo(D_8004D6A4)) because uopt's
+ * copy propagation folds an ISTR to a constant address into a direct
+ * store (istrfold, uoptcopy.c) when it replaces something in the stored
+ * value. So the increment is a local, `k = -2.0f; ... D.y = D.y + k`,
+ * set before each loop; 800467C0's second step is `d = 45/-45; d /= 30`
+ * like the first, since `d = e / 30` was propagated into the x store and
+ * folded that one instead. 800488B0 matches with the inlined 80044FDC's
+ * result in `r` and a dead `if (r == m) {}` (m not yet set) at the top
+ * of the then-arm: m's range reaches the block where v0 holds the
+ * result, so m can't take v0 (m v1, n a1, as in the original).
+ * 800432D8 has `if (pad == 100.0f) {} do {} while (0);` at the top of the
+ * first loop (TRICK): 100.0 is then the first constant seen and gets f20
+ * (the `-(a) + 1.0f` form is no longer needed).
+ *
+ * What still differs (2 functions):
  * - 80049814 (8): the arms' addresses are in v1, the original's v0 (v,
  *   the loop pointer, is live there through the dead read and takes v0
  *   first). A separate variable for the arms does the same; one whose
  *   dead read is after the next call gets v1 and frees v0 for the
  *   addresses, but spills. `l` is `volatile` (semantics unchanged): the
  *   original keeps it in its frame slot, which gives the 40-byte frame.
- * - 800488B0 (13): n in a1 and m in v1 (ours v1 and v0). m is coloured
- *   first and takes v0; in the original v0 is forbidden for it. `if ((m =
- *   80044FDC()) == 0)` with no `m = 0` (m live through the inlined
- *   result) gives exactly a1/v1 but spills m across 8004CA08.
- * - 800467C0 (44), 8004654C (4): the store to D_8004D6A0.y in each
- *   loop goes through its own lui (%lo(D_8004D6A4)) in the original
- *   (uncoloured address; struct, separate f32s, casts, (&x)[1], volatile
- *   all give the same or worse; a scalar f32 D_8004D6A4 for the store is
- *   still an indirect store whose address uopt colours into s2; D_8004D6A0
- *   has other users, so a function-scope static is not an option).
- *   8004654C uses one counter for both loops (that keeps the first one's
- *   slti).
- * - 800432D8 (10): the original keeps 100.0 in f20 and reloads 120.0 in
- *   the first loop; ours keeps 120.0 in f20 and reloads 100.0. The three
- *   constants tie (priority 5) and are coloured in order of first
- *   appearance; 100.0 would have to appear before 1.0 and 120.0, but the
- *   multiplication puts the constant last whatever the source order, and
- *   a `pad = 100.0f` before the loop is propagated without effect.
+ *   Plain `D_8004D4DC = D_8004D190` arms (no v) give 82.
+ * - 800432D8 (5): `mul.s f6,f20,f4` (100.0 first) where ours has the
+ *   product first, and dy0/sdy's homes are 4 bytes lower than the
+ *   original's (72/68); a variable for 100.0 is propagated, and no
+ *   declaration order moves the homes.
  * Several functions need an unused `pad` local for the original's frame.
  */
 #include "common.h"
@@ -1495,6 +1500,7 @@ void func_ovl14_01_800488B0(void) {
     Vec3f low;
     s32 n;
     s32 m;
+    s32 r;
 
     home.x = D_ovl14_01_8004D690.x;
     home.y = D_ovl14_01_8004D690.y;
@@ -1516,7 +1522,8 @@ void func_ovl14_01_800488B0(void) {
     func_ovl14_01_8004882C();
     func_ovl14_01_80048454();
     func_ovl14_01_800487A8();
-    if (func_ovl14_01_80044FDC() == 0) {
+    if ((r = func_ovl14_01_80044FDC()) == 0) {
+        if (r == m) {} /* TRICK: keeps m off v0 */
         func_ovl14_01_8004CA08(60);
         m = 0;
         if (D_ovl14_01_8004D554 != 0) {
@@ -2196,7 +2203,7 @@ void func_ovl14_01_800467C0(UnkStructA **arg0, Link_ovl14_01 *arg1) {
     f32 x;
     f32 d;
     s32 i;
-    f32 e;
+    f32 k;
 
     y = D_ovl14_01_8004D6A0.y;
     x = D_ovl14_01_8004D6A0.x;
@@ -2212,22 +2219,24 @@ void func_ovl14_01_800467C0(UnkStructA **arg0, Link_ovl14_01 *arg1) {
     } else {
         func_ovl14_01_800431C4(0xFE, D_ovl14_01_8004D618[4]);
     }
+    k = -1.0f; /* TRICK: a propagated local makes uopt fold the store (own lui) */
     for (i = 0; i < 10; i++) {
         D_ovl14_01_8004D6A0.x += d;
-        D_ovl14_01_8004D6A0.y += -1.0f;
+        D_ovl14_01_8004D6A0.y = D_ovl14_01_8004D6A0.y + k;
         func_ovl14_01_8004CA30();
     }
     func_ovl14_01_80043688(arg0, arg1);
     func_ovl14_01_8004CA08(0x1E);
     if (arg1 == D_ovl14_01_8004D560) {
-        e = 45.0f;
+        d = 45.0f;
     } else {
-        e = -45.0f;
+        d = -45.0f;
     }
-    d = e / 30.0f;
+    d /= 30.0f;
+    k = 0.33333334f;
     for (i = 0; i != 30; i++) {
         D_ovl14_01_8004D6A0.x += d;
-        D_ovl14_01_8004D6A0.y += 0.33333334f;
+        D_ovl14_01_8004D6A0.y = D_ovl14_01_8004D6A0.y + k;
         func_ovl14_01_8004CA30();
     }
     D_ovl14_01_8004D6A0.y = y;
@@ -2277,6 +2286,7 @@ void func_ovl14_01_80046648(UnkStructA **arg0, Link_ovl14_01 *arg1) {
 void func_ovl14_01_8004654C(void) {
     f32 pad;
     f32 sp38;
+    f32 k;
     s32 var_s0;
     s32 var_s0_2;
 
@@ -2284,16 +2294,18 @@ void func_ovl14_01_8004654C(void) {
     func_ovl14_01_8004C8A0(D_ovl14_01_8004D5F0, 0x01000000);
     func_ovl14_01_8004C9E8(func_ovl14_01_80047A10, NULL, 0, 0, 0x150);
     var_s0 = 0;
+    k = -2.0f; /* TRICK: a propagated local makes uopt fold the store (own lui) */
     sp38 = D_ovl14_01_8004D6A0.y;
     do {
-        D_ovl14_01_8004D6A0.y = D_ovl14_01_8004D6A0.y + -2.0f;
+        D_ovl14_01_8004D6A0.y = D_ovl14_01_8004D6A0.y + k;
         func_ovl14_01_8004CA30();
         var_s0 += 1;
     } while (var_s0 < 0xA);
     func_ovl14_01_8004CA08(0x1E);
     var_s0 = 0;
+    k = 0.6666667f;
     do {
-        D_ovl14_01_8004D6A0.y = D_ovl14_01_8004D6A0.y + 0.6666667f;
+        D_ovl14_01_8004D6A0.y = D_ovl14_01_8004D6A0.y + k;
         func_ovl14_01_8004CA30();
         var_s0 += 1;
     } while (var_s0 != 0x1E);
@@ -2652,7 +2664,7 @@ void func_ovl14_01_8004515C(void) {
     func_ovl14_01_8004CC60(0x414);
     by = D_ovl14_01_8004D6A0.y;
     bx = D_ovl14_01_8004D6A0.x;
-    D_ovl14_01_8004D554 = D_ovl14_01_8004D550 = D_ovl14_01_8004D54C = D_ovl14_01_8004D548 = 0;
+    D_ovl14_01_8004D554 = D_ovl14_01_8004D548 = D_ovl14_01_8004D54C = D_ovl14_01_8004D550 = 0;
     n = 0x78;
     t1 = 0.0f;
     t2 = 0.0f;
@@ -3249,9 +3261,10 @@ void func_ovl14_01_800432D8(void) {
     if (func_ovl14_01_8004CC70(0x400) == 0) {
         func_ovl14_01_8004C9E8(func_ovl14_01_80043624, NULL, 0, 0, 0x150);
         for (i = 0; i < 120; i++) {
+            if (pad == 100.0f) {} /* TRICK: 100.0 seen first (f20) */
+            do {} while (0); /* TRICK: uopt block boundary */
             func_ovl14_01_8004CA30();
-            /* TRICK: 1 - i / 120 written so 120.0 is seen first */
-            func_ovl14_01_8004CCE8(0, 0, 0, (-((f32) i / 120.0f) + 1.0f) * 100.0f);
+            func_ovl14_01_8004CCE8(0, 0, 0, (1.0f - (f32) i / 120.0f) * 100.0f);
         }
         func_ovl14_01_8004CCE8(0, 0, 0, 0.0f);
         func_ovl14_01_800431C4(0x10D, D_ovl14_01_8004D5DC);

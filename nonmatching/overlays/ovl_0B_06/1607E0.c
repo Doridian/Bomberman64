@@ -63,6 +63,12 @@
  * the handler's case 1 and keeps its body), where the statics are defined
  * below theirs.
  *
+ * fcmp's relocation check flags calls in 8004616C (us/eu: 80049230 for
+ * 80048CC8, 80048CC8 for 80048CF0) and 800445BC_jp (80045D28 for
+ * 80048CF0). They are position artifacts: the code there is shifted by
+ * two words (one in jp), and the calls are made in the original's order
+ * (the SE macro's 80049230 then 80048CC8, then 80048CF0).
+ *
  * What still differs in us (words; each with the statics after it up to
  * the next global, so a function the wrong size shifts the rest):
  * - 80043220 8 (jp 0): one lbu in 80043480 scheduled too late.

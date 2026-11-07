@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 200, eu 200, jp 208
+ * differing words: us 200, eu 200, jp 203
  *
  * The pages are a table (D_ovl0B_04_800499B8: texts, handler, cursor
  * table, set-up) that func_ovl0B_04_80043ADC runs in turn; pages 1-4 are
@@ -41,9 +41,12 @@
  * 56 - 8n, no menu-cursor fade in 800444E8/800468F0 nor page 0's 0x80
  * flags, 80045214's texts at x 55/50, R goes to set 1, 80045E24's second
  * text, 80046294 sets the choices' strings in place and 80046734 lights
- * only open ones; one stub fewer at 80043F3C. jp's .data and .bss are
- * still us's (nonmatching.py doesn't compare them; jp's strings and its
- * .bss layout, e.g. its fade pointer at 8004A4A4, are to do).
+ * only open ones; one stub fewer at 80043F3C. jp's .bss differs: the fade
+ * pointer is its last word (vermap name D_ovl0B_04_8004A4A4; us's name is
+ * #defined to it) and 80043F24's two words are A3EC/A3F0 (us's A3F0/A3F4),
+ * found by fcmp's relocation check. jp's .data and the rest of its .bss
+ * are still us's (nonmatching.py doesn't compare them; jp's strings and
+ * the rest of its .bss layout, e.g. no A40C, are to do).
  *
  * What still differs (words us/jp; the comparison counts a global with
  * the statics after it, so a static of the wrong size costs the rest of
@@ -284,9 +287,17 @@ s32 D_ovl0B_04_8004A2D8[2];
 s32 D_ovl0B_04_8004A2E0[2];
 s32 D_ovl0B_04_8004A2E8[50];   /* page 4's, then pages 5-8's (11 each) */
 s32 D_ovl0B_04_8004A3B0[6];    /* page 9's */
+#if VERSION_JP
+/* jp's .bss differs (vermap.jp.txt names): the fade pointer is the last
+ * word (A4A4, below), the two words 80043F24 sets are A3EC/A3F0 */
+s32 D_ovl0B_04_8004A3EC;
+s32 D_ovl0B_04_8004A3F0;
+#define D_ovl0B_04_8004A3E4 D_ovl0B_04_8004A4A4
+#else
 Fade *D_ovl0B_04_8004A3E4;
 s32 D_ovl0B_04_8004A3F0;
 s32 D_ovl0B_04_8004A3F4;
+#endif
 Vec3f D_ovl0B_04_8004A3F8;
 Page *D_ovl0B_04_8004A404;
 s32 D_ovl0B_04_8004A40C[15];
@@ -296,6 +307,9 @@ u8 D_ovl0B_04_8004A480[16];
 Cursor D_ovl0B_04_8004A490;
 u8 D_ovl0B_04_8004A498[8];
 s32 D_ovl0B_04_8004A4A0;
+#if VERSION_JP
+Fade *D_ovl0B_04_8004A4A4;
+#endif
 
 /* .data */
 u8 D_ovl0B_04_800489F0[0x30] = {
@@ -2099,8 +2113,13 @@ static void func_ovl0B_04_80043FA4(u8 *ret, s32 page, s32 item, s32 mode) {
 /* The other overlays' shared code (ovl_17_09's 80044A98-80044B70); nothing
  * here calls it. */
 void func_ovl0B_04_80043F24(void) {
+#if VERSION_JP
+    D_ovl0B_04_8004A3EC = -1;
+    D_ovl0B_04_8004A3F0 = -1;
+#else
     D_ovl0B_04_8004A3F0 = -1;
     D_ovl0B_04_8004A3F4 = -1;
+#endif
 }
 
 void func_ovl0B_04_80043EC8(f32 arg0, f32 arg1, f32 arg2) {
