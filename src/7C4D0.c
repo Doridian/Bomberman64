@@ -1,14 +1,14 @@
 /*
- * NON_MATCHING: main_code's 7C4D0, complete (its only rodata is
- * func_80261CD0's jump table): func_80262DE8 draws a texture-file entry
- * (CI4 with a 16-colour TLUT, CI8 with a 256-colour one, RGBA16 or
- * RGBA32) through func_80261CD0, which draws an image as a grid of
- * textured quads, loading each tile with a one-texel border, placed by
- * an alignment code and flipped per its flip argument (7B2D0's drawer,
- * not inlined). Not built into the ROM (docs/DECOMPILING.md,
- * "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * main_code's 7C4D0, IDO -O3; it matches in us, eu and jp. Its data:
+ * .rodata 0x20 (func_80261CD0's jump table), placed where the ROM has
+ * it; no .data or .bss.
+ *
+ * func_80262DE8 draws a texture-file entry (CI4 with a 16-colour TLUT,
+ * CI8 with a 256-colour one, RGBA16 or RGBA32) through func_80261CD0,
+ * which draws an image as a grid of textured quads, loading each tile
+ * with a one-texel border, placed by an alignment code and flipped per
+ * its flip argument (7B2D0's drawer, not inlined). The code is the same
+ * in every version.
  *
  * Both functions match. Levers in func_80261CD0:
  * - the vertices are written through vtx->, with vtx++ after each one
