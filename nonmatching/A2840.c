@@ -2,9 +2,9 @@
  * NON_MATCHING: main_code's A2840, complete (every function and its
  * .data); not in the ROM.
  * flags: -O3
- * differing words: us 56, eu 56, jp 56
+ * differing words: us 0, eu 0, jp 0
  *
- * 36 of 37 functions match, the same in every version (the code is the
+ * All 37 functions match, the same in every version (the code is the
  * same in all three). Function order is reversed, as -O3 emits it. The
  * statics: 80288C00, 80288634 and 80289750 are empty K&R
  * `static void f() {}` called first thing in 80288C08, 80288644 and
@@ -14,17 +14,14 @@
  * of 80288654, taking (o, px, pz)), 80288190/80288198 and 80289758 are
  * inlined and leave stubs.
  *
- * - func_80288654 (56 words, size right): only the diagonal cases
- *   differ. Each case keeps a dead `if (0) { func_8028863C(...); }`
- *   (keeps the inline frame area), tests z then x with the loads in
- *   the condition, and passes the x distance as a ternary. The
- *   `if (*(s32 *) &player.x) {}` after func_80250338 is a hack: it
- *   leaves player.x uncoloured, but also blocks copy-propagation, so
- *   px is read from its home at sp+188 instead of player.x at sp+204,
- *   and player.z is still coloured in f0. Without the hack, the draft
- *   matches fully when uopt is forced not to colour player.x and
- *   player.z (scratch/main1/p3/i0.c, ux/ ZKILL ",12,17,"): the original
- *   leaves both uncoloured.
+ * func_80288654's diagonal cases keep a dead
+ * `if (0) { func_8028863C(...); }` (keeps the inline frame area), test
+ * z then x with the loads in the condition, and reload x and z from
+ * the object inside the distance arguments
+ * (`(px < (x = ...->unk10)) ? ...`, `func_8028863C(pz, z = ...->unk18)`):
+ * an indirect load in a block keeps uopt from giving player.x/player.z
+ * (address-taken by func_80250338) a live range there, so they are
+ * read from the stack in each block as in the original.
  */
 #include "common.h"
 
@@ -694,7 +691,7 @@ static s32 func_80288644(UnkStruct_80288040 *arg0, f32 px, f32 pz) {
         case 0x20:
             if (0) { func_8028863C(px, x); }
             if (pz < (z = arg0->unk0->unk40->unk18) && (x = arg0->unk0->unk40->unk10) < px
-                && func_802885E4(arg0, 8.0f, (px < x) ? x - px : px - x, func_8028863C(pz, z))) {
+                && func_802885E4(arg0, 8.0f, (px < (x = arg0->unk0->unk40->unk10)) ? x - px : px - x, func_8028863C(pz, z = arg0->unk0->unk40->unk18))) {
                 ret = 1;
             }
             break;
@@ -708,7 +705,7 @@ static s32 func_80288644(UnkStruct_80288040 *arg0, f32 px, f32 pz) {
         case 0x60:
             if (0) { func_8028863C(px, x); }
             if ((z = arg0->unk0->unk40->unk18) < pz && (x = arg0->unk0->unk40->unk10) < px
-                && func_802885E4(arg0, 8.0f, (px < x) ? x - px : px - x, func_8028863C(pz, z))) {
+                && func_802885E4(arg0, 8.0f, (px < (x = arg0->unk0->unk40->unk10)) ? x - px : px - x, func_8028863C(pz, z = arg0->unk0->unk40->unk18))) {
                 ret = 1;
             }
             break;
@@ -722,7 +719,7 @@ static s32 func_80288644(UnkStruct_80288040 *arg0, f32 px, f32 pz) {
         case 0xA0:
             if (0) { func_8028863C(px, x); }
             if ((z = arg0->unk0->unk40->unk18) < pz && px < (x = arg0->unk0->unk40->unk10)
-                && func_802885E4(arg0, 8.0f, (px < x) ? x - px : px - x, func_8028863C(pz, z))) {
+                && func_802885E4(arg0, 8.0f, (px < (x = arg0->unk0->unk40->unk10)) ? x - px : px - x, func_8028863C(pz, z = arg0->unk0->unk40->unk18))) {
                 ret = 1;
             }
             break;
@@ -736,7 +733,7 @@ static s32 func_80288644(UnkStruct_80288040 *arg0, f32 px, f32 pz) {
         case 0xE0:
             if (0) { func_8028863C(px, x); }
             if (pz < (z = arg0->unk0->unk40->unk18) && px < (x = arg0->unk0->unk40->unk10)
-                && func_802885E4(arg0, 8.0f, (px < x) ? x - px : px - x, func_8028863C(pz, z))) {
+                && func_802885E4(arg0, 8.0f, (px < (x = arg0->unk0->unk40->unk10)) ? x - px : px - x, func_8028863C(pz, z = arg0->unk0->unk40->unk18))) {
                 ret = 1;
             }
             break;
@@ -748,7 +745,6 @@ s32 func_80288654(UnkStruct_80288040 *arg0) {
     Vec3f player;
 
     func_80250338(func_80243DDC(), &player);
-    if (*(s32 *) &player.x) {}
     return func_80288644(arg0, player.x, player.z);
 }
 
