@@ -6,7 +6,7 @@
  * floats). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 51, eu 51, jp 50
+ * differing words: us 39, eu 39, jp 16
  * jp's code differences are drafted (`#if VERSION_JP`), its .data is not:
  * its five own strings are only declared, and its text tables and
  * positions are us's.
@@ -271,6 +271,35 @@
  *   variable un-inlines it), 8004518C's `move v0,s6` (ours v1: casts,
  *   loop-test forms and copies of `pressed` change nothing).
  *
+ * wAG (us/eu 51 -> 39, jp 50 -> 16):
+ * - Handler case 5's six 80043040 calls pass `0`, not `0.0f` (as case
+ *   2/4): their `mtc1 zero,$fs0` then follows `lui $s0` (us 12 -> 2,
+ *   jp 26 -> 12).
+ * - Case 2's D_8004A668 store goes in the 80048A00 call's delay slot only
+ *   with a later .loc than the call's argument: `#line 2484` / `#line
+ *   2483` around the two statements (flagged: as1 orders a block by
+ *   line; checked on hand-edited ugen output). us handler 0.
+ * - 80048CF0 is declared s32 (OPEN_A/OPEN_B's counter reload in $v1, jp).
+ * - OPEN_B is defined under `#line 2518` (back to 2706 after; flagged):
+ *   its `i = 0` then schedules as the original in both us (li s2 first)
+ *   and jp (the 364 home stored before 368); 2517 breaks us, 2519 jp.
+ *   jp handler 0.
+ * - jp COPY_ASK: `loop = 1; sub = 0;` before the 80048CA8 call (the
+ *   original's order) with a dead `if (!loop) {}` after the loop
+ *   (flagged: it gives loop $s4 and sub $s6; without it they swap; any
+ *   of ~37 positions works). jp 800445BC_jp 19 -> 11.
+ * - Not solved: 80043478's lbu of unk14 ahead of the other arguments
+ *   (ugen must load both stack arguments before the register ones; a
+ *   u8 local or parameter gives that order, but in $v0, a uopt register,
+ *   where the original's t8 is ugen's, so later temporaries shift);
+ *   LEVEL_ASK's 0x30 arm (us has li a0,2 in the beqz slot as jp, the
+ *   original us li s0,10: ugen order and .loc don't change it; a0 live
+ *   at the join gives a nop there); 80044BE4 (its callee 80044B08 is a
+ *   leaf that leaves t1-t4 alone, so something else holds t1 over the
+ *   FADE loop in the original; FADE macro forms that keep it inlined
+ *   change nothing); LEVEL_FILE's result store (dead reads after the
+ *   loop change nothing).
+ *
  * Loops: a loop with a constant count and no call in it is unrolled
  * (80044BE4's four unk36 = 0), and 80045340 copies the name with an index
  * loop (`name[i] = save[i + 8]`, `name[i] = 0` after).
@@ -404,7 +433,7 @@ s32 func_ovl0B_06_80048CA8(void (*)(), void *, void *, s32, s32); /* 0x1900 */
 void func_ovl0B_06_80048CB0(s32); /* 0x1901 */
 void func_ovl0B_06_80048CB8(void); /* 0x1902 */
 void func_ovl0B_06_80048CC8(s32); /* 0x1904 */
-void func_ovl0B_06_80048CF0(void); /* 0x1909 */
+s32 func_ovl0B_06_80048CF0(void); /* 0x1909 */
 UnkStructC *func_ovl0B_06_80048D30(s32); /* 0x1A00 */
 void func_ovl0B_06_80048D40(UnkStructC *, s32); /* 0x1A02 */
 s32 func_ovl0B_06_80048DF0(s32); /* 0x1C02 */
@@ -1574,9 +1603,9 @@ static s32 COPY_ASK(void) {
     s32 sub;
     s32 slot;
 
-    func_ovl0B_06_80048CA8(MSG_TASK, NULL, 0, 0, 0x130);
     loop = 1;
     sub = 0;
+    func_ovl0B_06_80048CA8(MSG_TASK, NULL, 0, 0, 0x130);
     func_ovl0B_06_80044908(0);
 #if VERSION_JP
     SET_TEXT(D_ovl0B_06_80049B94[0].unk4, D_ovl0B_06_800493EC_jp, D_ovl0B_06_80049B94[0].unk14);
@@ -1615,6 +1644,7 @@ static s32 COPY_ASK(void) {
         func_ovl0B_06_80048CF0();
     } while (loop != 0);
     func_ovl0B_06_80044908(1);
+    if (!loop) {} /* lever (wAG): loop $s4, sub $s6 */
     slot = sub & 0xF;
 #if VERSION_JP
     SET_TEXT(D_ovl0B_06_80049B94[0].unk4, D_ovl0B_06_80049508, D_ovl0B_06_80049B94[0].unk14);
@@ -2479,8 +2509,11 @@ void func_ovl0B_06_80043C48(s32 arg0) {
         case 2:
             D_ovl0B_06_80049928 = 0;
             func_ovl0B_06_80048FF8(0x32, 0x32, 0x32);
+#line 2484
             D_ovl0B_06_8004A668[0] = func_ovl0B_06_80048258();
+#line 2483
             func_ovl0B_06_80048A00(0x7F);
+#line 2484
             func_ovl0B_06_80048978(1);
             func_ovl0B_06_80048998(0, 10.0f, 0);
             func_ovl0B_06_80048988(1);
@@ -2541,12 +2574,12 @@ void func_ovl0B_06_80043C48(s32 arg0) {
                     D_ovl0B_06_80049E44[0].unkC += 18.0f;
                     D_ovl0B_06_80049E44[1].unk4 += 18.0f;
                     D_ovl0B_06_80049E44[1].unkC += 18.0f;
-                    func_ovl0B_06_80043040(&D_ovl0B_06_80049E44[0], &D_ovl0B_06_8004A0C4[1], 0.0f);
-                    func_ovl0B_06_80043040(&D_ovl0B_06_80049E44[1], &D_ovl0B_06_8004A0C4[0], 0.0f);
-                    func_ovl0B_06_80043040(&D_ovl0B_06_80049E44[3], &D_ovl0B_06_8004A0C4[3], 0.0f);
-                    func_ovl0B_06_80043040(&D_ovl0B_06_80049E44[8], &D_ovl0B_06_8004A0C4[3], 0.0f);
-                    func_ovl0B_06_80043040(&D_ovl0B_06_80049E44[9], &D_ovl0B_06_8004A0C4[0], 0.0f);
-                    func_ovl0B_06_80043040(&D_ovl0B_06_80049E44[10], &D_ovl0B_06_8004A0C4[14], 0.0f);
+                    func_ovl0B_06_80043040(&D_ovl0B_06_80049E44[0], &D_ovl0B_06_8004A0C4[1], 0);
+                    func_ovl0B_06_80043040(&D_ovl0B_06_80049E44[1], &D_ovl0B_06_8004A0C4[0], 0);
+                    func_ovl0B_06_80043040(&D_ovl0B_06_80049E44[3], &D_ovl0B_06_8004A0C4[3], 0);
+                    func_ovl0B_06_80043040(&D_ovl0B_06_80049E44[8], &D_ovl0B_06_8004A0C4[3], 0);
+                    func_ovl0B_06_80043040(&D_ovl0B_06_80049E44[9], &D_ovl0B_06_8004A0C4[0], 0);
+                    func_ovl0B_06_80043040(&D_ovl0B_06_80049E44[10], &D_ovl0B_06_8004A0C4[14], 0);
                     break;
             }
             break;
@@ -2685,6 +2718,7 @@ static void CLOSE_A(s32 n, Box_ovl0B_06 *box) {
     }
 }
 
+#line 2518
 static void OPEN_B(s32 n, Box_ovl0B_06 *box) {
     s32 i;
     f32 step;
@@ -2700,6 +2734,7 @@ static void OPEN_B(s32 n, Box_ovl0B_06 *box) {
         func_ovl0B_06_80048CF0();
     }
 }
+#line 2706
 
 static void CLOSE_B(s32 n, Box_ovl0B_06 *box) {
     s32 i;
