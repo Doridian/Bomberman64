@@ -6,7 +6,7 @@
  * floats). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 39, eu 39, jp 16
+ * differing words: us 39, eu 39, jp 15
  * jp's code differences are drafted (`#if VERSION_JP`), its .data is not:
  * its five own strings are only declared, and its text tables and
  * positions are us's.
@@ -300,6 +300,25 @@
  *   change nothing); LEVEL_FILE's result store (dead reads after the
  *   loop change nothing).
  *
+ * wAH (jp 16 -> 15):
+ * - 80045C24 is `#if !VERSION_JP`: jp never calls it, and an unused
+ *   static is still emitted, as an 8-byte stub after the last function
+ *   (jp 80047DE4 1 -> 0).
+ * - LEVEL_FILE's result store is the root of us 8004616C's 20 too:
+ *   without the `&result` trick us differs only by the missing `sw
+ *   s0,208(sp)` and the shift it leaves (the 0x30 arm's li a0,2 goes).
+ *   Dead reads of result anywhere give it $s6 (saved registers cost 0 in
+ *   a static, so it isn't split) or a save around the 80045C24 call, not
+ *   the original's store in the exit block's bne slot.
+ * - jp's label temp at 24 (ours 28): our front-end frame is 52, the
+ *   original's 48. It is always 4 mod 8 because the last inlined area
+ *   (80043010: p, n, i) ends on an odd word; pads, orders, block-scoped
+ *   locals and an inline final loop don't change it.
+ * - 80044BE4: the trace has the FADE count in $v0 and the end pointer in
+ *   t1 (original t2, with &B94 in t4). The stub order suggests 80044B90
+ *   is a FADE static and 80044B98 the label loop, but a FADE(mode, n)
+ *   static is emitted out of line (us 205).
+ *
  * Loops: a loop with a constant count and no call in it is unrolled
  * (80044BE4's four unk36 = 0), and 80045340 copies the name with an index
  * loop (`name[i] = save[i + 8]`, `name[i] = 0` after).
@@ -552,7 +571,9 @@ static void func_ovl0B_06_80045340(u8 *save, s32 arg0);
 static s32 func_ovl0B_06_80045794(s32 arg0, s32 mode, s32 arg2);
 static void func_ovl0B_06_800459D0(s32 y, s32 x);
 static void func_ovl0B_06_800459D8(s32 arg0);
+#if !VERSION_JP
 static void func_ovl0B_06_80045C24(Label_ovl0B_06 *a, u8 *str, s16 dx, s16 dy, u8 fa, Label_ovl0B_06 *b, u8 fb);
+#endif
 static void func_ovl0B_06_80045D20(s32 a);
 static void func_ovl0B_06_80045D28(s32 arg0, s32 arg1);
 static s32 func_ovl0B_06_80045F20(Col_ovl0B_06 *off, Col_ovl0B_06 *on, s32 n, s32 arg0);
@@ -1850,6 +1871,7 @@ static void func_ovl0B_06_80045D20(s32 a) {
     }
 }
 
+#if !VERSION_JP
 static void func_ovl0B_06_80045C24(Label_ovl0B_06 *a, u8 *str, s16 dx, s16 dy, u8 fa, Label_ovl0B_06 *b, u8 fb) {
     s32 ta;
     s32 tb;
@@ -1863,6 +1885,7 @@ static void func_ovl0B_06_80045C24(Label_ovl0B_06 *a, u8 *str, s16 dx, s16 dy, u
     a->unk18 = func_ovl0B_06_800490C8(a->unk4);
     b->unk18 = func_ovl0B_06_800490C8(b->unk4);
 }
+#endif
 
 
 /* @800459D8 */
