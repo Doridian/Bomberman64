@@ -1,7 +1,6 @@
 /*
- * NON_MATCHING: ovl_14_02's game object, complete; not in the ROM.
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * ovl_14_02's game object, IDO -O3; it matches in us, eu and jp. Its
+ * data: .data 0x90, .rodata 0x2E0, .bss 0x1B0, the same in every version.
  *
  * All 138 functions match (the same in every version). A first draft:
  * m2c output (with the ZeroJump prototypes of the other drafts and the
@@ -164,6 +163,13 @@
  * order doesn't matter.
  *
  * Everything matches in every version.
+ *
+ * -O3 drops unreferenced .bss, so a dead `if (0)` in the unused stub
+ * 8004E824 stores to every filler (scratch/bsscheck.sh: every symbol at
+ * its address, .bss 0x1B0). The 12-byte tail filler is split into three
+ * [4] pieces, and the Vec3f 800502D4 (only its address is used) is three
+ * f32s, its y and z kept alive the same way: IDO 8-aligns a .bss
+ * variable of 8 bytes or more.
  */
 #include "common.h"
 
@@ -295,7 +301,9 @@ s32 D_ovl14_02_800502B4;
 Vec3f D_ovl14_02_800502B8;
 f32 D_ovl14_02_800502C4;
 Vec3f D_ovl14_02_800502C8;
-Vec3f D_ovl14_02_800502D4;
+f32 D_ovl14_02_800502D4; /* a Vec3f, split: IDO would 8-align it */
+f32 D_ovl14_02_800502D8;
+f32 D_ovl14_02_800502DC;
 s32 D_ovl14_02_800502E0;
 u8 D_ovl14_02_800502E4[4];
 s32 D_ovl14_02_800502E8;
@@ -341,7 +349,9 @@ f32 D_ovl14_02_80050404;
 s32 D_ovl14_02_80050408;
 s32 D_ovl14_02_8005040C;
 f32 D_ovl14_02_80050410;
-u8 D_ovl14_02_80050414[12];
+u8 D_ovl14_02_80050414[4];
+u8 D_ovl14_02_80050418[4];
+u8 D_ovl14_02_8005041C[4];
 
 f32 func_ovl14_02_80043010(s32 arg0);
 static void func_ovl14_02_800430A8(UnkStructA *arg0);
@@ -487,6 +497,7 @@ void func_ovl14_02_8004E80C(void);
 /* .data */
 /* unused: the stubs IDO -O3 leaves after the tail */
 static void func_ovl14_02_8004E824(void) {
+    if (0) { D_ovl14_02_8005027C[0] = 0; D_ovl14_02_80050290[0] = 0; D_ovl14_02_8005029C[0] = 0; D_ovl14_02_800502E4[0] = 0; D_ovl14_02_800503DC[0] = 0; D_ovl14_02_800503EC[0] = 0; D_ovl14_02_800503F8[0] = 0; D_ovl14_02_80050414[0] = 0; D_ovl14_02_80050418[0] = 0; D_ovl14_02_8005041C[0] = 0; D_ovl14_02_800502D8 = 0; D_ovl14_02_800502DC = 0; }
 }
 
 static void func_ovl14_02_8004E82C(void) {
@@ -3496,7 +3507,7 @@ void func_ovl14_02_80046184(void) {
 void func_ovl14_02_800460E0(void) {
     s32 i;
 
-    D_ovl14_02_800502EC = &D_ovl14_02_800502D4;
+    D_ovl14_02_800502EC = (Vec3f *) &D_ovl14_02_800502D4;
     D_ovl14_02_800503FC = D_ovl14_02_800502EC->y;
     for (i = 0; i < 16; i++) {
         func_ovl14_02_8004F758(func_ovl14_02_800482A0, (void *) i, 0, 0, 0x150);

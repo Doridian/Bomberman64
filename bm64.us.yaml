@@ -1645,11 +1645,12 @@ segments:
     symbol_name_format: ovl14_02_$VRAM
     dir: overlays/ovl_14_02
     subsegments:
-      - [0x27E910, asm, ovl_14_02_entry]
-      - [0x27E920, asm]
+      - [0x27E910, c, ovl_14_02_entry]
+      - [0x27E920, c]
       - [0x28A1D0, hasm, ovl_14_02_zerojmp]
-      - [0x28B810, rodata]
-      - {type: bss, vram: 0x80050270}
+      - [0x28B810, .data, 27E920]
+      - [0x28B8A0, .rodata, 27E920]
+      - {type: .bss, vram: 0x80050270, name: 27E920}
   - name: ovl_15_01
     type: code
     start: 0x28BB80

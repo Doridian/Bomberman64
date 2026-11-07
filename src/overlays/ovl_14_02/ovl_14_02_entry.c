@@ -1,9 +1,3 @@
-/*
- * NON_MATCHING: ovl_14_02's entry. It matches; it waits for its object.
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O2
- * differing words: us 0, eu 0, jp 0
- */
 #include "common.h"
 
 void func_ovl14_02_8004E4E4(s32);

@@ -464,6 +464,10 @@ ovl_13_02 2697F0 0x460 0x340 0x3A0
 ovl_14_01 ovl_14_01_entry 0 0 0
 ovl_14_01 274480 0x80 0x290 0x2C0
 
+# ovl_14_02: all C (-O3)
+ovl_14_02 ovl_14_02_entry 0 0 0
+ovl_14_02 27E920 0x90 0x2E0 0x1B0
+
 # ovl_15_01: all C (-O3)
 ovl_15_01 ovl_15_01_entry 0 0 0
 ovl_15_01 28BB90 0x30 0x230 0x1B0
