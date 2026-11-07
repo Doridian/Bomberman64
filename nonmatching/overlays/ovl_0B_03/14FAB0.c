@@ -6,7 +6,7 @@
  * tables, .bss 0x1140, as the original's sizes). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4, eu 4, jp 33
+ * differing words: us 0, eu 0, jp 0
  *
  * jp (`#if VERSION_JP`) has its own strings (80048AF4, 80048B60,
  * 80049144, and D_ovl0B_03_8004901C_jp for us's 80049168, with the
@@ -66,13 +66,19 @@
  * come after the la of the table as in the original. The update loop
  * takes the next step into a local.
  *
- * What still differs in us (words): 8004386C 4 (case 1's two spills
- * around 80043340 are at 128/132(sp), the original's at 132/136: uopt
- * leaves 12 bytes between w and them where the original leaves 8. Not
- * the ternaries, the nested calls, the switches, the loops (all tried,
- * one at a time), nor lab: without lab (D_ovl0B_03_80048C90[k]
- * throughout) the spills come out right but w 4 higher, 1 word).
- * Everything else matches.
+ * The frame: below the locals cfe reserves its own temporaries (never
+ * used once uopt is done, but they take frame words ahead of uopt's
+ * spills), one pool per type, as many as one statement needs at once.
+ * The original has one float and one int (the small switches compiled
+ * as compare chains, `j |= ...`, the nested 80043234 calls). A ternary
+ * inside a nested call's arguments takes two float temporaries (the call
+ * result and the ternary), and so does a three-store chain from a load
+ * through a pointer (`a->x = a->y = a->z = b->w`), so the turning boxes
+ * take the wrapped angle into a float local u first and the 0x40 model
+ * copies its scale through u, one store per statement (stores of u
+ * keep the value in its register, as the original's $f12 shows, where
+ * `= ... = u` chains reload each field). u is declared where m2c had an
+ * unused local (sel); dir is still unused and keeps its frame word.
  *
  * jp builds the same 8004386C but for its #if VERSION_JP parts: the
  * labels and strings; case 0's two message handles are held in k (us:
@@ -84,26 +90,6 @@
  * With the handles in state instead, k takes $s3, and freeing through
  * a local held in state/next, or k merged into state, lets
  * &D_ovl0B_03_8004A324 take $s0 (its priority is at the edge).
- * What still differs in jp (words): 8004386C 33, all stack offsets: the
- * same extra uopt temporary as in us (below); with lab gone it pushes the
- * frame from 304 to 312 (w at 152, not 144; the locals above it 8 too
- * high) and the spills to 132/136 (128/132).
- *
- * The frame, measured (scratch/lastmile3/ of the main checkout: sp.py,
- * sp2.py, gap.py and the v*.py variant lists): below the locals uopt
- * lays out its temporaries top-down, here 7 words (the saves end at
- * 120): three never used, the two spills, two more never used; adding a
- * local anywhere (even after w) moves the spills down by the same 4, so
- * the original has one temporary fewer ahead of the spills (us: 2 + the
- * spills + 2, then 4 bytes of rounding; jp: 2 + 2 + 2, frame 304 without
- * lab). That temporary didn't move with any single statement or block
- * of 8004386C deleted (about 500 variants), nor without every ternary
- * (WRAPW's and case 1's switch), every nested call (0x800484B8, 80043234),
- * the inner switches, case 0, the cursor tables' initializers, each
- * float constant (replaced by a global), different forms of case 1's
- * spilled loop, or initialising any local at entry; ternaries and nested
- * calls added to case 1 don't add one either. The permuter (us, 10 min)
- * found nothing.
  */
 
 #include "common.h"
@@ -794,7 +780,7 @@ void func_ovl0B_03_8004386C(void) {
     u8 *str;
     s32 j;
     s32 k;
-    s32 sel;
+    f32 u;
     s32 dir;
     s32 v28;
     s32 v38;
@@ -833,7 +819,8 @@ void func_ovl0B_03_8004386C(void) {
         case 0:
             func_ovl0B_03_80043340(D_ovl0B_03_80048D58, 3, 0x31);
             t = 0.0f;
-            func_ovl0B_03_80043170(&D_ovl0B_03_80048D58[D_ovl0B_03_8004A324->unk0], func_ovl0B_03_800484B8(WRAPW_ovl0B_03(t)) * 0.05f + 1.0f);
+            u = WRAPW_ovl0B_03(t);
+            func_ovl0B_03_80043170(&D_ovl0B_03_80048D58[D_ovl0B_03_8004A324->unk0], func_ovl0B_03_800484B8(u) * 0.05f + 1.0f);
             for (i = 0; i != 0x108; i += 8) {
                 func_ovl0B_03_800436EC(3, D_ovl0B_03_80048D58, i);
                 func_ovl0B_03_80048350();
@@ -926,7 +913,8 @@ void func_ovl0B_03_8004386C(void) {
                 for (i = 0; i < 3; i++) {
                     func_ovl0B_03_80043170(&D_ovl0B_03_80048D58[i], 0.7f);
                 }
-                func_ovl0B_03_80043170(&D_ovl0B_03_80048D58[D_ovl0B_03_8004A324->unk0], func_ovl0B_03_800484B8(WRAPW_ovl0B_03(t)) * 0.05f + 1.0f);
+                u = WRAPW_ovl0B_03(t);
+                func_ovl0B_03_80043170(&D_ovl0B_03_80048D58[D_ovl0B_03_8004A324->unk0], func_ovl0B_03_800484B8(u) * 0.05f + 1.0f);
                 t += 4.0f;
                 func_ovl0B_03_80048350();
             }
@@ -1079,8 +1067,10 @@ void func_ovl0B_03_8004386C(void) {
                 D_ovl0B_03_80048E6C->unk0 = D_ovl0B_03_8004A410 + 60.0f;
                 M2C_FIELD(D_ovl0B_03_80048E6C, f32 *, 0x18) = D_ovl0B_03_8004A410 + 110.0f;
                 D_ovl0B_03_80048E6C->unk4 = D_ovl0B_03_80048E60[D_ovl0B_03_8004A32C];
-                func_ovl0B_03_80043170(D_ovl0B_03_80048E6C, func_ovl0B_03_800484B8(WRAPW_ovl0B_03(t)) * 0.05f + 0.7f);
-                func_ovl0B_03_80043170(D_ovl0B_03_80048E84, func_ovl0B_03_800484B8(WRAPW_ovl0B_03(t)) * 0.05f + 0.7f);
+                u = WRAPW_ovl0B_03(t);
+                func_ovl0B_03_80043170(D_ovl0B_03_80048E6C, func_ovl0B_03_800484B8(u) * 0.05f + 0.7f);
+                u = WRAPW_ovl0B_03(t);
+                func_ovl0B_03_80043170(D_ovl0B_03_80048E84, func_ovl0B_03_800484B8(u) * 0.05f + 0.7f);
                 t += 4.0f;
                 func_ovl0B_03_800434BC();
                 func_ovl0B_03_80048350();
@@ -1424,7 +1414,10 @@ void func_ovl0B_03_8004386C(void) {
                 D_ovl0B_03_8004A338->unk14 = D_ovl0B_03_8004A334->unk14;
                 D_ovl0B_03_8004A338->unk18 = D_ovl0B_03_8004A334->unk18;
                 D_ovl0B_03_8004A338->unk1C = D_ovl0B_03_8004A334->unk1C;
-                D_ovl0B_03_8004A338->unk28 = D_ovl0B_03_8004A338->unk2C = D_ovl0B_03_8004A338->unk30 = D_ovl0B_03_8004A334->unk28;
+                u = D_ovl0B_03_8004A334->unk28;
+                D_ovl0B_03_8004A338->unk30 = u;
+                D_ovl0B_03_8004A338->unk2C = u;
+                D_ovl0B_03_8004A338->unk28 = u;
             } else {
                 D_ovl0B_03_8004A338 = NULL;
             }
@@ -1482,7 +1475,10 @@ void func_ovl0B_03_8004386C(void) {
                             D_ovl0B_03_8004A338->unk14 = D_ovl0B_03_8004A334->unk14;
                             D_ovl0B_03_8004A338->unk18 = D_ovl0B_03_8004A334->unk18;
                             D_ovl0B_03_8004A338->unk1C = D_ovl0B_03_8004A334->unk1C;
-                            D_ovl0B_03_8004A338->unk28 = D_ovl0B_03_8004A338->unk2C = D_ovl0B_03_8004A338->unk30 = D_ovl0B_03_8004A334->unk28;
+                            u = D_ovl0B_03_8004A334->unk28;
+                            D_ovl0B_03_8004A338->unk30 = u;
+                            D_ovl0B_03_8004A338->unk2C = u;
+                            D_ovl0B_03_8004A338->unk28 = u;
                         } else {
                             D_ovl0B_03_8004A338 = NULL;
                         }
@@ -1531,7 +1527,10 @@ void func_ovl0B_03_8004386C(void) {
                             D_ovl0B_03_8004A338->unk14 = D_ovl0B_03_8004A334->unk14;
                             D_ovl0B_03_8004A338->unk18 = D_ovl0B_03_8004A334->unk18;
                             D_ovl0B_03_8004A338->unk1C = D_ovl0B_03_8004A334->unk1C;
-                            D_ovl0B_03_8004A338->unk28 = D_ovl0B_03_8004A338->unk2C = D_ovl0B_03_8004A338->unk30 = D_ovl0B_03_8004A334->unk28;
+                            u = D_ovl0B_03_8004A334->unk28;
+                            D_ovl0B_03_8004A338->unk30 = u;
+                            D_ovl0B_03_8004A338->unk2C = u;
+                            D_ovl0B_03_8004A338->unk28 = u;
                         } else {
                             D_ovl0B_03_8004A338 = NULL;
                         }
@@ -1579,8 +1578,10 @@ void func_ovl0B_03_8004386C(void) {
                     }
                     break;
                 }
-                func_ovl0B_03_80043170(D_ovl0B_03_80048E6C, func_ovl0B_03_800484B8(WRAPW_ovl0B_03(t)) * 0.05f + 1.0f);
-                func_ovl0B_03_80043170(D_ovl0B_03_80048E84, func_ovl0B_03_800484B8(WRAPW_ovl0B_03(t)) * 0.05f + 1.0f);
+                u = WRAPW_ovl0B_03(t);
+                func_ovl0B_03_80043170(D_ovl0B_03_80048E6C, func_ovl0B_03_800484B8(u) * 0.05f + 1.0f);
+                u = WRAPW_ovl0B_03(t);
+                func_ovl0B_03_80043170(D_ovl0B_03_80048E84, func_ovl0B_03_800484B8(u) * 0.05f + 1.0f);
                 t += 4.0f;
                 func_ovl0B_03_80048350();
             }
