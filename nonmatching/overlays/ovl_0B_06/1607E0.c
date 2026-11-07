@@ -6,7 +6,7 @@
  * floats). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 131, eu 131, jp 86
+ * differing words: us 95, eu 95, jp 86
  * jp's code differences are drafted (`#if VERSION_JP`), its .data is not:
  * its five own strings are only declared, and its text tables and
  * positions are us's.
@@ -223,6 +223,22 @@
  *   are its shift); COPY_FILE's `li s8,1` / `sw t9,96(sp)` order;
  *   COPY_ASK's sub/slot in a0/s7 swapped; 800465E0's `sw a0,4(sp)`;
  *   t-register rotations in 80046634/80046F14; 8004518C returns v1.
+ *
+ * wAD (us/eu 131 -> 95, jp 86):
+ * - us ERASE's tail: ERASE_FILE reads D_8004992C through its neighbour
+ *   in a dead `if (!(&D_80049928)[1]) {}` after the loop (flagged, us
+ *   only) and stores 0x400 the same way: the address becomes its own
+ *   register candidate, no longer `lui at`, so ERASE has the original's
+ *   size and 800478D4 matches. Left: uopt colours it $s7 (cost 0, already
+ *   used, lower than $fp) where the original has $fp.
+ * - ERASE_FILE has no `slot` local (`sel & 0xF` at each use, `loop`
+ *   reused for the result, flagged): the frame stays 200 with the dead
+ *   read. us's 0x1064 arm calls SEF, not the SE macro (flagged: the
+ *   macro's branches push ERASE_ASK out of line).
+ * - Tried without gain: the `&result` trick moved anywhere in LEVEL_FILE
+ *   (same code wherever it is), dropping it (result in $s0 as the
+ *   original, but its one store after the loop goes missing), pointer
+ *   locals or an inlined static for &D_8004992C (`lui at` again).
  *
  * Loops: a loop with a constant count and no call in it is unrolled
  * (80044BE4's four unk36 = 0), and 80045340 copies the name with an index
@@ -1031,7 +1047,6 @@ void func_ovl0B_06_8004747C(void) {
 static s32 ERASE_FILE(void) {
     s32 loop;
     s32 sel;
-    s32 slot;
 
     loop = 1;
     sel = 0;
@@ -1051,12 +1066,15 @@ static s32 ERASE_FILE(void) {
         if ((sel & 0xF0) == 0x30) {
             loop = 0;
         } else {
-            slot = sel & 0xF;
-            if (func_ovl0B_06_80049368(slot, 0) == 10) {
+            if (func_ovl0B_06_80049368(sel & 0xF, 0) == 10) {
                 D_ovl0B_06_8004992C = 0x1064;
+#if VERSION_JP
                 SE(0x18, 50);
+#else
+                SEF(0x18, 50);
+#endif
             } else {
-                ERASE_ASK(slot, &D_ovl0B_06_8004A244, &D_ovl0B_06_8004A264);
+                ERASE_ASK(sel & 0xF, &D_ovl0B_06_8004A244, &D_ovl0B_06_8004A264);
 #if !VERSION_JP
 func_ovl0B_06_80046858();
 #endif
@@ -1065,7 +1083,10 @@ func_ovl0B_06_80046858();
         }
         func_ovl0B_06_80048CF0();
     } while (loop != 0);
-    slot = sel & 0xF;
+    loop = sel & 0xF;
+#if !VERSION_JP
+    if (!(&D_ovl0B_06_80049928)[1]) {}
+#endif
 #if VERSION_JP
     SET_TEXT(D_ovl0B_06_80049A44[0].unk4, D_ovl0B_06_80049480, D_ovl0B_06_80049A44[0].unk14);
     func_ovl0B_06_800490B0(D_ovl0B_06_80049A44[0].unk4, -10, 0);
@@ -1077,7 +1098,7 @@ func_ovl0B_06_80046858();
     func_ovl0B_06_800433B0(&D_ovl0B_06_80049A44[5]);
     (&D_ovl0B_06_80049928)[1] = 0x400; /* lever: D_8004992C through its neighbour */
     func_ovl0B_06_800464C0(1);
-    return slot;
+    return loop;
 }
 
 
