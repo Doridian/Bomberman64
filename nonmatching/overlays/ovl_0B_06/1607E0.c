@@ -6,7 +6,7 @@
  * floats). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 95, eu 95, jp 86
+ * differing words: us 70, eu 70, jp 61
  * jp's code differences are drafted (`#if VERSION_JP`), its .data is not:
  * its five own strings are only declared, and its text tables and
  * positions are us's.
@@ -239,6 +239,20 @@
  *   (same code wherever it is), dropping it (result in $s0 as the
  *   original, but its one store after the loop goes missing), pointer
  *   locals or an inlined static for &D_8004992C (`lui at` again).
+ *
+ * wAE (us/eu 95 -> 70, jp 86 -> 61): 80046634 and 800465E0.
+ * - 800465E0 takes (obj, alpha), not (alpha, obj): its callers evaluate
+ *   the object first, as the original's t-registers do, and its
+ *   `sw a0,4(sp)` matches.
+ * - 80046634's FADE loop runs to `D_8004A5D0 + i` with `i = 3` set ahead
+ *   (the count in a variable takes the register the original leaves
+ *   free), and the second loop's alpha is its own s16 `b` (one variable
+ *   for both is one live range, in one register). The old dead read on
+ *   alpha is gone; `if (i) {}` stays in the inner loop (flagged).
+ * - Tried without gain: the same `i = 3` FADE count in 80044BE4 (worse:
+ *   it un-inlines the loop) and dead reads around ERASE's 800464C0(1)
+ *   call (the neighbour candidate still ties to $s7, owned by `done`,
+ *   coloured first).
  *
  * Loops: a loop with a constant count and no call in it is unrolled
  * (80044BE4's four unk36 = 0), and 80045340 copies the name with an index
@@ -501,7 +515,7 @@ static s32 COPY_ASK(void);
 void COPY_FILE(void);
 static void func_ovl0B_06_800464C0(s32 arg0);
 static void func_ovl0B_06_80046558(s32 arg1, s32 arg0);
-static void func_ovl0B_06_800465E0(s16 alpha, UnkStructA_40 *obj);
+static void func_ovl0B_06_800465E0(UnkStructA_40 *obj, s16 alpha);
 static void func_ovl0B_06_80046624(void);
 static void func_ovl0B_06_8004662C(void);
 static void func_ovl0B_06_80046634(s32 arg0);
@@ -1008,10 +1022,10 @@ void func_ovl0B_06_8004747C(void) {
             if (func_ovl0B_06_80049370() != 0) {
                 D_ovl0B_06_8004992C = 0;
                 func_ovl0B_06_80048CF0();
-                func_ovl0B_06_800465E0(0x3C, D_ovl0B_06_80049E44[4].unk0);
-                func_ovl0B_06_800465E0(0x3C, D_ovl0B_06_80049E44[5].unk0);
-                func_ovl0B_06_800465E0(0x3C, D_ovl0B_06_80049E44[6].unk0);
-                func_ovl0B_06_800465E0(0x3C, D_ovl0B_06_80049E44[7].unk0);
+                func_ovl0B_06_800465E0(D_ovl0B_06_80049E44[4].unk0, 0x3C);
+                func_ovl0B_06_800465E0(D_ovl0B_06_80049E44[5].unk0, 0x3C);
+                func_ovl0B_06_800465E0(D_ovl0B_06_80049E44[6].unk0, 0x3C);
+                func_ovl0B_06_800465E0(D_ovl0B_06_80049E44[7].unk0, 0x3C);
                 func_ovl0B_06_80044B90(0, D_ovl0B_06_80049AEC, 2);
                 func_ovl0B_06_80046634(0);
                 D_ovl0B_06_8004992C = 0x44C8;
@@ -1397,6 +1411,7 @@ static void func_ovl0B_06_80046850(void) {
 
 static void func_ovl0B_06_80046634(s32 arg0) {
     s16 alpha;
+    s16 b;
     s32 i;
     s32 j;
 
@@ -1412,19 +1427,28 @@ static void func_ovl0B_06_80046634(s32 arg0) {
     }
     func_ovl0B_06_80044B90(arg0, D_ovl0B_06_80049A44, 4);
     func_ovl0B_06_80044B90(arg0, D_ovl0B_06_8004999C, 3);
-    FADE_SLOTS(arg0)
-    alpha = arg0 == 0 ? 0x3C : 0xFF;
-    for (j = 0; j < 3; j++) {
-        if (D_ovl0B_06_8004A5D0[j] == 1) {
-            func_ovl0B_06_800465E0(alpha, D_ovl0B_06_80049F20[j][0].unk0);
+    {
+        s32 *p;
+        Label_ovl0B_06 *l;
+
+        i = 3; /* FADE_SLOTS with i as its count (wAE) */
+        for (p = D_ovl0B_06_8004A5D0, l = D_ovl0B_06_800499F0; p < D_ovl0B_06_8004A5D0 + i; p++, l++) {
+            if (*p != 0) {
+                func_ovl0B_06_80044B08(l, arg0);
+            }
         }
     }
     alpha = arg0 == 0 ? 0x3C : 0xFF;
+    for (j = 0; j < 3; j++) {
+        if (D_ovl0B_06_8004A5D0[j] == 1) {
+            func_ovl0B_06_800465E0(D_ovl0B_06_80049F20[j][0].unk0, alpha);
+        }
+    }
+    b = arg0 == 0 ? 0x3C : 0xFF;
     for (i = 0; i < 3; i++) {
         for (j = 0; j < 6; j++) {
-            if (alpha) {} /* TRICK: dead read; arg0 gets $t2 */
             if (D_ovl0B_06_8004A5E0[i].unk[j] == 1) {
-                func_ovl0B_06_800465E0(alpha, D_ovl0B_06_80049F20[i][j + 1].unk0);
+                func_ovl0B_06_800465E0(D_ovl0B_06_80049F20[i][j + 1].unk0, b);
                 if (i) {} /* TRICK: dead read; 140/alpha/i in t0/t1 */
             }
         }
@@ -1438,7 +1462,7 @@ static void func_ovl0B_06_8004662C(void) {
 static void func_ovl0B_06_80046624(void) {
 }
 
-static void func_ovl0B_06_800465E0(s16 alpha, UnkStructA_40 *obj) {
+static void func_ovl0B_06_800465E0(UnkStructA_40 *obj, s16 alpha) {
     if (alpha == 0xFF) {
         obj->unk36 = 0xFF;
         obj->unkC &= ~0x80;
