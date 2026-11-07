@@ -9,7 +9,7 @@
  * .bss 0x1F0 as the original). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 6, eu 6, jp 6
+ * differing words: us 0, eu 0, jp 0
  *
  * Drafted from m2c, then rewritten function by function: the angle
  * normalisations are the original's ternaries (A180, and the 0-360 wrap
@@ -2277,12 +2277,14 @@ void func_ovl13_01_800446FC(void) {
         if (func_ovl13_01_80043830() >= 2) {
             break;
         }
+        if (z == 1.0f) {} /* fake: 1.0f's range is decided before 90.0f's piece is split */
         func_ovl13_01_8004B5C8(&D_ovl13_01_8004C388.x, &D_ovl13_01_8004C260.x, &spA8.x);
+        if (a == 90.0f) {} /* fake: 90.0f in $f14 */
         if (spA8.y - 90.0f >= 360.0f) {
             spA8.y = spA8.y - 90.0f - 360.0f;
         } else {
-            spA8.y = (spA8.y < 90.0f) ? spA8.y - 90.0f + 360.0f : spA8.y - 90.0f;
-            if (spA8.y) {}
+            cur = (spA8.y < 90.0f) ? spA8.y - 90.0f + 360.0f : spA8.y - 90.0f; /* cur: the original's $f12 */
+            spA8.y = cur;
         }
         b = S(a);
         cur = S(D_ovl13_01_8004C3A8.x);
@@ -2294,6 +2296,7 @@ void func_ovl13_01_800446FC(void) {
             d += 360.0f;
         }
         /* the clamp's result is never used: only the compare is left */
+        if (!a) {} /* fake */
         if (d >= 0.0f) {
             if (D_ovl13_01_8004C2A8 < d) {
                 d = D_ovl13_01_8004C2A8;
