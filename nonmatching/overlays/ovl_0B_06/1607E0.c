@@ -6,7 +6,7 @@
  * floats). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 525, eu 525, jp 264
+ * differing words: us 530, eu 530, jp 265
  * jp's code differences are drafted (`#if VERSION_JP`), its .data is not:
  * its five own strings are only declared, and its text tables and
  * positions are us's.

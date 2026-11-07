@@ -111,9 +111,11 @@ Makefile's `O3_C_FILES` (and `MIPS2_C_FILES` if `-mips2`), regenerate the
 configs (`tools/layout.py`) and extract again, then give it its data
 (below). Until then `data_split.txt` doesn't list it: its data stays in the
 module's asm blocks, though the draft defines it. A 0-word draft can still
-fail to link or to match a version's sha1: the comparison doesn't check
-call targets, so a call through a ZeroJump stub a version lacks (jp has
-fewer) only shows up when it is built. ovl_0A_06's jp calls 0x2501/0x2503
+fail to link or to match a version's sha1. The comparison checks where
+each relocated word points (`tools/fcmp.py` resolves every %hi/%lo/jal
+target against the extracted asm, `R(wrong: ours vs orig)` with `-v`), but
+a call through a ZeroJump stub a version lacks (jp has fewer) only shows
+up when it is built. ovl_0A_06's jp calls 0x2501/0x2503
 where us calls 0x250C/0x250D.
 
 ## Compiler flags: the evidence

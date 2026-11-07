@@ -1,10 +1,10 @@
 /*
  * NON_MATCHING: ovl_14_01's game object, complete; not in the ROM.
  * flags: -O3
- * differing words: us 79, eu 79, jp 79
+ * differing words: us 81, eu 81, jp 81
  *
  * The text is the same in every version (only jp's ZeroJump numbers
- * differ). 84 of 89 functions match. m2c output (with the ZeroJump
+ * differ). 83 of 89 functions match (8004515C: two swapped globals, found by the relocation check). m2c output (with the ZeroJump
  * prototypes of the other drafts, scratch/newovl2/protos.h, and the
  * file's own in own.h) made to compile, then tuned by hand
  * (scratch/newovl2/r/).
