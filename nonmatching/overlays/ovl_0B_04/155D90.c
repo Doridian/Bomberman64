@@ -52,7 +52,9 @@
  *   12 bytes higher) and H5: &D_ovl0B_04_8004A170 gets $s0 across H5b
  *   (the original leaves it uncoloured, `lui a0` before each test, and
  *   keeps &D_ovl0B_04_8004A17C in $s0); the original's slot values go to
- *   $a3/$v1 and are copied to $a2 (`addiu a2,v1,0`). H5b's tests read
+ *   $a3/$v1 and are copied to $a2 (`addiu a2,v1,0`: only `x++; x--;`
+ *   on a local x = *ptr reproduces an `addiu r,r,0` copy; see
+ *   scratch/0B_04/wV/notes.md). H5b's tests read
  *   the copies D_ovl0B_04_8004A194.. (size-tuned, see there). 800436C8
  *   25/25 (its padding).
  * - 800444E8 102/102: 800447DC's registers (d1 in $t0 then $s2, d2/d3
@@ -66,7 +68,15 @@
  *   where c isn't set, spill it) and rub-out registers (the original loads
  *   the cursor to $s1 with a $v1 copy and tests `i != 7` directly; ours
  *   compares p with &D_ovl0B_04_8004A290[7]), unk3 stored through $s0
- *   (the original by its own lui).
+ *   (the original by its own lui). 80045540's rub-out as written here
+ *   (i/p with the dead reads of c, "iiDD") scores well partly by
+ *   coincidence: its `lui t6` for &D_ovl0B_04_8004A290[7] happens to take
+ *   the ugen temp the original's code uses up some other way, and the c
+ *   spill (`lbu s1,31(sp)`) stands where the original has unk3's
+ *   `lui at`. The original's form is probably scratch/0B_04/wW/rubout_DD.c
+ *   (no i, no p, no dead reads: tests on D_ovl0B_04_8004A490.unk0, one
+ *   `unk0--`), exact in the block but for the `li a2,7` order and the
+ *   ugen temps being one behind from there on (170 words as a whole).
  * - 80043ADC 16/0 (us keeps 36 in $s8 and multiplies; the original keeps
  *   &tbl[3] in $s7 and the table in $s8; p3 set before the loop with a
  *   dead read gets &tbl[3] a register, but only $v0 on entry), 80044BE8 8/16 (the MakeEntries homes 12 bytes off),
