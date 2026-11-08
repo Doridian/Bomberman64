@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2705, eu 2705, jp 2704
+ * differing words: us 2665, eu 2665, jp 2664
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -3288,24 +3288,15 @@ void func_802498D4(s32 arg0, f32 arg1) {
 }
 
 void func_80249810(s32 arg0, s32 arg1, s32 arg2) {
-    UnkStruct_800AEDF0 *sp18;                       /* compiler-managed */
-    UnkStruct_800AEDF0 *temp_a3;
-    s32 var_v1;
-
-    temp_a3 = &D_800AEDF0[arg0];
-    var_v1 = func_80244BA4(arg0, 0x8000);
-    if (var_v1 == 0) {
-        sp18 = temp_a3;
-        func_802444B8(7, (s32) temp_a3);
+    if (!func_80244BA4(arg0, 0x8000)) {
+        func_802444B8(arg0, 7);
     } else {
-        sp18 = temp_a3;
-        func_802444B8(0x10, (s32) temp_a3);
+        func_802444B8(arg0, 0x10);
     }
-    sp18 = (s32 *) temp_a3;
     func_80244354(arg0, 0x120, 1);
-    M2C_FIELD((s32 *) temp_a3, s32 *, 0x38) = (s32) (M2C_FIELD((s32 *) temp_a3, s32 *, 0x38) & ~0x100);
-    M2C_FIELD((s32 *) temp_a3, s32 *, 0x30) = arg1;
-    M2C_FIELD((s32 *) temp_a3, s32 *, 0xBC) = arg2;
+    D_800AEDF0[arg0].unk38 &= ~0x100;
+    D_800AEDF0[arg0].unk30 = arg1;
+    D_800AEDF0[arg0].unkBC = arg2;
 }
 
 void func_802497D8(s32 arg0) {
