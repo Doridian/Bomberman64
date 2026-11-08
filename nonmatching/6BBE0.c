@@ -17,11 +17,22 @@
  * and uopt hoisted all their constant initialisations together, so they
  * took every callee-saved register before the object pointer; merging
  * the families gives the pointer fp. The frame is still 568 bytes (the
- * original's is 352): too many locals, each one a slot. Then
- * func_802530A8 (about 1700), whose callee takes the object in t1 (the
- * draft's arg0; m2c's "unset $t1" writes were wrong and are gone).
- * func_802553D4 is about 0x3A8 bytes too long, which misaligns its whole
- * block, so local fixes there don't show in the count yet.
+ * original's is 352): too many locals, each one a slot. It is about
+ * 0x3A8 bytes too long, which misaligns its whole block, so local fixes
+ * there don't show in the count yet (merging every m2c family by type
+ * and register, spE4 as a 32-byte struct copy of D_802A0FA0 and the
+ * declarations in the original's frame order give frame 400 and 233
+ * words too many, but no better count).
+ *
+ * func_802530A8 (about 1500) has its exact size (0x1BE8) and frame
+ * (136): its 24 declared words in the original's slot order, the
+ * func_8022FA88 wrappers taking the distance pointer (&sp6C) as a
+ * second argument, and an else/goto shape that keeps umerge from
+ * inlining the small static wrappers (a `break` shape is small enough
+ * that it inlines them; check the jal list). What is left is
+ * allocation: dir isn't coloured (the original keeps it in s6), range
+ * is a PRE temp (the original stores `range = v` to sp78), and the
+ * object arrives in t2, not t1.
  *
  * What moved the count: exact sizes first (one block per original
  * global, so a short static misaligns everything after it; for
