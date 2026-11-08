@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 9574, eu 9574, jp 9575
+ * differing words: us 9235, eu 9235, jp 9220
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -4614,20 +4614,9 @@ static void func_802530A8(f32 *arg0) {
                         M2C_FIELD(arg0, s32 *, 8) = v;
                     } else {
                         target = func_80251D10(M2C_FIELD(arg0, f32 **, 0x18), &dist);
-                        if (target != NULL) {
-                            entry = func_80251C88((s32) target);
-                            if (entry != NULL) {
-                                angle = (f32) M2C_FIELD(entry, s16 *, 0x36);
-                            } else {
-                                angle = 2.0f;
-                            }
-                            if (dist < (angle * 100.0f)) {
-                                M2C_FIELD(arg0, f32 *, 0x7C) = 0.0f;
-                            } else {
-                                goto block_289;
-                            }
+                        if ((target != NULL) && (entry = func_80251C88((s32) target), angle = (entry != NULL) ? (f32) M2C_FIELD(entry, s16 *, 0x36) : 2.0f, (dist < (angle * 100.0f)))) {
+                            M2C_FIELD(arg0, f32 *, 0x7C) = 0.0f;
                         } else {
-block_289:
                             dist = func_80251C48((f32 *) ((u8 *)arg0 + 0x2C), (f32 *) ((u8 *)arg0 + 0x20));
                             if ((dist >= 400.0f) && (dist <= 500.0f)) {
                                 v = M2C_FIELD(arg0, s32 *, 4);
