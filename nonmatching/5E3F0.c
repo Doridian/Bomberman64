@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3543, eu 3543, jp 3542
+ * differing words: us 3436, eu 3436, jp 3435
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -242,6 +242,7 @@ typedef struct { s32 v[5]; } Tbl5_5E3F0;
 typedef struct {
     s32 v[3];
 } Tbl3_5E3F0;
+typedef struct { s32 x, y, z, w; f32 h; } Cell5_5E3F0;
 
 
 void free(void *);
@@ -3665,70 +3666,48 @@ void func_8024878C(s32 arg0) {
 }
 
 void func_8024857C(s32 arg0) {
-    s32 sp60[5];
-    UnkStruct_800AEDF0 *sp28;
-    UnkModel *temp_v0;
-    UnkStruct_800AEDF0 *temp_t1;
-    s32 *temp_v0_2;
-    s32 *temp_v0_3;
-    s32 *temp_v0_4;
-    s32 *temp_v0_5;
-    s32 var_v1;
-    s32 var_v1_2;
-    s32 var_v1_3;
+    s32 pad;
+    Cell5_5E3F0 c;
+    UnkObj *obj;
+    s32 r;
 
-    temp_t1 = &D_800AEDF0[arg0];
-    temp_v0 = temp_t1->unk28->unk40;
-    sp28 = temp_t1;
-    func_8026DCAC(temp_v0->unk10, temp_v0->unk14, temp_v0->unk18, sp60, 2);
-    var_v1 = 1;
-    if (sp60[4] == 0.0f) {
-        var_v1 = func_8026D7D8(sp60[0], sp60[1], sp60[2]) & 0xF;
+    obj = (UnkObj *)func_802443F4(arg0);
+    func_8026DCAC(obj->unk40->unk10, obj->unk40->unk14, obj->unk40->unk18, &c, 2);
+    if (c.h == 0.0f) {
+        r = func_8026D7D8(c.x, c.y, c.z) & 0xF;
+    } else {
+        r = 1;
     }
-    switch (var_v1) {                               /* irregular */
+    switch (r) {
     case 2:
-        temp_v0_2 = &D_802AC8A8[arg0];
-        if (!(*temp_v0_2 & 1)) {
-            *temp_v0_2 = 1;
+        if (!(D_802AC8A8[arg0] & 1)) {
+            D_802AC8A8[arg0] = 1;
             func_80243824(0x50);
-            var_v1_2 = 0;
-            if ((sp28->unk10 & 0x1000) == 0x1000) {
-                var_v1_2 = 1;
-            }
-            if (var_v1_2 != 0) {
+            if (func_80244BA4(arg0, 0x1000)) {
                 func_80247C50(arg0);
             }
         }
         break;
     case 9:
-        var_v1_3 = 0;
-        if ((sp28->unk10 & 0x10000) == 0x10000) {
-            var_v1_3 = 1;
-        }
-        if (var_v1_3 == 0) {
-            if (!(D_802AC8A8[arg0] & 2)) {
-                func_80248148(arg0, 4);
-            }
+        if (!func_80244BA4(arg0, 0x10000) && !(D_802AC8A8[arg0] & 2)) {
+            func_80248148(arg0, 4);
         }
         break;
     case 10:
-        temp_v0_3 = &D_802AC8A8[arg0];
-        if (!(*temp_v0_3 & 4)) {
-            *temp_v0_3 = 4;
+        if (!(D_802AC8A8[arg0] & 4)) {
+            D_802AC8A8[arg0] = 4;
             func_80243824(0x52);
         }
         break;
     case 11:
-        temp_v0_4 = &D_802AC8A8[arg0];
-        if (!(*temp_v0_4 & 8)) {
-            *temp_v0_4 = 8;
+        if (!(D_802AC8A8[arg0] & 8)) {
+            D_802AC8A8[arg0] = 8;
             func_80243824(0x53);
         }
         break;
     default:
-        temp_v0_5 = &D_802AC8A8[arg0];
-        if (*temp_v0_5 != 0) {
-            *temp_v0_5 = 0;
+        if (D_802AC8A8[arg0] != 0) {
+            D_802AC8A8[arg0] = 0;
         }
         break;
     }
