@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2583, eu 2583, jp 2582
+ * differing words: us 2558, eu 2558, jp 2557
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -992,16 +992,12 @@ void func_80250338(s32 arg0, void *arg1) {
 }
 
 void func_802502BC(s32 arg0) {
-    UnkObj *sp24;
-    UnkStruct_800AEDF0 *sp18;
-    UnkStruct_800AEDF0 *temp_a3;
+    UnkObj *obj;
 
-    temp_a3 = &D_800AEDF0[arg0];
-    sp18 = temp_a3;
-    sp24 = temp_a3->unk28;
+    obj = (UnkObj *)func_802443F4(arg0);
     func_80243D90(arg0, 0x90, 1);
-    temp_a3->unk78 = 0x4B0;
-    func_80231408(sp24, 0x40);
+    D_800AEDF0[arg0].unk78 = 1200;
+    func_80231408(obj, 0x40);
     func_80246C3C(arg0, 1, 1);
 }
 
@@ -2271,16 +2267,9 @@ void func_8024C884(s32 arg0, f32 arg1, s32 arg2) {
 }
 
 void func_8024C804(s32 arg0) {
-    UnkStruct_800AEDF0 *sp18;
-    UnkStruct_800AEDF0 *temp_v1;
-
-    if (!D_800AEDF0[arg0].unk10 && !D_800AEDF0[arg0].unk10) {}
-    temp_v1 = &D_800AEDF0[arg0];
-    sp18 = temp_v1;
-    if (func_8024C4EC(temp_v1->unk28, 2) != temp_v1->unk4C) {
-        sp18 = temp_v1;
+    if (func_8024C4EC((UnkObj *)func_802443F4(arg0), 2) != D_800AEDF0[arg0].unk4C) {
         func_80244354(arg0, 0x200, 0);
-        temp_v1->unk4C = 0;
+        D_800AEDF0[arg0].unk4C = 0;
     }
 }
 
@@ -2380,17 +2369,9 @@ void func_8024C29C(s32 arg0) {
 }
 
 void func_8024C1E8(s32 arg0) {
-    UnkStruct_800AEDF0 *sp18;
-    UnkStruct_800AEDF0 *temp_a3;
-    s32 var_v1;
-
-    if (!D_800AEDF0[arg0].unk10 && !D_800AEDF0[arg0].unk10) {}
-    temp_a3 = &D_800AEDF0[arg0];
-    if (M2C_FIELD(M2C_FIELD(M2C_FIELD(temp_a3->unk28->unk40, void **, 0x48), void **, 4), s32 *, 8) & 0x40) {
-        sp18 = temp_a3;
+    if (((Obj88 *)func_802443F4(arg0))->unk40->unk48->unk4->unk8 & 0x40) {
         func_80244354(arg0, 0x2020, 0);
-        var_v1 = func_80244BA4(arg0, 0x8000);
-        if (var_v1 == 0) {
+        if (!func_80244BA4(arg0, 0x8000)) {
             func_802444B8(arg0, 0);
         } else {
             func_802444B8(arg0, 0xC);
@@ -3219,16 +3200,16 @@ void func_80249AD4(s32 arg0) {
 }
 
 void func_80249A30(s32 arg0) {
-    s32 sp38[3];
-    void *temp_v0;
+    s32 ipos[3];
+    UnkObj *obj;
 
-    temp_v0 = M2C_FIELD(((UnkObj *)func_802443F4(arg0)), void **, 0x40);
-    func_8026DCAC(M2C_FIELD(temp_v0, f32 *, 0x10), M2C_FIELD(temp_v0, f32 *, 0x14), M2C_FIELD(temp_v0, f32 *, 0x18), sp38, 2);
-    if (func_8026E278(func_8026D7D8(sp38[0], sp38[1], sp38[2])) != 0) {
+    obj = (UnkObj *)func_802443F4(arg0);
+    func_8026DCAC(obj->unk40->unk10, obj->unk40->unk14, obj->unk40->unk18, ipos, 2);
+    if (func_8026E278(func_8026D7D8(ipos[0], ipos[1], ipos[2]))) {
         func_80244354(arg0, 0x10, 1);
-        return;
+    } else {
+        func_80244354(arg0, 0x10, 0);
     }
-    func_80244354(arg0, 0x10, 0);
 }
 
 void func_802498D4(s32 arg0, f32 arg1) {
