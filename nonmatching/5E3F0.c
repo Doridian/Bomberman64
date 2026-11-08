@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3436, eu 3436, jp 3435
+ * differing words: us 3327, eu 3327, jp 3326
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -316,7 +316,7 @@ s32 func_80271540(s16);
 s32 func_80271BB8(s32);
 void func_802727D8(s32);
 void func_802733C8(void *);
-s32 func_802741D8(void);
+s32 func_802741D8(s16);
 s32 func_80274994(s32);
 s32 func_80274F64(s32);
 s32 func_80274F8C(s16, f32, f32, f32, s32);
@@ -2200,73 +2200,53 @@ block_10:
 }
 
 void func_8024CC58(s32 arg0) {
-    UnkObj *sp64;
-    s32 sp60;
-    f32 sp58;
-    f32 sp54;
-    f32 sp50;
-    f32 *sp24;
-    UnkStruct_800AEDF0 *temp_s1;
-    f32 *temp_v0;
-    s32 temp_v0_2;
-    s32 temp_v0_3;
-    s32 temp_v0_4;
-    s32 temp_v1;
-    s32 var_v1;
-    void *var_v0;
+    Obj88 *obj;
+    s32 r;
+    s32 pad;
+    f32 vec[3];
+    UnkStruct_800AEDF0 *p;
+    s32 i;
 
-    if (!D_800AEDF0[arg0].unk10 && !D_800AEDF0[arg0].unk10) {}
-    var_v1 = 0;
-    temp_s1 = &D_800AEDF0[arg0];
-    sp64 = temp_s1->unk28;
-    if ((temp_s1->unk68 & 0x2000) == 0x2000) {
-        var_v1 = 1;
+    p = &D_800AEDF0[arg0];
+    obj = (Obj88 *)func_802443F4(arg0);
+    if (i) {}
+    if (func_80243EB4(arg0, 0x2000)) {
+        i = p->unkA4;
+        vec[2] = 70.0f;
+        vec[1] = D_802ACE90[i];
+        vec[0] = 180.0f;
+        func_8022FEAC(vec, D_800AEDF0[i].unk28->unk4C);
+        D_802ACE90[i] -= 1.0f;
     }
-    if (var_v1 != 0) {
-        temp_v1 = temp_s1->unkA4;
-        temp_v0 = &D_802ACE90[temp_v1];
-        sp24 = temp_v0;
-        sp58 = 70.0f;
-        sp54 = *temp_v0;
-        sp50 = 180.0f;
-        func_8022FEAC(&sp50, ((UnkObj *)func_802443F4(temp_v1))->unk4C);
-        *sp24 -= 1.0f;
-    }
-    var_v0 = M2C_FIELD(M2C_FIELD(sp64->unk40, void **, 0x48), void **, 4);
-    if ((M2C_FIELD(var_v0, f32 *, 4) == 2.0f) && !(temp_s1->unk38 & 0x80)) {
-        if (temp_s1->unk3C == 0) {
-            sp24 = (f32 *) arg0;
-            temp_v0_2 = func_80271540(arg0);
-            if (temp_v0_2 != 0) {
-                sp60 = temp_v0_2;
-                func_80271BB8((s32) sp24);
-                temp_s1->unk2C = sp60;
+    if (obj->unk40->unk48->unk4->unk4 == 2.0f && !(p->unk38 & 0x80)) {
+        if (p->unk3C == 0) {
+            r = func_80271540((s16)arg0);
+            if (r != 0) {
+                func_80271BB8((s16)arg0);
+                p->unk2C = r;
             } else {
-                func_80244354((s32) arg0, 0xA0, 0);
-                func_802444B8((s32) arg0, 0);
-                temp_s1->unk2C = 0;
+                func_80244354(arg0, 0xA0, 0);
+                func_802444B8(arg0, 0);
+                p->unk2C = 0;
             }
         } else {
-            sp24 = (f32 *) arg0;
-            func_802741D8();
-            temp_v0_3 = func_80270714((s32) sp24);
-            temp_s1->unk2C = temp_v0_3;
-            if (temp_v0_3 == 0) {
-                func_80244354((s32) arg0, 0xA0, 0);
-                func_802444B8((s32) arg0, 0);
+            func_802741D8((s16)arg0);
+            p->unk2C = func_80270714((s16)arg0);
+            if (p->unk2C == 0) {
+                func_80244354(arg0, 0xA0, 0);
+                func_802444B8(arg0, 0);
             }
         }
-        temp_s1->unk38 |= 0x80;
-        var_v0 = M2C_FIELD(M2C_FIELD(sp64->unk40, void **, 0x48), void **, 4);
+        p->unk38 |= 0x80;
     }
-    if ((M2C_FIELD(var_v0, s32 *, 8) & 0x40) && (func_80277CEC((s32) arg0) != 0)) {
-        func_80244354((s32) arg0, 0xA0, 0);
-        func_80244354((s32) arg0, 0x8000, 1);
-        func_802444B8((s32) arg0, 0xC);
+    if ((obj->unk40->unk48->unk4->unk8 & 0x40) && func_80277CEC(arg0)) {
+        func_80244354(arg0, 0xA0, 0);
+        func_80244354(arg0, 0x8000, 1);
+        func_802444B8(arg0, 0xC);
     }
-    temp_v0_4 = temp_s1->unk2C;
-    if ((temp_v0_4 != 0) && ((s32) sp64 != M2C_FIELD(temp_v0_4, s32 *, 0x44))) {
+    if (p->unk2C != 0 && (s32)obj != M2C_FIELD(p->unk2C, s32 *, 0x44)) {
         func_80244C30(arg0, 0);
+    if (!p->unk2C && !p->unk2C) {}
     }
 }
 
