@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3735, eu 3753, jp 3744
+ * differing words: us 3386, eu 3405, jp 3404
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -2946,14 +2946,9 @@ block_5:
 }
 
 s32 func_8023BBCC() {
-    s32 *sp7C;
-    s32 *var_v0_2;
-    s32 var_a0;
-    s32 var_a0_2;
-    s32 var_s0;
-    s32 var_s0_2;
+    s32 pad[6];
+    s32 i;
     s32 var_v0;
-    u8 *temp_v0;
 
     if ((D_802A0B80 != 0) || (D_802A01B8 == 0)) {
         return 1;
@@ -2975,24 +2970,13 @@ s32 func_8023BBCC() {
         func_80238CF8(0x90, 0x90);
         func_80238CF8(0x170, 0x170);
     }
-    temp_v0 = func_8022A328(func_8023FC80, 0x9D, 1, 0, 0);
-    D_802AC818 = temp_v0;
-    M2C_FIELD(temp_v0, s32 *, 0xC) = (s32) (M2C_FIELD(temp_v0, s32 *, 0xC) | 0x80);
+    D_802AC818 = func_8022A328(func_8023FC80, 0x9D, 1, 0, 0);
+    M2C_FIELD(D_802AC818, s32 *, 0xC) |= 0x80;
     func_8023B8D0();
     func_8026BF90(0x40);
     if (D_802AC5D0 & 0x2C) {
-        var_a0 = 0;
-        if (D_802AC5D0 & 4) {
-            var_a0 = 1;
-        }
-        if (!(func_8023AEDC(var_a0) & 0x1000)) {
-            do {
-                func_80239094();
-                var_a0_2 = 0;
-                if (D_802AC5D0 & 4) {
-                    var_a0_2 = 1;
-                }
-            } while (!(func_8023AEDC(var_a0_2) & 0x1000));
+        while (!(func_8023AEDC((D_802AC5D0 & 4) ? 1 : 0) & 0x1000)) {
+            func_80239094();
         }
         func_8026C660(2);
         func_8026BF90(0x7F);
@@ -3003,10 +2987,8 @@ s32 func_8023BBCC() {
     } else {
         func_802443F4(func_80243DDC());
         if ((D_802AC75C == 0) || (func_8023AB90() == 0)) {
-            if (!(func_8023AEDC(0) & 0x1000)) {
-                do {
-                    func_80239094();
-                } while (!(func_8023AEDC(0) & 0x1000));
+            while (!(func_8023AEDC(0) & 0x1000)) {
+                func_80239094();
             }
             func_8026C660(2);
             func_8026BF90(0x7F);
@@ -3025,37 +3007,22 @@ s32 func_8023BBCC() {
                 D_802AC7CC = 0x3C;
                 func_8026C8E8();
                 func_8026C894();
-                var_v0_2 = &D_800BE818;
-                var_s0 = 0;
-                do {
-                    if (*var_v0_2 != 0) {
-                        sp7C = var_v0_2;
-                        func_8028A3D0((D_802AC5E8 * 0x14) + (D_802AC5EC * 5) + var_s0 + 0x2C);
+                for (i = 0; i < 5; i++) {
+                    if ((&D_800BE818)[i] != 0) {
+                        func_8028A3D0(D_802AC5E8 * 20 + D_802AC5EC * 5 + i + 0x2C);
                     } else {
-                        sp7C = var_v0_2;
-                        func_8028A428((D_802AC5E8 * 0x14) + (D_802AC5EC * 5) + var_s0 + 0x2C);
+                        func_8028A428(D_802AC5E8 * 20 + D_802AC5EC * 5 + i + 0x2C);
                     }
-                    var_s0 += 1;
-                    var_v0_2 = (void *) ((u8 *)var_v0_2 + 4);
-                } while (var_s0 < 5);
-                var_s0_2 = 0;
-                do {
-                    if (*(D_800BE830 + ((var_s0_2 / 8) * 4)) & (1 << (var_s0_2 % 8))) {
-                        func_8028A3D0(var_s0_2);
-                    } else {
-                        func_8028A428(var_s0_2);
-                    }
-                    var_s0_2 += 1;
-                } while (var_s0_2 != 0x2C);
-                *func_8028A060(1) = D_802AC610.unk38;
-                if (!(D_802AC5D0 & 1) && (D_802A01B4 == 0)) {
-                    D_802AC5D4 = 0x21;
-                    D_802AC5DC = D_802AC5D4;
-                    D_802AC5D8 = 0x11;
-                    D_802AC5E0 = D_802AC5D8;
-                    D_802AC5D0 |= 1;
-                    D_802AC5E4 = 0;
                 }
+                for (i = 0; i < 0x2C; i++) {
+                    if (((s32 *) D_800BE830)[i / 8] & (1 << (i % 8))) {
+                        func_8028A3D0(i);
+                    } else {
+                        func_8028A428(i);
+                    }
+                }
+                *func_8028A060(1) = D_802AC610.unk38;
+                func_8023AE6C(0x21, 0x11, 0);
                 func_8023ADD4(1);
                 func_80229280(1);
                 D_802AC5F0 = 0;
