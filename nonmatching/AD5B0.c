@@ -5,19 +5,23 @@
  * inlined statics. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1112, eu 1112, jp 1112
+ * differing words: us 665, eu 665, jp 665
  *
- * Left: func_80292DB8 (the original keeps the retry loop's constant top
- * test, ours folds it, 3 words short), func_80292E90 (s-register
- * permutation), func_802934E8 (4 words long: frame 0xE8 against 0x128,
- * i spilled at 0x5C in the original, k should end in s4 after sum),
- * func_8029414C (frame 0x88 against 0x90: func_8029413C written with
- * u8 *p = *pp and *p++ gives 0x90 and the original's a2/v1 but 3 words
- * more, 1200 in jp; the arguments' li a0 before the jal instead of in its
- * delay slot; the loop folds j + 1 into k + 22 and swaps j/k's
- * registers), func_80293EAC's IPA argument registers, func_802948A0's
- * tail (one return too many), func_80294D34, func_802953B0 (lui before
- * sw ra) and colouring in func_80293378 (3 words).
+ * p3 (1112 -> 665): func_80292DB0's range, func_802934E8 and
+ * func_8029414C are left; everything else matches.
+ * - func_80292DB8: the original keeps the retry loop's constant top test
+ *   (li v0,1; beqz v0). A goto form keeps it, but retry lands in s1 and
+ *   the callers get worse.
+ * - func_80292E90: the original keeps ret in v1 after both calls; its
+ *   spill slot is 92 against our 88.
+ * - func_802934E8: frame 0x128 against our 0xF0 (56 bytes short); E0's
+ *   i is spilled at sp+92 in the original and sp+68 in ours. In D0,
+ *   *out |= p[0] & 0xFF (or p[1] & 0xFF) gives the original's lbu-before-
+ *   or schedule (nd 24 -> 21), but it makes 4144's loop reload *pp in
+ *   414C (+300 words), so it isn't used.
+ * - func_8029414C: the sw of p/chk after the first 3EAC call comes after
+ *   the loop's init in the original; the second loop call's arguments go
+ *   s2, s1, a0, s3 in the original and a0, s3, s2, s1 in ours.
  */
 #include "common.h"
 
@@ -44,7 +48,7 @@ static s32 func_80294A40(s32 slot);
 static s32 func_802949BC(u8 b);
 static s32 func_802948A0(u8 *p);
 static void func_80294144(u8 **pp, u8 *src);
-static u8 *func_8029413C(u8 *p, s32 v);
+static void func_8029413C(u8 **pp, u16 v);
 static void func_80294134(u8 **pp, u32 v);
 static void func_80294064(s32 a, s32 b, u8 **pp, u8 **chk);
 static void func_80294040(u8 **pp, u32 v);
@@ -108,13 +112,15 @@ void *D_802A1DBC[] = {
 void func_802953E0(void) {
 }
 
-void func_802953B0(void) {
+static void func_802953A8(void) {
     func_80297D30(0x2F, D_802A1DBC);
+}
+
+void func_802953B0(void) {
+    func_802953A8();
     D_802A1DB4 = -1;
 }
 
-void func_802953A8(void) {
-}
 
 void func_80295384(void) {
     func_80294D34(D_80063000);
@@ -345,15 +351,12 @@ static s32 func_802948A0(u8 *p) {
     s32 ret = 0;
 
     if ((p[14] & 0x38) || p[11] || p[12] || p[13]) {
-        return 4;
-    }
-    if ((p[14] & 7) || p[8] || p[9] || p[10]) {
-        return 3;
-    }
-    if ((p[6] & 0x38) || p[3] || p[4] || p[5]) {
-        return 2;
-    }
-    if ((p[6] & 7) || p[0] || p[1] || p[2]) {
+        ret = 4;
+    } else if ((p[14] & 7) || p[8] || p[9] || p[10]) {
+        ret = 3;
+    } else if ((p[6] & 0x38) || p[3] || p[4] || p[5]) {
+        ret = 2;
+    } else if ((p[6] & 7) || p[0] || p[1] || p[2]) {
         ret = 1;
     }
     return ret;
@@ -374,6 +377,24 @@ s32 func_802947AC(void) {
     return ret;
 }
 
+static void func_80294134(u8 **pp, u32 v) {
+    u8 *p = *pp;
+
+    *p++ = (v >> 24) & 0xFF;
+    *p++ = (v >> 16) & 0xFF;
+    *p++ = (v >> 8) & 0xFF;
+    *p++ = v & 0xFF;
+    *pp = p;
+}
+
+static void func_8029413C(u8 **pp, u16 v) {
+    u8 *p = *pp;
+
+    *p++ = (v >> 8) & 0xFF;
+    *p++ = v & 0xFF;
+    *pp = p;
+}
+
 void func_8029414C(u8 *buf) {
     u8 *chk = buf;
     u8 *p = buf;
@@ -383,9 +404,9 @@ void func_8029414C(u8 *buf) {
     s32 k;
 
     func_80294134(&p, *func_8028A060(1));
-    p = func_8029413C(p, (*func_8028A060(2) & 0x3FF) | 0x8000);
+    func_8029413C(&p, (*func_8028A060(2) & 0x3FF) | 0x8000);
     x = func_8028A060(4);
-    *p++ = (*x & 0x7F) | (*func_8028A060(3) << 7);
+    *p++ = (*func_8028A060(3) << 7) | (*x & 0x7F);
     *p++ = func_80293EAC(chk, 7);
     chk += 8;
     func_80294144(&p, (u8 *) func_8028A060(12));
@@ -398,15 +419,16 @@ void func_8029414C(u8 *buf) {
     p++;
     *p++ = *func_8028A060(6) & 0x7F;
     x = func_8028A060(8);
-    *p++ = (*x & 0xF) | (*func_8028A060(9) << 4);
+    *p++ = ((*func_8028A060(9) & 0xF) << 4) | (*x & 0xF);
     x = func_8028A060(10);
-    *p++ = (*x & 0xF) | (*func_8028A060(11) << 4);
+    *p++ = ((*func_8028A060(11) & 0xF) << 4) | (*x & 0xF);
     *p++ = func_80293FE4(0);
     *p++ = func_80293FE4(0xB);
     *p++ = func_80293EAC(chk, 6);
     chk += 7;
-    for (i = 0, k = 0; i < 6; i++, k += 4) {
+    for (k = 0, i = 0; i < 6; i++, k += 4) {
         j = k + 0x15;
+        do {} while (0);
         func_80294064(j, j + 1, &p, &chk);
         func_80294064(j + 2, j + 3, &p, &chk);
     }
@@ -442,24 +464,9 @@ static void func_80294144(u8 **pp, u8 *src) {
     s32 i;
 
     for (i = 0; i < 8; i++) {
-        *(*pp)++ = src[i];
+        *(*pp)++ = src[0];
+        src++;
     }
-}
-
-static u8 *func_8029413C(u8 *p, s32 v) {
-    p[0] = v >> 8;
-    p[1] = v;
-    return p + 2;
-}
-
-static void func_80294134(u8 **pp, u32 v) {
-    u8 *p = *pp;
-
-    *p++ = v >> 24;
-    *p++ = v >> 16;
-    *p++ = v >> 8;
-    *p++ = v;
-    *pp = p;
 }
 
 static void func_80294064(s32 a, s32 b, u8 **pp, u8 **chk) {
@@ -469,7 +476,7 @@ static void func_80294064(s32 a, s32 b, u8 **pp, u8 **chk) {
 
     func_80294040(&q, *x);
     func_80294040(&q, *y);
-    *q = ((*x >> 24) & 7) | (((*y >> 24) & 7) << 3);
+    *q = (((*y >> 24) & 7) << 3) | ((*x >> 24) & 7);
     q++;
     *q = func_80293EAC(*chk, 7);
     q++;
@@ -480,10 +487,11 @@ static void func_80294064(s32 a, s32 b, u8 **pp, u8 **chk) {
 static void func_80294040(u8 **pp, u32 v) {
     u8 *p = *pp;
 
-    p[0] = v >> 16;
-    p[1] = v >> 8;
-    p[2] = v;
-    *pp = p + 3;
+    p[0] = (v >> 16) & 0xFF;
+    p[1] = (v >> 8) & 0xFF;
+    p[2] = v & 0xFF;
+    p += 3;
+    *pp = p;
 }
 
 static u8 func_80293FE4(s32 base) {
@@ -523,11 +531,12 @@ static u8 func_80293F34(s32 base) {
 }
 
 static u8 func_80293EAC(u8 *buf, s32 n) {
+    u8 *p = buf;
     u8 sum = 0;
     s32 i;
 
     for (i = 0; i < n; i++) {
-        sum += buf[i];
+        sum += *p++;
     }
     return 0xFF - sum;
 }
@@ -552,6 +561,7 @@ s32 func_802934E8(u8 *buf) {
     s32 *w;
     u8 sum;
     s32 i;
+    u8 *q;
 
     p = buf;
     while (D_802A1DA0) {
@@ -584,10 +594,10 @@ s32 func_802934E8(u8 *buf) {
         func_802930F8(buf, 10);
         return 1;
     }
-    w = func_8028A060(12);
     sum = 0;
+    q = (u8 *) func_8028A060(12);
     for (i = 0; i < 8; i++) {
-        sum += ((u8 *) w)[i] = *p++;
+        sum += *q++ = *p++;
     }
     sum += *p++;
     if (sum != 0xFF) {
@@ -695,8 +705,9 @@ static s32 func_802934E0(u8 **pp) {
     s32 k;
     s32 r;
 
-    for (i = 0, k = 0; i < 6; i++, k += 4) {
+    for (k = 0, i = 0; i < 6; i++, k += 4) {
         j = k + 0x15;
+        do {} while (0);
         r = func_802933E8(j, j + 1, pp);
         if (r == 1) {
             break;
@@ -768,7 +779,7 @@ static u8 func_80293378(u8 **pp, s32 *out) {
     sum = p[0];
     *out |= (p[1] << 8) & 0xFF00;
     sum += p[1];
-    *out |= p[2];
+    *out |= p[2] & 0xFF;
     sum += p[2];
     p += 3;
     *pp = p;
