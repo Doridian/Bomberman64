@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 5493, eu 5501, jp 5477
+ * differing words: us 5447, eu 5455, jp 5456
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -623,19 +623,16 @@ void func_802434F8() {
     temp_s2 = func_802811F0(D_802A08EC, 0x140U, 0x6EU, 0.8f, 0.8f, 3U);
     func_8026C964();
     func_8026C660(0x1E9);
-    var_s0 = 0xF0;
-loop_1:
-    if (!(D_802AC5D0 & 0x10)) {
+    for (var_s0 = 0xF0; var_s0 != 0; var_s0 -= 4) {
+        if (D_802AC5D0 & 0x10) {
+            break;
+        }
 #if VERSION_JP
-        func_80280EB0(temp_s2, 0x49, var_s0 & 0xFFFF);
+        func_80280EB0(temp_s2, 0x49, var_s0);
 #else
-        func_80280EB0(temp_s2, func_8023B2AC(D_802A08EC, 0.8f), var_s0 & 0xFFFF);
+        func_80280EB0(temp_s2, func_8023B2AC(D_802A08EC, 0.8f), var_s0);
 #endif
         func_80239094();
-        var_s0 -= 4;
-        if (var_s0 != 0) {
-            goto loop_1;
-        }
     }
     func_8026C93C(0x1C);
     func_80280DB4(temp_s2);
