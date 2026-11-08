@@ -149,6 +149,10 @@ main_code AD3D0 0x10 0 0x10
 main_code @us AD3D0 data=0x802A1D90 bss=0x802B0310
 main_code @eu AD3D0 data=0x802A1D90 bss=0x802B0300
 main_code @jp AD3D0 data=0x802A0FE0 bss=0x802AF530
+main_code AD5B0 0x60 0x70 0
+main_code @us AD5B0 data=0x802A1DA0 rodata=0x802A4660
+main_code @eu AD5B0 data=0x802A1DA0 rodata=0x802A4650
+main_code @jp AD5B0 data=0x802A0FF0 rodata=0x802A3890
 main_code AFBF0 0xE70 0x70 0x80
 main_code @us AFBF0 data=0x802A1E00 rodata=0x802A46D0 bss=0x802B0320
 main_code @eu AFBF0 data=0x802A1E00 rodata=0x802A46C0 bss=0x802B0310

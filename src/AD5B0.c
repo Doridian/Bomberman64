@@ -1,82 +1,25 @@
 /*
- * NON_MATCHING: main_code's AD5B0, complete: the EEPROM save (header,
- * three slots, the format, load, store and checks). Every function is
- * emitted in the original's order, with the original's stubs for the
- * inlined statics. Not built into the ROM (docs/DECOMPILING.md,
- * "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 5, eu 5, jp 5
- *
- * p5 (70 -> 5): func_80292E90 matches; func_80292DB8 is 5 words off.
- * - func_80297E80 is declared returning u16. The hidden narrowing cvt
- *   stops uopt copy-propagating ret into v0, so E90 keeps it in v1
- *   (move v1,v0 in both arms, bnez v1), as the original does.
- * - In func_80292DB0, #line 950 before the for: as1 orders by .loc, and
- *   the andi argument copy takes the call line, so the loop's line must be
- *   below the line of the func_80292DB0 call in E88 (any value under it
- *   works; renumber if lines above move). This puts move v0,zero before
- *   andi v1.
- * - DB8's retry loop is a do/while entered by goto to its test
- *   (retry = 1; goto test; ... test: i++; } while (retry)). The entry
- *   jump becomes a duplicated top test that keeps li v0,1; beqz v0
- *   (while, if+do and goto pretests with retry known to be 1 all fold).
- * - Left: the loop-invariant loads (lui/addiu s1 = &D_802AC3E0, li s5,1)
- *   go at the end of the header's outside predecessor, which here is the
- *   entry block, so they come before the guard instead of after it, and
- *   li s0,1 fills the beqz delay slot. The original's order is that of a
- *   real while pretest on a value uopt can't fold (a retry parameter does
- *   it, but its callers get worse).
- *
- * p4 (665 -> 70): only func_80292DB0's range (DB8 and E90) is left;
- * func_802934E8 and func_8029414C match.
- * - func_802934E8 was one word long (a load-delay nop in D8); most of its
- *   529 words were the shift. D8 and D0 interleave the checksum with the
- *   ors (sum = *p++; *out |= *p; ...), which hoists the sum's lbu above
- *   the or/sw. D0 is defined before 34E8 (lower .loc lines put li a0,2 in
- *   the jal delay slot). The last or of D0 and the first of D8 read
- *   (u8)(x << 0): it burns one ugen temp so the t-register rotation lines
- *   up (plain, & 0xFF and other casts are a register behind or change
- *   414C). The 8-byte copy loop is sum += *p; *q++ = *p++; (addu before
- *   sb). Frame: s32 pad[8] in D8 puts E0's i at sp+0x5C and pad2[6] in E0
- *   (after its locals) makes the frame 0x128.
- * - 33E8 and 4064 take their pointer arguments first ((pp, a, b) and
- *   (pp, chk, a, b)): IPA keeps their registers, and ugen's argument order
- *   then puts the pointer moves first in the second call of each loop.
- * - 414C's for line gets a #line one below the *p++ = ...(chk, 6) line
- *   (then a #line back to the real numbering), so the loop's init is
- *   scheduled before the sw of p and chk. Both are absolute: renumber
- *   them when lines above move.
- * - DB8: the original keeps the guard on retry (li v0,1; beqz v0) before
- *   the loop preheader. Any form where uopt knows retry == 1 folds it
- *   (while, goto, for/do variants, retry from i or ret, narrow types, a
- *   late assignment, retry = 0 instead of break). Passing retry as a
- *   parameter (1 from every caller) gives the exact structure (guard
- *   before the preheader), but it lives in s0 and the callers get worse.
- *   The kept form is for (;;) { if (!retry) break; ... } with retry = 1
- *   just before: the guard stays but the preheader (s1, s5) comes before
- *   it and the exit takes an extra move v0,s2 (one word long).
- * - E90: declaring i first gives its spill slot 92. The original copies
- *   ret to v1 after both calls (move v1,v0; bnez v1); ours tests v0, one
- *   word short, so DB8 and E90 cancel in size and E90 is shifted. ret
- *   with a later use (return ret, if (ret) {} after the loop) gets its own
- *   register but lives across the E88 call; u16 ret gives a per-branch
- *   register with an andi.
- *
- * p3 (1112 -> 665): func_80292DB0's range, func_802934E8 and
- * func_8029414C are left; everything else matches.
- * - func_80292DB8: the original keeps the retry loop's constant top test
- *   (li v0,1; beqz v0). A goto form keeps it, but retry lands in s1 and
- *   the callers get worse.
- * - func_80292E90: the original keeps ret in v1 after both calls; its
- *   spill slot is 92 against our 88.
- * - func_802934E8: frame 0x128 against our 0xF0 (56 bytes short); E0's
- *   i is spilled at sp+92 in the original and sp+68 in ours. In D0,
- *   *out |= p[0] & 0xFF (or p[1] & 0xFF) gives the original's lbu-before-
- *   or schedule (nd 24 -> 21), but it makes 4144's loop reload *pp in
- *   414C (+300 words), so it isn't used.
- * - func_8029414C: the sw of p/chk after the first 3EAC call comes after
- *   the loop's init in the original; the second loop call's arguments go
- *   s2, s1, a0, s3 in the original and a0, s3, s2, s1 in ours.
+ * -O3. Every function is emitted in the original's order, with the
+ * original's stubs for the inlined statics. Matching notes:
+ * - The #line directives order as1's .loc lines; only their differences
+ *   matter. In func_8029414C the for gets a line below the
+ *   *p++ = ...(chk, 6) line before it, which schedules the loop's init
+ *   before the sw of p and chk; in func_80292DB0 the for's line must be
+ *   below the line of the func_80292DB0 call in func_80292E88, which puts
+ *   move v0,zero before andi v1. Moving lines above the first #line
+ *   changes the first difference: shift all three by the same amount.
+ * - func_80297E80 is declared returning u16: the narrowing stops uopt
+ *   copy-propagating ret into v0, so func_80292E90 keeps it in v1.
+ * - func_80292DB8's loop is while (ret != 0 && i++ < 3) with ret = -1:
+ *   uopt folds the i++ < 3 entry test but keeps ret != 0 (li v0,1; beqz).
+ * - func_802934D8/D0 interleave the checksum with the ors, and the last
+ *   or of D0 and the first of D8 read (u8)(x << 0), which burns one ugen
+ *   temp so the t registers rotate as the original's. D0 is defined
+ *   before func_802934E8 (its .loc lines put li a0,2 in the delay slot).
+ * - Frames: s32 pad[8] in D8 and pad2[6] in E0 (after its locals) give
+ *   the 0x128 frame and E0's i at sp+0x5C. func_80292E90 declares i first.
+ * - func_802933E8 and func_80294064 take their pointer arguments first,
+ *   so IPA keeps their registers and the pointer moves come first.
  */
 #include "common.h"
 
@@ -481,9 +424,9 @@ void func_8029414C(u8 *buf) {
     *p++ = func_80293FE4(0xB);
     *p++ = func_80293EAC(chk, 6);
     chk += 7;
-#line 461
+#line 397
     for (k = 0, i = 0; i < 6; i++, k += 4) {
-#line 467
+#line 403
         j = k + 0x15;
         do {} while (0);
         func_80294064(&p, &chk, j, j + 1);
@@ -990,7 +933,6 @@ static s32 func_80292DB8(u8 addr, u8 *buf, u8 n) {
     s32 ret = -1;
     s32 size;
     s32 i;
-    s32 retry;
 
     if (!D_802A1DA4) {
         return -2;
@@ -999,28 +941,20 @@ static s32 func_80292DB8(u8 addr, u8 *buf, u8 n) {
     func_80297D60(buf, size);
     func_80297D50(buf, size);
     i = 0;
-    retry = 1;
-    goto test;
-    do {
+    while (ret != 0 && i++ < 3) {
         if (n == 1) {
             ret = func_80297E68(D_802AC3E0, addr, buf);
         } else {
             ret = func_80297E78(D_802AC3E0, addr, buf, size);
         }
-        if (ret == 0) {
-            break;
-        }
-        retry = i < 3;
-    test:
-        i++;
-    } while (retry);
+    }
     return ret;
 }
 
 static s32 func_80292DB0(u8 *a, u8 *b, u8 n) {
     s32 i;
 
-#line 950
+#line 886
     for (i = 0; i < n * 8; i++) {
         if (b[i] != a[i]) {
             return 1;
