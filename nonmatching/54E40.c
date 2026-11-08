@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3808, eu 3825, jp 3813
+ * differing words: us 3735, eu 3753, jp 3744
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -2754,51 +2754,40 @@ static void func_8023CC4C(void) {
 }
 
 static void func_8023CA94() {
-    u8 *var_s4;
-    s32 *var_s1;
-    s32 *var_s2;
-    s32 temp_v0;
-    s32 var_s0;
-    s32 var_s5;
+    s32 i;
+    s32 j;
+    s32 v;
+    s32 *q;
 
     if (D_802AC5D0 & 4) {
+        D_802AC660.unk2C = D_802AC660.unk28;
         D_802AC660.unk30 = 0;
         D_802AC660.unk34 = 0x3C;
-        D_802AC660.unk2C = (s32) D_802AC660.unk28;
         func_80277E1C();
-        var_s2 = ((s32 *) &D_802AC660);
-        var_s4 = D_800AEDF0;
-        var_s5 = 0;
-        do {
-            temp_v0 = M2C_FIELD(var_s2, s32 *, 4);
-            M2C_FIELD(var_s4, s32 *, 0x20) = 3;
-            M2C_FIELD(var_s4, s32 *, 0x14) = 1;
-            M2C_FIELD(var_s4, s32 *, 0x98) = 3;
-            M2C_FIELD(var_s2, s32 *, 0xB4) = (s32) (M2C_FIELD(var_s2, s32 *, 0xB4) & ~2);
-            M2C_FIELD(var_s4, s32 *, 0x94) = (s32) M2C_FIELD(var_s4, s32 *, 0x18);
-            if (temp_v0 == 2) {
-                func_80251804(var_s5);
-                M2C_FIELD(var_s2, s32 *, 0xB4) = (s32) (M2C_FIELD(var_s2, s32 *, 0xB4) | 8);
-            } else if ((temp_v0 == 1) && (M2C_FIELD(var_s2, s32 *, 0x40) == 1)) {
-                M2C_FIELD(var_s2, s32 *, 0xE8) = func_802280F4(M2C_FIELD(func_802443F4(var_s5), s32 *, 0x40), 0xF);
-                var_s0 = 0;
-                var_s1 = (var_s5 * 0x10) + 0x50 + ((s32 *) &D_802AC660);
-                do {
-                    func_8023A734(M2C_FIELD(var_s2, s32 *, 0xE8), var_s0, *var_s1);
-                    var_s0 += 1;
-                    var_s1 = (void *) ((u8 *)var_s1 + 4);
-                } while (var_s0 != 4);
+        for (i = 0; i < 4; i++) {
+            v = D_802AC660.unk4[i];
+            M2C_FIELD(D_800AEDF0 + i * 0xC8, s32 *, 0x20) = 3;
+            M2C_FIELD(D_800AEDF0 + i * 0xC8, s32 *, 0x14) = 1;
+            M2C_FIELD(D_800AEDF0 + i * 0xC8, s32 *, 0x98) = 3;
+            ((s32 *) D_802AC660.unkB4)[i] &= ~2;
+            M2C_FIELD(D_800AEDF0 + i * 0xC8, s32 *, 0x94) = M2C_FIELD(D_800AEDF0 + i * 0xC8, s32 *, 0x18);
+            if (v == 2) {
+                func_80251804(i);
+                ((s32 *) D_802AC660.unkB4)[i] |= 8;
+            } else if ((v == 1) && (D_802AC660.unk40[i] == 1)) {
+                D_802AC660.unkE8[i] = func_802280F4(M2C_FIELD(func_802443F4(i), s32 *, 0x40), 0xF);
+                q = D_802AC660.unk50[i];
+                for (j = 0; j < 4; j++) {
+                    func_8023A734(D_802AC660.unkE8[i], j, q[j]);
+                }
             }
-            var_s5 += 1;
-            var_s4 += 0xC8;
-            var_s2 = (void *) ((u8 *)var_s2 + 4);
-        } while (var_s5 != 4);
+        }
         if (D_802AC660.unk0 == 1) {
             D_802AC610.unk10 = 0;
-            M2C_FIELD(&D_802AC760, s32 *, 0) = 1;
-            M2C_FIELD(&D_802AC760, s32 *, 4) = 1;
-            M2C_FIELD(D_802AC820, s32 *, 4) = 0;
-            M2C_FIELD(D_802AC820, s32 *, 0) = 0;
+            (&D_802AC760)[0] = 1;
+            (&D_802AC760)[1] = 1;
+            ((s32 *) D_802AC820)[1] = 0;
+            ((s32 *) D_802AC820)[0] = 0;
             func_80238A10(func_80242FB4, 1, 0, 0, 0x130);
             func_80238A10(func_80242FB4, 2, 0, 0, 0x130);
         }
