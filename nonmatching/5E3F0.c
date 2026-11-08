@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2744, eu 2744, jp 2743
+ * differing words: us 2705, eu 2705, jp 2704
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -3266,49 +3266,19 @@ void func_80249A30(s32 arg0) {
 }
 
 void func_802498D4(s32 arg0, f32 arg1) {
-    UnkObj *sp54;
-    s32 sp50;
-    UnkStruct_800AEDF0 *sp20;
-    UnkObj *temp_a0;
-    UnkStruct_800AEDF0 *temp_t0;
-    s32 *temp_v0_2;
-    s32 temp_a0_2;
-    s32 temp_t3;
-    s32 temp_v0;
-    s32 var_v1;
-    s32 var_v1_2;
+    UnkObj *obj;
+    s32 r;
 
-    temp_t0 = &D_800AEDF0[arg0];
-    temp_a0 = temp_t0->unk28;
-    sp20 = temp_t0;
-    sp54 = temp_a0;
-    temp_v0 = func_8022F4AC((s32) temp_a0, 2, temp_t0->unk4C);
-    if ((temp_v0 != 0) && (arg1 > 0.0f)) {
-        temp_v0_2 = &D_802AC948[arg0];
-        temp_t3 = *temp_v0_2 - 1;
-        *temp_v0_2 = temp_t3;
-        if (temp_t3 == 0) {
-            sp50 = temp_v0;
-            sp20 = temp_t0;
+    obj = (UnkObj *)func_802443F4(arg0);
+    r = func_8022F4AC((s32)obj, 2, D_800AEDF0[arg0].unk4C);
+    if (r != 0 && arg1 > 0.0f) {
+        if (--D_802AC948[arg0] == 0) {
             func_80244354(arg0, 1, 0);
-            if (temp_v0 != 0) {
-                temp_a0_2 = temp_t0->unk10;
-                var_v1 = 0;
-                if (!(temp_a0_2 & 0x11C0)) {
-                    var_v1 = 1;
-                }
-                if (var_v1 != 0) {
-                    if (sp54->unk6C == 0.0f) {
-                        func_80249810(arg0, temp_v0, 1);
-                    } else {
-                        var_v1_2 = 0;
-                        if ((temp_a0_2 & 0x10000) == 0x10000) {
-                            var_v1_2 = 1;
-                        }
-                        if (var_v1_2 == 0) {
-                            func_80247D74(arg0, 22.5f, 8.0f, 1, NULL);
-                        }
-                    }
+            if (r != 0 && func_802452AC(arg0, 0x11C0)) {
+                if (obj->unk6C == 0.0f) {
+                    func_80249810(arg0, r, 1);
+                } else if (!func_80244BA4(arg0, 0x10000)) {
+                    func_80247D74(arg0, 22.5f, 8.0f, 1, NULL);
                 }
             }
         }
