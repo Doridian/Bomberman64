@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4142, eu 4159, jp 4156
+ * differing words: us 4081, eu 4098, jp 4095
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -1345,7 +1345,7 @@ void func_8023FD08() {
         D_802AC7F0 = func_80238A10(func_80240F34, 0, 0, 0, 0x401);
     } else {
         D_802AC7F0 = 0;
-        D_802AC7EC = 0;
+        D_802AC7EC = D_802AC7F0;
     }
     func_8023903C(0x1E);
     D_802AC610.unk0 &= ~8;
@@ -1837,7 +1837,7 @@ static void func_8023EF38(u8 *arg0) {
         D_802AC7F0 = func_80238A10(func_80240F34, 0, 0, 0, 0x130);
     } else {
         D_802AC7F0 = 0;
-        D_802AC7EC = 0;
+        D_802AC7EC = D_802AC7F0;
     }
     func_8026C660(0x1E);
     func_8022979C((s32) M2C_FIELD(arg0, void **, 0x40), 4, 0xC);
@@ -2092,9 +2092,9 @@ void func_8023E1D8() {
         if (!(D_802AC5D0 & 1)) {
             if (D_802A01B4 == 0) {
                 D_802AC5D4 = 0x20;
-                D_802AC5DC = 0x20;
+                D_802AC5DC = D_802AC5D4;
                 D_802AC5D8 = 0x11;
-                D_802AC5E0 = 0x11;
+                D_802AC5E0 = D_802AC5D8;
                 D_802AC5D0 |= 1;
                 D_802AC5E4 = 0;
             }
@@ -2186,9 +2186,9 @@ block_36:
             D_802AC5D0 = temp_v1;
             if (!(temp_v1 & 1) && (D_802A01B4 == 0)) {
                 D_802AC5D4 = 0x21;
-                D_802AC5DC = 0x21;
+                D_802AC5DC = D_802AC5D4;
                 D_802AC5D8 = 0x11;
-                D_802AC5E0 = 0x11;
+                D_802AC5E0 = D_802AC5D8;
                 D_802AC5D0 = temp_v1 | 1;
                 goto block_44;
             }
@@ -2196,9 +2196,9 @@ block_36:
             func_8023903C(0x3C);
             if (!(D_802AC5D0 & 1) && (D_802A01B4 == 0)) {
                 D_802AC5D4 = 0x20;
-                D_802AC5DC = 0x20;
+                D_802AC5DC = D_802AC5D4;
                 D_802AC5D8 = 0x11;
-                D_802AC5E0 = 0x11;
+                D_802AC5E0 = D_802AC5D8;
                 D_802AC5D0 |= 1;
 block_44:
                 D_802AC5E4 = 0;
@@ -2958,9 +2958,9 @@ block_5:
             temp_a0 = D_802AC5D8;
             if (!(D_802AC5D0 & 1) && (D_802A01B4 == 0)) {
                 D_802AC5D4 = temp_v1;
-                D_802AC5DC = temp_v1;
+                D_802AC5DC = D_802AC5D4;
                 D_802AC5D8 = temp_a0;
-                D_802AC5E0 = temp_a0;
+                D_802AC5E0 = D_802AC5D8;
                 D_802AC5D0 |= 1;
                 D_802AC5E4 = 0;
             }
@@ -3073,9 +3073,9 @@ s32 func_8023BBCC() {
                 *func_8028A060(1) = D_802AC610.unk38;
                 if (!(D_802AC5D0 & 1) && (D_802A01B4 == 0)) {
                     D_802AC5D4 = 0x21;
-                    D_802AC5DC = 0x21;
+                    D_802AC5DC = D_802AC5D4;
                     D_802AC5D8 = 0x11;
-                    D_802AC5E0 = 0x11;
+                    D_802AC5E0 = D_802AC5D8;
                     D_802AC5D0 |= 1;
                     D_802AC5E4 = 0;
                 }
