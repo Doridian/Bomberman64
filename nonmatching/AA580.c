@@ -6,7 +6,7 @@
  * Every function is emitted in the original's order. Not built into the
  * ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 254, eu 254, jp 254
+ * differing words: us 38, eu 38, jp 38
  *
  * func_802921C4 and func_8029217C match; of the statics (compared as one
  * run from func_8028FD80, 402 words), func_8028FD88 matches. The inlined
@@ -98,6 +98,33 @@
  *   splits when save * n <= mincost. Without effect or worse: a
  *   4-param wrapper static (frame 168 but locals +16), the slope test
  *   as a static, a switch dispatcher (881), "(c = code & 0xF) == 7".
+ * p5 (254 -> 38 in every version; jp allf: FFA8 3, 09FC 35, the rest
+ *   match; the static run stays 0xC7C).
+ *   ABS(x) is ((x) < 0 ? -(x) : (x)): IDO keys float constants by
+ *   spelling, so 0 and 0.0f are different CSE candidates (0.0F is the same
+ *   as 0.0f); with the int 0 the corner's zero got its own range, with
+ *   0.0f it is shared in f0 like the original (145 -> 82).
+ *   unk6C == unk70 * 2 (an int 2 keeps lui/mul.s; 2.0f becomes add.s).
+ *   (dirA.unk0 * 1) == 1 and (dirA.unk8 * 1) == 1 flip bne to v0,t6 when
+ *   1 is CSE'd in v0 (1 == x does not).
+ *   res = 0x51/0x52 after the two ctx updates (ugen hands t6-t9 out in
+ *   source order).
+ *   func_80290708(ctx, code, dirB, dir, mode): IPA argument moves follow
+ *   the static's parameter order; all 120 orders tried (51 -> 38).
+ *   #line 679 on the inlined "ctx->unk14 = func_8026EE18(...)" (split
+ *   before the =) and #line 680 on ctx.unk1C = ... fix sw v0,300(sp).
+ *   FFA8: every declared local takes a frame slot in declaration order
+ *   (inlined statics' locals appended, rounded to 8): Vec3i v below
+ *   s32 a, b and no obj in half B give frame 160 and the v slots; a
+ *   named z = unk24 - fb * 50.0f gives half A's registers (27 -> 10);
+ *   t = dx; t *= a; gives mul.s's operand order.
+ * Left (38): 09FC c's spill slot 0x54 vs 0x58 (~15 words: the original
+ *   looks like 8 fewer bytes of locals, td 240, with one more spill temp
+ *   below c's bit that interferes with it); the corner's r and the unk44
+ *   branch's p in v0/a0 vs v1 (~17; their ranges have cost 0 and nothing
+ *   forbidden; the original reloads res into v0 before the final stores,
+ *   ours at the return, which also costs a nop: 0xF4C vs 0xF48); FFA8
+ *   half B's ctx->unk0 in v0 vs v1 (3).
  * Left: FFA8's frame 168 vs 160 (v_A 140 vs 124, v_B 76 vs 68, flag
  * read at 184 vs 176), half A's float registers (orig fb f2, u f0, ab
  * f12, 50.0 temp f18, unk24 loaded early), half B's end (obj v1 vs v0,
@@ -168,7 +195,7 @@ s32 func_802909FC(UnkStructA *obj, s32 (*cb)(s32));
 void func_80291944(UnkStructA *obj, s32 dir, f32 speed);
 void func_8029217C(UnkStructA *obj, s32 dir, f32 speed, s32 (*cb)(s32));
 
-#define ABS(x) ((x) < 0.0f ? -(x) : (x))
+#define ABS(x) ((x) < 0 ? -(x) : (x))
 
 void *D_802A1D60[] = { func_8029217C, func_80291944, func_802909FC, NULL };
 
@@ -288,14 +315,15 @@ static void func_8028FD88(Vec3i *out, s32 dir, s32 mode) {
 }
 
 static s32 func_8028FFA8_a(UnkStruct_802909FC *ctx, s32 code) {
-    Vec3i v;
     s32 a;
     s32 b;
+    Vec3i v;
     f32 u;
     f32 w;
     f32 ab;
     f32 fb;
     UnkStructA *obj;
+    f32 z;
 
     a = 0;
     b = 0;
@@ -323,9 +351,10 @@ static s32 func_8028FFA8_a(UnkStruct_802909FC *ctx, s32 code) {
     }
     u = ctx->unk1C - a * 50.0f;
     fb = b;
+    z = ctx->unk24 - fb * 50.0f;
     obj = ctx->unk0;
     ab = a * b;
-    w = -a * ((200.0f + fb * ((ctx->unk24 - fb * 50.0f) - ab * u)) * 0.5f) - u;
+    w = -a * ((200.0f + fb * (z - ab * u)) * 0.5f) - u;
     ctx->unk4 = obj->unk58 + w;
     ctx->unkC = obj->unk60 + ab * w;
     return 0x13;
@@ -339,7 +368,6 @@ static s32 func_8028FFA8_b(UnkStruct_802909FC *ctx, Vec3i *dir, s32 code2, s32 f
     f32 dx;
     f32 dz;
     f32 t;
-    UnkStructA *obj;
 
     a = 0;
     b = 0;
@@ -390,18 +418,17 @@ static s32 func_8028FFA8_b(UnkStruct_802909FC *ctx, Vec3i *dir, s32 code2, s32 f
     if (res == 0) {
         return res;
     }
-    obj = ctx->unk0;
-    dx = ctx->unk4 - obj->unk58;
-    dz = ctx->unkC - obj->unk60;
+    dx = ctx->unk4 - ctx->unk0->unk58;
+    dz = ctx->unkC - ctx->unk0->unk60;
     res = 0;
     if (v.unk0 == a) {
-        t = a * dx;
+        t = dx; t *= a;
         res = 1;
         ctx->unkC -= b * t * 0.70710677f;
         ctx->unk4 -= a * t * 0.29289323f;
     }
     if (v.unk8 == b) {
-        t = b * dz;
+        t = dz; t *= b;
         res |= 2;
         ctx->unk4 -= a * t * 0.70710677f;
         ctx->unkC -= b * t * 0.29289323f;
@@ -501,7 +528,7 @@ static s32 func_80290498(UnkStruct_802909FC *ctx, s32 dx, s32 dy, s32 dz, s32 co
     return t;
 }
 
-static s32 func_80290708(s32 mode, UnkStruct_802909FC *ctx, Vec3i *dir, Vec3i *dirB, s32 code) {
+static s32 func_80290708(UnkStruct_802909FC *ctx, s32 code, Vec3i *dirB, Vec3i *dir, s32 mode) {
     s32 res;
     s32 dy;
     s32 t1;
@@ -577,8 +604,11 @@ static void func_8029087C(UnkStruct_802909FC *ctx) {
 static void func_8029085C(UnkStruct_802909FC *ctx, f32 angle) {
     ctx->unk10 = (ctx->unk0->unk40->unk10 + 50.0f) * 0.01f;
     ctx->unk18 = (ctx->unk0->unk40->unk18 + 50.0f) * 0.01f;
-    ctx->unk14 = func_8026EE18(ctx->unk8 + angle);
+    ctx->unk14
+#line 679
+        = func_8026EE18(ctx->unk8 + angle);
 }
+#line 582
 
 #define func_802909FC_slope(c) ((c) == 3 || (c) == 4 || (c) == 5 || (c) == 6)
 
@@ -633,7 +663,9 @@ s32 func_802909FC(UnkStructA *obj, s32 (*cb)(s32)) {
         func_8026E6E4(ctx.unk0->unk40, &angle, &sdir);
     }
     func_8029085C(&ctx, angle);
+#line 680
     ctx.unk1C = ctx.unk4 - (s32) (ctx.unk4 * 0.01f) * 100.0f;
+#line 637
     if (ctx.unk4 < -50.0f) {
         ctx.unk1C += 100.0f;
     }
@@ -686,7 +718,7 @@ s32 func_802909FC(UnkStructA *obj, s32 (*cb)(s32)) {
     func_8028FD88(&dirB, ctx.unk28, 0);
     c = code & 0xF;
     if (func_802909FC_slope(c)) {
-        r = func_80290708(0, &ctx, &dirA, &dirB, code);
+        r = func_80290708(&ctx, code, &dirB, &dirA, 0);
         if (r & 1) {
             yx = 1;
         }
@@ -697,7 +729,7 @@ s32 func_802909FC(UnkStructA *obj, s32 (*cb)(s32)) {
         code2 = func_8026D7D8(ctx.unk10, ctx.unk14 - 1, ctx.unk18);
         if ((code2 & 0xF) == 3 || (code2 & 0xF) == 4 || (code2 & 0xF) == 5 || (code2 & 0xF) == 6) {
             if (ctx.unk0->unk68 == 0.0f && ctx.unk0->unk6C == 0.0f) {
-                r = func_80290708(2, &ctx, &dirA, &dirB, code2);
+                r = func_80290708(&ctx, code2, &dirB, &dirA, 2);
                 code = code2;
                 if (!(r & 1)) {
                     yx = -1;
@@ -728,7 +760,7 @@ s32 func_802909FC(UnkStructA *obj, s32 (*cb)(s32)) {
         }
         codeX = func_80290498(&ctx, dx, yx, 0, code);
         codeZ = func_80290498(&ctx, 0, yz, dz, code);
-        r = func_80290708(0, &ctx, &dirA, &dirB, code) != 0 ? 1 : 0;
+        r = func_80290708(&ctx, code, &dirB, &dirA, 0) != 0 ? 1 : 0;
         if (ctx.unk14 + r >= D_800B15D8[0].unk0) {
             r = D_800B15D8[0].unk0 - ctx.unk14 - 1;
         }
@@ -835,24 +867,24 @@ s32 func_802909FC(UnkStructA *obj, s32 (*cb)(s32)) {
     }
     if (c == 0xF) {
         if (ctx.unk30(func_8026D7D8(ctx.unk10 + dirB.unk0, ctx.unk14, ctx.unk18 + dirB.unk8))) {
-            res = 0x51;
             ctx.unk4 += dirB.unk0 * 100.0f;
             ctx.unkC += dirB.unk8 * 100.0f;
+            res = 0x51;
         } else if (ctx.unk30(func_8026D7D8(ctx.unk10 - dirB.unk0, ctx.unk14, ctx.unk18 - dirB.unk8))) {
-            res = 0x52;
             ctx.unk4 -= dirB.unk0 * 100.0f;
             ctx.unkC -= dirB.unk8 * 100.0f;
+            res = 0x52;
         }
     }
-    if (ctx.unk0->unk68 == 0.0f && ctx.unk0->unk70 * 2.0f == ctx.unk0->unk6C) {
+    if (ctx.unk0->unk68 == 0.0f && ctx.unk0->unk6C == ctx.unk0->unk70 * 2) {
         a = 0.0f;
         b = 0.0f;
         func_8026E6E4(ctx.unk0->unk40, &a, &b);
         if (a != 0.0f) {
             if ((b == 90.0f && dirA.unk0 == -1 && dirB.unk0 == -1) ||
-                (b == 270.0f && dirA.unk0 == 1 && dirB.unk0 == 1) ||
+                (b == 270.0f && (dirA.unk0 * 1) == 1 && dirB.unk0 == 1) ||
                 (b == 0.0f && dirA.unk8 == -1 && dirB.unk8 == -1) ||
-                (b == 180.0f && dirA.unk8 == 1 && dirB.unk8 == 1)) {
+                (b == 180.0f && (dirA.unk8 * 1) == 1 && dirB.unk8 == 1)) {
                 ctx.unk8 = func_8026EAF8(ctx.unk0);
                 ctx.unk0->unk6C = 0.0f;
             }
