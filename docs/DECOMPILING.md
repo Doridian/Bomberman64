@@ -74,6 +74,14 @@ tools/progress.py                                # per module, overlays per bank
   functions too, so check a 0 found that way against the whole object.
   Run whole-file dirs with `--stack-diffs` when the target is a frame
   slot: by default stack offsets aren't scored.
+  The patch also keeps base.c's line of every statement (`#line`):
+  pycparser's output otherwise splits a one-line macro into one statement
+  per line, and IDO allocates temporaries per line, so the permuter's
+  "base" wasn't the draft's code. `--algorithm words` scores as
+  `tools/fcmp.py` does (words differing at the same offset, plus the
+  length difference), so its base score is the draft's count; the other
+  algorithms' scores don't track it. `tools/mkperm.py` keeps a draft's own
+  `#line`s and marks every other definition `inline`, whatever its name.
 - The permuter's "fake" matches (`if (1) {}` and the like) are accepted
   with a comment saying so; prefer a natural spelling when one is found.
 

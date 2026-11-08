@@ -10,7 +10,7 @@ index dd8098a..0016621 100644
  [weight_overrides]
  perm_temp_for_expr = 100
 diff --git a/src/ast_util.py b/src/ast_util.py
-index 2431205..a7f289a 100644
+index 2431205..8ec0bd5 100644
 --- a/src/ast_util.py
 +++ b/src/ast_util.py
 @@ -34,11 +34,38 @@ def to_c_raw(node: ca.Node) -> str:
@@ -54,7 +54,17 @@ index 2431205..a7f289a 100644
  def process_pragmas(source: str) -> str:
      # Support MWCC-specific "u32 var : 0x1234;" syntax encoded as standard C
      # "u32 var = FIXEDADDR(0x1234)".
-@@ -88,7 +115,35 @@ def process_pragmas(source: str) -> str:
+@@ -51,6 +78,9 @@ def process_pragmas(source: str) -> str:
+     ignore = 0
+     for line in lines:
+         stripped = line.strip()
++        if same_line and stripped.startswith("#line "):
++            # a joined line keeps the first statement's line
++            continue
+         if stripped.startswith("#pragma _permuter "):
+             # Expand permuter pragmas to nothing, by default. Still, keep one
+             # output line per input line to preserve line numbers for import.py
+@@ -88,7 +118,48 @@ def process_pragmas(source: str) -> str:
  
  class PatchedCGenerator(c_generator.CGenerator):
      """Like a CGenerator, except it keeps else if's prettier despite
@@ -70,7 +80,10 @@ index 2431205..a7f289a 100644
 +    def _visit_ext(self, ext: ca.Node) -> str:
 +        # CGenerator.visit_FileAST's code for one item.
 +        if isinstance(ext, ca.FuncDef):
-+            return self.visit(ext)  # type: ignore
++            coord = ext.decl.coord
++            pre = f"#line {coord.line}\n" if coord is not None and coord.line else ""
++            # the header and its brace on one line, as in base.c
++            return pre + self.visit(ext).replace("\n{\n", " {\n", 1)  # type: ignore
 +        elif isinstance(ext, ca.Pragma):
 +            return self.visit(ext) + "\n"  # type: ignore
 +        else:
@@ -79,7 +92,7 @@ index 2431205..a7f289a 100644
 +    def visit_FileAST(self, n: ca.FileAST) -> str:
 +        cache = self.ext_cache
 +        if cache is None:
-+            return super().visit_FileAST(n)  # type: ignore
++            cache = {}
 +        parts: List[str] = []
 +        for ext in n.ext:
 +            hit = cache.get(id(ext)) if self.indent_level == 0 else None
@@ -88,6 +101,16 @@ index 2431205..a7f289a 100644
 +            else:
 +                parts.append(self._visit_ext(ext))
 +        return "".join(parts)
++
++    def _generate_stmt(self, n: ca.Node, add_indent: bool = False) -> str:
++        # Keep base.c's line of every statement (#line): IDO allocates
++        # temporaries and orders blocks per source line, so a macro's
++        # statements must stay on one line as in base.c.
++        s: str = super()._generate_stmt(n, add_indent)  # type: ignore
++        coord = getattr(n, "coord", None)
++        if coord is not None and coord.line and not isinstance(n, ca.Compound):
++            return f"#line {coord.line}\n" + s
++        return s
  
      def visit_If(self, n: ca.If) -> str:
          n2 = n
@@ -172,7 +195,7 @@ index d4c7d64..8bec4ca 100644
  
      def compile(self, compiler: Compiler, show_errors: bool = False) -> Optional[str]:
 diff --git a/src/main.py b/src/main.py
-index 32965fc..a9de3de 100644
+index 32965fc..1c9eb7c 100644
 --- a/src/main.py
 +++ b/src/main.py
 @@ -46,6 +46,7 @@ from .permuter import (
@@ -223,6 +246,15 @@ index 32965fc..a9de3de 100644
  
          try:
              permuter = Permuter(
+@@ -698,7 +715,7 @@ def main() -> None:
+         "--algorithm",
+         dest="algorithm",
+         default="difflib",
+-        choices=["difflib", "levenshtein"],
++        choices=["difflib", "levenshtein", "words"],
+         help="Diff algorithm to use",
+     )
+     parser.add_argument(
 @@ -779,6 +796,16 @@ def main() -> None:
          "with insertions/deletions.",
      )
@@ -537,8 +569,25 @@ index 95c0f31..7108272 100644
      )
  
  
+diff --git a/src/preprocess.py b/src/preprocess.py
+index 8447a80..ed409b6 100644
+--- a/src/preprocess.py
++++ b/src/preprocess.py
+@@ -3,8 +3,11 @@ import subprocess
+ 
+ 
+ def preprocess(filename: str, cpp_args: List[str] = []) -> str:
++    # A base.c with #lines (mkperm keeps a draft's) keeps them as line
++    # markers, which pycparser reads into the coords the generator emits.
++    keep = "#line" in open(filename, encoding="utf-8").read()
+     return subprocess.check_output(
+-        ["cpp"] + cpp_args + ["-P", "-nostdinc", "-DPERMUTER", filename],
++        ["cpp"] + cpp_args + ([] if keep else ["-P"]) + ["-nostdinc", "-DPERMUTER", filename],
+         universal_newlines=True,
+         encoding="utf-8",
+     )
 diff --git a/src/scorer.py b/src/scorer.py
-index 35bf27a..7676289 100644
+index 35bf27a..9911269 100644
 --- a/src/scorer.py
 +++ b/src/scorer.py
 @@ -1,3 +1,4 @@
@@ -804,7 +853,25 @@ index 35bf27a..7676289 100644
          )
          return "\n".join([line.row for line in lines]), lines
  
-@@ -69,26 +282,6 @@ class Scorer:
+@@ -60,6 +273,17 @@ class Scorer:
+ 
+         objdump_output, cand_seq = self._objdump(cand_o)
+ 
++        if self.algorithm == "words":
++            # fcmp's measure: instructions that differ at the same offset
++            # (relocated fields masked), plus the length difference
++            n = min(len(cand_seq), len(self.target_seq))
++            words = sum(
++                1
++                for k in range(n)
++                if cand_seq[k].row != self.target_seq[k].row
++            ) + abs(len(cand_seq) - len(self.target_seq))
++            return (words, hashlib.sha256(objdump_output.encode()).hexdigest())
++
+         num_stack_penalties: int = 0
+         num_branch_penalties: int = 0
+         num_regalloc_penalties: int = 0
+@@ -69,26 +293,6 @@ class Scorer:
          deletions: List[str] = []
          insertions: List[str] = []
  
@@ -831,7 +898,7 @@ index 35bf27a..7676289 100644
          def diff_sameline(old_line: Line, new_line: Line) -> bool:
              nonlocal num_stack_penalties
              nonlocal num_branch_penalties
-@@ -106,8 +299,8 @@ class Scorer:
+@@ -106,8 +310,8 @@ class Scorer:
  
              ignore_last_field = False
              if self.stack_differences:
@@ -842,7 +909,7 @@ index 35bf27a..7676289 100644
                  if oldsp and newsp:
                      oldrel = int(oldsp.group(1) or "0", 0)
                      newrel = int(newsp.group(1) or "0", 0)
-@@ -141,11 +334,8 @@ class Scorer:
+@@ -141,11 +345,8 @@ class Scorer:
                  newfields = newfields[:-1]
                  oldfields = oldfields[:-1]
              else:
@@ -856,7 +923,7 @@ index 35bf27a..7676289 100644
                  oldfields = oldfields[:-1] + (
                      re_paren.split(oldfields[-1]) if len(oldfields) > 0 else []
                  )
-@@ -180,8 +370,6 @@ class Scorer:
+@@ -180,8 +381,6 @@ class Scorer:
  
          result_diff: Sequence[Tuple[str, int, int, int, int]]
          if self.algorithm == "levenshtein":
@@ -865,7 +932,7 @@ index 35bf27a..7676289 100644
              remapping: Dict[str, str] = {}
  
              def remap(seq: List[str]) -> str:
-@@ -194,9 +382,9 @@ class Scorer:
+@@ -194,9 +393,9 @@ class Scorer:
                      seq[i] = val
                  return "".join(seq)
  

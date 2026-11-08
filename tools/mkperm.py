@@ -26,10 +26,15 @@ cc = (f"{W}/tools/ido/5.3/cc -c -G 0 -Xfullwarn -Xcpluscomm -nostdinc -non_share
       f"-D_LANGUAGE_C -D_FINALROM -DVERSION_{VERSION.upper()} -woff 649,838,712,807 -I {W}/include -I {W}/include/PR "
       f"{opt} {isa} -32")
 # preprocess (keep it C89-ish for pycparser: drop line markers)
-pp = subprocess.run(["cpp", "-P", "-undef", "-D_LANGUAGE_C", "-D_FINALROM", f"-DVERSION_{VERSION.upper()}", "-D__sgi",
+# A draft that steers with #line keeps its line numbers (as `#line`s,
+# which pycparser reads): -P would drop them and change the code.
+keep_lines = "#line" in open(cfile).read()
+pp = subprocess.run(["cpp"] + ([] if keep_lines else ["-P"]) + ["-undef", "-D_LANGUAGE_C", "-D_FINALROM", f"-DVERSION_{VERSION.upper()}", "-D__sgi",
                      "-I", f"{W}/include", "-I", f"{W}/include/PR", cfile],
                     capture_output=True, text=True, check=True).stdout
 import re as _re
+if keep_lines:
+    pp = _re.sub(r'(?m)^# (\d+) ("[^"]*")( \d+)*$', r"#line \1 \2", pp)
 # The permuter turns every function but the target into a declaration
 # unless it's `inline`, and drops `static` from function declarations: so
 # mark the other definitions `inline` and every `static` function
@@ -38,8 +43,11 @@ lines = pp.split("\n")
 for k, l in enumerate(lines):
     if _re.match(r"^static\s", l) and "(" in l:
         l = "_Noreturn " + l[len("static "):]
-    m = _re.match(r"^(_Noreturn )?([A-Za-z_][\w \*]*?)\b(func_\w+)\s*\(.*\)\s*\{?\s*$", l)
-    if m and not l.rstrip().endswith(";") and m.group(3) != func:
+    # any file-scope definition, whatever its name (macro-named statics
+    # like 1607E0's NAMES included)
+    m = _re.match(r"^(_Noreturn )?([A-Za-z_][\w \*]*?)\b([A-Za-z_]\w*)\s*\(.*\)\s*\{?\s*$", l)
+    if (m and not l.rstrip().endswith(";") and m.group(3) != func
+            and m.group(2).split()[0] not in ("typedef", "extern", "return", "if", "while", "for", "switch")):
         l = "inline " + l
     lines[k] = l
 pp = "\n".join(lines)
