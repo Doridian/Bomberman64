@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 5331, eu 5339, jp 5340
+ * differing words: us 5317, eu 5325, jp 5326
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -641,28 +641,26 @@ void func_802434F8() {
 
 void func_80242FB4() {
     s32 id;
-    s32 lives;
     s32 i;
     s32 k;
-    s32 st;
-    s32 n;
-    f32 pos[3];
-    u8 *o;
     u8 *obj;
+    s32 lives;
+    f32 pos[3];
+    s32 st;
     u8 *p;
 
     lives = 5;
-    n = func_802391F0();
-    id = n - 1;
-    func_80287008(id, 0x19, n + 0x1D);
+    i = func_802391F0();
+    id = i - 1;
+    func_80287008(id, 0x19, i + 0x1D);
     for (i = 0; i < lives; i++) {
-        o = func_80231274(0x130, 0x01000000, 0xD0, NULL);
-        ((u8 * (*)[5]) D_802AC828)[id][i] = o;
-        M2C_FIELD(M2C_FIELD(o, u8 **, 0x40), f32 *, 0x10) = ((f32 *) D_802A0748)[id];
-        M2C_FIELD(M2C_FIELD(o, u8 **, 0x40), f32 *, 0x14) = i * 24.0f + 40.0f;
-        M2C_FIELD(M2C_FIELD(o, u8 **, 0x40), f32 *, 0x18) = ((f32 *) D_802A0748)[id] + 16.0f;
-        M2C_FIELD(M2C_FIELD(o, u8 **, 0x40), f32 *, 0x1C) = M2C_FIELD(M2C_FIELD(o, u8 **, 0x40), f32 *, 0x14) + 16.0f;
-        M2C_FIELD(M2C_FIELD(o, u8 **, 0x40), s32 *, 0x38) = ((s32 *) D_802A0750)[id];
+        p = func_80231274(0x130, 0x01000000, 0xD0, NULL);
+        ((u8 * (*)[5]) D_802AC828)[id][i] = p;
+        M2C_FIELD(M2C_FIELD(p, u8 **, 0x40), f32 *, 0x10) = ((f32 *) D_802A0748)[id];
+        M2C_FIELD(M2C_FIELD(p, u8 **, 0x40), f32 *, 0x14) = i * 24.0f + 40.0f;
+        M2C_FIELD(M2C_FIELD(p, u8 **, 0x40), f32 *, 0x18) = ((f32 *) D_802A0748)[id] + 16.0f;
+        M2C_FIELD(M2C_FIELD(p, u8 **, 0x40), f32 *, 0x1C) = M2C_FIELD(M2C_FIELD(p, u8 **, 0x40), f32 *, 0x14) + 16.0f;
+        M2C_FIELD(M2C_FIELD(p, u8 **, 0x40), s32 *, 0x38) = ((s32 *) D_802A0750)[id];
     }
 loop_3:
     i = 0;
@@ -709,9 +707,9 @@ loop_3:
             }
             p = M2C_FIELD(M2C_FIELD(obj, u8 **, 0), u8 **, 0x44);
             if (p != NULL) {
-                n = func_802441AC(p);
-                func_80244C30(n, 0);
-                func_802444B8(n, 0);
+                i = func_802441AC(p);
+                func_80244C30(i, 0);
+                func_802444B8(i, 0);
             }
             i = 0;
             func_8023E8FC(pos);
