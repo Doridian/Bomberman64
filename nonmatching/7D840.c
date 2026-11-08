@@ -6,20 +6,39 @@
  * with the original's stubs. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 46, eu 46, jp 46
+ * differing words: us 25, eu 25, jp 25 (fake: dead `if (rects[0].d == 0.0f) {}`)
  *
  * func_80265274 matches: the wrap is the inlined static func_80264F98
  * (a switch writing through r++, called with info.width/height, which
  * gives the original's t1/t2 copies and its 8 bytes of frame), the loop
  * indexes rects[i], and the X dir block assigns scale before dir.
  *
- * Left: func_8026437C (size 0x710 and frame 344 match; 52 words of
- * register choice and schedule): `save` is loaded into v1 (original v0),
- * fw/fh live in $f2 (original $f0), and block 1 loads rects[0].b and
- * orders its multiplies and the info.y0 store differently. The dead
- * float-to-int conversions are kept by `if (func_80263904(fw)) {}` (costs
- * 8 bytes of frame, which the pads account for) and
- * `if (fh - (s32) fh && fh - (s32) fh) {}` (costs none).
+ * Left: func_8026437C (size 0x710 and frame 344 match).
+ *
+ * p3 (46 -> 25): the dead float-to-int conversions are kept by `&&`
+ * tests. The `+` form (`fw + (s32) fw && ...`) burns three ugen FP temps
+ * (trunc, mtc1, cvt into a ugen temp), the `-` form two (its cvt is a
+ * uopt CSE temp that takes $f0/$f2), and ugen hands out f4/f6/f8/f10
+ * from a FIFO free list (operands freed to the tail, result from the
+ * head), so the forms choose which temp each later op gets. `+` for fw
+ * and the first fh test puts fw/fh in $f0 and fixes the fh region; the
+ * `-` test stays in block 0. Replacing `if (func_80263904(fw)) {}` frees
+ * its 8 bytes of frame, so `padA` (last local) keeps the frame at 344.
+ * `save = gfx++` puts save in v0. Block 0's order (y0 store, dead test,
+ * x0 store, x1, y1) gives the test block's registers and y0 reload. The
+ * old `(0, y0)` fake is gone; the rects[0].d one still saves 3 words
+ * (`if (rects[0].d) {}` and placing it inside the fh `if` do the same).
+ *
+ * Still differing (all block 0): the original computes c-a and d-b as
+ * uopt temps in $f0/$f2 with mul operands (c-a, dir*scale), x0 and y0
+ * each loaded twice (store, then the add), and `addiu s3,sp,172` in the
+ * bc1t delay slot (ours hoists the y0 load there). A FIFO simulation
+ * says c-a and d-b must both be non-ugen temps, d-b computed before
+ * dirY*scaleY. A block-0 dead conversion of an expression containing
+ * both (e.g. CA/DB) gives the original's mul order but colours them
+ * f12/f14 (72). dx/dy locals flip the mul order (variable leaves go
+ * second): 40 at best. A 45-minute permuter run on this found nothing
+ * real (24 only by reordering scaleX*dirX, a score artefact).
  */
 #include "common.h"
 #define F3DEX_GBI
@@ -725,6 +744,7 @@ void func_8026437C(Gfx **gfxp, TexFile *file, f32 x0, f32 y0, f32 x1, f32 y1, f3
     RectF rects[4] = { { 32768.0f, 32768.0f, 32768.0f, 32768.0f }, { 32768.0f, 32768.0f, 32768.0f, 32768.0f }, { 32768.0f, 32768.0f, 32768.0f, 32768.0f }, { 32768.0f, 32768.0f, 32768.0f, 32768.0f } };
     DrawF info;
     Gfx *save;
+    s32 padA; /* the frame the old func_80263904(fw) call took */
 
     gfx = *gfxp;
     if (func_80233650(x0, x1) || func_802336E4(w) || func_80233650(y0, y1) || func_802336E4(h)) {
@@ -735,8 +755,8 @@ void func_8026437C(Gfx **gfxp, TexFile *file, f32 x0, f32 y0, f32 x1, f32 y1, f3
     }
     flags = func_80263E6C(u, v, w, h, info.width, info.height, rects);
     if (D_802AD0D0 == 0) {
-        save = gfx;
-        gDPSetTextureFilter(gfx++, G_TF_POINT);
+        save = gfx++;
+        gDPSetTextureFilter(save, G_TF_POINT);
     }
     if (info.width < w || info.height < h) {
         gDPSetTextureFilter(save, G_TF_POINT);
@@ -758,17 +778,18 @@ void func_8026437C(Gfx **gfxp, TexFile *file, f32 x0, f32 y0, f32 x1, f32 y1, f3
     }
     fw = (rects[0].c - rects[0].a) - 1.0f;
     if (func_802336E4(rects[0].c - (f32) (s32) rects[0].c) == 0) {
-        if (func_80263904(fw)) {}
+        if (fw + (s32) fw && fw + (s32) fw) {} /* keeps the dead conversion; `+` for its ugen temps */
     }
     fh = (rects[0].d - rects[0].b) - 1.0f;
     if (func_802336E4(rects[0].d - (f32) (s32) rects[0].d) == 0) {
-        if (fh - (s32) fh && fh - (s32) fh) {}
+        if (fh + (s32) fh && fh + (s32) fh) {}
     }
+    if (rects[0].d == 0.0f) {} /* fake: -3 words */
     i = 0;
     if (rects[i].a != 32768.0f && rects[i].b != 32768.0f && rects[i].c != 32768.0f && rects[i].d != 32768.0f) {
+        info.y0 = y0;
         if (fh - (s32) fh && fh - (s32) fh) {}
         info.x0 = x0;
-        info.y0 = y0;
         info.x1 = (rects[i].c - rects[i].a) * (info.dirX * info.scaleX) + x0;
         info.y1 = (rects[i].d - rects[i].b) * (info.dirY * info.scaleY) + y0;
         if (x1 < info.x1) {
