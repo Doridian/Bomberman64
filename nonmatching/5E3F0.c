@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3327, eu 3327, jp 3326
+ * differing words: us 3192, eu 3192, jp 3191
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -676,65 +676,45 @@ void func_802510C8() {
 }
 
 void func_80250E2C(s32 arg0) {
-    s32 spBC;
-    s32 spA4[3];
-    f32 sp98[3];
-    f32 sp8C;
-    f32 sp88;
-    f32 sp84;
-    f32 sp80;
-    f32 sp74;
-    f32 sp70;
-    UnkStruct_800AEDF0 *temp_s1;
-    s32 temp_t1;
-    s32 temp_v0;
-    s32 var_s0;
-    s32 var_v1;
-    void *temp_a0;
-    void *temp_v1;
-    void *temp_v1_2;
+    s32 id;
+    s32 pad[3];
+    s32 ipos[3];
+    f32 fpos[3];
+    f32 cur[3];
+    f32 tgt[3];
+    s32 pad2[2];
+    f32 dir[2];
+    Obj88 *obj;
+    s32 v;
 
-    temp_a0 = ((UnkObj *)func_802443F4(func_80243DDC()));
-    spBC = func_80243DDC();
-    func_8022F808(temp_a0, &sp8C);
-    func_80247C50(spBC);
-    temp_v1 = M2C_FIELD(temp_a0, void **, 0x40);
-    func_8026DCAC(M2C_FIELD(temp_v1, f32 *, 0x10), M2C_FIELD(temp_v1, f32 *, 0x14), M2C_FIELD(temp_v1, f32 *, 0x18), spA4, 2);
-    func_8026E338((f32) spA4[0], (f32) spA4[1], (f32) spA4[2], sp98, 0);
-    temp_t1 = spBC * 4;
-    D_802ACA10[(temp_t1) / 4] = 0;
-    sp80 = sp98[0];
-    sp84 = sp98[1];
-    sp88 = sp98[2];
-    if (func_8022DF68(&sp8C, &sp80) > 0.0f) {
-        func_8022FF58(&sp8C, &sp80, &sp70);
-        sp74 -= 90.0f;
-        temp_v0 = func_80243F50(sp70);
-        D_802AC8BC = temp_v0;
-        D_802AC8C0 = temp_v0;
+    id = func_80243DDC();
+    obj = (Obj88 *)func_802443F4(id);
+    func_8022F808(obj, cur);
+    func_80247C50(id);
+    func_8026DCAC(obj->unk40->unk10, obj->unk40->unk14, obj->unk40->unk18, ipos, 2);
+    func_8026E338(ipos[0], ipos[1], ipos[2], fpos, 0);
+    D_802ACA10[id] = 0;
+    tgt[0] = fpos[0];
+    tgt[1] = fpos[1];
+    tgt[2] = fpos[2];
+    if (func_8022DF68(cur, tgt) > 0.0f) {
+        func_8022FF58(cur, tgt, dir);
+        dir[1] -= 90.0f;
+        D_802AC8C0 = D_802AC8BC = func_80243F50(dir[0]);
         D_802ACA24 = 4.0f;
         D_802AC95C = 3;
-        D_802AC968[(temp_t1) / 4] = 1;
-        temp_v1_2 = M2C_FIELD(temp_a0, void **, 0x40);
-        func_8026DCAC(M2C_FIELD(temp_v1_2, f32 *, 0x10), M2C_FIELD(temp_v1_2, f32 *, 0x14), M2C_FIELD(temp_v1_2, f32 *, 0x18), spA4, 2);
-        func_8026E338((f32) spA4[0], (f32) spA4[1], (f32) spA4[2], sp98, 0);
-        D_802ACA28 = sp98[0];
-        D_802ACA2C = sp98[1];
-        D_802ACA8C = sp98[2];
-        func_80244354(spBC, 0x10420, 1);
-        D_802AC918[(temp_t1) / 4] = 0;
-        func_802313DC(temp_a0, 0x40000);
+        D_802AC968[id] = 1;
+        func_8026DCAC(obj->unk40->unk10, obj->unk40->unk14, obj->unk40->unk18, ipos, 2);
+        func_8026E338(ipos[0], ipos[1], ipos[2], fpos, 0);
+        D_802ACA28 = fpos[0];
+        D_802ACA2C = fpos[1];
+        D_802ACA8C = fpos[2];
+        func_80244354(id, 0x10420, 1);
+        D_802AC918[id] = 0;
+        func_802313DC(obj, 0x40000);
         if (arg0 != 0) {
-            temp_s1 = &D_800AEDF0[spBC];
-            var_v1 = func_80244BA4(spBC, 0x400);
-            if (var_v1 != 0) {
-                do {
-                    var_s0 = 0;
-                    func_80239094();
-                    if ((temp_s1->unk10 & 0x400) == 0x400) {
-                        var_s0 = 1;
-                    }
-                } while (var_s0 != 0);
+            while (func_80244BA4(id, 0x400)) {
+                func_80239094();
             }
         }
     }
