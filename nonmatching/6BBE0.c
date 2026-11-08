@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 9696, eu 9696, jp 9700
+ * differing words: us 9677, eu 9677, jp 9683
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -4251,55 +4251,37 @@ static void func_802530A8(f32 *arg0) {
                     var_fv1 = temp_fv0 - temp_fa0;
                 }
                 if (var_fv1 > 50.0f) {
-                    if (temp_v0 & 1) {
-                        temp_fv0_2 = func_80252CD4((u8 *) arg0, 90.0f);
-                        if (temp_fv0_2 != 0.0f) {
-                            goto block_43;
-                        }
-                    }
-                    if (!(temp_v0 & 1)) {
-                        temp_cond = func_80252CD4((u8 *) arg0, 270.0f) == 0.0f;
-                        var_t6 = temp_v0 & 2;
-                        if (!temp_cond) {
-                            M2C_FIELD(arg0, f32 *, 0x74) = 270.0f;
+                    if ((temp_v0 & 1) && func_80252CD4((u8 *) arg0, 90.0f) != 0.0f) {
+                        M2C_FIELD(arg0, f32 *, 0x74) = 90.0f;
+                    } else if (!(temp_v0 & 1) && func_80252CD4((u8 *) arg0, 270.0f) != 0.0f) {
+                        M2C_FIELD(arg0, f32 *, 0x74) = 270.0f;
+                    } else if (temp_v0 & 2) {
+                        if (func_80252CD4((u8 *) arg0, 0.0f) != 0.0f) {
+                            M2C_FIELD(arg0, f32 *, 0x74) = 0.0f;
                         } else {
-                            goto block_23;
+                            M2C_FIELD(arg0, f32 *, 0x74) = 180.0f;
                         }
                     } else {
-                        var_t6 = temp_v0 & 2;
-block_23:
-                        if (var_t6 != 0) {
-                            temp_cond_2 = func_80252CD4((u8 *) arg0, 0.0f) == 0.0f;
-                            if (!temp_cond_2) {
-                                M2C_FIELD(arg0, f32 *, 0x74) = 0.0f;
-                            } else {
-                                M2C_FIELD(arg0, f32 *, 0x74) = 180.0f;
-                            }
+                        if (func_80252CD4((u8 *) arg0, 180.0f) != 0.0f) {
+                            M2C_FIELD(arg0, f32 *, 0x74) = 180.0f;
                         } else {
-                            temp_cond_3 = func_80252CD4((u8 *) arg0, 180.0f) == 0.0f;
-                            if (!temp_cond_3) {
-                                M2C_FIELD(arg0, f32 *, 0x74) = 180.0f;
-                            } else {
-                                M2C_FIELD(arg0, f32 *, 0x74) = 0.0f;
-                            }
+                            M2C_FIELD(arg0, f32 *, 0x74) = 0.0f;
                         }
                     }
-                } else if ((temp_v0 & 2) && (temp_fv0_3 = func_80252CD4((u8 *) arg0, 0.0f), (temp_fv0_3 != 0.0f))) {
+                } else if ((temp_v0 & 2) && func_80252CD4((u8 *) arg0, 0.0f) != 0.0f) {
                     M2C_FIELD(arg0, f32 *, 0x74) = 0.0f;
-                } else if (!(temp_v0 & 2) && (temp_cond_4 = func_80252CD4((u8 *) arg0, 180.0f) == 0.0f, !temp_cond_4)) {
+                } else if (!(temp_v0 & 2) && func_80252CD4((u8 *) arg0, 180.0f) != 0.0f) {
                     M2C_FIELD(arg0, f32 *, 0x74) = 180.0f;
                 } else if (temp_v0 & 1) {
-                    temp_cond_5 = func_80252CD4((u8 *) arg0, 90.0f) == 0.0f;
-                    if (!temp_cond_5) {
-                        goto block_43;
+                    if (func_80252CD4((u8 *) arg0, 90.0f) != 0.0f) {
+                        M2C_FIELD(arg0, f32 *, 0x74) = 90.0f;
+                    } else {
+                        M2C_FIELD(arg0, f32 *, 0x74) = 270.0f;
                     }
-                    M2C_FIELD(arg0, f32 *, 0x74) = 270.0f;
                 } else {
-                    temp_cond_6 = func_80252CD4((u8 *) arg0, 270.0f) == 0.0f;
-                    if (!temp_cond_6) {
+                    if (func_80252CD4((u8 *) arg0, 270.0f) != 0.0f) {
                         M2C_FIELD(arg0, f32 *, 0x74) = 270.0f;
                     } else {
-block_43:
                         M2C_FIELD(arg0, f32 *, 0x74) = 90.0f;
                     }
                 }
@@ -4362,27 +4344,20 @@ block_43:
                         if (func_80251A24(0x3FFFF, (f32 *) ((u8 *)(u8 *)arg0 + 0x20), M2C_FIELD(arg0, f32 *, 0x74)) != 0) {
                             temp_fv0_6 = M2C_FIELD(arg0, f32 *, 0x74) + 180.0f;
                             if (temp_fv0_6 >= 360.0f) {
-                                M2C_FIELD(arg0, f32 *, 0x74) = (f32) (temp_fv0_6 - 360.0f);
+                                M2C_FIELD(arg0, f32 *, 0x74) = temp_fv0_6 - 360.0f;
+                            } else if (temp_fv0_6 < 0.0f) {
+                                M2C_FIELD(arg0, f32 *, 0x74) = temp_fv0_6 + 360.0f;
                             } else {
-                                if (temp_fv0_6 < 0.0f) {
-                                    var_fv1_4 = temp_fv0_6 + 360.0f;
-                                } else {
-                                    var_fv1_4 = temp_fv0_6;
-                                }
-                                goto block_83;
+                                M2C_FIELD(arg0, f32 *, 0x74) = temp_fv0_6;
                             }
                         } else {
                             temp_fv0_7 = M2C_FIELD(arg0, f32 *, 0x74) + 90.0f;
                             if (temp_fv0_7 >= 360.0f) {
-                                M2C_FIELD(arg0, f32 *, 0x74) = (f32) (temp_fv0_7 - 360.0f);
+                                M2C_FIELD(arg0, f32 *, 0x74) = temp_fv0_7 - 360.0f;
+                            } else if (temp_fv0_7 < 0.0f) {
+                                M2C_FIELD(arg0, f32 *, 0x74) = temp_fv0_7 + 360.0f;
                             } else {
-                                if (temp_fv0_7 < 0.0f) {
-                                    var_fv1_4 = temp_fv0_7 + 360.0f;
-                                } else {
-                                    var_fv1_4 = temp_fv0_7;
-                                }
-block_83:
-                                M2C_FIELD(arg0, f32 *, 0x74) = var_fv1_4;
+                                M2C_FIELD(arg0, f32 *, 0x74) = temp_fv0_7;
                             }
                         }
                     }
