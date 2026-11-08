@@ -64,3 +64,14 @@ main_code 78F60
 # 0x802AFE70, all 16-byte boundaries, and nothing before them uses those.
 main_code 8E730
 main_code 926A0
+
+# A1EA0 (func_802876A0..func_80287FD4) is a second object after 9CAB0:
+# 9CAB0's IPA statics (s-register parameters, func_802822E0..func_80286400)
+# tie its callers from func_80282598 to func_802875B0 together, and none
+# of 9CAB0 calls A1EA0 or the other way round. A1EA0's .data (-1, then a
+# table of its four functions) starts on the 16-byte boundary 0x802A1B50
+# where 9CAB0's tables end, and its .bss (0x802B0260, 0xB0 bytes) on the
+# one where 9BFD0's ends; 9CAB0 has no .bss. As one file, its functions
+# (emitted last, so first in the source) would have their data after
+# 9CAB0's. func_80287680 ends 9CAB0 on a 16-byte boundary.
+main_code A1EA0
