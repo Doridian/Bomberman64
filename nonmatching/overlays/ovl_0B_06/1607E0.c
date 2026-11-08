@@ -6,7 +6,7 @@
  * floats). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 24, eu 24, jp 13
+ * differing words: us 14, eu 14, jp 3
  * jp's code differences are drafted (`#if VERSION_JP`), its .data is not:
  * its five own strings are only declared, and its text tables and
  * positions are us's.
@@ -335,6 +335,21 @@
  * Loops: a loop with a constant count and no call in it is unrolled
  * (80044BE4's four unk36 = 0), and 80045340 copies the name with an index
  * loop (`name[i] = save[i + 8]`, `name[i] = 0` after).
+ *
+ * ovlx: FADE_SLOTS (80044BE4's two fade loops, us 8004473C / jp
+ * 800445BC_jp, 11 words to 1) got two dead reads in the loop's if body:
+ * `if (mode == 4) {}` makes the constant 4 a candidate whose live range
+ * keeps t1 busy over both loops (the end pointer goes to t2), and
+ * `if (!D_ovl0B_06_80049CAC[4].unk0) {}` raises &CAC's priority so it
+ * takes t3 and &B94 t4. Either alone is worse. Left: 80043220's 8 (us/eu)
+ * is the order of the unk14 lbu; an ugen .s edited by hand gives the
+ * original's order exactly when that lbu alone has an earlier .loc than
+ * the other argument loads and the sw (scratch/ovlx/asx/e1.s), but cfe
+ * gives the whole call one line and no C form found split it (#line in
+ * the argument list, around the static, casts, getters, an extra
+ * parameter: all no change or worse). 8004616C's/80046170's (us 5, jp 2)
+ * include the return in v1 instead of v0 (`move v0,s6`): dead reads,
+ * casts and other loop shapes don't move it.
  */
 #include "common.h"
 
@@ -528,7 +543,7 @@ s32 func_ovl0B_06_80049390(void); /* 0x2F0E */
 #endif
 
 
-#define FADE_SLOTS(mode) { s32 *p_; Label_ovl0B_06 *l_; s32 n_; n_ = 3; for (p_ = D_ovl0B_06_8004A5D0, l_ = D_ovl0B_06_800499F0; p_ < D_ovl0B_06_8004A5D0 + n_; p_++, l_++) { if (*p_ != 0) { func_ovl0B_06_80044B08(l_, mode); } } }
+#define FADE_SLOTS(mode) { s32 *p_; Label_ovl0B_06 *l_; s32 n_; n_ = 3; for (p_ = D_ovl0B_06_8004A5D0, l_ = D_ovl0B_06_800499F0; p_ < D_ovl0B_06_8004A5D0 + n_; p_++, l_++) { if (*p_ != 0) { if (!D_ovl0B_06_80049CAC[4].unk0) {} if (mode == 4) {} func_ovl0B_06_80044B08(l_, mode);  } } }
 static void func_ovl0B_06_80043030(void);
 static void func_ovl0B_06_80043028(void);
 static void func_ovl0B_06_80043020(void);

@@ -130,6 +130,17 @@
  * `changed`, hand-written MakeEntries loops or an unrolled 80044BE0 (the
  * homes are counted from the bottom of the frame: dropping a/b in jp
  * shrinks the frame by 8 but leaves them at 84/96/112).
+ *
+ * ovlx: unchanged. 800444E8 (8): the original keeps d1 in t0 and splits it
+ * to s2, with the counter A1A0 uncoloured; saved registers cost nothing
+ * here (allcallersave), so the split needs best >= save*n or no registers
+ * left, and dead reads, address-taking, volatile and neighbour addressing
+ * didn't get it. 80044BE8 (us 8, jp 16): the frame homes can be matched
+ * (frame 160, homes 104/88) by making 8004461C K&R in us too, adding
+ * `if (0) { func_ovl0B_04_8004456C(); }` before case 1's first MakeEntries
+ * and `s32 pad[4];` as the first local (scratch/ovlx/v/zp0.c), but the v1
+ * spill then lands at 76, not 80 (the front end's temps take 80, not 76),
+ * so the function is worse (22) and it was not kept.
  */
 #include "common.h"
 
