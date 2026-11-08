@@ -6,7 +6,7 @@
  * Every function is emitted in the original's order. Not built into the
  * ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1701, eu 1701, jp 1701
+ * differing words: us 849, eu 849, jp 849
  *
  * func_802921C4 and func_8029217C match; of the statics (compared as one
  * run from func_8028FD80, 402 words), func_8028FD88 matches. The inlined
@@ -28,6 +28,28 @@
  *   c is at 0x58 against our 0x54.
  * - func_80291944: the join after the sdir reload and the bc1f delay
  *   slots are scheduled differently, which moves every later branch.
+ *
+ * p2 (1701 -> 849 in every version; per function, jp allf: FFA8 51,
+ * 90498 16, 90708 0 (matches), stubs 6, 09FC 246, 1944 359):
+ * - 09FC: the quadrant result goes into dx (not i) for the FD88 call;
+ *   the corner case builds r = 0; r |= 1 ...; r |= 2 (uopt's one-pass
+ *   constant propagation keeps the ori/move unfolded), then res |= r.
+ *   Removing the unused i makes it worse.
+ * - 1944: "t1.unk8 - 1 == t2.unk8" forms for the e tests.
+ * - 90490/90498: an empty static func_80290490(s32 c) called once
+ *   (inlined: its stub, +8 frame bytes) and the slope test as an inline
+ *   if-chain on (code & 0xF): 143 -> 16 words. pos[] declared before tmp.
+ * - 90708 matches: switch (mode) for dy, "5 == c", and the result
+ *   masked at assignment (t2 = func_8026D7D8(...) & 0xF).
+ * - FFA8: passes code2 & 0xF into func_8028FFA8_b (IPA argument
+ *   registers follow the callee's colouring), which switches on it.
+ * Left: three stubs before 9087C (statics inlined into 9087C keep it
+ * matching, so they could go there); 90498 keeps t in s6 where the
+ * original has a1 spilled at 160(sp) (frame 152 vs 168); FFA8's frame
+ * 168 vs 160 (v_A 140 vs 124; dropping flag gives 160 but costs);
+ * 09FC's quadrant in a3 vs v0, obj in v0 vs v1, the 0.0f not shared in
+ * f0, arg setup before the 90708 calls; 1944's fast path reloads sdir
+ * and branches past the join's lwc1 f0 (perhaps uopt PRE).
  */
 #include "common.h"
 
@@ -271,7 +293,7 @@ static s32 func_8028FFA8_b(UnkStruct_802909FC *ctx, Vec3i *dir, s32 code2, s32 f
     b = 0;
     res = 0;
     func_8028FD88(&v, ctx->unk28, 0);
-    switch (code2 & 0xF) {
+    switch (code2) {
         case 7:
             a = -1;
             b = -1;
@@ -342,27 +364,27 @@ static s32 func_8028FFA8(s32 code, UnkStruct_802909FC *ctx, Vec3i *dir, s32 code
     if (c == 7 || c == 8 || c == 12 || c == 13) {
         res = func_8028FFA8_a(ctx, c);
     } else {
-        res = func_8028FFA8_b(ctx, dir, code2, flag);
+        res = func_8028FFA8_b(ctx, dir, code2 & 0xF, flag);
     }
     return res;
 }
 
-static s32 func_80290490(s32 c) {
-    return c == 3 || c == 4 || c == 5 || c == 6;
+static void func_80290490(s32 c) {
 }
 
 static s32 func_80290498(UnkStruct_802909FC *ctx, s32 dx, s32 dy, s32 dz, s32 code) {
-    UnkStruct_80290498 tmp;
     f32 pos[3];
+    UnkStruct_80290498 tmp;
     s32 t;
     s32 slope;
     s32 res;
     f32 h;
 
+    func_80290490(code);
     t = func_8026D7D8(ctx->unk10 + dx, ctx->unk14 + dy, ctx->unk18 + dz);
     slope = 0;
     res = 0;
-    if (func_80290490(code & 0xF)) {
+    if ((code & 0xF) == 3 || (code & 0xF) == 4 || (code & 0xF) == 5 || (code & 0xF) == 6) {
         slope = 1;
     }
     switch (t & 0xF) {
@@ -433,20 +455,23 @@ static s32 func_80290708(s32 mode, UnkStruct_802909FC *ctx, Vec3i *dir, Vec3i *d
     s32 c;
 
     res = 0;
-    if (mode == 0) {
-        dy = 0;
-    } else if (mode == 2) {
-        dy = -1;
+    switch (mode) {
+        case 0:
+            dy = 0;
+            break;
+        case 2:
+            dy = -1;
+            break;
     }
     t1 = func_8026D7D8(ctx->unk10 + dir->unk0, ctx->unk14 + dy, ctx->unk18) & 0xF;
-    t2 = func_8026D7D8(ctx->unk10, ctx->unk14 + dy, ctx->unk18 + dir->unk8);
+    t2 = func_8026D7D8(ctx->unk10, ctx->unk14 + dy, ctx->unk18 + dir->unk8) & 0xF;
     c = code & 0xF;
-    if ((c == 5 && dirB->unk0 != -1 && dir->unk0 == 1 && t1 != 5) ||
+    if ((5 == c && dirB->unk0 != -1 && dir->unk0 == 1 && t1 != 5) ||
         (c == 6 && dirB->unk0 != 1 && dir->unk0 == -1 && t1 != 6)) {
         res = 1;
     }
-    if ((c == 3 && dirB->unk8 != -1 && dir->unk8 == 1 && (t2 & 0xF) != 3) ||
-        (c == 4 && dirB->unk8 != 1 && dir->unk8 == -1 && (t2 & 0xF) != 4)) {
+    if ((c == 3 && dirB->unk8 != -1 && dir->unk8 == 1 && t2 != 3) ||
+        (c == 4 && dirB->unk8 != 1 && dir->unk8 == -1 && t2 != 4)) {
         res |= 2;
     }
     return res;
@@ -561,30 +586,30 @@ s32 func_802909FC(UnkStructA *obj, s32 (*cb)(s32)) {
     obj->unk40->unk18 = obj->unk60;
     if (ctx.unk1C > 0.0f) {
         if (ctx.unk24 > 0.0f) {
-            i = 4;
+            dx = 4;
         } else if (ctx.unk24 < 0.0f) {
-            i = 2;
+            dx = 2;
         } else {
-            i = 3;
+            dx = 3;
         }
     } else if (ctx.unk1C < 0.0f) {
         if (ctx.unk24 > 0.0f) {
-            i = 6;
+            dx = 6;
         } else if (ctx.unk24 < 0.0f) {
-            i = 8;
+            dx = 8;
         } else {
-            i = 7;
+            dx = 7;
         }
     } else {
         if (ctx.unk24 > 0.0f) {
-            i = 5;
+            dx = 5;
         } else if (ctx.unk24 < 0.0f) {
-            i = 1;
+            dx = 1;
         } else {
-            i = 0;
+            dx = 0;
         }
     }
-    func_8028FD88(&dirA, i, 1);
+    func_8028FD88(&dirA, dx, 1);
     code = func_8026D7D8(ctx.unk10, ctx.unk14, ctx.unk18);
     yx = 0;
     yz = 0;
@@ -689,15 +714,17 @@ s32 func_802909FC(UnkStructA *obj, s32 (*cb)(s32)) {
         if (ctx.unk30(code) == 0) {
             res |= 0x13;
         } else if (ctx.unk30(codeXZ) == 0) {
-            r = 4;
+            r = 0;
             if (ABS(ctx.unk24) <= ABS(ctx.unk1C)) {
-                r = 1;
+                r |= 1;
                 ctx.unkC -= ctx.unk24;
+                
                 if (dirB.unk0 == 0 && dirB.unk8 == dirA.unk8) {
                     r |= 2;
                     ctx.unk4 -= dirA.unk0 * 5.0f;
                 }
             } else {
+                r |= 4;
                 ctx.unk4 -= ctx.unk1C;
                 if (dirB.unk8 == 0 && dirB.unk0 == dirA.unk0) {
                     r |= 8;
@@ -869,10 +896,10 @@ void func_80291944(UnkStructA *obj, s32 dir, f32 speed) {
         } else if (angle == 0.0f && c != 0.0f) {
             func_8026DCAC(obj->unk40->unk10, obj->unk40->unk14, obj->unk40->unk18, &t1, 2);
             func_8026DCAC(obj->unk58, obj->unk5C, obj->unk60, &t2, 2);
-            if ((e == 0.0f && (t2.unk8 + 1 == t1.unk8 || dir == 0x80)) ||
-                (e == 90.0f && (t2.unk0 + 1 == t1.unk0 || dir == 0x40)) ||
-                (e == 180.0f && (t1.unk8 + 1 == t2.unk8 || dir == 0)) ||
-                (e == 270.0f && (t1.unk0 + 1 == t2.unk0 || dir == 0xC0))) {
+            if ((e == 0.0f && (t1.unk8 - 1 == t2.unk8 || dir == 0x80)) ||
+                (e == 90.0f && (t1.unk0 - 1 == t2.unk0 || dir == 0x40)) ||
+                (e == 180.0f && (t2.unk8 - 1 == t1.unk8 || dir == 0)) ||
+                (e == 270.0f && (t2.unk0 - 1 == t1.unk0 || dir == 0xC0))) {
                 obj->unk40->unk14 = func_8026EAF8(obj);
                 h = func_8026E938(obj->unk40);
                 if (h != 20000.0f && obj->unk40->unk14 <= h + 100.0f) {
