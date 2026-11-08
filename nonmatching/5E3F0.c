@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 7236, eu 7236, jp 7236
+ * differing words: us 6743, eu 6743, jp 6743
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -738,47 +738,50 @@ void func_80250DC8() {
 }
 
 void func_802506B8(u8 *str) {
-    s32 id = D_802AC894;
-    s32 i;
+    s32 pad[1];
+    u8 *s;
+    s32 id = func_80243DDC();
     s32 n;
     s32 c;
 
-    for (i = 0; i < 255; i++) {
-        D_800AF1D8[i] = -1;
-        D_800AF5D8[i] = -1;
-        D_802ACA90[i] = -1.0f;
-        D_800AF9D8[i] = -1;
-        D_800AFDD8[i] = -1;
-        D_800B01D8[i] = -1;
-        D_800B05D8[i] = -1;
-        D_800B09D8[i] = -1;
-        D_800B0DD8[i] = -1;
-        D_800B11D8[i] = -1;
+    if (!str && !str) {}
+    for (n = 0; n < 255; n++) {
+        D_800AF1D8[n] = -1;
+        D_800AF5D8[n] = -1;
+        D_802ACA90[n] = -1.0f;
+        D_800AF9D8[n] = -1;
+        D_800AFDD8[n] = -1;
+        D_800B01D8[n] = -1;
+        D_800B05D8[n] = -1;
+        D_800B09D8[n] = -1;
+        D_800B0DD8[n] = -1;
+        D_800B11D8[n] = -1;
     }
     n = 0;
-    c = *str;
-    if (c != 0) {
+    s = str;
+    if (*s != 0) {
+        c = *s;
         do {
             D_800AF1D8[n] = c;
-            switch (*str) {
+            switch (*s) {
             case 'W':
             case 'w':
-                switch (*++str) {
+                switch (*++s) {
                 case 'D':
                 case 'd':
-                    switch (*++str) {
+                    switch (*++s) {
                     case 'N':
                     case 'n':
-                        switch (str[1]) {
+                        switch (s[1]) {
                         case 'E':
                         case 'e':
                             D_800AF5D8[n] = 0x20;
-                            str++;
+                            s++;
                             break;
                         case 'W':
                         case 'w':
                             D_800AF5D8[n] = 0xE0;
-                            str++;
+                            s++;
                             break;
                         default:
                             D_800AF5D8[n] = 0;
@@ -791,16 +794,16 @@ void func_802506B8(u8 *str) {
                         break;
                     case 'S':
                     case 's':
-                        switch (str[1]) {
+                        switch (s[1]) {
                         case 'E':
                         case 'e':
                             D_800AF5D8[n] = 0x60;
-                            str++;
+                            s++;
                             break;
                         case 'W':
                         case 'w':
                             D_800AF5D8[n] = 0xA0;
-                            str++;
+                            s++;
                             break;
                         default:
                             D_800AF5D8[n] = 0x80;
@@ -823,7 +826,7 @@ void func_802506B8(u8 *str) {
                     break;
                 case 'S':
                 case 's':
-                    switch (*++str) {
+                    switch (*++s) {
                     case 'L':
                     case 'l':
                         D_802ACA90[n] = 2.0f;
@@ -844,7 +847,7 @@ void func_802506B8(u8 *str) {
                     break;
                 case 'A':
                 case 'a':
-                    switch (*++str) {
+                    switch (*++s) {
                     case 'O':
                     case 'o':
                         D_800AF9D8[n] = 1;
@@ -869,7 +872,7 @@ void func_802506B8(u8 *str) {
                     break;
                 case 'M':
                 case 'm':
-                    if (*++str == '1') {
+                    if (*++s == '1') {
                         D_800B01D8[n] = 1;
                     } else {
                         D_800B01D8[n] = 0;
@@ -877,7 +880,7 @@ void func_802506B8(u8 *str) {
                     break;
                 case 'G':
                 case 'g':
-                    if (*++str == '1') {
+                    if (*++s == '1') {
                         D_800B05D8[n] = 1;
                     } else {
                         D_800B05D8[n] = 0;
@@ -885,13 +888,13 @@ void func_802506B8(u8 *str) {
                     break;
                 case 'B':
                 case 'b':
-                    if (str[1] >= '0' && str[1] <= '9') {
+                    if (s[1] >= '0' && s[1] <= '9') {
                         D_800AFDD8[n] = 0;
                     }
-                    while (str[1] >= '0' && str[1] <= '9') {
-                        str++;
+                    while (s[1] >= '0' && s[1] <= '9') {
+                        s++;
                         D_800AFDD8[n] *= 10;
-                        D_800AFDD8[n] += *str - '0';
+                        D_800AFDD8[n] += *s - '0';
                     }
                     n++;
                     break;
@@ -899,27 +902,27 @@ void func_802506B8(u8 *str) {
                 break;
             case 'S':
             case 's':
-                D_800B09D8[n] = str[1];
-                c = *++str;
+                D_800B09D8[n] = s[1];
+                c = *++s;
                 if (c == 'T' || c == 't') {
-                    if (str[1] >= '0' && str[1] <= '9') {
+                    if (s[1] >= '0' && s[1] <= '9') {
                         D_800B0DD8[n] = 0;
                     }
-                    while (str[1] >= '0' && str[1] <= '9') {
-                        str++;
+                    while (s[1] >= '0' && s[1] <= '9') {
+                        s++;
                         D_800B0DD8[n] *= 10;
-                        D_800B0DD8[n] += *str - '0';
+                        D_800B0DD8[n] += *s - '0';
                     }
                     n++;
                 }
                 break;
             case 'M':
             case 'm':
-                D_800B11D8[n] = *++str;
+                D_800B11D8[n] = *++s;
                 n++;
                 break;
             }
-            c = *++str;
+            c = *++s;
         } while (c != 0);
     }
     D_800AF1D8[n] = -2;
