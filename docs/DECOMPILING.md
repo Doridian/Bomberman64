@@ -64,6 +64,16 @@ tools/progress.py                                # per module, overlays per bank
   than `make shift-check` and catches what `find_abs.py` can't (the shift
   pad after a module's entry went missing when the entry became C, until
   `ld_fix.py` matched `.c.o` too).
+- `make setup` applies `tools/decomp-permuter.patch` to the permuter
+  submodule (once; it checks first). It changes no score: it makes
+  difflib scoring exact but faster, caches objdump's parsed lines and the
+  unchanged parts of the C, and copies the function with pickle (1.7x on
+  a whole-file -O3 dir, 5.6x on a bigger one). It adds
+  `--score-func-only` (or `score_func_only = true` in settings.toml),
+  which scores only the target function: at -O3 an edit changes other
+  functions too, so check a 0 found that way against the whole object.
+  Run whole-file dirs with `--stack-diffs` when the target is a frame
+  slot: by default stack offsets aren't scored.
 - The permuter's "fake" matches (`if (1) {}` and the like) are accepted
   with a comment saying so; prefer a natural spelling when one is found.
 

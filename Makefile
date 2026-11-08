@@ -86,9 +86,12 @@ default: all
 
 all: verify
 
-# The tools, once per checkout: submodules, the venv, IDO.
+# The tools, once per checkout: submodules (the permuter with our speed
+# patch, tools/decomp-permuter.patch), the venv, IDO.
 setup:
 	git submodule update --init --recursive
+	git -C tools/decomp-permuter apply --reverse --check $(CURDIR)/tools/decomp-permuter.patch 2>/dev/null || \
+		git -C tools/decomp-permuter apply $(CURDIR)/tools/decomp-permuter.patch
 	test -d $(VENV) || python3 -m venv $(VENV)
 	$(VENV)/bin/pip install -q -r requirements.txt
 	$(TOOLS_DIR)/get_ido.sh

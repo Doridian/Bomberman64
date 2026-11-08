@@ -1,0 +1,879 @@
+diff --git a/example_settings.toml b/example_settings.toml
+index dd8098a..0016621 100644
+--- a/example_settings.toml
++++ b/example_settings.toml
+@@ -1,5 +1,6 @@
+ func_name = "func_800123456"
+ compiler_type = "ido" # examples: base, ido, mwcc, gcc
++# score_func_only = true # score only func_name, not the whole object (also --score-func-only)
+ 
+ [weight_overrides]
+ perm_temp_for_expr = 100
+diff --git a/src/ast_util.py b/src/ast_util.py
+index 2431205..a7f289a 100644
+--- a/src/ast_util.py
++++ b/src/ast_util.py
+@@ -34,11 +34,38 @@ def to_c_raw(node: ca.Node) -> str:
+     return source
+ 
+ 
+-def to_c(node: ca.Node, *, from_import: bool = False) -> str:
+-    source = to_c_raw(node) if from_import else PatchedCGenerator().visit(node)
++# Generated code of top-level items: id(item) -> (item, code).
++ExtCache = Dict[int, Tuple[ca.Node, str]]
++
++
++def to_c(
++    node: ca.Node, *, from_import: bool = False, ext_cache: Optional[ExtCache] = None
++) -> str:
++    if from_import:
++        source = to_c_raw(node)
++    else:
++        gen = PatchedCGenerator()
++        gen.ext_cache = ext_cache
++        source = gen.visit(node)
+     return process_pragmas(source)
+ 
+ 
++def make_ext_cache(ast: ca.FileAST, skip: int) -> ExtCache:
++    """The code PatchedCGenerator().visit_FileAST generates for each top-level
++    item of ast (but ast.ext[skip]), for to_c's ext_cache. The items must not
++    be mutated afterwards (to_c identifies them by identity)."""
++    cache: ExtCache = {}
++    gen = PatchedCGenerator()
++    for i, item in enumerate(ast.ext):
++        if i == skip:
++            continue
++        gen.indent_level = 0
++        code = gen._visit_ext(item)
++        if gen.indent_level == 0:
++            cache[id(item)] = (item, code)
++    return cache
++
++
+ def process_pragmas(source: str) -> str:
+     # Support MWCC-specific "u32 var : 0x1234;" syntax encoded as standard C
+     # "u32 var = FIXEDADDR(0x1234)".
+@@ -88,7 +115,35 @@ def process_pragmas(source: str) -> str:
+ 
+ class PatchedCGenerator(c_generator.CGenerator):
+     """Like a CGenerator, except it keeps else if's prettier despite
+-    the terrible things we've done to them in normalize_ast."""
++    the terrible things we've done to them in normalize_ast.
++
++    With ext_cache, top-level items found in it (by identity) aren't
++    regenerated: their code only depends on them and the indentation, which
++    is 0 between items."""
++
++    ext_cache: Optional["ExtCache"] = None
++
++    def _visit_ext(self, ext: ca.Node) -> str:
++        # CGenerator.visit_FileAST's code for one item.
++        if isinstance(ext, ca.FuncDef):
++            return self.visit(ext)  # type: ignore
++        elif isinstance(ext, ca.Pragma):
++            return self.visit(ext) + "\n"  # type: ignore
++        else:
++            return self.visit(ext) + ";\n"  # type: ignore
++
++    def visit_FileAST(self, n: ca.FileAST) -> str:
++        cache = self.ext_cache
++        if cache is None:
++            return super().visit_FileAST(n)  # type: ignore
++        parts: List[str] = []
++        for ext in n.ext:
++            hit = cache.get(id(ext)) if self.indent_level == 0 else None
++            if hit is not None and hit[0] is ext:
++                parts.append(hit[1])
++            else:
++                parts.append(self._visit_ext(ext))
++        return "".join(parts)
+ 
+     def visit_If(self, n: ca.If) -> str:
+         n2 = n
+diff --git a/src/candidate.py b/src/candidate.py
+index d4c7d64..8bec4ca 100644
+--- a/src/candidate.py
++++ b/src/candidate.py
+@@ -1,6 +1,7 @@
+ import copy
+ from dataclasses import dataclass, field
+ import functools
++import pickle
+ from typing import Mapping, Optional, Tuple
+ 
+ from perm_pycparser import c_ast as ca
+@@ -41,16 +42,27 @@ class Candidate:
+     score_value: Optional[int] = field(init=False, default=None)
+     score_hash: Optional[str] = field(init=False, default=None)
+     _cache_source: Optional[str] = field(init=False, default=None)
++    _ext_cache: Optional[ast_util.ExtCache] = field(
++        init=False, default=None, repr=False
++    )
+ 
+     @staticmethod
+     @functools.lru_cache(maxsize=16)
+     def _cached_shared_ast(
+         source: str, fn_name: str
+-    ) -> Tuple[ca.FuncDef, int, ca.FileAST]:
++    ) -> Tuple[ca.FuncDef, int, ca.FileAST, Optional[bytes], ast_util.ExtCache]:
+         ast = ast_util.parse_c(source)
+         orig_fn, fn_index = ast_util.extract_fn(ast, fn_name)
+         ast_util.normalize_ast(orig_fn, ast)
+-        return orig_fn, fn_index, ast
++        # Unpickling makes the same deep copy as copy.deepcopy, ~10x faster.
++        fn_pickle: Optional[bytes]
++        try:
++            fn_pickle = pickle.dumps(orig_fn, protocol=pickle.HIGHEST_PROTOCOL)
++        except Exception:
++            fn_pickle = None
++        # The code of the shared top-level items, which never change.
++        ext_cache = ast_util.make_ext_cache(ast, fn_index)
++        return orig_fn, fn_index, ast, fn_pickle, ext_cache
+ 
+     @staticmethod
+     def from_source(
+@@ -64,18 +76,25 @@ class Candidate:
+         # with the target function deeply copied. Since we never change the
+         # AST outside of the target function, this is fine, and it saves us
+         # performance (deepcopy is really slow).
+-        orig_fn, fn_index, ast = Candidate._cached_shared_ast(source, fn_name)
++        orig_fn, fn_index, ast, fn_pickle, ext_cache = Candidate._cached_shared_ast(
++            source, fn_name
++        )
+         ast = copy.copy(ast)
+         ast.ext = copy.copy(ast.ext)
+-        fn_copy = copy.deepcopy(orig_fn)
++        if fn_pickle is not None:
++            fn_copy = pickle.loads(fn_pickle)
++        else:
++            fn_copy = copy.deepcopy(orig_fn)
+         ast.ext[fn_index] = fn_copy
+         apply_ast_perms(fn_copy, eval_state)
+-        return Candidate(
++        cand = Candidate(
+             ast=ast,
+             fn_name=fn_name,
+             rng_seed=rng_seed,
+             randomizer=Randomizer(randomization_weights, rng_seed),
+         )
++        cand._ext_cache = ext_cache
++        return cand
+ 
+     def randomize_ast(self) -> None:
+         self.randomizer.randomize(self.ast, self.fn_name)
+@@ -83,7 +102,7 @@ class Candidate:
+ 
+     def get_source(self) -> str:
+         if self._cache_source is None:
+-            self._cache_source = ast_util.to_c(self.ast)
++            self._cache_source = ast_util.to_c(self.ast, ext_cache=self._ext_cache)
+         return self._cache_source
+ 
+     def compile(self, compiler: Compiler, show_errors: bool = False) -> Optional[str]:
+diff --git a/src/main.py b/src/main.py
+index 32965fc..a9de3de 100644
+--- a/src/main.py
++++ b/src/main.py
+@@ -46,6 +46,7 @@ from .permuter import (
+     Permuter,
+     Task,
+     WorkDone,
++    _find_fns,
+ )
+ from .preprocess import preprocess
+ from .printer import Printer
+@@ -85,6 +86,7 @@ class Options:
+     debug_mode: bool = False
+     speed: int = 100
+     ign_branch_targets: bool = False
++    score_func_only: bool = False
+ 
+ 
+ def restricted_float(lo: float, hi: float) -> Callable[[str], float]:
+@@ -360,6 +362,21 @@ def run_inner(options: Options, heartbeat: Callable[[], None]) -> List[int]:
+ 
+         objdump_command = json_prop(settings, "objdump_command", str, "") or None
+ 
++        c_source = preprocess(base_c)
++
++        # Score only the target function instead of the whole object. Faster,
++        # but blind to what a change does to the rest of the object (e.g.
++        # through inlining at -O3).
++        score_fn_name: Optional[str] = None
++        if options.score_func_only or json_prop(
++            settings, "score_func_only", bool, False
++        ):
++            score_fn_name = fn_name
++            if not score_fn_name:
++                fns = _find_fns(c_source)
++                if fns:
++                    score_fn_name = fns[-1]
++
+         scorer = Scorer(
+             target_o,
+             stack_differences=options.stack_differences,
+@@ -367,8 +384,8 @@ def run_inner(options: Options, heartbeat: Callable[[], None]) -> List[int]:
+             debug_mode=options.debug_mode,
+             ign_branch_targets=options.ign_branch_targets,
+             objdump_command=objdump_command,
++            fn_name=score_fn_name,
+         )
+-        c_source = preprocess(base_c)
+ 
+         try:
+             permuter = Permuter(
+@@ -779,6 +796,16 @@ def main() -> None:
+         "with insertions/deletions.",
+     )
+ 
++    parser.add_argument(
++        "--score-func-only",
++        dest="score_func_only",
++        action="store_true",
++        help="Score only the target function, not the whole object (also "
++        "settings.toml's score_func_only). Faster for files with many "
++        "functions, but changes to the other functions (e.g. through "
++        "inlining) no longer count.",
++    )
++
+     args = parser.parse_args()
+ 
+     threads = args.threads
+@@ -808,6 +835,7 @@ def main() -> None:
+         debug_mode=args.debug_mode,
+         speed=args.speed,
+         ign_branch_targets=args.ign_branch_targets,
++        score_func_only=args.score_func_only,
+     )
+ 
+     run(options)
+diff --git a/src/objdump.py b/src/objdump.py
+index 95c0f31..7108272 100644
+--- a/src/objdump.py
++++ b/src/objdump.py
+@@ -7,7 +7,7 @@ import string
+ import subprocess
+ import sys
+ import shutil
+-from typing import List, Match, Pattern, Set, Tuple, Optional
++from typing import Any, Dict, List, Match, Pattern, Set, Tuple, Optional
+ 
+ # Ignore registers, for cleaner output. (We don't do this right now, but it can
+ # be useful for debugging.)
+@@ -591,35 +591,83 @@ def process_reloc(
+     return before + new_repl + after
+ 
+ 
++def _restrict_to_function(input_lines: List[str], fn_name: str) -> List[str]:
++    """Return the lines of objdump output that belong to the function fn_name:
++    those after its "<fn_name>:" header, up to the next symbol header or
++    section. Returns [] if the function isn't there."""
++    header = f"<{fn_name}>:"
++    start = None
++    for index, row in enumerate(input_lines):
++        if row.rstrip().endswith(header):
++            start = index + 1
++            break
++    if start is None:
++        return []
++    end = len(input_lines)
++    for index in range(start, len(input_lines)):
++        row = input_lines[index]
++        if ">:" in row or row.startswith("Disassembly of section"):
++            end = index
++            break
++    # Keep a leading dummy line, since simplify_objdump skips `skip_lines`.
++    return [""] * skip_lines + input_lines[start:end]
++
++
++# Per-line results of simplify_objdump, by settings, then by the line without
++# its address field (see simplify_objdump). Bounded; cleared when full.
++_LINE_CACHE: Dict[Tuple[object, ...], Dict[Tuple[str, bool], Tuple[int, str, str]]] = {}
++_LINE_CACHE_MAX = 1 << 18
++# Relocations' effect on the previous output line, by settings, then by the
++# relocation line without its address and the previous line.
++_RELOC_CACHE: Dict[Tuple[object, ...], Dict[Tuple[str, str, bool], Optional[str]]] = {}
++_MISSING: Any = object()  # a sentinel
++re_reloc_addr = re.compile(r"(\s*)[0-9a-fA-F]+:( [^<>/]*)$")
++
++_KIND_SKIP = 0
++_KIND_RELOC = 1
++_KIND_INSN = 2
++
++
+ def simplify_objdump(
+     input_lines: List[str],
+     arch: ArchSettings,
+     *,
+     stack_differences: bool,
+     ign_branch_targets: bool,
++    fn_name: Optional[str] = None,
+ ) -> List[Line]:
++    if fn_name is not None:
++        input_lines = _restrict_to_function(input_lines, fn_name)
+     output_lines: List[Line] = []
+     skip_next = False
+-    for index, row in enumerate(input_lines):
+-        if index < skip_lines:
+-            continue
+-        row = row.rstrip()
+-        if ">:" in row or not row:
+-            continue
+-
+-        row = re.sub(arch.re_comment, "", row)
++    # Hoisted out of the loop: compiled patterns and per-arch constants.
++    re_comment_sub = arch.re_comment.sub
++    re_sprel_sub = arch.re_sprel.sub
++    re_int_sub = re_int.sub
++    re_int_full_sub = re_int_full.sub
++    re_includes_sp_search = arch.re_includes_sp.search
++    forbidden = arch.forbidden
++    reloc_str = arch.reloc_str
++    sp_ref_insns = arch.sp_ref_insns
++    branch_instructions = arch.branch_instructions
++    branch_likely_instructions = arch.branch_likely_instructions
++    first_field = 1 if "--no-show-raw-insn" in arch.arguments else 2
++    num_lines = len(input_lines)
++
++    def transform(row: str, next_line: Optional[str], skipped: bool) -> Tuple[int, str, str]:
++        """The original per-line processing of an (rstripped, non-empty,
++        non-header) line, up to the point where it is appended to the
++        output: (kind, row, mnemonic)."""
++        row = re_comment_sub("", row)
+         row = row.rstrip()
+ 
+         tabs = row.split("\t")
+ 
+         # TODO: use --no-show-raw-insn for all arches
+-        if "--no-show-raw-insn" in arch.arguments:
+-            row = "\t".join(tabs[1:])
+-        else:
+-            row = "\t".join(tabs[2:])
++        row = "\t".join(tabs[first_field:])
+ 
+         if not row:
+-            continue
++            return _KIND_SKIP, "", ""
+ 
+         if "\t" in row:
+             row_parts = row.split("\t", 1)
+@@ -630,32 +678,22 @@ def simplify_objdump(
+         mnemonic = row_parts[0].strip()
+         args = row_parts[1].strip() if len(row_parts) >= 2 else ""
+ 
+-        next_line = input_lines[index + 1] if index + 1 < len(input_lines) else None
+         mnemonic, args = pre_process(mnemonic, args, next_line)
+         row = mnemonic + "\t" + args.replace("\t", "  ")
+ 
+-        if arch.reloc_str in row:
+-            # Process Relocations, modify the previous line and do not add this line to output
+-            modified_prev = process_reloc(
+-                row, output_lines[-1].row, ign_branch_targets=ign_branch_targets
+-            )
+-            if modified_prev:
+-                output_lines[-1].row = modified_prev
+-                output_lines[-1].has_symbol = True
+-
+-            continue
++        if reloc_str in row:
++            return _KIND_RELOC, row, mnemonic
+ 
+-        if skip_next:
+-            skip_next = False
++        if skipped:
+             row = "<skipped>"
+             mnemonic = "<skipped>"
+         if ign_regs:
+-            row = re.sub(arch.re_reg, "<reg>", row)
++            row = arch.re_reg.sub("<reg>", row)
+ 
+         if not stack_differences:
+-            if mnemonic in arch.sp_ref_insns and arch.re_includes_sp.search(args):
+-                row = re.sub(re_int_full, "imm", row)
+-        if mnemonic in arch.branch_instructions:
++            if mnemonic in sp_ref_insns and re_includes_sp_search(args):
++                row = re_int_full_sub("imm", row)
++        if mnemonic in branch_instructions:
+             if ign_branch_targets:
+                 instr_parts = args.split(",")
+                 instr_parts[-1] = "<target>"
+@@ -669,17 +707,105 @@ def simplify_objdump(
+                 if len(full) <= 1:
+                     return full
+                 start, end = pat.span()
+-                if start and row[start - 1] in arch.forbidden:
++                if start and row[start - 1] in forbidden:
+                     return full
+-                if end < len(row) and row[end] in arch.forbidden:
++                if end < len(row) and row[end] in forbidden:
+                     return full
+                 return hex(int(full))
+ 
+-            row = re.sub(re_int, fn, row)
+-        if mnemonic in arch.branch_likely_instructions and skip_bl_delay_slots:
+-            skip_next = True
++            row = re_int_sub(fn, row)
+         if not stack_differences:
+-            row = re.sub(arch.re_sprel, "addr(sp)", row)
++            row = re_sprel_sub("addr(sp)", row)
++        return _KIND_INSN, row, mnemonic
++
++    # transform() doesn't depend on a line's first tab-separated field (the
++    # address) as long as that field holds no comment start ("<" or "/"),
++    # since that field is always dropped (first_field >= 1). Nor on the next
++    # line, except for whether it has an sda21 relocation. So its results
++    # are cached by the rest of the line. Relocation lines (unique by their
++    # address) and skipped delay slots aren't cached.
++    cache = _LINE_CACHE.get((arch.name, stack_differences, ign_branch_targets, ign_regs))
++    if cache is None or len(cache) > _LINE_CACHE_MAX:
++        cache = _LINE_CACHE[
++            (arch.name, stack_differences, ign_branch_targets, ign_regs)
++        ] = {}
++    cache_get = cache.get
++    reloc_cache = _RELOC_CACHE.get(
++        (arch.name, stack_differences, ign_branch_targets, ign_regs)
++    )
++    if reloc_cache is None or len(reloc_cache) > _LINE_CACHE_MAX:
++        reloc_cache = _RELOC_CACHE[
++            (arch.name, stack_differences, ign_branch_targets, ign_regs)
++        ] = {}
++    reloc_cache_get = reloc_cache.get
++
++    for index, row in enumerate(input_lines):
++        if index < skip_lines:
++            continue
++        row = row.rstrip()
++        if ">:" in row or not row:
++            continue
++
++        next_line = input_lines[index + 1] if index + 1 < num_lines else None
++        next_sda21 = next_line is not None and "R_PPC_EMB_SDA21" in next_line
++        if reloc_str in row:
++            # A relocation line, "<ws><address>: <type>\t<symbol>". It only
++            # changes the previous output line, in a way that depends on its
++            # type and symbol and that line, not on the address, so that is
++            # cached too.
++            m = re_reloc_addr.match(row)
++            if m is not None and output_lines:
++                key2 = (m.group(1) + m.group(2), output_lines[-1].row, next_sda21)
++                modified_prev = reloc_cache_get(key2, _MISSING)
++                if modified_prev is _MISSING:
++                    kind, row2, _ = transform(row, next_line, False)
++                    if kind != _KIND_RELOC:
++                        modified_prev = _MISSING
++                    else:
++                        modified_prev = process_reloc(
++                            row2,
++                            output_lines[-1].row,
++                            ign_branch_targets=ign_branch_targets,
++                        )
++                        reloc_cache[key2] = modified_prev
++                if modified_prev is not _MISSING:
++                    if modified_prev:
++                        output_lines[-1].row = modified_prev
++                        output_lines[-1].has_symbol = True
++                    continue
++        head, tab, rest = row.partition("\t")
++        if (
++            tab
++            and not skip_next
++            and reloc_str not in row
++            and "<" not in head
++            and "/" not in head
++        ):
++            key = (rest, next_sda21)
++            res = cache_get(key)
++            if res is None:
++                res = cache[key] = transform(row, next_line, False)
++        else:
++            res = transform(row, next_line, skip_next)
++        kind, row, mnemonic = res
++
++        if kind == _KIND_SKIP:
++            continue
++
++        if kind == _KIND_RELOC:
++            # Process Relocations, modify the previous line and do not add this line to output
++            modified_prev = process_reloc(
++                row, output_lines[-1].row, ign_branch_targets=ign_branch_targets
++            )
++            if modified_prev:
++                output_lines[-1].row = modified_prev
++                output_lines[-1].has_symbol = True
++
++            continue
++
++        skip_next = False
++        if mnemonic in branch_likely_instructions and skip_bl_delay_slots:
++            skip_next = True
+ 
+         output_lines.append(Line(row=row, has_symbol=False, mnemonic=mnemonic))
+ 
+@@ -713,6 +839,7 @@ def objdump(
+     objdump_command: Optional[List[str]] = None,
+     stack_differences: bool = False,
+     ign_branch_targets: bool = False,
++    fn_name: Optional[str] = None,
+ ) -> List[Line]:
+     if objdump_command:
+         executable = objdump_command[0]
+@@ -720,6 +847,10 @@ def objdump(
+     else:
+         executable = find_executable(tuple(arch.executable), arch.name)
+         arguments = arch.arguments
++        if fn_name is not None:
++            # Only disassemble that function (GNU objdump); simplify_objdump
++            # restricts the output to it anyway.
++            arguments = arguments + [f"--disassemble={fn_name}"]
+     output = subprocess.check_output([executable] + arguments + [o_filename])
+     lines = output.decode("utf-8").splitlines()
+     return simplify_objdump(
+@@ -727,6 +858,7 @@ def objdump(
+         arch,
+         stack_differences=stack_differences,
+         ign_branch_targets=ign_branch_targets,
++        fn_name=fn_name,
+     )
+ 
+ 
+diff --git a/src/scorer.py b/src/scorer.py
+index 35bf27a..7676289 100644
+--- a/src/scorer.py
++++ b/src/scorer.py
+@@ -1,3 +1,4 @@
++from bisect import bisect_left
+ import difflib
+ import hashlib
+ import re
+@@ -8,6 +9,210 @@ from collections import Counter
+ from .objdump import ArchSettings, Line, objdump, get_arch
+ 
+ 
++# If the last field has a parenthesis suffix, e.g. "0x38(r7)"
++# we split that part out to make it a separate field
++# however, we don't split if it has a proceeding %hi/%lo
++# e.g."%lo(.data)" or "%hi(.rodata + 0x10)"
++RE_PAREN = re.compile(r"(?<!%hi)(?<!%lo)\(")
++RE_PPC_SYMBOL = re.compile(r"^@\d+$")
++
++
++def field_matches_any_symbol(field: str, arch: ArchSettings) -> bool:
++    if arch.name == "ppc":
++        if "..." in field:
++            return True
++
++        parts = field.rsplit("@", 1)
++        if len(parts) == 2 and parts[1] in {"l", "h", "ha", "sda21"}:
++            field = parts[0]
++
++        return RE_PPC_SYMBOL.fullmatch(field) is not None
++
++    if arch.name == "mips":
++        return "." in field
++
++    # Example: ".text+0x34"
++    if arch.name == "arm32":
++        return "." in field
++
++    return False
++
++
++class FastSequenceMatcher(difflib.SequenceMatcher):  # type: ignore
++    """A difflib.SequenceMatcher (no junk, autojunk=False) whose
++    find_longest_match gives exactly the same results, faster.
++
++    difflib's version walks b2j[a[i]] for every i, over all of b, so it costs
++    the number of equal (i, j) pairs: quadratic for long, similar sequences
++    with a small alphabet (instruction mnemonics). Here, small ranges use the
++    same dynamic programming, but only visit the j's inside [blo, bhi) (found
++    by bisection), and large ranges map elements to characters and binary
++    search the length of the longest common substring with string slicing.
++    In both cases the result is the longest match, the earliest in a, then
++    the earliest in b, which is what difflib documents and computes."""
++
++    # Below this many (a, b) element pairs, use the dynamic programming.
++    DP_LIMIT = 40000
++    # The smallest anchor block length tried before falling back to it.
++    MIN_ANCHOR = 4
++
++    def __init__(self) -> None:
++        self._codes: Dict[object, str] = {}
++        self._sa = ""
++        self._sb = ""
++        super().__init__(None, "", "", autojunk=False)
++
++    def _encode(self, seq: Sequence[object]) -> str:
++        codes = self._codes
++        out = []
++        for x in seq:
++            c = codes.get(x)
++            if c is None:
++                c = codes[x] = chr(len(codes))
++            out.append(c)
++        return "".join(out)
++
++    def set_seq1(self, a: Sequence[object]) -> None:
++        super().set_seq1(a)
++        self._sa = self._encode(a)
++
++    def set_seq2(self, b: Sequence[object]) -> None:
++        super().set_seq2(b)
++        self._sb = self._encode(b)
++
++    def find_longest_match(
++        self, alo: int = 0, ahi: Optional[int] = None, blo: int = 0, bhi: Optional[int] = None
++    ) -> difflib.Match:
++        if self.bjunk or self.bpopular:
++            return super().find_longest_match(alo, ahi, blo, bhi)
++        if ahi is None:
++            ahi = len(self.a)
++        if bhi is None:
++            bhi = len(self.b)
++        if (ahi - alo) * (bhi - blo) <= self.DP_LIMIT:
++            return self._dp_match(alo, ahi, blo, bhi)
++        return self._str_match(alo, ahi, blo, bhi)
++
++    def _dp_match(self, alo: int, ahi: int, blo: int, bhi: int) -> difflib.Match:
++        # difflib's loop, restricted to j in [blo, bhi).
++        a, b2j = self.a, self.b2j
++        besti, bestj, bestsize = alo, blo, 0
++        j2len: Dict[int, int] = {}
++        nothing: List[int] = []
++        for i in range(alo, ahi):
++            js = b2j.get(a[i], nothing)
++            lo = bisect_left(js, blo)
++            hi = bisect_left(js, bhi, lo)
++            j2lenget = j2len.get
++            newj2len: Dict[int, int] = {}
++            for j in js[lo:hi]:
++                k = newj2len[j] = j2lenget(j - 1, 0) + 1
++                if k > bestsize:
++                    besti, bestj, bestsize = i - k + 1, j - k + 1, k
++            j2len = newj2len
++        return difflib.Match(besti, bestj, bestsize)
++
++    def _str_match(self, alo: int, ahi: int, blo: int, bhi: int) -> difflib.Match:
++        # With the sequences as strings, look for matches through "anchor"
++        # blocks: at level q, the blocks sa[p:p+q] for p a multiple of q.
++        # Every common substring of length >= 2q-1 contains a whole anchor
++        # block, so finding each anchor's occurrences in sb (str.find) and
++        # extending them both ways finds all of those matches (each extension
++        # is the maximal match on its diagonal). If the best is >= 2q-1, it
++        # is the longest, and all the longest are among those found, so the
++        # earliest (i, j) is the answer. Otherwise halve q. Small q, or too
++        # many occurrences, fall back to the dynamic programming.
++        sa = self._sa[alo:ahi]
++        sb = self._sb[blo:bhi]
++        na, nb = len(sa), len(sb)
++        budget = 2 * (na + nb)
++        q = 1
++        while 2 * q <= min(na, nb):
++            q *= 2
++        while q >= self.MIN_ANCHOR:
++            best = 0
++            cands: List[Tuple[int, int]] = []
++            # diagonal (j - i) -> end of the last match extended on it
++            done: Dict[int, int] = {}
++            for p in range(0, na - q + 1, q):
++                block = sa[p : p + q]
++                j = sb.find(block)
++                while j >= 0:
++                    diag = j - p
++                    if done.get(diag, -1) < p + q:
++                        budget -= 1
++                        if budget < 0:
++                            return self._dp_match(alo, ahi, blo, bhi)
++                        lft = _common_suffix(sa, p, sb, j)
++                        rgt = _common_prefix(sa, p + q, sb, j + q)
++                        size = lft + q + rgt
++                        done[diag] = p + q + rgt
++                        if size > best:
++                            best = size
++                            cands = [(p - lft, j - lft)]
++                        elif size == best:
++                            cands.append((p - lft, j - lft))
++                    j = sb.find(block, j + 1)
++            if best >= 2 * q - 1:
++                i, j = min(cands)
++                return difflib.Match(alo + i, blo + j, best)
++            q //= 2
++        return self._dp_match(alo, ahi, blo, bhi)
++
++
++def _common_prefix(s1: str, i1: int, s2: str, i2: int) -> int:
++    """Length of the common prefix of s1[i1:] and s2[i2:]."""
++    hi = min(len(s1) - i1, len(s2) - i2)
++    if hi <= 0 or s1[i1] != s2[i2]:
++        return 0
++    # Gallop, then bisect: s1[i1:i1+lo] == s2[i2:i2+lo], and not for hi+1.
++    lo, step = 1, 1
++    while True:
++        step *= 2
++        if step >= hi:
++            break
++        if s1[i1 : i1 + step] != s2[i2 : i2 + step]:
++            hi = step - 1
++            break
++        lo = step
++    if s1[i1 : i1 + hi] == s2[i2 : i2 + hi]:
++        return hi
++    hi -= 1
++    while lo < hi:
++        mid = (lo + hi + 1) // 2
++        if s1[i1 : i1 + mid] == s2[i2 : i2 + mid]:
++            lo = mid
++        else:
++            hi = mid - 1
++    return lo
++
++
++def _common_suffix(s1: str, e1: int, s2: str, e2: int) -> int:
++    """Length of the common suffix of s1[:e1] and s2[:e2]."""
++    hi = min(e1, e2)
++    if hi <= 0 or s1[e1 - 1] != s2[e2 - 1]:
++        return 0
++    lo, step = 1, 1
++    while True:
++        step *= 2
++        if step >= hi:
++            break
++        if s1[e1 - step : e1] != s2[e2 - step : e2]:
++            hi = step - 1
++            break
++        lo = step
++    if s1[e1 - hi : e1] == s2[e2 - hi : e2]:
++        return hi
++    hi -= 1
++    while lo < hi:
++        mid = (lo + hi + 1) // 2
++        if s1[e1 - mid : e1] == s2[e2 - mid : e2]:
++            lo = mid
++        else:
++            hi = mid - 1
++    return lo
++
++
+ class Scorer:
+     PENALTY_INF = 10**9
+ 
+@@ -27,30 +232,38 @@ class Scorer:
+         debug_mode: bool,
+         ign_branch_targets: bool,
+         objdump_command: Optional[str],
++        fn_name: Optional[str] = None,
+     ):
++        """If fn_name is given, only that function is scored (in both the
++        target and the candidates), instead of the whole object."""
+         self.target_o = target_o
++        self.fn_name = fn_name
+         self.arch = get_arch(target_o)
+         self.stack_differences = stack_differences
+         self.algorithm = algorithm
+         self.debug_mode = debug_mode
+         self.objdump_command = objdump_command or ""
+         self.ign_branch_targets = ign_branch_targets
+-        _, self.target_seq = self._objdump(target_o)
+-        self.difflib_differ: difflib.SequenceMatcher[str] = difflib.SequenceMatcher(
+-            autojunk=False
++        self._objdump_split = (
++            shlex.split(self.objdump_command) if self.objdump_command else None
+         )
+-        self.difflib_differ.set_seq2([line.mnemonic for line in self.target_seq])
++        _, self.target_seq = self._objdump(target_o)
++        self.target_mnemonics = [line.mnemonic for line in self.target_seq]
++        self.difflib_differ = FastSequenceMatcher()
++        self.difflib_differ.set_seq2(self.target_mnemonics)
++        if self.algorithm == "levenshtein":
++            import Levenshtein
++
++            self._levenshtein_opcodes = Levenshtein.opcodes
+ 
+     def _objdump(self, o_file: str) -> Tuple[str, List[Line]]:
+-        objdump_command = (
+-            shlex.split(self.objdump_command) if self.objdump_command else None
+-        )
+         lines = objdump(
+             o_file,
+             self.arch,
+-            objdump_command=objdump_command,
++            objdump_command=self._objdump_split,
+             stack_differences=self.stack_differences,
+             ign_branch_targets=self.ign_branch_targets,
++            fn_name=self.fn_name,
+         )
+         return "\n".join([line.row for line in lines]), lines
+ 
+@@ -69,26 +282,6 @@ class Scorer:
+         deletions: List[str] = []
+         insertions: List[str] = []
+ 
+-        def field_matches_any_symbol(field: str, arch: ArchSettings) -> bool:
+-            if arch.name == "ppc":
+-                if "..." in field:
+-                    return True
+-
+-                parts = field.rsplit("@", 1)
+-                if len(parts) == 2 and parts[1] in {"l", "h", "ha", "sda21"}:
+-                    field = parts[0]
+-
+-                return re.fullmatch(r"^@\d+$", field) is not None
+-
+-            if arch.name == "mips":
+-                return "." in field
+-
+-            # Example: ".text+0x34"
+-            if arch.name == "arm32":
+-                return "." in field
+-
+-            return False
+-
+         def diff_sameline(old_line: Line, new_line: Line) -> bool:
+             nonlocal num_stack_penalties
+             nonlocal num_branch_penalties
+@@ -106,8 +299,8 @@ class Scorer:
+ 
+             ignore_last_field = False
+             if self.stack_differences:
+-                oldsp = re.search(self.arch.re_sprel, old)
+-                newsp = re.search(self.arch.re_sprel, new)
++                oldsp = self.arch.re_sprel.search(old)
++                newsp = self.arch.re_sprel.search(new)
+                 if oldsp and newsp:
+                     oldrel = int(oldsp.group(1) or "0", 0)
+                     newrel = int(newsp.group(1) or "0", 0)
+@@ -141,11 +334,8 @@ class Scorer:
+                 newfields = newfields[:-1]
+                 oldfields = oldfields[:-1]
+             else:
+-                # If the last field has a parenthesis suffix, e.g. "0x38(r7)"
+-                # we split that part out to make it a separate field
+-                # however, we don't split if it has a proceeding %hi/%lo
+-                # e.g."%lo(.data)" or "%hi(.rodata + 0x10)"
+-                re_paren = re.compile(r"(?<!%hi)(?<!%lo)\(")
++                # Split a parenthesis suffix into its own field (RE_PAREN).
++                re_paren = RE_PAREN
+                 oldfields = oldfields[:-1] + (
+                     re_paren.split(oldfields[-1]) if len(oldfields) > 0 else []
+                 )
+@@ -180,8 +370,6 @@ class Scorer:
+ 
+         result_diff: Sequence[Tuple[str, int, int, int, int]]
+         if self.algorithm == "levenshtein":
+-            import Levenshtein
+-
+             remapping: Dict[str, str] = {}
+ 
+             def remap(seq: List[str]) -> str:
+@@ -194,9 +382,9 @@ class Scorer:
+                     seq[i] = val
+                 return "".join(seq)
+ 
+-            result_diff = Levenshtein.opcodes(
++            result_diff = self._levenshtein_opcodes(
+                 remap([line.mnemonic for line in cand_seq]),
+-                remap([line.mnemonic for line in self.target_seq]),
++                remap(self.target_mnemonics),
+             )
+         else:
+             self.difflib_differ.set_seq1([line.mnemonic for line in cand_seq])
