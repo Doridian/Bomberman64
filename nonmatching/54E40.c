@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 5074, eu 5082, jp 5085
+ * differing words: us 4991, eu 4999, jp 4994
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -3531,51 +3531,40 @@ s32 func_8023AA60(s32 arg0) {
 }
 
 s32 func_8023A870(s32 arg0, s32 arg1) {
-    u8 *sp34;
-    s32 temp_t5;
-    s32 temp_v1;
-    s32 var_t0;
-    u8 *temp_v0;
-    u8 *temp_v0_2;
+    u8 *obj;
+    s32 pad[2];
 
     if (!(D_802A01B0 & 2)) {
         if (!(D_802AC5D0 & 1)) {
-            func_80245208(arg0, 1);
-            sp34 = func_802443F4(arg0);
-            *func_8028A060(1) = D_802AC610.unk38;
-            temp_v1 = D_802AC5D0;
-            if ((temp_v1 & 4) || ((temp_v1 & 8) && (arg0 != 0))) {
-                temp_t5 = arg0 * 4;
-                *(D_802AC714 + temp_t5) = 2;
-                func_802313DC(sp34, 0x7FFFF);
-                D_802A01BC = 0;
-            } else {
-                if (D_802A01BC != 0) {
-                    func_802350F8(1);
-                    func_80234F6C(1);
-                    func_80234858(&D_802AC5F8, &D_802AC5FC, &D_802AC600);
-                    D_802A01C0 = 1;
-                    if (D_802AC5D0 & 8) {
-                        func_80251534(0);
-                    }
-                }
-                D_802A01B8 = 0;
-                var_t0 = arg0 * 4;
-                D_802AC5D0 = temp_v1 | 0x92;
+    func_80245208(arg0, 1);
+    obj = func_802443F4(arg0);
+    *func_8028A060(1) = D_802AC610.unk38;
+    if ((D_802AC5D0 & 4) || ((D_802AC5D0 & 8) && (arg0 != 0))) {
+        ((s32 *) D_802AC714)[arg0] = 2;
+        func_802313DC(obj, 0x7FFFF);
+        D_802A01BC = 0;
+    } else {
+        if (D_802A01BC != 0) {
+            func_802350F8(1);
+            func_80234F6C(1);
+            func_80234858(&D_802AC5F8, &D_802AC5FC, &D_802AC600);
+            D_802A01C0 = 1;
+            if (D_802AC5D0 & 8) {
+                func_80251534(0);
             }
-            temp_v0 = M2C_FIELD(sp34, void **, 0x40);
-            M2C_FIELD(temp_v0, s32 *, 0xC) = (s32) (M2C_FIELD(temp_v0, s32 *, 0xC) & ~0x4000);
-            temp_v0_2 = M2C_FIELD(sp34, void **, 0x40);
-            M2C_FIELD(temp_v0_2, s32 *, 0xC) = (s32) (M2C_FIELD(temp_v0_2, s32 *, 0xC) | 0x40);
-            if (arg1 == 4) {
-                arg1 = D_802AC798;
-            }
-            *(&D_802AC858 + var_t0) = arg1;
-            func_80238A10(func_8023F26C, (s32) (var_t0 + D_802A0B98), 0, 0, 0x130);
-            return 1;
         }
-        /* Duplicate return node #15. Try simplifying control flow for better match */
-        return 0;
+        D_802A01B8 = 0;
+        D_802AC5D0 |= 0x92;
+    }
+    M2C_FIELD(M2C_FIELD(obj, u8 **, 0x40), s32 *, 0xC) &= ~0x4000;
+    M2C_FIELD(M2C_FIELD(obj, u8 **, 0x40), s32 *, 0xC) |= 0x40;
+    if (arg1 == 4) {
+        arg1 = D_802AC798;
+    }
+    (&D_802AC858)[arg0] = arg1;
+    func_80238A10(func_8023F26C, (s32) (D_802A0B98 + arg0 * 4), 0, 0, 0x130);
+    return 1;
+        }
     }
     return 0;
 }
