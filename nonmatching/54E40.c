@@ -40,6 +40,16 @@
  *   doesn't exist) with the x fixed; the other uses of func_802811F0
  *   (func_8023FD08, 8023F26C) and jp's own text in func_8023AEDC,
  *   8023C374 and 8023ECEC have no jp arm yet.
+ * - The count is positional: a function one instruction short shifts
+ *   every word after it, so its size matters more than its registers.
+ *   What fixed sizes here: a separate index (`D_802AC770[k++]`, k = 0)
+ *   leaves the original's dead `move v0,zero`; a global pointer read
+ *   again each iteration is `tf = D_802A0758;` at the top of the loop
+ *   body; a loop end against arr+N folded into one relocation is a
+ *   compare with the next symbol (`r != (Rect54E40 *) D_802A079C`);
+ *   calls m2c shows in both branches are both there (func_8023B8D0).
+ *   func_8023AC38's dead call to func_8023AB90 keeps the order once
+ *   func_8023AB54 is inlined.
  */
 #include "common.h"
 
