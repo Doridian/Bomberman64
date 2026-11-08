@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2901, eu 2920, jp 2940
+ * differing words: us 2832, eu 2851, jp 2871
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -866,30 +866,29 @@ void func_80242270(s32 arg0, Gfx **gdl) {
     s32 d;
     s32 *p;
     s32 t;
+    s32 k;
 
     if (0) {
         func_80242268();
     }
-    n = 0;
+    k = 0;
     v = D_802AC610.unk30;
     div = 10000000;
-    i = 0;
-    do {
+    for (i = 0; i < 8; i++) {
         d = v / div;
-        D_802AC770[n++] = d * 2;
+        D_802AC770[k++] = d * 2;
         t = d * div;
         if (v >= t) {
             v -= t;
         }
-        i++;
         div /= 10;
-    } while (i < 8);
+    }
     v = D_802AC610.unk1C;
     div = 10;
     i = 0;
     do {
         d = v / div;
-        D_802AC770[n++] = d * 2;
+        D_802AC770[k++] = d * 2;
         t = d * div;
         if (v >= t) {
             v -= t;
@@ -903,14 +902,15 @@ void func_80242270(s32 arg0, Gfx **gdl) {
     gSPTexture(gfx++, 0x8000, 0x8000, 0, G_TX_RENDERTILE, 1);
     gDPSetTexturePersp(gfx++, G_TP_NONE);
     gDPSetTextureLUT(gfx++, G_TT_RGBA16);
-    for (i = 0; i < 2; i++) {
+    r = D_802A0774;
+    do {
         tf = D_802A0758;
-        r = &D_802A0774[i];
         gDPLoadTLUT_pal256(gfx++, (u8 *) tf + tf->entries[r->idx + 1].offset);
         gDPLoadTextureBlock_4b(gfx++, (u8 *) tf + tf->entries[r->idx].offset, G_IM_FMT_CI, 16, 16, 0,
                                G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMASK, G_TX_NOMASK, G_TX_NOLOD, G_TX_NOLOD);
         gSPTextureRectangle(gfx++, r->xl, r->yl, r->xh, r->yh, G_TX_RENDERTILE, 0, 0, 0x400, 0x400);
-    }
+        r++;
+    } while (r != (Rect54E40 *) D_802A079C);
     n = 0;
     tf = D_802A075C;
     count = D_802A076C;
@@ -943,6 +943,7 @@ void func_80242270(s32 arg0, Gfx **gdl) {
     gDPSetTextureLUT(gfx++, G_TT_NONE);
     *gdl = gfx;
 }
+
 
 
 
