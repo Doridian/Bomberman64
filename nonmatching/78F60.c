@@ -5,7 +5,7 @@
  * order, with the original's stub. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 591, eu 591, jp 591
+ * differing words: us 394, eu 394, jp 394
  *
  * func_8025E760 (the LoadTile switch, the same code as 7D840's
  * func_80263464), func_8025EC00, the stub of the inlined func_8025EC3C
@@ -23,6 +23,25 @@
  * short. The inner loop's head then picks a0/v1 for width/height where
  * this picks a1/a0, and case 2's last block schedules the andi and the
  * sw to 348(sp) differently.
+ *
+ * p2 (591 -> 394 in us, eu and jp; size 0x1A80 now matches, slots and
+ * j + 1 in v0 match):
+ * - `pad1 = i + 1; q0 = j + 1;` (dead stores) before case 2's yl line
+ *   gives i + 1 and j + 1 their expression bits ahead of ucvt(y1), so
+ *   uopt's temp slots come out at 0x3C/0x38 as in the original.
+ * - `if (flags == 3) {}` first in the outer body: lowers the shared count
+ *   at node 23 (Chow addadjacents: regsleft*2 >= numintf + shared), so
+ *   j + 1's split piece reaches the outer head and lives in v0.
+ * - `if (!(i)) {}` first in the inner body: size 0x1A80.
+ * - `if (!scaleX) {}` moved after the call, `if (!(height)) {}` after the
+ *   width clamp, `if (!(width - x)) {}` after the tw clamp: width a0,
+ *   height v1, y + th v0, the second y + th t5, slots unchanged.
+ * Left: the inner head's three moves (addiu s0,sp,348 / move a0,s4 /
+ * move t4,s5) land in other delay slots, height in a1 not v1 in that
+ * spot; the rest (about 20 hunks from case 0 on) is t6-t9 renamed in
+ * the case bodies, plus case 2's last block order.
+ * Tool: scratch/main9/p2/ux/ (uopt with MARK/ADJ/SPLIT trace of Chow
+ * colouring; tr2.sh runs it), sl.sh lists the spill slots per bit.
  */
 #include "common.h"
 #define F3DEX_GBI
@@ -152,22 +171,26 @@ static void func_8025EC44(Gfx **gfxp, s32 x0, s32 y0, s32 x1, s32 y1, s32 mode, 
     tileW = tw;
     tileH = th;
     for (j = 0, y = 0; j < ny; j++, y += th) {
+        if (flags == 3) {}
         for (i = 0, x = 0, tw = tileW; i < nx; i++, x += tileW) {
+            if (!(i)) {}
             if (!width) {}
             if (width < x + tw) {
                 tw = width - x;
             }
+            if (!(height)) {}
             if (height < y + th) {
                 th = height - y;
             }
             if (tw < 0) {
                 tw = 1;
             }
+            if (!(width - x)) {}
             if (th < 0) {
                 th = 1;
             }
-            if (!scaleX) {}
             func_8025E760(x, mode, y, x + tw - 1, height, y + th - 1, img, width, &gfx);
+            if (!scaleX) {}
             switch (flags) {
                 case 0:
                     s = ((s32) RNDD(i * tileW + 0.5) << 5) & 0xFFFF;
@@ -205,6 +228,7 @@ static void func_8025EC44(Gfx **gfxp, s32 x0, s32 y0, s32 x1, s32 y1, s32 mode, 
                     dtdy = (s32) RNDF(-1.0f / scaleY * 1023.0f) & 0xFFFF;
                     xl = RNDI(x0 + x * scaleX);
                     k = (ny - j - 1) * th;
+pad1 = i + 1; q0 = j + 1;
                     yl = RNDI(k * scaleY + y1);
                     xh = RNDI(x0 + (x + tw) * scaleX);
                     yh = RNDI((k + tileH) * scaleY + y1);
