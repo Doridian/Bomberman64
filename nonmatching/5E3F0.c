@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2802, eu 2802, jp 2801
+ * differing words: us 2744, eu 2744, jp 2743
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -3979,93 +3979,38 @@ void func_80247848(s32 arg0, s32 arg1) {
 }
 
 void func_80247614() {
-    s32 temp_a0;
-    s32 temp_t7;
-    s32 temp_t7_2;
-    s32 var_t0;
-    s32 var_t5;
-    s32 var_t9;
-    s32 var_v1;
-    s32 var_v1_10;
-    s32 var_v1_2;
-    s32 var_v1_3;
-    s32 var_v1_4;
-    s32 var_v1_5;
-    s32 var_v1_6;
-    s32 var_v1_7;
-    s32 var_v1_8;
-    s32 var_v1_9;
-
-    temp_t7 = D_802AC9EC - 1;
-    D_802AC9EC = temp_t7;
-    if (temp_t7 == 0) {
-        var_v1 = func_80243E18(0x20);
-        var_t9 = D_802AC9E8 & 0x40;
-        if (var_v1 != 0) {
+    if (--D_802AC9EC == 0) {
+        if (func_80243E18(0x20)) {
             func_80246F00(0x20, 0);
-            var_t9 = D_802AC9E8 & 0x40;
         }
-        var_v1_2 = 0;
-        if (var_t9 == 0x40) {
-            var_v1_2 = 1;
-        }
-        if (var_v1_2 != 0) {
+        if (func_80243E18(0x40)) {
             func_80246F00(0x40, 0);
         }
-        var_v1_3 = func_80243E18(0x10);
-        if (var_v1_3 != 0) {
+        if (func_80243E18(0x10)) {
             func_80246F00(0x10, 0);
         }
-        var_v1_4 = func_80243E18(0x80);
-        if (var_v1_4 != 0) {
+        if (func_80243E18(0x80)) {
             func_80246F00(0x80, 0);
         }
-        var_v1_5 = func_80243E18(4);
-        if (var_v1_5 != 0) {
+        if (func_80243E18(4)) {
             func_80246F00(4, 0);
         }
-        var_v1_6 = func_80243E18(2);
-        if (var_v1_6 != 0) {
+        if (func_80243E18(2)) {
             func_80246F00(2, 0);
         }
         D_802AC9EC = 0;
         D_802AC9E8 = 0;
     }
-    temp_a0 = D_802AC9E8;
-    var_v1_7 = 0;
-    if ((temp_a0 & 0x40) == 0x40) {
-        var_v1_7 = 1;
-    }
-    var_t5 = temp_a0 & 0x10;
-    if (var_v1_7 != 0) {
+    if (func_80243E18(0x40)) {
         func_80246808();
-        var_t5 = D_802AC9E8 & 0x10;
     }
-    var_v1_8 = 0;
-    if (var_t5 == 0x10) {
-        var_v1_8 = 1;
+    if (func_80243E18(0x10) && --D_802AC9F0 == 0) {
+        func_80246078();
     }
-    if (var_v1_8 != 0) {
-        temp_t7_2 = D_802AC9F0 - 1;
-        D_802AC9F0 = temp_t7_2;
-        if (temp_t7_2 == 0) {
-            func_80246078();
-        }
-    }
-    var_v1_9 = 0;
-    if ((temp_a0 & 0x80) == 0x80) {
-        var_v1_9 = 1;
-    }
-    var_t0 = temp_a0 & 4;
-    if (var_v1_9 != 0) {
+    if (func_80243E18(0x80)) {
         func_80246018();
-        var_t0 = D_802AC9E8 & 4;
     }
-    var_v1_10 = 0;
-    if (var_t0 == 4) {
-        var_v1_10 = 1;
-    }
-    if (var_v1_10 != 0) {
+    if (func_80243E18(4)) {
         func_80245FD4();
     }
 }
