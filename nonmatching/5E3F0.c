@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 6299, eu 6299, jp 6299
+ * differing words: us 5881, eu 5881, jp 5881
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -133,8 +133,10 @@ extern UnkStruct_800AEDF0 D_800AEDF0[5];
 typedef struct {
     /* 0x00 */ u8 unk0[4];
     /* 0x04 */ f32 unk4;
-    /* 0x08 */ u8 unk8[8];
+    /* 0x08 */ s32 unk8;
+    /* 0x0C */ u8 unkC[4];
     /* 0x10 */ f32 unk10;
+    /* 0x14 */ s32 unk14;
 } Sub88b;
 
 typedef struct {
@@ -143,7 +145,8 @@ typedef struct {
 } Sub88a;
 
 typedef struct {
-    /* 0x00 */ u8 unk0[0x10];
+    /* 0x00 */ u8 unk0[0xC];
+    /* 0x0C */ s32 unkC;
     /* 0x10 */ f32 unk10;
     /* 0x14 */ f32 unk14;
     /* 0x18 */ f32 unk18;
@@ -5436,233 +5439,182 @@ s32 func_80244BA4(s32 arg0, s32 arg1) {
 }
 
 void func_802444B8(s32 arg0, s32 arg1) {
-    s32 sp20;
-    u32 sp1C;
-    UnkObj *sp18;
-    UnkModel *temp_v0;
-    UnkObj *temp_a2;
-    UnkStruct_800AEDF0 *temp_v1;
-    s32 var_a1;
-    s32 var_a3;
-    void *temp_v0_10;
-    void *temp_v0_11;
-    void *temp_v0_12;
-    void *temp_v0_13;
-    void *temp_v0_14;
-    void *temp_v0_15;
-    void *temp_v0_16;
-    void *temp_v0_17;
-    void *temp_v0_18;
-    void *temp_v0_19;
-    void *temp_v0_20;
-    void *temp_v0_21;
-    void *temp_v0_22;
-    void *temp_v0_23;
-    void *temp_v0_24;
-    void *temp_v0_25;
-    void *temp_v0_26;
-    void *temp_v0_2;
-    void *temp_v0_3;
-    void *temp_v0_4;
-    void *temp_v0_5;
-    void *temp_v0_6;
-    void *temp_v0_7;
-    void *temp_v0_8;
-    void *temp_v0_9;
+    s32 anim1;
+    s32 anim2;
+    s32 mode;
+    Obj88 *obj;
 
-    temp_v1 = &D_800AEDF0[arg0];
-    temp_a2 = temp_v1->unk28;
-    temp_v1->unk44 = arg1;
-    switch (arg1) {                                 /* switch 1 */
-    case 0:                                         /* switch 1 */
-        var_a1 = 0;
-        var_a3 = -1;
-        sp1C = 3;
+    D_800AEDF0[arg0].unk44 = arg1;
+    obj = (Obj88 *)func_802443F4(arg0);
+    switch (arg1) {
+    case 0:
+        anim1 = 0;
+        anim2 = -1;
+        mode = 3;
         break;
-    case 1:                                         /* switch 1 */
-        var_a1 = 1;
-        var_a3 = 2;
-        sp1C = 5;
+    case 1:
+        anim1 = 1;
+        anim2 = 2;
+        mode = 5;
         break;
-    case 2:                                         /* switch 1 */
-        var_a1 = 3;
-        var_a3 = 4;
-        sp1C = 5;
+    case 2:
+        anim1 = 3;
+        anim2 = 4;
+        mode = 5;
         break;
-    case 3:                                         /* switch 1 */
-        var_a1 = 5;
-        var_a3 = 6;
-        sp1C = 5;
+    case 3:
+        anim1 = 5;
+        anim2 = 6;
+        mode = 5;
         break;
-    case 4:                                         /* switch 1 */
-        var_a1 = 7;
-        var_a3 = -1;
-block_27:
-        sp1C = 0;
+    case 4:
+        anim1 = 7;
+        anim2 = -1;
+        mode = 0;
         break;
-    case 5:                                         /* switch 1 */
-        var_a1 = -1;
-        var_a3 = -1;
+    case 5:
+        anim1 = -1;
+        anim2 = -1;
         break;
-    case 6:                                         /* switch 1 */
-        var_a1 = 0xB;
-        var_a3 = -1;
-        goto block_27;
-    case 7:                                         /* switch 1 */
-        var_a1 = 0xA;
-        var_a3 = -1;
-        goto block_27;
-    case 8:                                         /* switch 1 */
-        var_a1 = 0x11;
-        var_a3 = -1;
-        sp1C = 3;
+    case 6:
+        anim1 = 0xB;
+        anim2 = -1;
+        mode = 0;
         break;
-    case 10:                                        /* switch 1 */
-        var_a1 = 0xC;
-        var_a3 = -1;
-        goto block_27;
-    case 9:                                         /* switch 1 */
-        var_a1 = 0xD;
-        var_a3 = -1;
-        goto block_27;
-    case 11:                                        /* switch 1 */
-        var_a1 = 0x10;
-        var_a3 = -1;
-        goto block_27;
-    case 12:                                        /* switch 1 */
-        var_a1 = 9;
-        var_a3 = -1;
-        sp1C = 4;
+    case 7:
+        anim1 = 0xA;
+        anim2 = -1;
+        mode = 0;
         break;
-    case 13:                                        /* switch 1 */
-        var_a1 = 8;
-        var_a3 = 2;
-        sp1C = 6;
+    case 8:
+        anim1 = 0x11;
+        anim2 = -1;
+        mode = 3;
         break;
-    case 14:                                        /* switch 1 */
-        var_a1 = 8;
-        var_a3 = 4;
-        sp1C = 6;
+    case 10:
+        anim1 = 0xC;
+        anim2 = -1;
+        mode = 0;
         break;
-    case 15:                                        /* switch 1 */
-        var_a1 = 8;
-        var_a3 = 6;
-        sp1C = 6;
+    case 9:
+        anim1 = 0xD;
+        anim2 = -1;
+        mode = 0;
         break;
-    case 16:                                        /* switch 1 */
-        var_a1 = 0xF;
-        var_a3 = -1;
-        goto block_27;
-    case 18:                                        /* switch 1 */
-        var_a1 = 8;
-        var_a3 = -1;
-        goto block_27;
-    case 17:                                        /* switch 1 */
-        var_a1 = 0xE;
-        var_a3 = -1;
-        goto block_27;
-    case 19:                                        /* switch 1 */
-        var_a1 = 0x12;
-        var_a3 = -1;
-        goto block_27;
-    case 20:                                        /* switch 1 */
-        var_a1 = 8;
-        var_a3 = 0x15;
-        sp1C = 2;
+    case 11:
+        anim1 = 0x10;
+        anim2 = -1;
+        mode = 0;
         break;
-    case 21:                                        /* switch 1 */
-        var_a1 = 0x16;
-        var_a3 = -1;
-        sp1C = 2;
+    case 12:
+        anim1 = 9;
+        anim2 = -1;
+        mode = 4;
         break;
-    case 23:                                        /* switch 1 */
-        var_a1 = 0x18;
-        var_a3 = -1;
-        goto block_27;
-    case 24:                                        /* switch 1 */
-        var_a1 = 0x19;
-        var_a3 = -1;
-        goto block_27;
-    default:                                        /* switch 1 */
-        var_a1 = -1;
-        var_a3 = -1;
-        goto block_27;
+    case 13:
+        anim1 = 8;
+        anim2 = 2;
+        mode = 6;
+        break;
+    case 14:
+        anim1 = 8;
+        anim2 = 4;
+        mode = 6;
+        break;
+    case 15:
+        anim1 = 8;
+        anim2 = 6;
+        mode = 6;
+        break;
+    case 16:
+        anim1 = 0xF;
+        anim2 = -1;
+        mode = 0;
+        break;
+    case 18:
+        anim1 = 8;
+        anim2 = -1;
+        mode = 0;
+        break;
+    case 17:
+        anim1 = 0xE;
+        anim2 = -1;
+        mode = 0;
+        break;
+    case 19:
+        anim1 = 0x12;
+        anim2 = -1;
+        mode = 0;
+        break;
+    case 20:
+        anim1 = 8;
+        anim2 = 0x15;
+        mode = 2;
+        break;
+    case 21:
+        anim1 = 0x16;
+        anim2 = -1;
+        mode = 2;
+        break;
+    case 23:
+        anim1 = 0x18;
+        anim2 = -1;
+        mode = 0;
+        break;
+    case 24:
+        anim1 = 0x19;
+        anim2 = -1;
+        mode = 0;
+        break;
+    default:
+        anim1 = -1;
+        anim2 = -1;
+        mode = 0;
+        break;
     }
-    sp20 = var_a3;
-    sp18 = temp_a2;
-    func_80229E38(temp_a2->unk40, var_a1, 0);
-    func_80229E38(temp_a2->unk40, sp20, 1);
-    temp_v0 = temp_a2->unk40;
-    M2C_FIELD(temp_v0, s32 *, 0xC) = (s32) (M2C_FIELD(temp_v0, s32 *, 0xC) | 0x4000);
-    switch (sp1C) {                                 /* switch 2 */
-    case 0:                                         /* switch 2 */
-        temp_v0_2 = M2C_FIELD(M2C_FIELD(temp_a2->unk40, void **, 0x48), void **, 4);
-        M2C_FIELD(temp_v0_2, s32 *, 8) = (s32) (M2C_FIELD(temp_v0_2, s32 *, 8) | 0x20);
-        temp_v0_3 = M2C_FIELD(M2C_FIELD(temp_a2->unk40, void **, 0x48), void **, 4);
-        M2C_FIELD(temp_v0_3, s32 *, 8) = (s32) (M2C_FIELD(temp_v0_3, s32 *, 8) & ~0x40);
-        temp_v0_4 = M2C_FIELD(M2C_FIELD(temp_a2->unk40, void **, 0x48), void **, 4);
-        M2C_FIELD(temp_v0_4, s32 *, 0x14) = (s32) (M2C_FIELD(temp_v0_4, s32 *, 0x14) & ~0x20);
-        temp_v0_5 = M2C_FIELD(M2C_FIELD(temp_a2->unk40, void **, 0x48), void **, 4);
-        M2C_FIELD(temp_v0_5, s32 *, 0x14) = (s32) (M2C_FIELD(temp_v0_5, s32 *, 0x14) & ~0x40);
-        return;
-    case 2:                                         /* switch 2 */
-        temp_v0_6 = M2C_FIELD(M2C_FIELD(temp_a2->unk40, void **, 0x48), void **, 4);
-        M2C_FIELD(temp_v0_6, s32 *, 8) = (s32) (M2C_FIELD(temp_v0_6, s32 *, 8) | 0x20);
-        temp_v0_7 = M2C_FIELD(M2C_FIELD(temp_a2->unk40, void **, 0x48), void **, 4);
-        M2C_FIELD(temp_v0_7, s32 *, 8) = (s32) (M2C_FIELD(temp_v0_7, s32 *, 8) & ~0x40);
-        temp_v0_8 = M2C_FIELD(M2C_FIELD(temp_a2->unk40, void **, 0x48), void **, 4);
-        M2C_FIELD(temp_v0_8, s32 *, 0x14) = (s32) (M2C_FIELD(temp_v0_8, s32 *, 0x14) & ~0x20);
-        temp_v0_9 = M2C_FIELD(M2C_FIELD(temp_a2->unk40, void **, 0x48), void **, 4);
-        M2C_FIELD(temp_v0_9, s32 *, 0x14) = (s32) (M2C_FIELD(temp_v0_9, s32 *, 0x14) & ~0x40);
-        return;
-    case 3:                                         /* switch 2 */
-        temp_v0_10 = M2C_FIELD(M2C_FIELD(temp_a2->unk40, void **, 0x48), void **, 4);
-        M2C_FIELD(temp_v0_10, s32 *, 8) = (s32) (M2C_FIELD(temp_v0_10, s32 *, 8) & ~0x20);
-        temp_v0_11 = M2C_FIELD(M2C_FIELD(temp_a2->unk40, void **, 0x48), void **, 4);
-        M2C_FIELD(temp_v0_11, s32 *, 8) = (s32) (M2C_FIELD(temp_v0_11, s32 *, 8) & ~0x40);
-        temp_v0_12 = M2C_FIELD(M2C_FIELD(temp_a2->unk40, void **, 0x48), void **, 4);
-        M2C_FIELD(temp_v0_12, s32 *, 0x14) = (s32) (M2C_FIELD(temp_v0_12, s32 *, 0x14) & ~0x20);
-        temp_v0_13 = M2C_FIELD(M2C_FIELD(temp_a2->unk40, void **, 0x48), void **, 4);
-        M2C_FIELD(temp_v0_13, s32 *, 0x14) = (s32) (M2C_FIELD(temp_v0_13, s32 *, 0x14) & ~0x40);
-        return;
-    case 4:                                         /* switch 2 */
-        temp_v0_14 = M2C_FIELD(M2C_FIELD(temp_a2->unk40, void **, 0x48), void **, 4);
-        M2C_FIELD(temp_v0_14, s32 *, 8) = (s32) (M2C_FIELD(temp_v0_14, s32 *, 8) | 0x20);
-        temp_v0_15 = M2C_FIELD(M2C_FIELD(temp_a2->unk40, void **, 0x48), void **, 4);
-        M2C_FIELD(temp_v0_15, s32 *, 8) = (s32) (M2C_FIELD(temp_v0_15, s32 *, 8) | 0x40);
-        temp_v0_16 = M2C_FIELD(M2C_FIELD(temp_a2->unk40, void **, 0x48), void **, 4);
-        M2C_FIELD(temp_v0_16, s32 *, 0x14) = (s32) (M2C_FIELD(temp_v0_16, s32 *, 0x14) | 0x20);
-        temp_v0_17 = M2C_FIELD(M2C_FIELD(temp_a2->unk40, void **, 0x48), void **, 4);
-        M2C_FIELD(temp_v0_17, s32 *, 0x14) = (s32) (M2C_FIELD(temp_v0_17, s32 *, 0x14) | 0x40);
-        return;
-    case 5:                                         /* switch 2 */
-        temp_v0_18 = M2C_FIELD(M2C_FIELD(temp_a2->unk40, void **, 0x48), void **, 4);
-        M2C_FIELD(temp_v0_18, s32 *, 8) = (s32) (M2C_FIELD(temp_v0_18, s32 *, 8) & ~0x20);
-        temp_v0_19 = M2C_FIELD(M2C_FIELD(temp_a2->unk40, void **, 0x48), void **, 4);
-        M2C_FIELD(temp_v0_19, s32 *, 8) = (s32) (M2C_FIELD(temp_v0_19, s32 *, 8) & ~0x40);
-        sp18 = temp_a2;
-        M2C_FIELD(M2C_FIELD(M2C_FIELD(temp_a2->unk40, void **, 0x48), void **, 4), f32 *, 4) = func_8024441C(arg0, arg1);
-        temp_v0_20 = M2C_FIELD(M2C_FIELD(temp_a2->unk40, void **, 0x48), void **, 4);
-        M2C_FIELD(temp_v0_20, s32 *, 0x14) = (s32) (M2C_FIELD(temp_v0_20, s32 *, 0x14) & ~0x20);
-        temp_v0_21 = M2C_FIELD(M2C_FIELD(temp_a2->unk40, void **, 0x48), void **, 4);
-        M2C_FIELD(temp_v0_21, s32 *, 0x14) = (s32) (M2C_FIELD(temp_v0_21, s32 *, 0x14) & ~0x40);
-        temp_v0_22 = M2C_FIELD(M2C_FIELD(temp_a2->unk40, void **, 0x48), void **, 4);
-        M2C_FIELD(temp_v0_22, f32 *, 0x10) = (f32) M2C_FIELD(temp_v0_22, f32 *, 4);
-        return;
-    case 6:                                         /* switch 2 */
-        temp_v0_23 = M2C_FIELD(M2C_FIELD(temp_a2->unk40, void **, 0x48), void **, 4);
-        M2C_FIELD(temp_v0_23, s32 *, 8) = (s32) (M2C_FIELD(temp_v0_23, s32 *, 8) | 0x20);
-        temp_v0_24 = M2C_FIELD(M2C_FIELD(temp_a2->unk40, void **, 0x48), void **, 4);
-        M2C_FIELD(temp_v0_24, s32 *, 8) = (s32) (M2C_FIELD(temp_v0_24, s32 *, 8) | 0x40);
-        temp_v0_25 = M2C_FIELD(M2C_FIELD(temp_a2->unk40, void **, 0x48), void **, 4);
-        M2C_FIELD(temp_v0_25, s32 *, 0x14) = (s32) (M2C_FIELD(temp_v0_25, s32 *, 0x14) & ~0x20);
-        temp_v0_26 = M2C_FIELD(M2C_FIELD(temp_a2->unk40, void **, 0x48), void **, 4);
-        M2C_FIELD(temp_v0_26, s32 *, 0x14) = (s32) (M2C_FIELD(temp_v0_26, s32 *, 0x14) & ~0x40);
-        sp18 = temp_a2;
-        M2C_FIELD(M2C_FIELD(M2C_FIELD(temp_a2->unk40, void **, 0x48), void **, 4), f32 *, 0x10) = func_8024441C(arg0, arg1);
-        /* fallthrough */
-    default:                                        /* switch 2 */
-        return;
+    func_80229E38(obj->unk40, anim1, 0);
+    func_80229E38(obj->unk40, anim2, 1);
+    obj->unk40->unkC |= 0x4000;
+    switch (mode) {
+    case 0:
+        obj->unk40->unk48->unk4->unk8 |= 0x20;
+        obj->unk40->unk48->unk4->unk8 &= ~0x40;
+        obj->unk40->unk48->unk4->unk14 &= ~0x20;
+        obj->unk40->unk48->unk4->unk14 &= ~0x40;
+        break;
+    case 2:
+        obj->unk40->unk48->unk4->unk8 |= 0x20;
+        obj->unk40->unk48->unk4->unk8 &= ~0x40;
+        obj->unk40->unk48->unk4->unk14 &= ~0x20;
+        obj->unk40->unk48->unk4->unk14 &= ~0x40;
+        break;
+    case 3:
+        obj->unk40->unk48->unk4->unk8 &= ~0x20;
+        obj->unk40->unk48->unk4->unk8 &= ~0x40;
+        obj->unk40->unk48->unk4->unk14 &= ~0x20;
+        obj->unk40->unk48->unk4->unk14 &= ~0x40;
+        break;
+    case 4:
+        obj->unk40->unk48->unk4->unk8 |= 0x20;
+        obj->unk40->unk48->unk4->unk8 |= 0x40;
+        obj->unk40->unk48->unk4->unk14 |= 0x20;
+        obj->unk40->unk48->unk4->unk14 |= 0x40;
+        break;
+    case 5:
+        obj->unk40->unk48->unk4->unk8 &= ~0x20;
+        obj->unk40->unk48->unk4->unk8 &= ~0x40;
+        obj->unk40->unk48->unk4->unk4 = func_8024441C(arg0, arg1);
+        obj->unk40->unk48->unk4->unk14 &= ~0x20;
+        obj->unk40->unk48->unk4->unk14 &= ~0x40;
+        obj->unk40->unk48->unk4->unk10 = obj->unk40->unk48->unk4->unk4;
+        break;
+    case 6:
+        obj->unk40->unk48->unk4->unk8 |= 0x20;
+        obj->unk40->unk48->unk4->unk8 |= 0x40;
+        obj->unk40->unk48->unk4->unk14 &= ~0x20;
+        obj->unk40->unk48->unk4->unk14 &= ~0x40;
+        obj->unk40->unk48->unk4->unk10 = func_8024441C(arg0, arg1);
+        break;
     }
 }
 
