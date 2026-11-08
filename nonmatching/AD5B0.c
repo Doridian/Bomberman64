@@ -5,7 +5,42 @@
  * inlined statics. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 665, eu 665, jp 665
+ * differing words: us 70, eu 70, jp 70
+ *
+ * p4 (665 -> 70): only func_80292DB0's range (DB8 and E90) is left;
+ * func_802934E8 and func_8029414C match.
+ * - func_802934E8 was one word long (a load-delay nop in D8); most of its
+ *   529 words were the shift. D8 and D0 interleave the checksum with the
+ *   ors (sum = *p++; *out |= *p; ...), which hoists the sum's lbu above
+ *   the or/sw. D0 is defined before 34E8 (lower .loc lines put li a0,2 in
+ *   the jal delay slot). The last or of D0 and the first of D8 read
+ *   (u8)(x << 0): it burns one ugen temp so the t-register rotation lines
+ *   up (plain, & 0xFF and other casts are a register behind or change
+ *   414C). The 8-byte copy loop is sum += *p; *q++ = *p++; (addu before
+ *   sb). Frame: s32 pad[8] in D8 puts E0's i at sp+0x5C and pad2[6] in E0
+ *   (after its locals) makes the frame 0x128.
+ * - 33E8 and 4064 take their pointer arguments first ((pp, a, b) and
+ *   (pp, chk, a, b)): IPA keeps their registers, and ugen's argument order
+ *   then puts the pointer moves first in the second call of each loop.
+ * - 414C's for line gets a #line one below the *p++ = ...(chk, 6) line
+ *   (then a #line back to the real numbering), so the loop's init is
+ *   scheduled before the sw of p and chk. Both are absolute: renumber
+ *   them when lines above move.
+ * - DB8: the original keeps the guard on retry (li v0,1; beqz v0) before
+ *   the loop preheader. Any form where uopt knows retry == 1 folds it
+ *   (while, goto, for/do variants, retry from i or ret, narrow types, a
+ *   late assignment, retry = 0 instead of break). Passing retry as a
+ *   parameter (1 from every caller) gives the exact structure (guard
+ *   before the preheader), but it lives in s0 and the callers get worse.
+ *   The kept form is for (;;) { if (!retry) break; ... } with retry = 1
+ *   just before: the guard stays but the preheader (s1, s5) comes before
+ *   it and the exit takes an extra move v0,s2 (one word long).
+ * - E90: declaring i first gives its spill slot 92. The original copies
+ *   ret to v1 after both calls (move v1,v0; bnez v1); ours tests v0, one
+ *   word short, so DB8 and E90 cancel in size and E90 is shifted. ret
+ *   with a later use (return ret, if (ret) {} after the loop) gets its own
+ *   register but lives across the E88 call; u16 ret gives a per-branch
+ *   register with an andi.
  *
  * p3 (1112 -> 665): func_80292DB0's range, func_802934E8 and
  * func_8029414C are left; everything else matches.
@@ -50,7 +85,7 @@ static s32 func_802948A0(u8 *p);
 static void func_80294144(u8 **pp, u8 *src);
 static void func_8029413C(u8 **pp, u16 v);
 static void func_80294134(u8 **pp, u32 v);
-static void func_80294064(s32 a, s32 b, u8 **pp, u8 **chk);
+static void func_80294064(u8 **pp, u8 **chk, s32 a, s32 b);
 static void func_80294040(u8 **pp, u32 v);
 static u8 func_80293FE4(s32 base);
 static u8 func_80293F90(s32 base);
@@ -59,7 +94,7 @@ static u8 func_80293EAC(u8 *buf, s32 n);
 static s32 func_802934E0(u8 **pp);
 static u8 func_802934D8(u8 **pp, s32 *out);
 static u8 func_802934D0(u8 **pp, s32 *out);
-static s32 func_802933E8(s32 a, s32 b, u8 **pp);
+static s32 func_802933E8(u8 **pp, s32 a, s32 b);
 static u8 func_80293378(u8 **pp, s32 *out);
 static void func_80293314(u8 bits, s32 base);
 static void func_802932B0(u8 bits, s32 base);
@@ -426,11 +461,13 @@ void func_8029414C(u8 *buf) {
     *p++ = func_80293FE4(0xB);
     *p++ = func_80293EAC(chk, 6);
     chk += 7;
+#line 461
     for (k = 0, i = 0; i < 6; i++, k += 4) {
+#line 467
         j = k + 0x15;
         do {} while (0);
-        func_80294064(j, j + 1, &p, &chk);
-        func_80294064(j + 2, j + 3, &p, &chk);
+        func_80294064(&p, &chk, j, j + 1);
+        func_80294064(&p, &chk, j + 2, j + 3);
     }
     *p++ = func_80293FE4(0x16);
     *p++ = func_80293FE4(0x21);
@@ -469,7 +506,7 @@ static void func_80294144(u8 **pp, u8 *src) {
     }
 }
 
-static void func_80294064(s32 a, s32 b, u8 **pp, u8 **chk) {
+static void func_80294064(u8 **pp, u8 **chk, s32 a, s32 b) {
     s32 *x = func_8028A060(a);
     s32 *y = func_8028A060(b);
     u8 *q = *pp;
@@ -553,6 +590,22 @@ s32 func_80293E1C(void) {
     return func_802934E8(SLOT(D_802A1DB4));
 }
 
+static u8 func_802934D0(u8 **pp, s32 *out) {
+    u8 *p = *pp;
+    u8 sum;
+
+    *out = (p[0] << 24) & 0xFF000000;
+    sum = *p++;
+    *out |= (p[0] << 16) & 0xFF0000;
+    sum += *p++;
+    *out |= (p[0] << 8) & 0xFF00;
+    sum += *p++;
+    *out |= (u8)(p[0] << 0);
+    sum += *p++;
+    *pp = p;
+    return sum;
+}
+
 s32 func_802934E8(u8 *buf) {
     s32 r;
     u8 *p;
@@ -597,7 +650,8 @@ s32 func_802934E8(u8 *buf) {
     sum = 0;
     q = (u8 *) func_8028A060(12);
     for (i = 0; i < 8; i++) {
-        sum += *q++ = *p++;
+        sum += *p;
+        *q++ = *p++;
     }
     sum += *p++;
     if (sum != 0xFF) {
@@ -704,15 +758,16 @@ static s32 func_802934E0(u8 **pp) {
     s32 j;
     s32 k;
     s32 r;
+    s32 pad2[6];
 
     for (k = 0, i = 0; i < 6; i++, k += 4) {
         j = k + 0x15;
         do {} while (0);
-        r = func_802933E8(j, j + 1, pp);
+        r = func_802933E8(pp, j, j + 1);
         if (r == 1) {
             break;
         }
-        r = func_802933E8(j + 2, j + 3, pp);
+        r = func_802933E8(pp, j + 2, j + 3);
         if (r == 1) {
             break;
         }
@@ -721,34 +776,19 @@ static s32 func_802934E0(u8 **pp) {
 }
 
 static u8 func_802934D8(u8 **pp, s32 *out) {
+    s32 pad[8];
     u8 *p = *pp;
     u8 sum;
 
     *out = (p[0] << 8) & 0xFF00;
-    *out |= p[1];
     sum = *p++;
+    *out |= (u8)(*p << 0);
     sum += *p++;
     *pp = p;
     return sum;
 }
 
-static u8 func_802934D0(u8 **pp, s32 *out) {
-    u8 *p = *pp;
-    u8 sum;
-
-    *out = (p[0] << 24) & 0xFF000000;
-    *out |= (p[1] << 16) & 0xFF0000;
-    sum = *p++;
-    sum += *p++;
-    *out |= (p[0] << 8) & 0xFF00;
-    sum += *p++;
-    *out |= p[0];
-    sum += *p++;
-    *pp = p;
-    return sum;
-}
-
-static s32 func_802933E8(s32 a, s32 b, u8 **pp) {
+static s32 func_802933E8(u8 **pp, s32 a, s32 b) {
     s32 *x = func_8028A060(a);
     s32 *y = func_8028A060(b);
     s32 r;
@@ -885,8 +925,8 @@ s32 func_8029301C(void) {
 }
 
 static s32 func_80292E90(u8 addr, u8 *buf, u8 n) {
-    s32 size;
     s32 i;
+    s32 size;
     s32 ret;
 
     if (!D_802A1DA4) {
@@ -930,7 +970,7 @@ static s32 func_80292DB8(u8 addr, u8 *buf, u8 n) {
     s32 ret = -1;
     s32 size;
     s32 i;
-    s32 retry = 1;
+    s32 retry;
 
     if (!D_802A1DA4) {
         return -2;
@@ -939,7 +979,11 @@ static s32 func_80292DB8(u8 addr, u8 *buf, u8 n) {
     func_80297D60(buf, size);
     func_80297D50(buf, size);
     i = 1;
-    while (retry) {
+    retry = 1;
+    for (;;) {
+        if (!retry) {
+            break;
+        }
         if (n == 1) {
             ret = func_80297E68(D_802AC3E0, addr, buf);
         } else {
