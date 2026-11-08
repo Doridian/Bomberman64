@@ -93,7 +93,7 @@ UnkStruct_8023A834 *func_8023A834(void);
 UnkStruct_8023A840 *func_8023A840(void);
 void func_8026C660(s32);
 s32 func_8026D7D8(s32, s32, s32);
-s16 func_8026DC74(s32);
+s32 func_8026DC74(s32);
 void func_8026EEF0(s32, s32, s32, s32, s32);
 s32 func_8026F068(s32, s32, s32, s32);
 void func_8027404C(f32, f32, f32, f32 *, f32 *, f32 *);
@@ -319,7 +319,81 @@ void func_8027D7DC(void) {
     }
 }
 
-#pragma GLOBAL_ASM("asm/nonmatchings/97610/func_8027D894.s")
+void func_8027D894(void) {
+    UnkStruct_80090440 *node;
+    s32 i;
+    s16 n;
+    s16 kind;
+    s32 pad;
+    f32 pos[3];
+
+    if (D_80090440[0].unk4 != NULL) {
+        func_8027D7DC();
+        for (node = D_80090440[0].unk4; node->unk4 != NULL; node = node->unk4) {
+            if (node->unk18 == 0) {
+                node->unk16++;
+            }
+            node->unk18 = 0;
+        }
+        for (node = D_80090440[0].unk4, i = 0; node->unk4 != NULL; node = node->unk4, i++) {
+            if (i >= 10) {
+                break;
+            }
+            node->unk18 = 1;
+            node->unk16 = 0;
+            D_802B01D0->unk40->unk10 = node->unkC->unk10;
+            D_802B01D0->unk40->unk14 = node->unkC->unk14;
+            D_802B01D0->unk40->unk18 = node->unkC->unk18;
+            func_80231408(D_802B01D0, 0x01000000);
+            n = func_8026DC74(node->unk20);
+            D_802B01D0->unk30 = 4;
+            switch (node->unk14) {
+                case 0:
+                    D_802B01D0->unk34 = 50.0f;
+                    D_802B01D0->unk38 = n * 100 - 10;
+                    break;
+                case 1:
+                    D_802B01D0->unk34 = 50.0f;
+                    D_802B01D0->unk38 = n * 200 - 10;
+                    break;
+                case 2:
+                    D_802B01D0->unk34 = 100.0f;
+                    D_802B01D0->unk38 = n * 100 - 10;
+                    D_802B01D0->unk40->unk10 += 50.0f;
+                    D_802B01D0->unk40->unk18 += 50.0f;
+                    break;
+                case 3:
+                    D_802B01D0->unk34 = 100.0f;
+                    D_802B01D0->unk38 = n * 200 - 10;
+                    D_802B01D0->unk40->unk10 += 50.0f;
+                    D_802B01D0->unk40->unk18 += 50.0f;
+                    break;
+            }
+            switch (node->unk1A & 0x60) {
+                case 0x20:
+                    kind = 0;
+                    break;
+                case 0x40:
+                    kind = 1;
+                    break;
+                case 0x60:
+                    kind = 2;
+                    break;
+                default:
+                    kind = 0;
+                    break;
+            }
+            if (func_80232D18(D_802B01D0, 0xC0) != 0) {
+                func_8027D398(node);
+                func_8027D328(node);
+                func_8027404C(node->unk1C, node->unk20, node->unk24, &pos[0], &pos[1], &pos[2]);
+                pos[1] += 50;
+                func_8028A7CC(D_802B0190[kind].unk6, pos, 0);
+            }
+            func_802313DC(D_802B01D0, 0x01000000);
+        }
+    }
+}
 
 void func_8027DCB8(void);
 void func_8027DFAC(void);
