@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 5838, eu 5846, jp 5819
+ * differing words: us 5796, eu 5804, jp 5777
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -3030,41 +3030,31 @@ void func_8023CD1C() {
 }
 
 void func_8023CC54(s32 arg0) {
-    u8 *var_t0;
-    s32 *var_a1;
-    s32 temp_lo;
-    s32 var_a2;
-    s32 var_a3;
-    s32 var_v0;
-    s32 var_v1;
+    s32 i;
+    s32 j;
+    s32 v;
+    s32 div;
+    s32 d;
+    s32 k;
+    s32 t;
 
     if (0) {
         func_8023CC4C();
         func_8023CA94();
     }
-    var_v1 = 0;
-    if (arg0 > 0) {
-        var_t0 = D_802AC780;
-        var_a1 = ((s32 *) &D_802AC660);
-        do {
-            var_v0 = M2C_FIELD(var_a1, s32 *, 0xA4);
-            var_a2 = 1;
-            var_a3 = 0;
-loop_3:
-            temp_lo = var_v0 / var_a2;
-            var_t0 += 4;
-            M2C_FIELD(var_t0, s32 *, -4) = (s32) (temp_lo * 2);
-            if (var_v0 >= (temp_lo * var_a2)) {
-                var_v0 %= var_a2;
+    k = 0;
+    for (i = 0; i < arg0; i++) {
+        v = D_802AC660.unkA4[i];
+        div = 1;
+        for (j = 0; j < 1; j++) {
+            d = v / div;
+            ((s32 *) D_802AC780)[k++] = d * 2;
+            t = d * div;
+            if (v >= t) {
+                v -= t;
             }
-            var_a3 += 1;
-            var_a2 = var_a2 / 10;
-            if (var_a3 != 1) {
-                goto loop_3;
-            }
-            var_v1 += 1;
-            var_a1 = (void *) ((u8 *)var_a1 + 4);
-        } while (var_v1 != arg0);
+            div /= 10;
+        }
     }
 }
 
