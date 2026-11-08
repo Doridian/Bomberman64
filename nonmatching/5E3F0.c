@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2607, eu 2607, jp 2606
+ * differing words: us 2583, eu 2583, jp 2582
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -644,14 +644,8 @@ void func_802511C4() {
 }
 
 void func_80251134(s32 arg0) {
-    UnkStruct_800AEDF0 *temp_a3;
-    s32 var_v1;
-
-    if (!D_800AEDF0[arg0].unk10 && !D_800AEDF0[arg0].unk10) {}
-    temp_a3 = &D_800AEDF0[arg0];
-    var_v1 = func_80244BA4(arg0, 0x1000);
-    if (var_v1 != 0) {
-        func_80247A54(arg0, func_8022F4AC((s32) temp_a3->unk28, 2, temp_a3->unk4C), 0, 0);
+    if (func_80244BA4(arg0, 0x1000)) {
+        func_80247A54(arg0, func_8022F4AC((s32)func_802443F4(arg0), 2, D_800AEDF0[arg0].unk4C), 0, 0);
         func_80244354(arg0, 0x1020, 1);
     }
 }
@@ -1960,15 +1954,13 @@ void func_8024D5D0(Ctl58 *arg0) {
 }
 
 void func_8024D540(s32 arg0, f32 *arg1) {
-    UnkObj *temp_a2;
-    UnkStruct_800AEDF0 *temp_v1;
+    Obj88 *obj;
 
-    temp_v1 = &D_800AEDF0[arg0];
-    M2C_FIELD(arg1, f32 *, 0) = D_802ACA44;
-    M2C_FIELD(arg1, s32 *, 4) = (s32) temp_v1->unkA0;
-    temp_a2 = temp_v1->unk28;
-    if ((M2C_FIELD(temp_a2, f32 *, 0x68) == 0.0f) && (temp_a2->unk6C == 0.0f)) {
-        func_8024878C((s32) temp_a2);
+    arg1[0] = D_802ACA44;
+    ((s32 *)arg1)[1] = D_800AEDF0[arg0].unkA0;
+    obj = (Obj88 *)func_802443F4(arg0);
+    if (obj->unk68 == 0.0f && obj->unk6C == 0.0f) {
+        func_8024878C((s32)obj);
     }
 }
 
@@ -2000,22 +1992,9 @@ s32 func_8024D41C(f32 key) {
 }
 
 void func_8024D374(s32 arg0) {
-    s32 temp_a0;
-    s32 var_v1;
-    s32 var_v1_2;
-
     func_80244354(arg0, 0x100, 0);
-    temp_a0 = D_800AEDF0[arg0].unk10;
-    var_v1 = 0;
-    if ((temp_a0 & 0x1000) == 0x1000) {
-        var_v1 = 1;
-    }
-    if (var_v1 == 0) {
-        var_v1_2 = 0;
-        if (!(temp_a0 & 0x8080)) {
-            var_v1_2 = 1;
-        }
-        if (var_v1_2 != 0) {
+    if (!func_80244BA4(arg0, 0x1000)) {
+        if (func_802452AC(arg0, 0x8080)) {
             func_802444B8(arg0, 0xA);
         } else {
             func_802444B8(arg0, 0x12);
@@ -2761,13 +2740,7 @@ void func_8024B028(s32 arg0) {
 }
 
 void func_8024AFD4(s32 arg0) {
-    UnkStruct_800AEDF0 *temp_v0;
-    s32 temp_t9;
-
-    temp_v0 = &D_800AEDF0[arg0];
-    temp_t9 = temp_v0->unk7C - 1;
-    temp_v0->unk7C = temp_t9;
-    if (temp_t9 == 0) {
+    if (--D_800AEDF0[arg0].unk7C == 0) {
         func_80243D90(arg0, 0x40, 0);
     }
 }
@@ -3818,14 +3791,8 @@ void func_80247CD0(s32 arg0, s32 arg1) {
 }
 
 void func_80247C50(s32 arg0) {
-    UnkStruct_800AEDF0 *temp_a3;
-    s32 var_v1;
-
-    if (!D_800AEDF0[arg0].unk10 && !D_800AEDF0[arg0].unk10) {}
-    temp_a3 = &D_800AEDF0[arg0];
-    var_v1 = func_80244BA4(arg0, 0x1000);
-    if (var_v1 != 0) {
-        func_80247A54(arg0, func_8022F4AC((s32) temp_a3->unk28, 2, temp_a3->unk4C), 0, 1);
+    if (func_80244BA4(arg0, 0x1000)) {
+        func_80247A54(arg0, func_8022F4AC((s32)func_802443F4(arg0), 2, D_800AEDF0[arg0].unk4C), 0, 1);
     }
 }
 
@@ -4669,24 +4636,16 @@ s32 func_802456FC(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
 }
 
 s32 func_80245690(void *arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) {
-    s32 temp_a1;
-    s32 temp_t0;
-    s32 var_v0;
-    s32 var_v1;
+    s32 ret = 0;
+    s32 in = 0;
 
-    temp_t0 = M2C_FIELD(arg0, s32 *, 0);
-    var_v1 = 0;
-    var_v0 = 0;
-    if (temp_t0 >= arg1) {
-        temp_a1 = M2C_FIELD(arg0, s32 *, 8);
-        if ((temp_a1 >= arg3) && (arg4 >= temp_t0) && (arg5 >= temp_a1)) {
-            var_v0 = 1;
-        }
+    if (((s32 *)arg0)[0] >= arg1 && ((s32 *)arg0)[2] >= arg3 && arg4 >= ((s32 *)arg0)[0] && arg5 >= ((s32 *)arg0)[2]) {
+        in = 1;
     }
-    if ((var_v0 != 0) && (arg2 == M2C_FIELD(arg0, s32 *, 4))) {
-        var_v1 = 1;
+    if (in && arg2 == ((s32 *)arg0)[1]) {
+        ret = 1;
     }
-    return var_v1;
+    return ret;
 }
 
 s32 func_802455A8(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) {
