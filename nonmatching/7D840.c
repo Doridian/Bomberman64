@@ -39,6 +39,29 @@
  * f12/f14 (72). dx/dy locals flip the mul order (variable leaves go
  * second): 40 at best. A 45-minute permuter run on this found nothing
  * real (24 only by reordering scaleX*dirX, a score artefact).
+ *
+ * p4 (25, unchanged): no source form found that beats it. Levers found:
+ * - Target proven by hand-edited ugen asm (h5.s/h6.s, 0 words through
+ *   as1): dead fh conversion first; y0 load f4/store 176; x0 load
+ *   f10/store 172; dirX*scaleX -> f8; f0 = c-a; f10 = f0*f8; reload x0
+ *   (f4); add into f0; dirY f8, scaleY f10, mul f4; b f6; f2 = d-b;
+ *   f6 = f2*f4; y0 f8; add f2. So the as1 side is fine; only uopt's
+ *   colouring of c-a/d-b (uopt temps in $f0/$f2) is missing.
+ * - The double x0/y0 loads come free once c-a/d-b are uopt temps:
+ *   ugen remembers which FP reg holds a memory value until it is reused,
+ *   and the FIFO reuses it in between.
+ * - Commutative operand order: a plain variable leaf goes second, but an
+ *   assignment expression `(v = e)` or a ternary's cfe temp keeps its
+ *   first-operand place, so `(info.x1 = CA) * S` and
+ *   `(i == 0 ? CA : CA) * S` give the original's (c-a, dir*scale).
+ * - A ternary used as a value takes a cfe float temp frame slot: drop
+ *   padA with it to keep frame 344.
+ * - Those forms fail on colouring: `(info.x1 = CA)` raises info.x1's
+ *   priority so it no longer splits to blocks 48-49 (65 words, b19/v7);
+ *   the ternary adds blocks that flip the a/b tie (a must win f12, b stay
+ *   uncoloured) (47 words, b13/v7); a dx local gives 53 (b15/v1).
+ *   Priorities from scratch/zdbug12/cs.sh. Next try: a ternary/assign
+ *   form plus fakes that restore info.x1's split and the a/b tie.
  */
 #include "common.h"
 #define F3DEX_GBI
