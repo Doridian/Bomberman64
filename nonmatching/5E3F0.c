@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2665, eu 2665, jp 2664
+ * differing words: us 2607, eu 2607, jp 2606
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -603,15 +603,15 @@ void func_80251368(s32 arg0) {
 }
 
 void func_802512F8() {
-    UnkObj *temp_a1;
-    UnkStruct_800AEDF0 *temp_v0;
+    s32 id;
+    UnkObj *obj;
 
-    temp_a1 = ((UnkObj *)func_802443F4(func_80243DDC()));
-    temp_v0 = &D_800AEDF0[func_80243DDC()];
-    temp_a1->unk40->unk10 = temp_v0->unk0;
-    temp_a1->unk40->unk14 = temp_v0->unk4;
-    temp_a1->unk40->unk18 = temp_v0->unk8;
-    M2C_FIELD(temp_a1->unk40, f32 *, 0x20) = (f32) temp_v0->unkC;
+    id = func_80243DDC();
+    obj = (UnkObj *)func_802443F4(id);
+    obj->unk40->unk10 = D_800AEDF0[id].unk0;
+    obj->unk40->unk14 = D_800AEDF0[id].unk4;
+    obj->unk40->unk18 = D_800AEDF0[id].unk8;
+    obj->unk40->unk20 = D_800AEDF0[id].unkC;
 }
 
 void func_802512C0(s32 arg0, s32 arg1, s32 arg2) {
@@ -619,25 +619,23 @@ void func_802512C0(s32 arg0, s32 arg1, s32 arg2) {
 }
 
 void func_802511EC(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
-    f32 sp34[3];
-    UnkObj *temp_a0;
-    UnkStruct_800AEDF0 *temp_v1;
+    f32 pos[3];
+    UnkObj *obj;
 
-    func_8026E338((f32) arg1, (f32) arg2, (f32) arg3, sp34, 0);
-    temp_v1 = &D_800AEDF0[arg0];
-    temp_a0 = temp_v1->unk28;
-    if (temp_a0 != NULL) {
-        temp_a0->unk40->unk10 = sp34[0];
-        temp_a0->unk40->unk14 = sp34[1];
-        temp_a0->unk40->unk18 = sp34[2];
-        temp_v1->unk0 = -10000.0f;
-        temp_v1->unk4 = -10000.0f;
-        temp_v1->unk8 = -10000.0f;
-        return;
+    func_8026E338(arg1, arg2, arg3, pos, 0);
+    obj = (UnkObj *)func_802443F4(arg0);
+    if (obj != NULL) {
+        obj->unk40->unk10 = pos[0];
+        obj->unk40->unk14 = pos[1];
+        obj->unk40->unk18 = pos[2];
+        D_800AEDF0[arg0].unk0 = -10000.0f;
+        D_800AEDF0[arg0].unk4 = -10000.0f;
+        D_800AEDF0[arg0].unk8 = -10000.0f;
+    } else {
+        D_800AEDF0[arg0].unk0 = pos[0];
+        D_800AEDF0[arg0].unk4 = pos[1];
+        D_800AEDF0[arg0].unk8 = pos[2];
     }
-    temp_v1->unk0 = sp34[0];
-    temp_v1->unk4 = sp34[1];
-    temp_v1->unk8 = sp34[2];
 }
 
 void func_802511C4() {
@@ -659,16 +657,11 @@ void func_80251134(s32 arg0) {
 }
 
 void func_802510F0() {
-    s32 var_a0;
-    s32 var_s0;
+    s32 i;
 
-    var_s0 = 0;
-    var_a0 = 0;
-    do {
-        func_80247848(var_a0, 0);
-        var_s0 += 1;
-        var_a0 = var_s0;
-    } while (var_s0 != 5);
+    for (i = 0; i < 5; i++) {
+        func_80247848(i, 0);
+    }
 }
 
 void func_802510C8() {
