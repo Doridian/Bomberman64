@@ -6,7 +6,7 @@
  * Every function is emitted in the original's order. Not built into the
  * ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 472, eu 472, jp 472
+ * differing words: us 254, eu 254, jp 254
  *
  * func_802921C4 and func_8029217C match; of the statics (compared as one
  * run from func_8028FD80, 402 words), func_8028FD88 matches. The inlined
@@ -75,6 +75,33 @@
  * position); 09FC's c slot (0x54 vs 0x58), the corner 0.0f in f0 and r in
  * a0 vs v1, arg order before the 90708 calls, the sw v0,300(sp) schedule;
  * FFA8 (not looked at this pass).
+ *
+ * p4 (472 -> 254 in every version; jp allf: FFA8 29, 90498 0 (matches),
+ * stubs 0, 09FC 225, 1944 0; the static run is now 0xC7C as original):
+ * - 90498: a volatile struct local (volatile struct { s32 a, b, c, d; }
+ *   sv;) with "sv.c = t | 0;" right after "if (res != 0) {" and
+ *   "t = sv.c;" at the join reproduces the caller-saved spill exactly
+ *   (frame 168, slot 160(sp), t in a1). "| 0" stops copy propagation so
+ *   the stored register is a1, not v0 (* 1, ^ 0, + 0 don't). A volatile
+ *   scalar goes to the frame bottom and shifts the locals; an array
+ *   element adds an addiu. 472 -> 371.
+ * - Stubs: the three K&R stubs called right after func_8029087C(&ctx)
+ *   (not first thing in 09FC) still emit before 9087C and stop shifting
+ *   the run: 371 -> 276.
+ * - FFA8's dispatcher as "(code & 0xF) == 7 || (code & 0xF) == 8 || ..."
+ *   (no c variable) gives the const-first beq order; in half B
+ *   "dir->unk8 != -b", "ABS(ctx->unk24) > ABS(ctx->unk1C)" (larger side
+ *   first) set the load order and t-regs; in half A "u = ...;" before
+ *   "fb = b;". 51 -> 29.
+ * - uopt (p4/uo, instrumented): s-regs cost 0 in an eb70=1 static; the
+ *   func_8026E338 call forbids a1/a2 for every lr live across it; an lr
+ *   splits when save * n <= mincost. Without effect or worse: a
+ *   4-param wrapper static (frame 168 but locals +16), the slope test
+ *   as a static, a switch dispatcher (881), "(c = code & 0xF) == 7".
+ * Left: FFA8's frame 168 vs 160 (v_A 140 vs 124, v_B 76 vs 68, flag
+ * read at 184 vs 176), half A's float registers (orig fb f2, u f0, ab
+ * f12, 50.0 temp f18, unk24 loaded early), half B's end (obj v1 vs v0,
+ * mul.s f2,f16,f0 operand order twice); 09FC's 225 as listed under p3.
  */
 #include "common.h"
 
@@ -294,8 +321,8 @@ static s32 func_8028FFA8_a(UnkStruct_802909FC *ctx, s32 code) {
     if (a == 0 || b == 0) {
         return 0;
     }
-    fb = b;
     u = ctx->unk1C - a * 50.0f;
+    fb = b;
     obj = ctx->unk0;
     ab = a * b;
     w = -a * ((200.0f + fb * ((ctx->unk24 - fb * 50.0f) - ab * u)) * 0.5f) - u;
@@ -341,21 +368,21 @@ static s32 func_8028FFA8_b(UnkStruct_802909FC *ctx, Vec3i *dir, s32 code2, s32 f
     }
     if (flag == 0) {
         if (a == dir->unk0) {
-            if (-b != dir->unk8 || !(ABS(ctx->unk1C) < ABS(ctx->unk24))) {
+            if (dir->unk8 != -b || !(ABS(ctx->unk24) > ABS(ctx->unk1C))) {
                 res = 1;
             }
-        } else if (-a == dir->unk0 && b == dir->unk8) {
-            if (ABS(ctx->unk1C) < ABS(ctx->unk24)) {
+        } else if (dir->unk0 == -a && b == dir->unk8) {
+            if (ABS(ctx->unk24) > ABS(ctx->unk1C)) {
                 res = 1;
             }
         }
     } else {
         if (b == dir->unk8) {
-            if (-a != dir->unk0 || !(ABS(ctx->unk24) < ABS(ctx->unk1C))) {
+            if (dir->unk0 != -a || !(ABS(ctx->unk1C) > ABS(ctx->unk24))) {
                 res = 2;
             }
-        } else if (-b == dir->unk8 && a == dir->unk0) {
-            if (ABS(ctx->unk24) < ABS(ctx->unk1C)) {
+        } else if (dir->unk8 == -b && a == dir->unk0) {
+            if (ABS(ctx->unk1C) > ABS(ctx->unk24)) {
                 res = 2;
             }
         }
@@ -368,13 +395,13 @@ static s32 func_8028FFA8_b(UnkStruct_802909FC *ctx, Vec3i *dir, s32 code2, s32 f
     dz = ctx->unkC - obj->unk60;
     res = 0;
     if (v.unk0 == a) {
-        t = dx * a;
+        t = a * dx;
         res = 1;
         ctx->unkC -= b * t * 0.70710677f;
         ctx->unk4 -= a * t * 0.29289323f;
     }
     if (v.unk8 == b) {
-        t = dz * b;
+        t = b * dz;
         res |= 2;
         ctx->unk4 -= a * t * 0.70710677f;
         ctx->unkC -= b * t * 0.29289323f;
@@ -383,11 +410,10 @@ static s32 func_8028FFA8_b(UnkStruct_802909FC *ctx, Vec3i *dir, s32 code2, s32 f
 }
 
 static s32 func_8028FFA8(s32 code, UnkStruct_802909FC *ctx, Vec3i *dir, s32 code2, s32 flag) {
-    s32 c = code & 0xF;
     s32 res;
 
-    if (c == 7 || c == 8 || c == 12 || c == 13) {
-        res = func_8028FFA8_a(ctx, c);
+    if ((code & 0xF) == 7 || (code & 0xF) == 8 || (code & 0xF) == 12 || (code & 0xF) == 13) {
+        res = func_8028FFA8_a(ctx, code & 0xF);
     } else {
         res = func_8028FFA8_b(ctx, dir, code2 & 0xF, flag);
     }
@@ -398,6 +424,7 @@ static void func_80290490(s32 c) {
 }
 
 static s32 func_80290498(UnkStruct_802909FC *ctx, s32 dx, s32 dy, s32 dz, s32 code) {
+    volatile struct { s32 a, b, c, d; } sv;
     f32 pos[3];
     UnkStruct_80290498 tmp;
     s32 t;
@@ -455,6 +482,7 @@ static s32 func_80290498(UnkStruct_802909FC *ctx, s32 dx, s32 dy, s32 dz, s32 co
             break;
     }
     if (res != 0) {
+        sv.c = t | 0;
         if (res == 1) {
             h = func_8026EAF8(ctx->unk0);
             func_8026E338(ctx->unk10 + dx, ctx->unk14 + dy, ctx->unk18 + dz, pos, 0);
@@ -465,6 +493,7 @@ static s32 func_80290498(UnkStruct_802909FC *ctx, s32 dx, s32 dy, s32 dz, s32 co
                 res = 2;
             }
         }
+        t = sv.c;
         if (res == 2) {
             t = (t & ~0xF) | 0xF;
         }
@@ -589,14 +618,14 @@ s32 func_802909FC(UnkStructA *obj, s32 (*cb)(s32)) {
     s32 c;
     s32 pad6;
 
-    func_80290864();
-    func_8029086C();
-    func_80290874();
     ctx.unk0 = obj;
     ctx.unk4 = obj->unk40->unk10;
     ctx.unk8 = obj->unk40->unk14;
     ctx.unkC = obj->unk40->unk18;
     func_8029087C(&ctx);
+    func_80290864();
+    func_8029086C();
+    func_80290874();
     ctx.unk30 = cb;
     angle = 0.0f;
     sdir = 0.0f;
