@@ -191,7 +191,7 @@ where us calls 0x250C/0x250D.
   Seen so far: 40FB0, 412F0, 41FD0, 4DE50, 4E030 (4DE50's second half:
   its wrappers call 4DE50's compares with a `jal`, which -O3 would inline
   in one file), 4ED50, 52270 (jp's func_8023876C has no TV-type
-  switch: `#if VERSION_JP`), 530C0, 53D70, 78CA0, 86680, 995C0, 9A5F0, 9BFD0, ACA00, AD5B0,
+  switch: `#if VERSION_JP`), 530C0, 53D70, 78CA0, 78F60, 86680, 995C0, 9A5F0, 9BFD0, ACA00, AD5B0,
   AFBF0, B6680 (`-mips2`), ovl_0A_02-05's, ovl_0C_03's, ovl_0E_09's, ovl_12_02's, ovl_12_04's, ovl_17_01's and ovl_17_10's objects are `-O3`; 404C0, 5E090, 87190, 87730,
   99F40, A4860 and B11F0 are `-O2` (no
   inlining between functions that call each other, no cross-call

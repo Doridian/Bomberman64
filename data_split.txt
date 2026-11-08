@@ -108,6 +108,10 @@ main_code 78CA0 0 0x10 0xF0
 main_code @us 78CA0 rodata=0x802A3A10 bss=0x802ACFE0
 main_code @eu 78CA0 rodata=0x802A3A00 bss=0x802ACFD0
 main_code @jp 78CA0 rodata=0x802A2C40 bss=0x802AC210
+main_code 78F60 0 0x20 0
+main_code @us 78F60 rodata=0x802A3A20
+main_code @eu 78F60 rodata=0x802A3A10
+main_code @jp 78F60 rodata=0x802A2C50
 main_code 7C4D0 0 0x20 0
 main_code @us 7C4D0 rodata=0x802A3A40
 main_code @eu 7C4D0 rodata=0x802A3A30
