@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3320, eu 3339, jp 3346
+ * differing words: us 3304, eu 3323, jp 3331
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -771,8 +771,6 @@ void func_80242DA8() {
 static void func_80242994() {
     s32 i;
     s32 n;
-    s32 a;
-    s32 b;
     UnkStruct_8023FD08 *o;
 
     if (D_802AC854 != 0) {
@@ -822,16 +820,7 @@ static void func_80242994() {
         func_8026CCBC(0x3E);
         func_8026C8E8();
         func_8026C894();
-        a = D_802AC5D4;
-        b = D_802AC5D8;
-        if (!(D_802AC5D0 & 1) && (D_802A01B4 == 0)) {
-            D_802AC5D4 = a;
-            D_802AC5DC = D_802AC5D4;
-            D_802AC5D8 = b;
-            D_802AC5E0 = D_802AC5D8;
-            D_802AC5D0 |= 1;
-            D_802AC5E4 = 0;
-        }
+        func_8023AE6C(D_802AC5D4, D_802AC5D8, 0);
     } else if (D_802AC660.unk0 == 0) {
         func_8026C660(0x1E5);
         func_8023903C(0x3C);
@@ -843,14 +832,7 @@ static void func_80242994() {
                 break;
             }
         }
-        if (!(D_802AC5D0 & 1) && (D_802A01B4 == 0)) {
-            D_802AC5D4 = 0x22;
-            D_802AC5DC = D_802AC5D4;
-            D_802AC5D8 = i + 0x11;
-            D_802AC5E0 = D_802AC5D8;
-            D_802AC5D0 |= 1;
-            D_802AC5E4 = 0;
-        }
+        func_8023AE6C(0x22, i + 0x11, 0);
     } else {
         func_8023903C(0x3C);
         func_8026C660(0x1E5);
@@ -862,20 +844,14 @@ static void func_80242994() {
                 break;
             }
         }
-        if (!(D_802AC5D0 & 1) && (D_802A01B4 == 0)) {
-            D_802AC5D4 = 0x22;
-            D_802AC5DC = D_802AC5D4;
-            D_802AC5D8 = i + 0x16;
-            D_802AC5E0 = D_802AC5D8;
-            D_802AC5D0 |= 1;
-            D_802AC5E4 = 0;
-        }
+        func_8023AE6C(0x22, i + 0x16, 0);
     }
 }
 
 void func_80242270(s32 arg0, Gfx **gdl) {
-    s32 pad[56];
+    s32 pad[54];
     Gfx *gfx;
+    TexFile *tf;
     Rect54E40 *r;
     TexEntry *e;
     s32 *digit;
@@ -894,6 +870,7 @@ void func_80242270(s32 arg0, Gfx **gdl) {
     if (0) {
         func_80242268();
     }
+    t = 0;
     v = D_802AC610.unk30;
     div = 10000000;
     p = D_802AC770;
@@ -927,14 +904,14 @@ void func_80242270(s32 arg0, Gfx **gdl) {
     gSPTexture(gfx++, 0x8000, 0x8000, 0, G_TX_RENDERTILE, 1);
     gDPSetTexturePersp(gfx++, G_TP_NONE);
     gDPSetTextureLUT(gfx++, G_TT_RGBA16);
-    r = D_802A0774;
-    do {
-        gDPLoadTLUT_pal256(gfx++, (u8 *) D_802A0758 + D_802A0758->entries[r->idx + 1].offset);
-        gDPLoadTextureBlock_4b(gfx++, (u8 *) D_802A0758 + D_802A0758->entries[r->idx].offset, G_IM_FMT_CI, 16, 16, 0,
+    tf = D_802A0758;
+    for (i = 0; i < 2; i++) {
+        r = &D_802A0774[i];
+        gDPLoadTLUT_pal256(gfx++, (u8 *) tf + tf->entries[r->idx + 1].offset);
+        gDPLoadTextureBlock_4b(gfx++, (u8 *) tf + tf->entries[r->idx].offset, G_IM_FMT_CI, 16, 16, 0,
                                G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMASK, G_TX_NOMASK, G_TX_NOLOD, G_TX_NOLOD);
         gSPTextureRectangle(gfx++, r->xl, r->yl, r->xh, r->yh, G_TX_RENDERTILE, 0, 0, 0x400, 0x400);
-        r++;
-    } while (r != D_802A0774 + 2);
+    }
     n = 0;
     count = D_802A076C;
     xs = D_802A0764;
@@ -966,6 +943,7 @@ void func_80242270(s32 arg0, Gfx **gdl) {
     gDPSetTextureLUT(gfx++, G_TT_NONE);
     *gdl = gfx;
 }
+
 
 void func_80242268() {
 
