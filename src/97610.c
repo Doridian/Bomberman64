@@ -103,6 +103,7 @@ s32 func_8027B8D4(s16, s16, s16, s16);
 void func_8028A7CC(s32, f32 *, s32);
 
 extern UnkStruct_80090440 D_80090440[50];
+extern UnkStruct_80090440 D_80090468;
 extern UnkStruct_800B15D8 D_800B15D8[];
 extern s32 D_802AC5D0;
 extern u8 *D_802AFE80;
@@ -160,7 +161,27 @@ void func_8027CE10(UnkStruct_80090440 *arg0) {
     }
 }
 
-#pragma GLOBAL_ASM("asm/nonmatchings/97610/func_8027CF64.s")
+s16 func_8027CF64(s32 arg0) {
+    s16 ret;
+    s32 kind = arg0 & 0x60;
+
+    switch (kind) {
+        case 0x20:
+            ret = D_802B0190[0].unkA;
+            break;
+        case 0x40:
+            ret = D_802B0190[1].unkA;
+            break;
+        case 0x60:
+            ret = D_802B0190[2].unkA;
+            break;
+        default:
+            ret = 0;
+            if (kind) {}
+            break;
+    }
+    return ret;
+}
 
 void func_8027CFC0(void) {
     UnkStruct_80090440 *node;
@@ -303,11 +324,76 @@ void func_8027D7DC(void) {
 void func_8027DCB8(void);
 void func_8027DFAC(void);
 
-#pragma GLOBAL_ASM("asm/nonmatchings/97610/func_8027DCB8.s")
+void func_8027DCB8(void) {
+    while (TRUE) {
+        func_8027D894();
+        if ((D_802AC5D0 & 4) && D_802B018A == 0 && func_8027D10C() == 0) {
+            D_802B018A = 1;
+            D_802B0184 = func_80238A10(func_8027DFAC, 0, 0, 0, 0x110);
+            if (D_802B0184 == 0) {}
+            if (D_802B0188) {}
+        }
+        func_8027CFC0();
+        func_80239094();
+    }
+}
 
-#pragma GLOBAL_ASM("asm/nonmatchings/97610/func_8027DD94.s")
+void func_8027DD94(s16 arg0, s16 arg1, s16 arg2, s16 arg3, s32 arg4, s16 arg5) {
+    s16 x;
+    s16 y;
+    s16 z;
+    s16 nx;
+    s16 ny;
+    s16 nz;
 
-#pragma GLOBAL_ASM("asm/nonmatchings/97610/func_8027DF40.s")
+    switch (arg0) {
+        case 0:
+            nx = ny = nz = 1;
+            break;
+        case 1:
+            nz = 1;
+            nx = 1;
+            ny = 2;
+            break;
+        case 2:
+            nz = 2;
+            nx = 2;
+            ny = 1;
+            break;
+        case 3:
+            nx = ny = nz = 2;
+            break;
+    }
+    for (y = 0; y < ny; y++) {
+        for (z = 0; z < nz; z++) {
+            for (x = 0; x < nx; x++) {
+                func_8026EEF0(arg1 + x, arg2 + y, arg3 + z, arg4, arg5);
+            }
+        }
+    }
+}
+
+s16 func_8027DF40(s32 arg0) {
+    s16 ret;
+    s32 kind = arg0 & 0x60;
+
+    switch (kind) {
+        case 0x20:
+            ret = D_802B0190[0].unk2;
+            break;
+        case 0x40:
+            ret = D_802B0190[1].unk2;
+            break;
+        case 0x60:
+            ret = D_802B0190[2].unk2;
+            break;
+        default:
+            ret = 0;
+            if (kind) {}
+            break;
+    }
+    return ret;
+}
 
 s16 func_8027DF9C(void) {
     return D_802B0190[0].unk4;
@@ -315,7 +401,27 @@ s16 func_8027DF9C(void) {
 
 #pragma GLOBAL_ASM("asm/nonmatchings/97610/func_8027DFAC.s")
 
-#pragma GLOBAL_ASM("asm/nonmatchings/97610/func_8027E5F8.s")
+s16 func_8027E5F8(s32 arg0) {
+    s16 ret;
+    s32 kind = arg0 & 0x60;
+
+    switch (kind) {
+        case 0x20:
+            ret = D_802B01B8[0].unk6;
+            break;
+        case 0x40:
+            ret = D_802B01B8[1].unk6;
+            break;
+        case 0x60:
+            ret = D_802B01B8[2].unk6;
+            break;
+        default:
+            ret = 0;
+            if (kind) {}
+            break;
+    }
+    return ret;
+}
 
 void func_8027E654(UnkStruct_80090440 *arg0) {
     UnkStruct_80090440 *last = D_80090440[1].unk8;
