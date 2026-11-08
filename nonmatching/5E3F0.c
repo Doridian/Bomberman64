@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3069, eu 3069, jp 3068
+ * differing words: us 2964, eu 2964, jp 2963
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -1019,38 +1019,40 @@ void func_802502BC(s32 arg0) {
 }
 
 void func_802500D4() {
-    void *objs[4];
+    UnkObj *objs[4];
+    s32 pad[2];
     Tbl4_5E3F0 tbl;
     f32 pos[3];
     f32 off[3];
-    UnkStruct_800AEDF0 *p;
-    void **o;
-    UnkObj *obj;
+    s32 pad3[2];
+    s32 i;
     s32 r;
+    UnkObj *obj;
 
     tbl = *(Tbl4_5E3F0 *)D_802A0E08;
-    for (p = D_800AEDF0, o = objs; p < &D_800AEDF0[4]; p++, o++) {
-        *o = NULL;
-        if (p->unk14 != 0 && p->unk24 != 0) {
+    for (i = 0; i < 4; i++) {
+        objs[i] = NULL;
+        if (D_800AEDF0[i].unk14 != 0 && D_800AEDF0[i].unk24 != 0) {
             r = func_80234248(3);
+            if (!r && !r) {}
             if (r != 0) {
-                obj = p->unk28;
+                obj = D_800AEDF0[i].unk28;
                 pos[2] = 50.0f;
                 pos[1] = 0.0f;
-                pos[0] = M2C_FIELD(obj->unk40, f32 *, 0x20);
+                pos[0] = obj->unk40->unk20;
                 func_8022FEAC(pos, off);
-                *o = func_80231274(-1, tbl.v[r], 0x60, NULL);
-                ((UnkObj *)*o)->unk40->unk10 = obj->unk40->unk10 + off[0];
-                ((UnkObj *)*o)->unk40->unk14 = obj->unk40->unk14 + off[1];
-                ((UnkObj *)*o)->unk40->unk18 = obj->unk40->unk18 + off[2];
-                func_8022E884((s32)*o, (s32)obj);
+                objs[i] = (UnkObj *)func_80231274(-1, tbl.v[r], 0x60, NULL);
+                objs[i]->unk40->unk10 = obj->unk40->unk10 + off[0];
+                objs[i]->unk40->unk14 = obj->unk40->unk14 + off[1];
+                objs[i]->unk40->unk18 = obj->unk40->unk18 + off[2];
+                func_8022E884((s32)objs[i], (s32)obj);
             }
         }
     }
     func_80239094();
-    for (o = objs; o != &objs[4]; o++) {
-        if (*o != NULL) {
-            func_8022FC90(*o);
+    for (i = 0; i < 4; i++) {
+        if (objs[i] != NULL) {
+            func_8022FC90(objs[i]);
         }
     }
     func_80239430();
