@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3738, eu 3738, jp 3737
+ * differing words: us 3642, eu 3642, jp 3641
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -5087,40 +5087,36 @@ void func_80244E04(void *arg0) {
 }
 
 void func_80244C30(s32 arg0, s32 arg1) {
-    UnkStruct_800AEDF0 *p = &D_800AEDF0[arg0];
-    s32 flag;
     UnkObj *obj;
+    s32 pad;
     f32 vec[3];
-    UnkObj *other;
+    s32 pad2[2];
+    UnkStruct_800AEDF0 *p;
 
-    if (!D_800AEDF0[arg0].unk10 && !D_800AEDF0[arg0].unk10) {}
+    p = &D_800AEDF0[arg0];
     if (p->unk2C != 0) {
-        obj = p->unk28;
-        func_80270770(arg0, arg1);
+        obj = (UnkObj *)func_802443F4(arg0);
+        func_80270770((s16)arg0, (s16)arg1);
+        if (!obj && !obj) {}
         p->unk2C = 0;
         p->unk2C = 0;
         func_80270BA4(obj);
-        flag = func_80244BA4(arg0, 0x400000);
-        if (flag) {
+        if (func_80244BA4(arg0, 0x400000)) {
             func_802444B8(arg0, 0x13);
         }
         func_80244354(arg0, 0xA040, 0);
-        flag = func_80244BA4(arg0, 0x400000);
-        if (!flag) {
+        if (!func_80244BA4(arg0, 0x400000)) {
             func_80244354(arg0, 0x20, 0);
         }
-        flag = func_80243EB4(arg0, 0x2000);
-        if (flag) {
-            other = D_800AEDF0[p->unkA4].unk28;
+        if (func_80243EB4(arg0, 0x2000)) {
             vec[2] = 70.0f;
             vec[1] = 60.0f;
             vec[0] = 180.0f;
-            func_8022FEAC(vec, other->unk4C);
+            func_8022FEAC(vec, ((UnkObj *)func_802443F4(p->unkA4))->unk4C);
         }
         func_80244354(arg0, 0x100, 0);
     }
-    flag = func_80244BA4(arg0, 0x80);
-    if (flag) {
+    if (func_80244BA4(arg0, 0x80)) {
         func_802444B8(arg0, 0);
     }
     func_80244354(arg0, 0x80, 0);
