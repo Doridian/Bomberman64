@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 11207, eu 11207, jp 11194
+ * differing words: us 10649, eu 10649, jp 10636
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -201,7 +201,7 @@ s32 func_80270770(s16, s16);
 s32 func_80271F74(s32);
 f32 func_80277484(void);
 void * func_8027A1A0(void *);
-void func_8027F820(void);
+void func_8027F820();
 void func_8027F858(s32, s32);
 s32 func_8028A4E0(s32);
 void func_8028A81C(s32, f32, f32, f32, s32);
@@ -385,8 +385,7 @@ void func_8025E1D4(u8 **arg0) {
 }
 
 void func_8025E16C() {
-    D_802ACFD4 = 0;
-    D_802ACFD0 = 0;
+    D_802ACFD0 = D_802ACFD4 = 0;
     func_80297DA8(D_800BE868, 2, func_8025E100, NULL, D_800BEA58, 0x7F);
     func_80297DB0(D_800BE868);
 }
@@ -575,142 +574,107 @@ void func_8025DAB0() {
 }
 
 void func_8025D858() {
-    f32 temp_fv0;
-    f32 temp_fv1;
-    f64 temp_fs0;
-    f64 temp_ft2;
-    s32 *temp_s1;
-    s32 var_s1;
-    s32 var_s2;
-    u8 *temp_s0;
-    u8 *temp_v0;
-    u8 *temp_v0_2;
-    u8 *temp_v1;
+    f32 f;
+    f64 r1;
+    f64 r2;
+    u8 *p;
+    u8 *obj;
+    u8 *o;
+    u8 *s;
+    s32 i;
+    s32 j;
 
-    temp_s1 = func_802391F0();
-    temp_s0 = func_80231274(0x32B, 0x03080080, 0x40, NULL);
-    temp_fs0 = func_8025E63C();
-    temp_v1 = M2C_FIELD(temp_s1, void **, 0x40);
-    temp_v0 = M2C_FIELD(temp_s0, void **, 0x40);
-    temp_ft2 = func_8025E63C() * 50.0;
-    M2C_FIELD(temp_v0, f32 *, 0x10) = (f32) (M2C_FIELD(temp_v1, f32 *, 0x10) + (f32) ((temp_fs0 * 50.0) + -25.0));
-    M2C_FIELD(temp_v0, f32 *, 0x14) = (f32) M2C_FIELD(temp_v1, f32 *, 0x14);
-    M2C_FIELD(temp_v0, f32 *, 0x18) = (f32) (M2C_FIELD(temp_v1, f32 *, 0x18) + (f32) (temp_ft2 + -25.0));
-    M2C_FIELD(M2C_FIELD(temp_s0, void **, 0x40), s16 *, 0x36) = 0xFF;
-    func_8022984C(M2C_FIELD(temp_s0, void **, 0x40), 2);
-    var_s2 = 0;
-    var_s1 = 0;
-    do {
-        temp_fv1 = (f32) var_s2;
-        temp_fv0 = ((temp_fv1 * 0.5f) / 20.0f) + 1.0f;
-        M2C_FIELD(M2C_FIELD(temp_s0, void **, 0x40), f32 *, 0x30) = temp_fv0;
-        M2C_FIELD(M2C_FIELD(temp_s0, void **, 0x40), f32 *, 0x2C) = temp_fv0;
-        M2C_FIELD(M2C_FIELD(temp_s0, void **, 0x40), f32 *, 0x28) = temp_fv0;
-        M2C_FIELD(M2C_FIELD(temp_s0, void **, 0x40), s16 *, 0x36) = (s16) (s32) (255.0f - ((temp_fv1 * 255.0f) / 20.0f));
-        temp_v0_2 = M2C_FIELD(temp_s0, void **, 0x40);
-        M2C_FIELD(temp_v0_2, f32 *, 0x14) = (f32) (M2C_FIELD(temp_v0_2, f32 *, 0x14) + 6.0f);
-        if (var_s1 < 0xA) {
-            if (!(var_s1 & 1)) {
-                func_802297B8((s32) M2C_FIELD(temp_s0, void **, 0x40), 0x32C, 0, var_s1);
-                func_802297B8((s32) M2C_FIELD(temp_s0, void **, 0x40), 0x32C, 1, var_s1 + 1);
+    p = func_802391F0();
+    obj = func_80231274(0x32B, 0x03080080, 0x40, NULL);
+    r1 = func_8025E63C();
+    r2 = func_8025E63C();
+    s = M2C_FIELD(p, void **, 0x40);
+    o = M2C_FIELD(obj, void **, 0x40);
+    M2C_FIELD(o, f32 *, 0x10) = M2C_FIELD(s, f32 *, 0x10) + (f32) (r1 * 50.0 + -25.0);
+    M2C_FIELD(o, f32 *, 0x14) = M2C_FIELD(s, f32 *, 0x14);
+    M2C_FIELD(o, f32 *, 0x18) = M2C_FIELD(s, f32 *, 0x18) + (f32) (r2 * 50.0 + -25.0);
+    M2C_FIELD(M2C_FIELD(obj, void **, 0x40), s16 *, 0x36) = 0xFF;
+    func_8022984C(M2C_FIELD(obj, void **, 0x40), 2);
+    for (i = 0, j = 0; i < 20; i++) {
+        f = ((f32) i * 0.5f) / 20.0f + 1.0f;
+        M2C_FIELD(M2C_FIELD(obj, void **, 0x40), f32 *, 0x30) = f;
+        M2C_FIELD(M2C_FIELD(obj, void **, 0x40), f32 *, 0x2C) = f;
+        M2C_FIELD(M2C_FIELD(obj, void **, 0x40), f32 *, 0x28) = f;
+        M2C_FIELD(M2C_FIELD(obj, void **, 0x40), s16 *, 0x36) = 255.0f - ((f32) i * 255.0f) / 20.0f;
+        M2C_FIELD(M2C_FIELD(obj, void **, 0x40), f32 *, 0x14) += 6.0f;
+        if (j < 10) {
+            if (!(j & 1)) {
+                func_802297B8((s32) M2C_FIELD(obj, void **, 0x40), 0x32C, 0, j);
+                func_802297B8((s32) M2C_FIELD(obj, void **, 0x40), 0x32C, 1, j + 1);
             }
-            var_s1 += 2;
+            j += 2;
         }
-        func_80232DB4(temp_s0);
+        func_80232DB4(obj);
         func_80239094();
-        var_s2 += 1;
-    } while (var_s2 != 0x14);
-    func_8022FC90(temp_s0);
+    }
+    func_8022FC90(obj);
     func_80239430();
 }
 
 void func_8025D544() {
-    f32 temp_fs0;
-    f32 temp_fs2;
-    f32 temp_fv0;
-    f32 temp_fv1;
-    f32 var_fa0;
-    f32 var_fv0;
-    f32 var_fv1;
-    s32 temp_ft2;
-    s32 temp_s3;
-    s32 var_s0;
-    s32 var_s0_2;
-    u8 *temp_a0;
-    u8 *temp_s0;
-    u8 *temp_s1;
-    u8 *temp_v0;
-    u8 *temp_v0_2;
-    u8 *temp_v0_3;
-    u8 *temp_v0_4;
-    u8 *temp_v0_5;
-    u8 *temp_v1;
+    u8 *src;
+    s32 dir;
+    u8 *obj;
+    u8 *o;
+    u8 *s;
+    f32 *t;
+    s32 dist;
+    f32 y;
+    f32 dy;
+    f32 ady;
+    f32 x;
+    f32 z;
+    s32 i;
 
-    temp_s0 = *func_802391F0();
-    temp_s3 = M2C_FIELD(func_802391F0(), s32 *, 4);
-    temp_v0 = func_80231274(0x32A, 0x03000000, 0xD0, NULL);
-    temp_v1 = M2C_FIELD(temp_v0, void **, 0x40);
-    temp_a0 = M2C_FIELD(M2C_FIELD(temp_s0, void **, 0x18), void **, 0x40);
-    M2C_FIELD(temp_v1, f32 *, 0x10) = (f32) M2C_FIELD(temp_a0, f32 *, 0x10);
-    temp_fv0 = (f32) temp_s3 * 45.0f;
-    M2C_FIELD(temp_v1, f32 *, 0x14) = (f32) M2C_FIELD(temp_a0, f32 *, 0x14);
-    M2C_FIELD(temp_v1, f32 *, 0x18) = (f32) M2C_FIELD(temp_a0, f32 *, 0x18);
-    if (temp_fv0 >= 360.0f) {
-        M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x20) = (f32) (temp_fv0 - 360.0f);
-    } else {
-        if (temp_fv0 < 0.0f) {
-            var_fv1 = temp_fv0 + 360.0f;
-        } else {
-            var_fv1 = temp_fv0;
-        }
-        M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x20) = var_fv1;
-    }
-    M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x1C) = 45.0f;
-    temp_v0_2 = M2C_FIELD(temp_v0, void **, 0x40);
-    M2C_FIELD(temp_v0_2, s32 *, 0xC) = (s32) (M2C_FIELD(temp_v0_2, s32 *, 0xC) | 0x10000);
-    M2C_FIELD(temp_v0, f32 *, 0x6C) = 0.0f;
-    M2C_FIELD(temp_v0, f32 *, 0x70) = 0.0f;
-    M2C_FIELD(temp_v0, f32 *, 0x68) = 0.0f;
-    func_802311E8(temp_v0);
-    var_fa0 = M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x14);
-    temp_ft2 = (s32) func_80251C48(temp_s0 + 0x2C, temp_s0 + 0x20);
-    var_s0 = temp_ft2;
-    temp_fv1 = var_fa0 / (f32) temp_ft2;
-    if (temp_fv1 < 0.0f) {
-        var_fv0 = -temp_fv1;
-    } else {
-        var_fv0 = temp_fv1;
-    }
-    if (temp_ft2 > 0) {
-        temp_s1 = (temp_s3 * 8) + D_802A0F3C;
+    src = *func_802391F0();
+    dir = M2C_FIELD(func_802391F0(), s32 *, 4);
+    obj = func_80231274(0x32A, 0x03000000, 0xD0, NULL);
+    o = M2C_FIELD(obj, void **, 0x40);
+    s = M2C_FIELD(M2C_FIELD(src, void **, 0x18), void **, 0x40);
+    M2C_FIELD(o, f32 *, 0x10) = M2C_FIELD(s, f32 *, 0x10);
+    M2C_FIELD(o, f32 *, 0x14) = M2C_FIELD(s, f32 *, 0x14);
+    M2C_FIELD(o, f32 *, 0x18) = M2C_FIELD(s, f32 *, 0x18);
+    M2C_FIELD(M2C_FIELD(obj, void **, 0x40), f32 *, 0x20) = (dir * 45.0f >= 360.0f) ? dir * 45.0f - 360.0f : ((dir * 45.0f < 0.0f) ? dir * 45.0f + 360.0f : dir * 45.0f);
+    M2C_FIELD(M2C_FIELD(obj, void **, 0x40), f32 *, 0x1C) = 45.0f;
+    M2C_FIELD(M2C_FIELD(obj, void **, 0x40), s32 *, 0xC) |= 0x10000;
+    M2C_FIELD(obj, f32 *, 0x6C) = 0.0f;
+    M2C_FIELD(obj, f32 *, 0x70) = 0.0f;
+    M2C_FIELD(obj, f32 *, 0x68) = 0.0f;
+    func_802311E8(obj);
+    dist = func_80251C48(src + 0x2C, src + 0x20);
+    i = dist;
+    dy = M2C_FIELD(M2C_FIELD(obj, void **, 0x40), f32 *, 0x14) / dist;
+    ady = (dy < 0) ? -dy : dy;
+    if (dist > 0) {
+        t = ((f32 (*)[2]) D_802A0F3C)[dir];
         do {
-            temp_v0_3 = M2C_FIELD(temp_v0, void **, 0x40);
-            M2C_FIELD(temp_v0_3, f32 *, 0x10) = (f32) (M2C_FIELD(temp_v0_3, f32 *, 0x10) + (M2C_FIELD(temp_s1, f32 *, 0) * 20.0f));
-            temp_v0_4 = M2C_FIELD(temp_v0, void **, 0x40);
-            M2C_FIELD(temp_v0_4, f32 *, 0x14) = (f32) (M2C_FIELD(temp_v0_4, f32 *, 0x14) - (var_fv0 * 20.0f));
-            temp_v0_5 = M2C_FIELD(temp_v0, void **, 0x40);
-            if (M2C_FIELD(temp_v0_5, f32 *, 0x14) < 0.0f) {
-                M2C_FIELD(temp_v0_5, f32 *, 0x14) = 0.0f;
+            M2C_FIELD(M2C_FIELD(obj, void **, 0x40), f32 *, 0x10) += t[0] * 20.0f;
+            M2C_FIELD(M2C_FIELD(obj, void **, 0x40), f32 *, 0x14) -= ady * 20.0f;
+            if (M2C_FIELD(M2C_FIELD(obj, void **, 0x40), f32 *, 0x14) < 0.0f) {
+                M2C_FIELD(M2C_FIELD(obj, void **, 0x40), f32 *, 0x14) = 0.0f;
             }
-            M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x18) = (f32) (M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x18) + (M2C_FIELD(temp_s1, f32 *, 4) * 20.0f));
+            M2C_FIELD(M2C_FIELD(obj, void **, 0x40), f32 *, 0x18) += t[1] * 20.0f;
             func_80239094();
-            var_s0 -= 0x14;
-        } while (var_s0 > 0);
-        var_fa0 = M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x14);
+            i -= 20;
+        } while (i > 0);
     }
-    temp_fs0 = M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x10);
-    temp_fs2 = M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x18);
-    func_80231408(temp_v0, 0x01000000);
-    func_8026C51C(0x219, temp_fs0, var_fa0, temp_fs2);
-    func_80238A10(func_8025DAB0, (s32) temp_v0, 0, 0, 0x130);
-    var_s0_2 = 0;
-    do {
-        func_80238A10(func_8025D858, (s32) temp_v0, 0, 0, 0x130);
+    x = M2C_FIELD(M2C_FIELD(obj, void **, 0x40), f32 *, 0x10);
+    y = M2C_FIELD(M2C_FIELD(obj, void **, 0x40), f32 *, 0x14);
+    z = M2C_FIELD(M2C_FIELD(obj, void **, 0x40), f32 *, 0x18);
+    func_80231408(obj, 0x01000000);
+    func_8026C51C(0x219, x, y, z);
+    func_80238A10(func_8025DAB0, (s32) obj, 0, 0, 0x130);
+    for (i = 0; i < 8; i++) {
+        func_80238A10(func_8025D858, (s32) obj, 0, 0, 0x130);
         func_8023903C(4);
-        var_s0_2 += 1;
-    } while (var_s0_2 != 8);
+    }
     func_80239094();
-    func_8022FC90(temp_v0);
+    func_8022FC90(obj);
     func_80239430();
 }
 
@@ -722,115 +686,94 @@ s32 func_8025D504(s32 arg0) {
 }
 
 void func_8025D35C() {
-    void *sv_a0;
-    s32 *temp_s0;
-    s32 temp_s2;
-    s32 var_s0;
-    u8 *temp_a0;
-    u8 *temp_v0;
-    u8 *temp_v1;
+    u8 *obj;
+    void *res;
+    s32 dir;
+    s32 i;
+    u8 *p;
+    f32 *t;
+    u8 *o;
+    f32 x;
+    f32 z;
 
     func_8026C660(0x239);
-    temp_s0 = func_802391F0();
-    sv_a0 = func_8026CE28(0x32E);
-    temp_s2 = func_802519B4(M2C_FIELD(M2C_FIELD(temp_s0, void **, 0x40), f32 *, 0x20));
-    temp_v0 = func_8022A6C4(sv_a0, 0);
-    M2C_FIELD(temp_v0, s32 *, 0xC) = (s32) (M2C_FIELD(temp_v0, s32 *, 0xC) | 0x80);
-    M2C_FIELD(temp_v0, s16 *, 0x36) = 0xFA;
-    temp_a0 = (temp_s2 * 8) + D_802A0F3C;
-    temp_v1 = M2C_FIELD(temp_s0, void **, 0x40);
-    M2C_FIELD(temp_v0, f32 *, 0x10) = (f32) ((M2C_FIELD(temp_a0, f32 *, 0) * 50.0f) + M2C_FIELD(temp_v1, f32 *, 0x10));
-    M2C_FIELD(temp_v0, f32 *, 0x18) = (f32) ((M2C_FIELD(temp_a0, f32 *, 4) * 50.0f) + M2C_FIELD(temp_v1, f32 *, 0x18));
-    M2C_FIELD(temp_v0, f32 *, 0x14) = 80.0f;
-    M2C_FIELD(temp_v0, f32 *, 0x20) = (f32) M2C_FIELD(M2C_FIELD(temp_s0, void **, 0x40), f32 *, 0x20);
-    var_s0 = 0;
-    M2C_FIELD(temp_v0, f32 *, 0x24) = (f32) ((func_8025E63C() * 60.0) + -30.0);
-    do {
-        M2C_FIELD(temp_v0, s16 *, 0x36) = (s16) (s32) ((f32) M2C_FIELD(temp_v0, s16 *, 0x36) - 31.25f);
-        if (M2C_FIELD(temp_v0, s16 *, 0x36) < 0) {
-            M2C_FIELD(temp_v0, s16 *, 0x36) = 0;
+    obj = func_802391F0();
+    res = func_8026CE28(0x32E);
+    dir = func_802519B4(M2C_FIELD(M2C_FIELD(obj, void **, 0x40), f32 *, 0x20));
+    p = func_8022A6C4(res, 0);
+    M2C_FIELD(p, s32 *, 0xC) |= 0x80;
+    M2C_FIELD(p, s16 *, 0x36) = 0xFA;
+    o = M2C_FIELD(obj, void **, 0x40);
+    t = ((f32 (*)[2]) D_802A0F3C)[dir];
+    x = M2C_FIELD(o, f32 *, 0x10) + t[0] * 50.0f;
+    z = M2C_FIELD(o, f32 *, 0x18) + t[1] * 50.0f;
+    M2C_FIELD(p, f32 *, 0x10) = x;
+    M2C_FIELD(p, f32 *, 0x18) = z;
+    M2C_FIELD(p, f32 *, 0x14) = 80.0f;
+    M2C_FIELD(p, f32 *, 0x20) = M2C_FIELD(M2C_FIELD(obj, void **, 0x40), f32 *, 0x20);
+    M2C_FIELD(p, f32 *, 0x24) = func_8025E63C() * 60.0 + -30.0;
+    for (i = 0; i < 8; i++) {
+        M2C_FIELD(p, s16 *, 0x36) = M2C_FIELD(p, s16 *, 0x36) - 31.25f;
+        if (M2C_FIELD(p, s16 *, 0x36) < 0) {
+            M2C_FIELD(p, s16 *, 0x36) = 0;
         }
         func_80239094();
-        var_s0 += 1;
-    } while (var_s0 != 8);
-    func_8022A1E8(temp_v0);
+    }
+    func_8022A1E8(p);
     func_8026CCBC(0x32E);
     func_80239430();
 }
 
 void func_8025D1AC(u8 *arg0) {
-    s32 temp_v0;
-    s32 temp_v0_2;
-    s32 temp_v0_3;
-    s32 var_v0;
+    s32 hit;
+    f32 k = 2.0f;
 
     func_8026C660(0x1E);
     func_8022979C(M2C_FIELD(arg0, s32 *, 0x40), 4, 0xC);
     func_8022979C(M2C_FIELD(arg0, s32 *, 0x40), 5, 0xD);
     func_802313DC(arg0, 0x08000000);
-    temp_v0 = M2C_FIELD(arg0, s32 *, 0x40);
-    M2C_FIELD(temp_v0, s32 *, 0xC) = (s32) (M2C_FIELD(temp_v0, s32 *, 0xC) & ~0x4000);
+    M2C_FIELD(M2C_FIELD(arg0, s32 *, 0x40), s32 *, 0xC) &= ~0x4000;
     func_80229E38((void *) M2C_FIELD(arg0, s32 *, 0x40), 0x14, 0);
     func_80229E38((void *) M2C_FIELD(arg0, s32 *, 0x40), -1, 1);
     M2C_FIELD(arg0, f32 *, 0x68) = 13.0f;
     M2C_FIELD(arg0, f32 *, 0x6C) = 0.0f;
     M2C_FIELD(arg0, f32 *, 0x70) = 0.40833336f;
-    if (0.0f != 13.0f) {
-loop_2:
-        temp_v0_2 = M2C_FIELD(arg0, s32 *, 0x40);
-        M2C_FIELD(temp_v0_2, f32 *, 0x10) = (f32) (M2C_FIELD(temp_v0_2, f32 *, 0x10) + (*(D_802A0F3C + (D_802ACFC8 * 8)) * 2.0f));
-        temp_v0_3 = M2C_FIELD(arg0, s32 *, 0x40);
-        M2C_FIELD(temp_v0_3, f32 *, 0x18) = (f32) (M2C_FIELD(temp_v0_3, f32 *, 0x18) + (M2C_FIELD((D_802A0F3C + (D_802ACFC8 * 8)), f32 *, 4) * 2.0f));
+    while (M2C_FIELD(arg0, f32 *, 0x68) != 0.0f) {
+        M2C_FIELD(M2C_FIELD(arg0, s32 *, 0x40), f32 *, 0x10) += ((f32 (*)[2]) D_802A0F3C)[D_802ACFC8][0] * k;
+        M2C_FIELD(M2C_FIELD(arg0, s32 *, 0x40), f32 *, 0x18) += ((f32 (*)[2]) D_802A0F3C)[D_802ACFC8][1] * k;
         func_80230914(arg0);
-        var_v0 = 0;
-        if (M2C_FIELD(M2C_FIELD(arg0, s32 *, 0x40), f32 *, 0x14) <= func_8026E8B8()) {
-            var_v0 = 1;
-        }
-        if (var_v0 != 0) {
-            func_8027F820();
+        hit = M2C_FIELD(M2C_FIELD(arg0, s32 *, 0x40), f32 *, 0x14) <= func_8026E8B8() ? 1 : 0;
+        if (hit) {
+            func_8027F820(arg0);
             return;
         }
         func_80239094();
-        if (M2C_FIELD(arg0, f32 *, 0x68) == 0.0f) {
-
-        } else {
-            goto loop_2;
-        }
     }
 }
 
 void func_8025D008(u8 *arg0) {
-    s32 temp_v0;
-    s32 temp_v0_2;
-    s32 var_s0;
-    s32 var_s0_2;
+    s32 i;
 
     func_8022979C(M2C_FIELD(arg0, s32 *, 0x40), 4, 0xC);
     func_8022979C(M2C_FIELD(arg0, s32 *, 0x40), 5, 0xD);
     func_80229E38((void *) M2C_FIELD(arg0, s32 *, 0x40), 1, 0);
     func_80229E38((void *) M2C_FIELD(arg0, s32 *, 0x40), 2, 1);
     func_802313DC(arg0, 0x0C000000);
-    temp_v0 = M2C_FIELD(arg0, s32 *, 0x40);
-    var_s0 = 0;
-    M2C_FIELD(temp_v0, s32 *, 0xC) = (s32) (M2C_FIELD(temp_v0, s32 *, 0xC) & ~0x4000);
-    do {
-        if (var_s0 == 0x1E) {
+    M2C_FIELD(M2C_FIELD(arg0, s32 *, 0x40), s32 *, 0xC) &= ~0x4000;
+    for (i = 0; i < 0x3C; i++) {
+        if (i == 0x1E) {
             func_8026C660(0x1E);
         }
-        func_8029279C((void *) M2C_FIELD(arg0, s32 *, 0x40), 0x1F, 0, 4, (f32) var_s0 / 140.0f);
+        func_8029279C((void *) M2C_FIELD(arg0, s32 *, 0x40), 0x1F, 0, 4, (f32) i / 140.0f);
         func_80239094();
-        var_s0 += 1;
-    } while (var_s0 < 0x3C);
+    }
     func_80231408(arg0, 0x80000);
-    temp_v0_2 = M2C_FIELD(arg0, s32 *, 0x40);
-    M2C_FIELD(temp_v0_2, s32 *, 0xC) = (s32) (M2C_FIELD(temp_v0_2, s32 *, 0xC) | 0x1000);
-    var_s0_2 = 0x3C;
+    M2C_FIELD(M2C_FIELD(arg0, s32 *, 0x40), s32 *, 0xC) |= 0x1000;
     M2C_FIELD(M2C_FIELD(arg0, s32 *, 0x40), s16 *, 0x36) = 0xFF;
-    do {
-        M2C_FIELD(M2C_FIELD(arg0, s32 *, 0x40), s16 *, 0x36) = (s16) (s32) (((f32) var_s0_2 / 60.0f) * 255.0f);
+    for (i = 0x3C; i != 0; i--) {
+        M2C_FIELD(M2C_FIELD(arg0, s32 *, 0x40), s16 *, 0x36) = (s16) (((f32) i / 60.0f) * 255.0f);
         func_80239094();
-        var_s0_2 -= 1;
-    } while (var_s0_2 != 0);
+    }
     func_802313DC(arg0, 0x01000000);
 }
 
