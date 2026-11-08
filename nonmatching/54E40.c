@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4541, eu 4558, jp 4558
+ * differing words: us 4142, eu 4159, jp 4156
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -1676,7 +1676,7 @@ void func_8023F26C() {
         id = 0;
     }
     func_802313DC(obj, 0x7FFFF);
-    ((u32 *) D_802AC868)[id] = mode;
+    ((s32 *) D_802AC868)[id] = mode;
     switch (mode) {
     case 3:
         if (!(D_802AC5D0 & 8) || (id == 0)) {
@@ -1712,7 +1712,7 @@ void func_8023F26C() {
             D_802AC7F0 = func_80238A10(func_80240F34, 0, 0, 0, 0x130);
         } else {
             D_802AC7F0 = 0;
-            D_802AC7EC = 0;
+            D_802AC7EC = D_802AC7F0;
         }
         func_8022979C(M2C_FIELD(obj, s32 *, 0x40), 4, 0xC);
         func_8022979C(M2C_FIELD(obj, s32 *, 0x40), 5, 0xD);
@@ -1797,10 +1797,10 @@ void func_8023F26C() {
         x = D_802AC5DC;
         y = D_802AC5E0;
         if (!(D_802AC5D0 & 1) && (D_802A01B4 == 0)) {
-            D_802AC5D8 = y;
             D_802AC5D4 = x;
-            D_802AC5DC = x;
-            D_802AC5E0 = y;
+            D_802AC5DC = D_802AC5D4;
+            D_802AC5D8 = y;
+            D_802AC5E0 = D_802AC5D8;
             D_802AC5D0 |= 1;
             D_802AC5E4 = 0;
         }
