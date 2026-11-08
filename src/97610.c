@@ -518,9 +518,111 @@ UnkStruct_80090440 *func_8027E67C(void) {
     return NULL;
 }
 
-#pragma GLOBAL_ASM("asm/nonmatchings/97610/func_8027E6C4.s")
+void func_8027E6C4(void) {
+    UnkStruct_80090440 *node;
+    s16 i;
+    s64 m; // a separate -1 (not one register for both unk1A stores)
 
-#pragma GLOBAL_ASM("asm/nonmatchings/97610/func_8027E8EC.s")
+    if (D_802B0188 != 1) {
+        D_802B0188 = 1;
+        D_802B018C = 300;
+        D_802B0180 = func_80238A10(func_8027DCB8, 0, 0, 0, 0x30);
+        if (D_802B0180 == 0) {}
+        D_802B01D8 = (D_802B0190[0].unk0 == 0) ? NULL : func_8026CE28(D_802B0190[0].unk0);
+        if (D_802B01D8 == NULL) {}
+        D_802B01DC = (D_802B0190[1].unk0 == 0) ? NULL : func_8026CE28(D_802B0190[1].unk0);
+        if (D_802B01DC == NULL) {}
+        D_802B01E0 = (D_802B0190[2].unk0 == 0) ? NULL : func_8026CE28(D_802B0190[2].unk0);
+        if (D_802B01E0 == NULL) {}
+        D_802B01E4 = (D_802B01B8[0].unk0 == 0) ? NULL : func_8026CE28(D_802B01B8[0].unk0);
+        if (D_802B01E4 == NULL) {}
+        D_802B01E8 = (D_802B01B8[1].unk0 == 0) ? NULL : func_8026CE28(D_802B01B8[1].unk0);
+        if (D_802B01E8 == NULL) {}
+        D_802B01EC = (D_802B01B8[2].unk0 == 0) ? NULL : func_8026CE28(D_802B01B8[2].unk0);
+        if (D_802B01EC == NULL) {}
+        D_802B01D0 = func_80231274(-1, 0, 0xD0, 0);
+        node = D_80090440;
+        for (i = 0; i < 50; i++, node++) {
+            node->unk0 = i;
+            node->unk2 = 1;
+        }
+        node = &D_80090440[0];
+        node->unk2 = 0;
+        node->unk4 = &D_80090468;
+        node->unk8 = NULL;
+        node->unk1A = -1;
+        node->unk1C = -1.0f;
+        node->unk20 = -1.0f;
+        node->unk24 = -1.0f;
+        node = node->unk4;
+        node->unk2 = 0;
+        node->unk4 = NULL;
+        node->unk8 = &D_80090440[0];
+        m = -1;
+        node->unk1A = m;
+        node->unk1C = -1.0f;
+        node->unk20 = -1.0f;
+        node->unk24 = -1.0f;
+    }
+}
+
+s32 func_8027E8EC(s16 arg0, s16 arg1, s16 arg2, s16 arg3) {
+    void *model;
+    void *model2;
+    s16 kind;
+    UnkStruct_80090440 *node;
+
+    func_8027E6C4();
+    switch (arg0 & 0x60) {
+        case 0x20:
+            model = D_802B01D8;
+            kind = 0;
+            model2 = D_802B01E4;
+            break;
+        case 0x40:
+            kind = 1;
+            model = D_802B01DC;
+            model2 = D_802B01E8;
+            break;
+        case 0x60:
+            kind = 2;
+            model = D_802B01E0;
+            model2 = D_802B01EC;
+            break;
+        default:
+            return 0;
+    }
+    if (D_802B0190[kind].unk0 == 0) {
+        return 0;
+    }
+    if (model == NULL) {
+        return 0;
+    }
+    node = func_8027E67C();
+    if (node == NULL) {
+        return 0;
+    }
+    func_8027E654(node);
+    node->unk2 = 0;
+    node->unk14 = D_802B0190[kind].unk2;
+    node->unkC = func_8022A6C4(model, 0x40);
+    if (node->unkC == NULL) {}
+    node->unkC->unkC = func_8027CF64(arg0);
+    if (D_802B01B8[kind].unk0 != 0) {
+        node->unk10 = func_8022A6C4(model2, 0x60);
+        if (node->unk10 == NULL) {}
+        node->unk10->unkC = func_8027E5F8(arg0);
+    } else {
+        node->unk10 = NULL;
+    }
+    node->unk16 = 0;
+    node->unk18 = 0;
+    node->unk1A = arg0;
+    node->unk1C = arg1;
+    node->unk20 = arg2;
+    node->unk24 = arg3;
+    return 1;
+}
 
 void func_8027EB1C(UnkStruct_802B01B8 *arg0) {
     UnkStruct_802B01B8 *p = D_802B01B8;
