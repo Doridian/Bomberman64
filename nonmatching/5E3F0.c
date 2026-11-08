@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3192, eu 3192, jp 3191
+ * differing words: us 3069, eu 3069, jp 3068
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -4385,27 +4385,24 @@ void func_80246808() {
 }
 
 void func_8024663C() {
-    f32 temp_fv0;
-    s32 temp_v0;
-    s32 var_s0;
+    s32 r;
+    s32 done;
 
-    var_s0 = 0;
     do {
-        temp_v0 = func_80234248(7);
-        D_802ACEB8 = (f32) (temp_v0 & 1) * 255.0f;
-        D_802ACEB0 = (f32) ((s32) (temp_v0 & 2) >> 1) * 255.0f;
-        D_802ACEB4 = (f32) ((s32) (temp_v0 & 4) >> 2) * 255.0f;
+        done = 0;
+        r = func_80234248(7);
+        D_802ACEB8 = (r & 1) * 255.0f;
+        D_802ACEB0 = ((r & 2) >> 1) * 255.0f;
+        D_802ACEB4 = ((r & 4) >> 2) * 255.0f;
         func_80234248(2);
-        D_802AC9F0 = 0xF;
-        temp_fv0 = (f32) 0xF;
-        D_802ACEBC = (D_802ACEB0 - D_802ACEA4) / temp_fv0;
-        D_802ACEC0 = (D_802ACEB4 - D_802ACEA8) / temp_fv0;
-        D_802ACEC4 = (D_802ACEB8 - D_802ACEAC) / temp_fv0;
-        if ((D_802ACEBC != 0.0f) || (D_802ACEC0 != 0.0f) || (D_802ACEC4 != 0.0f)) {
-            var_s0 = 1;
+        D_802AC9F0 = 15;
+        D_802ACEBC = (D_802ACEB0 - D_802ACEA4) / (f32)D_802AC9F0;
+        D_802ACEC0 = (D_802ACEB4 - D_802ACEA8) / (f32)D_802AC9F0;
+        D_802ACEC4 = (D_802ACEB8 - D_802ACEAC) / (f32)D_802AC9F0;
+        if (D_802ACEBC != 0.0f || D_802ACEC0 != 0.0f || D_802ACEC4 != 0.0f) {
+            done = 1;
         }
-        var_s0 = 0;
-    } while (var_s0 == 0);
+    } while (!done);
 }
 
 void func_80246604() {
