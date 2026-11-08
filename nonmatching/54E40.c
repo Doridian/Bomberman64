@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 6725, eu 6732, jp 6689
+ * differing words: us 6325, eu 6332, jp 6291
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -3000,53 +3000,44 @@ static void func_8023CECC() {
 }
 
 void func_8023CD1C() {
-    s32 *var_a1;
-    s32 *var_a1_2;
-    s32 temp_lo;
-    s32 temp_lo_2;
-    s32 var_a0;
-    s32 var_a0_2;
-    s32 var_v0;
-    s32 var_v0_2;
-    s32 var_v1;
-    s32 var_v1_2;
+    s32 n;
+    s32 i;
+    s32 v;
+    s32 d;
+    s32 q;
+    s32 t;
 
+    n = 0;
     if (D_802AC660.unk28 < 6) {
-        var_v0 = D_802AC660.unk2C;
-        var_v1 = 1;
-        var_a1 = D_802AC770;
-        var_a0 = 0;
-        do {
-            temp_lo = var_v0 / var_v1;
-            var_a1 = (void *) ((u8 *)var_a1 + 4);
-            M2C_FIELD(var_a1, s32 *, -4) = (s32) (temp_lo * 2);
-            if (var_v0 >= (temp_lo * var_v1)) {
-                var_v0 %= var_v1;
+        v = D_802AC660.unk2C;
+        d = 1;
+        for (i = 0; i < 1; i++) {
+            q = v / d;
+            D_802AC770[n++] = q * 2;
+            t = q * d;
+            if (v >= t) {
+                v -= t;
             }
-            var_a0 += 1;
-            var_v1 = var_v1 / 10;
-        } while (var_a0 <= 0);
-        var_v0_2 = D_802AC660.unk30;
-        M2C_FIELD(var_a1, s32 *, 0) = 0x14;
-        var_a1_2 = (u8 *)var_a1 + 4;
-        var_v1_2 = 0xA;
-        var_a0_2 = 0;
-        do {
-            temp_lo_2 = var_v0_2 / var_v1_2;
-            var_a1_2 = (void *) ((u8 *)var_a1_2 + 4);
-            M2C_FIELD(var_a1_2, s32 *, -4) = (s32) (temp_lo_2 * 2);
-            if (var_v0_2 >= (temp_lo_2 * var_v1_2)) {
-                var_v0_2 %= var_v1_2;
+            d /= 10;
+        }
+        D_802AC770[n++] = 0x14;
+        v = D_802AC660.unk30;
+        d = 10;
+        for (i = 0; i < 2; i++) {
+            q = v / d;
+            D_802AC770[n++] = q * 2;
+            t = q * d;
+            if (v >= t) {
+                v -= t;
             }
-            var_a0_2 += 1;
-            var_v1_2 = var_v1_2 / 10;
-        } while (var_a0_2 != 2);
-        return;
+            d /= 10;
+        }
+    } else {
+        D_802AC770[n++] = 0x16;
+        D_802AC770[n++] = 0x14;
+        D_802AC770[n++] = 0x16;
+        D_802AC770[n++] = 0x16;
     }
-    D_802AC770[0] = 0x16;
-    D_802AC770[1] = 0x14;
-    D_802AC770[2] = 0x16;
-    D_802AC770[3] = 0x16;
 }
 
 void func_8023CC54(s32 arg0) {
