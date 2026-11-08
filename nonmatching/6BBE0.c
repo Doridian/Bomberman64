@@ -18,8 +18,21 @@
  * took every callee-saved register before the object pointer; merging
  * the families gives the pointer fp. The frame is still 568 bytes (the
  * original's is 352): too many locals, each one a slot. Then
- * func_802530A8 (about 1750), whose callee takes the object in t1 (the
+ * func_802530A8 (about 1700), whose callee takes the object in t1 (the
  * draft's arg0; m2c's "unset $t1" writes were wrong and are gone).
+ * func_802553D4 is about 0x3A8 bytes too long, which misaligns its whole
+ * block, so local fixes there don't show in the count yet.
+ *
+ * What moved the count: exact sizes first (one block per original
+ * global, so a short static misaligns everything after it; for
+ * func_80251EE0, `if (ret == 1)` was the size). In func_802530A8, the
+ * (flags & 3) switch with its bodies in source order (case 3, case 0,
+ * default); `flags &= ~3; flags |= K;` for a double store (K may be
+ * 0); and m2c's shared-tail gotos written as inline stores in each
+ * branch. Also chained global stores (`A = B = 0`), f32 `k = 2.0f` to
+ * keep a mul.s, `x = c ? 1 : 0` for `b; li v0,1`, K&R prototypes for
+ * callees given arguments, and m2c's goto loops as for(;;) with an
+ * else-if chain and break to the return block.
  *
  * jp lacks one height test in func_802553D4 (VERSION_JP); eu is us.
  */
