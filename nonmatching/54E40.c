@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 20136, eu 20136, jp 20058
+ * differing words: us 8550, eu 8551, jp 8564
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -14,16 +14,19 @@
  * func_8023FD08; func_8023E8FC in s4, called by func_80242FB4) tie
  * 0x8023AB54-0x80242FB4 together, so no 16-aligned cut is possible.
  *
- * Most of the count is the emission order, not the code: compared by
- * their own sizes the functions differ in 8418 words. func_8024364C calls
- * the hook D_802AC768 (jalr), and IDO then pulls the functions whose
- * address goes to func_80238A10 (func_8023F26C, 8023FAA0, 80240F34,
- * 80241180, 8023FD08) in behind it, after func_802434F8; the original
- * emits them at their places, func_8023F26C first. Without the call in
- * func_8023F26C the order is the original's; the hook's type, a defined
- * D_802AC768 and moving func_8024364C don't change it. fcmp sizes each
- * original function up to our next symbol, so the misplaced run counts
- * almost whole.
+ * The emission order is the original's. IDO -O3 emits the global
+ * functions in reverse source order, each after its callees (depth
+ * first, the callees last called first); statics only come out as
+ * callees. With an indirect call in the file (func_8024364C's hook
+ * D_802AC768), taking a function's address is no edge; the indirect
+ * caller calls every function whose address code takes, in the reverse
+ * order of their first reference in the source (references in .data
+ * don't count). So func_8024364C is defined just below func_8023F26C (its
+ * turn starts the run func_8023F26C .. func_802434F8), and
+ * func_80243824, the first function in the file, holds dead references
+ * that set that order; dead calls (seen by umerge, removed by uopt) pull
+ * func_8023AB54 into func_8023AB90, func_8023B2AC into func_8023B318,
+ * func_8023EB28 into func_8023ECEC and func_80242268 into func_80242270.
  * - func_80241590, 80241BB0, 80242270 (digit counters over 16x16
  *   pictures) are written with the GBI macros (gDPLoadTLUT_pal256/pal16,
  *   gDPLoadTextureBlock_4b, gDPLoadTextureTile_4b, gSPTextureRectangle)
@@ -437,6 +440,23 @@ void func_80243824(s32 arg0) {
     s32 *var_a1;
     s32 var_v1;
 
+    if (0) {
+        func_80238A10(func_802434F8, 0, 0, 0, 0);
+        func_80238A10(func_80242FB4, 0, 0, 0, 0);
+        func_80238A10(func_80242DA8, 0, 0, 0, 0);
+        func_80238A10(func_80242270, 0, 0, 0, 0);
+        func_80238A10(func_80241BB0, 0, 0, 0, 0);
+        func_80238A10(func_80241590, 0, 0, 0, 0);
+        func_80238A10(func_80241550, 0, 0, 0, 0);
+        func_80238A10(func_80241180, 0, 0, 0, 0);
+        func_80238A10(func_80240F34, 0, 0, 0, 0);
+        func_80238A10(func_8023FD08, 0, 0, 0, 0);
+        func_80238A10(func_8023FC80, 0, 0, 0, 0);
+        func_80238A10(func_8023FC00, 0, 0, 0, 0);
+        func_80238A10(func_8023FAA0, 0, 0, 0, 0);
+        func_80238A10(func_8023F26C, 0, 0, 0, 0);
+        func_80238A10(func_8023DB0C, 0, 0, 0, 0);
+    }
     var_a1 = &(&D_802AC7A0)[D_802AC608];
     var_v1 = 0;
 loop_1:
@@ -510,13 +530,6 @@ void func_80243698(s32 arg0) {
 
 void func_8024368C(s32 (*arg0)(void *)) {
     D_802AC768 = arg0;
-}
-
-void func_8024364C(u8 *arg0) {
-    func_802362B8(0x7F);
-    if (D_802AC768 != NULL) {
-        D_802AC768(arg0);
-    }
 }
 
 void func_802434F8() {
@@ -919,6 +932,9 @@ void func_80242270(s32 arg0, Gfx **gdl) {
     s32 *p;
     s32 t;
 
+    if (0) {
+        func_80242268();
+    }
     v = M2C_FIELD(&D_802AC610, s32 *, 0x30);
     div = 10000000;
     p = D_802AC770;
@@ -2064,6 +2080,13 @@ loop_45:
     func_80239430();
 }
 
+void func_8024364C(u8 *arg0) {
+    func_802362B8(0x7F);
+    if (D_802AC768 != NULL) {
+        D_802AC768(arg0);
+    }
+}
+
 static void func_8023EF38(u8 *arg0) {
     f64 temp_fs0;
     f64 temp_fs0_2;
@@ -2178,6 +2201,9 @@ static void func_8023ECF4(u8 *arg0) {
 }
 
 void func_8023ECEC() {
+    if (0) {
+        func_8023EB28(0);
+    }
 
 }
 
@@ -3685,6 +3711,9 @@ static void func_8023B318(u8 **arg0, s32 arg1) {
     u16 temp_a1;
     u8 **var_s0;
 
+    if (0) {
+        func_8023B2AC(0);
+    }
     var_s1 = 0;
     if (arg1 > 0) {
         var_s0 = arg0;
@@ -3886,6 +3915,9 @@ s32 func_8023AB90() {
     s32 var_v0;
     u8 *temp_v0_2;
 
+    if (0) {
+        func_8023AB54(0, 0);
+    }
     temp_v0 = func_80243DDC();
     temp_v0_2 = func_802443F4(temp_v0);
     if ((*(&D_800AEE14 + (temp_v0 * 0xC8)) == 3) || (M2C_FIELD(temp_v0_2, f32 *, 0x68) != 0.0f) || (M2C_FIELD(temp_v0_2, f32 *, 0x6C) != 0.0f) || (var_v0 = 1, (func_80244BA4(temp_v0, 0x20) != 0))) {
