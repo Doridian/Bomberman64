@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4991, eu 4999, jp 4994
+ * differing words: us 4943, eu 4951, jp 4954
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -3421,57 +3421,38 @@ void func_8023ADD4(s32 arg0) {
     }
 }
 
-static void func_8023AC38() {
-    s32 temp_t9;
-    s32 var_t6;
-    s32 var_v1;
-    TextItem *var_s0;
-    TextItem *var_s0_2;
-    TextItem *var_s0_3;
-    void **var_s0_4;
+static void func_8023AC38(void) {
+    s32 i;
+    TextItem *p;
+    TextItem *end;
 
     if (D_802AC5D0 & 0x2C) {
-        var_s0 = D_802A0B1C;
-        do {
-            func_80280DB4(var_s0->handle);
-            var_s0++;
-        } while (var_s0 < &D_802A0B1C[1]);
-        temp_t9 = D_802AC5D0 & 4;
-        var_v1 = temp_t9;
-        if (temp_t9 == 0) {
+        for (p = D_802A0B1C, end = p + 1; p < end; p++) {
+            func_80280DB4(p->handle);
+        }
+        if (!(D_802AC5D0 & 4)) {
             func_80280DB4(D_802AC7E4);
             func_80280DB4(D_802AC7E8);
-            var_t6 = D_802AC5D0 & 4;
-            goto block_15;
         }
     } else {
         if ((D_802AC75C == 0) || (func_8023AB90() == 0)) {
-            var_s0_2 = D_802A0B1C;
-            do {
-                func_80280DB4(var_s0_2->handle);
-                var_s0_2++;
-            } while (var_s0_2 < &D_802A0B1C[3]);
+            for (i = 0; i < 3; i++) {
+                func_80280DB4(D_802A0B1C[i].handle);
+            }
         } else {
-            var_s0_3 = D_802A0B1C;
-            do {
-                func_80280DB4(var_s0_3->handle);
-                var_s0_3++;
-            } while (var_s0_3 < &D_802A0B1C[5]);
+            for (i = 0; i < 5; i++) {
+                func_80280DB4(D_802A0B1C[i].handle);
+            }
         }
-        var_s0_4 = (void *) D_802AC7F8;
-        do {
-            func_8022A1E8(*var_s0_4);
-            var_s0_4 += 4;
-        } while ((void *) var_s0_4 != (void *) &D_802AC80C);
+        for (i = 0; i < 5; i++) {
+            func_8022A1E8(D_802AC7F8[i]);
+        }
         func_8026CCBC(0x19);
         func_80280DB4(D_802AC814);
         func_80280DB4(D_802AC7E4);
         func_80280DB4(D_802AC7E8);
-        var_t6 = D_802AC5D0 & 4;
-block_15:
-        var_v1 = var_t6;
     }
-    if (var_v1 == 0) {
+    if (!(D_802AC5D0 & 4)) {
         func_8023AAE4();
     }
 }
