@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3770, eu 3770, jp 3769
+ * differing words: us 3738, eu 3738, jp 3737
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -1769,7 +1769,7 @@ void func_8024D8C4(Ctl58 *arg0) {
         arg0->unk0 = 0.0f;
     }
     if (arg0->unk8 != 3) {
-        func_8024D5D0((f32 *)arg0);
+        func_8024D5D0(arg0);
     }
     if ((D_802AC8BC != 0x100 && D_802AC8BC != 0x200) || b0 != 1) {
         if (dist >= 1.0f) {
@@ -3871,70 +3871,48 @@ void func_80247F90(s32 arg0) {
 }
 
 void func_80247D74(s32 arg0, f32 arg1, f32 arg2, s32 arg3, UnkObj *arg4) {
-    UnkObj *sp5C;
-    f32 sp4C[3];
-    f32 sp44[2];
-    f32 sp40;
-    f32 sp34;
-    UnkStruct_800AEDF0 *sp1C;
-    UnkObj *temp_v1;
-    UnkStruct_800AEDF0 *temp_t9;
-    f32 temp_fv0;
-    f32 var_fa0;
-    s32 var_t2;
-    s32 var_t3;
-    s32 var_t7;
+    UnkObj *obj;
+    s32 pad;
+    f32 a[3];
+    f32 b[3];
+    s32 pad2[2];
+    f32 dir;
+    s32 pad3[3];
+    f32 angle;
+    UnkStruct_800AEDF0 *p;
 
-    temp_t9 = &D_800AEDF0[arg0];
-    sp1C = temp_t9;
-    temp_v1 = temp_t9->unk28;
-    M2C_FIELD(temp_v1, f32 *, 0x68) = arg1;
+    p = &D_800AEDF0[arg0];
+    obj = p->unk28;
+    ((Obj88 *)obj)->unk68 = arg1;
     D_802ACA44 = arg2;
     D_802AC8C8 = arg3;
     if (arg4 != NULL) {
-        var_t7 = 0;
         if (arg3 == 1) {
-            sp5C = temp_v1;
-            func_8022F808(temp_v1, sp4C);
-            func_8022F808(arg4, &sp40);
-            sp44[0] = sp4C[1];
-            if (sp4C[0] == sp40) {
-                if (sp4C[2] == sp44[1]) {
-                    var_fa0 = -1.0f;
-                } else {
-                    goto block_6;
-                }
+            func_8022F808(obj, a);
+            func_8022F808(arg4, b);
+            b[1] = a[1];
+            if (a[0] == b[0] && a[2] == b[2]) {
+                angle = -1.0f;
             } else {
-block_6:
-                func_8022FF58(sp4C, &sp40, &sp34);
-                var_t2 = 0;
-                if (sp34 >= 180.0f) {
-                    var_t2 = 1;
-                }
-                var_t3 = 0;
-                var_fa0 = (sp34 + 180.0f) - (360.0f * (f32) var_t2);
-                if (var_fa0 >= 180.0f) {
-                    var_t3 = 1;
-                }
-                M2C_FIELD(sp5C->unk40, f32 *, 0x20) = (f32) ((var_fa0 + 180.0f) - (360.0f * (f32) var_t3));
+                func_8022FF58(a, b, &dir);
+                angle = (dir + 180.0f) - 360.0f * (dir >= 180.0f);
+                obj->unk40->unk20 = (angle + 180.0f) - 360.0f * (angle >= 180.0f);
             }
         } else {
-            temp_fv0 = M2C_FIELD(temp_v1->unk40, f32 *, 0x20);
-            if (temp_fv0 >= 180.0f) {
-                var_t7 = 1;
-            }
-            var_fa0 = (temp_fv0 + 180.0f) - (360.0f * (f32) var_t7);
+            angle = (obj->unk40->unk20 + 180.0f) - 360.0f * (obj->unk40->unk20 >= 180.0f);
         }
     } else {
-        var_fa0 = M2C_FIELD(temp_v1->unk40, f32 *, 0x20);
+        angle = obj->unk40->unk20;
+    if (!arg4 && !arg4) {}
     }
-    sp1C->unkA0 = func_80243F50(var_fa0);
-    if ((arg3 == 1) && (arg4 != NULL)) {
+    p->unkA0 = func_80243F50(angle);
+    if (arg3 == 1 && arg4 != NULL) {
         func_802444B8(arg0, 0xB);
         func_80244354(arg0, 0xA0C8, 0);
-        func_80270770((s16) arg0, 1);
-        sp1C->unk2C = 0;
-        sp1C->unk2C = 0;
+        if (!obj && !obj) {}
+        func_80270770((s16)arg0, 1);
+        p->unk2C = 0;
+        p->unk2C = 0;
     }
     func_80244354(arg0, 0x22, 1);
 }
