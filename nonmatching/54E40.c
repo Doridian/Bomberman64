@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 8550, eu 8551, jp 8564
+ * differing words: us 8335, eu 8338, jp 8288
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -54,6 +54,14 @@ typedef s32 M2C_UNK32;
 #define _SHIFTL(v, s, w) ((unsigned int) (((unsigned int)(v) & ((0x01 << (w)) - 1)) << (s)))
 #define _SHIFTR(v, s, w) ((unsigned int)(((unsigned int)(v) >> (s)) & ((0x01 << (w)) - 1)))
 #include "ultralib/PR/gbi.h"
+
+typedef struct {
+    /* 0x00 */ u8 *str;
+    /* 0x04 */ f32 y;
+    /* 0x08 */ f32 scale;
+    /* 0x0C */ s32 mode;
+    /* 0x10 */ s32 handle;
+} TextItem; /* size = 0x14 */
 
 /* One entry of a texture file's table (12 bytes, after a 12-byte header). */
 typedef struct {
@@ -245,14 +253,14 @@ extern s32 D_802A01B4;
 extern s32 D_802A01B8;
 extern s32 D_802A01BC;
 extern s32 D_802A01C0;
-extern u8 D_802A01C4;
-extern u8 D_802A01D0;
-extern u8 D_802A01D8;
-extern u8 D_802A01E0;
+extern u8 D_802A01C4[];
+extern u8 D_802A01D0[];
+extern u8 D_802A01D8[];
+extern u8 D_802A01E0[];
 extern u8 D_802A039C;
-extern u8 D_802A0448;
-extern u8 D_802A04A4;
-extern u8 D_802A04B4;
+extern u8 D_802A0448[];
+extern u8 D_802A04A4[];
+extern u8 D_802A04B4[];
 extern u8 D_802A04C8[];
 extern u8 D_802A063C[];
 extern s32 D_802A0654;
@@ -274,15 +282,15 @@ extern u8 D_802A0888[];
 extern s32 D_802A08D8[5];
 extern u8 D_802A08E4[];
 extern u8 D_802A08EC[];
-extern u8 D_802A08F8[];
-extern u8 D_802A0958[];
-extern u8 D_802A09B8[];
-extern u8 *D_802A0A18;
-extern u8 *D_802A0A68;
-extern u8 *D_802A0A7C;
-extern u8 *D_802A0AB8;
-extern u8 *D_802A0ACC;
-extern u8 *D_802A0B1C;
+extern u8 *D_802A08F8[][4];
+extern s32 D_802A0958[][4];
+extern s32 D_802A09B8[][4];
+extern TextItem D_802A0A18[];
+extern TextItem D_802A0A68[];
+extern TextItem D_802A0A7C[];
+extern TextItem D_802A0AB8[];
+extern TextItem D_802A0ACC[];
+extern TextItem D_802A0B1C[];
 extern s32 D_802A0B40;
 extern s32 D_802A0B80;
 extern u8 D_802A0B84[];
@@ -375,7 +383,7 @@ s32 func_8023A870(s32 arg0, s32 arg1);
 s32 func_8023AA60(s32 arg0);
 void func_8023AA78(s32 arg0);
 void func_8023AAE4(void);
-static void func_8023AB54(u8 **arg0, s32 arg1);
+static void func_8023AB54(TextItem *items, s32 n);
 s32 func_8023AB90(void);
 void func_8023AC38(void);
 void func_8023ADD4(s32 arg0);
@@ -383,8 +391,8 @@ void func_8023AE6C(s32 arg0, s32 arg1, s32 arg2);
 void func_8023AED0(s32 arg0);
 s32 func_8023AEDC(s32 arg0);
 static void func_8023AF5C(f32 arg0, f32 arg1);
-static s32 func_8023B2AC(f32 arg0);
-static void func_8023B318(u8 **arg0, s32 arg1);
+static s32 func_8023B2AC(u8 *str, f32 scale);
+static void func_8023B318(TextItem *items, s32 n);
 static void func_8023B450(s32 arg0, s32 arg1, u8 *arg2);
 static void func_8023B7C0(f32 arg0);
 void func_8023B8D0();
@@ -435,6 +443,21 @@ void func_802437E0(void);
 s32 func_80243800(void);
 void func_80243810(s32 arg0, s32 arg1);
 void func_80243824(s32 arg0);
+
+#if VERSION_JP
+#define func_802811F0 func_802810A0
+#define STR_A D_8029FB00_jp
+#define STR_B D_8029FB10_jp
+#define X_01D8 0x70
+#define X_01E0 0x83
+extern u8 D_8029FB00_jp[];
+extern u8 D_8029FB10_jp[];
+#else
+#define STR_A D_802A04A4
+#define STR_B D_802A04B4
+#define X_01D8 func_8023B2AC(D_802A01D8, 0.8f)
+#define X_01E0 func_8023B2AC(D_802A01E0, 0.8f)
+#endif
 
 void func_80243824(s32 arg0) {
     s32 *var_a1;
@@ -536,11 +559,7 @@ void func_802434F8() {
     s32 temp_s2;
     s32 var_s0;
 
-#if VERSION_JP
-    temp_s2 = func_802810A0(D_802A08EC, 0x140, 0x6E, 0.8f, 0.8f, 3);
-#else
     temp_s2 = func_802811F0(D_802A08EC, 0x140U, 0x6EU, 0.8f, 0.8f, 3U);
-#endif
     func_8026C964();
     func_8026C660(0x1E9);
     var_s0 = 0xF0;
@@ -549,7 +568,7 @@ loop_1:
 #if VERSION_JP
         func_80280EB0(temp_s2, 0x49, var_s0 & 0xFFFF);
 #else
-        func_80280EB0(temp_s2, (s32) ((320.0f - ((f32) func_80280C08(D_802A08EC) * 0.8f)) / 2.0f) & 0xFFFF, var_s0 & 0xFFFF);
+        func_80280EB0(temp_s2, func_8023B2AC(D_802A08EC, 0.8f), var_s0 & 0xFFFF);
 #endif
         func_80239094();
         var_s0 -= 4;
@@ -1504,7 +1523,7 @@ void func_8023FD08() {
             func_80239094();
         } while (!(M2C_FIELD(M2C_FIELD(sp88, void **, 0x40), s32 *, 0xC) & 0x40));
     }
-    func_8023B318(&D_802A0A68, 1);
+    func_8023B318(D_802A0A68, 1);
     func_8023903C(0x5A);
 loop_32:
     var_v0_3 = var_s3_3 ^ 0x10;
@@ -1569,17 +1588,17 @@ block_42:
         func_8028A3D0(0x2A);
     }
     func_8023903C(0x1E);
-    func_8023AB54(&D_802A0A68, 1);
+    func_8023AB54(D_802A0A68, 1);
     func_8023903C(2);
     if (D_802AC5D0 & 0x28) {
-        func_8023B318(&D_802A0A7C, 3);
+        func_8023B318(D_802A0A7C, 3);
         var_ft3 = 110.0f;
         var_fv0 = 140.0f;
         sp68 = 3.4f;
         sp64 = -1.5f;
         sp58 = 3.82f;
     } else {
-        func_8023B318(&D_802A0A18, 4);
+        func_8023B318(D_802A0A18, 4);
         var_ft3 = 120.0f;
         var_fv0 = 180.0f;
         sp68 = 6.6f;
@@ -1671,13 +1690,13 @@ block_42:
     }
     var_s3_6 = 0;
     func_8023903C(0x3C);
-    sp84 = func_802811F0(&D_802A04A4, func_8023B2AC(0.6f) & 0xFFFF, 0xD2U, 0.6f, 0.6f, 2U);
+    sp84 = func_802811F0(STR_A, func_8023B2AC(STR_A, 0.6f), 0xD2U, 0.6f, 0.6f, 2U);
     func_8023903C(2);
     if (func_802947AC() != 0) {
         func_80280DB4(sp84);
         func_8023903C(4);
         func_8026C660(0x18);
-        sp84 = func_802811F0(&D_802A04B4, func_8023B2AC(0.6f) & 0xFFFF, 0xD2U, 0.6f, 0.6f, 0U);
+        sp84 = func_802811F0(STR_B, func_8023B2AC(STR_B, 0.6f), 0xD2U, 0.6f, 0.6f, 0U);
         func_8023903C(0xB4);
     }
     func_8023903C(0x3C);
@@ -1689,9 +1708,9 @@ block_42:
     func_80280DB4(sp84);
     func_8023903C(0x3C);
     if (D_802AC5D0 & 0x28) {
-        func_8023AB54(&D_802A0A7C, 3);
+        func_8023AB54(D_802A0A7C, 3);
     } else {
-        func_8023AB54(&D_802A0A18, 4);
+        func_8023AB54(D_802A0A18, 4);
     }
     if (D_802AC80C > 0) {
         var_v1_4 = &D_802AC7F8;
@@ -2356,9 +2375,9 @@ void func_8023E1D8() {
     s32 var_s0_3;
     s32 var_s1;
     s32 var_s2;
-    u8 **var_v1;
-    u8 **var_v1_2;
-    u8 **var_v1_3;
+    TextItem *var_v1;
+    TextItem *var_v1_2;
+    TextItem *var_v1_3;
     u8 *temp_v0;
 
     var_v0 = &D_800BE818;
@@ -2385,15 +2404,15 @@ void func_8023E1D8() {
     } while (var_s0_2 != 0x2C);
     func_8026C8E8();
     D_802AC5F0 = 0;
-    func_8023B318(&D_802A0AB8, 1);
+    func_8023B318(D_802A0AB8, 1);
     if (D_802AC628 == 0) {
         func_8023903C(0xB4);
-        var_v1 = &D_802A0AB8;
+        var_v1 = D_802A0AB8;
         do {
             sp48 = var_v1;
-            func_80280DB4(M2C_FIELD(var_v1, s32 *, 0x10));
-            var_v1 += 0x14;
-        } while ((u32) var_v1 < (u32) (&D_802A0AB8 + 0x14));
+            func_80280DB4(var_v1->handle);
+            var_v1++;
+        } while (var_v1 < &D_802A0AB8[1]);
         if (!(D_802AC5D0 & 1)) {
             if (D_802A01B4 == 0) {
                 D_802AC5D4 = 0x20;
@@ -2406,15 +2425,15 @@ void func_8023E1D8() {
         }
     } else {
         func_8023903C(0xB4);
-        var_v1_2 = &D_802A0AB8;
+        var_v1_2 = D_802A0AB8;
         do {
             sp48 = var_v1_2;
-            func_80280DB4(M2C_FIELD(var_v1_2, s32 *, 0x10));
-            var_v1_2 += 0x14;
-        } while ((u32) var_v1_2 < (u32) (&D_802A0AB8 + 0x14));
+            func_80280DB4(var_v1_2->handle);
+            var_v1_2++;
+        } while (var_v1_2 < &D_802A0AB8[1]);
         func_8023903C(2);
         func_8023B450(2, D_802AC628, &spA4);
-        func_8023B318(&D_802A0ACC, 4);
+        func_8023B318(D_802A0ACC, 4);
         spC4 = func_802811F0(&spA4, 0xBEU, 0xA0U, 0.6f, 0.6f, 2U);
         func_8023B450(1, 9, &spA4);
         spC0 = func_802811F0(&spA4, 0xD6U, 0x50U, 0.8f, 0.8f, 2U);
@@ -2509,12 +2528,12 @@ block_44:
                 D_802AC5E4 = 0;
             }
         }
-        var_v1_3 = &D_802A0ACC;
+        var_v1_3 = D_802A0ACC;
         do {
             sp48 = var_v1_3;
-            func_80280DB4(M2C_FIELD(var_v1_3, s32 *, 0x10));
-            var_v1_3 += 0x14;
-        } while ((u32) var_v1_3 < (u32) (&D_802A0ACC + 0x50));
+            func_80280DB4(var_v1_3->handle);
+            var_v1_3++;
+        } while (var_v1_3 < &D_802A0ACC[4]);
         func_80280DB4(spC4);
         func_80280DB4(spC0);
     }
@@ -3253,9 +3272,9 @@ void func_8023C374() {
     if (D_802AC5D0 & 4) {
         func_8026C93C(0x1B);
         func_8026C660(0x1E4);
-        sp68 = func_802811F0(&D_802A01D8, (s32) ((320.0f - ((f32) func_80280C08(&D_802A01D8) * 0.8f)) / 2.0f) & 0xFFFF, 0x6EU, 0.8f, 0.8f, 0U);
+        sp68 = func_802811F0(D_802A01D8, X_01D8, 0x6EU, 0.8f, 0.8f, 0U);
         func_8023903C(0x2B);
-        sp64 = func_802811F0(&D_802A01E0, (s32) ((320.0f - ((f32) func_80280C08(&D_802A01E0) * 0.8f)) / 2.0f) & 0xFFFF, 0x6EU, 0.8f, 0.8f, 4U);
+        sp64 = func_802811F0(D_802A01E0, X_01E0, 0x6EU, 0.8f, 0.8f, 4U);
         func_80280DB4(sp68);
         func_8023903C(0x23);
         func_80280DB4(sp64);
@@ -3268,16 +3287,16 @@ void func_8023C374() {
     }
     func_8023903C(0x1E);
     D_802AC5F0 = 1;
-    M2C_FIELD(&D_802A01C4, s8 *, 6) = (s8) (D_802AC5EC + 0x11);
-    sp6C = func_802811F0(&D_802A01C4, (s32) ((320.0f - ((f32) func_80280C08(&D_802A01C4) * 0.8f)) / 2.0f) & 0xFFFF, 0x3CU, 0.8f, 0.8f, 0U);
-    temp_a0 = *(D_802A08F8 + ((D_802AC5E8 * 0x10) + (D_802AC5EC * 4)));
-    sp68 = func_802811F0(&D_802A01D0, (s32) ((320.0f - ((f32) func_80280C08(&D_802A01D0) * 0.8f)) / 2.0f) & 0xFFFF, 0x5AU, 0.8f, 0.8f, 0U);
-    sp60 = func_802811F0(temp_a0, (s32) ((320.0f - ((f32) func_80280C08(temp_a0) * 0.6f)) / 2.0f) & 0xFFFF, 0x78U, 0.6f, 0.8f, 0U);
+    D_802A01C4[6] = (s8) (D_802AC5EC + 0x11);
+    sp6C = func_802811F0(D_802A01C4, func_8023B2AC(D_802A01C4, 0.8f), 0x3CU, 0.8f, 0.8f, 0U);
+    sp68 = func_802811F0(D_802A01D0, func_8023B2AC(D_802A01D0, 0.8f), 0x5AU, 0.8f, 0.8f, 0U);
+    temp_a0 = D_802A08F8[D_802AC5E8][D_802AC5EC];
+    sp60 = func_802811F0(temp_a0, func_8023B2AC(temp_a0, 0.6f), 0x78U, 0.6f, 0.8f, 0U);
     func_8023AF5C(163.0f, 150.0f);
     if (M2C_FIELD(&D_802AC610, s32 *, 0x10) == 0) {
-        M2C_FIELD(&D_802AC610, s32 *, 0x28) = (s32) *(D_802A0958 + ((D_802AC5E8 * 0x10) + (D_802AC5EC * 4)));
+        M2C_FIELD(&D_802AC610, s32 *, 0x28) = D_802A0958[D_802AC5E8][D_802AC5EC];
     } else {
-        M2C_FIELD(&D_802AC610, s32 *, 0x28) = (s32) *(D_802A09B8 + ((D_802AC5E8 * 0x10) + (D_802AC5EC * 4)));
+        M2C_FIELD(&D_802AC610, s32 *, 0x28) = D_802A09B8[D_802AC5E8][D_802AC5EC];
     }
     func_8023B7C0(180.0f);
     func_8023903C(0xB4);
@@ -3287,7 +3306,7 @@ void func_8023C374() {
     func_80280DB4(D_802AC7E4);
     func_80280DB4(D_802AC7E8);
     func_8023AAE4();
-    D_802AC75C = *(func_8028A060(0x15) + (D_802AC5E8 * 0x10) + (D_802AC5EC * 4));
+    D_802AC75C = func_8028A060(0x15)[D_802AC5E8 * 4 + D_802AC5EC];
     func_8023903C(2);
     temp_v1 = D_802AC5D0;
     if (temp_v1 & 8) {
@@ -3529,12 +3548,12 @@ void func_8023B8D0() {
     u8 *temp_v0;
 
     if (!(D_802AC5D0 & 4)) {
-        D_802A0B1C = *(D_802A08F8 + ((D_802AC5E8 * 0x10) + (D_802AC5EC * 4)));
+        D_802A0B1C[0].str = D_802A08F8[D_802AC5E8][D_802AC5EC];
     } else {
-        D_802A0B1C = &D_802A0448;
+        D_802A0B1C[0].str = D_802A0448;
     }
     if (D_802AC5D0 & 0x2C) {
-        func_8023B318(&D_802A0B1C, 1);
+        func_8023B318(D_802A0B1C, 1);
         temp_t8 = D_802AC5D0 & 4;
         var_v0 = temp_t8;
         if (temp_t8 == 0) {
@@ -3571,11 +3590,11 @@ void func_8023B8D0() {
         } while (var_s1 != 5);
         func_8023B7C0(154.0f);
         if ((D_802AC75C == 0) || (func_8023AB90() == 0)) {
-            func_8023B318(&D_802A0B1C, 3);
+            func_8023B318(D_802A0B1C, 3);
             func_802814D8(D_802A0B40, 0xFFE8U, 0U);
             var_v0 = D_802AC5D0 & 4;
         } else {
-            func_8023B318(&D_802A0B1C, 5);
+            func_8023B318(D_802A0B1C, 5);
             func_802814D8(D_802A0B40, 0xFFE8U, 0U);
             var_v0 = D_802AC5D0 & 4;
         }
@@ -3701,38 +3720,24 @@ block_15:
     arg2[var_a1] = 0;
 }
 
-static void func_8023B318(u8 **arg0, s32 arg1) {
-    f32 temp_fs0;
-    f32 temp_ft2;
-    f32 temp_fv0;
-    s32 temp_v0;
-    s32 var_a2;
-    s32 var_s1;
-    u16 temp_a1;
-    u8 **var_s0;
+static void func_8023B318(TextItem *items, s32 n) {
+    s32 i;
 
-    if (0) {
-        func_8023B2AC(0);
-    }
-    var_s1 = 0;
-    if (arg1 > 0) {
-        var_s0 = arg0;
-        do {
-            temp_fs0 = M2C_FIELD(var_s0, f32 *, 8);
-            temp_ft2 = M2C_FIELD(var_s0, f32 *, 4);
-            temp_a1 = (s32) ((320.0f - ((f32) func_80280C08(M2C_FIELD(var_s0, u8 **, 0)) * temp_fs0)) / 2.0f) & 0xFFFF;
-            var_a2 = (u32) temp_ft2;
-            temp_fv0 = M2C_FIELD(var_s0, f32 *, 8);
-            temp_v0 = func_802811F0(M2C_FIELD(var_s0, u8 **, 0), temp_a1, var_a2 & 0xFFFF, temp_fv0, temp_fv0, (u8) M2C_FIELD(var_s0, s32 *, 0xC));
-            var_s1 += 1;
-            var_s0 += 0x14;
-            M2C_FIELD(var_s0, s32 *, -4) = temp_v0;
-        } while (var_s1 != arg1);
+    for (i = 0; i < n; i++) {
+        items[i].handle = func_802811F0(items[i].str, func_8023B2AC(items[i].str, items[i].scale), (u32) items[i].y, items[i].scale, items[i].scale, items[i].mode);
     }
 }
 
-static s32 func_8023B2AC(f32 arg0) {
-    return (s32) ((320.0f - ((f32) func_80280C08(0 /* FIXME unset $a0 */) * arg0)) / 2.0f);
+static s32 func_8023B2AC(u8 *str, f32 scale) {
+#if VERSION_JP
+    s32 n;
+
+    for (n = 0; str[n] != 0; n++) {
+    }
+    return (320.0f - (f32) (n * 24) * scale) / 2;
+#else
+    return (320.0f - (f32) func_80280C08(str) * scale) / 2;
+#endif
 }
 
 static void func_8023AF5C(f32 arg0, f32 arg1) {
@@ -3859,17 +3864,17 @@ void func_8023AC38() {
     s32 temp_t9;
     s32 var_t6;
     s32 var_v1;
-    u8 **var_s0;
-    u8 **var_s0_2;
-    u8 **var_s0_3;
+    TextItem *var_s0;
+    TextItem *var_s0_2;
+    TextItem *var_s0_3;
     void **var_s0_4;
 
     if (D_802AC5D0 & 0x2C) {
-        var_s0 = &D_802A0B1C;
+        var_s0 = D_802A0B1C;
         do {
-            func_80280DB4(M2C_FIELD(var_s0, s32 *, 0x10));
-            var_s0 += 0x14;
-        } while ((u32) var_s0 < (u32) (&D_802A0B1C + 0x14));
+            func_80280DB4(var_s0->handle);
+            var_s0++;
+        } while (var_s0 < &D_802A0B1C[1]);
         temp_t9 = D_802AC5D0 & 4;
         var_v1 = temp_t9;
         if (temp_t9 == 0) {
@@ -3880,17 +3885,17 @@ void func_8023AC38() {
         }
     } else {
         if ((D_802AC75C == 0) || (func_8023AB90() == 0)) {
-            var_s0_2 = &D_802A0B1C;
+            var_s0_2 = D_802A0B1C;
             do {
-                func_80280DB4(M2C_FIELD(var_s0_2, s32 *, 0x10));
-                var_s0_2 += 0x14;
-            } while ((u32) var_s0_2 < (u32) (&D_802A0B1C + 0x3C));
+                func_80280DB4(var_s0_2->handle);
+                var_s0_2++;
+            } while (var_s0_2 < &D_802A0B1C[3]);
         } else {
-            var_s0_3 = &D_802A0B1C;
+            var_s0_3 = D_802A0B1C;
             do {
-                func_80280DB4(M2C_FIELD(var_s0_3, s32 *, 0x10));
-                var_s0_3 += 0x14;
-            } while ((u32) var_s0_3 < (u32) (&D_802A0B1C + 0x64));
+                func_80280DB4(var_s0_3->handle);
+                var_s0_3++;
+            } while (var_s0_3 < &D_802A0B1C[5]);
         }
         var_s0_4 = &D_802AC7F8;
         do {
@@ -3926,18 +3931,11 @@ s32 func_8023AB90() {
     return var_v0;
 }
 
-static void func_8023AB54(u8 **arg0, s32 arg1) {
-    s32 var_s0;
-    u8 **var_s1;
+static void func_8023AB54(TextItem *items, s32 n) {
+    s32 i;
 
-    var_s0 = 0;
-    if (arg1 > 0) {
-        var_s1 = arg0;
-        do {
-            func_80280DB4(M2C_FIELD(var_s1, s32 *, 0x10));
-            var_s0 += 1;
-            var_s1 += 0x14;
-        } while (var_s0 != arg1);
+    for (i = 0; i < n; i++) {
+        func_80280DB4(items[i].handle);
     }
 }
 
