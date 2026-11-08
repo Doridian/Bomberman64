@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 6325, eu 6332, jp 6291
+ * differing words: us 6277, eu 6284, jp 6243
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -3542,75 +3542,61 @@ static s32 func_8023B2AC(u8 *str, f32 scale) {
 #endif
 }
 
-static void func_8023AF5C(f32 arg0, f32 arg1) {
-    u8 sp4C;
-    f32 temp_ft2;
-    f32 temp_fv0;
-    f32 var_fs0;
-    f32 var_fs1;
-    f32 var_fs2;
-    f32 var_fs3;
-    s32 temp_lo;
-    s32 var_a0;
-    s32 var_a1;
-    s32 var_a1_2;
-    s32 var_a2;
-    s32 var_a2_2;
-    u8 *var_a3;
-    u8 *temp_v0;
-    u8 *temp_v0_2;
-    u8 *temp_v0_3;
-    u8 *temp_v0_4;
+static void func_8023AF5C(f32 x, f32 y) {
+    u8 buf[4];
+    s32 v;
+    s32 d;
+    s32 i;
+    s32 q;
+    s32 t;
+    u8 *p;
+    f32 w;
+    f32 x0;
+    f32 y0;
+    f32 y1;
+    f32 sz;
 
-    var_a0 = D_802AC610.unk14;
-    var_a1 = 0xA;
-    var_a3 = &sp4C;
-    var_a2 = 0;
-    do {
-        temp_lo = var_a0 / var_a1;
-        var_a3 += 1;
-        M2C_FIELD(var_a3, s8 *, -1) = (s8) (temp_lo + 0x10);
-        if (var_a0 >= (temp_lo * var_a1)) {
-            var_a0 %= var_a1;
+    v = D_802AC610.unk14;
+    d = 10;
+    p = buf;
+    for (i = 0; i < 2; i++) {
+        q = v / d;
+        *p++ = q + 0x10;
+        t = q * d;
+        if (v >= t) {
+            v -= t;
         }
-        var_a2 += 1;
-        var_a1 = var_a1 / 10;
-    } while (var_a2 != 2);
-    M2C_FIELD(var_a3, u8 *, 0) = 0;
-    if (D_800AEE04 >= 2) {
-        var_fs3 = 16.0f;
-        temp_v0 = func_8026CE28(0x34E);
-        D_802AC7E0 = temp_v0;
-        temp_v0_2 = func_8022A6C4(temp_v0, 0x3F);
-        var_fs1 = arg0 - 28.0f;
-        temp_fv0 = var_fs1 - 28.0f;
-        D_802AC7DC = temp_v0_2;
-        M2C_FIELD(temp_v0_2, f32 *, 0x10) = (f32) (temp_fv0 + 16.0f);
-        var_fs0 = arg1 + 1.0f;
-        M2C_FIELD(D_802AC7DC, f32 *, 0x14) = var_fs0;
-        M2C_FIELD(D_802AC7DC, f32 *, 0x18) = (f32) (temp_fv0 + 16.0f + 16.0f);
-        var_fs2 = var_fs0 + 16.0f;
-        M2C_FIELD(D_802AC7DC, f32 *, 0x1C) = var_fs2;
-    } else {
-        var_fs3 = 0.0f;
-        var_fs0 = arg1 + 1.0f;
-        var_fs1 = arg0 - 28.0f;
-        D_802AC7E0 = NULL;
-        var_fs2 = var_fs0 + 16.0f;
+        d /= 10;
     }
-    temp_v0_3 = func_8026CE28(0x130);
-    D_802AC7D0 = temp_v0_3;
-    temp_v0_4 = func_8022A6C4(temp_v0_3, 0x3F);
-    D_802AC7D4 = temp_v0_4;
-    M2C_FIELD(temp_v0_4, s32 *, 0xC) = (s32) (M2C_FIELD(temp_v0_4, s32 *, 0xC) | 0x10);
-    M2C_FIELD(D_802AC7D4, f32 *, 0x10) = (f32) (var_fs1 + var_fs3);
-    M2C_FIELD(D_802AC7D4, f32 *, 0x14) = var_fs0;
-    M2C_FIELD(D_802AC7D4, f32 *, 0x18) = (f32) (var_fs1 + 16.0f + var_fs3);
-    temp_ft2 = (arg0 - 36.0f) + 24.0f + 8.0f + var_fs3;
-    M2C_FIELD(D_802AC7D4, f32 *, 0x1C) = var_fs2;
-    var_a1_2 = (u32) temp_ft2;
-    var_a2_2 = (u32) arg1;
-    D_802AC7D8 = func_802811F0(&sp4C, var_a1_2 & 0xFFFF, var_a2_2 & 0xFFFF, 0.6f, 0.8f, 2U);
+    *p = 0;
+    if (D_800AEE04 >= 2) {
+        sz = 16.0f;
+        w = sz;
+        D_802AC7E0 = func_8026CE28(0x34E);
+        D_802AC7DC = func_8022A6C4(D_802AC7E0, 0x3F);
+        x0 = x - 28.0f;
+        M2C_FIELD(D_802AC7DC, f32 *, 0x10) = x0 - 28.0f + sz;
+        y0 = y + 1.0f;
+        M2C_FIELD(D_802AC7DC, f32 *, 0x14) = y0;
+        M2C_FIELD(D_802AC7DC, f32 *, 0x18) = x0 - 28.0f + sz + sz;
+        y1 = y0 + sz;
+        M2C_FIELD(D_802AC7DC, f32 *, 0x1C) = y1;
+    } else {
+        w = 0.0f;
+        y0 = y + 1.0f;
+        x0 = x - 28.0f;
+        D_802AC7E0 = NULL;
+        y1 = y0 + 16.0f;
+        sz = 16.0f;
+    }
+    D_802AC7D0 = func_8026CE28(0x130);
+    D_802AC7D4 = func_8022A6C4(D_802AC7D0, 0x3F);
+    M2C_FIELD(D_802AC7D4, s32 *, 0xC) |= 0x10;
+    M2C_FIELD(D_802AC7D4, f32 *, 0x10) = x0 + w;
+    M2C_FIELD(D_802AC7D4, f32 *, 0x14) = y0;
+    M2C_FIELD(D_802AC7D4, f32 *, 0x18) = x0 + sz + w;
+    M2C_FIELD(D_802AC7D4, f32 *, 0x1C) = y1;
+    D_802AC7D8 = func_802811F0(buf, (x - 36.0f) + 24.0f + 8.0f + w, y, 0.6f, 0.8f, 2);
 }
 
 s32 func_8023AEDC(s32 arg0) {
