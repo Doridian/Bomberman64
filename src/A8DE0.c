@@ -1,22 +1,15 @@
 /*
- * NON_MATCHING: main_code's A8DE0, complete: the 16 moving objects at
- * 0x800BC770 (their task func_8028E614, the spawn table D_802A1D00 that
- * func_8028E9B8 registers, and the two function tables D_802A1D08 and
- * D_802A1D30). Split from A4CE0 (text_objects.txt has the evidence).
- * Every function and stub is emitted in the original's order. Not built
- * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 22, eu 22, jp 22
- *
- * func_8028E5E0, func_8028E8A4, func_8028E8E0, func_8028E97C and
- * func_8028E9B8 match; of the statics compared as one run from
- * func_8028E9E0 (16 words), all but four match:
- * - func_8028E6CC (6): the spill of the new id and the argument set-up
- *   around the jalr are scheduled differently.
- * - func_8028F428 (6): `li s4,40` and `move s3,zero` come out in the other
- *   order.
- * - func_8028F5E0 (5): where `sw a0,48(sp)` goes.
- * - func_8028EE78 (3) and func_8028EF58 (2): register choices.
+ * -O3. The 16 moving objects at 0x800BC770: their task func_8028E614,
+ * the spawn table D_802A1D00 that func_8028E9B8 registers, and the two
+ * function tables D_802A1D08 and D_802A1D30. Split from A4CE0
+ * (text_objects.txt has the evidence). Every function and stub is
+ * emitted in the original's order. Matching notes:
+ * - func_8028E6CC: `o` is set only after the dir test (the unk14 stores go
+ *   through D_800BC770[id]); that reorders ugen's spills around the jalr.
+ * - func_8028EE78: parameters (o, grow, speed, limit, flag), from the order
+ *   its callers set s4 before s3; `speed * 100.0f / 2` (int 2 keeps div.s).
+ * - func_8028F5E0: its body's lines are below its opening line (#line),
+ *   which puts `sw a0,48(sp)` where the original has it.
  * D_802A1D08 and D_802A1D30 are defined after the functions so that the
  * function-local D_802A1D00 comes first in .data.
  */
@@ -104,7 +97,7 @@ static void func_8028ECB0(UnkStruct_800BC770 *o);
 static void func_8028ED18(UnkStruct_800BC770 *o);
 static void func_8028ED9C(UnkStruct_800BC770 *o);
 static void func_8028EE0C(UnkStruct_800BC770 *o);
-static void func_8028EE78(UnkStruct_800BC770 *o, f32 grow, f32 speed, s32 flag, s32 limit);
+static void func_8028EE78(UnkStruct_800BC770 *o, f32 grow, f32 speed, s32 limit, s32 flag);
 static void func_8028EF58(UnkStruct_800BC770 *o);
 static void func_8028EFE4(UnkStruct_800BC770 *o);
 static void func_8028F08C(UnkStruct_800BC770 *o);
@@ -194,12 +187,12 @@ s32 func_8028E6CC(s32 kind, f32 *pos, s32 dir) {
     }
     D_800BC770[id].unk0 = id;
     func_8028E6BC();
-    o = &D_800BC770[id];
     if (dir == 0) {
-        o->unk14 = func_8025E63C() * 8.0 + 1.0;
+        D_800BC770[id].unk14 = func_8025E63C() * 8.0 + 1.0;
     } else {
-        o->unk14 = dir;
+        D_800BC770[id].unk14 = dir;
     }
+    o = &D_800BC770[id];
     o->unkC = 0;
     o->unk10 = kind;
     D_802A1D30[kind](o, 0, pos);
@@ -330,13 +323,13 @@ static void func_8028EE0C(UnkStruct_800BC770 *o) {
     func_8028ECB0(o);
 }
 
-static void func_8028EE78(UnkStruct_800BC770 *o, f32 grow, f32 speed, s32 flag, s32 limit) {
+static void func_8028EE78(UnkStruct_800BC770 *o, f32 grow, f32 speed, s32 limit, s32 flag) {
     f32 y;
 
     y = o->unk8->unk40->unk14;
     o->unk4->unk40->unk30 += grow;
     func_80232DB4(o->unk8);
-    if (func_8028EAD8(o->unk8, (o->unk14 - 1) << 5, speed * 100.0f / 2.0f,
+    if (func_8028EAD8(o->unk8, (o->unk14 - 1) << 5, speed * 100.0f / 2,
                       flag ? func_8028E5EC : func_8028E5E0) && flag) {
         func_8028EE0C(o);
         return;
@@ -349,7 +342,7 @@ static void func_8028EE78(UnkStruct_800BC770 *o, f32 grow, f32 speed, s32 flag, 
 
 static void func_8028EF58(UnkStruct_800BC770 *o) {
     func_8028EC08(o, 5.0f);
-    func_8028EE78(o, 0.5f, 0.5f, 1, 15);
+    func_8028EE78(o, 0.5f, 0.5f, 15, 1);
 }
 
 static void func_8028EFE4(UnkStruct_800BC770 *o) {
@@ -414,12 +407,12 @@ static void func_8028F320(UnkStruct_800BC770 *o) {
 
 static void func_8028F428(UnkStruct_800BC770 *o) {
     if (o->unkC < 10) {
-        func_8028EE78(o, 3.2f, 0.8f, 0, 40);
+        func_8028EE78(o, 3.2f, 0.8f, 40, 0);
     } else if (o->unkC < 20) {
-        func_8028EE78(o, 1.2f, 0.3f, 0, 40);
+        func_8028EE78(o, 1.2f, 0.3f, 40, 0);
         o->unk4->unk40->unk28 += 0.14f;
     } else {
-        func_8028EE78(o, 0.25f, 0.16666667f, 0, 40);
+        func_8028EE78(o, 0.25f, 0.16666667f, 40, 0);
         o->unk4->unk40->unk28 -= 0.114999995f;
     }
 }
@@ -433,7 +426,11 @@ static void func_8028F55C(UnkStruct_800BC770 *o) {
     func_8028F1F0(o, 1.0f, 80);
 }
 
-static void func_8028F5E0(UnkStruct_800BC770 *o) { if (func_8028EB70(o, 100, 10.0f)) {
+/* The body's lines are below the opening line's (as1 then puts `sw a0,48(sp)` early, as the original). */
+#line 1000
+static void func_8028F5E0(UnkStruct_800BC770 *o) {
+#line 999
+    if (func_8028EB70(o, 100, 10.0f)) {
         func_8028ECB0(o);
     } else {
         func_8028EC08(o, 10.0f);
