@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 8335, eu 8338, jp 8288
+ * differing words: us 8029, eu 8032, jp 7975
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -3616,108 +3616,29 @@ static void func_8023B7C0(f32 arg0) {
     D_802AC7E8 = func_802811F0(&sp24, 0xB4U, temp_t7 & 0xFFFF, 0.6f, 0.8f, 3U);
 }
 
-static void func_8023B450(s32 arg0, s32 arg1, u8 *arg2) {
-    s32 temp_a1;
-    s32 temp_lo;
-    s32 temp_lo_2;
-    s32 temp_lo_3;
-    s32 temp_lo_4;
-    s32 temp_lo_5;
-    s32 temp_lo_6;
-    s32 temp_lo_7;
-    s32 temp_lo_8;
-    s32 temp_t1;
-    s32 temp_t6;
-    s32 var_a1;
-    s32 var_t0;
-    s32 var_v0;
-    s32 var_v1;
-    u8 *temp_a3;
-    u8 *temp_a3_2;
-    u8 *temp_a3_3;
-    u8 *var_a3;
-    u8 *var_a3_2;
+static void func_8023B450(s32 n, s32 value, u8 *buf) {
+    s32 i;
+    s32 div;
+    s32 j;
+    s32 d;
+    s32 t;
 
-    var_t0 = arg1;
-    temp_a1 = arg0 - 1;
-    var_v0 = 0;
-    var_v1 = 1;
-    if (temp_a1 > 0) {
-        temp_t6 = (arg0 - 1) & 3;
-        if (temp_t6 != 0) {
-            do {
-                var_v0 += 1;
-                var_v1 *= 0xA;
-            } while (temp_t6 != var_v0);
-            if (var_v0 != temp_a1) {
-                goto block_5;
-            }
-        } else {
-block_5:
-            do {
-                var_v0 += 4;
-                var_v1 = var_v1 * 0xA * 0xA * 0xA * 0xA;
-            } while (var_v0 != temp_a1);
-        }
-        var_v0 = 0;
+    i = 0;
+    div = 1;
+    for (; i < n - 1; i++) {
+        div *= 10;
     }
-    var_a1 = 0;
-    if (arg0 > 0) {
-        temp_t1 = arg0 & 3;
-        if (temp_t1 != 0) {
-            var_a3 = arg2;
-            do {
-                temp_lo = var_t0 / var_v1;
-                var_a1 += 1;
-                var_a3 += 1;
-                M2C_FIELD(var_a3, s8 *, -1) = (s8) (temp_lo + 0x10);
-                if (var_t0 >= (temp_lo * var_v1)) {
-                    var_t0 %= var_v1;
-                }
-                var_v0 += 1;
-                var_v1 = var_v1 / 10;
-            } while (temp_t1 != var_v0);
-            if (var_v0 != arg0) {
-                goto block_15;
-            }
-        } else {
-block_15:
-            var_a3_2 = &arg2[var_a1];
-            do {
-                temp_lo_2 = var_t0 / var_v1;
-                temp_a3 = var_a3_2 + 1;
-                M2C_FIELD(temp_a3, s8 *, -1) = (s8) (temp_lo_2 + 0x10);
-                if (var_t0 >= (temp_lo_2 * var_v1)) {
-                    var_t0 %= var_v1;
-                }
-                temp_lo_3 = var_v1 / 10;
-                temp_a3_2 = temp_a3 + 1;
-                temp_lo_4 = var_t0 / temp_lo_3;
-                M2C_FIELD(temp_a3_2, s8 *, -1) = (s8) (temp_lo_4 + 0x10);
-                if (var_t0 >= (temp_lo_4 * temp_lo_3)) {
-                    var_t0 %= temp_lo_3;
-                }
-                temp_lo_5 = temp_lo_3 / 10;
-                temp_a3_3 = temp_a3_2 + 1;
-                temp_lo_6 = var_t0 / temp_lo_5;
-                M2C_FIELD(temp_a3_3, s8 *, -1) = (s8) (temp_lo_6 + 0x10);
-                if (var_t0 >= (temp_lo_6 * temp_lo_5)) {
-                    var_t0 %= temp_lo_5;
-                }
-                temp_lo_7 = temp_lo_5 / 10;
-                var_a1 = var_a1 + 1 + 1 + 1 + 1;
-                var_a3_2 = temp_a3_3 + 1;
-                temp_lo_8 = var_t0 / temp_lo_7;
-                M2C_FIELD(var_a3_2, s8 *, -1) = (s8) (temp_lo_8 + 0x10);
-                if (var_t0 >= (temp_lo_8 * temp_lo_7)) {
-                    var_t0 %= temp_lo_7;
-                }
-                var_v0 += 4;
-                var_v1 = temp_lo_7 / 10;
-            } while (var_v0 != arg0);
+    j = 0;
+    for (i = 0; i < n; i++) {
+        d = value / div;
+        buf[j++] = d + 0x10;
+        t = d * div;
+        if (value >= t) {
+            value -= t;
         }
+        div /= 10;
     }
-    arg2[var_a1] = 0;
+    buf[j] = 0;
 }
 
 static void func_8023B318(TextItem *items, s32 n) {
