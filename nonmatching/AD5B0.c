@@ -5,7 +5,27 @@
  * inlined statics. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 70, eu 70, jp 70
+ * differing words: us 5, eu 5, jp 5
+ *
+ * p5 (70 -> 5): func_80292E90 matches; func_80292DB8 is 5 words off.
+ * - func_80297E80 is declared returning u16. The hidden narrowing cvt
+ *   stops uopt copy-propagating ret into v0, so E90 keeps it in v1
+ *   (move v1,v0 in both arms, bnez v1), as the original does.
+ * - In func_80292DB0, #line 950 before the for: as1 orders by .loc, and
+ *   the andi argument copy takes the call line, so the loop's line must be
+ *   below the line of the func_80292DB0 call in E88 (any value under it
+ *   works; renumber if lines above move). This puts move v0,zero before
+ *   andi v1.
+ * - DB8's retry loop is a do/while entered by goto to its test
+ *   (retry = 1; goto test; ... test: i++; } while (retry)). The entry
+ *   jump becomes a duplicated top test that keeps li v0,1; beqz v0
+ *   (while, if+do and goto pretests with retry known to be 1 all fold).
+ * - Left: the loop-invariant loads (lui/addiu s1 = &D_802AC3E0, li s5,1)
+ *   go at the end of the header's outside predecessor, which here is the
+ *   entry block, so they come before the guard instead of after it, and
+ *   li s0,1 fills the beqz delay slot. The original's order is that of a
+ *   real while pretest on a value uopt can't fold (a retry parameter does
+ *   it, but its callers get worse).
  *
  * p4 (665 -> 70): only func_80292DB0's range (DB8 and E90) is left;
  * func_802934E8 and func_8029414C match.
@@ -77,7 +97,7 @@ s32 func_80297E60(void *);
 s32 func_80297E68(void *, u8, u8 *);
 s32 func_80297E70(void *, u8, u8 *);
 s32 func_80297E78(void *, u8, u8 *, s32);
-s32 func_80297E80(void *, u8, u8 *, s32);
+u16 func_80297E80(void *, u8, u8 *, s32);
 
 static s32 func_80294A40(s32 slot);
 static s32 func_802949BC(u8 b);
@@ -978,12 +998,10 @@ static s32 func_80292DB8(u8 addr, u8 *buf, u8 n) {
     size = n * 8;
     func_80297D60(buf, size);
     func_80297D50(buf, size);
-    i = 1;
+    i = 0;
     retry = 1;
-    for (;;) {
-        if (!retry) {
-            break;
-        }
+    goto test;
+    do {
         if (n == 1) {
             ret = func_80297E68(D_802AC3E0, addr, buf);
         } else {
@@ -993,14 +1011,16 @@ static s32 func_80292DB8(u8 addr, u8 *buf, u8 n) {
             break;
         }
         retry = i < 3;
+    test:
         i++;
-    }
+    } while (retry);
     return ret;
 }
 
 static s32 func_80292DB0(u8 *a, u8 *b, u8 n) {
     s32 i;
 
+#line 950
     for (i = 0; i < n * 8; i++) {
         if (b[i] != a[i]) {
             return 1;
