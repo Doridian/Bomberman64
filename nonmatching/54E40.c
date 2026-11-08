@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4081, eu 4098, jp 4095
+ * differing words: us 3977, eu 3994, jp 3993
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -1817,11 +1817,9 @@ void func_8024364C(u8 *arg0) {
 }
 
 static void func_8023EF38(u8 *arg0) {
-    f64 temp_fs0;
-    f64 temp_fs0_2;
-    s32 temp_s3;
-    s32 var_s0;
-    s32 var_s0_2;
+    f64 r;
+    s32 task;
+    s32 i;
     u8 *temp_v0;
 
     func_802313DC(arg0, 0x0C000000);
@@ -1829,7 +1827,7 @@ static void func_8023EF38(u8 *arg0) {
     M2C_FIELD(temp_v0, s32 *, 0xC) = (s32) (M2C_FIELD(temp_v0, s32 *, 0xC) & ~0x4000);
     func_80229E38(M2C_FIELD(arg0, void **, 0x40), 0x14, 0);
     func_80229E38(M2C_FIELD(arg0, void **, 0x40), -1, 1);
-    temp_s3 = func_80238A10(func_8023FAA0, (s32) arg0, 0, 0, 0x130);
+    task = func_80238A10(func_8023FAA0, (s32) arg0, 0, 0, 0x130);
     func_802362B8(0x7F);
     D_802A0038 = 0;
     if (D_802A01BC != 0) {
@@ -1846,32 +1844,24 @@ static void func_8023EF38(u8 *arg0) {
     func_80239094();
     func_80231408(arg0, 0x04000000);
     M2C_FIELD(arg0, f32 *, 0x68) = 13.0f;
-    var_s0 = 0;
+    i = 0;
     M2C_FIELD(arg0, f32 *, 0x70) = 0.40833336f;
     do {
-        temp_fs0 = func_8025E63C();
-        func_8028A81C(7, ((f32) temp_fs0 * 100.0f) - 50.0f, 100.0f, ((f32) func_8025E63C() * 100.0f) - 50.0f, (s32) arg0);
+        r = func_8025E63C();
+        func_8028A81C(7, ((f32) r * 100.0f) - 50.0f, 100.0f, ((f32) func_8025E63C() * 100.0f) - 50.0f, (s32) arg0);
         func_8023903C(8);
-        var_s0 += 1;
-    } while (var_s0 < 8);
-    var_s0_2 = 0;
-    do {
-        temp_fs0_2 = func_8025E63C();
-        func_8028A81C(0xD, ((f32) temp_fs0_2 * 50.0f) - 25.0f, 70.0f, ((f32) func_8025E63C() * 50.0f) - 25.0f, (s32) arg0);
+        i++;
+    } while (i < 8);
+    for (i = 0; i < 8; i++) {
+        r = func_8025E63C();
+        func_8028A81C(0xD, ((f32) r * 50.0f) - 25.0f, 70.0f, ((f32) func_8025E63C() * 50.0f) - 25.0f, (s32) arg0);
         func_8023903C(8);
-        var_s0_2 += 1;
-    } while (var_s0_2 != 8);
-    func_8023903C(0x3C);
-    if (!(M2C_FIELD(M2C_FIELD(arg0, void **, 0x40), s32 *, 0xC) & 0x41) && ((M2C_FIELD(arg0, f32 *, 0x68) != 0.0f) || (M2C_FIELD(arg0, f32 *, 0x6C) != 0.0f))) {
-loop_10:
-        func_80239094();
-        if (!(M2C_FIELD(M2C_FIELD(arg0, void **, 0x40), s32 *, 0xC) & 0x41)) {
-            if ((M2C_FIELD(arg0, f32 *, 0x68) != 0.0f) || (M2C_FIELD(arg0, f32 *, 0x6C) != 0.0f)) {
-                goto loop_10;
-            }
-        }
     }
-    func_80238EA8(temp_s3);
+    func_8023903C(0x3C);
+    while (!(M2C_FIELD(M2C_FIELD(arg0, void **, 0x40), s32 *, 0xC) & 0x41) && ((M2C_FIELD(arg0, f32 *, 0x68) != 0.0f) || (M2C_FIELD(arg0, f32 *, 0x6C) != 0.0f))) {
+        func_80239094();
+    }
+    func_80238EA8(task);
     func_8023903C(0x3C);
     if (D_802AC7EC != 0) {
         func_80238EA8(D_802AC7EC);
