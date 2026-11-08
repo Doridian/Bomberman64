@@ -6,7 +6,7 @@
  * Every function is emitted in the original's order. Not built into the
  * ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 849, eu 849, jp 849
+ * differing words: us 472, eu 472, jp 472
  *
  * func_802921C4 and func_8029217C match; of the statics (compared as one
  * run from func_8028FD80, 402 words), func_8028FD88 matches. The inlined
@@ -50,6 +50,31 @@
  * 09FC's quadrant in a3 vs v0, obj in v0 vs v1, the 0.0f not shared in
  * f0, arg setup before the 90708 calls; 1944's fast path reloads sdir
  * and branches past the join's lwc1 f0 (perhaps uopt PRE).
+ *
+ * p3 (849 -> 472 in every version; jp allf: FFA8 51, 90498 16 plus its
+ * 4-byte size, stubs 0, 09FC 225, 1944 0 (matches in all three)):
+ * - Stubs: three K&R empty statics (static void f() {}, no frame cost)
+ *   defined just before 9087C and called first thing in 09FC give the
+ *   four stubs there; the static run is 0xC78 against 0xC7C, the last
+ *   4 bytes being 90498's missing spill.
+ * - 1944: a bare ";" (or do {} while (0);) after the if/else at the end
+ *   of the first else arm makes a join block of its own, where the
+ *   original reloads sdir: 359 -> 112. The e tests as
+ *   "t1.unk8 - 1 == t2.unk8" / "t1.unk8 + 1 == t2.unk8" (same for unk0)
+ *   then match the rest.
+ * - 09FC: the quadrant goes into i, passed as func_8028FD88(&dirA, i ^ 0,
+ *   1) (i * 1 also works; | 0, + 0, & ~0 and casts don't): the identity
+ *   op drops the a1 precolour, so i takes v0 and obj v1 as in the
+ *   original. 246 -> 225.
+ * - 90498: the instrumented uopt shows t (lr 19) costing 3 in a1/t-regs
+ *   and 0 in s6/s7/fp (firstUseCost 18.5 isn't charged for them in this
+ *   o3opt static), so t takes s6 and no spill/frame bytes appear. Tried
+ *   without effect: declaration order, wrapping t's call in 90490,
+ *   ternary/split returns, extra blocks everywhere, a non-inlined 90490.
+ * Left: 90498's t (the 4 bytes shift every later static, ~170 words by
+ * position); 09FC's c slot (0x54 vs 0x58), the corner 0.0f in f0 and r in
+ * a0 vs v1, arg order before the 90708 calls, the sw v0,300(sp) schedule;
+ * FFA8 (not looked at this pass).
  */
 #include "common.h"
 
@@ -477,6 +502,15 @@ static s32 func_80290708(s32 mode, UnkStruct_802909FC *ctx, Vec3i *dir, Vec3i *d
     return res;
 }
 
+static void func_80290864() {
+}
+
+static void func_8029086C() {
+}
+
+static void func_80290874() {
+}
+
 static void func_8029087C(UnkStruct_802909FC *ctx) {
     UnkStructA *obj = ctx->unk0;
     UnkStructA_40 *p = obj->unk40;
@@ -555,6 +589,9 @@ s32 func_802909FC(UnkStructA *obj, s32 (*cb)(s32)) {
     s32 c;
     s32 pad6;
 
+    func_80290864();
+    func_8029086C();
+    func_80290874();
     ctx.unk0 = obj;
     ctx.unk4 = obj->unk40->unk10;
     ctx.unk8 = obj->unk40->unk14;
@@ -586,30 +623,30 @@ s32 func_802909FC(UnkStructA *obj, s32 (*cb)(s32)) {
     obj->unk40->unk18 = obj->unk60;
     if (ctx.unk1C > 0.0f) {
         if (ctx.unk24 > 0.0f) {
-            dx = 4;
+            i = 4;
         } else if (ctx.unk24 < 0.0f) {
-            dx = 2;
+            i = 2;
         } else {
-            dx = 3;
+            i = 3;
         }
     } else if (ctx.unk1C < 0.0f) {
         if (ctx.unk24 > 0.0f) {
-            dx = 6;
+            i = 6;
         } else if (ctx.unk24 < 0.0f) {
-            dx = 8;
+            i = 8;
         } else {
-            dx = 7;
+            i = 7;
         }
     } else {
         if (ctx.unk24 > 0.0f) {
-            dx = 5;
+            i = 5;
         } else if (ctx.unk24 < 0.0f) {
-            dx = 1;
+            i = 1;
         } else {
-            dx = 0;
+            i = 0;
         }
     }
-    func_8028FD88(&dirA, dx, 1);
+    func_8028FD88(&dirA, i  ^ 0, 1);
     code = func_8026D7D8(ctx.unk10, ctx.unk14, ctx.unk18);
     yx = 0;
     yz = 0;
@@ -854,6 +891,7 @@ void func_80291944(UnkStructA *obj, s32 dir, f32 speed) {
                     obj->unk40->unk14 = y0;
                 }
             }
+            ;
         }
         if ((sdir == 90.0f || sdir == 270.0f) &&
             (dir == 0 || dir == 0x20 || dir == 0xE0 || dir == 0x80 || dir == 0x60 || dir == 0xA0)) {
@@ -898,8 +936,8 @@ void func_80291944(UnkStructA *obj, s32 dir, f32 speed) {
             func_8026DCAC(obj->unk58, obj->unk5C, obj->unk60, &t2, 2);
             if ((e == 0.0f && (t1.unk8 - 1 == t2.unk8 || dir == 0x80)) ||
                 (e == 90.0f && (t1.unk0 - 1 == t2.unk0 || dir == 0x40)) ||
-                (e == 180.0f && (t2.unk8 - 1 == t1.unk8 || dir == 0)) ||
-                (e == 270.0f && (t2.unk0 - 1 == t1.unk0 || dir == 0xC0))) {
+                (e == 180.0f && (t1.unk8 + 1 == t2.unk8 || dir == 0)) ||
+                (e == 270.0f && (t1.unk0 + 1 == t2.unk0 || dir == 0xC0))) {
                 obj->unk40->unk14 = func_8026EAF8(obj);
                 h = func_8026E938(obj->unk40);
                 if (h != 20000.0f && obj->unk40->unk14 <= h + 100.0f) {
