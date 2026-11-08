@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 6936, eu 6942, jp 6896
+ * differing words: us 6916, eu 6922, jp 6874
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -456,11 +456,14 @@ void func_8023B8D0();
 s32 func_8023BBCC(void);
 void func_8023C170(void);
 void func_8023C374(void);
-void func_8023CA94(void);
+static void func_8023CC4C(void);
+static void func_8023CA94(void);
 void func_8023CC54(s32 arg0);
 void func_8023CD1C(void);
-void func_8023CECC(void);
-s32 func_8023D0F8(void);
+static void func_8023D0F0(void);
+static void func_8023CECC(void);
+static void func_8023D840(void);
+static s32 func_8023D0F8(void);
 void func_8023D848(void);
 static void func_8023D8A0(void);
 static void func_8023D9FC(void);
@@ -2724,9 +2727,16 @@ void func_8023D848() {
     D_802AC768 = NULL;
     D_802AC798 = 0;
     D_802A01BC = 1;
+    if (0) {
+        func_8023D840();
+        func_8023D0F8();
+    }
 }
 
-s32 func_8023D0F8() {
+static void func_8023D840(void) {
+}
+
+static s32 func_8023D0F8() {
     f32 sp54;
     u8 *var_v0;
     u8 *var_v0_3;
@@ -2750,6 +2760,9 @@ s32 func_8023D0F8() {
     s32 var_t8;
     u8 *temp_v0_2;
 
+    if (0) {
+        func_8023D0F0();
+    }
     if ((D_802AC5D0 & 2) && (D_802AC610.unk14 != 0)) {
         D_802AC610.unk14 = (s32) (D_802AC610.unk14 - 1);
         M2C_FIELD(D_800AEDF0, s32 *, 0x14) = 1;
@@ -2929,7 +2942,10 @@ block_56:
     goto loop_13;
 }
 
-void func_8023CECC() {
+static void func_8023D0F0(void) {
+}
+
+static void func_8023CECC() {
     u8 *var_v1_2;
     s32 *var_v1;
     s32 *var_v1_3;
@@ -3064,6 +3080,10 @@ void func_8023CC54(s32 arg0) {
     s32 var_v0;
     s32 var_v1;
 
+    if (0) {
+        func_8023CC4C();
+        func_8023CA94();
+    }
     var_v1 = 0;
     if (arg0 > 0) {
         var_t0 = D_802AC780;
@@ -3090,7 +3110,10 @@ loop_3:
     }
 }
 
-void func_8023CA94() {
+static void func_8023CC4C(void) {
+}
+
+static void func_8023CA94() {
     u8 *var_s4;
     s32 *var_s1;
     s32 *var_s2;
