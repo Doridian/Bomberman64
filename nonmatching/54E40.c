@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 6916, eu 6922, jp 6874
+ * differing words: us 6754, eu 6761, jp 6718
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -442,7 +442,7 @@ void func_8023AAE4(void);
 static void func_8023AB54(TextItem *items, s32 n);
 static void func_8023AB4C(void);
 static s32 func_8023AB90(void);
-void func_8023AC38(void);
+static void func_8023AC38(void);
 void func_8023ADD4(s32 arg0);
 void func_8023AE6C(s32 arg0, s32 arg1, s32 arg2);
 void func_8023AED0(s32 arg0);
@@ -452,9 +452,9 @@ static s32 func_8023B2AC(u8 *str, f32 scale);
 static void func_8023B318(TextItem *items, s32 n);
 static void func_8023B450(s32 arg0, s32 arg1, u8 *arg2);
 static void func_8023B7C0(f32 arg0);
-void func_8023B8D0();
+static void func_8023B8D0();
 s32 func_8023BBCC(void);
-void func_8023C170(void);
+static void func_8023C170(void);
 void func_8023C374(void);
 static void func_8023CC4C(void);
 static void func_8023CA94(void);
@@ -489,7 +489,7 @@ void func_80241590(s32 arg0, Gfx **gdl);
 void func_80241BB0(s32 arg0, Gfx **gdl);
 void func_80242268(void);
 void func_80242270(s32 arg0, Gfx **gdl);
-void func_80242994(void);
+static void func_80242994(void);
 void func_80242DA8(void);
 void func_80242FB4();
 void func_802434F8();
@@ -855,7 +855,7 @@ loop_15:
     func_80239430();
 }
 
-void func_80242994() {
+static void func_80242994() {
     u8 *var_s1;
     u8 *var_s1_2;
     u8 *var_s1_3;
@@ -3174,6 +3174,9 @@ void func_8023C374() {
     s32 temp_v1;
     u8 *temp_a0;
 
+    if (0) {
+        func_8023C170();
+    }
     if ((D_802AC5F0 != 0) || (D_802AC5D4 < 0x28) || (D_802AC610.unk0 & 6)) {
         D_802AC5D0 &= ~0x10;
         return;
@@ -3246,7 +3249,7 @@ void func_8023C374() {
     D_802AC5D0 = temp_v1 & ~0x90;
 }
 
-void func_8023C170() {
+static void func_8023C170() {
     u8 *var_s1;
     s32 temp_a0;
     s32 temp_v0;
@@ -3445,7 +3448,7 @@ s32 func_8023BBCC() {
     return 0;
 }
 
-void func_8023B8D0() {
+static void func_8023B8D0() {
     u8 sp30[8];
     s32 sp38;
     f32 temp_ft1;
@@ -3676,6 +3679,9 @@ void func_8023AE6C(s32 arg0, s32 arg1, s32 arg2) {
 }
 
 void func_8023ADD4(s32 arg0) {
+    if (0) {
+        func_8023AC38();
+    }
     if ((arg0 != 0) && (D_802A01B4 == 0)) {
         D_802A01B4 = 1;
         func_80238DFC(0x70, 0x70, 0U);
@@ -3690,7 +3696,7 @@ void func_8023ADD4(s32 arg0) {
     }
 }
 
-void func_8023AC38() {
+static void func_8023AC38() {
     s32 temp_t9;
     s32 var_t6;
     s32 var_v1;
