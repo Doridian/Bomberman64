@@ -75,3 +75,14 @@ main_code 926A0
 # (emitted last, so first in the source) would have their data after
 # 9CAB0's. func_80287680 ends 9CAB0 on a 16-byte boundary.
 main_code A1EA0
+
+# A8DE0 (-O3) is the 16 moving objects at 0x800BC770 (their task, their
+# spawn table D_802A1D00 and their two function tables); A4CE0 before it
+# is the 16 effects at 0x800BC528 and ends with the effect coroutine
+# func_8028E540 on a 16-byte boundary.  A4CE0's .rodata ends at
+# 0x802A4524 and is followed by 12 zero bytes before A8DE0's first float
+# (20000.0f) at 0x802A4530, and A8DE0's .data starts with D_802A1D00, on
+# the boundary after A4CE0's tables.  The emission order shows it too:
+# each half has its globals first and its statics after, as one -O3
+# object does.
+main_code A8DE0

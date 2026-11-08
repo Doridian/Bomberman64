@@ -363,6 +363,7 @@ segments:
       - [0xA1F40, c, A2840]
       - [0xA3F60, c, A4860]
       - [0xA43E0, asm, A4CE0]
+      - [0xA84E0, asm, A8DE0]
       - [0xA9C80, asm, AA580]
       - [0xAC100, c, ACA00]
       - [0xACAD0, c, AD3D0]
