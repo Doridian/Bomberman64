@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 5995, eu 6003, jp 5975
+ * differing words: us 5877, eu 5885, jp 5858
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -2448,13 +2448,10 @@ void func_8023DB0C() {
     D_802AC610.unkC = 0;
     D_802AC610.unk38 = (s32) *func_8028A060(1);
     temp_v1 = *func_8028A060(3);
-    switch (temp_v1) {                              /* irregular */
-    case 0:
+    if (temp_v1 == 0) {
         D_802AC610.unk10 = 0;
-        break;
-    case 1:
+    } else if (temp_v1 == 1) {
         D_802AC610.unk10 = 1;
-        break;
     }
     D_802AC610.unk14 = 2;
     D_802AC610.unk18 = 3;
@@ -2462,32 +2459,26 @@ void func_8023DB0C() {
     D_802AC610.unk2C = 0;
     func_8028A0B4();
     if (D_802AC610.unk40 != 0) {
-        temp_t6 = M2C_FIELD(D_800AEDF0, s32 *, 0x18) | 0x200;
-        M2C_FIELD(D_800AEDF0, s32 *, 0x18) = temp_t6;
-        M2C_FIELD(D_800AEDF0, s32 *, 0x18) = (s32) (temp_t6 | 3);
+        M2C_FIELD(D_800AEDF0, s32 *, 0x18) |= 0x200;
+        M2C_FIELD(D_800AEDF0, s32 *, 0x18) |= 3;
         func_80278E84(0, 8);
         func_80277AF8(0, 8);
     } else {
         func_80277E1C();
     }
-    var_v0 = ((s32 *) &D_802AC660);
     D_802AC610.unk0 |= 1;
     D_802AC660.unk0 = 0;
-    var_v1 = ((s32 *) &D_802AC660);
     M2C_FIELD(D_800AEDF0, s32 *, 0x14) = 1;
-    do {
-        M2C_FIELD(var_v1, s32 *, 4) = 1;
-        M2C_FIELD(var_v1, s32 *, 0x40) = 0;
-        M2C_FIELD(var_v1, s32 *, 0x90) = 0;
-        M2C_FIELD(var_v1, s32 *, 0xA4) = 0;
-        M2C_FIELD(var_v1, s32 *, 0x14) = 1;
-        var_v0 = (void *) ((u8 *)var_v0 + 0x10);
-        var_v1 = (void *) ((u8 *)var_v1 + 4);
-        M2C_FIELD(var_v0, s32 *, 0x4C) = 0;
-        M2C_FIELD(var_v0, s32 *, 0x48) = 0;
-        M2C_FIELD(var_v0, s32 *, 0x44) = 0;
-        M2C_FIELD(var_v0, s32 *, 0x40) = 0;
-    } while ((s32) var_v0 != (s32) D_802AC6A0);
+    for (var_s0 = 0; var_s0 < 4; var_s0++) {
+        D_802AC660.unk4[var_s0] = 1;
+        D_802AC660.unk40[var_s0] = 0;
+        D_802AC660.unk90[var_s0] = 0;
+        D_802AC660.unkA4[var_s0] = 0;
+        D_802AC660.unk14[var_s0] = 1;
+        for (var_a0_2 = 0; var_a0_2 < 4; var_a0_2++) {
+            D_802AC660.unk50[var_s0][var_a0_2] = 0;
+        }
+    }
     D_802AC660.unk24 = 3;
     D_802AC660.unk28 = 2;
     D_802AC660.unk2C = 2;
