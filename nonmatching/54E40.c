@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 5765, eu 5773, jp 5748
+ * differing words: us 5733, eu 5741, jp 5716
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -1747,28 +1747,15 @@ void func_8023FD08() {
 }
 
 void func_8023FC80(s32 arg0, u8 **arg1) {
-    u8 *temp_a0;
-    u8 *temp_a2;
-    u8 *temp_a3;
-    u8 *temp_t0;
-    u8 *temp_v1;
+    Gfx *gfx;
 
-    temp_v1 = *arg1;
-    temp_a0 = temp_v1 + 8;
-    M2C_FIELD(temp_v1, s32 *, 4) = 0x80;
-    M2C_FIELD(temp_v1, s32 *, 0) = 0xFA000000;
-    temp_a2 = temp_a0 + 8;
-    M2C_FIELD(temp_v1, s32 *, 8) = 0xFCFFFFFF;
-    M2C_FIELD(temp_a0, s32 *, 4) = 0xFFFDF6FB;
-    temp_a3 = temp_a2 + 8;
-    M2C_FIELD(temp_a0, s32 *, 8) = 0xFF10013F;
-    M2C_FIELD(temp_a2, M2C_UNK **, 4) = D_1000000;
-    temp_t0 = temp_a3 + 8;
-    M2C_FIELD(temp_a2, s32 *, 8) = 0xF7000000;
-    M2C_FIELD(temp_a3, s32 *, 4) = 0x10001;
-    M2C_FIELD(temp_a3, s32 *, 8) = 0xF64FC3BC;
-    M2C_FIELD(temp_t0, s32 *, 4) = 0;
-    *arg1 = temp_t0 + 8;
+    gfx = *(Gfx **) arg1;
+    gDPSetPrimColor(gfx++, 0, 0, 0, 0, 0, 0x80);
+    gDPSetCombine(gfx++, 0xFFFFFF, 0xFFFDF6FB);
+    gDPSetColorImage(gfx++, G_IM_FMT_RGBA, G_IM_SIZ_16b, 320, D_1000000);
+    gDPSetFillColor(gfx++, 0x10001);
+    gDPFillRectangle(gfx++, 0, 0, 319, 239);
+    *(Gfx **) arg1 = gfx;
 }
 
 s32 func_8023FC00(u8 arg0, u16 arg1) {
