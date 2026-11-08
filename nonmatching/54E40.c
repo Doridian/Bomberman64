@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 6754, eu 6761, jp 6718
+ * differing words: us 6725, eu 6732, jp 6689
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -2946,19 +2946,10 @@ static void func_8023D0F0(void) {
 }
 
 static void func_8023CECC() {
-    u8 *var_v1_2;
-    s32 *var_v1;
-    s32 *var_v1_3;
-    s32 temp_a1;
-    s32 temp_lo;
-    s32 temp_lo_2;
-    s32 temp_lo_3;
-    s32 var_a0;
-    s32 var_a0_2;
-    s32 var_a2;
-    s32 var_a2_2;
-    s32 var_v0;
-    s32 var_v0_2;
+    Rect54E40 *r;
+    s32 n;
+    s32 i;
+    s32 x;
 
     D_802A0758 = func_8026CE28(0x130);
     D_802A075C = func_8026CE28(0x131);
@@ -2969,56 +2960,43 @@ static void func_8023CECC() {
     } else {
         func_8023CD1C();
         func_8023CC54(2);
-        var_v1 = ((s32 *) &D_802AC660);
-        var_a2 = 0;
-        do {
-            if ((M2C_FIELD(var_v1, s32 *, 4) != 0) && (M2C_FIELD(var_v1, s32 *, 0x90) == 0)) {
-                var_a2 += 1;
+        for (n = 0, i = 0; i < 4; i++) {
+            if ((D_802AC660.unk4[i] != 0) && (D_802AC660.unk90[i] == 0)) {
+                n++;
             }
-            var_v1 = (void *) ((u8 *)var_v1 + 4);
-        } while ((u32) var_v1 < (u32) D_802AC670);
-        var_v1_2 = D_802A0888;
-        var_a0 = 3;
-        var_v0 = 0x84;
+        }
+        r = (Rect54E40 *) D_802A0888;
+        i = 3;
+        x = 0x84;
         do {
-            M2C_FIELD(var_v1_2, s32 *, 4) = (s32) (var_v0 * 4);
-            M2C_FIELD(var_v1_2, s32 *, 0xC) = (s32) ((var_v0 + 0x10) * 4);
-            var_v0 += 0x12;
-            if ((var_a2 + 2) == var_a0) {
-                M2C_FIELD(&D_802A0838, s32 *, 0xC) = (s32) (var_v0 + 4);
-                var_v0 += 0x3A;
+            r->xl = x << 2;
+            r->xh = (x + 0x10) << 2;
+            x += 0x12;
+            if ((n + 2) == i) {
+                D_802A0838[3] = x + 4;
+                x += 0x3A;
             }
-            var_a0 += 1;
-            var_v1_2 += 0x14;
-        } while (var_a0 < 7);
-        temp_lo = var_a2 * 0x12;
-        var_v0_2 = var_a2 + 3;
-        var_a2_2 = 3;
-        var_v1_3 = ((s32 *) &D_802AC660);
-        var_a0_2 = 0;
-        M2C_FIELD(D_802A084C, s32 *, 0x2C) = (s32) ((temp_lo + 0xAC) * 4);
-        M2C_FIELD(D_802A084C, s32 *, 0x34) = (s32) ((temp_lo + 0xBC) * 4);
-        do {
-            if (M2C_FIELD(var_v1_3, s32 *, 4) != 0) {
-                temp_a1 = var_a0_2 * 2;
-                if (M2C_FIELD(var_v1_3, s32 *, 0x90) == 0) {
-                    temp_lo_2 = var_a2_2 * 0x14;
-                    var_a2_2 += 1;
-                    *(D_802A084C + temp_lo_2) = temp_a1;
+            i++;
+            r++;
+        } while (i < 7);
+        ((Rect54E40 *) D_802A084C)[2].xl = (n * 0x12 + 0xAC) << 2;
+        ((Rect54E40 *) D_802A084C)[2].xh = (n * 0x12 + 0xBC) << 2;
+        x = n + 3;
+        n = 3;
+        for (i = 0; i < 4; i++) {
+            if (D_802AC660.unk4[i] != 0) {
+                if (D_802AC660.unk90[i] == 0) {
+                    ((Rect54E40 *) D_802A084C)[n++].idx = i * 2;
                 } else {
-                    temp_lo_3 = var_v0_2 * 0x14;
-                    var_v0_2 += 1;
-                    *(D_802A084C + temp_lo_3) = temp_a1;
+                    ((Rect54E40 *) D_802A084C)[x++].idx = i * 2;
                 }
             }
-            var_a0_2 += 1;
-            var_v1_3 = (void *) ((u8 *)var_v1_3 + 4);
-        } while (var_a0_2 != 4);
-        M2C_FIELD(&D_802A0838, s32 *, 0x10) = (s32) ((var_v0_2 * 0x12) + 0x8C);
-        D_802AC7C8 = var_v0_2;
+        }
+        D_802A0838[4] = x * 0x12 + 0x8C;
+        D_802AC7C8 = x;
         D_802A0760 = func_8022A328(func_80241590, 0x3F, 1, 0, 0);
     }
-    M2C_FIELD(D_802A0760, s32 *, 0xC) = (s32) (M2C_FIELD(D_802A0760, s32 *, 0xC) | 0x210);
+    M2C_FIELD(D_802A0760, s32 *, 0xC) |= 0x210;
 }
 
 void func_8023CD1C() {
