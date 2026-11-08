@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 5733, eu 5741, jp 5716
+ * differing words: us 5601, eu 5609, jp 5584
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -1360,76 +1360,56 @@ block_32:
 }
 
 void func_80240F34() {
-    f32 sp6C[3];
-    f32 sp68;
-    f32 sp64;
-    f32 sp60;
-    f32 var_fa0;
-    f32 var_fa1;
-    f32 var_fs0;
-    f32 var_ft4;
-    f32 var_ft5;
-    f32 var_fv0;
-    f32 var_fv1;
+    f32 t[3];
+    f32 x;
+    f32 y;
+    f32 z;
+    f32 dx;
+    f32 dy;
+    f32 dz;
+    f32 speed;
 
     func_802350F8(1);
     func_80234F6C(1);
-    func_802348B4(&sp68, &sp64, &sp60);
-    var_fs0 = 8.0f;
-loop_1:
-    func_80250338(func_80243DDC(), sp6C);
-    var_fa0 = sp68;
-    if (!(sp6C[1] < -1000.0f)) {
-        var_fv1 = sp64;
-        if (var_fa0 < sp6C[0]) {
-            var_fa1 = -(var_fa0 - sp6C[0]);
-        } else {
-            var_fa1 = var_fa0 - sp6C[0];
+    func_802348B4(&x, &y, &z);
+    speed = 8.0f;
+    while (TRUE) {
+        func_80250338(func_80243DDC(), t);
+        if (t[1] < -1000.0f) {
+            break;
         }
-        var_fv0 = sp60;
-        if (var_fv1 < sp6C[1]) {
-            var_ft4 = -(var_fv1 - sp6C[1]);
-        } else {
-            var_ft4 = var_fv1 - sp6C[1];
-        }
-        if (var_fv0 < sp6C[2]) {
-            var_ft5 = -(var_fv0 - sp6C[2]);
-        } else {
-            var_ft5 = var_fv0 - sp6C[2];
-        }
-        if (!(var_fa1 > 100.0f) && !(var_ft4 > 100.0f) && !(var_ft5 > 100.0f)) {
-            var_fs0 *= 0.9f;
-            if (var_fs0 < 1.0f) {
-                var_fs0 = 1.0f;
+        dx = (x < t[0]) ? -(x - t[0]) : (x - t[0]);
+        dy = (y < t[1]) ? -(y - t[1]) : (y - t[1]);
+        dz = (z < t[2]) ? -(z - t[2]) : (z - t[2]);
+        if (!(dx > 100.0f) && !(dy > 100.0f) && !(dz > 100.0f)) {
+            speed *= 0.9f;
+            if (speed < 1.0f) {
+                speed = 1.0f;
             }
         }
-        if (var_fa1 > 1.0f) {
-            if (var_fa0 < sp6C[0]) {
-                var_fa0 += var_fs0;
+        if (dx > 1.0f) {
+            if (x < t[0]) {
+                x += speed;
             } else {
-                var_fa0 -= var_fs0;
+                x -= speed;
             }
         }
-        if (var_ft4 > 1.0f) {
-            if (var_fv1 < sp6C[1]) {
-                var_fv1 += var_fs0;
+        if (dy > 1.0f) {
+            if (y < t[1]) {
+                y += speed;
             } else {
-                var_fv1 -= var_fs0;
+                y -= speed;
             }
         }
-        if (var_ft5 > 1.0f) {
-            if (var_fv0 < sp6C[2]) {
-                var_fv0 += var_fs0;
+        if (dz > 1.0f) {
+            if (z < t[2]) {
+                z += speed;
             } else {
-                var_fv0 -= var_fs0;
+                z -= speed;
             }
         }
-        sp60 = var_fv0;
-        sp64 = var_fv1;
-        sp68 = var_fa0;
-        func_802346C8(var_fa0, var_fv1 + 50.0f, var_fv0);
+        func_802346C8(x, y + 50.0f, z);
         func_80239094();
-        goto loop_1;
     }
     D_802AC7F0 = 0;
     func_80239430();
