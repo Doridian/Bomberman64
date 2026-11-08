@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2809, eu 2828, jp 2848
+ * differing words: us 2645, eu 2664, jp 2684
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -1047,8 +1047,9 @@ void func_80241BB0(s32 arg0, Gfx **gdl) {
 }
 
 void func_80241590(s32 arg0, Gfx **gdl) {
-    s32 pad[48];
+    s32 pad[46];
     Gfx *gfx;
+    TexFile *tf;
     Rect54E40 *r;
     TexEntry *e;
     s32 *digit;
@@ -1072,8 +1073,9 @@ void func_80241590(s32 arg0, Gfx **gdl) {
     if (D_802AC7C8 > 0) {
         r = (Rect54E40 *) D_802A084C;
         do {
-            gDPLoadTLUT_pal256(gfx++, (u8 *) D_802A0758 + D_802A0758->entries[r->idx + 1].offset);
-            gDPLoadTextureBlock_4b(gfx++, (u8 *) D_802A0758 + D_802A0758->entries[r->idx].offset, G_IM_FMT_CI, 16, 16, 0,
+            tf = D_802A0758;
+            gDPLoadTLUT_pal256(gfx++, (u8 *) tf + tf->entries[r->idx + 1].offset);
+            gDPLoadTextureBlock_4b(gfx++, (u8 *) tf + tf->entries[r->idx].offset, G_IM_FMT_CI, 16, 16, 0,
                                    G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMASK, G_TX_NOMASK, G_TX_NOLOD, G_TX_NOLOD);
             gSPTextureRectangleYX(gfx++, r->xl, r->yl, r->xh, r->yh, G_TX_RENDERTILE, 0, 0, 0x400, 0x400);
             i++;
@@ -1081,6 +1083,7 @@ void func_80241590(s32 arg0, Gfx **gdl) {
         } while (i < D_802AC7C8);
     }
     n = 0;
+    tf = D_802A075C;
     count = D_802A08D8;
     xs = D_802A0838;
     do {
@@ -1088,15 +1091,15 @@ void func_80241590(s32 arg0, Gfx **gdl) {
         j = 0;
         if (*count > 0) {
             digit = &D_802AC770[n];
-            e = D_802A075C->entries;
+            e = tf->entries;
             do {
                 n++;
-                if (count >= D_802A08D8 + 3 || D_802AC660.unk2C > 0) {
-                    gDPLoadTLUT_pal16(gfx++, 0, (u8 *) D_802A075C + e[1].offset);
+                if (count >= (s32 *) D_802A08E4 || D_802AC660.unk2C > 0) {
+                    gDPLoadTLUT_pal16(gfx++, 0, (u8 *) tf + e[1].offset);
                 } else {
-                    gDPLoadTLUT_pal16(gfx++, 0, (u8 *) D_802A075C + e[25].offset);
+                    gDPLoadTLUT_pal16(gfx++, 0, (u8 *) tf + e[25].offset);
                 }
-                gDPLoadTextureTile_4b(gfx++, (u8 *) D_802A075C + e[*digit].offset, G_IM_FMT_CI, 10, 18, 0, 0, 9, 17, 0,
+                gDPLoadTextureTile_4b(gfx++, (u8 *) tf + e[*digit].offset, G_IM_FMT_CI, 10, 18, 0, 0, 9, 17, 0,
                                       G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMASK, G_TX_NOMASK, G_TX_NOLOD, G_TX_NOLOD);
                 gSPTextureRectangle(gfx++, x << 2, 22 << 2, (x + 10) << 2, 40 << 2, G_TX_RENDERTILE, 0, 0, 0x400, 0x400);
                 j++;
