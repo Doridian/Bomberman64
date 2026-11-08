@@ -6,7 +6,7 @@
  * Every function is emitted in the original's order. Not built into the
  * ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 38, eu 38, jp 38
+ * differing words: us 23, eu 23, jp 23
  *
  * func_802921C4 and func_8029217C match; of the statics (compared as one
  * run from func_8028FD80, 402 words), func_8028FD88 matches. The inlined
@@ -125,6 +125,33 @@
  *   forbidden; the original reloads res into v0 before the final stores,
  *   ours at the return, which also costs a nop: 0xF4C vs 0xF48); FFA8
  *   half B's ctx->unk0 in v0 vs v1 (3).
+ * p6 (38 -> 23 in every version; jp allf: FFA8 3, 09FC 20; 09FC is
+ *   0xF4C vs 0xF48).
+ *   c's spill slot: uopt puts global expression temps (Uand/Ucvt/Uilod
+ *   ichains) at -(td+4+4*idx), idx handed out greedily by ichain bit;
+ *   td is the local area (declared locals, inlined statics' parameters
+ *   and locals, compiler temps such as ABS's). Ours had td 248 (c at
+ *   0x54); the original's is 244 (0x58, same frame 336). Removing
+ *   09FC's pad6 drops td by 8 (alignment); "s32 qq[1];" as the first
+ *   local of the inlined func_8029085C adds back exactly 4 (35 -> 20).
+ * Left (23): 09FC (20): the corner's r in a0 (it shares one range with
+ *   the else branch's r; a fresh variable gets v0) and the unk44
+ *   branch's p in v0, both v1 in the original, plus the t7/t9 rotation
+ *   after; the original reloads res into v0 in the delay slot before the
+ *   final stores, ours at the return with an extra nop. p is coloured
+ *   first (highest priority) and takes v0 on a cost tie; the original
+ *   needs v0 taken or forbidden there. FFA8 (3): half B's ctx->unk0 has
+ *   cost 0 for every register and nothing forbidden, so it takes v0.
+ *   Tried without effect: dead tests on 14 variables at every line, the
+ *   if-chain rewrites (128 variants), r = 0 hoisted, the final stores as
+ *   an inlined static returning res (td 256; compensated to 248, 47),
+ *   a res temp, #line on the return.
+ * Levers: td moves in 4s through an inlined static's locals, in 8s
+ *   through the main function's; scratch/main11/p6/uo is uopt
+ *   instrumented to print each ichain's type, frame offset and the
+ *   colouring order (ASSIGN lines); a call's argument register is
+ *   forbidden to ranges live across that block; a call result tested in
+ *   the same block makes v0/v1 cost 1e20.
  * Left: FFA8's frame 168 vs 160 (v_A 140 vs 124, v_B 76 vs 68, flag
  * read at 184 vs 176), half A's float registers (orig fb f2, u f0, ab
  * f12, 50.0 temp f18, unk24 loaded early), half B's end (obj v1 vs v0,
@@ -602,6 +629,7 @@ static void func_8029087C(UnkStruct_802909FC *ctx) {
 }
 
 static void func_8029085C(UnkStruct_802909FC *ctx, f32 angle) {
+    s32 qq[1];
     ctx->unk10 = (ctx->unk0->unk40->unk10 + 50.0f) * 0.01f;
     ctx->unk18 = (ctx->unk0->unk40->unk18 + 50.0f) * 0.01f;
     ctx->unk14
@@ -646,7 +674,6 @@ s32 func_802909FC(UnkStructA *obj, s32 (*cb)(s32)) {
     f32 b;
     s32 pad7;
     s32 c;
-    s32 pad6;
 
     ctx.unk0 = obj;
     ctx.unk4 = obj->unk40->unk10;
