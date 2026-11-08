@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 61, eu 61, jp 74
+ * differing words: us 58, eu 58, jp 71
  *
  * The pages are a table (D_ovl0B_04_800499B8: texts, handler, cursor
  * table, set-up) that func_ovl0B_04_80043ADC runs in turn; pages 1-4 are
@@ -1509,12 +1509,12 @@ static void func_ovl0B_04_80045540(u8 item, u16 buttons, u8 *ret) {
     if (buttons & 2) {
         i = D_ovl0B_04_8004A490.unk0;
         p = D_ovl0B_04_8004A290[i];
-        c = p[0];
+        c = p[0] ^ 0; /* fake (permuter): without it the object is 335 words */
         D_ovl0B_04_8004A490.unk1 = 0;
         p[0] = 0;
-        /* i and the cursor mixed only for registers (the same value: p
-         * points into D_ovl0B_04_8004A290). */
-        if ((i == 7 && c == 0) || (i != 7 && D_ovl0B_04_8004A490.unk0 > 0)) {
+        /* The test reads the cursor again rather than i (the same value):
+         * found by the permuter, 80045214's run 26 to 23 words. */
+        if ((D_ovl0B_04_8004A490.unk0 == 7 && c == 0) || (D_ovl0B_04_8004A490.unk0 != 7 && D_ovl0B_04_8004A490.unk0 > 0)) {
             D_ovl0B_04_8004A490.unk0 = D_ovl0B_04_8004A490.unk0 - 1;
         }
         func_ovl0B_04_80044210();
