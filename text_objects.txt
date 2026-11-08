@@ -86,3 +86,28 @@ main_code A1EA0
 # each half has its globals first and its statics after, as one -O3
 # object does.
 main_code A8DE0
+
+# 45170 (-O3) is the skeleton and animation code (model file chunks 2, 3
+# and 7 read into a skeleton, its node tree, the animation tracks and
+# their interpolation); 426E0 before it is the object pool, the draw
+# loop and the per-object animation slots.  -O3 emits a file's callees
+# before their callers, but 426E0's func_8022827C, func_80229D68,
+# func_80229E38, func_80229F74 and func_8022A328 call func_8022C530,
+# func_8022ABCC, func_8022BB88, func_8022C8B8, func_8022CF64,
+# func_8022AF1C and func_8022D1D0, all emitted after them: a file
+# boundary lies between func_8022A328 and func_8022ABCC.  The text
+# there starts on 16 bytes only at func_8022A970 and func_8022AA50, with
+# no padding before either; func_8022A970 frees what func_8022AF1C's
+# chunk 3 allocated and only func_8022AA50 calls it.  The data agree:
+# 426E0's .rodata (0.001f) ends in 12 zero bytes at 0x802A2D30, its
+# .data (to D_8029F858's table) in 8 zero bytes at 0x8029F880, and its
+# .bss at 0x802A54A0, each where 45170's references start.
+main_code 45170
+
+# 479D0 (-O3) is func_8022D1D0 alone, which builds a skeleton instance.
+# It calls func_8022D15C (nine words copied from three .data vectors)
+# and func_8022AEDC (two calls) with a jal, each once and outside any
+# loop. IDO -O3 inlines a callee like that when it is in the same file,
+# as a draft of 45170 with all of them in one file shows. The function
+# before it, func_8022D15C, ends on a 16-byte boundary.
+main_code 479D0
