@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2887, eu 2887, jp 2886
+ * differing words: us 2802, eu 2802, jp 2801
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -2122,63 +2122,56 @@ void func_8024D108(s32 arg0, s32 arg1) {
 }
 
 void func_8024CEB8(s32 arg0) {
-    UnkObj *sp44;
-    f32 sp2C[3];
-    UnkObj *temp_a3;
-    UnkStruct_800AEDF0 *temp_v1;
-    f32 temp_fv0;
-    f32 temp_fv0_2;
-    f32 temp_fv0_3;
-    s32 *temp_v0_2;
-    s32 temp_v0;
-    s32 var_a2;
-    s32 var_v1;
+    Obj88 *obj;
+    s32 pad[1];
+    f32 pos[3];
+    UnkStruct_800AEDF0 *p;
+    s32 hit;
+    f32 f;
+    s32 v;
 
-    temp_v1 = &D_800AEDF0[arg0];
-    temp_v0 = temp_v1->unk44;
-    temp_a3 = temp_v1->unk28;
-    var_a2 = 0;
-    switch (temp_v0) {
+    p = &D_800AEDF0[arg0];
+    obj = (Obj88 *)p->unk28;
+    hit = 0;
+    v = p->unk44;
+    if (!p && !p) {}
+    switch (v) {
     case 1:
     case 13:
-        temp_fv0 = (f32) (s32) M2C_FIELD(M2C_FIELD(M2C_FIELD(temp_a3->unk40, void **, 0x48), void **, 4), f32 *, 0x10);
-        if ((temp_fv0 == 12.0f) || (temp_fv0 == 36.0f)) {
-block_10:
-            var_a2 = 1;
+        v = obj->unk40->unk48->unk4->unk10;
+        if (v == 12.0f || v == 36.0f) {
+            hit = 1;
         }
         break;
     case 2:
     case 14:
-        temp_fv0_2 = (f32) (s32) M2C_FIELD(M2C_FIELD(M2C_FIELD(temp_a3->unk40, void **, 0x48), void **, 4), f32 *, 0x10);
-        if ((temp_fv0_2 == 0.0f) || (temp_fv0_2 == 20.0f)) {
-            goto block_10;
+        v = obj->unk40->unk48->unk4->unk10;
+        if (v == 0.0f || v == 20.0f) {
+            hit = 1;
         }
         break;
     case 3:
     case 15:
-        temp_fv0_3 = (f32) (s32) M2C_FIELD(M2C_FIELD(M2C_FIELD(temp_a3->unk40, void **, 0x48), void **, 4), f32 *, 0x10);
-        if ((temp_fv0_3 == 0.0f) || (temp_fv0_3 == 16.0f)) {
-            goto block_10;
+        v = obj->unk40->unk48->unk4->unk10;
+        if (v == 0.0f || v == 16.0f) {
+            hit = 1;
         }
         break;
     }
-    if (var_a2 != 0) {
-        sp44 = temp_a3;
-        temp_v0_2 = func_8023A840();
-        D_802ACF60 = temp_v0_2;
-        var_v1 = M2C_FIELD(temp_v0_2, s32 *, 4);
-        if ((var_v1 == 3) && (M2C_FIELD(temp_v0_2, s32 *, 8) == 0)) {
-            sp44 = temp_a3;
+    if (D_802ACF60) {}
+    if (hit) {
+        D_802ACF60 = func_8023A840();
+        if (D_802ACF60[1] == 3 && D_802ACF60[2] == 0) {
             func_8026C660(0x30);
-            var_v1 = M2C_FIELD(D_802ACF60, s32 *, 4);
         }
-        if (var_v1 == 0) {
-            func_8022F808(temp_a3, sp2C);
-            if ((func_8026DF74(sp2C[0], sp2C[1], sp2C[2]) & 0x1C00) == 0x400) {
+        if (D_802ACF60[1] == 0) {
+            func_8022F808(obj, pos);
+            if ((func_8026DF74(pos[0], pos[1], pos[2]) & 0x1C00) == 0x400) {
                 func_8026C660(0x31);
             }
         }
     }
+    if (!f && !f) {}
 }
 
 void func_8024CC58(s32 arg0) {
