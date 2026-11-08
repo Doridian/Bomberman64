@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 5877, eu 5885, jp 5858
+ * differing words: us 5862, eu 5870, jp 5843
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -2621,7 +2621,6 @@ block_48:
 }
 
 void func_8023DA04(s32 arg0) {
-    s32 temp_t2;
     s32 temp_v1;
 
     if (0) {
@@ -2637,7 +2636,7 @@ void func_8023DA04(s32 arg0) {
     D_802AC610.unkC = 0;
     D_802AC610.unk38 = (s32) *func_8028A060(1);
     temp_v1 = *func_8028A060(3);
-    switch (temp_v1) {                              /* irregular */
+    switch (temp_v1) {
     case 0:
         D_802AC610.unk10 = 0;
         break;
@@ -2651,9 +2650,8 @@ void func_8023DA04(s32 arg0) {
     D_802AC610.unk2C = 0;
     func_8028A0B4();
     if (D_802AC610.unk40 != 0) {
-        temp_t2 = M2C_FIELD(D_800AEDF0, s32 *, 0x18) | 0x200;
-        M2C_FIELD(D_800AEDF0, s32 *, 0x18) = temp_t2;
-        M2C_FIELD(D_800AEDF0, s32 *, 0x18) = (s32) (temp_t2 | 3);
+        M2C_FIELD(D_800AEDF0, s32 *, 0x18) |= 0x200;
+        M2C_FIELD(D_800AEDF0, s32 *, 0x18) |= 3;
         func_80278E84(0, 8);
         func_80277AF8(0, 8);
     } else {
