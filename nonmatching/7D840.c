@@ -6,7 +6,7 @@
  * with the original's stubs. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 52, eu 52, jp 52
+ * differing words: us 46, eu 46, jp 46
  *
  * func_80265274 matches: the wrap is the inlined static func_80264F98
  * (a switch writing through r++, called with info.width/height, which
@@ -767,8 +767,8 @@ void func_8026437C(Gfx **gfxp, TexFile *file, f32 x0, f32 y0, f32 x1, f32 y1, f3
     i = 0;
     if (rects[i].a != 32768.0f && rects[i].b != 32768.0f && rects[i].c != 32768.0f && rects[i].d != 32768.0f) {
         if (fh - (s32) fh && fh - (s32) fh) {}
-        info.y0 = y0;
         info.x0 = x0;
+        info.y0 = y0;
         info.x1 = (rects[i].c - rects[i].a) * (info.dirX * info.scaleX) + x0;
         info.y1 = (rects[i].d - rects[i].b) * (info.dirY * info.scaleY) + y0;
         if (x1 < info.x1) {
