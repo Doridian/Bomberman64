@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2558, eu 2558, jp 2557
+ * differing words: us 2530, eu 2530, jp 2529
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -3139,17 +3139,15 @@ void func_80249E30(s32 arg0) {
 
 void func_80249D74(s32 arg0) {
     UnkObj *o;
-    UnkStruct_800AEDF0 *e = &D_800AEDF0[arg0];
-    s32 v;
 
     if (!func_80243EB4(arg0, 0x20000)) {
-        o = e->unk28;
+        o = (UnkObj *)func_802443F4(arg0);
         func_80243D90(arg0, 0x20000, 1);
-        e->unkB8 = 60;
-        e->unkB4 = v = func_80231274(0x4E, 0x11200000, 0xD0, o);
-        M2C_FIELD(v, f32 *, 0x4C) = 0.0f;
-        M2C_FIELD(e->unkB4, f32 *, 0x50) = 200.0f;
-        M2C_FIELD(e->unkB4, f32 *, 0x54) = 0.0f;
+        D_800AEDF0[arg0].unkB8 = 60;
+        D_800AEDF0[arg0].unkB4 = (s32)func_80231274(0x4E, 0x11200000, 0xD0, o);
+        M2C_FIELD(D_800AEDF0[arg0].unkB4, f32 *, 0x4C) = 0.0f;
+        M2C_FIELD(D_800AEDF0[arg0].unkB4, f32 *, 0x50) = 200.0f;
+        M2C_FIELD(D_800AEDF0[arg0].unkB4, f32 *, 0x54) = 0.0f;
     }
 }
 
@@ -4210,15 +4208,11 @@ void func_80246938() {
 }
 
 void func_80246808() {
-    s32 temp_t2;
-
-    func_80282144((s32) D_802ACEA4, (s32) D_802ACEA8, (s32) D_802ACEAC, 50.0f);
+    func_80282144((s32)D_802ACEA4, (s32)D_802ACEA8, (s32)D_802ACEAC, 50.0f);
     D_802ACEA4 += D_802ACEBC;
     D_802ACEA8 += D_802ACEC0;
-    temp_t2 = D_802AC9F0 - 1;
     D_802ACEAC += D_802ACEC4;
-    D_802AC9F0 = temp_t2;
-    if (temp_t2 == 0) {
+    if (--D_802AC9F0 == 0) {
         D_802ACEA4 = D_802ACEB0;
         D_802ACEA8 = D_802ACEB4;
         D_802ACEAC = D_802ACEB8;
@@ -4248,11 +4242,7 @@ void func_8024663C() {
 }
 
 void func_80246604() {
-    s32 temp_t7;
-
-    temp_t7 = D_802AC9F0 - 1;
-    D_802AC9F0 = temp_t7;
-    if (temp_t7 == 0) {
+    if (--D_802AC9F0 == 0) {
         func_80246078();
     }
 }
@@ -4738,7 +4728,7 @@ void func_80245208(s32 arg0, s32 arg1) {
     void *obj;
 
     if (arg0 != -1) {
-        obj = D_800AEDF0[arg0].unk28;
+        obj = (void *)func_802443F4(arg0);
         func_80244354(arg0, 0x02010000, arg1);
         D_802AC918[arg0] = 0;
         func_802313DC(obj, 0x40000);
