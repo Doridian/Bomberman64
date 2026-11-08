@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2964, eu 2964, jp 2963
+ * differing words: us 2887, eu 2887, jp 2886
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -248,10 +248,10 @@ typedef struct { s32 x, y, z, w; f32 h; } Cell5_5E3F0;
 void free(void *);
 s32 func_8022979C(s32, s32, s32);
 void func_802297B8(s32, s32, s32, s32);
-s32 func_8022984C(s32);
+s32 func_8022984C(s32, s32);
 f32 func_80229D3C(void *, s32);
 void func_80229E38(void *, s32, s32);
-s32 func_80229F74(s32);
+s32 func_80229F74(s32, s32);
 f32 func_8022DF68(f32 *, f32 *);
 s32 func_8022E884(s32, s32);
 s32 func_8022F4AC(s32, s32, s32);
@@ -4619,95 +4619,82 @@ void func_80245CDC() {
 }
 
 void func_802459BC(s32 arg0) {
-    s32 sp38;
-    UnkModel *temp_v0_2;
-    UnkObj *temp_s0;
-    UnkObj *temp_v0;
-    UnkStruct_800AEDF0 *temp_s2;
-    s32 temp_s0_2;
-    s32 var_s0;
-    s32 var_s1;
-    s32 var_v1;
-    void *temp_v0_3;
+    s32 pad;
+    s32 m;
+    UnkStruct_800AEDF0 *p;
+    UnkObj *v;
+    Obj88 *obj;
+    s32 i;
 
-    temp_v0 = func_80231274(0x49, 0x0D000011, 0x70, NULL);
-    temp_s2 = &D_800AEDF0[arg0];
-    temp_s2->unk28 = temp_v0;
-    temp_v0->unk40->unk10 = temp_s2->unk0;
-    temp_s2->unk28->unk40->unk14 = temp_s2->unk4;
-    temp_s2->unk28->unk40->unk18 = temp_s2->unk8;
-    M2C_FIELD(temp_s2->unk28->unk40, f32 *, 0x20) = (f32) temp_s2->unkC;
-    M2C_FIELD(temp_s2->unk28, s32 *, 0x30) = 1;
-    M2C_FIELD(temp_s2->unk28, f32 *, 0x34) = 30.0f;
-    M2C_FIELD(temp_s2->unk28, f32 *, 0x38) = 51.0f;
-    temp_s2->unk28->unk6C = 0.0f;
-    M2C_FIELD(temp_s2->unk28, f32 *, 0x70) = 1.6333334f;
-    M2C_FIELD(temp_s2->unk28, f32 *, 0x68) = 0.0f;
-    M2C_FIELD(temp_s2->unk28, s32 *, 0xC) = 0x1FF0;
-    func_80229F74((s32) temp_s2->unk28->unk40);
-    func_8022984C((s32) temp_s2->unk28->unk40);
-    var_v1 = func_80243EB4(arg0, 0x200);
-    var_s1 = sp38;
-    if (var_v1 != 0) {
-        temp_s0 = temp_s2->unk28;
-        func_8022979C((s32) temp_s0->unk40, 4, 4);
-        func_8022979C((s32) temp_s0->unk40, 5, 5);
-        func_80231408(temp_s0, 0x80000);
-        M2C_FIELD(temp_s0->unk40, s16 *, 0x36) = 0x80;
-        temp_v0_2 = temp_s0->unk40;
-        M2C_FIELD(temp_v0_2, s32 *, 0xC) = (s32) (M2C_FIELD(temp_v0_2, s32 *, 0xC) | 0x1000);
-        var_s1 = sp38;
+    v = func_80231274(0x49, 0x0D000011, 0x70, NULL);
+    p = &D_800AEDF0[arg0];
+    p->unk28 = v;
+    v->unk40->unk10 = p->unk0;
+    p->unk28->unk40->unk14 = p->unk4;
+    p->unk28->unk40->unk18 = p->unk8;
+    p->unk28->unk40->unk20 = p->unkC;
+    M2C_FIELD(p->unk28, s32 *, 0x30) = 1;
+    M2C_FIELD(p->unk28, f32 *, 0x34) = 30.0f;
+    M2C_FIELD(p->unk28, f32 *, 0x38) = 51.0f;
+    p->unk28->unk6C = 0.0f;
+    M2C_FIELD(p->unk28, f32 *, 0x70) = 1.6333334f;
+    M2C_FIELD(p->unk28, f32 *, 0x68) = 0.0f;
+    M2C_FIELD(p->unk28, s32 *, 0xC) = 0x1FF0;
+    func_80229F74((s32)p->unk28->unk40, 2);
+    func_8022984C((s32)p->unk28->unk40, 12);
+    if (func_80243EB4(arg0, 0x200)) {
+        obj = (Obj88 *)p->unk28;
+        func_8022979C((s32)obj->unk40, 4, 4);
+        func_8022979C((s32)obj->unk40, 5, 5);
+        func_80231408(obj, 0x80000);
+        M2C_FIELD(obj->unk40, s16 *, 0x36) = 0x80;
+        obj->unk40->unkC |= 0x1000;
     }
-    var_s0 = 0;
-    do {
-        switch (arg0) {                             /* irregular */
+    for (i = 0; i < 12; i++) {
+        switch (arg0) {
         case 0:
-            var_s1 = 0x4A;
+            m = 0x4A;
             break;
         case 1:
-            var_s1 = 0x4B;
+            m = 0x4B;
             break;
         case 2:
-            var_s1 = 0x4C;
+            m = 0x4C;
             break;
         case 3:
-            var_s1 = 0x4D;
+            m = 0x4D;
             break;
         }
-        func_802297B8((s32) temp_s2->unk28->unk40, var_s1, var_s0, var_s0);
-        var_s0 += 1;
-    } while (var_s0 != 0xC);
-    sp38 = var_s1;
-    temp_s0_2 = arg0 * 4;
-    temp_s2->unkB0 = func_802311E8(temp_s2->unk28);
-    D_802AC8A8[(temp_s0_2) / 4] = 1;
+        func_802297B8((s32)p->unk28->unk40, m, i, i);
+    }
+    p->unkB0 = func_802311E8(p->unk28);
+    D_802AC8A8[arg0] = 1;
     D_802AC89C = 0;
     D_802AC8A0 = 0;
     func_802444B8(arg0, 0);
-    D_802AC8E8[(temp_s0_2) / 4] = -1;
-    D_802ACA78[(temp_s0_2) / 4] = 0.0f;
-    temp_s2->unk10 = 0;
-    temp_s2->unk68 &= 0x200;
-    temp_s2->unk2C = 0;
-    temp_s2->unk48 = 1;
-    temp_s2->unk4C = 0;
-    temp_s2->unk50 = 0;
-    temp_s2->unk54 = 0;
-    temp_s2->unk80 = 3;
-    temp_s2->unk9C = 0;
-    temp_s2->unkA4 = 0;
-    temp_s2->unkA8 = 0;
-    temp_s2->unkB4 = 0;
-    temp_s2->unk38 = 0;
-    temp_s2->unk18 &= ~0x404;
-    temp_s2->unk74 = 0;
-    temp_s2->unk40 = 0;
-    temp_v0_3 = &D_802ACF08[arg0];
-    M2C_FIELD(temp_v0_3, s16 *, 0xC) = 0;
-    M2C_FIELD(temp_v0_3, s16 *, 0xE) = 0;
-    M2C_FIELD(temp_v0_3, f32 *, 8) = 0.0f;
-    M2C_FIELD(temp_v0_3, f32 *, 4) = 0.0f;
-    M2C_FIELD(temp_v0_3, f32 *, 0) = 0.0f;
+    D_802AC8E8[arg0] = -1;
+    D_802ACA78[arg0] = 0.0f;
+    p->unk10 = 0;
+    p->unk68 &= 0x200;
+    p->unk2C = 0;
+    p->unk48 = 1;
+    p->unk4C = 0;
+    p->unk50 = 0;
+    p->unk54 = 0;
+    p->unk80 = 3;
+    p->unk9C = 0;
+    p->unkA4 = 0;
+    p->unkA8 = 0;
+    p->unkB4 = 0;
+    p->unk38 = 0;
+    p->unk18 &= ~0x404;
+    p->unk74 = 0;
+    p->unk40 = 0;
+    D_802ACF08[arg0].unkC = 0;
+    D_802ACF08[arg0].unkE = 0;
+    D_802ACF08[arg0].unk8 = 0.0f;
+    D_802ACF08[arg0].unk4 = 0.0f;
+    D_802ACF08[arg0].unk0 = 0.0f;
 }
 
 void func_80245868() {
