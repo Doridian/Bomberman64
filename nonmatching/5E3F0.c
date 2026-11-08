@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 6743, eu 6743, jp 6743
+ * differing words: us 6299, eu 6299, jp 6299
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -214,6 +214,13 @@ typedef struct {
     /* 0x0E */ u16 unkE;
 } PadState;
 
+typedef struct {
+    /* 0x00 */ f32 unk0;
+    /* 0x04 */ s32 unk4;
+    /* 0x08 */ s32 unk8;
+    /* 0x0C */ f32 unkC;
+} Ctl58;
+
 #define WRAP360(x) (((x) >= 360.0f) ? (x) - 360.0f : (((x) < 0.0f) ? (x) + 360.0f : (x)))
 
 typedef struct {
@@ -391,7 +398,7 @@ extern s32 D_802AC9EC;
 extern s32 D_802AC9F0;
 extern s32 D_802AC9F4;
 extern s32 D_802AC9F8[];
-extern f32 D_802ACA10[];
+extern s32 D_802ACA10[];
 extern f32 D_802ACA24;
 extern f32 D_802ACA28;
 extern f32 D_802ACA2C;
@@ -553,7 +560,7 @@ s32 func_8024D41C(f32 key);
 s32 func_8024D50C(void *arg0);
 void func_8024D540(s32 arg0, f32 *arg1);
 void func_8024D5D0(f32 *arg0);
-void func_8024D8C4(f32 *arg0);
+void func_8024D8C4(Ctl58 *arg0);
 void func_8024E088(s32 arg0);
 void func_8024FFF0(void);
 void func_802500D4(void);
@@ -1255,7 +1262,7 @@ void func_8024E088(s32 arg0) {
             sp120 = 1;
             spD4 = 0.0f;
             if (func_80244BA4(arg0, 0x400) && func_802452AC(arg0, 0x1C0)) {
-                func_8024D8C4((f32 *)&sp58);
+                func_8024D8C4((Ctl58 *)&sp58);
                 spD4 = sp58.unk0;
                 sp120 = sp58.unk4;
                 if ((D_802AC968[arg0] & 1) == 1 && D_802AC97C == 0) {
@@ -1702,242 +1709,181 @@ void func_8024E088(s32 arg0) {
 }
 #undef EN
 
-void func_8024D8C4(f32 *arg0) {
-    f32 spE4;
-    f32 spDC;
-    f32 spD4;
-    UnkObj *spD0;
-    f32 spC4[2];
-    f32 spC0;
-    f32 spBC;
-    f32 spB8;
-    f32 spAC[3];
-    f32 spA4;
-    f32 spA0;
-    s32 sp88[3];
-    s32 sp84;
-    s32 sp80;
-    s32 sp7C;
-    UnkStruct_800AEDF0 *sp2C;
-    UnkModel *temp_v0_2;
-    UnkObj *temp_a0;
-    UnkStruct_800AEDF0 *temp_t4;
-    UnkStruct_800AEDF0 *temp_v1;
-    UnkStruct_800AEDF0 *var_t4;
-    f32 var_ft4;
-    f32 var_ft5;
-    f32 var_ft5_2;
-    f32 var_fv1;
-    f32 var_fv1_2;
-    s32 *temp_v0_3;
-    s32 temp_a3;
-    s32 temp_t7;
-    s32 temp_v0;
-    s32 var_v0;
-    s32 var_v1;
-    s32 var_v1_2;
-    s32 var_v1_3;
+void func_8024D8C4(Ctl58 *arg0) {
+    f32 dist;
+    f32 dx;
+    f32 dy;
+    f32 dz;
+    f32 angle;
+    Obj88 *obj;
+    f32 pos[3];
+    f32 target[3];
+    f32 res[3];
+    f32 rot[3];
+    f32 unused[3];
+    s32 ipos[3];
+    s32 b1;
+    s32 b0;
+    s32 id;
+    s32 pad[3];
 
-    temp_v0 = D_802AC968[func_80243DDC()];
-    temp_a3 = temp_v0 & 1;
-    sp84 = (temp_v0 >> 1) & 1;
-    if (temp_a3 != 0) {
-        M2C_FIELD(arg0, s32 *, 8) = (s32) D_802AC95C;
+    id = func_80243DDC();
+    b0 = D_802AC968[id] & 1;
+    b1 = (D_802AC968[id] >> 1) & 1;
+    if (b0) {
+        arg0->unk8 = D_802AC95C;
     } else {
-        M2C_FIELD(arg0, s32 *, 8) = 3;
+        arg0->unk8 = 3;
     }
-    M2C_FIELD(arg0, f32 *, 0xC) = 0.0f;
-    temp_v1 = &D_800AEDF0[func_80243DDC()];
-    temp_a0 = temp_v1->unk28;
-    sp2C = temp_v1;
-    sp7C = func_80243DDC();
-    sp80 = temp_a3;
-    spD0 = temp_a0;
-    func_8022F808(temp_a0, spC4);
-    spB8 = D_802ACA28;
-    if ((D_802AC8BC == 0x100) || (D_802AC8BC == 0x200)) {
-        spBC = D_802ACA2C;
+    arg0->unkC = 0.0f;
+    obj = (Obj88 *)func_802443F4(id);
+    func_8022F808(obj, pos);
+    target[0] = D_802ACA28;
+    if (D_802AC8BC == 0x100 || D_802AC8BC == 0x200) {
+        target[1] = D_802ACA2C;
     } else {
-        spBC = spC4[1];
+        target[1] = pos[1];
     }
-    spC0 = D_802ACA8C;
-    spD4 = M2C_FIELD(spD0->unk40, f32 *, 0x20);
-    func_8022FF58(spC4, &spB8, &spA0);
-    spA4 -= 90.0f;
-    var_ft5 = spD4;
-    var_fv1 = func_8022DF68(spC4, &spB8);
-    if (sp80 != 0) {
-        M2C_FIELD(arg0, s32 *, 4) = (s32) D_802AC8BC;
+    if (!D_802ACA8C && !D_802ACA8C) {}
+    target[2] = D_802ACA8C;
+    angle = obj->unk40->unk20;
+    func_8022FF58(pos, target, rot);
+    rot[1] -= 90.0f;
+    dist = func_8022DF68(pos, target);
+    if (b0) {
+        arg0->unk4 = D_802AC8BC;
     } else {
-        spE4 = var_fv1;
-        M2C_FIELD(arg0, s32 *, 4) = func_80243F50(spA0);
+        arg0->unk4 = func_80243F50(rot[0]);
     }
-    if (!(D_802ACA24 < var_fv1)) {
-        var_v0 = 0;
-        if ((sp2C->unk10 & 0x4000) == 0x4000) {
-            var_v0 = 1;
-        }
-        if (var_v0 != 0) {
-            goto block_14;
-        }
-        M2C_FIELD(arg0, f32 *, 0) = var_fv1;
+    if (D_802ACA24 < dist || func_80244BA4(id, 0x4000)) {
+        arg0->unk0 = D_802ACA24;
     } else {
-block_14:
-        M2C_FIELD(arg0, f32 *, 0) = D_802ACA24;
+        arg0->unk0 = dist;
     }
-    var_v1 = 0;
-    if ((sp2C->unk10 & 0x2000) == 0x2000) {
-        var_v1 = 1;
+    if (func_80244BA4(id, 0x2000)) {
+        arg0->unk0 = 0.0f;
     }
-    if (var_v1 != 0) {
-        M2C_FIELD(arg0, f32 *, 0) = 0.0f;
+    if (arg0->unk8 != 3) {
+        func_8024D5D0((f32 *)arg0);
     }
-    if (M2C_FIELD(arg0, s32 *, 8) != 3) {
-        spE4 = var_fv1;
-        spD4 = var_ft5;
-        func_8024D5D0(arg0);
-    }
-    if (((D_802AC8BC != 0x100) && (D_802AC8BC != 0x200)) || (sp80 != 1)) {
-        if (var_fv1 >= 1.0f) {
-            spE4 = var_fv1;
-            spD4 = var_ft5;
-            M2C_FIELD(arg0, s32 *, 4) = func_80243F50(spA0);
+    if ((D_802AC8BC != 0x100 && D_802AC8BC != 0x200) || b0 != 1) {
+        if (dist >= 1.0f) {
+            arg0->unk4 = func_80243F50(rot[0]);
+        if (!dist && !dist) {}
         }
     }
-    if (var_fv1 <= 1.0f) {
-        if (sp80 == 0) {
-            var_ft4 = 0.0f;
-            var_fv1_2 = 0.0f;
-            spDC = 0.0f;
-            switch (D_802AC8BC) {                   /* switch 1; irregular */
-            case 0x0:                               /* switch 1 */
-                var_ft5 = 180.0f;
-                var_ft4 = (f32) -D_802AC8C4;
+    if (dist <= 1.0f) {
+        if (!b0) {
+            dz = 0.0f;
+            dx = 0.0f;
+            dy = 0.0f;
+            switch (D_802AC8BC) {
+            case 0x0:
+                angle = 180.0f;
+                dz = -D_802AC8C4;
                 break;
-            case 0x80:                              /* switch 1 */
-                var_ft5 = 0.0f;
-                var_ft4 = (f32) D_802AC8C4;
+            case 0x80:
+                angle = 0.0f;
+                dz = D_802AC8C4;
                 break;
-            case 0xC0:                              /* switch 1 */
-                var_ft5 = 270.0f;
-                var_fv1_2 = (f32) -D_802AC8C4;
+            case 0xC0:
+                angle = 270.0f;
+                dx = -D_802AC8C4;
                 break;
-            case 0x40:                              /* switch 1 */
-                var_ft5 = 90.0f;
-                var_fv1_2 = (f32) D_802AC8C4;
+            case 0x40:
+                angle = 90.0f;
+                dx = D_802AC8C4;
                 break;
-            case 0x20:                              /* switch 1 */
-                var_ft5 = 135.0f;
-                var_fv1_2 = (f32) D_802AC8C4;
-                var_ft4 = (f32) -D_802AC8C4;
+            case 0x20:
+                angle = 135.0f;
+                dx = D_802AC8C4;
+                dz = -D_802AC8C4;
                 break;
-            case 0xE0:                              /* switch 1 */
-                var_ft5 = 225.0f;
-                var_ft4 = (f32) -D_802AC8C4;
-                var_fv1_2 = var_ft4;
+            case 0xE0:
+                angle = 225.0f;
+                dx = dz = -D_802AC8C4;
                 break;
-            case 0x60:                              /* switch 1 */
-                var_ft5 = 45.0f;
-                var_ft4 = (f32) D_802AC8C4;
-                var_fv1_2 = var_ft4;
+            case 0x60:
+                angle = 45.0f;
+                dx = dz = D_802AC8C4;
                 break;
-            case 0xA0:                              /* switch 1 */
-                var_ft5 = 315.0f;
-                var_ft4 = (f32) D_802AC8C4;
-                var_fv1_2 = (f32) -D_802AC8C4;
+            case 0xA0:
+                angle = 315.0f;
+                dz = D_802AC8C4;
+                dx = -D_802AC8C4;
                 break;
-            case 0x100:                             /* switch 1 */
-                spDC = (f32) D_802AC8C4;
+            case 0x100:
+                dy = D_802AC8C4;
                 break;
-            case 0x200:                             /* switch 1 */
-                spDC = (f32) -D_802AC8C4;
+            case 0x200:
+                dy = -D_802AC8C4;
                 break;
             }
-            temp_v0_2 = spD0->unk40;
-            spD4 = var_ft5;
-            func_8026DCAC(temp_v0_2->unk10 + (var_fv1_2 * 100.0f), temp_v0_2->unk14 + (spDC * 100.0f), temp_v0_2->unk18 + (var_ft4 * 100.0f), sp88, 2);
-            func_8026E338((f32) sp88[0], (f32) sp88[1], (f32) sp88[2], spAC, 0);
-            D_802ACA28 = spAC[0];
-            D_802ACA2C = spAC[1];
-            D_802ACA8C = spAC[2];
-            func_8024A6B4(sp7C, spD4);
-            var_ft5_2 = spD4;
+            func_8026DCAC(obj->unk40->unk10 + dx * 100.0f, obj->unk40->unk14 + dy * 100.0f,
+                          obj->unk40->unk18 + dz * 100.0f, ipos, 2);
+            func_8026E338(ipos[0], ipos[1], ipos[2], res, 0);
+            D_802ACA28 = res[0];
+            D_802ACA2C = res[1];
+            D_802ACA8C = res[2];
+            func_8024A6B4(id, angle);
         } else {
-            switch (D_802AC8BC) {                   /* switch 2; irregular */
-            case 0x0:                               /* switch 2 */
-                var_ft5 = 180.0f;
+            switch (D_802AC8BC) {
+            case 0x0:
+                angle = 180.0f;
                 break;
-            case 0x80:                              /* switch 2 */
-                var_ft5 = 0.0f;
+            case 0x80:
+                angle = 0.0f;
                 break;
-            case 0xC0:                              /* switch 2 */
-                var_ft5 = 270.0f;
+            case 0xC0:
+                angle = 270.0f;
                 break;
-            case 0x40:                              /* switch 2 */
-                var_ft5 = 90.0f;
+            case 0x40:
+                angle = 90.0f;
                 break;
-            case 0x20:                              /* switch 2 */
-                var_ft5 = 135.0f;
+            case 0x20:
+                angle = 135.0f;
                 break;
-            case 0xE0:                              /* switch 2 */
-                var_ft5 = 225.0f;
+            case 0xE0:
+                angle = 225.0f;
                 break;
-            case 0x60:                              /* switch 2 */
-                var_ft5 = 45.0f;
+            case 0x60:
+                angle = 45.0f;
                 break;
-            case 0xA0:                              /* switch 2 */
-                var_ft5 = 315.0f;
+            case 0xA0:
+                angle = 315.0f;
                 break;
             }
-            spD0->unk40->unk10 = D_802ACA28;
-            if ((D_802AC8BC == 0x100) || (D_802AC8BC == 0x200)) {
-                spD0->unk40->unk14 = D_802ACA2C;
+            obj->unk40->unk10 = D_802ACA28;
+            if (D_802AC8BC == 0x100 || D_802AC8BC == 0x200) {
+                obj->unk40->unk14 = D_802ACA2C;
             }
-            spD0->unk40->unk18 = D_802ACA8C;
-            spD4 = var_ft5;
-            func_80244354(sp7C, 0x420, 0);
-            var_v1_2 = 0;
-            if ((sp2C->unk10 & 0x02000000) == 0x02000000) {
-                var_v1_2 = 1;
+            obj->unk40->unk18 = D_802ACA8C;
+            func_80244354(id, 0x420, 0);
+            if (!func_80244BA4(id, 0x2000000)) {
+                func_80244354(id, 0x10000, 0);
             }
-            if (var_v1_2 == 0) {
-                spD4 = var_ft5;
-                func_80244354(sp7C, 0x10000, 0);
-            }
-            sp2C->unk48 = 1;
-            M2C_FIELD(spD0, f32 *, 0x70) = 1.6333334f;
-            spD4 = var_ft5;
-            func_8024D108(sp7C, sp2C->unk44);
-            var_ft5_2 = var_ft5;
+            D_800AEDF0[id].unk48 = 1;
+            obj->unk70 = 1.6333334f;
+            func_8024D108(id, D_800AEDF0[id].unk44);
         }
-        M2C_FIELD(arg0, f32 *, 0) = 0.0f;
-        spD0->unk40->unk10 = spB8;
-        spD0->unk40->unk18 = spC0;
-        if (D_802AC8BC != 0x100) {
-            if (D_802AC8BC != 0x200) {
-                M2C_FIELD(spD0->unk40, f32 *, 0x20) = var_ft5_2;
-            }
+        arg0->unk0 = 0.0f;
+        obj->unk40->unk10 = target[0];
+        obj->unk40->unk18 = target[2];
+        if (D_802AC8BC != 0x100 && D_802AC8BC != 0x200) {
+            obj->unk40->unk20 = angle;
         }
-        sp80 += 1;
+        b0++;
     }
-    temp_t7 = sp7C * 4;
-    temp_t4 = temp_t7 + &D_802ACA10;
-    D_802AC968[(temp_t7) / 4] = (sp84 * 2) + sp80;
-    sp2C = temp_t4;
-    var_v1_3 = temp_t4->unk0;
-    var_t4 = temp_t4;
-    if (!(var_v1_3 & 3)) {
-        func_8022F808(spD0, spC4);
-        temp_v0_3 = func_8023A840();
-        D_802ACF60 = temp_v0_3;
-        if (!(*temp_v0_3 & 2)) {
-            func_802775D8((s32) spC4);
+    D_802AC968[id] = b1 * 2 + b0;
+    if (!(D_802ACA10[id] & 3)) {
+        func_8022F808(obj, pos);
+        D_802ACF60 = func_8023A840();
+        if (!(*D_802ACF60 & 2)) {
+            func_802775D8((s32)pos);
         }
         func_80282934();
-        var_v1_3 = (sp2C->unk0);
-        var_t4 = sp2C;
     }
-    var_t4->unk0 = ((var_v1_3 + 1));
+    D_802ACA10[id]++;
 }
 
 void func_8024D5D0(f32 *arg0) {
