@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 7086, eu 7092, jp 7045
+ * differing words: us 7075, eu 7081, jp 7033
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -440,7 +440,7 @@ s32 func_8023AA60(s32 arg0);
 void func_8023AA78(s32 arg0);
 void func_8023AAE4(void);
 static void func_8023AB54(TextItem *items, s32 n);
-s32 func_8023AB90(void);
+static s32 func_8023AB90(void);
 void func_8023AC38(void);
 void func_8023ADD4(s32 arg0);
 void func_8023AE6C(s32 arg0, s32 arg1, s32 arg2);
@@ -1824,7 +1824,7 @@ loop_5:
 
 void func_8023F26C() {
     s32 h;
-    u8 *pl;
+    s32 k;
     s32 id;
     s32 pad1;
     u32 mode;
@@ -1834,7 +1834,9 @@ void func_8023F26C() {
     s32 i;
     s32 task;
     u8 *obj;
-    s32 k;
+    u8 *pl;
+    s32 x;
+    s32 y;
 
     D_802A0B94 = 1;
     id = *(s32 *) func_802391F0();
@@ -1972,11 +1974,13 @@ void func_8023F26C() {
         func_8026C8E8();
         func_8026C894();
         func_802510F0();
+        x = D_802AC5DC;
+        y = D_802AC5E0;
         if (!(D_802AC5D0 & 1) && (D_802A01B4 == 0)) {
-            D_802AC5D8 = D_802AC5E0;
-            D_802AC5D4 = D_802AC5DC;
-            D_802AC5DC = D_802AC5DC;
-            D_802AC5E0 = D_802AC5E0;
+            D_802AC5D8 = y;
+            D_802AC5D4 = x;
+            D_802AC5DC = x;
+            D_802AC5E0 = y;
             D_802AC5D0 |= 1;
             D_802AC5E4 = 0;
         }
@@ -3709,20 +3713,20 @@ block_15:
     }
 }
 
-s32 func_8023AB90() {
-    s32 temp_v0;
-    s32 var_v0;
-    u8 *temp_v0_2;
+static s32 func_8023AB90(void) {
+    s32 id;
+    u8 *obj;
 
     if (0) {
         func_8023AB54(0, 0);
     }
-    temp_v0 = func_80243DDC();
-    temp_v0_2 = func_802443F4(temp_v0);
-    if ((*(&D_800AEE14 + (temp_v0 * 0xC8)) == 3) || (M2C_FIELD(temp_v0_2, f32 *, 0x68) != 0.0f) || (M2C_FIELD(temp_v0_2, f32 *, 0x6C) != 0.0f) || (var_v0 = 1, (func_80244BA4(temp_v0, 0x20) != 0))) {
-        var_v0 = 0;
+    id = func_80243DDC();
+    obj = func_802443F4(id);
+    if ((M2C_FIELD(D_800AEDF0 + id * 0xC8, s32 *, 0x24) == 3) || (M2C_FIELD(obj, f32 *, 0x68) != 0.0f) ||
+        (M2C_FIELD(obj, f32 *, 0x6C) != 0.0f) || (func_80244BA4(id, 0x20) != 0)) {
+        return 0;
     }
-    return var_v0;
+    return 1;
 }
 
 static void func_8023AB54(TextItem *items, s32 n) {
