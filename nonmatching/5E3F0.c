@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1890, eu 1890, jp 1889
+ * differing words: us 1839, eu 1839, jp 1838
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -3848,33 +3848,17 @@ void func_80247928(s32 arg0, s32 arg1) {
 }
 
 void func_80247848(s32 arg0, s32 arg1) {
-    UnkStruct_800AEDF0 *temp_v0;
-    UnkStruct_800AEDF0 *temp_v0_2;
-    s32 temp_t0;
-    s32 temp_t6;
-    s32 temp_v1;
-    s32 temp_v1_2;
-
-    if (!D_800AEDF0[arg0].unk10 && !D_800AEDF0[arg0].unk10) {}
     if (arg1 != 0) {
-        temp_v0 = &D_800AEDF0[arg0];
-        temp_v1 = temp_v0->unk54;
-        if (temp_v1 == 0) {
-            temp_t0 = D_802AC9DC + 1;
-            temp_v0->unk54 = temp_v1 + 1;
-            D_802AC9DC = temp_t0;
-            if (temp_t0 == 1) {
+        if (D_800AEDF0[arg0].unk54 == 0) {
+            D_800AEDF0[arg0].unk54++;
+            if (++D_802AC9DC == 1) {
                 D_802AC9E0 = func_8026C660(0x21);
             }
         }
     } else {
-        temp_v0_2 = &D_800AEDF0[arg0];
-        temp_v1_2 = temp_v0_2->unk54;
-        if (temp_v1_2 != 0) {
-            temp_t6 = D_802AC9DC - 1;
-            temp_v0_2->unk54 = temp_v1_2 - 1;
-            D_802AC9DC = temp_t6;
-            if (temp_t6 == 0) {
+        if (D_800AEDF0[arg0].unk54 != 0) {
+            D_800AEDF0[arg0].unk54--;
+            if (--D_802AC9DC == 0) {
                 func_8026BE80(D_802AC9E0);
                 D_802AC9E0 = -1;
             }
