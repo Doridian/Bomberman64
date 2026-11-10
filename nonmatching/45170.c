@@ -8,25 +8,25 @@
  * text_objects.txt). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1949, eu 1949, jp 1949
+ * differing words: us 698, eu 698, jp 698
  *
  * The code is the same in every version.
  *
+ * func_8022AF1C and func_8022C8B8 keep their globals (D_802A54B0..C8,
+ * D_802A54D4..D_802A5504) as function-scope statics: only then does a
+ * store to one not kill pointer loads, and each access gets its own lui.
+ * Moving this file to src/ has to check where IDO puts those in .bss.
+ * D_802A54B0 is s32 against arg0->unk4's u32 on purpose: the unsigned
+ * compare is what keeps the counter's store-then-reload.
+ *
  * Left:
- * - func_8022AF1C (999, ours 0xFAC vs 0xBE4): the original keeps every
- *   loop counter (D_802A54B0/B4/B8) in memory (lw, addiu, sw, lw again)
- *   while walking the chunks with a strength-reduced pointer, and keeps
- *   arg0->unk4 in a register across the counter stores. IDO promotes
- *   ours into s-registers through a base register, which then aliases
- *   arg0->unk4 and forces reloads. volatile, a local chunk pointer, and
- *   defining the counters in the file don't give the original's form.
- * - func_8022C8B8 (293, ours 0x40C vs 0x494): the animation start; its
- *   globals D_802A54D4..D_802A5504 have the same problem.
  * - func_8022C530 (124), func_8022BCC8 (96), func_8022C2A4 (85),
- *   func_8022CFC8 (80), func_8022CD98 (75), func_8022BE48 (58),
- *   func_8022BB88 (45): registers and float scheduling.
- * - func_8022CEE4 (27), func_8022C184 (20), func_8022AA50 and
- *   func_8022AB48 (18 each), func_8022C09C (11): registers only.
+ *   func_8022CFC8 (80), func_8022CD98 (75), func_8022BE48 (58):
+ *   registers and float scheduling, sizes differ by 2-6 words.
+ * - func_8022C8B8 (103): same size and shape; register colouring of
+ *   D_802A54D4 and D_802A54EC in the channel loop.
+ * - func_8022C184 (20), func_8022AA50 and func_8022AB48 (18 each),
+ *   func_8022C09C (11), func_8022BB88 (10): registers only.
  */
 #include "common.h"
 
@@ -91,6 +91,14 @@ typedef struct {
     /* 0x18 */ s32 *unk18;
     /* 0x1C */ f32 *unk1C;
 } UnkChan; /* size 0x20 */
+
+/* A key list channel's part from unk4 on. */
+typedef struct {
+    /* 0x00 */ s32 unk0;
+    /* 0x04 */ s32 unk4;
+    /* 0x08 */ s32 *unk8;
+    /* 0x0C */ s32 *unkC;
+} UnkChanKeys;
 
 typedef struct {
     /* 0x00 */ s32 unk0;
@@ -291,27 +299,7 @@ extern s32 D_802A54A0;
 extern s32 D_802A54A4;
 extern s32 D_802A54A8;
 extern s32 D_802A54AC;
-extern u32 D_802A54B0;
-extern s32 D_802A54B4;
-extern s32 D_802A54B8;
-extern UnkSkel *D_802A54BC;
-extern s32 *D_802A54C0;
-extern f32 *D_802A54C4;
-extern UnkChunk *D_802A54C8;
 extern s32 D_802A54D0;
-extern s32 D_802A54D4;
-extern s32 D_802A54D8;
-extern s32 D_802A54DC;
-extern s32 D_802A54E0;
-extern s32 D_802A54E4;
-extern s32 D_802A54E8;
-extern s32 D_802A54EC;
-extern s32 D_802A54F0;
-extern s32 *D_802A54F4;
-extern s32 *D_802A54F8;
-extern UnkChan *D_802A54FC;
-extern UnkAnim *D_802A5500;
-extern UnkTrack *D_802A5504;
 void func_8026CBD4(void *);
 void *func_80227678(s32);
 s32 func_8022769C(s32);
@@ -450,12 +438,14 @@ void func_8022CF64(UnkInst *arg0) {
 
 void func_8022CEE4(UnkNode *arg0) {
     s32 i;
+    UnkNode **c;
 
     if (arg0->unk10 != 0) {
+        c = arg0->unkC;
         for (i = 0; i < arg0->unk10; i++) {
-            func_8022CEE4(arg0->unkC[i]);
+            func_8022CEE4(c[i]);
         }
-        free(arg0->unkC);
+        free(c);
     }
     free(arg0);
 }
@@ -493,9 +483,22 @@ void func_8022CD4C(Vec3f *arg0, Vec3f *arg1, Vec3f *arg2, f32 arg3) {
 }
 
 UnkAnim *func_8022C8B8(UnkInst *arg0, s32 arg1) {
+    static s32 D_802A54D4;
+    static s32 D_802A54D8;
+    static s32 D_802A54DC;
+    static s32 D_802A54E0;
+    static s32 D_802A54E4;
+    static s32 D_802A54E8;
+    static s32 D_802A54EC;
+    static s32 D_802A54F0;
+    static s32 *D_802A54F4;
+    static s32 *D_802A54F8;
+    static UnkChan *D_802A54FC;
+    static UnkAnim *D_802A5500;
+    static UnkTrack *D_802A5504;
     UnkTrack *track;
     UnkChan *chan;
-    s32 *keys;
+    UnkChanKeys *k;
 
     if (arg0->unk0 != 1) {
         return NULL;
@@ -511,12 +514,12 @@ UnkAnim *func_8022C8B8(UnkInst *arg0, s32 arg1) {
     D_802A54DC = 0;
     for (D_802A54D4 = 0; D_802A54D4 < D_802A54E4; D_802A54D4++) {
         D_802A5504 = &D_802A5500->unk14[D_802A54D4];
+        D_802A54E0 = 0;
         D_802A5504->unk4 = D_802A54FC[D_802A54D4].unk0;
-        switch (D_802A54FC[D_802A54D4].unk0) {
+        switch (D_802A5504->unk4) {
             case 0x2F:
-                D_802A54E0 = 0;
-                chan = &D_802A54FC[D_802A54D4];
-                D_802A54E8 = chan->unk8;
+                k = (UnkChanKeys *)&D_802A54FC[D_802A54D4].unk4;
+                D_802A54E8 = k->unk4;
                 D_802A5504->unk10 = D_802A54F8 = malloc(D_802A54E8 * 4);
                 D_802A5504->unk14 = D_802A54F4 = malloc(D_802A54E8 * 4);
                 D_802A5504->unk18 = D_802A54E8;
@@ -524,11 +527,11 @@ UnkAnim *func_8022C8B8(UnkInst *arg0, s32 arg1) {
                 D_802A5504->unk20 = -1;
                 D_802A5504->unk24 = -1;
                 for (D_802A54D8 = 0; D_802A54D8 < D_802A54E8; D_802A54D8++) {
-                    D_802A54F8[D_802A54D8] = chan->unkC[D_802A54D8];
+                    D_802A54F8[D_802A54D8] = k->unk8[D_802A54D8];
                     D_802A54F4[D_802A54D8] = D_802A54E0;
-                    D_802A54E0 += chan->unk10[D_802A54D8];
+                    D_802A54E0 += k->unkC[D_802A54D8];
                 }
-                D_802A54EC = chan->unk4;
+                D_802A54EC = k->unk0;
                 break;
             case 0x30:
                 chan = &D_802A54FC[D_802A54D4];
@@ -782,11 +785,14 @@ void func_8022BB88(UnkAnim *arg0) {
 
     for (i = 0; i < arg0->unk10; i++) {
         track = &arg0->unk14[i];
-        if (track->unk4 == 0x2F) {
-            free(track->unk10);
-            free(track->unk14);
-            func_8022BB00(track->unk1C);
-        } else if (track->unk4 == 0x30) {
+        switch (track->unk4) {
+            case 0x2F:
+                free(track->unk10);
+                free(track->unk14);
+                func_8022BB00(track->unk1C);
+                break;
+            case 0x30:
+                break;
         }
     }
     free(arg0->unk14);
@@ -806,22 +812,28 @@ void func_8022BB00(UnkTree *arg0) {
 }
 
 UnkSkel *func_8022AF1C(UnkModel *arg0) {
-    UnkSkel *skel;
+    static s32 D_802A54B0;
+    static s32 D_802A54B4;
+    static s32 D_802A54B8;
+    static UnkSkel *D_802A54BC;
+    static s32 *D_802A54C0;
+    static f32 *D_802A54C4;
+    static UnkChunk *D_802A54C8;
     UnkKey *key;
     UnkChan *chan;
 
     D_802A54C8 = arg0->unkC;
-    skel = malloc(sizeof(UnkSkel));
-    skel->unk30 = NULL;
-    skel->unk28 = NULL;
-    skel->unk1C = arg0->unk4;
+    D_802A54BC = malloc(sizeof(UnkSkel));
+    D_802A54BC->unk1C = arg0->unk4;
+    D_802A54BC->unk30 = NULL;
+    D_802A54BC->unk28 = NULL;
     for (D_802A54B0 = 0; D_802A54B0 < arg0->unk4; D_802A54B0++) {
         if (D_802A54C8[D_802A54B0].unk0 == 1) {
             break;
         }
     }
     if (D_802A54B0 < arg0->unk4) {
-        skel->unk20 = (UnkJoint *)((u8 *)arg0 + D_802A54C8[D_802A54B0].unk8);
+        D_802A54BC->unk20 = (UnkJoint *)((u8 *)arg0 + D_802A54C8[D_802A54B0].unk8);
     }
     for (D_802A54B0 = 0; D_802A54B0 < arg0->unk4; D_802A54B0++) {
         if (D_802A54C8[D_802A54B0].unk0 == 2) {
@@ -829,11 +841,10 @@ UnkSkel *func_8022AF1C(UnkModel *arg0) {
         }
     }
     if (D_802A54B0 < arg0->unk4) {
-        skel->unk2C = D_802A54C8[D_802A54B0].unk4;
         D_802A54C0 = (s32 *)((u8 *)arg0 + D_802A54C8[D_802A54B0].unk8);
-        D_802A54BC = skel;
-        D_802A54BC->unk28 = malloc(skel->unk2C * sizeof(UnkKeySet));
-        for (D_802A54B0 = 0; (s32)D_802A54B0 < D_802A54BC->unk2C; D_802A54B0++) {
+        D_802A54BC->unk2C = D_802A54C8[D_802A54B0].unk4;
+        D_802A54BC->unk28 = malloc(D_802A54BC->unk2C * sizeof(UnkKeySet));
+        for (D_802A54B0 = 0; D_802A54B0 < D_802A54BC->unk2C; D_802A54B0++) {
             D_802A54BC->unk28[D_802A54B0].unk0 = *D_802A54C0++;
             D_802A54BC->unk28[D_802A54B0].unk8 = *D_802A54C0++;
             D_802A54BC->unk28[D_802A54B0].unk4 = malloc(D_802A54BC->unk28[D_802A54B0].unk8 * sizeof(UnkKey));
@@ -856,22 +867,19 @@ UnkSkel *func_8022AF1C(UnkModel *arg0) {
                 D_802A54C0 = (s32 *)D_802A54C4;
             }
         }
-        D_802A54B0 = 0;
     } else {
-        skel->unk2C = 0;
-        D_802A54B0 = 0;
+        D_802A54BC->unk2C = 0;
     }
-    for (; D_802A54B0 < arg0->unk4; D_802A54B0++) {
+    for (D_802A54B0 = 0; D_802A54B0 < arg0->unk4; D_802A54B0++) {
         if (D_802A54C8[D_802A54B0].unk0 == 3) {
             break;
         }
     }
     if (D_802A54B0 < arg0->unk4) {
-        skel->unk34 = D_802A54C8[D_802A54B0].unk4;
         D_802A54C0 = (s32 *)((u8 *)arg0 + D_802A54C8[D_802A54B0].unk8);
-        D_802A54BC = skel;
-        D_802A54BC->unk30 = malloc(skel->unk34 * sizeof(UnkChanSet));
-        for (D_802A54B0 = 0; (s32)D_802A54B0 < D_802A54BC->unk34; D_802A54B0++) {
+        D_802A54BC->unk34 = D_802A54C8[D_802A54B0].unk4;
+        D_802A54BC->unk30 = malloc(D_802A54BC->unk34 * sizeof(UnkChanSet));
+        for (D_802A54B0 = 0; D_802A54B0 < D_802A54BC->unk34; D_802A54B0++) {
             D_802A54BC->unk30[D_802A54B0].unk0 = *D_802A54C0++;
             D_802A54BC->unk30[D_802A54B0].unk8 = *D_802A54C0++;
             D_802A54BC->unk30[D_802A54B0].unkC = *D_802A54C0++;
@@ -903,25 +911,23 @@ UnkSkel *func_8022AF1C(UnkModel *arg0) {
                 }
             }
         }
-        D_802A54B0 = 0;
     } else {
-        skel->unk34 = 0;
-        D_802A54B0 = 0;
+        D_802A54BC->unk34 = 0;
     }
-    for (; D_802A54B0 < arg0->unk4; D_802A54B0++) {
+    for (D_802A54B0 = 0; D_802A54B0 < arg0->unk4; D_802A54B0++) {
         if (D_802A54C8[D_802A54B0].unk0 == 7) {
             break;
         }
     }
     if (D_802A54B0 < arg0->unk4 && D_802A54C8[D_802A54B0].unk4 == 4) {
         s32 *p = (s32 *)((u8 *)arg0 + D_802A54C8[D_802A54B0].unk8);
+        s32 *q = p + 3;
         for (D_802A54B0 = 0; D_802A54B0 != 3; D_802A54B0++) {
-            skel->unk0[D_802A54B0] = p[D_802A54B0];
-            skel->unkC[D_802A54B0] = p[D_802A54B0 + 3];
+            D_802A54BC->unk0[D_802A54B0] = p[D_802A54B0];
+            D_802A54BC->unkC[D_802A54B0] = q[D_802A54B0];
         }
     }
-    D_802A54BC = skel;
-    return skel;
+    return D_802A54BC;
 }
 
 void func_8022AEDC(UnkSkel *arg0, UnkInst *arg1) {
