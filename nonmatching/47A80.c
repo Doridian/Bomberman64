@@ -5,12 +5,14 @@
  * flags: -O3
  * differing words: us 75, eu 75, jp 75
  *
- * func_8022DAB0 matches. func_8022D280 and the static func_8022D414 (one
- * block) differ in about 18 words: the right size, but func_8022D414's
- * spill slots are 4 bytes low and two t registers are swapped.
- * func_8022D58C (about 290 words) has the original's frame; the rest is
- * register allocation (the original loads nb into a1 and keeps
- * &D_8029F840 in t2 and -1 in t1 throughout).
+ * fcmp counts a static with the global before it. func_8022DAB0 matches.
+ * func_8022D280 + func_8022D414: 4 words, at func_8022D414's start. The
+ * original burns one ugen temp (t6) before the first joint load, so idx*3
+ * lands in t8 (ours t6), and its call-argument address is
+ * addu v0,t0,v1 (ours v1,t0). func_8022D58C + func_8022D980: 71 words, all
+ * from case 6 on: the same instructions, with t registers rotated (ugen's
+ * free list is in a different state after case 6's GBI stores; reordering
+ * the | chains, the stores and D_8029FCC0's store doesn't recover it).
  */
 #include "common.h"
 
