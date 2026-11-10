@@ -5,140 +5,35 @@
  * global, emitted in the original's order. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3, eu 3, jp 3
+ * differing words: us 0, eu 0, jp 0
  *
- * 13 of 14 match. Pass 2 retyped the records: D_8008E658 is Rec926[48]
+ * All 14 match. Pass 2 retyped the records: D_8008E658 is Rec926[48]
  * (0x48 bytes), D_800AEDF0 Player926[] (0xC8); with plain struct C most
  * functions matched outright. func_80277FC4 then needed its locals in
  * the original's slot order (idx before alpha), flags set right after
  * unk3A in each case, `f *= ...` in place, r->unk14->unk40 re-read
  * through the record, and `arg6 < 0` (int 0, so 0.0f stays a colourable
- * constant for the later stores).
- * Left: func_80277EA0's last `return r`: ours keeps ugen's exit label
- * between `move v0,v1` and `jr ra`, so as1 can't fill the delay slot.
+ * constant for the later stores). func_80277EA0 is one `return r` with
+ * `r = K; break;` per case: uopt turns those into the direct returns, and
+ * with no second return ugen has no exit label to block the delay slot.
  */
 #include "common.h"
 
-#define M2C_FIELD(expr, type, offset) (*(type)((u8 *)(expr) + (offset)))
-#define M2C_BITWISE(type, expr) ((type)(expr))
-typedef s32 M2C_UNK;
-typedef s8 M2C_UNK8;
-typedef s16 M2C_UNK16;
-typedef s32 M2C_UNK32;
-
-typedef struct {
-    /* 0x00 */ s32 i[3];
-    /* 0x0C */ f32 f[3];
-} Unk8026DCAC;
-
-typedef struct Node87 {
-    /* 0x00 */ struct Node87 *next;
-    /* 0x04 */ s32 unk4;
-} Node87;
-
-extern Node87 D_802AFDE0;
-extern Node87 D_802AFE58;
-
-void free(void *);
+void *malloc(s32);
 void func_8022638C(u32, void *);
-void func_802297B8(s32, s32, s32, s32);
+void func_802297B8(void *, s32, s32, s32);
 s32 func_8022984C(void *, s32);
-s32 func_8022DF68(s32, s32);
-s32 func_8022E884(s32, s32);
-s32 func_8022F4AC(s32, s32, s32);
 void func_8022FC90(void *);
-void func_8022FF58(f32 *, f32 *, f32 *);
-void * func_802308B8(void *, s32);
-void func_80230914(void *);
-s32 func_802311E8(void *);
-void * func_80231274(s32, s32, s32, void *);
+void *func_80231274(s32, s32, s32, void *);
 void func_802313DC(void *, s32);
-void func_80231408(void *, s32);
-void func_80231434(void *);
-void func_80232A34(s32);
-s32 func_80232AA8(s32);
-s32 func_80232AC8(s32, s32);
-s32 func_80232D18(void *, s32);
 void func_80232DB4(void *);
-int func_8023369C(f32, f32, f32);
-int func_802336E4(f32);
-s32 func_80234248(s32);
 f32 func_80234408(f32);
 f32 func_80234434(f32);
-s32 func_80238A10(void *, s32, s32, s32, s32);
-void func_80238EA8(s32);
-void func_80239094(void);
-s32 *func_802391F0(void);
-s32 *func_8023A840(void);
-void func_802438BC(s32 *);
-void func_802441F4(void *, s32, s32 *, f32 *);
-s32 func_802442A8(s32);
-void * func_802443F4(s32);
-void func_80244C30(s32, s32);
-void func_80244E04(void *);
-s32 func_80244F34(void *, s32);
-s32 func_80244FF8(void *);
-void func_802511EC(s32, s32, s32, s32);
-s32 func_8026C51C(s32, f32, f32, f32);
-s32 func_8026C660(s32);
-void * func_8027A1A0(void *);
-s32 func_8027A1F4(void *, s32);
-void func_8027B440(void *);
-s32 func_8027B5A8(void *);
-s16 func_8027DF40(s32);
-s16 func_8027DF9C(void);
-s32 func_8027E8EC(s16, s16, s16, s16);
-void func_8027F820(void);
-void func_8027F858(s32, s32);
-s32 func_80286CA8(s32, f32, f32, f32);
-s32 func_802870A8(void);
-s32 func_80287440(void);
-s32 func_802875B0(void);
-s32 func_8028A4E0(s32);
-s32 func_8028A81C(s32, f32, f32, f32, s32);
-s32 func_802909FC(s32);
-void func_80291944(void *, s32, f32);
-void func_80297D38(const char *, ...);
-f32 func_8029CB40(f32);
-void * malloc(s32);
 
 extern s32 D_8008E658;
-extern u8 D_8008F438[];
-extern s16 *D_8008F44C;
-extern u8 D_8008F4C0[];
 extern u8 D_800AEDF0[];
-extern s32 D_800AEE08;
-extern u8 D_800AEE0A[];
-extern s32 D_800AEE0C;
-extern u8 D_800AEE0E[];
-extern s32 D_800AEE10;
-extern u8 D_802A1450[];
-extern s16 D_802A14B4;
-extern u8 D_802A14B8[];
 extern s16 D_802A14F0;
-extern void *D_802A55F4;
-extern s32 D_802AC5D0;
-extern s32 D_802AC89C;
-extern s32 D_802AC8A0;
-extern s32 D_802AFC50;
-extern s32 D_802AFC54;
-extern s32 D_802AFC58;
-extern f32 D_802AFC5C;
-extern f32 D_802AFC60;
-extern f32 D_802AFC64;
-extern f32 D_802AFC68;
-extern void *D_802AFC6C;
-extern s32 D_802AFC70;
-extern s32 D_802AFC74;
-extern u8 D_802AFC78[];
-extern u8 D_802AFCE8[];
-extern u8 D_802AFCF4[];
-extern s16 D_802AFCF8;
-extern void *D_802AFDD8;
-extern Node87 D_802AFE1C;
-extern u8 D_802AFE60[];
 extern s16 D_802AFE70;
-
 
 typedef struct {
     /* 0x00 */ u8 pad0[0xC];
@@ -666,19 +561,23 @@ s32 func_80277EA0(s16 arg0) {
     r = 0x28;
     switch (arg0) {
     case 3:
-        return 0x14;
+        r = 0x14;
+        break;
     case 4:
-        return 0x18;
+        r = 0x18;
+        break;
     case 5:
-        return 0x1C;
+        r = 0x1C;
+        break;
     case 6:
-        return 0x20;
+        r = 0x20;
+        break;
     case 7:
-        return 0x24;
+        r = 0x24;
+        break;
     case 9:
         r = 0x2D;
-        /* fallthrough */
-    default:
-        return r;
+        break;
     }
+    return r;
 }
