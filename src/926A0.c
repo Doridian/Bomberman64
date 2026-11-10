@@ -1,11 +1,8 @@
 /*
- * NON_MATCHING: main_code's 926A0, complete (14 functions,
- * func_80277EA0..func_80278FD8). Split from 8E730 by IDO's emission
- * order (text_objects.txt). A first draft from m2c; every function
- * global, emitted in the original's order. Not built into the ROM
- * (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * main_code's 926A0, IDO -O3; it matches in us, eu and jp (14 functions,
+ * func_80277EA0..func_80278FD8, split from 8E730 by IDO's emission order,
+ * text_objects.txt). Its .data (D_802A14F0) and .bss (D_802AFE70) are its
+ * own, placed in data_split.txt.
  *
  * All 14 match. Pass 2 retyped the records: D_8008E658 is Rec926[48]
  * (0x48 bytes), D_800AEDF0 Player926[] (0xC8); with plain struct C most
@@ -32,8 +29,8 @@ f32 func_80234434(f32);
 
 extern s32 D_8008E658;
 extern u8 D_800AEDF0[];
-extern s16 D_802A14F0;
-extern s16 D_802AFE70;
+s16 D_802A14F0 = 0;
+s16 D_802AFE70;
 
 typedef struct {
     /* 0x00 */ u8 pad0[0xC];
