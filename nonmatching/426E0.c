@@ -9,7 +9,7 @@
  * func_80228500 kept). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 883, eu 883, jp 883
+ * differing words: us 848, eu 848, jp 848
  *
  * The code is the same in every version.
  *
@@ -29,6 +29,10 @@
  * - func_8022946C: `i = D_800A0D00[idx].unk0` before `p = ...` (i first
  *   seen first takes v1). func_8022997C: `s = D_80098C68; do {` on one
  *   line orders the preheader's addiu s1 before addiu s0.
+ * - func_8022A858: the pool loop is an index do-while tested against
+ *   the end symbol (`&D_800A0D00[i] < D_800A3F00`: not unrolled, base
+ *   re-materialised after it), and the D_80098C68 clear is written out
+ *   in it (the call to func_80229BB4, inlined, schedules differently).
  *
  * Left:
  * - func_802289C0 (the draw loop, 431): the original keeps obj in s2
@@ -44,8 +48,6 @@
  *   and D_802A5484 in registers (stores on each exit, a duplicate pair
  *   IDO merges in ours); a global loop counter, static or not, isn't
  *   promoted here.
- * - func_8022A858 (35): the original re-lui's D_800A0D00 after the pool
- *   loop (an index loop gets that, but is unrolled by 4).
  * - func_80229C10 (18): a rotation of a0/a1/a3/t0/t1 (the original's
  *   dl a3, first t0, i t1, 2 in a0); `if (!chunks) {}` keeps model+12 a
  *   value of its own. func_80229448 (8: the original keeps an empty
@@ -436,16 +438,16 @@ void func_8022CF64(UnkInst *arg0);
 UnkInst *func_8022D1D0(UnkSkel *arg0, UnkModel *arg1, u32 arg2);
 
 static void func_8022A850(void) {
-    UnkObj *p;
+    s32 i;
 
-    p = D_800A0D00;
+    i = 0;
     do {
-        p->unk0 = 0;
-        p->unk4 = 0;
-        p->unk8 = 0;
-        p->unk3C = NULL;
-        p++;
-    } while (p < D_800A3F00);
+        D_800A0D00[i].unk0 = 0;
+        D_800A0D00[i].unk4 = 0;
+        D_800A0D00[i].unk8 = 0;
+        D_800A0D00[i].unk3C = NULL;
+        i++;
+    } while (&D_800A0D00[i] < D_800A3F00);
     D_800A0D00[0].unk3C = NULL;
     D_800A0D00[1].unk3C = NULL;
     D_800A0D00[1].unk8 = 0xA0;
@@ -466,7 +468,9 @@ void func_8022A858(void) {
         D_80098C18[i].unkC = NULL;
     }
     func_8022A850();
-    func_80229BB4();
+    for (i = 0; i < 6; i++) {
+        D_80098C68[i].unk0 = NULL;
+    }
 }
 
 void *func_8022A6C4(void *arg0, s32 arg1) {
