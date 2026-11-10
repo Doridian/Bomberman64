@@ -6,7 +6,7 @@
  * is emitted in the original's order and at the original's size. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 488, eu 488, jp 488
+ * differing words: us 366, eu 366, jp 366
  *
  * func_8028A7CC, func_8028A81C and func_8028A87C match; the statics are
  * compared as one run from func_8028A8A4 (538 words). Per function
@@ -556,7 +556,7 @@ static void func_8028B670(UnkStruct_800BC528 *e, s32 kind, s32 mode, f32 scale, 
     s32 pad;
 
     step = 1;
-    t = 0;
+    t = 0.0f;
     dir = func_80234248(7);
     func_8028A9D4(&m, kind, e, 0);
     m->unk40->unkC |= 0x8000;
@@ -587,7 +587,7 @@ static void func_8028B670(UnkStruct_800BC528 *e, s32 kind, s32 mode, f32 scale, 
     while (t < 24.0f) {
         if (step == 1 && (s32) t >= 2) {
             if (e->unk8 == 0 && mode == 0) {
-                SPAWN(e->unkC, m->unk40->unk10 + dx * 2.0f, m->unk40->unk14, m->unk40->unk18 - dz * 0.1f);
+                SPAWN(e->unkC, m->unk40->unk10 + dx * 2, m->unk40->unk14, m->unk40->unk18 - dz * 0.1f);
             }
             step++;
         } else if (step == 2 && (s32) t >= 4) {
