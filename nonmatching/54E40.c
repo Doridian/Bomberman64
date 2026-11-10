@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2337, eu 2337, jp 2320
+ * differing words: us 2243, eu 2243, jp 2228
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -461,7 +461,7 @@ s32 func_8023AA60(s32 arg0);
 void func_8023AA78(s32 arg0);
 void func_8023AAE4(void);
 static void func_8023AB54(TextItem *items, s32 n);
-static void func_8023AB4C(void);
+static void func_8023AB4C(TextItem *items, s32 n);
 static s32 func_8023AB90(void);
 static void func_8023AC38(void);
 void func_8023ADD4(s32 arg0);
@@ -2077,13 +2077,13 @@ void func_8023E1D8() {
     func_8023B318(D_802A0AB8, 1);
     if (D_802AC628 == 0) {
         func_8023903C(0xB4);
-        func_8023AB54(D_802A0AB8, 1);
+        func_8023AB4C(D_802A0AB8, 1);
         func_8023AE6C(0x20, 0x11, 0);
     } else {
         func_8023903C(0xB4);
-        func_8023AB54(D_802A0AB8, 1);
+        func_8023AB4C(D_802A0AB8, 1);
         func_8023903C(2);
-        func_8023B450(2, D_802AC628, buf);
+        func_8023B450(2, D_802AC610.unk18, buf);
         func_8023B318(D_802A0ACC, 4);
         h1 = func_802811F0(buf, 0xBEU, 0xA0U, 0.6f, 0.6f, 2U);
         func_8023B450(1, 9, buf);
@@ -2103,12 +2103,10 @@ void func_8023E1D8() {
                 sel = 0;
                 M2C_FIELD(cur, f32 *, 0x14) = 108.0f;
                 M2C_FIELD(cur, f32 *, 0x1C) = 122.0f;
-                t++;
             } else if ((keys & 0x400) && (sel == 0)) {
                 sel = 1;
                 M2C_FIELD(cur, f32 *, 0x14) = 126.0f;
                 M2C_FIELD(cur, f32 *, 0x1C) = 140.0f;
-                t++;
             } else if (func_802399AC(0) & 0x8000) {
                 func_8026C660(1);
                 if (sel == 0) {
@@ -2117,13 +2115,11 @@ void func_8023E1D8() {
                     D_802AC810 = -1;
                 }
                 break;
-            } else {
-                t++;
-                if (func_802399AC(0) & 0x4000) {
-                    D_802AC810 = -1;
-                    break;
-                }
+            } else if (func_802399AC(0) & 0x4000) {
+                D_802AC810 = -1;
+                break;
             }
+            t++;
             if (t >= FPS) {
                 k--;
                 t = 0;
@@ -2154,7 +2150,7 @@ void func_8023E1D8() {
             func_8023903C(0x3C);
             func_8023AE6C(0x20, 0x11, 0);
         }
-        func_8023AB54(D_802A0ACC, 4);
+        func_8023AB4C(D_802A0ACC, 4);
         func_80280DB4(h1);
         func_80280DB4(h2);
     }
@@ -3241,7 +3237,13 @@ static void func_8023AC38(void) {
     }
 }
 
-static void func_8023AB4C(void) {
+static void func_8023AB4C(TextItem *items, s32 n) {
+    s32 i;
+
+    for (i = 0; i < n; i++) {
+        func_80280DB4(items->handle);
+        items++;
+    }
 }
 
 static s32 func_8023AB90(void) {
@@ -3250,7 +3252,7 @@ static s32 func_8023AB90(void) {
 
     if (0) {
         func_8023AB54(0, 0);
-        func_8023AB4C();
+        func_8023AB4C(0, 0);
     }
     id = func_80243DDC();
     obj = func_802443F4(id);
