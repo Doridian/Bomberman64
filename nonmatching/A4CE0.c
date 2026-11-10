@@ -6,7 +6,7 @@
  * is emitted in the original's order and at the original's size. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 538, eu 538, jp 538
+ * differing words: us 488, eu 488, jp 488
  *
  * func_8028A7CC, func_8028A81C and func_8028A87C match; the statics are
  * compared as one run from func_8028A8A4 (538 words). Per function
@@ -97,7 +97,8 @@ extern s32 D_800BC76C;
 extern UnkStruct_800BC770 D_800BC770[16];
 
 /* a debris spawn, inlined everywhere with its own frame area (func_8028A978 is its empty stub) */
-#define SPAWN(k, x, y, z) { f32 pos[3]; s32 kind; f32 px, py, pz; func_8028A978(); kind = k; px = x; py = y; pz = z; pos[0] = px; pos[1] = py; pos[2] = pz; func_8028A5C4(func_8028A690(kind), kind, pos, 0, 1); }
+#define SPAWN1(k, x, y, z) { f32 pos[3]; s32 kind; f32 px, py, pz; func_8028A978(); kind = k; px = x; py = y; pz = z; pos[0] = px; pos[1] = py; pos[2] = pz; func_8028A5C4(func_8028A690(kind), kind, pos, 0, 1); }
+#define SPAWN(k, x, y, z) { s32 kind; f32 px, py, pz; s32 pad[3]; f32 pos[3]; func_8028A978(); kind = k; px = x; py = y; pz = z; pos[0] = px; pos[1] = py; pos[2] = pz; func_8028A5C4(func_8028A690(kind), kind, pos, 0, 1); }
 
 s32 func_8028A4E0(s32 arg0);
 void func_8028A584(void);
@@ -549,9 +550,10 @@ static void func_8028B4DC(UnkStruct_800BC528 *e, f32 angle) {
 
 static void func_8028B670(UnkStruct_800BC528 *e, s32 kind, s32 mode, f32 scale, f32 dz, f32 dx) {
     UnkStructA *m;
-    s32 dir;
     s32 step;
     f32 t;
+    s32 dir;
+    s32 pad;
 
     step = 1;
     t = 0;
@@ -619,7 +621,10 @@ static void func_8028B670(UnkStruct_800BC528 *e, s32 kind, s32 mode, f32 scale, 
         t += 1.0f;
         func_80239094();
     }
-    func_8028A9CC(e);
+    e->unk0 = -1;
+    e->unk4 = -1;
+    func_8022FC90(e->unk20);
+    e->unk20 = NULL;
     func_80239430();
 }
 
@@ -638,7 +643,7 @@ static void func_8028BD20(UnkStruct_800BC528 *e, f32 speed1, f32 speed2, f32 rat
     func_80231408(m, 0x80000);
     if (e->unk8 == 0) {
         for (i = 0; i < 5; i++) {
-            SPAWN(e->unkC, m->unk40->unk10, m->unk40->unk14, m->unk40->unk18);
+            SPAWN1(e->unkC, m->unk40->unk10, m->unk40->unk14, m->unk40->unk18);
         }
     }
     m->unk40->unk20 = func_8028AB04(dir) + 30.0f;
