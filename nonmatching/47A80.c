@@ -3,7 +3,7 @@
  * 0x8022D280-0x8022DB00) that build a model's display list from its joint
  * tree. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 103, eu 103, jp 103
+ * differing words: us 75, eu 75, jp 75
  *
  * func_8022DAB0 matches. func_8022D280 and the static func_8022D414 (one
  * block) differ in about 18 words: the right size, but func_8022D414's
@@ -134,9 +134,9 @@ void func_8022D58C(Gfx **gp, s32 base, s32 idx) {
             }
         }
     }
-    g = *gp;
     m = &((MeshEntry *)base)[idx + 1];
     type = m->type;
+    g = *gp;
     GFX2(g++, 0xBC000806, base + 0x80000000);
     if (type == 1) {
         func_8022D414(&g, base, m->dl, m->unk4);
