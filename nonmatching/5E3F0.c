@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1806, eu 1806, jp 1805
+ * differing words: us 1787, eu 1787, jp 1786
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -3166,13 +3166,13 @@ void func_80249D30(s32 arg0) {
 }
 
 void func_80249AD4(s32 arg0) {
-    s32 flag = D_802AC980[func_80243DDC()];
     s32 cur = func_80243DDC();
+    s32 flag = D_802AC980[cur];
     UnkStruct_800AEDF0 *e;
 
     switch (flag) {
         case 0x40000:
-            if (--D_802AC9C8[func_80243DDC()] == 0) {
+            if (--D_802AC9C8[cur] == 0) {
                 func_80244354(cur, 0x80020, 0);
             }
             break;
@@ -3180,7 +3180,7 @@ void func_80249AD4(s32 arg0) {
             e = &D_800AEDF0[cur];
             if (M2C_FIELD(e->unk28, f32 *, 0x68) == 0.0f) {
                 func_80244354(cur, D_802AC980[cur] | 0x80020, 0);
-                if (!func_80244BA4(cur, 0x2000000)) {
+                if (!FLAG_SET(e->unk10, 0x2000000)) {
                     func_80244354(cur, 0x10000, 0);
                 }
             }
@@ -3195,7 +3195,7 @@ void func_80249AD4(s32 arg0) {
             }
             break;
         default:
-            if (!func_80244BA4(func_80243DDC(), flag)) {
+            if (!func_80244BA4(cur, flag)) {
                 func_80244354(cur, D_802AC980[cur] | 0x80000, 0);
                 if (!func_80244BA4(cur, 0x2000000)) {
                     func_80244354(cur, 0x10000, 0);
