@@ -5,7 +5,7 @@
  * global, emitted in the original's order. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2887, eu 2887, jp 2887
+ * differing words: us 2760, eu 2760, jp 2760
  *
  * 13 of 47 match. Biggest left: func_802741D8 461, func_8027655C 436,
  * func_80274994 320, func_80276D68 171: m2c's control flow and untyped
@@ -32,6 +32,115 @@ typedef struct Node87 {
 
 extern Node87 D_802AFDE0;
 extern Node87 D_802AFE58;
+
+typedef struct {
+    /* 0x00 */ u8 pad0[0x10];
+    /* 0x10 */ f32 x;
+    /* 0x14 */ f32 y;
+    /* 0x18 */ f32 z;
+    /* 0x1C */ u8 pad1C[4];
+    /* 0x20 */ f32 rot;
+    /* 0x24 */ u8 pad24[4];
+    /* 0x28 */ f32 sx;
+    /* 0x2C */ f32 sy;
+    /* 0x30 */ f32 sz;
+} Sub8E; /* the object's transform */
+
+typedef struct {
+    /* 0x00 */ u8 pad0[8];
+    /* 0x08 */ s32 unk8;
+    /* 0x0C */ s32 unkC;
+    /* 0x10 */ s32 unk10;
+    /* 0x14 */ u8 pad14[0x30 - 0x14];
+    /* 0x30 */ s32 unk30;
+    /* 0x34 */ f32 unk34;
+    /* 0x38 */ f32 unk38;
+    /* 0x3C */ u8 pad3C[4];
+    /* 0x40 */ Sub8E *unk40;
+    /* 0x44 */ u8 pad44[0x4C - 0x44];
+    /* 0x4C */ f32 unk4C;
+    /* 0x50 */ f32 unk50;
+    /* 0x54 */ f32 unk54;
+    /* 0x58 */ f32 unk58;
+    /* 0x5C */ f32 unk5C;
+    /* 0x60 */ f32 unk60;
+    /* 0x64 */ u8 pad64[4];
+    /* 0x68 */ f32 unk68;
+    /* 0x6C */ f32 unk6C;
+    /* 0x70 */ f32 unk70;
+} Obj8E;
+
+typedef struct Ent88 {
+    /* 0x00 */ s16 unk0;
+    /* 0x02 */ u8 pad2[2];
+    /* 0x04 */ s32 unk4;
+    /* 0x08 */ s32 unk8;
+    /* 0x0C */ s16 unkC;
+    /* 0x0E */ s16 unkE;
+    /* 0x10 */ s16 unk10;
+    /* 0x12 */ u8 pad12[2];
+    /* 0x14 */ struct Ent88 *next;
+    /* 0x18 */ struct Ent88 *prev;
+    /* 0x1C */ Obj8E *obj;
+    /* 0x20 */ Sub8E *xf;
+    /* 0x24 */ void *unk24[3];
+    /* 0x30 */ Obj8E *unk30;
+    /* 0x34 */ u8 pad34[4];
+    /* 0x38 */ void *unk38;
+    /* 0x3C */ s16 unk3C;
+    /* 0x3E */ u8 pad3E[2];
+    /* 0x40 */ f32 x;
+    /* 0x44 */ f32 y;
+    /* 0x48 */ f32 z;
+    /* 0x4C */ u8 pad4C[4];
+    /* 0x50 */ f32 unk50;
+    /* 0x54 */ u8 pad54[8];
+    /* 0x5C */ s16 unk5C;
+    /* 0x5E */ s16 unk5E;
+    /* 0x60 */ s16 unk60;
+    /* 0x62 */ s16 unk62;
+    /* 0x64 */ s16 unk64;
+    /* 0x66 */ s16 unk66;
+    /* 0x68 */ s16 unk68;
+    /* 0x6A */ u8 pad6A[0x74 - 0x6A];
+    /* 0x74 */ s16 unk74;
+    /* 0x76 */ u8 pad76[2];
+    /* 0x78 */ f32 unk78;
+    /* 0x7C */ f32 unk7C;
+    /* 0x80 */ f32 unk80;
+    /* 0x84 */ f32 unk84;
+} Ent88; /* size 0x88 */
+
+typedef struct {
+    /* 0x00 */ s16 unk0;
+    /* 0x02 */ u8 pad2[6];
+    /* 0x08 */ s32 unk8;
+    /* 0x0C */ s32 unkC;
+    /* 0x10 */ s16 unk10;
+    /* 0x12 */ u8 pad12[0x1C - 0x12];
+    /* 0x1C */ f32 unk1C;
+    /* 0x20 */ u8 pad20[4];
+    /* 0x24 */ f32 unk24;
+    /* 0x28 */ u8 pad28[8];
+} Slot30; /* size 0x30 */
+
+typedef struct {
+    /* 0x00 */ u8 pad0[0x18];
+    /* 0x18 */ s32 unk18;
+    /* 0x1C */ s32 unk1C;
+    /* 0x20 */ s32 unk20;
+    /* 0x24 */ u8 pad24[0xC8 - 0x24];
+} Player8E; /* size 0xC8 */
+
+#define ENTS ((Ent88 *) D_8008F438)
+#define ENT_HEAD (*(Ent88 **) &D_8008F44C)
+#define ENT_4C0 ((Ent88 *) D_8008F4C0)
+#define SLOTS ((Slot30 *) D_802AFCE8)
+#define PLAYERS ((Player8E *) D_800AEDF0)
+#define IDS ((s16 (*)[9]) D_802AFC78)
+#define OBJ_DD8 (*(Obj8E **) &D_802AFDD8)
+#define VEC_E60 ((f32 *) D_802AFE60)
+#define LIVE(e) ((e)->x != 1e7f)
 
 void free(void *);
 void func_8022638C(u32, void *);
@@ -217,24 +326,13 @@ void func_80278D54(s32 *arg0);
 void func_80278DBC(void);
 
 void func_80277E1C() {
-    u8 *temp_v1;
+    s32 i;
 
-    D_800AEE08 = 0x200;
-    D_800AEE0C = 2;
-    D_800AEE10 = 2;
-    temp_v1 = (1 * 0xC8) + D_800AEDF0;
-    M2C_FIELD(temp_v1, s32 *, 0xE0) = 0x200;
-    M2C_FIELD(temp_v1, s32 *, 0x1A8) = 0x200;
-    M2C_FIELD(temp_v1, s32 *, 0x270) = 0x200;
-    M2C_FIELD(temp_v1, s32 *, 0xE4) = 2;
-    M2C_FIELD(temp_v1, s32 *, 0xE8) = 2;
-    M2C_FIELD(temp_v1, s32 *, 0x1AC) = 2;
-    M2C_FIELD(temp_v1, s32 *, 0x1B0) = 2;
-    M2C_FIELD(temp_v1, s32 *, 0x274) = 2;
-    M2C_FIELD(temp_v1, s32 *, 0x278) = 2;
-    M2C_FIELD(temp_v1, s32 *, 0x18) = 0x200;
-    M2C_FIELD(temp_v1, s32 *, 0x1C) = 2;
-    M2C_FIELD(temp_v1, s32 *, 0x20) = 2;
+    for (i = 0; i < 5; i++) {
+        PLAYERS[i].unk18 = 0x200;
+        PLAYERS[i].unk1C = 2;
+        PLAYERS[i].unk20 = 2;
+    }
 }
 
 void func_80277DF4(s16 arg0) {
@@ -275,53 +373,34 @@ s16 func_80277CC0(u8 *arg0) {
 }
 
 void func_80277B54() {
-    u8 *var_v1;
-    s16 var_v0;
-    s16 var_v0_2;
-    s16 var_v0_3;
-    s16 var_v0_4;
-    s32 temp_lo;
-    s32 temp_lo_2;
-    s32 temp_lo_3;
+    s16 i;
+    Ent88 *e;
 
     func_80297D30(0x27, D_802A14B8);
     D_802AFC70 = 0;
     D_802AFC74 = 0;
     D_802AFE58.next = NULL;
-    M2C_FIELD(D_802AFE60, f32 *, 0) = 0.0f;
-    M2C_FIELD(D_802AFE60, f32 *, 4) = 0.0f;
-    M2C_FIELD(D_802AFE60, f32 *, 8) = 0.0f;
-    var_v0 = 0;
-    do {
-        temp_lo = var_v0 * 0x30;
-        var_v0 += 1;
-        M2C_FIELD((D_802AFCE8 + temp_lo), s16 *, 0x10) = 0;
-    } while (var_v0 < 5);
-    var_v0_2 = 0;
-    do {
-        temp_lo_2 = var_v0_2 * 0xC8;
-        var_v0_2 += 1;
-        M2C_FIELD((D_800AEDF0 + temp_lo_2), s32 *, 0x1C) = 2;
-    } while (var_v0_2 < 5);
-    var_v1 = D_8008F438;
-    var_v0_3 = 0;
-    do {
-        var_v0_3 += 1;
-        var_v1 += 0x88;
-        M2C_FIELD(var_v1, s32 *, -0x68) = 0;
-    } while (var_v0_3 < 0x16);
-    var_v0_4 = 0;
-    do {
-        temp_lo_3 = var_v0_4 * 0x12;
-        var_v0_4 += 1;
-        *(D_802AFC78 + temp_lo_3) = -1;
-    } while (var_v0_4 < 6);
-    M2C_FIELD(D_8008F438, M2C_UNK **, 0x14) = D_8008F4C0;
-    M2C_FIELD(D_8008F438, s32 *, 0x18) = 0;
-    M2C_FIELD(D_8008F438, s32 *, 0x20) = -1;
-    M2C_FIELD(D_8008F4C0, s32 *, 0x14) = 0;
-    M2C_FIELD(D_8008F4C0, M2C_UNK **, 0x18) = D_8008F438;
-    M2C_FIELD(D_8008F4C0, s32 *, 0x20) = -1;
+    VEC_E60[0] = 0.0f;
+    VEC_E60[1] = 0.0f;
+    VEC_E60[2] = 0.0f;
+    for (i = 0; i < 5; i++) {
+        SLOTS[i].unk10 = 0;
+    }
+    for (i = 0; i < 5; i++) {
+        PLAYERS[i].unk1C = 2;
+    }
+    for (i = 0, e = ENTS; i < 22; i++, e++) {
+        e->xf = NULL;
+    }
+    for (i = 0; i < 6; i++) {
+        IDS[i][0] = -1;
+    }
+    ENTS[0].next = ENT_4C0;
+    ENTS[0].prev = NULL;
+    ENTS[0].xf = (Sub8E *) -1;
+    ENT_4C0->next = NULL;
+    ENT_4C0->prev = ENTS;
+    ENT_4C0->xf = (Sub8E *) -1;
     D_802AFDE0.next = &D_802AFE1C;
     D_802AFDE0.unk4 = 0;
     D_802AFE1C.next = NULL;
@@ -1951,41 +2030,42 @@ void func_8027404C(f32 arg0, f32 arg1, f32 arg2, f32 *arg3, f32 *arg4, f32 *arg5
 }
 
 void *func_80273F30(s16 arg0, f32 arg1, f32 arg2, f32 arg3, s16 arg4) {
-    f32 var_fa0;
-    f32 var_fv0;
-    f32 var_fv1;
-    s32 temp_v0;
-    s32 var_v0;
-    s32 var_v0_2;
+    f32 x;
+    f32 y;
+    f32 z;
+    s32 bad;
+    s32 v;
+    s32 r;
 
     if (D_802AFC70 != 1) {
         D_802AFC70 = 1;
     }
-    var_v0 = 1;
-    if ((arg4 >= 0) && (arg4 < 5)) {
-        var_v0 = 0;
-    }
-    if (var_v0 != 0) {
-        var_v0_2 = 0;
+    if (arg4 >= 0 && arg4 < 5) {
+        bad = 0;
     } else {
-        var_v0_2 = *(s32 *)(D_802AFCF4 + (arg4 * 0x30));
+        bad = 1;
     }
-    if (var_v0_2 != 0) {
+    if (bad) {
+        v = 0;
+    } else {
+        v = *(s32 *)(D_802AFCF4 + (arg4 * 0x30));
+    }
+    if (v != 0) {
         func_80273E2C(arg4);
         return NULL;
     }
-    temp_v0 = func_80273AD4(arg4, arg1, arg2, arg3);
-    if (temp_v0 == 0) {
+    r = func_80273AD4(arg4, arg1, arg2, arg3);
+    if (r == 0) {
         return NULL;
     }
-    if (temp_v0 == 2) {
-        var_fv0 = M2C_FIELD(D_802AFE60, f32 *, 0);
-        var_fv1 = M2C_FIELD(D_802AFE60, f32 *, 4);
-        var_fa0 = M2C_FIELD(D_802AFE60, f32 *, 8);
+    if (r == 2) {
+        x = M2C_FIELD(D_802AFE60, f32 *, 0);
+        y = M2C_FIELD(D_802AFE60, f32 *, 4);
+        z = M2C_FIELD(D_802AFE60, f32 *, 8);
     } else {
-        var_fv0 = arg1;
-        var_fv1 = arg2;
-        var_fa0 = arg3;
+        x = arg1;
+        y = arg2;
+        z = arg3;
     }
-    return func_8027361C(arg0, var_fv0, var_fv1, var_fa0, (s16) (s32) arg4);
+    return func_8027361C(arg0, x, y, z, arg4);
 }
