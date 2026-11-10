@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1441, eu 1441, jp 1440
+ * differing words: us 1378, eu 1378, jp 1377
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -1986,56 +1986,27 @@ void func_8024D374(s32 arg0) {
 }
 
 void func_8024D20C(s32 arg0) {
-    UnkObj *sp64;
-    UnkStruct_800AEDF0 *sp20;
-    UnkModel *temp_v0;
-    UnkObj *temp_v1;
-    UnkStruct_800AEDF0 *temp_t8;
-    s16 var_a3;
-    s32 temp_a0;
-    s32 var_v1;
-    s32 var_v1_2;
-    s32 var_v1_3;
+    UnkObj *obj;
+    UnkStruct_800AEDF0 *p = &D_800AEDF0[arg0];
+    s32 id = arg0;
 
-    temp_t8 = &D_800AEDF0[arg0];
-    sp20 = temp_t8;
-    var_a3 = arg0;
-    var_v1 = func_80244BA4(arg0, 0x40);
-    if (var_v1 != 0) {
-        func_80270770(var_a3, 1);
-        var_a3 = (s16) (s32) arg0;
-        sp20->unk2C = 0;
+    if (func_80244BA4(id, 0x40)) {
+        func_80270770((s16)id, 1);
+        p->unk2C = 0;
     }
-    arg0 = (s32) var_a3;
-    func_80244354((s32) var_a3, 0x148, 0);
-    func_80244354((s32) arg0, 0x2020, 1);
-    temp_a0 = sp20->unk10;
-    var_v1_2 = 0;
-    if ((temp_a0 & 0x8000) == 0x8000) {
-        var_v1_2 = 1;
-    }
-    if (var_v1_2 == 0) {
-        var_v1_3 = 0;
-        if ((temp_a0 & 0x80) == 0x80) {
-            var_v1_3 = 1;
-        }
-        if (var_v1_3 == 0) {
-            func_802444B8((s32) arg0, 9);
-        } else {
-            goto block_11;
-        }
+    func_80244354(id, 0x148, 0);
+    func_80244354(id, 0x2020, 1);
+    if (!func_80244BA4(id, 0x8000) && !func_80244BA4(id, 0x80)) {
+        func_802444B8(id, 9);
     } else {
-block_11:
-        func_802444B8((s32) arg0, 0x11);
+        func_802444B8(id, 0x11);
     }
-    temp_v1 = sp20->unk28;
-    sp64 = temp_v1;
-    temp_v0 = temp_v1->unk40;
-    func_8028A81C(0xC, temp_v0->unk10, temp_v0->unk14 + 20.0f, temp_v0->unk18, 0);
-    if (M2C_FIELD(sp64, s32 *, 8) & 0x01000000) {
+    obj = (UnkObj *)func_802443F4(arg0);
+    func_8028A81C(0xC, obj->unk40->unk10, obj->unk40->unk14 + 20.0f, obj->unk40->unk18, 0);
+    if (M2C_FIELD(obj, s32 *, 8) & 0x01000000) {
         func_8026C660(0x1C);
     }
-    sp20->unk50 = 0;
+    p->unk50 = 0;
 }
 
 void func_8024D108(s32 arg0, s32 arg1) {
