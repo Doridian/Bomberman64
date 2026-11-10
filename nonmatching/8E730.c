@@ -5,7 +5,7 @@
  * global, emitted in the original's order. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2605, eu 2605, jp 2605
+ * differing words: us 2533, eu 2533, jp 2533
  *
  * 13 of 47 match. Biggest left: func_802741D8 461, func_8027655C 436,
  * func_80274994 320, func_80276D68 171: m2c's control flow and untyped
@@ -567,59 +567,35 @@ void func_802775D8(u8 *arg0) {
 }
 
 void func_8027750C(s16 arg0) {
-    s16 *var_a0;
-    s16 *var_v1;
-    s16 temp_a2;
-    s32 var_v0;
+    Ent88 *e;
+    s32 live;
+    s16 f;
 
-    if ((D_802AFC70 != 0) && (var_v1 = D_8008F44C, var_a0 = M2C_FIELD(var_v1, s16 **, 0x14), (var_a0 != NULL))) {
-loop_3:
-        if ((arg0 == M2C_FIELD(var_v1, s16 *, 0xE)) && (M2C_FIELD(var_v1, s16 *, 0x10) & 2)) {
-            temp_a2 = M2C_FIELD(var_v1, s16 *, 0x64);
-            if ((s16) (temp_a2 & 0x10) == 0) {
-                var_v0 = 0;
-                if (M2C_FIELD(var_v1, f32 *, 0x40) != 1e7f) {
-                    var_v0 = 1;
-                }
-                if (var_v0 != 0) {
-                    M2C_FIELD(var_v1, s16 *, 0x64) = (s16) (temp_a2 | 1);
+    if (D_802AFC70 != 0) {
+        live = 0;
+        for (e = ENT_HEAD; e->next != NULL; e = e->next) {
+            if (arg0 == e->unkE && (e->unk10 & 2) && (f = e->unk64 & 0x10) == 0) {
+                live = (e->x != 1e7f) ? 1 : 0;
+                if (live) {
+                    e->unk64 |= 1;
                     return;
                 }
-                goto block_10;
             }
-        }
-block_10:
-        var_v1 = var_a0;
-        var_a0 = M2C_FIELD(var_a0, s16 **, 0x14);
-        if (var_a0 == NULL) {
-
-        } else {
-            goto loop_3;
         }
     }
 }
 
 void func_80277484() {
-    s16 *var_a0;
-    s16 *var_v1;
-    s32 var_v0;
+    Ent88 *e;
+    s32 live;
 
     if (D_802AFC70 != 0) {
-        var_v1 = D_8008F44C;
-        var_a0 = M2C_FIELD(var_v1, s16 **, 0x14);
-        if (var_a0 != NULL) {
-            do {
-                var_v0 = 0;
-                if (M2C_FIELD(var_v1, f32 *, 0x40) != 1e7f) {
-                    var_v0 = 1;
-                }
-                if (var_v0 != 0) {
-                    var_a0 = M2C_FIELD(var_v1, s16 **, 0x14);
-                    M2C_FIELD(var_v1, s16 *, 0x64) = (s16) (M2C_FIELD(var_v1, s16 *, 0x64) | 1);
-                }
-                var_v1 = var_a0;
-                var_a0 = M2C_FIELD(var_a0, s16 **, 0x14);
-            } while (var_a0 != NULL);
+        live = 0;
+        for (e = ENT_HEAD; e->next != NULL; e = e->next) {
+            live = (e->x != 1e7f) ? 1 : 0;
+            if (live) {
+                e->unk64 |= 1;
+            }
         }
     }
 }
