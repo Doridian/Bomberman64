@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2206, eu 2206, jp 2197
+ * differing words: us 2201, eu 2201, jp 2192
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -37,9 +37,11 @@
  *   EB28, ECF4, EE40, EF38) are static; func_8023AF5C takes its first
  *   argument in fs5 and its second at 0x4(sp) of the caller.
  * - jp: func_802434F8 calls func_802810A0 (us's wrapper func_802811F0
- *   doesn't exist) with the x fixed; the other uses of func_802811F0
- *   (func_8023FD08, 8023F26C) and jp's own text in func_8023AEDC,
- *   8023C374 and 8023ECEC have no jp arm yet.
+ *   doesn't exist) with the x fixed, and jp's text and x positions are
+ *   #if VERSION_JP arms; every function's calls match jp's. eu differs
+ *   only in its 50 Hz constants (FPS, FRAME_STEP, TIME_LIMIT).
+ * - func_8023B450 takes (value, buf, n): the original's registers for
+ *   it are still not ours (value t0, buf a2 there; a2, t0 here).
  * - The count is positional: a function one instruction short shifts
  *   every word after it, so its size matters more than its registers.
  *   What fixed sizes here: a separate index (`D_802AC770[k++]`, k = 0)
@@ -471,7 +473,7 @@ s32 func_8023AEDC(s32 arg0);
 static void func_8023AF5C(f32 arg0, f32 arg1);
 static s32 func_8023B2AC(u8 *str, f32 scale);
 static void func_8023B318(TextItem *items, s32 n);
-static void func_8023B450(s32 arg0, s32 arg1, u8 *arg2);
+static void func_8023B450(s32 value, u8 *buf, s32 n);
 static void func_8023B7C0(f32 arg0);
 static void func_8023B8D0();
 s32 func_8023BBCC(void);
@@ -1441,7 +1443,7 @@ void func_8023FD08() {
         y2 = 120.0f;
         y1 = 180.0f;
     }
-    func_8023B450(8, D_802AC610.unk28, buf);
+    func_8023B450(D_802AC610.unk28, buf, 8);
     t.h[0] = func_802811F0(buf, 0xBE, (u32) y1, 0.6f, 0.8f, 3);
     t.n = 1;
     func_8023903C(0x1E);
@@ -1464,7 +1466,7 @@ void func_8023FD08() {
         func_8023903C(0x1E);
     }
     if (!(D_802AC5D0 & 0x28)) {
-        func_8023B450(2, func_80287680(), buf);
+        func_8023B450(func_80287680(), buf, 2);
         t.h[t.n] = func_802811F0(buf, 0xE2, 0x5A, 0.8f, 0.8f, 2);
         t.n++;
         if ((D_800BE824 == 0) && (func_8028A36C((D_802AC5E8 * 0x14) + (D_802AC5EC * 5) + 0x2F) != 0)) {
@@ -1489,7 +1491,7 @@ void func_8023FD08() {
     }
     q = &t.h[t.n];
     func_8023903C(0x1E);
-    func_8023B450(8, D_802AC610.unk30, buf);
+    func_8023B450(D_802AC610.unk30, buf, 8);
     *q = func_802811F0(buf, 0xA0, (u32) y2, 0.6f, 0.8f, 2);
     t.n++;
     if (D_802AC610.unk28 >= D_802AC610.unk30) {
@@ -2083,10 +2085,10 @@ void func_8023E1D8() {
         func_8023903C(0xB4);
         func_8023AB4C(D_802A0AB8, 1);
         func_8023903C(2);
-        func_8023B450(2, D_802AC610.unk18, buf);
+        func_8023B450(D_802AC610.unk18, buf, 2);
         func_8023B318(D_802A0ACC, 4);
         h1 = func_802811F0(buf, 0xBEU, 0xA0U, 0.6f, 0.6f, 2U);
-        func_8023B450(1, 9, buf);
+        func_8023B450(9, buf, 1);
         h2 = func_802811F0(buf, 0xD6U, 0x50U, 0.8f, 0.8f, 2U);
         cur = func_8022A6C4(func_8026CE28(0x130), 0x40);
         M2C_FIELD(cur, f32 *, 0x10) = 123.0f;
@@ -2128,7 +2130,7 @@ void func_8023E1D8() {
                     break;
                 }
                 func_80280DB4(h2);
-                func_8023B450(1, k, buf);
+                func_8023B450(k, buf, 1);
                 h2 = func_802811F0(buf, 0xD6U, 0x50U, 0.8f, 0.8f, 2U);
                 func_8026C660(0x37);
             }
@@ -2139,7 +2141,7 @@ void func_8023E1D8() {
         if (D_802AC810 == 1) {
             func_80280DB4(h1);
             func_8023903C(2);
-            func_8023B450(2, --D_802AC610.unk18, buf);
+            func_8023B450(--D_802AC610.unk18, buf, 2);
             h1 = func_802811F0(buf, 0xBEU, 0xA0U, 0.6f, 0.6f, 2U);
             func_8023903C(0x3C);
             D_800AEE04 = 1;
@@ -3012,7 +3014,7 @@ static void func_8023B8D0() {
             func_8023B7C0(154.0f);
         }
     } else {
-        func_8023B450(2, func_80287680(), buf);
+        func_8023B450(func_80287680(), buf, 2);
         D_802AC814 = func_802811F0(buf, 0xDCU, 0x50U, 0.6f, 0.6f, 2U);
         model = func_8026CE28(0x19);
         for (i = 0; i < 5; i++) {
@@ -3050,14 +3052,14 @@ static void func_8023B7C0(f32 arg0) {
     s32 temp_t7;
     s32 var_s0;
 
-    func_8023B450(8, D_802AC610.unk28, &sp24);
+    func_8023B450(D_802AC610.unk28, &sp24, 8);
     var_s0 = (u32) arg0;
     temp_t7 = var_s0 & 0xFFFF;
     D_802AC7E4 = func_802811F0(&D_802A039C, 0x2DU, temp_t7 & 0xFFFF, 0.6f, 0.8f, 2U);
     D_802AC7E8 = func_802811F0(&sp24, X_B7C0, temp_t7 & 0xFFFF, 0.6f, 0.8f, 3U);
 }
 
-static void func_8023B450(s32 n, s32 value, u8 *buf) {
+static void func_8023B450(s32 value, u8 *buf, s32 n) {
     s32 i;
     s32 div;
     s32 j;
