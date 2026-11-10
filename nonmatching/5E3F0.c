@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2097, eu 2097, jp 2096
+ * differing words: us 2007, eu 2007, jp 2006
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -34,7 +34,8 @@
  * case 0x20 a loop over D_800AEDF0[i] (uopt unrolls it to absolute
  * addresses), func_80243EF0 inlined for case 8's test. Its call of
  * func_80246D74 passes the s16 index unextended, so func_80246D74 has
- * no prototype here and a K&R definition (and an int result).
+ * only a `()` prototype; it copies its argument into a local first
+ * (`move s0,a0`, then `sll/sra` for func_80270770's s16).
  * Left: register and scheduling differences nearly everywhere else, and
  * the large m2c functions (8024891C, 8024D8C4, 802444B8,
  * 8024A0DC) are still m2c's shape. 802506B8's fill loop of the
@@ -500,6 +501,7 @@ void func_80246808(void);
 void func_80246938(void);
 void func_8024694C(s32 arg0, s32 arg1, s32 arg2);
 void func_80246C3C(s32 arg0, s32 arg1, s32 arg2);
+void func_80246D74();
 void func_80246F00(s32 arg0, s32 arg1);
 void func_80247614(void);
 void func_80247848(s32 arg0, s32 arg1);
@@ -4051,52 +4053,33 @@ void func_80246F00(s32 arg0, s32 arg1) {
     }
 }
 
-func_80246D74(arg0) s16 arg0; {
-    UnkObj *sp24;
-    UnkStruct_800AEDF0 *temp_s1;
-    s32 var_t3;
-    s32 var_v1;
-    s32 var_v1_2;
-    s32 var_v1_3;
-    s32 var_v1_4;
-    s32 var_v1_5;
+void func_80246D74(s32 arg0) {
+    UnkObj *obj;
+    s32 id = arg0;
+    UnkStruct_800AEDF0 *p = &D_800AEDF0[id];
 
-    temp_s1 = &D_800AEDF0[arg0];
-    var_v1 = 0;
-    sp24 = temp_s1->unk28;
-    if ((temp_s1->unk68 & 4) == 4) {
-        var_v1 = 1;
+    obj = (UnkObj *)func_802443F4(id);
+    if (func_80243EB4(id, 4)) {
+        func_80270770(id, 1);
+        p->unk2C = 0;
+        func_8024694C(id, 1, 0);
     }
-    if (var_v1 != 0) {
-        func_80270770(arg0, 1);
-        temp_s1->unk2C = 0;
-        func_8024694C((s32) arg0, 1, 0);
+    if (func_80243EB4(id, 1)) {
+        func_80270770(id, 1);
+        p->unk2C = 0;
+        func_8024694C(id, 2, 0);
     }
-    var_v1_2 = func_80243EB4(arg0, 1);
-    if (var_v1_2 != 0) {
-        func_80270770(arg0, 1);
-        temp_s1->unk2C = 0;
-        func_8024694C((s32) arg0, 2, 0);
+    if (func_80243EB4(id, 0x80)) {
+        func_802313DC(obj, 0x40);
     }
-    var_v1_3 = func_80243EB4(arg0, 0x80);
-    var_t3 = temp_s1->unk68 & 0x100;
-    if (var_v1_3 != 0) {
-        func_802313DC(sp24, 0x40);
-        var_t3 = temp_s1->unk68 & 0x100;
+    if (func_80243EB4(id, 0x100)) {
+        func_80246C3C(id, 0, 0);
     }
-    var_v1_4 = 0;
-    if (var_t3 == 0x100) {
-        var_v1_4 = 1;
+    func_80243D90(id, 0xB9, 0);
+    if (!func_80243E18(1)) {
+        func_80243D90(id, 4, 0);
     }
-    if (var_v1_4 != 0) {
-        func_80246C3C((s32) arg0, 0, 0);
-    }
-    func_80243D90((s32) arg0, 0xB9, 0);
-    var_v1_5 = func_80243E18(1);
-    if (var_v1_5 == 0) {
-        func_80243D90((s32) arg0, 4, 0);
-    }
-    temp_s1->unk18 &= ~0x404;
+    p->unk18 &= ~0x404;
 }
 
 void func_80246C3C(s32 arg0, s32 arg1, s32 arg2) {
