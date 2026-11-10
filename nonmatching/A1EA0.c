@@ -3,7 +3,7 @@
  * and the task that updates them. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 27, eu 27, jp 27
+ * differing words: us 0, eu 0, jp 0
  */
 #include "common.h"
 
@@ -459,13 +459,13 @@ UnkStruct_802B0260 *func_80287DC0(s32 arg0) {
 }
 
 static void func_80287904(void) {
-    s32 pad0;
+    s32 j;
     f32 u[2];
     f32 v[2];
-    s32 pad1[4];
+    f32 w;
+    s32 pad[3];
     f32 rot[3];
     f32 cam[3];
-    f32 w;
     f32 h;
     f32 du;
     f32 dv;
@@ -473,9 +473,9 @@ static void func_80287904(void) {
     s32 i;
 
     func_802348B4(&cam[0], &cam[1], &cam[2]);
-    for (i = 0; i < 2; i++) {
-        u[i] = 0.0f;
-        v[i] = 0.0f;
+    for (j = 0; j < 2; j++) {
+        u[j] = 0.0f;
+        v[j] = 0.0f;
     }
     for (;;) {
         e = D_802B0260;
