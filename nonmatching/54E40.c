@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2471, eu 2490, jp 2454
+ * differing words: us 2471, eu 2471, jp 2454
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -539,6 +539,18 @@ extern u8 D_8029FB10_jp[];
 #define STR_B D_802A04B4
 #define X_01D8 func_8023B2AC(D_802A01D8, 0.8f)
 #define X_01E0 func_8023B2AC(D_802A01E0, 0.8f)
+#endif
+
+/* eu runs at 50 frames a second: its second, its per-frame step of the
+ * 100-frame counter and its time limit differ. */
+#if VERSION_EU
+#define FPS 50
+#define FRAME_STEP 2.0f
+#define TIME_LIMIT 0x3841
+#else
+#define FPS 0x3C
+#define FRAME_STEP 1.6666666f
+#define TIME_LIMIT 0x2A31
 #endif
 
 void func_80243824(s32 arg0) {
@@ -1396,14 +1408,14 @@ void func_8023FD08() {
         func_8028A3D0(0x13);
         func_8028A3D0(0x1E);
         func_8028A3D0(0x29);
-        if ((D_802AC610.unk10 == 1) && (D_802AC610.unk38 < 0x2A31)) {
+        if ((D_802AC610.unk10 == 1) && (D_802AC610.unk38 < TIME_LIMIT)) {
             func_8028A3D0(0xA);
             func_8028A3D0(0x15);
             func_8028A3D0(0x20);
             func_8028A3D0(0x2B);
         }
     }
-    if ((D_802AC5E8 == 5) && (D_802AC5EC == 3) && (D_802AC610.unk38 < 0x2A31)) {
+    if ((D_802AC5E8 == 5) && (D_802AC5EC == 3) && (D_802AC610.unk38 < TIME_LIMIT)) {
         func_8028A3D0(9);
         func_8028A3D0(0x14);
         func_8028A3D0(0x1F);
@@ -2110,7 +2122,7 @@ void func_8023E1D8() {
                     break;
                 }
             }
-            if (t >= 60) {
+            if (t >= FPS) {
                 k--;
                 t = 0;
                 if (k < 0) {
@@ -2202,7 +2214,7 @@ void func_8023DB0C() {
     D_802AC660.unk28 = 2;
     D_802AC660.unk2C = 2;
     D_802AC660.unk30 = 0;
-    D_802AC660.unk34 = 0x3C;
+    D_802AC660.unk34 = FPS;
     D_802AC660.unk38 = 1;
     D_802AC660.unk3C = 1;
     D_802AC660.unkA0 = 0;
@@ -2270,7 +2282,7 @@ void func_8023DB0C() {
             if (!(D_802AC5D0 & 0x40) && !(D_802AC5D0 & 0x80)) {
                 if ((D_802AC5D0 & 4) && (D_802AC660.unk28 < 6)) {
                     if (--D_802AC660.unk34 <= 0) {
-                        D_802AC660.unk34 = 0x3C;
+                        D_802AC660.unk34 = FPS;
                         if (--D_802AC660.unk30 < 0) {
                             D_802AC660.unk30 = 0x3B;
                             if (--D_802AC660.unk2C == 0) {
@@ -2281,13 +2293,13 @@ void func_8023DB0C() {
                         }
                     }
                 } else {
-                    D_802AC610.unk34 += 1.6666666f;
+                    D_802AC610.unk34 += FRAME_STEP;
                     if (D_802AC610.unk34 >= 1.0f) {
                         t = D_802AC610.unk34;
                         D_802AC610.unk30 += t;
                         D_802AC610.unk34 -= t;
                     }
-                    D_802AC5F4 += 1.6666666f;
+                    D_802AC5F4 += FRAME_STEP;
                     if (D_802AC5F4 >= 100.0f) {
                         D_802AC610.unk38++;
                         D_802AC5F4 -= (s32) D_802AC5F4;
@@ -2703,7 +2715,7 @@ static void func_8023CA94() {
     if (D_802AC5D0 & 4) {
         D_802AC660.unk2C = D_802AC660.unk28;
         D_802AC660.unk30 = 0;
-        D_802AC660.unk34 = 0x3C;
+        D_802AC660.unk34 = FPS;
         func_80277E1C();
         for (i = 0; i < 4; i++) {
             v = D_802AC660.unk4[i];
