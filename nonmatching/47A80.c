@@ -3,7 +3,7 @@
  * 0x8022D280-0x8022DB00) that build a model's display list from its joint
  * tree. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 139, eu 139, jp 139
+ * differing words: us 129, eu 129, jp 129
  *
  * func_8022DAB0 matches. func_8022D280 and the static func_8022D414 (one
  * block) differ in about 18 words: the right size, but func_8022D414's
@@ -36,8 +36,8 @@ typedef struct {
     /* 0x04 */ f32 trans[3];
     /* 0x10 */ f32 rot[3];
     /* 0x1C */ u8 pad1C[0xC];
-    /* 0x28 */ s32 next;
-    /* 0x2C */ s32 child;
+    /* 0x28 */ u32 next;
+    /* 0x2C */ u32 child;
 } Joint; /* size 0x30 */
 
 typedef struct Node {
@@ -194,9 +194,8 @@ void func_8022D58C(Gfx **gp, s32 base, s32 idx) {
 static void func_8022D414(Gfx **gp, s32 base, s32 joints, s32 idx) {
     s32 pad1;
     Gfx *g;
-    s32 pad2;
-    s32 pushed;
     Joint *j;
+    s32 pushed;
 
     pushed = 0;
     g = *gp;
