@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1760, eu 1760, jp 1759
+ * differing words: us 1715, eu 1715, jp 1714
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -3086,29 +3086,21 @@ void func_8024A0DC(s32 arg0) {
 }
 
 void func_80249FD4(s32 arg0, s32 arg1) {
-    s32 sp30;
-    UnkStruct_800AEDF0 *sp18;
-    UnkStruct_800AEDF0 *var_a1;
-    s32 var_v1;
+    Tbl4_5E3F0 tbl;
+    UnkStruct_800AEDF0 *p;
 
-    M2C_FIELD(&sp30, s32 *, 0) = M2C_FIELD(&D_802A0DA4, s32 *, 0);
-    M2C_FIELD(&sp30, s32 *, 4) = (s32) M2C_FIELD(&D_802A0DA4, s32 *, 4);
-    M2C_FIELD(&sp30, s32 *, 0xC) = (s32) M2C_FIELD(&D_802A0DA4, s32 *, 0xC);
-    M2C_FIELD(&sp30, s32 *, 8) = (s32) M2C_FIELD(&D_802A0DA4, s32 *, 8);
+    tbl = *(Tbl4_5E3F0 *)D_802A0DA4;
     func_802444B8(arg0, 4);
     func_80244354(arg0, 0xA0, 1);
-    var_a1 = &D_800AEDF0[arg0];
-    var_a1->unk3C = arg1;
-    if ((D_802AC5D0 & 4) || (var_a1 == D_800AEDF0)) {
-        sp18 = var_a1;
-        func_802479F0(&sp30);
-        var_a1 = sp18;
+    p = &D_800AEDF0[arg0];
+    p->unk3C = arg1;
+    if ((D_802AC5D0 & 4) || p == D_800AEDF0) {
+        func_802479F0(tbl.v);
     }
-    var_v1 = func_80243EB4(arg0, 0x2000);
-    if (var_v1 != 0) {
-        D_802ACE90[var_a1->unkA4] = 60.0f;
+    if (func_80243EB4(arg0, 0x2000)) {
+        D_802ACE90[p->unkA4] = 60.0f;
     }
-    var_a1->unk38 &= ~0x80;
+    p->unk38 &= ~0x80;
 }
 
 void func_80249F5C(s32 arg0) {
