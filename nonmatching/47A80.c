@@ -3,7 +3,7 @@
  * 0x8022D280-0x8022DB00) that build a model's display list from its joint
  * tree. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 116, eu 116, jp 116
+ * differing words: us 103, eu 103, jp 103
  *
  * func_8022DAB0 matches. func_8022D280 and the static func_8022D414 (one
  * block) differ in about 18 words: the right size, but func_8022D414's
@@ -96,8 +96,8 @@ void func_8022DAB0(Model *model, Gfx **gp, s32 base) {
 }
 
 static void func_8022D980(Node *node) {
-    s32 pushed;
     s32 i;
+    s32 pushed;
 
     func_8022D280(&D_802A5550, node->trans, node->rot, &pushed);
     if (node->mesh >= 0) {
@@ -109,7 +109,7 @@ static void func_8022D980(Node *node) {
         }
     }
     if (pushed != 0) {
-        GFX2R(D_802A5550++, 0xBD000000, 0);
+        GFX2(D_802A5550++, 0xBD000000, 0);
         if (pushed == 2) {
             D_800A0CF8--;
         }
@@ -117,21 +117,18 @@ static void func_8022D980(Node *node) {
 }
 
 void func_8022D58C(Gfx **gp, s32 base, s32 idx) {
-    s32 pad0;
-    Gfx *g;
     s32 load;
-    s32 pushed;
+    Gfx *g;
     MeshEntry *m;
+    s32 pushed;
     s32 type;
-    MeshOverride *o;
 
     load = 0;
     pushed = 0;
     if (D_8029F840 != -1) {
-        o = &D_80098C18[D_8029F840];
-        if (o->bases[idx] != 0) {
-            base = o->bases[idx];
-            idx = o->meshes[idx];
+        if (D_80098C18[D_8029F840].bases[idx] != 0) {
+            base = D_80098C18[D_8029F840].bases[idx];
+            idx = D_80098C18[D_8029F840].meshes[idx];
             if (((MeshEntry *)base)[idx + 1].type == 1U) {
                 D_8029F840 = -1;
             }
@@ -145,12 +142,12 @@ void func_8022D58C(Gfx **gp, s32 base, s32 idx) {
         func_8022D414(&g, base, m->dl, m->unk4);
     } else if (type != 4) {
         if (D_8029FCC0 != 0 && type != 6) {
-            GFX2R(g++, 0xB6000000, 0x40000);
-            GFX2R(g++, 0xBB000000, 0);
+            GFX2(g++, 0xB6000000, 0x40000);
+            GFX2(g++, 0xBB000000, 0);
             D_8029FCC0 = 0;
         }
         if (D_8029FCC4 != 0 && type != 8) {
-            GFX2R(g++, 0xB6000000, 0x40000);
+            GFX2(g++, 0xB6000000, 0x40000);
             D_8029FCC4 = 0;
         }
         switch (type) {
@@ -178,7 +175,7 @@ void func_8022D58C(Gfx **gp, s32 base, s32 idx) {
             GFX2(g++, 0x01040040, (u32) D_802A538C[D_802A5368]);
             D_802A5368++;
             GFX2(g++, 0x06000000, m->dl + base);
-            GFX2R(g++, 0xBD000000, 0);
+            GFX2(g++, 0xBD000000, 0);
             if (pushed != 0) {
                 D_800A0CF8--;
             }
