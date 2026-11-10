@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1571, eu 1571, jp 1570
+ * differing words: us 1560, eu 1560, jp 1559
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -3483,34 +3483,15 @@ void func_80248864(s32 arg0) {
 }
 
 void func_8024878C(s32 arg0) {
-    UnkStruct_800AEDF0 *sp18;
-    UnkStruct_800AEDF0 *temp_a3;
-    s32 temp_a0;
-    s32 var_v1;
-    s32 var_v1_2;
-    s32 var_v1_3;
-
     func_80244354(arg0, 2, 0);
-    temp_a3 = &D_800AEDF0[arg0];
-    var_v1 = func_80244BA4(arg0, 0x1000);
-    if (var_v1 == 0) {
-        sp18 = temp_a3;
+    if (!func_80244BA4(arg0, 0x1000)) {
         func_80244354(arg0, 0x20, 0);
-        temp_a0 = temp_a3->unk10;
-        var_v1_2 = 0;
-        if (!(temp_a0 & 0x20C0)) {
-            var_v1_2 = 1;
-        }
-        if (var_v1_2 == 0) {
-            var_v1_3 = 0;
-            if ((temp_a0 & 0x8000) == 0x8000) {
-                var_v1_3 = 1;
-            }
-            if (var_v1_3 == 0) {
+        if (!func_802452AC(arg0, 0x20C0)) {
+            if (!func_80244BA4(arg0, 0x8000)) {
                 func_802444B8(arg0, 0);
-                return;
+            } else {
+                func_802444B8(arg0, 0xC);
             }
-            func_802444B8(arg0, 0xC);
         }
     }
 }
