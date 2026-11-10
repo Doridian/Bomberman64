@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2190, eu 2190, jp 2189
+ * differing words: us 2126, eu 2126, jp 2125
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -4412,24 +4412,18 @@ void func_80245DFC() {
 }
 
 void func_80245CDC() {
-    UnkStruct_800AEDF0 *var_s1;
-    s32 var_s0;
-    void *temp_v0;
+    s32 i;
+    s32 v;
 
     D_802AC894 = 0;
-    temp_v0 = malloc(0x1000);
-    D_802ACF04 = temp_v0;
-    D_802AC898 = func_80238A10(func_8024FFF0, 0, (s32) temp_v0, 0x1000, 0x70);
-    var_s1 = D_800AEDF0;
-    var_s0 = 0;
-    do {
-        if (var_s1->unk24 != 0) {
-            var_s1->unk68 = 0;
-            func_802459BC(var_s0);
+    D_802ACF04 = malloc(0x1000);
+    D_802AC898 = func_80238A10(func_8024FFF0, 0, (s32) D_802ACF04, 0x1000, 0x70);
+    for (i = 0; i < 5; i++) {
+        if (D_800AEDF0[i].unk24 != 0) {
+            D_800AEDF0[i].unk68 = 0;
+            func_802459BC(i);
         }
-        var_s0 += 1;
-        var_s1 += 1;
-    } while (var_s0 != 5);
+    }
     func_80237664();
     func_802362D4(0x1F);
     D_802AC8BC = 0;
@@ -4439,7 +4433,8 @@ void func_80245CDC() {
     D_802AC9DC = 0;
     D_802AC9E0 = -1;
     D_802AC9E8 = 0;
-    if (D_802AC5D0 & 4) {
+    v = D_802AC5D0;
+    if (v & 4) {
         func_80287008(3, 0x1C, 0xD2);
     }
 }
