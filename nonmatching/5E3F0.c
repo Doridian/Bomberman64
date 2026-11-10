@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1545, eu 1545, jp 1544
+ * differing words: us 1509, eu 1509, jp 1508
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -925,63 +925,50 @@ void func_8025068C(s32 arg0) {
 }
 
 s32 func_80250398(s32 arg0) {
-    s32 sp64;
-    s32 sp48[3];
-    s32 sp44;
-    s32 sp40;
-    f64 temp_fv0;
-    s32 var_t0;
-    s32 var_t1;
-    s32 var_t2;
-    void *temp_a0;
-    void *temp_v0;
+    s32 ret = 0;
+    UnkObj *obj = (UnkObj *)func_802443F4(arg0);
+    s32 pad[3];
+    s32 c[3];
+    s32 dx;
+    s32 dz;
 
-    temp_a0 = D_800AEDF0[arg0].unk28;
-    temp_fv0 = (f64) M2C_FIELD(M2C_FIELD(temp_a0, void **, 0x40), f32 *, 0x20);
-    if (((temp_fv0 >= 0.0) && (temp_fv0 < 22.5)) || ((temp_fv0 >= 337.5) && (temp_fv0 < 360.0))) {
-        sp40 = 1;
-        sp44 = 0;
+    if ((obj->unk40->unk20 >= 0.0 && obj->unk40->unk20 < 22.5) || (obj->unk40->unk20 >= 337.5 && obj->unk40->unk20 < 360.0)) {
+        dx = 0;
+        dz = 1;
     }
-    var_t0 = sp44;
-    var_t1 = sp40;
-    if ((temp_fv0 >= 22.5) && (temp_fv0 < 67.5)) {
-        var_t0 = 1;
-        var_t1 = 1;
+    if (obj->unk40->unk20 >= 22.5 && obj->unk40->unk20 < 67.5) {
+        dx = 1;
+        dz = 1;
     }
-    if ((temp_fv0 >= 67.5) && (temp_fv0 < 112.5)) {
-        var_t0 = 1;
-        var_t1 = 0;
+    if (obj->unk40->unk20 >= 67.5 && obj->unk40->unk20 < 112.5) {
+        dx = 1;
+        dz = 0;
     }
-    if ((temp_fv0 >= 112.5) && (temp_fv0 < 157.5)) {
-        var_t0 = 1;
-        var_t1 = -1;
+    if (obj->unk40->unk20 >= 112.5 && obj->unk40->unk20 < 157.5) {
+        dx = 1;
+        dz = -1;
     }
-    if ((temp_fv0 >= 157.5) && (temp_fv0 < 202.5)) {
-        var_t0 = 0;
-        var_t1 = -1;
+    if (obj->unk40->unk20 >= 157.5 && obj->unk40->unk20 < 202.5) {
+        dx = 0;
+        dz = -1;
     }
-    if ((temp_fv0 >= 202.5) && (temp_fv0 < 247.5)) {
-        var_t0 = -1;
-        var_t1 = -1;
+    if (obj->unk40->unk20 >= 202.5 && obj->unk40->unk20 < 247.5) {
+        dx = -1;
+        dz = -1;
     }
-    if ((temp_fv0 >= 247.5) && (temp_fv0 < 292.5)) {
-        var_t0 = -1;
-        var_t1 = 0;
+    if (obj->unk40->unk20 >= 247.5 && obj->unk40->unk20 < 292.5) {
+        dx = -1;
+        dz = 0;
     }
-    if ((temp_fv0 >= 292.5) && (temp_fv0 < 337.5)) {
-        var_t0 = -1;
-        var_t1 = 1;
+    if (obj->unk40->unk20 >= 292.5 && obj->unk40->unk20 < 337.5) {
+        dx = -1;
+        dz = 1;
     }
-    temp_v0 = M2C_FIELD(temp_a0, void **, 0x40);
-    sp64 = 0;
-    sp40 = var_t1;
-    sp44 = var_t0;
-    func_8026DCAC(M2C_FIELD(temp_v0, f32 *, 0x10), M2C_FIELD(temp_v0, f32 *, 0x14), M2C_FIELD(temp_v0, f32 *, 0x18), sp48, 2);
-    var_t2 = sp64;
-    if (!(func_8026D7D8(sp48[0] + sp44, sp48[1], sp48[2] + sp40) & 0x4000)) {
-        var_t2 = 1;
+    func_8026DCAC(obj->unk40->unk10, obj->unk40->unk14, obj->unk40->unk18, c, 2);
+    if (!(func_8026D7D8(c[0] + dx, c[1], c[2] + dz) & 0x4000)) {
+        ret = 1;
     }
-    return var_t2;
+    return ret;
 }
 
 void func_80250338(s32 arg0, void *arg1) {
