@@ -3,7 +3,7 @@
  * 0x8022D280-0x8022DB00) that build a model's display list from its joint
  * tree. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 129, eu 129, jp 129
+ * differing words: us 116, eu 116, jp 116
  *
  * func_8022DAB0 matches. func_8022D280 and the static func_8022D414 (one
  * block) differ in about 18 words: the right size, but func_8022D414's
@@ -123,17 +123,15 @@ void func_8022D58C(Gfx **gp, s32 base, s32 idx) {
     s32 pushed;
     MeshEntry *m;
     s32 type;
-    s32 nb;
     MeshOverride *o;
 
     load = 0;
     pushed = 0;
     if (D_8029F840 != -1) {
         o = &D_80098C18[D_8029F840];
-        nb = o->bases[idx];
-        if (nb != 0) {
+        if (o->bases[idx] != 0) {
+            base = o->bases[idx];
             idx = o->meshes[idx];
-            base = nb;
             if (((MeshEntry *)base)[idx + 1].type == 1U) {
                 D_8029F840 = -1;
             }
