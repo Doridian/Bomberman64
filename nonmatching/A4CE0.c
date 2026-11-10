@@ -6,13 +6,12 @@
  * is emitted in the original's order and at the original's size. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 78, eu 78, jp 78
+ * differing words: us 20, eu 20, jp 20
  *
  * func_8028A7CC, func_8028A81C and func_8028A87C match; the statics are
- * compared as one run from func_8028A8A4 (78 words). Per function
- * (scratch's pf.py): func_8028B670 46 (v0/v1 swapped on m->unk40),
- * func_8028BD20 21 (e in s6, constant registers permuted), func_8028D094
- * 8, the rest 1 or 0, 44 of 50 exact.
+ * compared as one run from func_8028A8A4 (20 words). Per function
+ * (scratch's pf.py): func_8028BD20 12, func_8028D094 8, the other 48
+ * exact.
  * - The coroutines and table functions are referenced only from .data,
  *   so they are statics: the globals come out first (reversed), the
  *   statics after in source order.
@@ -23,7 +22,11 @@
  *   func_80239430 after it. func_8028B670 and func_8028BD20 write the kill
  *   out (the inlined static costs them 8 frame bytes). The spawn makes two
  *   calls, so SPAWN/SPAWN1 are macros with block locals, padded to the
- *   original's 40-byte areas, around an empty K&R stub.
+ *   original's 40-byte areas, around an empty K&R stub. The `do {} while
+ *   (0);` after func_8028A5C4 stands for the inlined static's exit label:
+ *   uopt marks v0 used in the block after a call to a function returning
+ *   a value, and the empty block takes that mark, so the code after the
+ *   spawn may keep m->unk40 in v0 as the original does.
  * - func_8028AB14: the original keeps 1.0 in three registers (fs2 for the
  *   scale, fs3 for t, fs5 for e->unk10) and so doesn't hoist 255.0f.
  *   uopt keys a float constant by its spelling, so `1`, `1.0f` and `1.f`
@@ -99,8 +102,8 @@ extern s32 D_800BC76C;
 extern UnkStruct_800BC770 D_800BC770[16];
 
 /* a debris spawn, inlined everywhere with its own frame area (func_8028A978 is its empty stub) */
-#define SPAWN1(k, x, y, z) { s32 kind; f32 px, py, pz; s32 pad[2]; f32 pos[3]; s32 pad2; func_8028A978(); kind = k; px = x; py = y; pz = z; pos[0] = px; pos[1] = py; pos[2] = pz; func_8028A5C4(func_8028A690(kind), kind, pos, 0, 1); }
-#define SPAWN(k, x, y, z) { s32 kind; f32 px, py, pz; s32 pad[3]; f32 pos[3]; func_8028A978(); kind = k; px = x; py = y; pz = z; pos[0] = px; pos[1] = py; pos[2] = pz; func_8028A5C4(func_8028A690(kind), kind, pos, 0, 1); }
+#define SPAWN1(k, x, y, z) { s32 kind; f32 px, py, pz; s32 pad[2]; f32 pos[3]; s32 pad2; func_8028A978(); kind = k; px = x; py = y; pz = z; pos[0] = px; pos[1] = py; pos[2] = pz; func_8028A5C4(func_8028A690(kind), kind, pos, 0, 1); do {} while (0); }
+#define SPAWN(k, x, y, z) { s32 kind; f32 px, py, pz; s32 pad[3]; f32 pos[3]; func_8028A978(); kind = k; px = x; py = y; pz = z; pos[0] = px; pos[1] = py; pos[2] = pz; func_8028A5C4(func_8028A690(kind), kind, pos, 0, 1); do {} while (0); }
 
 s32 func_8028A4E0(s32 arg0);
 void func_8028A584(void);
