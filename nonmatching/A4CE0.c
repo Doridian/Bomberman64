@@ -6,7 +6,7 @@
  * is emitted in the original's order and at the original's size. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 548, eu 548, jp 548
+ * differing words: us 538, eu 538, jp 538
  *
  * func_8028A7CC, func_8028A81C and func_8028A87C match; the statics are
  * compared as one run from func_8028A8A4 (538 words). Per function
@@ -209,23 +209,20 @@ void func_8028A584(void) {
 }
 
 s32 func_8028A4E0(s32 arg0) {
-    UnkStruct_800BC528 *e;
-
     if (arg0 == -1) {
         return 0;
     }
-    e = &D_800BC528[arg0];
-    if (e->unk0 == -1) {
+    if (D_800BC528[arg0].unk0 == -1) {
         return 0;
     }
-    e->unk0 = -1;
-    if (e->unk20 != NULL) {
-        func_8022FC90(e->unk20);
-        e->unk20 = NULL;
+    D_800BC528[arg0].unk0 = -1;
+    if (D_800BC528[arg0].unk20 != NULL) {
+        func_8022FC90(D_800BC528[arg0].unk20);
+        D_800BC528[arg0].unk20 = NULL;
     }
-    if (e->unk4 != -1) {
-        func_80238EA8(e->unk4);
-        e->unk4 = -1;
+    if (D_800BC528[arg0].unk4 != -1) {
+        func_80238EA8(D_800BC528[arg0].unk4);
+        D_800BC528[arg0].unk4 = -1;
     }
     return 1;
 }
@@ -246,10 +243,10 @@ static s32 func_8028A5C4(s32 slot, s32 kind, f32 *pos, s32 arg4, s32 arg3) {
     }
     e->unk10 = pos[0];
     e->unk14 = pos[1];
+    e->unk18 = pos[2];
     e->unk8 = arg3;
     e->unk1C = arg4;
     e->unkC = kind;
-    e->unk18 = pos[2];
     e->unk4 = func_80238A10(D_802A1C40[kind], e, 0, 0, 0x150);
     return slot;
 }
