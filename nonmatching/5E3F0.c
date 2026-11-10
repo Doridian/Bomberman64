@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1378, eu 1378, jp 1377
+ * differing words: us 1372, eu 1372, jp 1371
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -3988,40 +3988,26 @@ void func_80246D74(s32 arg0) {
 }
 
 void func_80246C3C(s32 arg0, s32 arg1, s32 arg2) {
-    UnkObj *sp4C;
-    UnkStruct_800AEDF0 *sp20;
-    UnkObj *temp_a3;
-    UnkStruct_800AEDF0 *temp_v1;
-    s32 var_a0;
-    s32 var_a0_2;
+    UnkStruct_800AEDF0 *p = &D_800AEDF0[arg0];
+    UnkObj *obj = (UnkObj *)func_802443F4(arg0);
 
-    temp_v1 = &D_800AEDF0[arg0];
-    temp_a3 = temp_v1->unk28;
     if (arg2 != 0) {
-        sp20 = temp_v1;
-        sp4C = temp_a3;
-        func_80243D90(0x100, 1, (s32) temp_a3);
-        temp_v1->unk8C = 0.0f;
-        temp_v1->unk88 = 0.2f;
-        temp_v1->unk84 = arg1;
-        func_8029279C(sp4C->unk40, 0, 0, 0, 0.0f);
-        var_a0 = 0;
-        temp_v1->unk90 = 0x3C;
-        if ((temp_v1->unk68 & 0x80) == 0x80) {
-            var_a0 = 1;
+        func_80243D90(arg0, 0x100, 1);
+        p->unk8C = 0.0f;
+        p->unk88 = 0.2f;
+        p->unk84 = arg1;
+        func_8029279C(obj->unk40, 0, 0, 0, 0.0f);
+        p->unk90 = 60;
+        if (func_80243EB4(arg0, 0x80)) {
+            p->unk90 = 1200;
         }
-        if (var_a0 != 0) {
-            temp_v1->unk90 = 0x4B0;
-        }
-        if (temp_v1->unk18 & 0x404) {
-            sp20 = temp_v1;
+        if (p->unk18 & 0x404) {
             func_80243D90(arg0, 0x10, 1);
-            temp_v1->unk78 = 0x4B0;
+            p->unk78 = 1200;
         }
     } else {
-        var_a0_2 = func_80243EB4(arg0, 0x100);
-        if (var_a0_2 != 0) {
-            func_802926EC(temp_a3->unk40);
+        if (func_80243EB4(arg0, 0x100)) {
+            func_802926EC(obj->unk40);
             func_80243D90(arg0, 0x100, 0);
         }
     }
