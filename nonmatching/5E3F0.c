@@ -40,8 +40,17 @@
  * the large m2c functions (8024891C, 8024D8C4, 802444B8,
  * 8024A0DC) are still m2c's shape. 802506B8's fill loop of the
  * ten 255-entry tables isn't unrolled in the original (this one is).
- * func_80244354 is inlined into its leaf callers (8024A6B4, 80247928)
- * here but not in the original.
+ * func_80244354 is never inlined in the original: a dead
+ * `if (0) { func_80237664(); }` in it keeps it out of line here too.
+ * D_802ACEC8 is `s32 [][3]`; 802455A8/802456FC/802457D8 pass its row to
+ * func_8024557C and func_80245480/func_80245690, which call
+ * func_80245430. Where m2c expanded an inlined getter or flag test back
+ * into loads, calling the getter again gives the original's frame (each
+ * inlined copy keeps its frame area) and registers. Declaration order
+ * of a variable initialised from a getter moves the code and the
+ * stack slots (8024C0D8, 80250398, 8024D108). Many functions still
+ * spill the entry pointer to sp+0x18 where the original uses sp+0x1C
+ * (8024BC20, 80247D74, 8024694C); nothing found yet moves it.
  */
 #include "common.h"
 
