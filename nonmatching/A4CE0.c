@@ -9,9 +9,10 @@
  * differing words: us 363, eu 363, jp 363
  *
  * func_8028A7CC, func_8028A81C and func_8028A87C match; the statics are
- * compared as one run from func_8028A8A4 (538 words). Per function
- * (scratch's pf.py): func_8028AB14 218, func_8028B670 179, func_8028CC18
- * 67, func_8028BD20 28, the rest 8 or fewer, 28 of 50 exact.
+ * compared as one run from func_8028A8A4 (363 words). Per function
+ * (scratch's pf.py): func_8028AB14 218, func_8028CC18 67, func_8028B670
+ * 46 (v0/v1 swapped on m->unk40), func_8028BD20 21 (e in s6, constant
+ * registers permuted), func_8028D094 8, the rest 1 or 0, 42 of 50 exact.
  * - The coroutines and table functions are referenced only from .data,
  *   so they are statics: the globals come out first (reversed), the
  *   statics after in source order.
@@ -19,16 +20,17 @@
  *   (a debris spawn) are inlined everywhere and leave stubs. IDO inlines a
  *   static called from several places only if it holds at most one call:
  *   the kill is the four stores and func_8022FC90, each caller calling
- *   func_80239430 after it. The spawn makes two calls, so SPAWN is a macro
- *   with block locals around an empty K&R stub (no frame cost); the
- *   original's areas are 40 bytes each (ours 28), which shifts
- *   func_8028B670's frame (0x110 against 0x160) and so most of its words.
+ *   func_80239430 after it. func_8028B670 and func_8028BD20 write the kill
+ *   out (the inlined static costs them 8 frame bytes). The spawn makes two
+ *   calls, so SPAWN/SPAWN1 are macros with block locals, padded to the
+ *   original's 40-byte areas, around an empty K&R stub.
  * - func_8028AB14: the original keeps 1.0 in three registers (fs2 for the
  *   scale, fs3 for t, fs5 for e->unk10) and so doesn't hoist 255.0f; ours
  *   shares one and hoists 255.0f and 8.0f, renumbering every fs register.
  *   No mix of 1 / 1.0f / 1.0 reproduces it.
  * - func_8028CC18: the original hoists 20.0f and 30.0f but loads 25.0f
- *   in the loop; ours hoists the other set.
+ *   in the loop; ours hoists the other set. No int/float spelling of
+ *   its constants (30, 20, 25, 1.0, 0.0) changes a word.
  * - The static parameter orders (func_8028A9D4 (out, kind, e, mode),
  *   func_8028A5C4 (slot, kind, pos, arg4, arg3), func_8028AB14's scale
  *   before alpha, func_8028B670's dz before dx) come from which argument
