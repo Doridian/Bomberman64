@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2471, eu 2471, jp 2454
+ * differing words: us 2337, eu 2337, jp 2320
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -532,6 +532,7 @@ void func_80243824(s32 arg0);
 #define STR_B D_8029FB10_jp
 #define X_01D8 0x70
 #define X_01E0 0x83
+#define X_B7C0 0xA0U
 extern u8 D_8029FB00_jp[];
 extern u8 D_8029FB10_jp[];
 #else
@@ -539,6 +540,7 @@ extern u8 D_8029FB10_jp[];
 #define STR_B D_802A04B4
 #define X_01D8 func_8023B2AC(D_802A01D8, 0.8f)
 #define X_01E0 func_8023B2AC(D_802A01E0, 0.8f)
+#define X_B7C0 0xB4U
 #endif
 
 /* eu runs at 50 frames a second: its second, its per-frame step of the
@@ -696,9 +698,8 @@ void func_80242FB4() {
         M2C_FIELD(M2C_FIELD(p, u8 **, 0x40), s32 *, 0x38) = ((s32 *) D_802A0750)[id];
     }
 loop_3:
-    i = 0;
-    for (k = 0; k < 4; k++) {
-        if ((D_802AC660.unk4[k] != 0) && (id == D_802AC660.unk90[k])) {
+    for (i = 0; i < 4; i++) {
+        if ((D_802AC660.unk4[i] != 0) && (id == D_802AC660.unk90[i])) {
             func_8023E8FC(pos);
             func_80286EF0();
             obj = func_802867E4(id, pos[0], pos[1] + 1500.0f, pos[2]);
@@ -720,6 +721,7 @@ loop_3:
             break;
         }
     }
+    i = 0;
     while (TRUE) {
         st = func_802871D0((s32) obj) & 3;
         if (st == 3) {
@@ -727,6 +729,10 @@ loop_3:
             goto loop_3;
         }
         if ((st != 0) || (lives == 0)) {
+            for (i = 0; i < lives - M2C_FIELD(obj, u8 *, 0x6D); i++) {
+                func_8022FC90(((void **) D_802AC828)[id * 5 + lives - 1 - i]);
+            }
+            (&D_802AC760)[id] = 0;
             break;
         }
         if (((M2C_FIELD(obj, u8 *, 0x7A) & 0xF) == 3) && (lives != M2C_FIELD(obj, u8 *, 0x6D))) {
@@ -755,10 +761,6 @@ loop_3:
         }
         func_80239094();
     }
-    for (i = 0; i < lives - M2C_FIELD(obj, u8 *, 0x6D); i++) {
-        func_8022FC90(((void **) D_802AC828)[id * 5 + lives - 1 - i]);
-    }
-    (&D_802AC760)[id] = 0;
     func_80239430();
 }
 
@@ -3054,7 +3056,7 @@ static void func_8023B7C0(f32 arg0) {
     var_s0 = (u32) arg0;
     temp_t7 = var_s0 & 0xFFFF;
     D_802AC7E4 = func_802811F0(&D_802A039C, 0x2DU, temp_t7 & 0xFFFF, 0.6f, 0.8f, 2U);
-    D_802AC7E8 = func_802811F0(&sp24, 0xB4U, temp_t7 & 0xFFFF, 0.6f, 0.8f, 3U);
+    D_802AC7E8 = func_802811F0(&sp24, X_B7C0, temp_t7 & 0xFFFF, 0.6f, 0.8f, 3U);
 }
 
 static void func_8023B450(s32 n, s32 value, u8 *buf) {
