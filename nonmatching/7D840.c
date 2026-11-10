@@ -6,62 +6,32 @@
  * with the original's stubs. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 25, eu 25, jp 25 (fake: dead `if (rects[0].d == 0.0f) {}`)
+ * differing words: us 0, eu 0, jp 0
  *
- * func_80265274 matches: the wrap is the inlined static func_80264F98
- * (a switch writing through r++, called with info.width/height, which
- * gives the original's t1/t2 copies and its 8 bytes of frame), the loop
- * indexes rects[i], and the X dir block assigns scale before dir.
+ * func_80265274: the wrap is the inlined static func_80264F98 (a switch
+ * writing through r++, called with info.width/height, which gives the
+ * original's t1/t2 copies and its 8 bytes of frame), the loop indexes
+ * rects[i], and the X dir block assigns scale before dir.
  *
- * Left: func_8026437C (size 0x710 and frame 344 match).
- *
- * p3 (46 -> 25): the dead float-to-int conversions are kept by `&&`
- * tests. The `+` form (`fw + (s32) fw && ...`) burns three ugen FP temps
- * (trunc, mtc1, cvt into a ugen temp), the `-` form two (its cvt is a
- * uopt CSE temp that takes $f0/$f2), and ugen hands out f4/f6/f8/f10
- * from a FIFO free list (operands freed to the tail, result from the
- * head), so the forms choose which temp each later op gets. `+` for fw
- * and the first fh test puts fw/fh in $f0 and fixes the fh region; the
- * `-` test stays in block 0. Replacing `if (func_80263904(fw)) {}` frees
- * its 8 bytes of frame, so `padA` (last local) keeps the frame at 344.
- * `save = gfx++` puts save in v0. Block 0's order (y0 store, dead test,
- * x0 store, x1, y1) gives the test block's registers and y0 reload. The
- * old `(0, y0)` fake is gone; the rects[0].d one still saves 3 words
- * (`if (rects[0].d) {}` and placing it inside the fh `if` do the same).
- *
- * Still differing (all block 0): the original computes c-a and d-b as
- * uopt temps in $f0/$f2 with mul operands (c-a, dir*scale), x0 and y0
- * each loaded twice (store, then the add), and `addiu s3,sp,172` in the
- * bc1t delay slot (ours hoists the y0 load there). A FIFO simulation
- * says c-a and d-b must both be non-ugen temps, d-b computed before
- * dirY*scaleY. A block-0 dead conversion of an expression containing
- * both (e.g. CA/DB) gives the original's mul order but colours them
- * f12/f14 (72). dx/dy locals flip the mul order (variable leaves go
- * second): 40 at best. A 45-minute permuter run on this found nothing
- * real (24 only by reordering scaleX*dirX, a score artefact).
- *
- * p4 (25, unchanged): no source form found that beats it. Levers found:
- * - Target proven by hand-edited ugen asm (h5.s/h6.s, 0 words through
- *   as1): dead fh conversion first; y0 load f4/store 176; x0 load
- *   f10/store 172; dirX*scaleX -> f8; f0 = c-a; f10 = f0*f8; reload x0
- *   (f4); add into f0; dirY f8, scaleY f10, mul f4; b f6; f2 = d-b;
- *   f6 = f2*f4; y0 f8; add f2. So the as1 side is fine; only uopt's
- *   colouring of c-a/d-b (uopt temps in $f0/$f2) is missing.
- * - The double x0/y0 loads come free once c-a/d-b are uopt temps:
- *   ugen remembers which FP reg holds a memory value until it is reused,
- *   and the FIFO reuses it in between.
- * - Commutative operand order: a plain variable leaf goes second, but an
- *   assignment expression `(v = e)` or a ternary's cfe temp keeps its
- *   first-operand place, so `(info.x1 = CA) * S` and
- *   `(i == 0 ? CA : CA) * S` give the original's (c-a, dir*scale).
- * - A ternary used as a value takes a cfe float temp frame slot: drop
- *   padA with it to keep frame 344.
- * - Those forms fail on colouring: `(info.x1 = CA)` raises info.x1's
- *   priority so it no longer splits to blocks 48-49 (65 words, b19/v7);
- *   the ternary adds blocks that flip the a/b tie (a must win f12, b stay
- *   uncoloured) (47 words, b13/v7); a dx local gives 53 (b15/v1).
- *   Priorities from scratch/zdbug12/cs.sh. Next try: a ternary/assign
- *   form plus fakes that restore info.x1's split and the a/b tie.
+ * func_8026437C (p5, 25 -> 0): the original computes c-a and d-b in
+ * info.x1's and info.y1's registers ($f0/$f2): `info.x1 = (info.x1 =
+ * c - a) * S + x0` (the assignment also keeps c-a the mul's first
+ * operand). That raises x1/y1's uopt priority (1.5) above rects[0].c/.d
+ * (1.0), so they took $f18 whole instead of splitting to $f0/$f2: the dead
+ * `if (rects[i].a == 32768.0f) {}` after them adds a block to their
+ * ranges (1.0, below c/d by bit order) and a use of a (which keeps its
+ * piece in $f12). The block-0 dead conversion is the `*` form after the
+ * x0/y0 stores: `+` shares uopt's partial-redundancy temp with the `+`
+ * test above (spanning both, priority 3, takes $f0 from fh), `-` gives
+ * the wrong ugen temps. The three fakes before `i = 0` set the rest:
+ * rects[0].a's and .d's reloads, and `fh * fh == fh` raises fh (three
+ * uses in one block) to 1.6 so it beats the two conversion temps to $f0.
+ * Found by scratch/main5/p5/rs.py (random statement search, ~200
+ * variants/s on 24 threads) after the trace (zdbug12/cs.sh, p5/pr1.sh)
+ * showed which priorities had to move.
+ * The dead float-to-int conversions are kept by `&&` tests (no frame
+ * cost); `padA` (last local) keeps the frame at 344 for the call
+ * `if (func_80263904(fw)) {}` they replace; `save = gfx++` puts save in v0.
  */
 #include "common.h"
 #define F3DEX_GBI
@@ -807,14 +777,19 @@ void func_8026437C(Gfx **gfxp, TexFile *file, f32 x0, f32 y0, f32 x1, f32 y1, f3
     if (func_802336E4(rects[0].d - (f32) (s32) rects[0].d) == 0) {
         if (fh + (s32) fh && fh + (s32) fh) {}
     }
-    if (rects[0].d == 0.0f) {} /* fake: -3 words */
+    /* fakes: uopt colouring priorities (a, fh, d) */
+    if (rects[0].a == 32768.0f) {}
+    if (fh * fh == fh) {}
+    if (rects[0].d == 0.0f) {}
     i = 0;
     if (rects[i].a != 32768.0f && rects[i].b != 32768.0f && rects[i].c != 32768.0f && rects[i].d != 32768.0f) {
-        info.y0 = y0;
-        if (fh - (s32) fh && fh - (s32) fh) {}
         info.x0 = x0;
-        info.x1 = (rects[i].c - rects[i].a) * (info.dirX * info.scaleX) + x0;
-        info.y1 = (rects[i].d - rects[i].b) * (info.dirY * info.scaleY) + y0;
+        info.y0 = y0;
+        if (fh * (s32) fh && fh * (s32) fh) {} /* keeps the dead conversion; `*` so it doesn't share the `+` above */
+        /* c-a and d-b in info.x1/info.y1's registers; the assignment keeps them the first operand */
+        info.x1 = (info.x1 = (rects[i].c - rects[i].a)) * (info.dirX * info.scaleX) + x0;
+        info.y1 = (info.y1 = (rects[i].d - rects[i].b)) * (info.dirY * info.scaleY) + y0;
+        if (rects[i].a == 32768.0f) {} /* fake: one more block for x1/y1's ranges */
         if (x1 < info.x1) {
             info.x1 = x1;
         }
