@@ -6,12 +6,14 @@
  * is emitted in the original's order and at the original's size. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 20, eu 20, jp 20
+ * differing words: us 14, eu 14, jp 14
  *
  * func_8028A7CC, func_8028A81C and func_8028A87C match; the statics are
- * compared as one run from func_8028A8A4 (20 words). Per function
- * (scratch's pf.py): func_8028BD20 12, func_8028D094 8, the other 48
- * exact.
+ * compared as one run from func_8028A8A4 (14 words). Per function
+ * (scratch's pf.py): func_8028D094 8, func_8028BD20 6 (the spawn loop's
+ * i and kind swap s2/s3), the other 48 exact.
+ * - Tied float constants are coloured in the order they first appear in
+ *   the loop: func_8028BD20's `t += 1.0f` comes after the unk24 update.
  * - The coroutines and table functions are referenced only from .data,
  *   so they are statics: the globals come out first (reversed), the
  *   statics after in source order.
@@ -664,9 +666,9 @@ static void func_8028BD20(UnkStruct_800BC528 *e, f32 speed1, f32 speed2, f32 rat
             }
             func_80291944(m, dir << 5, speed2);
         }
-        t += 1.0f;
         m->unk40->unk1C += 5.0f;
         m->unk40->unk24 += 20;
+        t += 1.0f;
         m->unk40->unk36 = e->unk10 * 255.0f;
         func_8023903C(1);
     }
