@@ -3,7 +3,7 @@
  * and the task that updates them. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 417, eu 417, jp 417
+ * differing words: us 27, eu 27, jp 27
  */
 #include "common.h"
 
@@ -202,8 +202,6 @@ extern u8 D_800BB488[20];
 extern s32 D_800BC520;
 extern u8 D_802A1AB4[];
 extern s32 D_802A1AF0[][4];
-extern s32 D_802A1B50;
-extern u8 D_802A1B54[];
 extern UnkStruct_802B0260 D_802B0260[2];
 extern UnkStruct_802B0300 *D_802B0300[2];
 extern UnkStruct_802B0308 *D_802B0308[2];
@@ -273,8 +271,8 @@ s32 func_802872E0(s32 arg0, f32 arg1, f32 arg2, f32 arg3);
 void func_80287440(UnkStructA *arg0);
 s32 func_802875B0(UnkStructA *arg0);
 s32 func_80287680(void);
-static void func_802876A0(void);
-static void func_802876C8(UnkStruct_802B0260 *arg0);
+void func_802876A0(void);
+void func_802876C8(UnkStruct_802B0260 *arg0);
 void func_8028773C(UnkStruct_802B0260 *arg0);
 void func_8028785C(void);
 void func_802878BC(UnkStruct_802B0260 *arg0, s32 arg1);
@@ -410,6 +408,12 @@ void func_80287698();
 
 #define DEC_80284CA4(a_) ((--(a_)->unk6D == 0) ? 1 : 0)
 
+s32 D_802A1B50 = -1;
+void *D_802A1B54[] = { func_80287DC0, func_8028773C, func_802878E0, func_802878BC };
+UnkStruct_802B0260 D_802B0260[2];
+UnkStruct_802B0300 *D_802B0300[2];
+UnkStruct_802B0308 *D_802B0308[2];
+
 void func_80287FD4(void) {
     s32 i;
 
@@ -455,15 +459,16 @@ UnkStruct_802B0260 *func_80287DC0(s32 arg0) {
 }
 
 static void func_80287904(void) {
-    f32 v[2];
+    s32 pad0;
     f32 u[2];
+    f32 v[2];
+    s32 pad1[4];
     f32 rot[3];
     f32 cam[3];
     f32 w;
     f32 h;
     f32 du;
     f32 dv;
-    f32 ang;
     UnkStruct_802B0260 *e;
     s32 i;
 
@@ -507,14 +512,7 @@ static void func_80287904(void) {
                 } else {
                     du = w / (360.0f / rot[0]);
                 }
-                if (rot[1] >= 360.0f) {
-                    ang = rot[1] - 360.0f;
-                } else if (rot[1] < 0.0f) {
-                    ang = rot[1] + 360.0f;
-                } else {
-                    ang = rot[1];
-                }
-                dv = func_80234434(ang) * (h * e->unk44 * 0.5f);
+                dv = func_80234434((rot[1] >= 360.0f) ? rot[1] - 360.0f : ((rot[1] < 0.0f) ? rot[1] + 360.0f : rot[1])) * (h * e->unk44 * 0.5f);
                 break;
             case 1:
                 e->unk20 += e->unk18;
@@ -535,7 +533,8 @@ static void func_80287904(void) {
                 dv = e->unk24;
                 break;
             default:
-                continue;
+                for (;;) {
+                }
             }
             u[i] = e->unk38 + du;
             u[i] = func_80263DC8(u[i], w);
@@ -565,16 +564,19 @@ void func_802878BC(UnkStruct_802B0260 *arg0, s32 arg1) {
 }
 
 void func_8028785C(void) {
+    UnkStruct_802B0260 *e;
     s32 i;
 
-    for (i = 0; i < 2; i++) {
-        if (D_802B0260[i].unk4 != 0) {
-            func_8028773C(&D_802B0260[i]);
+    e = D_802B0260;
+    for (i = 0; i < 2; i++, e++) {
+        if (e->unk4 != 0) {
+            func_8028773C(e);
         }
     }
 }
 
 void func_8028773C(UnkStruct_802B0260 *arg0) {
+    UnkStruct_802B0260 *e;
     s32 last;
     s32 i;
     s32 n;
@@ -585,8 +587,9 @@ void func_8028773C(UnkStruct_802B0260 *arg0) {
     }
     func_8022A1E8(D_802B0308[arg0->unk0]);
     last = 1;
-    for (i = 0; i < 2; i++) {
-        if ((D_802B0260[i].unk0 != arg0->unk0) && (D_802B0260[i].unk8 == arg0->unk8)) {
+    e = D_802B0260;
+    for (i = 0; i < 2; i++, e++) {
+        if ((arg0->unk0 != e->unk0) && (arg0->unk8 == e->unk8)) {
             last = 0;
         }
     }
@@ -595,8 +598,9 @@ void func_8028773C(UnkStruct_802B0260 *arg0) {
     }
     func_802876C8(arg0);
     n = 0;
-    for (i = 0; i < 2; i++) {
-        if (D_802B0260[i].unk4 != 0) {
+    arg0 = D_802B0260;
+    for (i = 0; i < 2; i++, arg0++) {
+        if (arg0->unk4 != 0) {
             n++;
         }
     }
@@ -609,7 +613,7 @@ void func_8028773C(UnkStruct_802B0260 *arg0) {
     }
 }
 
-static void func_802876C8(UnkStruct_802B0260 *arg0) {
+void func_802876C8(UnkStruct_802B0260 *arg0) {
     arg0->unk4 = 0;
     arg0->unk8 = -1;
     arg0->unkC = 0;
@@ -631,7 +635,11 @@ static void func_802876C8(UnkStruct_802B0260 *arg0) {
     arg0->unk34 = 240.0f;
 }
 
-static void func_802876A0(void) {
+void func_802876A0(void) {
     func_80297D30(0x1A, D_802A1B54);
+    if (0) {
+        func_80297D30(0, 0);
+        func_80297D30(0, 0);
+    }
 }
 
