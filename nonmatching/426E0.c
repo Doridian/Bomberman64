@@ -9,7 +9,7 @@
  * func_80228500 kept). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 912, eu 912, jp 912
+ * differing words: us 883, eu 883, jp 883
  *
  * The code is the same in every version.
  *
@@ -26,6 +26,9 @@
  * - func_8022A6C4: the first two chunk searches use a local index and a
  *   `chunks` local (the original walks model+12 with a pointer); the
  *   third stores D_802A547C and D_802A5484 on both exits.
+ * - func_8022946C: `i = D_800A0D00[idx].unk0` before `p = ...` (i first
+ *   seen first takes v1). func_8022997C: `s = D_80098C68; do {` on one
+ *   line orders the preheader's addiu s1 before addiu s0.
  *
  * Left:
  * - func_802289C0 (the draw loop, 431): the original keeps obj in s2
@@ -43,9 +46,10 @@
  *   promoted here.
  * - func_8022A858 (35): the original re-lui's D_800A0D00 after the pool
  *   loop (an index loop gets that, but is unrolled by 4).
- * - func_80229C10 (30), func_8022946C (15, p in v1 vs a2), func_80229448
- *   (8: the original keeps an empty 4-step loop after storing its
- *   arguments; IDO deletes ours), func_8022997C (2: addiu s0/s1 order).
+ * - func_80229C10 (18): a rotation of a0/a1/a3/t0/t1 (the original's
+ *   dl a3, first t0, i t1, 2 in a0); `if (!chunks) {}` keeps model+12 a
+ *   value of its own. func_80229448 (8: the original keeps an empty
+ *   4-step loop after storing its arguments; IDO deletes ours).
  */
 #include "common.h"
 
@@ -759,7 +763,9 @@ u32 func_80229C10(UnkObj *arg0, s32 arg1, UnkVtx **arg2) {
     s32 i;
 
     model = arg0->unk3C;
+    if (!arg2) {}
     chunks = model->unkC;
+    if (!chunks) {}
     dl = (UnkGfx *)((u8 *)model + chunks[arg1].unk8);
     first = dl->w1;
     for (i = 0; i < 2; i++) {
@@ -789,32 +795,31 @@ void func_8022997C(void) {
     UnkScroll *s;
     s32 j;
 
-    s = D_80098C68;
-    do {
+    s = D_80098C68; do {
         if (s->unk0 != NULL) {
-        if ((s->unkC > 0 && s->unk14 + s->unkC < s->unk10) || (s->unkC < 0 && s->unk10 < s->unk14 + s->unkC)) {
-            for (j = 0; j < s->unk8; j++) {
-                s->unk4[j].unk8 += s->unkC;
+            if ((s->unkC > 0 && s->unk14 + s->unkC < s->unk10) || (s->unkC < 0 && s->unk10 < s->unk14 + s->unkC)) {
+                for (j = 0; j < s->unk8; j++) {
+                    s->unk4[j].unk8 += s->unkC;
+                }
+                s->unk14 += s->unkC;
+            } else {
+                for (j = 0; j < s->unk8; j++) {
+                    s->unk4[j].unk8 -= s->unk14;
+                }
+                s->unk14 = 0;
             }
-            s->unk14 += s->unkC;
-        } else {
-            for (j = 0; j < s->unk8; j++) {
-                s->unk4[j].unk8 -= s->unk14;
+            if ((s->unkE > 0 && s->unk16 + s->unkE < s->unk12) || (s->unkE < 0 && s->unk12 < s->unk16 + s->unkE)) {
+                for (j = 0; j < s->unk8; j++) {
+                    s->unk4[j].unkA += s->unkE;
+                }
+                s->unk16 += s->unkE;
+            } else {
+                for (j = 0; j < s->unk8; j++) {
+                    s->unk4[j].unkA -= s->unk16;
+                }
+                s->unk16 = 0;
             }
-            s->unk14 = 0;
-        }
-        if ((s->unkE > 0 && s->unk16 + s->unkE < s->unk12) || (s->unkE < 0 && s->unk12 < s->unk16 + s->unkE)) {
-            for (j = 0; j < s->unk8; j++) {
-                s->unk4[j].unkA += s->unkE;
-            }
-            s->unk16 += s->unkE;
-        } else {
-            for (j = 0; j < s->unk8; j++) {
-                s->unk4[j].unkA -= s->unk16;
-            }
-            s->unk16 = 0;
-        }
-        func_80297D60(s->unk4, s->unk8 * sizeof(UnkVtx));
+            func_80297D60(s->unk4, s->unk8 * sizeof(UnkVtx));
         }
         s++;
     } while (s != (UnkScroll *)D_80098CF8);
@@ -896,8 +901,8 @@ void func_8022946C(UnkObj *arg0, s32 arg1) {
     s32 prev;
 
     idx = ((u32)arg0 - (u32)D_800A0D00) / sizeof(UnkObj);
+    i = D_800A0D00[idx].unk0;
     p = &D_800A0D00[idx];
-    i = p->unk0;
     prev = p->unk4;
     D_800A0D00[i].unk4 = prev;
     D_800A0D00[prev].unk0 = p->unk0;
