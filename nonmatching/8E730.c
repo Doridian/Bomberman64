@@ -5,7 +5,7 @@
  * global, emitted in the original's order. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2533, eu 2533, jp 2533
+ * differing words: us 2438, eu 2438, jp 2438
  *
  * 13 of 47 match. Biggest left: func_802741D8 461, func_8027655C 436,
  * func_80274994 320, func_80276D68 171: m2c's control flow and untyped
@@ -274,7 +274,7 @@ void func_802727D8(s32 *arg0);
 void func_802733C8(u8 *arg0);
 void func_802733F8(void *arg0);
 void func_80273414(void *arg0);
-void func_802734BC(u8 *arg0);
+void func_802734BC(void *arg0);
 void *func_8027361C(s16 arg0, f32 arg1, f32 arg2, f32 arg3, s16 arg4);
 s32 func_80273A5C(s32 arg0, s32 arg1, s32 arg2);
 s32 func_80273AD4(s16 arg0, f32 arg1, f32 arg2, f32 arg3);
@@ -307,7 +307,7 @@ s32 func_80277378(s32 arg0);
 s32 func_802773A8(s16 arg0, s16 arg1);
 void func_80277484(void);
 void func_8027750C(s16 arg0);
-void func_802775D8(u8 *arg0);
+void func_802775D8(f32 *arg0);
 void func_80277774(void);
 void func_802777D0(void);
 void func_8027783C(void);
@@ -509,60 +509,32 @@ void func_80277774() {
     }
 }
 
-void func_802775D8(u8 *arg0) {
-    f32 sp50;
-    f32 temp_fa0;
-    f32 temp_fa1;
-    f32 temp_fs1;
-    f32 temp_fs2;
-    f32 temp_fs4;
-    f32 temp_fs5;
-    f32 temp_fv0;
-    f32 temp_fv0_2;
-    f32 temp_fv0_3;
-    f32 temp_fv1;
-    f32 var_ft4;
-    s16 *var_s0;
-    s16 *var_v1;
-    s32 var_v0;
-    u8 *temp_a0;
-    u8 *temp_v0;
+void func_802775D8(f32 *arg0) {
+    f32 minx;
+    f32 maxx;
+    f32 miny;
+    f32 maxy;
+    f32 minz;
+    f32 maxz;
+    Ent88 *e;
+    s32 live;
+    Sub8E *s;
 
-    var_s0 = D_8008F44C;
-    temp_fv1 = M2C_FIELD(arg0, f32 *, 0);
-    temp_fa0 = M2C_FIELD(arg0, f32 *, 4);
-    temp_fa1 = M2C_FIELD(arg0, f32 *, 8);
-    var_v1 = M2C_FIELD(var_s0, s16 **, 0x14);
-    temp_fs1 = temp_fv1 - 200.0f;
-    temp_fs4 = temp_fv1 + 200.0f;
-    temp_fs2 = temp_fa0 - 200.0f;
-    temp_fs5 = temp_fa0 + 200.0f;
-    var_ft4 = temp_fa1 + 200.0f;
-    if (var_v1 != NULL) {
-        do {
-            var_v0 = 0;
-            if (M2C_FIELD(var_s0, f32 *, 0x40) != 1e7f) {
-                var_v0 = 1;
+    minx = arg0[0] - 200.0f;
+    miny = arg0[1] - 200.0f;
+    minz = arg0[2] - 200.0f;
+    maxx = arg0[0] + 200.0f;
+    maxy = arg0[1] + 200.0f;
+    maxz = arg0[2] + 200.0f;
+    live = 0;
+    for (e = ENT_HEAD; e->next != NULL; e = e->next) {
+        live = (e->x != 1e7f) ? 1 : 0;
+        if (live) {
+            s = e->obj->unk40;
+            if (!(s->x < minx) && !(maxx < s->x) && !(s->y < miny) && !(maxy < s->y) && !(s->z < minz) && !(maxz < s->z)) {
+                func_802734BC(e->obj);
             }
-            if (var_v0 != 0) {
-                temp_a0 = M2C_FIELD(var_s0, void **, 0x1C);
-                temp_v0 = M2C_FIELD(temp_a0, void **, 0x40);
-                temp_fv0 = M2C_FIELD(temp_v0, f32 *, 0x10);
-                if (!(temp_fv0 < temp_fs1) && !(temp_fs4 < temp_fv0)) {
-                    temp_fv0_2 = M2C_FIELD(temp_v0, f32 *, 0x14);
-                    if (!(temp_fv0_2 < temp_fs2) && !(temp_fs5 < temp_fv0_2)) {
-                        temp_fv0_3 = M2C_FIELD(temp_v0, f32 *, 0x18);
-                        if (!(temp_fv0_3 < (temp_fa1 - 200.0f)) && !(var_ft4 < temp_fv0_3)) {
-                            sp50 = var_ft4;
-                            func_802734BC(temp_a0);
-                            var_v1 = M2C_FIELD(var_s0, s16 **, 0x14);
-                        }
-                    }
-                }
-            }
-            var_s0 = var_v1;
-            var_v1 = M2C_FIELD(var_v1, s16 **, 0x14);
-        } while (var_v1 != NULL);
+        }
     }
 }
 
