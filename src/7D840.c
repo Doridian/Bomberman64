@@ -1,12 +1,9 @@
 /*
- * NON_MATCHING: main_code's 7D840, complete: textured rectangles drawn
- * in tiles (a float and an integer variant: setup, wrap of the texture
- * window into up to four rectangles, then a tile loop of LoadTile and
- * TextureRectangle). Every function is emitted in the original's order,
- * with the original's stubs. Not built into the ROM (docs/DECOMPILING.md,
- * "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * main_code's 7D840, IDO -O3; it matches in us, eu and jp: textured
+ * rectangles drawn in tiles (a float and an integer variant: setup, wrap
+ * of the texture window into up to four rectangles, then a tile loop of
+ * LoadTile and TextureRectangle). Every function is emitted in the
+ * original's order, with the original's stubs.
  *
  * func_80265274: the wrap is the inlined static func_80264F98 (a switch
  * writing through r++, called with info.width/height, which gives the
@@ -32,6 +29,10 @@
  * The dead float-to-int conversions are kept by `&&` tests (no frame
  * cost); `padA` (last local) keeps the frame at 344 for the call
  * `if (func_80263904(fw)) {}` they replace; `save = gfx++` puts save in v0.
+ *
+ * Data: .data is the two rects initializers (RectI[4] of -1 for
+ * func_80265274, then RectF[4] of 32768.0f for func_8026437C), .rodata four 0.001f
+ * (floats, not widened doubles), .bss D_802AD0D0 (16 with IDO's padding).
  */
 #include "common.h"
 #define F3DEX_GBI

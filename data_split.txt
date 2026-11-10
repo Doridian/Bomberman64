@@ -116,6 +116,10 @@ main_code 7C4D0 0 0x20 0
 main_code @us 7C4D0 rodata=0x802A3A40
 main_code @eu 7C4D0 rodata=0x802A3A30
 main_code @jp 7C4D0 rodata=0x802A2C70
+main_code 7D840 0x80 0x10 0x10
+main_code @us 7D840 data=0x802A11B0 rodata=0x802A3A60 bss=0x802AD0D0
+main_code @eu 7D840 data=0x802A11B0 rodata=0x802A3A50 bss=0x802AD0C0
+main_code @jp 7D840 data=0x802A0810 rodata=0x802A2C90 bss=0x802AC300
 main_code 86680 0x50 0x10 0x10
 main_code @us 86680 data=0x802A1380 rodata=0x802A3B50 bss=0x802AFC20
 main_code @eu 86680 data=0x802A1380 rodata=0x802A3B40 bss=0x802AFC10
