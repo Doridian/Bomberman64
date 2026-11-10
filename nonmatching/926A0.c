@@ -5,12 +5,17 @@
  * global, emitted in the original's order. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 180, eu 180, jp 180
+ * differing words: us 3, eu 3, jp 3
  *
- * 12 of 14 match. Pass 2 retyped the records: D_8008E658 is Rec926[48]
+ * 13 of 14 match. Pass 2 retyped the records: D_8008E658 is Rec926[48]
  * (0x48 bytes), D_800AEDF0 Player926[] (0xC8); with plain struct C most
- * functions matched outright. Left: func_80277FC4 (frame slots, 0.0f
- * colouring) and func_80277EA0 (switch return delay slot).
+ * functions matched outright. func_80277FC4 then needed its locals in
+ * the original's slot order (idx before alpha), flags set right after
+ * unk3A in each case, `f *= ...` in place, r->unk14->unk40 re-read
+ * through the record, and `arg6 < 0` (int 0, so 0.0f stays a colourable
+ * constant for the later stores).
+ * Left: func_80277EA0's last `return r`: ours keeps ugen's exit label
+ * between `move v0,v1` and `jr ra`, so as1 can't fill the delay slot.
  */
 #include "common.h"
 
@@ -454,7 +459,7 @@ Rec926 *func_80277FC4(s16 arg0, s16 arg1, s16 arg2, s16 arg3, s32 arg4, f32 arg5
     r->unk10 = arg2;
     r->unk8 = arg9;
     func_8027404C(arg5, arg6, arg7, &r->unk1C, &r->unk20, &r->unk24);
-    if (arg6 < 0.0f) {
+    if (arg6 < 0) {
         r->unk20 = arg6 * 100.0f;
     } else {
         for (f = arg6; f >= 1.0f; f -= 1.0) {
@@ -541,7 +546,7 @@ Rec926 *func_80277FC4(s16 arg0, s16 arg1, s16 arg2, s16 arg3, s32 arg4, f32 arg5
     r->unk18 = obj->unk40;
     r->unk44 = arg3;
     if (arg1 == 5) {
-        obj->unk40->unkC |= 0x8000;
+        r->unk14->unk40->unkC |= 0x8000;
         func_8022984C(r->unk14->unk40, 1);
         func_802297B8(r->unk14->unk40, 0xC, 0, 0);
     }
