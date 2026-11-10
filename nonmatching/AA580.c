@@ -6,7 +6,7 @@
  * Every function is emitted in the original's order. Not built into the
  * ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 23, eu 23, jp 23
+ * differing words: us 3, eu 3, jp 3
  *
  * func_802921C4 and func_8029217C match; of the statics (compared as one
  * run from func_8028FD80, 402 words), func_8028FD88 matches. The inlined
@@ -134,7 +134,7 @@
  *   0x54); the original's is 244 (0x58, same frame 336). Removing
  *   09FC's pad6 drops td by 8 (alignment); "s32 qq[1];" as the first
  *   local of the inlined func_8029085C adds back exactly 4 (35 -> 20).
- * Left (23): 09FC (20): the corner's r in a0 (it shares one range with
+ * Left (23, p6): 09FC (20): the corner's r in a0 (it shares one range with
  *   the else branch's r; a fresh variable gets v0) and the unk44
  *   branch's p in v0, both v1 in the original, plus the t7/t9 rotation
  *   after; the original reloads res into v0 in the delay slot before the
@@ -156,6 +156,28 @@
  * read at 184 vs 176), half A's float registers (orig fb f2, u f0, ab
  * f12, 50.0 temp f18, unk24 loaded early), half B's end (obj v1 vs v0,
  * mul.s f2,f16,f0 operand order twice); 09FC's 225 as listed under p3.
+ *
+ * p7 (23 -> 3 in every version; 09FC matches, FFA8 3):
+ * - unk44 branch: "if (!ctx.unk0->unk40) {}" right after
+ *   "p = ctx.unk0->unk40;" moves p's loads into v1 (23 -> 18).
+ * - Corner: the callback's result kept in a fresh variable (hitXZ) with
+ *   a dead "if (hitXZ) {}" inside the first arm stays live in v0 there,
+ *   so the corner's bits (a fresh variable, not r) take v1 (18 -> 12);
+ *   "corner |= 2" / "|= 8" after their float updates, not before, give
+ *   ugen's t6-t9 rotation (12 -> 4).
+ * - End: "r = res; res = 0;" before the final stores and "return r;"
+ *   load res into v0 in the first store's delay slot (4 -> 0). A plain
+ *   copy folds away; the dead kill of res keeps it (res = -1, res++ and
+ *   other copies (i, code2, ...) work the same).
+ * Left (3): FFA8 half B's ctx->unk0 (dx/dz) in v0, v1 in the original.
+ *   uopt gives the CSE cost 0 everywhere, nothing forbidden. An inlined
+ *   static returning ctx->unk0 (func_8028FD80(ctx)->unk58, with the
+ *   error print written into FD88's default so the stub count holds)
+ *   does put it in v1 and leaves FD88 matching, but each inlined
+ *   parameter costs 4 bytes of FFA8's local area (frame 176, and ctx/b
+ *   swap s2/s3): 52. An empty K&R inlined call costs nothing (160).
+ *   Tried without effect: a local obj, dz before dx, res = 0 first,
+ *   !res, an if (res != 0) block, a second result variable, return 0.
  */
 #include "common.h"
 
@@ -648,7 +670,7 @@ s32 func_802909FC(UnkStructA *obj, s32 (*cb)(s32)) {
     f32 angle;
     f32 sdir;
     s32 r;
-    s32 pad1;
+    s32 corner;
     Vec3i dirA;
     UnkStructA_40 *p;
     s32 pad2[4];
@@ -663,7 +685,7 @@ s32 func_802909FC(UnkStructA *obj, s32 (*cb)(s32)) {
     s32 dx;
     s32 dz;
     s32 below;
-    s32 pad3;
+    s32 hitXZ;
     s32 code2;
     s32 pad4[2];
     f32 save[3];
@@ -838,28 +860,30 @@ s32 func_802909FC(UnkStructA *obj, s32 (*cb)(s32)) {
     if (res == 0) {
         if (ctx.unk30(code) == 0) {
             res |= 0x13;
-        } else if (ctx.unk30(codeXZ) == 0) {
-            r = 0;
+        } else if ((hitXZ = ctx.unk30(codeXZ)) == 0) {
+            corner = 0;
             if (ABS(ctx.unk24) <= ABS(ctx.unk1C)) {
-                r |= 1;
+                corner |= 1;
+                if (hitXZ) {}
                 ctx.unkC -= ctx.unk24;
                 
                 if (dirB.unk0 == 0 && dirB.unk8 == dirA.unk8) {
-                    r |= 2;
                     ctx.unk4 -= dirA.unk0 * 5.0f;
+                    corner |= 2;
                 }
             } else {
-                r |= 4;
+                corner |= 4;
                 ctx.unk4 -= ctx.unk1C;
                 if (dirB.unk8 == 0 && dirB.unk0 == dirA.unk0) {
-                    r |= 8;
                     ctx.unkC -= dirA.unk8 * 5.0f;
+                    corner |= 8;
                 }
             }
-            res |= r;
+            res |= corner;
             res |= 0x20;
         } else if (*(s32 *) ctx.unk0->unk44 == 0) {
             p = ctx.unk0->unk40;
+            if (!ctx.unk0->unk40) {}
             save[0] = p->unk10;
             save[1] = p->unk14;
             save[2] = p->unk18;
@@ -917,10 +941,12 @@ s32 func_802909FC(UnkStructA *obj, s32 (*cb)(s32)) {
             }
         }
     }
+    r = res;
+    res = 0;
     obj->unk40->unk10 = ctx.unk4;
     obj->unk40->unk14 = ctx.unk8;
     obj->unk40->unk18 = ctx.unkC;
-    return res;
+    return r;
 }
 
 void func_80291944(UnkStructA *obj, s32 dir, f32 speed) {
