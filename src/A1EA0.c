@@ -1,9 +1,8 @@
 /*
- * NON_MATCHING: main_code's A1EA0, complete: the two D_802B0260 entries
- * and the task that updates them. Not built into the ROM
- * (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * main_code's A1EA0, IDO -O3; it matches in us, eu and jp: the two
+ * D_802B0260 entries and the task that updates them. Its .data
+ * (D_802A1B50, the D_802A1B54 table) and .bss (D_802B0260, D_802B0300,
+ * D_802B0308) are its own, placed in data_split.txt.
  */
 #include "common.h"
 
