@@ -5,7 +5,7 @@
  * global, emitted in the original's order. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2760, eu 2760, jp 2760
+ * differing words: us 2605, eu 2605, jp 2605
  *
  * 13 of 47 match. Biggest left: func_802741D8 461, func_8027655C 436,
  * func_80274994 320, func_80276D68 171: m2c's control flow and untyped
@@ -141,6 +141,11 @@ typedef struct {
 #define OBJ_DD8 (*(Obj8E **) &D_802AFDD8)
 #define VEC_E60 ((f32 *) D_802AFE60)
 #define LIVE(e) ((e)->x != 1e7f)
+typedef struct {
+    Node87 n;
+    u8 pad[0x3C - 8];
+} Node3C;
+#define NODES ((Node3C *) &D_802AFDE0)
 
 void free(void *);
 void func_8022638C(u32, void *);
@@ -244,7 +249,7 @@ extern s16 D_802AFE70;
 
 u16 func_8026D7D8(s32 arg0, s32 arg1, s32 arg2);
 u8 func_8026DC74(s32 arg0);
-void func_8026DCAC(f32 arg0, f32 arg1, f32 arg2, u8 *arg3, s32 arg4);
+void func_8026DCAC(f32 arg0, f32 arg1, f32 arg2, void *arg3, s32 arg4);
 void func_8026E338(f32 arg0, f32 arg1, f32 arg2, f32 *arg3, s32 arg4);
 f32 func_8026E8B8(void);
 f32 func_8026E938(u8 *arg0);
@@ -252,7 +257,7 @@ void *func_802700EC(u8 *arg0, u8 *arg1, s16 arg2, f32 arg3);
 void func_802702EC(s16 arg0);
 s16 *func_802703B4(u8 *arg0);
 f32 func_802704F8(f32 arg0);
-void func_80270A80(s32 *arg0);
+void func_80270A80(void *arg0);
 void func_80270BA4(u8 *arg0);
 f32 func_80270F44(u8 *arg0);
 f32 func_80270FC0(u8 *arg0);
@@ -267,8 +272,8 @@ s32 func_80272024(s16 arg0);
 s16 func_8027241C(s16 arg0);
 void func_802727D8(s32 *arg0);
 void func_802733C8(u8 *arg0);
-void func_802733F8(s16 *arg0);
-void func_80273414(s16 *arg0);
+void func_802733F8(void *arg0);
+void func_80273414(void *arg0);
 void func_802734BC(u8 *arg0);
 void *func_8027361C(s16 arg0, f32 arg1, f32 arg2, f32 arg3, s16 arg4);
 s32 func_80273A5C(s32 arg0, s32 arg1, s32 arg2);
@@ -306,7 +311,7 @@ void func_802775D8(u8 *arg0);
 void func_80277774(void);
 void func_802777D0(void);
 void func_8027783C(void);
-void func_80277984(s16 *arg0, s32 arg1);
+void func_80277984(s16 *arg0, s16 arg1);
 void *func_8027799C(s16 arg0);
 void func_802779C4(f32 arg0, f32 arg1, f32 arg2, f32 *arg3, f32 *arg4, f32 *arg5);
 void func_80277A28(f32 arg0, f32 arg1, f32 arg2, f32 *arg3, f32 *arg4, f32 *arg5);
@@ -358,10 +363,14 @@ void func_80277D20(s16 arg0, s16 arg1) {
 }
 
 s32 func_80277CEC(s32 arg0) {
-    if (*(s16 *)((u8 *)&D_802AFCF8 + (arg0 * 0x30)) <= 0) {
-        return 1;
+    s32 r;
+
+    if (SLOTS[arg0].unk10 <= 0) {
+        r = 1;
+    } else {
+        r = 0;
     }
-    return 0;
+    return r;
 }
 
 void *func_80277CE0() {
@@ -408,36 +417,26 @@ void func_80277B54() {
 }
 
 void func_80277AF8(s16 arg0, s16 arg1) {
-    s32 temp_t3;
-    u8 *temp_v0;
-
-    temp_v0 = (arg0 * 0xC8) + D_800AEDF0;
-    temp_t3 = M2C_FIELD(temp_v0, s32 *, 0x1C) + arg1;
-    M2C_FIELD(temp_v0, s32 *, 0x1C) = temp_t3;
-    if (temp_t3 >= 9) {
-        M2C_FIELD(temp_v0, s32 *, 0x1C) = 8;
+    PLAYERS[arg0].unk1C += arg1;
+    if (PLAYERS[arg0].unk1C >= 9) {
+        PLAYERS[arg0].unk1C = 8;
     }
 }
 
 void func_80277AA0(s16 arg0, s16 arg1) {
-    s32 temp_t3;
-    u8 *temp_v0;
-
-    temp_v0 = (arg0 * 0xC8) + D_800AEDF0;
-    temp_t3 = M2C_FIELD(temp_v0, s32 *, 0x1C) - arg1;
-    M2C_FIELD(temp_v0, s32 *, 0x1C) = temp_t3;
-    if (temp_t3 <= 0) {
-        M2C_FIELD(temp_v0, s32 *, 0x1C) = 1;
+    PLAYERS[arg0].unk1C -= arg1;
+    if (PLAYERS[arg0].unk1C <= 0) {
+        PLAYERS[arg0].unk1C = 1;
     }
 }
 
 void func_80277A28(f32 arg0, f32 arg1, f32 arg2, f32 *arg3, f32 *arg4, f32 *arg5) {
-    s32 sp20[3];
+    Unk8026DCAC sp20;
 
-    func_8026DCAC(arg0, arg1, arg2, sp20, 0);
-    *arg3 = (f32) sp20[0];
-    *arg4 = (f32) sp20[1];
-    *arg5 = (f32) sp20[2];
+    func_8026DCAC(arg0, arg1, arg2, &sp20, 0);
+    *arg3 = sp20.i[0];
+    *arg4 = sp20.i[1];
+    *arg5 = sp20.i[2];
 }
 
 void func_802779C4(f32 arg0, f32 arg1, f32 arg2, f32 *arg3, f32 *arg4, f32 *arg5) {
@@ -453,77 +452,60 @@ void *func_8027799C(s16 arg0) {
     return (arg0 * 0x88) + D_8008F438;
 }
 
-void func_80277984(s16 *arg0, s32 arg1) {
+void func_80277984(s16 *arg0, s16 arg1) {
     *arg0 ^= arg1;
 }
 
 void func_8027783C() {
-    Node87 *temp_s0;
-    s16 *var_s0;
-    s32 var_v0;
-    u8 *temp_v0;
+    s32 i;
+    Ent88 *e;
+    s32 live;
+    Node87 *n;
+    Node87 *h = &D_802AFDE0;
 
     func_802777D0();
-    D_802AFCF8 = 0;
-    temp_v0 = (1 * 0x30) + D_802AFCE8;
-    M2C_FIELD(temp_v0, s16 *, 0x40) = 0;
-    M2C_FIELD(temp_v0, s16 *, 0x70) = 0;
-    M2C_FIELD(temp_v0, s16 *, 0xA0) = 0;
-    M2C_FIELD(temp_v0, s16 *, 0x10) = 0;
+    for (i = 0; i < 5; i++) {
+        SLOTS[i].unk10 = 0;
+    }
     if (D_802AFC70 == 1) {
         D_802AFC70 = 0;
-        var_s0 = D_8008F44C;
-        if (M2C_FIELD(var_s0, s32 *, 0x14) != 0) {
-            do {
-                var_v0 = 0;
-                if (M2C_FIELD(var_s0, f32 *, 0x40) != 1e7f) {
-                    var_v0 = 1;
-                }
-                if (var_v0 != 0) {
-                    func_80273414(var_s0);
-                }
-                func_802733F8(var_s0);
-                func_80238EA8(M2C_FIELD(var_s0, s32 *, 4));
-                var_s0 = M2C_FIELD(var_s0, s16 **, 0x14);
-            } while (M2C_FIELD(var_s0, s32 *, 0x14) != 0);
+        for (e = ENT_HEAD; e->next != NULL; e = e->next) {
+            live = (e->x != 1e7f) ? 1 : 0;
+            if (live) {
+                func_80273414(e);
+            }
+            func_802733F8(e);
+            func_80238EA8(e->unk4);
         }
         func_80278DBC();
     }
-    if (D_802AFE58.next != NULL) {
-        do {
-            temp_s0 = D_802AFDE0.next;
-            func_80270A80((s32 *) D_802AFDE0.next);
-            free(temp_s0);
-        } while (D_802AFE58.next != NULL);
+    while (D_802AFE58.next != NULL) {
+        n = h->next;
+        func_80270A80(h->next);
+        free(n);
     }
 }
 
 void func_802777D0() {
-    s16 var_s0;
-    s32 var_a0;
+    s16 i;
 
     if (D_802AFC74 != 0) {
         D_802AFC74 = 0;
-        var_s0 = 0;
-        var_a0 = 0 << 0x10;
-        do {
-            func_802702EC((s16) (var_a0 >> 0x10));
-            var_s0 += 1;
-            var_a0 = var_s0 << 0x10;
-        } while (var_s0 < 5);
+        for (i = 0; i < 5; i++) {
+            func_802702EC(i);
+        }
         func_8022FC90(D_802AFDD8);
     }
 }
 
 void func_80277774() {
-    Node87 *temp_s0;
+    Node87 *n;
+    Node87 *h = &D_802AFDE0;
 
-    if (D_802AFE58.next != NULL) {
-        do {
-            temp_s0 = D_802AFDE0.next;
-            func_80270A80((s32 *) D_802AFDE0.next);
-            free(temp_s0);
-        } while (D_802AFE58.next != NULL);
+    while (D_802AFE58.next != NULL) {
+        n = h->next;
+        func_80270A80(h->next);
+        free(n);
     }
 }
 
