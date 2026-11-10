@@ -6,13 +6,13 @@
  * is emitted in the original's order and at the original's size. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 145, eu 145, jp 145
+ * differing words: us 78, eu 78, jp 78
  *
  * func_8028A7CC, func_8028A81C and func_8028A87C match; the statics are
- * compared as one run from func_8028A8A4 (145 words). Per function
- * (scratch's pf.py): func_8028CC18 67, func_8028B670 46 (v0/v1 swapped
- * on m->unk40), func_8028BD20 21 (e in s6, constant registers permuted),
- * func_8028D094 8, the rest 1 or 0, 43 of 50 exact.
+ * compared as one run from func_8028A8A4 (78 words). Per function
+ * (scratch's pf.py): func_8028B670 46 (v0/v1 swapped on m->unk40),
+ * func_8028BD20 21 (e in s6, constant registers permuted), func_8028D094
+ * 8, the rest 1 or 0, 44 of 50 exact.
  * - The coroutines and table functions are referenced only from .data,
  *   so they are statics: the globals come out first (reversed), the
  *   statics after in source order.
@@ -28,9 +28,9 @@
  *   scale, fs3 for t, fs5 for e->unk10) and so doesn't hoist 255.0f.
  *   uopt keys a float constant by its spelling, so `1`, `1.0f` and `1.f`
  *   are three constants with one value.
- * - func_8028CC18: the original hoists 20.0f and 30.0f but loads 25.0f
- *   in the loop; ours hoists the other set. No int/float spelling of
- *   its constants (30, 20, 25, 1.0, 0.0) changes a word.
+ * - func_8028CC18: both 30s spelt alike (one constant, fs3), e->unk10's
+ *   1.0 spelt apart from t's step, and a dead `if (t == 0.05f) {}` in the
+ *   loop: the uses put 0.05 (fs1) and 0.1 (fs2) ahead of the tied 30.
  * - The static parameter orders (func_8028A9D4 (out, kind, e, mode),
  *   func_8028A5C4 (slot, kind, pos, arg4, arg3), func_8028AB14's scale
  *   before alpha, func_8028B670's dz before dx) come from which argument
@@ -860,8 +860,9 @@ static void func_8028CC18(void) {
     func_802297B8(m->unk40, 0x113, 0, 0);
     func_802297B8(m->unk40, 0x113, 1, 1);
     func_8028AB0C(m, 0.01f);
-    e->unk10 = 1.0f;
-    while (t < 30) {
+    e->unk10 = 1.f;
+    while (t < 30.0f) {
+        if (t == 0.05f) {}
         if (t < 20.0f) {
             if (step == 1) {
                 step++;
