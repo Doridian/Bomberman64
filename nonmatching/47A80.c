@@ -3,7 +3,7 @@
  * 0x8022D280-0x8022DB00) that build a model's display list from its joint
  * tree. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 311, eu 311, jp 311
+ * differing words: us 139, eu 139, jp 139
  *
  * func_8022DAB0 matches. func_8022D280 and the static func_8022D414 (one
  * block) differ in about 18 words: the right size, but func_8022D414's
@@ -134,7 +134,7 @@ void func_8022D58C(Gfx **gp, s32 base, s32 idx) {
         if (nb != 0) {
             idx = o->meshes[idx];
             base = nb;
-            if (((MeshEntry *)base)[idx + 1].type == 1) {
+            if (((MeshEntry *)base)[idx + 1].type == 1U) {
                 D_8029F840 = -1;
             }
         }
@@ -155,21 +155,25 @@ void func_8022D58C(Gfx **gp, s32 base, s32 idx) {
             GFX2R(g++, 0xB6000000, 0x40000);
             D_8029FCC4 = 0;
         }
-        if (type == 5) {
+        switch (type) {
+        case 5:
             guMtxCatF(D_80098CF8[D_800A0CF8], D_802A5418, D_802A5510);
             func_8022928C(D_802A5510, D_802A5510);
             D_800A0CF8++;
             guMtxIdentF(D_80098CF8[D_800A0CF8]);
             pushed = 1;
             load = 1;
-        } else if (type == 6) {
+            break;
+        case 6:
             D_8029FCC0 = 1;
             GFX2(g++, 0x06000000, (u32) D_8029FCC8);
             GFX2(g++, 0xF2000000 | ((D_802A2D50[0] & 0xFFF) << 12) | (D_802A2D50[1] & 0xFFF),
                  (((D_802A2D50[0] + 0x7C) & 0xFFF) << 12) | ((D_802A2D50[1] + 0x7C) & 0xFFF));
-        } else if (type == 8) {
+            break;
+        case 8:
             D_8029FCC4 = 1;
             GFX2(g++, 0xB7000000, 0x40000);
+            break;
         }
         if (load != 0) {
             guMtxF2L(D_802A5510, D_802A538C[D_802A5368]);
