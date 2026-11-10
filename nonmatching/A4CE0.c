@@ -6,12 +6,14 @@
  * is emitted in the original's order and at the original's size. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 14, eu 14, jp 14
+ * differing words: us 6, eu 6, jp 6
  *
  * func_8028A7CC, func_8028A81C and func_8028A87C match; the statics are
- * compared as one run from func_8028A8A4 (14 words). Per function
- * (scratch's pf.py): func_8028D094 8, func_8028BD20 6 (the spawn loop's
- * i and kind swap s2/s3), the other 48 exact.
+ * compared as one run from func_8028A8A4 (6 words). Per function
+ * (scratch's pf.py): func_8028BD20 6 (the spawn loop's i and kind swap
+ * s2/s3; dead reads of i don't move it), the other 49 exact.
+ * - func_8028D094 declares d first: the order of the declarations sets
+ *   m's frame slot (112, not 116).
  * - Tied float constants are coloured in the order they first appear in
  *   the loop: func_8028BD20's `t += 1.0f` comes after the unk24 update.
  * - The coroutines and table functions are referenced only from .data,
@@ -915,10 +917,10 @@ static void func_8028D024(void) {
 }
 
 static void func_8028D094(void) {
+    f32 d;
     UnkStructA *m;
     UnkStruct_800BC528 *e;
     f32 t;
-    f32 d;
 
     t = 0.0f;
     e = func_802391F0();
