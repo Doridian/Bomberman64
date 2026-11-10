@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1715, eu 1715, jp 1714
+ * differing words: us 1658, eu 1658, jp 1657
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -2428,16 +2428,12 @@ void func_8024BFE0(s32 arg0) {
 }
 
 void func_8024BF04(s32 arg0) {
-    UnkStruct_800AEDF0 *sp28;
-    UnkModel *temp_v0;
-    UnkStruct_800AEDF0 *temp_v1;
+    UnkStruct_800AEDF0 *p = &D_800AEDF0[arg0];
+    UnkObj *obj = (UnkObj *)func_802443F4(arg0);
 
-    temp_v1 = &D_800AEDF0[arg0];
-    if (temp_v1->unk2C != 0) {
-        temp_v0 = temp_v1->unk28->unk40;
-        sp28 = temp_v1;
-        if (func_80274F8C(M2C_FIELD(temp_v1, s16 *, 0x1A), temp_v0->unk10, temp_v0->unk14, temp_v0->unk18, (s16) arg0) == 0) {
-            if (func_802712A8(func_802703B4(temp_v1->unk2C) + 0x64, 0x80) != 0) {
+    if (p->unk2C != 0) {
+        if (func_80274F8C(M2C_FIELD(p, s16 *, 0x1A), obj->unk40->unk10, obj->unk40->unk14, obj->unk40->unk18, arg0) == 0) {
+            if (func_802712A8(func_802703B4(p->unk2C) + 0x64, 0x80) != 0) {
                 func_80243D90(arg0, 0x400, 0);
                 func_80244354(arg0, 0x20, 0);
             }
