@@ -9,7 +9,7 @@
  * func_80228500 kept). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 778, eu 778, jp 778
+ * differing words: us 686, eu 686, jp 686
  *
  * The code is the same in every version.
  *
@@ -33,6 +33,11 @@
  *   the end symbol (`&D_800A0D00[i] < D_800A3F00`: not unrolled, base
  *   re-materialised after it), and the D_80098C68 clear is written out
  *   in it (the call to func_80229BB4, inlined, schedules differently).
+ * - func_8022928C (the 3x3 inverse): the nine elements are locals
+ *   initialised row-major in their declarations, the three cofactors and
+ *   the determinant scalars (uncoloured: stored and reloaded), `det =
+ *   1.0f / det`, an early return on zero, and the stores column 0, then
+ *   the other cofactors row-major, then the zeros and 1.0f.
  *
  * Left:
  * - func_802289C0 (the draw loop, 422): the original keeps obj in s2
@@ -43,8 +48,6 @@
  * - func_8022A328 (158): mostly registers. The original keeps j in t0
  *   for the two failure exits (ours stores zero and merges them) and
  *   re-materialises the pool base after the free-slot search.
- * - func_8022928C (92, the 3x3 inverse): nine element locals and
- *   `f32 c[4]` give the original's loads; its frame is 120 (ours 104).
  * - func_8022A6C4 (80): the original's third search keeps D_802A547C
  *   and D_802A5484 in registers (stores on each exit, a duplicate pair
  *   IDO merges in ours); a global loop counter, static or not, isn't
@@ -936,49 +939,45 @@ void func_80229448(s32 arg0, s32 arg1) {
 }
 
 void func_8022928C(f32 arg0[4][4], f32 arg1[4][4]) {
-    f32 m00;
-    f32 m01;
-    f32 m02;
-    f32 m10;
-    f32 m11;
-    f32 m12;
-    f32 m20;
-    f32 m21;
-    f32 m22;
-    f32 c[4];
-    f32 inv;
+    f32 m00 = arg1[0][0];
+    f32 m01 = arg1[0][1];
+    f32 m02 = arg1[0][2];
+    f32 m10 = arg1[1][0];
+    f32 m11 = arg1[1][1];
+    f32 m12 = arg1[1][2];
+    f32 m20 = arg1[2][0];
+    f32 m21 = arg1[2][1];
+    f32 m22 = arg1[2][2];
+    f32 c00;
+    f32 c10;
+    f32 c20;
+    f32 det;
 
-    m11 = arg1[1][1];
-    m22 = arg1[2][2];
-    m12 = arg1[1][2];
-    m21 = arg1[2][1];
-    m20 = arg1[2][0];
-    m10 = arg1[1][0];
-    m00 = arg1[0][0];
-    m01 = arg1[0][1];
-    m02 = arg1[0][2];
-    c[3] = m11 * m22 - m12 * m21;
-    c[2] = m12 * m20 - m10 * m22;
-    c[1] = m10 * m21 - m11 * m20;
-    c[0] = m00 * c[3] + m01 * c[2] + m02 * c[1];
-    if (c[0] != 0.0f) {
-        inv = 1.0f / c[0];
-        arg0[0][0] = c[3] * inv;
-        arg0[1][0] = c[2] * inv;
+    c00 = m11 * m22 - m12 * m21;
+    c10 = m12 * m20 - m10 * m22;
+    c20 = m10 * m21 - m11 * m20;
+    det = m00 * c00 + m01 * c10 + m02 * c20;
+    if (det == 0.0f) {
+        return;
+    }
+    {
+        det = 1.0f / det;
+        arg0[0][0] = c00 * det;
+        arg0[1][0] = c10 * det;
+        arg0[2][0] = c20 * det;
+        arg0[0][1] = (m02 * m21 - m01 * m22) * det;
+        arg0[0][2] = (m01 * m12 - m02 * m11) * det;
+        arg0[1][1] = (m00 * m22 - m02 * m20) * det;
+        arg0[1][2] = (m02 * m10 - m00 * m12) * det;
+        arg0[2][1] = (m01 * m20 - m00 * m21) * det;
+        arg0[2][2] = (m00 * m11 - m01 * m10) * det;
         arg0[0][3] = 0.0f;
         arg0[1][3] = 0.0f;
         arg0[2][3] = 0.0f;
         arg0[3][0] = 0.0f;
-        arg0[2][0] = c[1] * inv;
         arg0[3][1] = 0.0f;
         arg0[3][2] = 0.0f;
-        arg0[0][1] = (m02 * m21 - m01 * m22) * inv;
-        arg0[0][2] = (m01 * m12 - m02 * m11) * inv;
-        arg0[1][1] = (m00 * m22 - m02 * m20) * inv;
-        arg0[1][2] = (m02 * m10 - m00 * m12) * inv;
-        arg0[2][1] = (m01 * m20 - m00 * m21) * inv;
         arg0[3][3] = 1.0f;
-        arg0[2][2] = (m00 * m11 - m01 * m10) * inv;
     }
 }
 
