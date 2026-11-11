@@ -9,7 +9,7 @@
  * func_80228500 kept). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 356, eu 356, jp 356
+ * differing words: us 346, eu 346, jp 346
  *
  * The code is the same in every version.
  *
@@ -55,9 +55,14 @@
  *   delay slot. The ry ternary's `: 0` (an int) gives the original's
  *   mtc1 pair; the matrix stack is a frame struct's `mtx[]`, as in
  *   41FD0.c.
- * - func_8022A328 (158): mostly registers. The original keeps j in t0
- *   for the two failure exits (ours stores zero and merges them) and
- *   re-materialises the pool base after the free-slot search.
+ * - func_8022A328 (148): the free slot and the list position are
+ *   function-scope statics (D_802A5474, D_802A5478: no other function
+ *   uses them), which uopt keeps in registers and stores back at each
+ *   exit. `if (arg1) {}` after their initialisation ends the entry
+ *   block, so the first slot test is a direct load and the pool base is
+ *   loaded in the loop's preheader and again after it, as in the
+ *   original. Left: registers (the slot is t0 where the original has
+ *   v1, and one more shift each way).
  * - func_8022A6C4 (80): the original's third search keeps D_802A547C
  *   and D_802A5484 in registers (stores on each exit, a duplicate pair
  *   IDO merges in ours); a global loop counter, static or not, isn't
@@ -404,8 +409,6 @@ extern s32 D_802A5464;
 extern f32 D_802A5468;
 extern f32 D_802A546C;
 extern s32 D_802A5470;
-extern s32 D_802A5474;
-extern s32 D_802A5478;
 extern UnkModel *D_802A547C;
 extern UnkChunk *D_802A5480;
 extern u32 D_802A5484;
@@ -552,41 +555,35 @@ void *func_8022A6C4(void *arg0, s32 arg1) {
 }
 
 UnkObj *func_8022A328(UnkModel *arg0, s32 arg1, s32 arg2, u32 arg3, s32 arg4) {
-    s32 i;
-    s32 j;
+    static s32 D_802A5474;
+    static s32 D_802A5478;
     UnkObj *p;
     UnkSkel *skel;
     f32 f;
 
-    i = 2;
-    while (D_800A0D00[i].unk3C != NULL) {
-        if (++i >= 0xA1) {
+    D_802A5474 = 2;
+    D_802A5478 = 0;
+    if (arg1) {}
+    while (D_800A0D00[D_802A5474].unk3C != NULL) {
+        if (++D_802A5474 >= 0xA1) {
             break;
         }
     }
-    j = 0;
     if (arg1 >= 0xA0) {
-        D_802A5478 = j;
-        D_802A5474 = i;
         return NULL;
     }
-    if (i < 0xA0) {
-    } else {
-        D_802A5478 = j;
-        D_802A5474 = i;
+    if (D_802A5474 >= 0xA0) {
         return NULL;
     }
-    p = &D_800A0D00[i];
-    while (arg1 >= D_800A0D00[j].unk8) {
-        j = D_800A0D00[j].unk0;
+    while (arg1 >= D_800A0D00[D_802A5478].unk8) {
+        D_802A5478 = D_800A0D00[D_802A5478].unk0;
     }
+    p = &D_800A0D00[(u32)D_802A5474];
     p->unk8 = arg1;
-    p->unk4 = D_800A0D00[j].unk4;
-    D_800A0D00[j].unk4 = i;
-    p->unk0 = j;
-    D_800A0D00[p->unk4].unk0 = i;
-    D_802A5474 = i;
-    D_802A5478 = j;
+    p->unk4 = D_800A0D00[D_802A5478].unk4;
+    D_800A0D00[D_802A5478].unk4 = D_802A5474;
+    p->unk0 = D_802A5478;
+    D_800A0D00[p->unk4].unk0 = D_802A5474;
     if (arg2 == 0) {
         p->unkC = 0x800;
     } else if (arg2 == 1) {
