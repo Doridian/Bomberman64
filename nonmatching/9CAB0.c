@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1982, eu 1982, jp 1982
+ * differing words: us 1823, eu 1823, jp 1823
  */
 #include "common.h"
 
@@ -1104,7 +1104,7 @@ static s32 func_80284FD4(UnkStruct_80288040 *arg0) {
     ret = 1;
     switch ((u8) (arg0->unk7A & 0xF0)) {
     case 0x00:
-        switch (arg0->unk7A & 0xF) {
+        switch ((u8) (arg0->unk7A & 0xF)) {
         case 0:
             if (arg0->unk1E != 0) {
                 func_802848E8(arg0);
@@ -1211,9 +1211,11 @@ static s32 func_80284FD4(UnkStruct_80288040 *arg0) {
         break;
     }
     if (ret != 1) {
-        return ret;
+        r = ret;
+    } else {
+        r = 1;
     }
-    return 1;
+    return r;
 }
 
 static void func_80284C9C() {
@@ -2426,6 +2428,9 @@ static void func_80282454(UnkStruct_80288040 *arg0) {
     func_80229E38(arg0->unk0->unk40, 0, 0);
     arg0->unk0->unk40->unk48->unk4->unk4 = 0.0f;
     func_80282430(arg0, 0xF, 0);
+    if (0) {
+        D_800BC520 = (s32) func_80282454;
+    }
 }
 
 void func_80282430(UnkStruct_80288040 *arg0, s32 arg1, s32 arg2) {
@@ -2436,6 +2441,9 @@ void func_80282430(UnkStruct_80288040 *arg0, s32 arg1, s32 arg2) {
         func_80282340(NULL);
         func_802822E0(NULL);
         func_802822BC(NULL);
+    }
+    if (0) {
+        D_800BC520 = (s32) &arg1;
     }
 }
 
