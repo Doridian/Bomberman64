@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 7210, eu 7210, jp 7170
+ * differing words: us 7208, eu 7208, jp 7168
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -4078,7 +4078,9 @@ static void func_802530A8(f32 *arg0) {
         case 6:
             if (func_80251EE0((f32 *) ((u8 *)arg0 + 0x20)) != 0) {
                 target = func_80251974(M2C_FIELD(arg0, f32 **, 0x18), &dist);
-                if ((target != NULL) && (M2C_FIELD(M2C_FIELD(target, void **, 0x40), f32 *, 0x14) <= M2C_FIELD(M2C_FIELD(M2C_FIELD(arg0, f32 **, 0x18), void **, 0x40), f32 *, 0x14)) && (entry = func_8027A1A0(target), (dist <= 500.0f)) && (M2C_FIELD(entry, s16 *, 0x20) != 5)) {
+                if ((target != NULL) && (M2C_FIELD(M2C_FIELD(target, void **, 0x40), f32 *, 0x14) <= M2C_FIELD(M2C_FIELD(M2C_FIELD(arg0, f32 **, 0x18), void **, 0x40), f32 *, 0x14))) {
+                entry = func_8027A1A0(target);
+                if ((dist <= 500.0f) && (M2C_FIELD(entry, s16 *, 0x20) != 5)) {
                     pos[0] = M2C_FIELD(M2C_FIELD(target, void **, 0x40), f32 *, 0x10);
                     pos[1] = M2C_FIELD(M2C_FIELD(target, void **, 0x40), f32 *, 0x14);
                     pos[2] = M2C_FIELD(M2C_FIELD(target, void **, 0x40), f32 *, 0x18);
@@ -4151,6 +4153,7 @@ static void func_802530A8(f32 *arg0) {
                             grid[2] -= ((s32 (*)[2]) D_802A0EF0)[dirZ][1];
                         }
                     }
+                }
                 }
                 M2C_FIELD(arg0, s32 *, 4) = (s32) M2C_FIELD(arg0, s32 *, 8);
             } else if (func_80252724(arg0) != 0) {
