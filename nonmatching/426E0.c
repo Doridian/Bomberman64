@@ -9,7 +9,7 @@
  * func_80228500 kept). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 358, eu 358, jp 358
+ * differing words: us 356, eu 356, jp 356
  *
  * The code is the same in every version.
  *
@@ -40,7 +40,7 @@
  *   the other cofactors row-major, then the zeros and 1.0f.
  *
  * Left:
- * - func_802289C0 (the draw loop, 114): obj is in s2 and
+ * - func_802289C0 (the draw loop, 112): obj is in s2 and
  *   func_802284F0's obj is kept in memory as in the original once its
  *   texture loop has the original's register pressure: model is
  *   `unk4[i].unk0` and the then-branch index `unk4[i].unk4` (one slot
@@ -49,9 +49,9 @@
  *   (`done`; the original tests `at` directly, so the pressure may come
  *   from elsewhere) and writes the segment through a `g = gfx` taken
  *   first. `anim->unk4 == anim->unk0 - 1` keeps the two unk4 + 1 apart.
- *   Left: registers in the loop and after it, obj's home at 0xB8 (the
- *   original's 0xB0; `s32 pad[2]` keeps the 0x160 frame), and the
- *   D_8029F840 store, which the original puts in func_80228500's jal
+ *   An unused `s32 pad[2]` in func_802284F8 gives the 0x160 frame and
+ *   puts that obj's home at 0xB0. Left: registers in the loop and after
+ *   it, and the D_8029F840 store, which the original puts in func_80228500's jal
  *   delay slot. The ry ternary's `: 0` (an int) gives the original's
  *   mtc1 pair; the matrix stack is a frame struct's `mtx[]`, as in
  *   41FD0.c.
@@ -1123,6 +1123,7 @@ static s32 func_802284F8(UnkObj *arg0, UnkGfx **arg1) {
     f32 rx;
     f32 ry;
     f32 rz;
+    s32 pad[2];
 
     pushed = 0;
     gfx = *arg1;
@@ -1165,7 +1166,6 @@ static void func_802284F0(UnkObj *arg0, UnkGfx **arg1) {
     s32 idx;
     s32 cur;
     s32 done;
-    s32 pad[2];
 
     gfx = *arg1;
     for (i = 0; i < arg0->unk4C->unk0; i++) {
