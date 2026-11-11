@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 249, eu 249, jp 249
+ * differing words: us 240, eu 240, jp 240
  */
 #include "common.h"
 
@@ -1610,6 +1610,7 @@ static void func_8028425C(UnkStruct_80288040 *arg0) {
         arg0->unk10 = x;
         arg0->unk18 = (u8) (s32) ((arg0->unk0->unk40->unk18 + 50.0f) * 0.01);
         n = func_80284254(arg0);
+        if (x) {}
         arg0->unk20++;
         if (n == 0) {
             arg0->unk1C |= 1;
