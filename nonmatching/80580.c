@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 735, eu 735, jp 735
+ * differing words: us 680, eu 680, jp 680
  *
  * The object is the same in all three versions. 70 of the 79 original
  * procedures match (stubs included). The IPA statics
@@ -1208,7 +1208,8 @@ void func_802691A8() {
                 }
                 D_802AD23C = 0.0f;
                 D_802AD3C0 = 0;
-                if (D_802AD24C == 1) {
+                vol = D_802AD24C;
+                if ((vol ^ 1) == 0) {
                     D_802AD24C = 0;
                 }
             } else if (D_802AD240 != 0.0f) {
@@ -1273,22 +1274,22 @@ static void func_802691A0(void) {
             len++;
         }
     }
-    if (rom != D_802AD234) {
-        func_80269144(D_802AD21C, len, rom);
-        if (D_802AD21C->revision != 0x4231) {
-            goto end;
-        }
+    if (rom == D_802AD234) {
+        goto play;
+    }
+    func_80269144(D_802AD21C, len, rom);
+    if (D_802AD21C->revision == 0x4231) {
         func_802983E8(D_802AD21C, (void *) table);
         D_802AD234 = rom;
+play:
+        func_80298650(D_802AD220, D_802AD21C->bankArray[bank]);
+        func_80298628(D_802AD220, D_802AD228);
+        func_80298670(D_802AD220, (D_802AD24A * D_802AD248) / 32767);
+        func_80298638(D_802AD220);
+        D_802AD23C = 0.0f;
+        D_802AD3C0 = 0;
+        D_802AD238 = 1;
     }
-    func_80298650(D_802AD220, D_802AD21C->bankArray[bank]);
-    func_80298628(D_802AD220, D_802AD228);
-    func_80298670(D_802AD220, (D_802AD24A * D_802AD248) / 32767);
-    func_80298638(D_802AD220);
-    D_802AD23C = 0.0f;
-    D_802AD3C0 = 0;
-    D_802AD238 = 1;
-end:
     D_802AD24C = 0;
 }
 
