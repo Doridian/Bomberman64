@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 423, eu 423, jp 423
+ * differing words: us 348, eu 348, jp 348
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -4146,15 +4146,14 @@ void func_80246078() {
     s32 k;
     s32 m;
     void *q;
-    s32 pad2[6];
+    s32 pad2[1];
 
     c[0] = 0;
     n = 0;
     for (i = 0; i < 4; i++) {
         p = &D_800AEDF0[i];
         if ((p->unk24 == 1 || p->unk24 == 2) && p->unk14 != 0 && !func_80244BA4(i, 0x1000) && !func_80243EF0(i)) {
-            if (!j && !j) {}
-            obj = p->unk28;
+            obj = (UnkObj *) func_802443F4(i);
             x[n] = obj->unk40->unk10;
             y[n] = obj->unk40->unk14;
             z[n] = obj->unk40->unk18;
@@ -4173,7 +4172,7 @@ void func_80246078() {
             do {
                 s32 j = func_80234248(n - 1);
                 if (used[j] == 0) {
-                    UnkObj *o = p->unk28;
+                    UnkObj *o = (UnkObj *) func_802443F4(i);
                     o->unk40->unk10 = x[j];
                     o->unk40->unk14 = y[j];
                     o->unk40->unk18 = z[j];
@@ -4196,7 +4195,6 @@ void func_80246078() {
     for (i = 0; i < 4; i++) {
         p = &D_800AEDF0[i];
         if ((p->unk24 == 1 || p->unk24 == 2) && p->unk14 != 0 && !func_80244BA4(i, 0x1000) && !func_80243EF0(i)) {
-            if (!j && !j) {}
             if (func_80232D18(p->unk28, 0x10) != 0) {
                 c[0]++;
             }
@@ -4211,7 +4209,7 @@ void func_80246078() {
     m = 0;
     for (i = 0; i != 4; i++) {
         p = &D_800AEDF0[i];
-        obj = p->unk28;
+        obj = (UnkObj *) func_802443F4(i);
         if ((p->unk24 == 1 || p->unk24 == 2) && p->unk14 != 0 && !func_80244BA4(i, 0x1000) && !func_80243EF0(i)) {
             if (c[0] == 0) {
                 func_8022F808(obj, pos);
