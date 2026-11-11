@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 7047, eu 7047, jp 7007
+ * differing words: us 7039, eu 7039, jp 6999
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -628,8 +628,8 @@ void func_8025D858() {
     obj = func_80231274(0x32B, 0x03080080, 0x40, NULL);
     r1 = func_8025E63C();
     r2 = func_8025E63C();
-    s = M2C_FIELD(p, void **, 0x40);
     o = M2C_FIELD(obj, void **, 0x40);
+    s = M2C_FIELD(p, void **, 0x40);
     M2C_FIELD(o, f32 *, 0x10) = M2C_FIELD(s, f32 *, 0x10) + (f32) (r1 * 50.0 + -25.0);
     M2C_FIELD(o, f32 *, 0x14) = M2C_FIELD(s, f32 *, 0x14);
     M2C_FIELD(o, f32 *, 0x18) = M2C_FIELD(s, f32 *, 0x18) + (f32) (r2 * 50.0 + -25.0);
