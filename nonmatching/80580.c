@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2974, eu 2974, jp 2974
+ * differing words: us 2711, eu 2711, jp 2711
  *
  * The object is the same in all three versions. 36 of the 79 original
  * procedures match (8 of them inlined-static stubs). The IPA statics
@@ -85,7 +85,7 @@ typedef struct SndDef {
     /* 0x0C */ u8 pan;
     /* 0x0D */ u8 prio;
     /* 0x0E */ s8 unkE;
-    /* 0x0F */ s8 unkF;
+    /* 0x0F */ u8 unkF;
 } SndDef;
 
 /* The voices, D_802AD654[D_802A12BC]. */
@@ -277,7 +277,7 @@ extern void *D_802AD64C; /* ALSndPlayer */
 static void func_80268438();
 static void func_80268430();
 static void func_802699C0();
-static void func_80266928();
+static void func_80266928(s16 idx);
 void *func_8026B72C(s32);
 s32 *func_8026B79C(void);
 void func_8026B7A8(s32);
@@ -1974,6 +1974,7 @@ s16 func_8026724C(s16 num) {
     s16 idx;
     s16 ch;
     SndDef def;
+    SndDef def2;
 
     if (D_802A1348 == 0) {
         return -1;
@@ -2014,8 +2015,9 @@ s16 func_8026724C(s16 num) {
         func_802986F0(D_802AD64C, v->sndId);
         func_80298710(D_802AD64C);
         if (D_802AD658 != NULL) {
-            D_802AD65C[idx].script = -1;
-            D_802AD65C[idx].flags = 0;
+            VoiceScript *p = &D_802AD65C[idx];
+            p->script = -1;
+            p->flags = 0;
         }
         v->flags = 0x2000;
     } else {
@@ -2027,11 +2029,11 @@ s16 func_8026724C(s16 num) {
     v->unk16 = def.vol;
     v->unk18 = D_802AD674;
     v->unk19 = def.pan;
-    v->unk12 = 0;
     v->unk10 = D_802AD670;
+    v->unk12 = 0;
     v->pitch = def.pitch;
-    v->state = 1;
     v->unk1D = def.unkE;
+    v->state = 1;
     if (def.unkF != 0) {
         v->unk1E = 0;
         v->flags |= 0x10;
@@ -2247,66 +2249,52 @@ void func_80266B50() {
     }
 }
 
-static void func_80266928() {
+static void func_80266928(s16 idx) {
+    VoiceScript *s;
+
+    s = &D_802AD65C[idx];
+    s->script = -1;
+    s->flags = 0;
 }
 
-void func_80266930(s16 arg0) {
-    Voice *temp_s0;
-    Voice *temp_s0_2;
-    VoiceScript *temp_s1;
-    VoiceScript *temp_v0_4;
-    VoiceScript *temp_v0_5;
-    s16 temp_v0_2;
-    s16 temp_v1;
-    s16 var_t7;
-    s32 temp_v0;
-    s32 temp_v0_3;
+void func_80266930(s16 idx) {
+    Voice *v;
+    VoiceScript *s;
+    s16 c;
 
-    func_80266928();
-    temp_s0 = &D_802AD654[arg0];
-    if (temp_s0->state == 1) {
-        temp_v0 = temp_s0->flags;
-        if (temp_v0 & 0x1000) {
-            temp_s0->flags = temp_v0 & ~0x1000;
+    v = &D_802AD654[idx];
+    if (v->state == 1) {
+        if (v->flags & 0x1000) {
+            v->flags &= ~0x1000;
         } else {
-            func_802986F0(D_802AD64C, temp_s0->sndId);
+            func_802986F0(D_802AD64C, v->sndId);
             func_80298710(D_802AD64C);
-            temp_s0->flags |= 0x2000;
-            if (temp_s0->unk1F == 2) {
-                temp_s1 = &D_802AD65C[arg0];
-                temp_v1 = temp_s1->nchild;
-                var_t7 = temp_v1 - 1;
-                if (temp_v1 > 0) {
-                    do {
-                        temp_s1->nchild = var_t7;
-                        temp_v0_2 = temp_s1->child[temp_s1->nchild];
-                        if (arg0 == D_802AD65C[temp_v0_2].parent) {
-                            temp_s0_2 = &D_802AD654[temp_v0_2];
-                            if (temp_s0_2->state == 1) {
-                                temp_v0_3 = temp_s0_2->flags;
-                                if (temp_v0_3 & 0x1000) {
-                                    temp_s0_2->flags = temp_v0_3 & ~0x1000;
-                                } else {
-                                    func_802986F0(D_802AD64C, temp_s0_2->sndId);
-                                    func_80298710(D_802AD64C);
-                                    temp_s0_2->flags |= 0x2000;
-                                }
-                                temp_s0_2->unk1F = 0;
-                                temp_v0_4 = &D_802AD65C[temp_v0_2];
-                                temp_v0_4->script = -1;
-                                temp_v0_4->flags = 0;
+            v->flags |= 0x2000;
+            if (v->unk1F == 2) {
+                s = &D_802AD65C[idx];
+                while (s->nchild > 0) {
+                    s->nchild--;
+                    c = s->child[s->nchild];
+                    if (idx == D_802AD65C[c].parent) {
+                        v = &D_802AD654[c];
+                        if (v->state == 1) {
+                            if (v->flags & 0x1000) {
+                                v->flags &= ~0x1000;
+                            } else {
+                                func_802986F0(D_802AD64C, v->sndId);
+                                func_80298710(D_802AD64C);
+                                v->flags |= 0x2000;
                             }
+                            v->unk1F = 0;
+                            func_80266928(c);
                         }
-                        var_t7 = temp_s1->nchild - 1;
-                    } while (temp_s1->nchild > 0);
+                    }
                 }
             }
         }
-        D_802AD654[arg0].unk1F = 0;
+        D_802AD654[idx].unk1F = 0;
         if (D_802AD658 != NULL) {
-            temp_v0_5 = &D_802AD65C[arg0];
-            temp_v0_5->script = -1;
-            temp_v0_5->flags = 0;
+            func_80266928(idx);
         }
     }
 }
@@ -2320,71 +2308,53 @@ void func_802668D4(s16 arg0) {
     D_802AD66C = D_802AD66E;
 }
 
-void func_80266644(s16 arg0, s16 arg1, f32 arg2) {
-    u8 sp18;
-    f32 temp_ft2;
-    f32 var_fv0;
-    f32 var_fv0_2;
-    s16 temp_a0;
-    s16 temp_a1;
-    s16 temp_v1;
-    s16 var_a1;
-    s16 var_a3;
-    s32 temp_lo;
-    s32 var_a2_2;
-    s32 var_v0;
-    s8 temp_v0;
-    u8 var_a2;
+void func_80266644(s16 idx, s16 angle, f32 dist) {
+    f32 d;
+    s16 vol;
+    s8 c;
+    u8 pan;
 
-    var_fv0 = arg2 - D_802A1354;
-    temp_a0 = arg0;
-    if (var_fv0 < 0.0f) {
-        var_fv0 = 0.0f;
+    d = dist - D_802A1354;
+    if (d < 0.0f) {
+        d = 0.0f;
     }
-    var_a3 = 0;
-    if (var_fv0 <= D_802A1358) {
-        var_a3 = (s16) (s32) (((f64) (D_802A1358 - var_fv0) * 128.0) / (f64) D_802A1358);
-        if (var_a3 >= 0x80) {
-            var_a3 = 0x7F;
+    vol = 0;
+    if (d <= D_802A1358) {
+        vol = (s16) (((D_802A1358 - d) * 128.0) / D_802A1358);
+        if (vol >= 0x80) {
+            vol = 0x7F;
         }
-        temp_v0 = (s8) D_802AD654[temp_a0].unk1D;
-        temp_v1 = temp_v0 & 0x7F;
-        if (var_a3 < temp_v1) {
-            var_a3 = 0;
-            if (temp_v0 & 0x80) {
-                var_a3 = temp_v1;
+        c = D_802AD654[idx].unk1D;
+        if (vol < (c & 0x7F)) {
+            if (c & 0x80) {
+                vol = c & 0x7F;
+            } else {
+                vol = 0;
             }
         }
     }
-    temp_a1 = arg1 + D_802A1364;
-    var_a1 = temp_a1;
-    if (temp_a1 >= 0x168) {
-        var_a1 = temp_a1 - 0x168;
+    angle += D_802A1364;
+    if (angle >= 360) {
+        angle -= 360;
     }
-    var_v0 = var_a1 << 7;
-    if (var_a1 >= 0xB5) {
-        var_v0 = (s16) (0x168 - var_a1) << 7;
+    if (angle > 180) {
+        angle = 360 - angle;
     }
-    temp_lo = var_v0 / 180;
-    var_a2 = temp_lo & 0xFF;
-    if ((temp_lo & 0xFF) >= 0x80) {
-        var_a2 = 0x7F;
+    pan = (angle << 7) / 180;
+    if (pan >= 0x80) {
+        pan = 0x7F;
     }
     if (D_802A1360 != 0.0f) {
-        var_fv0_2 = arg2 - D_802A135C;
-        if (var_fv0_2 < 0.0f) {
-            var_fv0_2 = 0.0f;
+        d = dist - D_802A135C;
+        if (d < 0.0f) {
+            d = 0.0f;
         }
-        if (var_fv0_2 < D_802A1360) {
-            temp_ft2 = 64.0f - ((f32) (0x40 - var_a2) * (var_fv0_2 / D_802A1360));
-            var_a2_2 = (u32) temp_ft2;
-            var_a2 = var_a2_2 & 0xFF;
+        if (d < D_802A1360) {
+            pan = 64.0f - (0x40 - pan) * (d / D_802A1360);
         }
     }
-    arg0 = temp_a0;
-    sp18 = var_a2;
-    func_80266510(temp_a0, (s8) var_a3);
-    func_802663E0(arg0, sp18);
+    func_80266510(idx, vol);
+    func_802663E0(idx, pan);
 }
 
 void func_80266510(s16 idx, s8 vol) {
