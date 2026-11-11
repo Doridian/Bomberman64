@@ -7,7 +7,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4335, eu 4335, jp 4335
+ * differing words: us 4152, eu 4152, jp 4152
  *
  * 33 of 97 match. func_8026D5F8 and func_8026D5C0 (cell and slot of a
  * point) are inlined by func_8026D620/func_8026D7D8, which is what the
@@ -349,7 +349,7 @@ void func_8027036C(s16 *arg0, s32 arg1);
 s32 func_80270384(u8 *arg0);
 s16 *func_802703B4(u8 *arg0);
 s32 func_80270438(u8 *arg0, s32 *arg1);
-f32 func_802704F8(f32 arg0);
+s16 func_802704F8(f32 arg0);
 s32 func_80270714(s16 arg0);
 void func_80270770(s16 arg0, s16 arg1);
 void func_80270A80(s32 *arg0);
@@ -1031,7 +1031,7 @@ void func_80272494(u8 *arg0, u8 *arg1, s32 *arg2) {
     }
     if (M2C_FIELD(arg2, s16 *, 0x14) == 9) {
         func_8022FF58(sp7C, sp88, &sp70);
-        M2C_FIELD(arg2, s16 *, 0x14) = M2C_BITWISE(s16, func_802704F8(sp70));
+        M2C_FIELD(arg2, s16 *, 0x14) = func_802704F8(sp70);
     }
     var_s3 = M2C_FIELD(arg2, s16 *, 0x14);
     M2C_FIELD(arg2, f32 *, 0x2C) = (f32) M2C_FIELD(arg2, f32 *, 0x1C);
@@ -1990,7 +1990,7 @@ void func_80270770(s16 arg0, s16 arg1) {
         sp5C = var_fv0;
         temp_v0 = func_802443F4((s32) arg0);
         M2C_FIELD(temp_s0, void **, 4) = var_v0_4;
-        M2C_FIELD(temp_s0, s16 *, 0x14) = M2C_BITWISE(s16, func_802704F8(M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x20)));
+        M2C_FIELD(temp_s0, s16 *, 0x14) = func_802704F8(M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x20));
         M2C_FIELD(temp_s0, f32 *, 0x18) = var_fv0;
         M2C_FIELD(temp_s0, s32 *, 0x20) = 1;
         M2C_FIELD(temp_s0, s32 *, 0x28) = 0;
@@ -2047,69 +2047,33 @@ s32 func_80270714(s16 arg0) {
     return SLOTS[arg0].unkC;
 }
 
-f32 func_802704F8(f32 arg0) {
-    f32 var_fa0;
-    f32 var_fv0;
-
-    if (arg0 >= 360.0f) {
-        var_fa0 = arg0 - 360.0f;
-    } else {
-        if (arg0 < 0.0f) {
-            var_fv0 = arg0 + 360.0f;
-        } else {
-            var_fv0 = arg0;
-        }
-        var_fa0 = var_fv0;
+s16 func_802704F8(f32 arg0) {
+    arg0 = (arg0 >= 360.0f) ? arg0 - 360.0f : ((arg0 < 0.0f) ? arg0 + 360.0f : arg0);
+    if (arg0 > 337.0f || arg0 <= 22.0f) {
+        return 4;
     }
-    if ((var_fa0 > 337.0f) || (var_fa0 <= 22.0f)) {
-        return 6e-45f;
+    if (arg0 > 22.0f && arg0 <= 67.0f) {
+        return 3;
     }
-    if (var_fa0 > 22.0f) {
-        if (var_fa0 <= 67.0f) {
-            return 4e-45f;
-        }
-        goto block_13;
+    if (arg0 > 67.0f && arg0 <= 112.0f) {
+        return 2;
     }
-block_13:
-    if (var_fa0 > 67.0f) {
-        if (var_fa0 <= 112.0f) {
-            return 3e-45f;
-        }
-        goto block_17;
+    if (arg0 > 112.0f && arg0 <= 157.0f) {
+        return 1;
     }
-block_17:
-    if (var_fa0 > 112.0f) {
-        if (var_fa0 <= 157.0f) {
-            return 1e-45f;
-        }
-        goto block_21;
+    if (arg0 > 157.0f && arg0 <= 202.0f) {
+        return 0;
     }
-block_21:
-    if (var_fa0 > 157.0f) {
-        if (var_fa0 <= 202.0f) {
-            return 0.0f;
-        }
-        goto block_25;
+    if (arg0 > 202.0f && arg0 <= 247.0f) {
+        return 7;
     }
-block_25:
-    if (var_fa0 > 202.0f) {
-        if (var_fa0 <= 247.0f) {
-            return 1e-44f;
-        }
-        goto block_29;
+    if (arg0 > 247.0f && arg0 <= 292.0f) {
+        return 6;
     }
-block_29:
-    if (var_fa0 > 247.0f) {
-        if (var_fa0 <= 292.0f) {
-            return 8e-45f;
-        }
-        goto block_33;
+    if (arg0 > 292.0f && arg0 <= 337.0f) {
+        return 5;
     }
-block_33:
-    if ((var_fa0 > 292.0f) && (var_fa0 <= 337.0f)) {
-        return 7e-45f;
-    }
-    return 6e-45f;
+    return 4;
 }
 
 s32 func_80270438(u8 *arg0, s32 *arg1) {
