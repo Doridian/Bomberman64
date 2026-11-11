@@ -9,7 +9,7 @@
  * func_80228500 kept). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 787, eu 787, jp 787
+ * differing words: us 778, eu 778, jp 778
  *
  * The code is the same in every version.
  *
@@ -35,10 +35,11 @@
  *   in it (the call to func_80229BB4, inlined, schedules differently).
  *
  * Left:
- * - func_802289C0 (the draw loop, 431): the original keeps obj in s2
- *   with a 0x160 frame (ours 0x140, obj in t4 and spilled); its texture
- *   loop spills obj to 0xB0(sp), keeps 0xBC000000 in t5 with its own
- *   ori 6, and strength-reduces the slot offset.
+ * - func_802289C0 (the draw loop, 422): the original keeps obj in s2
+ *   (ours t4, spilled around each call); its texture loop spills obj to
+ *   0xB0(sp), keeps 0xBC000000 in t5 with its own ori 6, and
+ *   strength-reduces the slot offset. The 0x160 frame comes from an
+ *   unused `s32 pad[8]` in func_802284F0 (a guess at the 32 bytes).
  * - func_8022A328 (158): mostly registers. The original keeps j in t0
  *   for the two failure exits (ours stores zero and merges them) and
  *   re-materialises the pool base after the free-slot search.
@@ -1144,6 +1145,7 @@ static void func_802284F0(UnkObj *arg0, UnkGfx **arg1) {
     UnkTexSlot *slot;
     UnkTexAnim *anim;
     UnkModel *model;
+    s32 pad[8];
 
     gfx = *arg1;
     for (i = 0; i < arg0->unk4C->unk0; i++) {
