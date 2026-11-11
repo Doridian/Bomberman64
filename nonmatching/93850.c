@@ -7,7 +7,7 @@
  * after it, which moves with the sizes before it. Not built into the
  * ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 143, eu 143, jp 143
+ * differing words: us 139, eu 139, jp 139
  */
 #include "common.h"
 
@@ -380,8 +380,8 @@ void func_80279CA8(void) {
 
 void func_802797BC(UnkStruct_80279050_14 *arg0, UnkStruct_800BB4A8 *arg1) {
     s16 i;
-    s16 sound;
     s16 item;
+    s16 sound;
     s32 special;
     UnkStruct_8023A840 *st;
     s16 x;
@@ -413,13 +413,13 @@ void func_802797BC(UnkStruct_80279050_14 *arg0, UnkStruct_800BB4A8 *arg1) {
             break;
         case 2:
             D_800AEDF0[i].unk18 |= 1;
-            D_800BA8A0[i].unk4++;
             sound = 5;
+            D_800BA8A0[i].unk4++;
             break;
         case 3:
             D_800AEDF0[i].unk18 |= 2;
-            D_800BA8A0[i].unk6++;
             sound = 5;
+            D_800BA8A0[i].unk6++;
             break;
         case 4:
             if ((D_802AC5D0 & 8) && i != 0) {
