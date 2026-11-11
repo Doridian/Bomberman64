@@ -6,7 +6,7 @@
  * boxes, func_8022E884). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1880, eu 1880, jp 1880
+ * differing words: us 1855, eu 1855, jp 1855
  *
  * A first draft: functions in the reverse of the ROM's order, which IDO
  * now emits exactly as the original does (stubs included); a handful by
@@ -141,10 +141,7 @@ extern s32 D_800A7F04;
 extern Rect40 *D_800A7F08[8];
 extern void *D_800A7F28;
 extern u8 D_8029FD40[];
-extern f32 *D_802A5560;
-extern f32 D_802A5568;
-extern f32 D_802A556C;
-extern f32 D_802A5570;
+// D_802A5560: func_80230604
 extern UnkStructA80 D_802A5578;
 extern void *D_802A55F4;
 extern UnkStructA80 D_802A55F8;
@@ -1434,20 +1431,18 @@ void func_802306B0(f32 *arg0, s32 arg1, f32 *arg2) {
 }
 
 static void func_80230604(f32 *arg0, s32 arg1, f32 *arg2, s32 arg3) {
-    f32 *sv_a1;
-    f32 *sv_a0;
-    f32 *temp_v0;
+    static f32 *D_802A5560;
+    static f32 D_802A5568;
+    static f32 D_802A556C;
+    static f32 D_802A5570;
 
-    temp_v0 = func_802304C0(arg1, arg0, arg3);
-    D_802A5560 = temp_v0;
-    if (temp_v0 != NULL) {
-        sv_a0 = D_802A5560;
+    D_802A5560 = func_802304C0(arg1, arg0, arg3);
+    if (D_802A5560 != NULL) {
         func_8022F808(D_802A5560, D_802A5780);
-        sv_a1 = D_802A5790;
         func_8022F808(arg0, D_802A5790);
         func_8022FF58(D_802A5780, D_802A5790, &D_802A5568);
         D_802A556C = 0.0f;
-        D_802A5570 = (M2C_FIELD(D_802A5560, f32 *, 0x34) + M2C_FIELD(arg0, f32 *, 0x34)) - D_802A5570;
+        D_802A5570 = (M2C_FIELD(arg0, f32 *, 0x34) + M2C_FIELD(D_802A5560, f32 *, 0x34)) - D_802A5570;
         func_8022FEAC(&D_802A5568, arg2);
     }
 }
