@@ -9,7 +9,7 @@
  * func_80228500 kept). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 524, eu 524, jp 524
+ * differing words: us 506, eu 506, jp 506
  *
  * The code is the same in every version.
  *
@@ -40,7 +40,7 @@
  *   the other cofactors row-major, then the zeros and 1.0f.
  *
  * Left:
- * - func_802289C0 (the draw loop, 280): obj is in s2 as in the
+ * - func_802289C0 (the draw loop, 262): obj is in s2 as in the
  *   original once the texture loop reads `unk4[i].unk0` beside a
  *   `&unk4[i]` slot pointer (the i*8 is strength-reduced, and the loop's
  *   pressure keeps obj out of the t registers). The original computes
@@ -383,7 +383,14 @@ extern s32 D_8029F850;
 extern s32 D_8029F854;
 extern s32 D_8029F858[8];
 extern s32 D_802A5368;
-extern UnkMtx *D_802A538C;
+/* One frame's buffers (D_8014C8D0[2], as in 41FD0.c). */
+typedef struct {
+    /* 0x00000 */ UnkMtx mtx[0x400];
+    /* 0x10000 */ u8 unk10000[4][0x5000];
+    /* 0x24000 */ UnkGfx gfx[0x600];
+} UnkFrame; /* size 0x27000 */
+
+extern UnkFrame *D_802A538C;
 extern s32 D_802A5460;
 extern s32 D_802A5464;
 extern f32 D_802A5468;
@@ -1112,8 +1119,8 @@ static s32 func_802284F8(UnkObj *arg0, UnkGfx **arg1) {
     pushed = 0;
     gfx = *arg1;
     guMtxIdentF(mf);
-    guMtxF2L(mf, &D_802A538C[D_802A5368]);
-    gW(gfx++, 0x01020040, (u32)&D_802A538C[D_802A5368]);
+    guMtxF2L(mf, &D_802A538C->mtx[D_802A5368]);
+    gW(gfx++, 0x01020040, (u32)&D_802A538C->mtx[D_802A5368]);
     D_802A5368++;
     func_8029CA80(mf, arg0->unk10, arg0->unk14, arg0->unk18);
     rx = arg0->unk1C;
@@ -1134,8 +1141,8 @@ static s32 func_802284F8(UnkObj *arg0, UnkGfx **arg1) {
     if (arg0->unk28 != 1.0f || arg0->unk2C != 1.0f || arg0->unk30 != 1.0f) {
         func_8029CA00(mf, arg0->unk28, arg0->unk2C, arg0->unk30);
     }
-    guMtxF2L(mf, &D_802A538C[D_802A5368]);
-    gW(gfx++, 0x01060040, (u32)&D_802A538C[D_802A5368]);
+    guMtxF2L(mf, &D_802A538C->mtx[D_802A5368]);
+    gW(gfx++, 0x01060040, (u32)&D_802A538C->mtx[D_802A5368]);
     D_802A5368++;
     *arg1 = gfx;
     return pushed;
