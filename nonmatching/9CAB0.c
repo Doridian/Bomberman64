@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 460, eu 460, jp 460
+ * differing words: us 412, eu 412, jp 412
  */
 #include "common.h"
 
@@ -321,9 +321,9 @@ static void func_80285564();
 static void func_80285650();
 static void func_80285A6C();
 static UnkStruct_800BA900 *func_80285A74();
-static void func_80285A7C(UnkStruct_80288040 *a_, s32 i_);
+static void func_80285A7C(UnkStruct_80288040 *a_, UnkStruct_800BA8E8 *e_);
 static void func_80285A84(UnkStruct_80288040 *a_);
-static void func_80285A8C(UnkStruct_80288040 *a_, s32 i_);
+static void func_80285A8C(UnkStruct_80288040 *a_, UnkStruct_800BA8E8 *e_);
 static void func_80285A94(UnkStruct_80288040 *a_);
 static void func_80285F84(void);
 static s32 func_802863E8(s32 arg0);
@@ -757,7 +757,7 @@ static void func_80286400(s32 arg4, s32 arg0, s32 arg5, f32 arg1, f32 arg2, f32 
     s->unk8.z = arg3;
     s->unk14.unk80 = arg4;
     s->unk14.unk84 = arg0;
-    func_80285A7C(&s->unk14, arg0);
+    func_80285A7C(&s->unk14, &D_800BA8E8[arg0]);
     a = &s->unk14;
     s->unk0 = 2;
     p = &s->unk8;
@@ -956,11 +956,11 @@ static UnkStruct_800BA900 *func_80285A74() {
     return NULL;
 }
 
-static void func_80285A8C(UnkStruct_80288040 *a_, s32 i_) {
+static void func_80285A8C(UnkStruct_80288040 *a_, UnkStruct_800BA8E8 *e_) {
     void *f;
 
     f = func_80226604(0xDD, 1);
-    func_80225CCC((void *) f, D_800BA8E8[(i_)].unk0 * 20, 0);
+    func_80225CCC((void *) f, e_->unk0 * 20, 0);
     func_8022616C(D_800BB488, 1, 20, f);
     func_80226368(f);
     (a_)->unk1F = D_800BB488[0];
@@ -991,8 +991,8 @@ static void func_80285A94(UnkStruct_80288040 *a_) {
     }
 }
 
-static void func_80285A7C(UnkStruct_80288040 *a_, s32 i_) {
-    func_80285A8C(a_, i_);
+static void func_80285A7C(UnkStruct_80288040 *a_, UnkStruct_800BA8E8 *e_) {
+    func_80285A8C(a_, e_);
 }
 
 static void func_80285A84(UnkStruct_80288040 *a_) {
@@ -1001,15 +1001,19 @@ static void func_80285A84(UnkStruct_80288040 *a_) {
 
 static void func_80285A9C(UnkStruct_800BB340 *arg0) {
     UnkStruct_800BA900 *r;
+    UnkStruct_80288040 *a;
 
     func_80285A6C();
     r = func_80285A74();
     if (r != NULL) {
-        func_80285A7C(&r->unk14, r->unk14.unk84);
-        r->unk14.unk0->unk40->unk28 = 1.0f;
-        r->unk14.unk0->unk40->unk2C = 1.0f;
-        r->unk14.unk0->unk40->unk30 = 1.0f;
-        func_80285A84(&r->unk14);
+        a = &r->unk14;
+        func_80285A7C(a, &D_800BA8E8[a->unk84]);
+        goto L;
+    L:
+        a->unk0->unk40->unk28 = 1.0f;
+        a->unk0->unk40->unk2C = 1.0f;
+        a->unk0->unk40->unk30 = 1.0f;
+        func_80285A84(a);
         func_80285658(r, arg0);
     }
 }
