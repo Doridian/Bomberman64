@@ -7,13 +7,16 @@
  * flags: -O3
  * differing words: us 73, eu 73, jp 73
  *
- * 36 of 47 match. Biggest left: func_802741D8 461, func_8027655C 436,
- * func_80274994 320 (still m2c's control flow and untyped offsets),
- * func_80275DD8 150 (the ABS chains: the original keeps some ?: temps
- * on the stack), func_802763DC 73 (cvt'd floats stored to dead stack
- * homes), func_80276184 60 and func_80275C7C 34 (a flag test wants v0
- * but the entity pointer holds it); the rest are a few words of
- * register or stack-slot order.
+ * 39 of 47 match. 8A7A0's small helpers that nothing jal's
+ * (func_802712A8, func_80271448, ...) are inlined here with no stubs
+ * left, so 8A7A0 and 8E730 were likely one uld unit; static copies
+ * (*_inl) stand in, each costing a 2-word stub. Left: func_802741D8
+ * 19 (slot kept in a0, the 6C store's schedule), func_80277B54 17
+ * (the list-init tail stores in ugen order), func_80276D68 15 (the
+ * 0x20 flag in v1, the unk10 |= 0x100 store's slot), func_802763DC 9
+ * and func_8027655C 6 (an and-result's register), func_80275120 3
+ * (c.eq.s operand order), and the stubs (func_802757E0,
+ * func_80277AF8).
  */
 #include "common.h"
 #line 20 "8E730.c"
