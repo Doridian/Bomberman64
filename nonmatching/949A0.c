@@ -8,7 +8,7 @@
  * stack layout and loop forms; func_8027B828 in two registers. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 166, eu 166, jp 166
+ * differing words: us 102, eu 102, jp 102
  */
 #include "common.h"
 
@@ -535,23 +535,23 @@ void func_8027B39C(s16 arg0, s16 arg1) {
 }
 
 void func_8027B0BC(s16 arg0) {
-    UnkStruct_800BA8A0 *counts = &D_800BA8A0[arg0];
-    UnkStruct_80279050_14 *obj;
-    UnkStruct_800BB4A8 *node;
     s16 n;
     s16 prev;
     s16 i;
     s16 r;
-    s16 range;
-    s16 slots[8];
     s16 kinds[5];
+    s16 slots[8];
+    s16 range;
+    UnkStruct_80279050_14 *obj;
+    UnkStruct_800BB4A8 *node;
 
     n = 0;
     prev = 0;
     while (TRUE) {
-        if (counts->unk4 != 0) {
-            counts->unk4--;
+        if (D_800BA8A0[arg0].unk4 != 0) {
+            D_800BA8A0[arg0].unk4--;
             kinds[n++] = 2;
+            if (0) {}
             if (n >= 5) {
                 break;
             }
@@ -563,15 +563,15 @@ void func_8027B0BC(s16 arg0) {
                 break;
             }
         }
-        if (counts->unk2 != 0) {
-            counts->unk2--;
+        if (D_800BA8A0[arg0].unk2 != 0) {
+            D_800BA8A0[arg0].unk2--;
             kinds[n++] = 1;
             if (n >= 5) {
                 break;
             }
         }
-        if (counts->unk0 != 0) {
-            counts->unk0--;
+        if (D_800BA8A0[arg0].unk0 != 0) {
+            D_800BA8A0[arg0].unk0--;
             kinds[n++] = 0;
             if (n >= 5) {
                 break;
