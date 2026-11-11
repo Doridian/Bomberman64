@@ -6,7 +6,7 @@
  * boxes, func_8022E884). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1939, eu 1939, jp 1939
+ * differing words: us 1880, eu 1880, jp 1880
  *
  * A first draft: functions in the reverse of the ROM's order, which IDO
  * now emits exactly as the original does (stubs included); a handful by
@@ -225,7 +225,7 @@ void func_80230800(f32 *arg0, s32 arg1);
 void func_8023085C(f32 *arg0, s32 arg1);
 void func_802308B8(f32 *arg0, s32 arg1);
 void func_80230914(u8 *arg0);
-void func_80230AA0(u8 *arg0, s32 arg1, s32 arg2, s32 arg3);
+void func_80230AA0(UnkStructA80 *arg0, s32 arg1, s32 arg2, s32 arg3);
 static s32 *func_80230B98(s32 arg0);
 static void func_80230C08(s32 *arg0);
 void *func_80230CB4(s32 arg0, s32 arg1, s32 arg2, s32 arg3, u8 *arg4);
@@ -1291,92 +1291,75 @@ void *func_80230CB4(s32 arg0, s32 arg1, s32 arg2, s32 arg3, u8 *arg4) {
 }
 
 static void func_80230C08(s32 *arg0) {
-    M2C_FIELD(arg0, s32 *, 4) = 0;
-    M2C_FIELD(arg0, s32 *, 8) = 0;
-    M2C_FIELD(arg0, s32 *, 0xC) = 0;
-    M2C_FIELD(arg0, s32 *, 0x10) = 0;
-    M2C_FIELD(arg0, s32 *, 0x14) = 0;
-    M2C_FIELD(arg0, s32 *, 0x18) = 0x7FFFFFFF;
-    M2C_FIELD(arg0, s32 *, 0x1C) = 0x7FFFFFFF;
-    M2C_FIELD(arg0, s32 *, 0x20) = 0;
-    M2C_FIELD(arg0, s32 *, 0x24) = 0;
-    M2C_FIELD(arg0, s32 *, 0x28) = -1;
-    M2C_FIELD(arg0, s32 *, 0x2C) = -1;
-    M2C_FIELD(arg0, s32 *, 0x30) = 1;
-    M2C_FIELD(arg0, s32 *, 0x3C) = 0;
-    M2C_FIELD(arg0, s32 *, 0x40) = 0;
-    M2C_FIELD(arg0, s32 *, 0x44) = 0;
-    M2C_FIELD(arg0, s32 *, 0x48) = 0;
-    M2C_FIELD(arg0, s32 *, 0x64) = 0;
-    M2C_FIELD(arg0, f32 *, 0x4C) = 0.0f;
-    M2C_FIELD(arg0, f32 *, 0x50) = 0.0f;
-    M2C_FIELD(arg0, f32 *, 0x54) = 0.0f;
-    M2C_FIELD(arg0, f32 *, 0x58) = 0.0f;
-    M2C_FIELD(arg0, f32 *, 0x5C) = 0.0f;
-    M2C_FIELD(arg0, f32 *, 0x60) = 0.0f;
-    M2C_FIELD(arg0, f32 *, 0x68) = 0.0f;
-    M2C_FIELD(arg0, f32 *, 0x6C) = 0.0f;
-    M2C_FIELD(arg0, f32 *, 0x34) = 50.0f;
-    M2C_FIELD(arg0, f32 *, 0x38) = 50.0f;
-    M2C_FIELD(arg0, s32 *, 0x78) = 0;
-    M2C_FIELD(arg0, s32 *, 0x7C) = 0;
-    M2C_FIELD(arg0, f32 *, 0x70) = 1.6333334f;
-    M2C_FIELD(arg0, f32 *, 0x74) = 100.0f;
+    UnkStructA80 *o = (UnkStructA80 *) arg0;
+
+    o->unk4 = 0;
+    o->unk8 = 0;
+    o->unkC = 0;
+    o->unk10 = 0;
+    o->unk14 = 0;
+    o->unk18 = 0x7FFFFFFF;
+    o->unk1C = 0x7FFFFFFF;
+    o->unk20 = 0;
+    o->unk24 = 0;
+    o->unk28 = -1;
+    o->unk2C = -1;
+    o->unk30 = 1;
+    o->unk3C = NULL;
+    o->unk40 = NULL;
+    o->unk44 = NULL;
+    o->unk48 = 0;
+    o->unk64 = 0;
+    o->unk34 = 50.0f;
+    o->unk38 = 50.0f;
+    o->unk4C[0] = 0.0f;
+    o->unk4C[1] = 0.0f;
+    o->unk4C[2] = 0.0f;
+    o->unk58[0] = 0.0f;
+    o->unk58[1] = 0.0f;
+    o->unk58[2] = 0.0f;
+    o->unk68 = 0.0f;
+    o->unk6C = 0.0f;
+    o->unk70 = 1.6333334f;
+    o->unk74 = 100.0f;
+    o->unk78 = NULL;
+    o->unk7C = NULL;
 }
 
 static s32 *func_80230B98(s32 arg0) {
-    s32 *var_v1;
+    UnkStructA80 *p;
 
     if (arg0 < 0xD0) {
-        var_v1 = M2C_FIELD(&D_802A5578, s32 **, 0x7C);
-        D_802A56F8 = &D_802A5578;
-        if (var_v1 != NULL) {
-loop_2:
-            if (arg0 < M2C_FIELD(var_v1, s32 *, 4)) {
-                return var_v1;
+        p = D_802A5578.unk7C;
+        D_802A56F8 = (s32 *) &D_802A5578;
+        for (; p != NULL; p = p->unk7C) {
+            if (arg0 < p->unk4) {
+                return (s32 *) p;
             }
-            D_802A56F8 = var_v1;
-            var_v1 = M2C_FIELD(var_v1, s32 **, 0x7C);
-            if (var_v1 == NULL) {
-                /* Duplicate return node #5. Try simplifying control flow for better match */
-                return NULL;
-            }
-            goto loop_2;
+            D_802A56F8 = (s32 *) p;
         }
         return NULL;
     }
     return D_802A56F4;
 }
 
-void func_80230AA0(u8 *arg0, s32 arg1, s32 arg2, s32 arg3) {
-    f32 temp_fv0;
-    f32 temp_fv0_2;
-    f32 temp_fv1;
-    u8 *temp_v0;
-    u8 *temp_v0_2;
-    u8 *temp_v0_3;
+void func_80230AA0(UnkStructA80 *arg0, s32 arg1, s32 arg2, s32 arg3) {
+    f32 y;
 
-    temp_fv0 = func_8026E938(M2C_FIELD(arg0, void **, 0x40));
-    if (temp_fv0 != 20000.0f) {
-        temp_v0 = M2C_FIELD(arg0, void **, 0x40);
-        if (((M2C_FIELD(temp_v0, f32 *, 0x14) - M2C_FIELD(arg0, f32 *, 0x6C)) + M2C_FIELD(arg0, f32 *, 0x68)) <= temp_fv0) {
-            M2C_FIELD(arg0, f32 *, 0x6C) = 0.0f;
-            M2C_FIELD(arg0, f32 *, 0x68) = 0.0f;
-            M2C_FIELD(temp_v0, f32 *, 0x14) = temp_fv0;
-            return;
-        }
-    }
-    temp_v0_2 = M2C_FIELD(arg0, void **, 0x40);
-    M2C_FIELD(temp_v0_2, f32 *, 0x14) = (f32) (M2C_FIELD(temp_v0_2, f32 *, 0x14) + M2C_FIELD(arg0, f32 *, 0x68));
-    temp_v0_3 = M2C_FIELD(arg0, void **, 0x40);
-    M2C_FIELD(temp_v0_3, f32 *, 0x14) = (f32) (M2C_FIELD(temp_v0_3, f32 *, 0x14) - M2C_FIELD(arg0, f32 *, 0x6C));
-    temp_fv0_2 = M2C_FIELD(arg0, f32 *, 0x6C);
-    temp_fv1 = M2C_FIELD(arg0, f32 *, 0x74);
-    if (temp_fv0_2 <= temp_fv1) {
-        M2C_FIELD(arg0, f32 *, 0x6C) = (f32) (temp_fv0_2 + M2C_FIELD(arg0, f32 *, 0x70));
+    y = func_8026E938(arg0->unk40);
+    if (y != 20000.0f && arg0->unk40->pos[1] - arg0->unk6C + arg0->unk68 <= y) {
+        arg0->unk6C = 0.0f;
+        arg0->unk68 = 0.0f;
+        arg0->unk40->pos[1] = y;
         return;
     }
-    M2C_FIELD(arg0, f32 *, 0x6C) = temp_fv1;
+    arg0->unk40->pos[1] += arg0->unk68;
+    arg0->unk40->pos[1] -= arg0->unk6C;
+    if (arg0->unk6C <= arg0->unk74) {
+        arg0->unk6C += arg0->unk70;
+    } else {
+        arg0->unk6C = arg0->unk74;
+    }
 }
 
 void func_80230914(u8 *arg0) {
