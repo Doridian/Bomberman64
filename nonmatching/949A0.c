@@ -8,7 +8,7 @@
  * stack layout and loop forms; func_8027B828 in two registers. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 594, eu 594, jp 594
+ * differing words: us 552, eu 552, jp 552
  */
 #include "common.h"
 
@@ -165,7 +165,8 @@ UnkStruct_800BB4A8 *func_8027A1A0(UnkStruct_80279050_14 *arg0);
 extern UnkStruct_800BB4A8 *D_800BB4A8;
 extern UnkStruct_802AFED0 D_802AFED0[];
 extern UnkStruct_800AEDF0 D_800AEDF0[];
-extern UnkStruct_800BB4A8 D_800BB4A0[]; /* [0] the list's head, [1] its sentinel, [2..47] the pool */
+extern UnkStruct_800BB4A8 D_800BB4A0[];
+extern UnkStruct_800BB4A8 D_800BB4F8; /* [0] the list's head, [1] its sentinel, [2..47] the pool */
 extern s16 D_802AFF60[];
 
 typedef struct {
@@ -786,15 +787,18 @@ UnkStruct_800BB4A8 *func_8027AA74(s16 arg0, f32 arg1, f32 arg2, f32 arg3, s32 ar
 
 void func_8027A950(void) {
     s16 i;
+    UnkStruct_800BB4A8 *p;
 
     if (D_802AFEC4 == 1) {
         return;
     }
     D_802AFEC4 = 1;
     D_802AFEC8 = func_80238A10(func_8027A144, 0, D_800BD818, 0x1000, 0x50);
-    for (i = 0; i < 48; i++) {
-        D_800BB4A0[i].unk0 = i;
-        D_800BB4A0[i].unk2 = 1;
+    if (D_802AFEC8) {}
+    p = D_800BB4A0;
+    for (i = 0; i < 48; i++, p++) {
+        p->unk0 = i;
+        p->unk2 = 1;
     }
     for (i = 0; i < 5; i++) {
         D_802AFED0[i].unk8 = -1;
@@ -807,13 +811,14 @@ void func_8027A950(void) {
     D_800BB4A0[0].unk24 = -1.0f;
     D_800BB4A0[0].unk28 = -1.0f;
     D_800BB4A0[0].unk2C = -1.0f;
-    D_800BB4A0[1].unk2 = 0;
-    D_800BB4A0[1].unk8 = NULL;
-    D_800BB4A0[1].unkC = &D_800BB4A0[0];
-    D_800BB4A0[1].unk20 = -1;
-    D_800BB4A0[1].unk24 = -1.0f;
-    D_800BB4A0[1].unk28 = -1.0f;
-    D_800BB4A0[1].unk2C = -1.0f;
+    p = D_800BB4A0[0].unk8;
+    p->unk2 = 0;
+    p->unk8 = NULL;
+    p->unkC = &D_800BB4A0[0];
+    p->unk20 = -1;
+    p->unk24 = -1.0f;
+    p->unk28 = -1.0f;
+    p->unk2C = -1.0f;
 }
 
 void func_8027A640(void) {
