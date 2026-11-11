@@ -7,7 +7,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4475, eu 4475, jp 4475
+ * differing words: us 4350, eu 4350, jp 4350
  *
  * 33 of 97 match. func_8026D5F8 and func_8026D5C0 (cell and slot of a
  * point) are inlined by func_8026D620/func_8026D7D8, which is what the
@@ -377,8 +377,8 @@ s32 func_802721D4(u8 *arg0, s32 arg1, s32 *arg2);
 s16 func_8027241C(s16 arg0);
 void func_80272494(u8 *arg0, u8 *arg1, s32 *arg2);
 void func_802727D8(Ctl87 *arg0);
-void func_80272FC0(u8 *arg0, s16 arg1);
-void func_802731A4(u8 *arg0, s16 arg1);
+void func_80272FC0(Obj8E *arg0, s16 arg1);
+void func_802731A4(Obj8E *arg0, s16 arg1);
 void *func_80273370(s32 arg0);
 void func_802733C8(u8 *arg0);
 void func_802733F8(s16 *arg0);
@@ -768,71 +768,51 @@ loop_1:
     goto loop_1;
 }
 
-void func_802731A4(u8 *arg0, s16 arg1) {
-    s32 sp24;
-    f32 sp1C;
-    f32 temp_fv0;
-    s32 var_v0;
-    s32 var_v0_2;
-    s32 var_v0_3;
-    u8 *temp_v0;
+void func_802731A4(Obj8E *arg0, s16 arg1) {
+    s32 done;
+    s32 pad;
+    f32 y;
+    Sub8E *t;
+    Obj8E *cur;
 
-    if (arg1 >= 0) {
-        var_v0 = 1;
-        if (arg1 < 5) {
-            var_v0 = 0;
-        }
-    } else {
-        var_v0 = 1;
+    if (func_802702BC(arg1) != 0) {
+        return;
     }
-    if (var_v0 == 0) {
-        if (arg1 >= 0) {
-            var_v0_2 = 1;
-            if (arg1 < 5) {
-                var_v0_2 = 0;
-            }
-        } else {
-            var_v0_2 = 1;
+    cur = (Obj8E *) func_80270714(arg1);
+    if (cur == NULL) {
+        return;
+    }
+    if (cur != arg0) {
+        return;
+    }
+    if (SLOTS[arg1].unk10 <= 0) {
+        return;
+    }
+    y = func_8026E938(arg0->unk40);
+    func_80272FC0(arg0, arg1);
+    done = 0;
+    func_80231434(arg0);
+    if (y != 20000.0f) {
+        t = arg0->unk40;
+        if (t->y < y) {
+            arg0->unk50 += y - t->y;
+            t->y = y;
         }
-        if (var_v0_2 != 0) {
-            var_v0_3 = 0;
-        } else {
-            var_v0_3 = *(s32 *)(D_802AFCF4 + (arg1 * 0x30));
+    }
+    if (arg0->unk8 & 0x10) {
+        if (func_80232D18(arg0, 0x10) != 0) {
+            arg0->unk40->x = arg0->unk58;
+            arg0->unk40->y = arg0->unk5C;
+            arg0->unk40->z = arg0->unk60;
+            done = 1;
         }
-        if (var_v0_3 != 0) {
-            if (var_v0_3 == (s32) arg0) {
-                if (*(s16 *)((u8 *)&D_802AFCF8 + (arg1 * 0x30)) > 0) {
-                    arg1 = arg1;
-                    sp1C = func_8026E938(M2C_FIELD(arg0, void **, 0x40));
-                    func_80272FC0(arg0, arg1);
-                    sp24 = 0;
-                    func_80231434(arg0);
-                    if (sp1C != 20000.0f) {
-                        temp_v0 = M2C_FIELD(arg0, void **, 0x40);
-                        temp_fv0 = M2C_FIELD(temp_v0, f32 *, 0x14);
-                        if (temp_fv0 < sp1C) {
-                            M2C_FIELD(arg0, f32 *, 0x50) = (f32) (M2C_FIELD(arg0, f32 *, 0x50) + (sp1C - temp_fv0));
-                            M2C_FIELD(temp_v0, f32 *, 0x14) = sp1C;
-                        }
-                    }
-                    if (M2C_FIELD(arg0, s32 *, 8) & 0x10) {
-                        if (func_80232D18(arg0, 0x10) != 0) {
-                            M2C_FIELD(M2C_FIELD(arg0, void **, 0x40), f32 *, 0x10) = (f32) M2C_FIELD(arg0, f32 *, 0x58);
-                            M2C_FIELD(M2C_FIELD(arg0, void **, 0x40), f32 *, 0x14) = (f32) M2C_FIELD(arg0, f32 *, 0x5C);
-                            M2C_FIELD(M2C_FIELD(arg0, void **, 0x40), f32 *, 0x18) = (f32) M2C_FIELD(arg0, f32 *, 0x60);
-                            sp24 = 1;
-                        }
-                        if (sp24 == 1) {
-                            func_80244C30((s32) arg1, 0);
-                        }
-                    }
-                }
-            }
+        if (done == 1) {
+            func_80244C30(arg1, 0);
         }
     }
 }
 
-void func_80272FC0(u8 *arg0, s16 arg1) {
+void func_80272FC0(Obj8E *arg0, s16 arg1) {
     f32 sp3C;
     f32 sp38;
     f32 sp28;
@@ -2228,17 +2208,10 @@ void func_802702EC(s16 arg0) {
 }
 
 s32 func_802702BC(s16 arg0) {
-    s32 v;
-
-    if (arg0 >= 0) {
-        v = 1;
-        if (arg0 < 5) {
-            v = 0;
-        }
-    } else {
-        v = 1;
+    if (arg0 >= 0 && arg0 < 5) {
+        return 0;
     }
-    return v;
+    return 1;
 }
 
 void *func_802700EC(u8 *arg0, u8 *arg1, s16 arg2, f32 arg3) {
