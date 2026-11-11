@@ -5,7 +5,7 @@
  * global, emitted in the original's order. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 468, eu 468, jp 468
+ * differing words: us 434, eu 434, jp 434
  *
  * 36 of 47 match. Biggest left: func_802741D8 461, func_8027655C 436,
  * func_80274994 320 (still m2c's control flow and untyped offsets),
@@ -1171,12 +1171,11 @@ void func_80275C7C(s16 arg0, u8 *arg1, s16 arg2) {
     if (e == NULL) {
         return;
     }
-    fl = e->unk64;
-    if ((f = fl & 0x10) != 0) {
+    if (func_802712A8_inl(&e->unk64, 0x10) != 0) {
         return;
     }
-    if ((f = fl & 0x200) != 0) {
-        e->unk64 = fl & ~0x200;
+    if (func_802712A8_inl(&e->unk64, 0x200) != 0) {
+        e->unk64 &= ~0x200;
         func_802313DC(e->obj, 0x20000);
         n = e->unk38;
         func_80270A80(n);
@@ -1189,7 +1188,7 @@ void func_80275C7C(s16 arg0, u8 *arg1, s16 arg2) {
     neg = -1;
     id = e->unk0;
     for (i = 0; i < 8; i = (s16) (i + 1)) {
-        p = &row[i];
+        p = (s16 *) ((u8 *) row + i * 2);
         cur = *p;
         if (id == cur && arg2 == e->unk74) {
             return;
