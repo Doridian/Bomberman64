@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 8687, eu 8687, jp 8260
+ * differing words: us 8000, eu 8000, jp 7573
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -324,7 +324,7 @@ static f32 func_80251994(f32 *arg0, f32 *arg1);
 static s32 func_802519B4(f32 arg0);
 static s32 func_80251A24(s32 arg0, f32 *arg1, f32 arg2);
 static s32 func_80251AC8(s32 arg0);
-static void *func_80251B08(s32 *arg0, s32 arg1, f32 *arg2);
+static void *func_80251B08(s32 arg2, s32 *arg0, s32 arg1);
 static s32 func_80251BDC(f32 *arg0, f32 *arg1);
 static f32 func_80251C48(f32 *arg0, f32 *arg1);
 static void *func_80251C88(s32 arg0);
@@ -342,9 +342,9 @@ static f32 func_802523E0(f32 *arg0);
 static f32 func_80252490(f32 *arg0);
 static f32 func_80252598(f32 *arg0, f32 *arg1);
 static s32 func_80252658(f32 *arg0, f32 *arg1);
-static f32 func_802526A0(f32 *arg0, f32 *arg1);
+static f32 func_802526A0(f32 *arg1, f32 *arg0);
 static s32 func_80252724(u8 *arg0);
-static s32 func_80252918(s32 arg0, s32 *arg1, s32 arg2);
+static s32 func_80252918(s32 *arg1, s32 arg0, s32 arg2);
 static s32 func_802529A4(u8 *arg0, s32 arg1, s32 arg2, f32 arg3);
 static s32 func_80252AF8(s32 arg0, s32 *arg1, s32 arg2);
 static s32 func_80252BF8(s32 arg0, s32 *arg1);
@@ -1315,7 +1315,7 @@ loop_25:
                         temp_fv0 = func_80251994((f32 *) temp_a0, (f32 *) temp_a1);
                         sp12C = temp_fv0;
                         temp_s3 = func_802519B4(temp_fv0);
-                        if (func_80251B08(temp_s4, temp_s3, (f32 *)1) != NULL) {
+                        if (func_80251B08(1, temp_s4, temp_s3) != NULL) {
                             M2C_FIELD(var_fp, f32 *, 0x74) = sp12C;
                             func_80252048((f32 *) var_fp);
                         } else {
@@ -2038,7 +2038,7 @@ loop_241:
                                 } else {
 block_305:
                                     if ((func_80251BDC((f32 *) temp_a1, (f32 *) temp_a0) != -1) && (temp_a3_6 = M2C_FIELD(var_fp, f32 **, 0x18), (M2C_FIELD(temp_a3_6, f32 *, 0x68) == 0.0f)) && (M2C_FIELD(temp_a3_6, f32 *, 0x6C) == 0.0f) && (func_80245408(M2C_FIELD(var_fp, s32 *, 0xC)) == 0) && (M2C_FIELD(var_fp, s32 *, 0x90) == 0)) {
-                                        if ((func_80234248(0x64) >= 0xB) && (temp_fv0 = func_80251994((f32 *) temp_a0, (f32 *) temp_a1), M2C_FIELD(var_fp, f32 *, 0x74) = temp_fv0, (func_80251B08((u8 *)var_fp + 0x38, func_802519B4(temp_fv0), (f32 *)2) == NULL))) {
+                                        if ((func_80234248(0x64) >= 0xB) && (temp_fv0 = func_80251994((f32 *) temp_a0, (f32 *) temp_a1), M2C_FIELD(var_fp, f32 *, 0x74) = temp_fv0, (func_80251B08(2, (u8 *)var_fp + 0x38, func_802519B4(temp_fv0)) == NULL))) {
                                             M2C_FIELD(M2C_FIELD(M2C_FIELD(var_fp, f32 **, 0x18), void **, 0x40), f32 *, 0x20) = (f32) M2C_FIELD(var_fp, f32 *, 0x74);
                                             M2C_FIELD(var_fp, s32 *, 0) &= ~3;
                                             M2C_FIELD(var_fp, f32 *, 0x7C) = 0.0f;
@@ -3793,11 +3793,8 @@ static void func_802530A8(f32 *arg0) {
         }
         return;
     case 0:
-        v = M2C_FIELD(arg0, s32 *, 0x88);
-        i = v - 1;
-        if (v != -1) {
-            M2C_FIELD(arg0, s32 *, 0x88) = i;
-            if (i == 0) {
+        if (M2C_FIELD(arg0, s32 *, 0x88) != -1) {
+            if (--M2C_FIELD(arg0, s32 *, 0x88) == 0) {
                 M2C_FIELD(arg0, s32 *, 0) &= ~3;
                 M2C_FIELD(arg0, s32 *, 0) |= 1;
             }
@@ -3875,29 +3872,29 @@ static void func_802530A8(f32 *arg0) {
                                 M2C_FIELD(arg0, f32 *, 0x80) = (f32) (angle - 360.0f);
                             } else {
                                 if (angle < 0.0f) {
-                                    limit = angle + 360.0f;
+                                    dx = angle + 360.0f;
                                 } else {
-                                    limit = angle;
+                                    dx = angle;
                                 }
-                                M2C_FIELD(arg0, f32 *, 0x80) = limit;
+                                M2C_FIELD(arg0, f32 *, 0x80) = dx;
                             }
                             angle = M2C_FIELD(arg0, f32 *, 0x74) + 90.0f;
                             if (angle >= 360.0f) {
                                 M2C_FIELD(arg0, f32 *, 0x74) = (f32) (angle - 360.0f);
                             } else {
                                 if (angle < 0.0f) {
-                                    limit = angle + 360.0f;
+                                    dx = angle + 360.0f;
                                 } else {
-                                    limit = angle;
+                                    dx = angle;
                                 }
-                                M2C_FIELD(arg0, f32 *, 0x74) = limit;
+                                M2C_FIELD(arg0, f32 *, 0x74) = dx;
                             }
                         }
                     } else {
                         if (func_8025156C(M2C_FIELD(arg0, f32 **, 0x18)) == 0) {
                             M2C_FIELD(arg0, s32 *, 0) = ((M2C_FIELD(arg0, s32 *, 0) | 0x40));
                             M2C_FIELD(arg0, f32 *, 0x80) = (f32) M2C_FIELD(arg0, f32 *, 0x74);
-                            angle = func_802526A0((f32 *) ((u8 *)arg0 + 0x2C), arg0);
+                            angle = func_802526A0(arg0, (f32 *) ((u8 *)arg0 + 0x2C));
                         } else {
                             angle = func_80252598((f32 *) ((u8 *)arg0 + 0x20), (f32 *) ((u8 *)arg0 + 0x2C));
                         }
@@ -3914,11 +3911,11 @@ static void func_802530A8(f32 *arg0) {
                         M2C_FIELD(arg0, f32 *, 0x74) = angle - 360.0f;
                     } else {
                         if (angle < 0.0f) {
-                            limit = angle + 360.0f;
+                            dx = angle + 360.0f;
                         } else {
-                            limit = angle;
+                            dx = angle;
                         }
-                        M2C_FIELD(arg0, f32 *, 0x74) = limit;
+                        M2C_FIELD(arg0, f32 *, 0x74) = dx;
                     }
                 } else {
                     angle = M2C_FIELD(arg0, f32 *, 0x74) + 90.0f;
@@ -3926,11 +3923,11 @@ static void func_802530A8(f32 *arg0) {
                         M2C_FIELD(arg0, f32 *, 0x74) = angle - 360.0f;
                     } else {
                         if (angle < 0.0f) {
-                            limit = angle + 360.0f;
+                            dx = angle + 360.0f;
                         } else {
-                            limit = angle;
+                            dx = angle;
                         }
-                        M2C_FIELD(arg0, f32 *, 0x74) = limit;
+                        M2C_FIELD(arg0, f32 *, 0x74) = dx;
                     }
                 }
                 M2C_FIELD(arg0, f32 *, 0x7C) = (f32) D_802ACFB4;
@@ -3943,25 +3940,23 @@ static void func_802530A8(f32 *arg0) {
                 if (target != NULL) {
                 entry = func_802703B4((s32) target);
                 if (entry == NULL) {
-                    v = 3;
+                    range = 3;
                 } else {
-                    v = ((s16) M2C_FIELD(entry, s16 *, 0x66) >> 1) + 1;
-                    range = v;
+                    range = ((s16) M2C_FIELD(entry, s16 *, 0x66) >> 1) + 1;
                 }
-                limit = (f32) v * 110.0f;
+                limit = (f32) range * 110.0f;
                 if (dist <= limit) {
                     angle = dist * 0.01f;
-                    if (angle >= 0.0f) {
+                    if (angle >= 0) {
                         angle = angle + 0.5f;
                     } else {
                         angle = angle - 0.5f;
                     }
-                    range = (v - (s32) angle) + 1;
+                    range = (range - (s32) angle) + 1;
                     dir = func_802519B4(M2C_FIELD(arg0, f32 *, 0x74));
-                    i = 0;
                     if (func_80252AF8(dir, (s32 *) ((u8 *)arg0 + 0x38), range) != 0) {
                         dir = func_80252BF8(dir ^ 4, (s32 *) ((u8 *)arg0 + 0x38));
-                        entry = func_80251B08((s32 *) ((u8 *)arg0 + 0x38), dir, (f32 *)2);
+                        entry = func_80251B08(2, (s32 *) ((u8 *)arg0 + 0x38), dir);
                         if (entry != NULL) {
                             if (M2C_FIELD(entry, s32 *, 8) & 2) {
                                 dir = func_802519B4(M2C_FIELD(arg0, f32 *, 0x74)) ^ 4;
@@ -3970,17 +3965,18 @@ static void func_802530A8(f32 *arg0) {
                             dir = func_802519B4(M2C_FIELD(arg0, f32 *, 0x74)) ^ 4;
                         }
                     } else {
-                        for (; i < 4; i++) {
-                            if (func_80252918(dir, (s32 *) ((u8 *)arg0 + 0x38), 1) != 0 && func_80252AF8(dir, (s32 *) ((u8 *)arg0 + 0x38), range >> 1) == 0) {
+                        for (i = 0; i < 4; i++) {
+                            if (func_80252918((s32 *) ((u8 *)arg0 + 0x38), dir, 1) != 0 && func_80252AF8(dir, (s32 *) ((u8 *)arg0 + 0x38), range >> 1) == 0) {
                                 break;
                             }
-                            dir = (dir + 2) & 7;
+                            dir += 2;
+                            dir &= 7;
                         }
                         if (i >= 4) {
                             M2C_FIELD(arg0, f32 *, 0x7C) = 0.0f;
                             break;
                         }
-                        if (func_80251B08((s32 *) ((u8 *)arg0 + 0x38), dir, (f32 *)0x3FFFF) != NULL) {
+                        if (func_80251B08(0x3FFFF, (s32 *) ((u8 *)arg0 + 0x38), dir) != NULL) {
                             dir ^= 4;
                         }
                     }
@@ -3992,6 +3988,7 @@ static void func_802530A8(f32 *arg0) {
                     } else {
                         M2C_FIELD(arg0, f32 *, 0x7C) = 0.0f;
                     }
+                    break;
                 }
                 } else {
                     M2C_FIELD(arg0, f32 *, 0x7C) = 0.0f;
@@ -3999,7 +3996,7 @@ static void func_802530A8(f32 *arg0) {
                 }
             } else {
                 dir = func_802519B4(M2C_FIELD(arg0, f32 *, 0x74));
-                entry = func_80251B08((s32 *) ((u8 *)arg0 + 0x38), dir, (f32 *)2);
+                entry = func_80251B08(2, (s32 *) ((u8 *)arg0 + 0x38), dir);
                 if ((entry != NULL) && (M2C_FIELD(entry, s32 *, 8) & 2)) {
                     M2C_FIELD(arg0, f32 *, 0x74) = (func_802519B4(M2C_FIELD(arg0, f32 *, 0x74)) ^ 4) * 45;
                 }
@@ -4012,25 +4009,23 @@ static void func_802530A8(f32 *arg0) {
                 if (target != NULL) {
                 entry = func_802703B4((s32) target);
                 if (entry == NULL) {
-                    v = 3;
+                    range = 3;
                 } else {
-                    v = ((s16) M2C_FIELD(entry, s16 *, 0x66) >> 1) + 1;
-                    range = v;
+                    range = ((s16) M2C_FIELD(entry, s16 *, 0x66) >> 1) + 1;
                 }
-                limit = (f32) v * 110.0f;
-                if (dist <= limit) {
+                if (dist <= (f32) range * 110.0f) {
+                    limit = (f32) range * 110.0f;
                     angle = dist * 0.01f;
-                    if (angle >= 0.0f) {
+                    if (angle >= 0) {
                         angle = angle + 0.5f;
                     } else {
                         angle = angle - 0.5f;
                     }
-                    range = (v - (s32) angle) + 1;
+                    range = (range - (s32) angle) + 1;
                     dir = func_802519B4(M2C_FIELD(arg0, f32 *, 0x74));
-                    i = 0;
                     if (func_80252AF8(dir, (s32 *) ((u8 *)arg0 + 0x38), range) != 0) {
                         dir = func_80252BF8(dir ^ 4, (s32 *) ((u8 *)arg0 + 0x38));
-                        if (func_80251B08((s32 *) ((u8 *)arg0 + 0x38), dir, (f32 *)0x3FFFF) != NULL) {
+                        if (func_80251B08(0x3FFFF, (s32 *) ((u8 *)arg0 + 0x38), dir) != NULL) {
                             if (func_802529A4(M2C_FIELD(arg0, u8 **, 0x18), 0x42, dir, limit) != 0) {
                                 dir = func_802519B4(M2C_FIELD(arg0, f32 *, 0x74)) ^ 4;
                             }
@@ -4038,27 +4033,29 @@ static void func_802530A8(f32 *arg0) {
                             dir = func_802519B4(M2C_FIELD(arg0, f32 *, 0x74)) ^ 4;
                         }
                     } else {
-                        for (; i < 4; i++) {
-                            if (func_80252918(dir, (s32 *) ((u8 *)arg0 + 0x38), 1) != 0 && func_80252AF8(dir, (s32 *) ((u8 *)arg0 + 0x38), range >> 1) == 0) {
+                        for (i = 0; i < 4; i++) {
+                            if (func_80252918((s32 *) ((u8 *)arg0 + 0x38), dir, 1) != 0 && func_80252AF8(dir, (s32 *) ((u8 *)arg0 + 0x38), range >> 1) == 0) {
                                 break;
                             }
-                            dir = (dir + 1) & 7;
+                            dir += 1;
+                            dir &= 7;
                         }
                         if (i >= 4) {
                             M2C_FIELD(arg0, f32 *, 0x7C) = 0.0f;
                             break;
                         }
-                        if ((func_80251B08((s32 *) ((u8 *)arg0 + 0x38), dir, (f32 *)0x3FFFF) != NULL) || (func_802529A4(M2C_FIELD(arg0, u8 **, 0x18), 0x42, dir, limit) != 0)) {
+                        if ((func_80251B08(0x3FFFF, (s32 *) ((u8 *)arg0 + 0x38), dir) != NULL) || (func_802529A4(M2C_FIELD(arg0, u8 **, 0x18), 0x42, dir, limit) != 0)) {
                             dir = (dir + 1) & 7;
                         }
                     }
                     M2C_FIELD(arg0, f32 *, 0x74) = dir * 45;
                 } else {
-                    if ((dist - limit) >= 200.0f) {
+                    if ((dist - (f32) range * 110.0f) >= 200.0f) {
                         M2C_FIELD(arg0, s32 *, 4) = (s32) M2C_FIELD(arg0, s32 *, 8);
                     } else {
                         M2C_FIELD(arg0, s32 *, 4) = (s32) M2C_FIELD(arg0, s32 *, 8);
                     }
+                    break;
                 }
                 } else {
                     M2C_FIELD(arg0, s32 *, 4) = (s32) M2C_FIELD(arg0, s32 *, 8);
@@ -4069,15 +4066,15 @@ static void func_802530A8(f32 *arg0) {
                     M2C_FIELD(arg0, f32 *, 0x74) = angle - 360.0f;
                 } else {
                     if (angle < 0.0f) {
-                        limit = angle + 360.0f;
+                        dx = angle + 360.0f;
                     } else {
-                        limit = angle;
+                        dx = angle;
                     }
-                    M2C_FIELD(arg0, f32 *, 0x74) = limit;
+                    M2C_FIELD(arg0, f32 *, 0x74) = dx;
                 }
             } else {
                 dir = func_802519B4(M2C_FIELD(arg0, f32 *, 0x74));
-                if (func_80251B08((s32 *) ((u8 *)arg0 + 0x38), dir, (f32 *)0x3FFFF) != NULL) {
+                if (func_80251B08(0x3FFFF, (s32 *) ((u8 *)arg0 + 0x38), dir) != NULL) {
                     if (func_802529A4(M2C_FIELD(arg0, u8 **, 0x18), 0x42, dir, 110.0f) != 0) {
                         M2C_FIELD(arg0, f32 *, 0x74) = func_802519B4(M2C_FIELD(arg0, f32 *, 0x74) + 45.0f) * 45;
                     }
@@ -4087,15 +4084,15 @@ static void func_802530A8(f32 *arg0) {
         case 4:
             if ((func_80251EE0((f32 *) ((u8 *)arg0 + 0x20)) != 0) || ((func_80252724(arg0) != 0))) {
                 if (func_80234248(0xC8) < 0x32) {
-                    dir = func_80234248(8) & 6;
-                    if ((func_80252918(dir, (s32 *) ((u8 *)arg0 + 0x38), 1) != 0) && ((func_80251B08((s32 *) ((u8 *)arg0 + 0x38), dir, (f32 *)0x3FFFF) == NULL))) {
-                        M2C_FIELD(arg0, f32 *, 0x74) = (f32) ((f32) dir * 45.0f);
+                    i = func_80234248(8) & 6;
+                    if ((func_80252918((s32 *) ((u8 *)arg0 + 0x38), i, 1) != 0) && ((func_80251B08(0x3FFFF, (s32 *) ((u8 *)arg0 + 0x38), i) == NULL))) {
+                        M2C_FIELD(arg0, f32 *, 0x74) = (f32) ((f32) i * 45.0f);
                         M2C_FIELD(arg0, f32 *, 0x7C) = (f32) D_802ACFB4;
                     } else {
                         M2C_FIELD(arg0, f32 *, 0x7C) = 0.0f;
                     }
                 }
-                for (i = 0; i < 4; i++) {
+                for (dir = 0; dir < 4; dir++) {
                     if (func_80251AC8(func_80252330((s32 *) ((u8 *)arg0 + 0x38), M2C_FIELD(arg0, f32 *, 0x74))) == 0) {
                         break;
                     }
@@ -4104,11 +4101,11 @@ static void func_802530A8(f32 *arg0) {
                         M2C_FIELD(arg0, f32 *, 0x74) = (f32) (angle - 360.0f);
                     } else {
                         if (angle < 0.0f) {
-                            limit = angle + 360.0f;
+                            dx = angle + 360.0f;
                         } else {
-                            limit = angle;
+                            dx = angle;
                         }
-                        M2C_FIELD(arg0, f32 *, 0x74) = limit;
+                        M2C_FIELD(arg0, f32 *, 0x74) = dx;
                     }
                 }
             }
@@ -4149,11 +4146,11 @@ static void func_802530A8(f32 *arg0) {
                         dirZ = 0;
                     }
                     if (dx < dz) {
-                        if (func_80252918(dirZ, grid, (s32) (dz * 0.01f)) != 0) {
+                        if (func_80252918(grid, dirZ, (s32) (dz * 0.01f)) != 0) {
                             step = (s32 *) ((dirZ * 8) + D_802A0EF0);
                             grid[2] += step[1];
-                            if (func_80252918(dirX, grid, (s32) (dx * 0.01f)) != 0) {
-                                if (dz != 0.0f) {
+                            if (func_80252918(grid, dirX, (s32) (dx * 0.01f)) != 0) {
+                                if (dz != 0) {
                                     M2C_FIELD(arg0, f32 *, 0x74) = dirZ * 45;
                                 } else {
                                     M2C_FIELD(arg0, f32 *, 0x74) = dirX * 45;
@@ -4162,11 +4159,11 @@ static void func_802530A8(f32 *arg0) {
                             }
                             grid[2] -= step[1];
                         }
-                        if (func_80252918(dirX, grid, (s32) (dx * 0.01f)) != 0) {
+                        if (func_80252918(grid, dirX, (s32) (dx * 0.01f)) != 0) {
                             step = (s32 *) ((dirX * 8) + D_802A0EF0);
                             grid[0] += step[0];
-                            if (func_80252918(dirZ, grid, (s32) (dz * 0.01f)) != 0) {
-                                if (dx != 0.0f) {
+                            if (func_80252918(grid, dirZ, (s32) (dz * 0.01f)) != 0) {
+                                if (dx != 0) {
                                     M2C_FIELD(arg0, f32 *, 0x74) = dirX * 45;
                                 } else {
                                     M2C_FIELD(arg0, f32 *, 0x74) = dirZ * 45;
@@ -4176,11 +4173,11 @@ static void func_802530A8(f32 *arg0) {
                             grid[0] -= step[0];
                         }
                     } else {
-                        if (func_80252918(dirX, grid, (s32) (dx * 0.01f)) != 0) {
+                        if (func_80252918(grid, dirX, (s32) (dx * 0.01f)) != 0) {
                             step = (s32 *) ((dirX * 8) + D_802A0EF0);
                             grid[0] += step[0];
-                            if (func_80252918(dirZ, grid, (s32) (dz * 0.01f)) != 0) {
-                                if (dx != 0.0f) {
+                            if (func_80252918(grid, dirZ, (s32) (dz * 0.01f)) != 0) {
+                                if (dx != 0) {
                                     M2C_FIELD(arg0, f32 *, 0x74) = dirX * 45;
                                 } else {
                                     M2C_FIELD(arg0, f32 *, 0x74) = dirZ * 45;
@@ -4189,11 +4186,11 @@ static void func_802530A8(f32 *arg0) {
                             }
                             grid[0] -= step[0];
                         }
-                        if (func_80252918(dirZ, grid, (s32) (dz * 0.01f)) != 0) {
+                        if (func_80252918(grid, dirZ, (s32) (dz * 0.01f)) != 0) {
                             step = (s32 *) ((dirZ * 8) + D_802A0EF0);
                             grid[2] += step[1];
-                            if (func_80252918(dirX, grid, (s32) (dx * 0.01f)) != 0) {
-                                if (dz != 0.0f) {
+                            if (func_80252918(grid, dirX, (s32) (dx * 0.01f)) != 0) {
+                                if (dz != 0) {
                                     M2C_FIELD(arg0, f32 *, 0x74) = dirZ * 45;
                                 } else {
                                     M2C_FIELD(arg0, f32 *, 0x74) = dirX * 45;
@@ -4229,22 +4226,22 @@ static void func_802530A8(f32 *arg0) {
                                 M2C_FIELD(arg0, f32 *, 0x80) = (f32) (angle - 360.0f);
                             } else {
                                 if (angle < 0.0f) {
-                                    limit = angle + 360.0f;
+                                    dx = angle + 360.0f;
                                 } else {
-                                    limit = angle;
+                                    dx = angle;
                                 }
-                                M2C_FIELD(arg0, f32 *, 0x80) = limit;
+                                M2C_FIELD(arg0, f32 *, 0x80) = dx;
                             }
                             angle = M2C_FIELD(arg0, f32 *, 0x74) + 90.0f;
                             if (angle >= 360.0f) {
                                 M2C_FIELD(arg0, f32 *, 0x74) = (f32) (angle - 360.0f);
                             } else {
                                 if (angle < 0.0f) {
-                                    limit = angle + 360.0f;
+                                    dx = angle + 360.0f;
                                 } else {
-                                    limit = angle;
+                                    dx = angle;
                                 }
-                                M2C_FIELD(arg0, f32 *, 0x74) = limit;
+                                M2C_FIELD(arg0, f32 *, 0x74) = dx;
                             }
                             M2C_FIELD(arg0, f32 *, 0x74) = func_802523E0(arg0);
                         }
@@ -4252,7 +4249,7 @@ static void func_802530A8(f32 *arg0) {
                         if (func_8025156C(M2C_FIELD(arg0, f32 **, 0x18)) == 0) {
                             M2C_FIELD(arg0, s32 *, 0) = ((M2C_FIELD(arg0, s32 *, 0) | 0x40));
                             M2C_FIELD(arg0, f32 *, 0x80) = (f32) M2C_FIELD(arg0, f32 *, 0x74);
-                            M2C_FIELD(arg0, f32 *, 0x74) = func_802526A0((f32 *) ((u8 *)arg0 + 0x2C), arg0);
+                            M2C_FIELD(arg0, f32 *, 0x74) = func_802526A0(arg0, (f32 *) ((u8 *)arg0 + 0x2C));
                             M2C_FIELD(arg0, f32 *, 0x74) = func_802523E0(arg0);
                         } else {
                             M2C_FIELD(arg0, f32 *, 0x74) = func_80252598((f32 *) ((u8 *)arg0 + 0x20), (f32 *) ((u8 *)arg0 + 0x2C));
@@ -4316,7 +4313,7 @@ static void func_802530A8(f32 *arg0) {
                                 M2C_FIELD(arg0, s32 *, 4) = 0x40;
                                 goto block_301;
                             }
-                            if ((func_80251BDC((f32 *) ((u8 *)arg0 + 0x2C), (f32 *) ((u8 *)arg0 + 0x20)) != -1) && (M2C_FIELD(arg0, f32 *, 0x30) <= M2C_FIELD(arg0, f32 *, 0x24)) && (limit = func_80251994((f32 *) ((u8 *)arg0 + 0x20), (f32 *) ((u8 *)arg0 + 0x2C)), dir = func_802519B4(limit), func_80251B08((s32 *) ((u8 *)arg0 + 0x38), dir, (f32 *)1) != NULL)) {
+                            if ((func_80251BDC((f32 *) ((u8 *)arg0 + 0x2C), (f32 *) ((u8 *)arg0 + 0x20)) != -1) && (M2C_FIELD(arg0, f32 *, 0x30) <= M2C_FIELD(arg0, f32 *, 0x24)) && (limit = func_80251994((f32 *) ((u8 *)arg0 + 0x20), (f32 *) ((u8 *)arg0 + 0x2C)), dir = func_802519B4(limit), func_80251B08(1, (s32 *) ((u8 *)arg0 + 0x38), dir) != NULL)) {
                                 v = M2C_FIELD(arg0, s32 *, 4);
                                 M2C_FIELD(arg0, f32 *, 0x74) = func_80251994((f32 *) ((u8 *)arg0 + 0x20), (f32 *) ((u8 *)arg0 + 0x2C));
                                 M2C_FIELD(arg0, s32 *, 4) = 0x80;
@@ -4553,7 +4550,7 @@ static s32 func_802529A4(u8 *arg0, s32 arg1, s32 arg2, f32 arg3) {
     return 0;
 }
 
-static s32 func_80252918(s32 arg0, s32 *arg1, s32 arg2) {
+static s32 func_80252918(s32 *arg1, s32 arg0, s32 arg2) {
     s32 sv_a2;
     s32 temp_a0;
     s32 var_s0;
@@ -4608,7 +4605,7 @@ static s32 func_80252724(u8 *arg0) {
     return 0;
 }
 
-static f32 func_802526A0(f32 *arg0, f32 *arg1) {
+static f32 func_802526A0(f32 *arg1, f32 *arg0) {
     f32 var_fv1;
     s32 temp_v0;
 
@@ -4849,7 +4846,7 @@ static s32 func_80251BDC(f32 *arg0, f32 *arg1) {
     return -1;
 }
 
-static void *func_80251B08(s32 *arg0, s32 arg1, f32 *arg2) {
+static void *func_80251B08(s32 arg2, s32 *arg0, s32 arg1) {
     f32 v[3];
     s32 x;
     s32 z;
@@ -4863,7 +4860,7 @@ static void *func_80251B08(s32 *arg0, s32 arg1, f32 *arg2) {
             return NULL;
         }
         func_8026E338((f32) x, (f32) arg0[1], (f32) z, v, 0);
-        r = func_80251A24((s32) arg2, v, (f32) (arg1 * 45));
+        r = func_80251A24(arg2, v, (f32) (arg1 * 45));
         if (r != 0) {
             return (void *) r;
         }
