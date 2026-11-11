@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 581, eu 581, jp 584
+ * differing words: us 580, eu 580, jp 583
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -167,7 +167,8 @@ typedef struct {
     /* 0x2C */ f32 unk2C;
     /* 0x30 */ f32 unk30;
     /* 0x34 */ s16 unk34;
-    /* 0x36 */ u8 unk36[0x12];
+    /* 0x36 */ s16 unk36;
+    /* 0x38 */ u8 unk38[0x10];
     /* 0x48 */ UnkStruct_8023FD08_48 *unk48;
 } UnkStruct_8023FD08;
 
@@ -3001,10 +3002,10 @@ s32 func_8023BBCC() {
 }
 
 static void func_8023B8D0() {
-    u8 buf[4];
-    s32 model;
     s32 i;
+    s32 model;
     UnkStruct_8023FD08 *o;
+    u8 buf[4];
 
     if (!(D_802AC5D0 & 4)) {
         D_802A0B1C[0].str = (*D_802A08F8)[D_802AC5EC + D_802AC5E8 * 4];
@@ -3018,31 +3019,31 @@ static void func_8023B8D0() {
         }
     } else {
         func_8023B450(func_80287680(), buf, 2);
-        D_802AC814 = func_802811F0(buf, 0xDCU, 0x50U, 0.6f, 0.6f, 2U);
+        D_802AC814 = func_802811F0(buf, 0xDC, 0x50, 0.6f, 0.6f, 2);
         model = func_8026CE28(0x19);
         for (i = 0; i < 5; i++) {
             o = D_802AC7F8[i] = func_8022A6C4(model, 0x40);
             if ((func_8028A36C(D_802AC5E8 * 20 + D_802AC5EC * 5 + i + 0x2C) != 0) || ((i == 3) && ((&D_800BE818)[i] != 0))) {
-                M2C_FIELD(o, s32 *, 0xC) |= 0x100;
+                o->unkC |= 0x100;
             } else {
-                M2C_FIELD(o, s32 *, 0xC) |= 0x1180;
-                M2C_FIELD(o, s16 *, 0x36) = 0x64;
+                o->unkC |= 0x1180;
+                o->unk36 = 0x64;
             }
-            M2C_FIELD(o, f32 *, 0x10) = i * 5.8f + 0.65f;
-            M2C_FIELD(o, f32 *, 0x14) = 9.95f;
-            M2C_FIELD(o, f32 *, 0x18) = 900.3f;
-            M2C_FIELD(o, f32 *, 0x28) = 0.05f;
-            M2C_FIELD(o, f32 *, 0x2C) = 0.05f;
-            M2C_FIELD(o, f32 *, 0x30) = 0.05f;
-            M2C_FIELD(o, s16 *, 0x34) = D_802AC5CC;
+            o->unk10 = i * 5.8f + 0.65f;
+            o->unk14 = 9.95f;
+            o->unk18 = 900.3f;
+            o->unk28 = 0.05f;
+            o->unk2C = 0.05f;
+            o->unk30 = 0.05f;
+            o->unk34 = D_802AC5CC;
         }
         func_8023B7C0(154.0f);
         if ((D_802AC75C == 0) || (func_8023AB90() == 0)) {
             func_8023B318(D_802A0B1C, 3);
-            func_802814D8(D_802A0B40, 0xFFE8U, 0U);
+            func_802814D8(D_802A0B40, 0xFFE8, 0);
         } else {
             func_8023B318(D_802A0B1C, 5);
-            func_802814D8(D_802A0B40, 0xFFE8U, 0U);
+            func_802814D8(D_802A0B40, 0xFFE8, 0);
         }
     }
     if (!(D_802AC5D0 & 4)) {
