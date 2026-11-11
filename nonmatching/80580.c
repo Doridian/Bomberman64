@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3217, eu 3217, jp 3217
+ * differing words: us 3058, eu 3058, jp 3058
  *
  * The object is the same in all three versions. 36 of the 79 original
  * procedures match (8 of them inlined-static stubs). The IPA statics
@@ -1351,14 +1351,11 @@ void func_80268EE4() {
 }
 
 void func_80268E7C(s16 arg0) {
-    s16 var_a0;
-
-    var_a0 = arg0;
     if (D_802AD238 != 0) {
         if (arg0 < 0) {
-            var_a0 = 1;
+            arg0 = 1;
         }
-        D_802AD23C = (f32) D_802AD24A / (f32) var_a0;
+        D_802AD23C = (f32) D_802AD24A / (f32) arg0;
         D_802AD240 = 0.0f;
         D_802AD246 = D_802AD24A;
     }
@@ -1451,13 +1448,10 @@ void func_80268A40(s16 arg0) {
 }
 
 void func_802689B4(s16 arg0) {
-    s16 var_a2;
-
-    var_a2 = arg0;
     if (arg0 <= 0) {
-        var_a2 = 1;
+        arg0 = 1;
     }
-    func_80298658(D_802AD220, (s32) ((60.0f / (f32) var_a2) * 1000.0f * 1000.0f));
+    func_80298658(D_802AD220, (s32) ((60.0f / (f32) arg0) * 1000.0f * 1000.0f));
 }
 
 void func_802686B8() {
@@ -1981,13 +1975,14 @@ void func_80267654(s16 arg0, f32 arg1, f32 arg2, f32 arg3, f32 arg4) {
 }
 
 s16 func_802675F4(s16 arg0, s16 arg1, f32 arg2) {
-    s16 temp_v0;
+    s16 v;
 
-    temp_v0 = func_8026724C(arg0);
-    if (temp_v0 < 0) {
+    v = func_8026724C(arg0);
+    if (v < 0) {
         return -1;
     }
-    func_80266644(temp_v0, arg1, arg2);
+    func_80266644(v, arg1, arg2);
+    return v;
 }
 
 s16 func_8026724C(s16 num) {
@@ -2211,25 +2206,14 @@ static s16 func_80266D8C(u8 prio, s32 arg1) {
 }
 
 s16 func_80266D0C(s16 arg0) {
-    s16 var_v1;
-    s32 var_t7;
-    u8 *temp_a0;
+    s16 i;
+    Voice *v;
 
-    var_v1 = 0;
-    if (D_802A12BC > 0) {
-        var_t7 = 0 << 5;
-loop_2:
-        temp_a0 = var_t7 + D_802AD654;
-        if ((M2C_FIELD(temp_a0, u8 *, 0x1B) != 0) && (arg0 == M2C_FIELD(temp_a0, s16 *, 0xC))) {
-            return var_v1;
+    for (i = 0; i < D_802A12BC; i++) {
+        v = &D_802AD654[i];
+        if (v->state != 0 && arg0 == v->num) {
+            return i;
         }
-        var_v1 += 1;
-        var_t7 = var_v1 << 5;
-        if (var_v1 >= D_802A12BC) {
-            /* Duplicate return node #6. Try simplifying control flow for better match */
-            return -1;
-        }
-        goto loop_2;
     }
     return -1;
 }
@@ -2345,13 +2329,10 @@ void func_80266930(s16 arg0) {
 }
 
 void func_802668D4(s16 arg0) {
-    s16 var_a0;
-
-    var_a0 = arg0;
-    if (var_a0 < 0) {
-        var_a0 = 1;
+    if (arg0 < 0) {
+        arg0 = 1;
     }
-    D_802AD664 = (f32) D_802AD66E / (f32) var_a0;
+    D_802AD664 = (f32) D_802AD66E / (f32) arg0;
     D_802AD668 = 0.0f;
     D_802AD66C = D_802AD66E;
 }
