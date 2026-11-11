@@ -1,14 +1,17 @@
 /*
- * NON_MATCHING: main_code's 80580, complete first draft: Hudson's sound
+ * main_code's 80580, IDO -O3; it matches in us, eu and jp: Hudson's sound
  * manager over libultra audio (the ALSndPlayer voices D_802AD654 with
  * their scripts D_802AD65C, the 'T1'/'T2' sound tables, the 'S1'/'S2'
  * sequence files on the ALCSPlayer, and the SDK's oscillator example).
  * One object (no caller before its callee, no padding, the data, rodata
  * and bss follow function order). Every procedure is emitted in the
- * original's order. Not built into the ROM (docs/DECOMPILING.md,
- * "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * original's order. Its .data (D_802A1250-802A1370, the configs, the
+ * reverb parameters, the ROM addresses and func_80266D8C's static
+ * counter D_802A1368) and .rodata (802A3A70-802A3B50: constants and
+ * jump tables) are its own and placed in data_split.txt; its .bss stays
+ * asm. The static counter is why the .data is in C: as an extern it
+ * changes func_80266D8C's code. D_802A1288 is D_802A1278[4] and
+ * D_802A12C0 a pair (the second word is the heap).
  *
  * The object is the same in all three versions. All 79 original
  * procedures match (stubs included). The IPA statics
@@ -39,7 +42,9 @@
  * a local of its own (t, not the pitch's r). 8026706C matched once the
  * volume static returned s16 (its (s16) conversion before the sh is
  * dead and as1 drops it, but it used up a ugen temp) and the script id
- * lost its inner (u8) cast (one `and` fewer).
+ * lost its inner (u8) cast (one `and` fewer). 80267A18's `case 2:
+ * break;` is the jump table's: the text is the same without it, but
+ * op 0x82 then goes to the default.
  */
 #include "common.h"
 
@@ -348,29 +353,6 @@ void func_80298738(void *, u8);
 s32 func_80298740(void *);
 f32 sinf(f32);
 
-extern s32 D_802A1250;
-extern u8 D_802A1254[];
-extern u8 D_802A1278[];
-extern s32 D_802A1288;
-extern u8 D_802A1298[];
-extern s32 D_802A12B4;
-extern s32 D_802A12B8;
-extern s32 D_802A12C0;
-extern u8 D_802A12C8[];
-extern s32 D_802A1330;
-extern s32 D_802A1334;
-extern s32 D_802A1338;
-extern s32 D_802A133C;
-extern s32 D_802A1340;
-extern s32 D_802A1344;
-extern s32 D_802A1348;
-extern s32 D_802A134C;
-extern s32 D_802A1350;
-extern f32 D_802A1354;
-extern f32 D_802A1358;
-extern f32 D_802A135C;
-extern f32 D_802A1360;
-extern s16 D_802A1364;
 extern u8 D_802AD120[];
 extern u8 D_802AD130[];
 extern u8 D_802AD1F8[];
@@ -493,6 +475,35 @@ s16 func_8026A754(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
 s32 func_8026A8B4(void **oscState, f32 *initVal, u8 oscType, u8 oscRate, u8 oscDepth, u8 oscDelay);
 s32 func_8026ABF4(void *oscState, f32 *updateVal);
 void func_8026B1EC(void *oscState);
+
+s32 D_802A1250 = 0x7D00;
+u32 D_802A1254[] = { 0x10, 0x10, 0x15E, 0, 0, (u32) D_802AD120, 0, 0x01000000, 0 };
+s32 D_802A1278[] = { 0x180000, 0x800, 1, 0x800, 0, 0, 0, 0 };
+u32 D_802A1298[] = { 0x10, 0x80, 0x10000000, (u32) D_802AD120,
+                     (u32) func_8026A8B4, (u32) func_8026ABF4, (u32) func_8026B1EC };
+s32 D_802A12B4 = 2;
+s32 D_802A12B8 = 6;
+s32 D_802A12BC = 8;
+s32 D_802A12C0[] = { 0x100, (s32) D_802AD120 };
+s32 D_802A12C8[] = {
+    3,      0x1900, 0x380, 0xAC0, 0x2A3D, -0x2A3D, 0x30A3, 0, 0, 0x3FFF,
+    0xD80,  0x1600, 0x2A3D, -0x2A3D, 0x30A3, 0, 0, 0x3FFF,
+    0,      0x1800, 0x30A3, 0, 0x30A3, 0, 0, 0x3FFF,
+};
+s32 D_802A1330 = 0;
+s32 D_802A1334 = 0;
+s32 D_802A1338 = 0;
+s32 D_802A133C = 0;
+s32 D_802A1340 = 0;
+s32 D_802A1344 = 0;
+s32 D_802A1348 = 0;
+s32 D_802A134C = 0;
+s32 D_802A1350 = 0;
+f32 D_802A1354 = 50.0f;
+f32 D_802A1358 = 500.0f;
+f32 D_802A135C = 0.0f;
+f32 D_802A1360 = 0.0f;
+s16 D_802A1364 = 0;
 
 void func_8026B1EC(void *oscState) {
     ((oscData *) oscState)->next = D_802AD3C4;
@@ -1105,7 +1116,7 @@ void func_80269908(u8 *arg0) {
     M2C_FIELD(D_802A1298, s32 *, 4) = (s32) M2C_FIELD(arg0, s32 *, 0x1C);
     D_802A12B4 = M2C_FIELD(arg0, s32 *, 0x20);
     D_802A12B8 = M2C_FIELD(arg0, s32 *, 0x24);
-    D_802A12C0 = M2C_FIELD(arg0, s32 *, 0x28);
+    D_802A12C0[0] = M2C_FIELD(arg0, s32 *, 0x28);
     M2C_FIELD(D_802A1278, u16 *, 0) = (u16) M2C_FIELD(arg0, u16 *, 0x2C);
     M2C_FIELD(D_802A1278, s32 *, 4) = (s32) M2C_FIELD(arg0, s32 *, 0x30);
     M2C_FIELD(D_802A1278, s32 *, 8) = (s32) M2C_FIELD(arg0, s32 *, 0x34);
@@ -1123,7 +1134,7 @@ void func_8026984C(u8 *arg0) {
     M2C_FIELD(arg0, s32 *, 0x1C) = (s32) M2C_FIELD(D_802A1298, s32 *, 4);
     M2C_FIELD(arg0, s32 *, 0x20) = (s32) D_802A12B4;
     M2C_FIELD(arg0, s32 *, 0x24) = (s32) D_802A12B8;
-    M2C_FIELD(arg0, s32 *, 0x28) = (s32) D_802A12C0;
+    M2C_FIELD(arg0, s32 *, 0x28) = (s32) D_802A12C0[0];
     M2C_FIELD(arg0, u16 *, 0x2C) = (u16) M2C_FIELD(D_802A1278, u16 *, 0);
     M2C_FIELD(arg0, s32 *, 0x30) = (s32) M2C_FIELD(D_802A1278, s32 *, 4);
     M2C_FIELD(arg0, s32 *, 0x34) = (s32) M2C_FIELD(D_802A1278, s32 *, 8);
@@ -1743,6 +1754,8 @@ static void func_80267A18(s16 idx) {
                         s->script = -1;
                         s->wait = 1;
                         break;
+                    case 2:
+                        break;
                     default:
                         s->flags |= 0x300;
                         s->script = -1;
@@ -2080,7 +2093,7 @@ static void func_8026706C(s16 num, SndDef *def) {
     def->vol = 0x7FFF;
     def->pan = 0x40;
     def->prio = e->unk3;
-    def->pitch = (f32) e->unk6 / (f32) D_802A1288;
+    def->pitch = (f32) e->unk6 / (f32) D_802A1278[4];
     def->script = -1;
     def->unkF = 0;
     switch (D_802AD650->magic) {

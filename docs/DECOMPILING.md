@@ -234,7 +234,7 @@ matches, drop the `#ifdef` and the asm.
   Seen so far: boot_code's 10D0, 13F0 and 14B0 (the scheduler), 404C0, 40FB0, 412F0, 41FD0, 4DE50, 4E030 (4DE50's second half:
   its wrappers call 4DE50's compares with a `jal`, which -O3 would inline
   in one file), 4ED50, 52270 (jp's func_8023876C has no TV-type
-  switch: `#if VERSION_JP`), 530C0, 53D70, 78CA0, 78F60, 85A10, 86680,
+  switch: `#if VERSION_JP`), 530C0, 53D70, 78CA0, 78F60, 80580, 85A10, 86680,
   949A0 (split off 93850 at 0x8027A1A0, text_objects.txt has why), 96540, 97610, 995C0, 9A5F0, 9BFD0, A8DE0, ACA00, AD5B0,
   AFBF0, B11F0, B6680 (`-mips2`), ovl_0A_02-05's, ovl_0C_03's, ovl_0E_09's, ovl_12_02's, ovl_12_04's, ovl_17_01's and ovl_17_10's objects are `-O3`, and
   so is 93850 (a draft in nonmatching/, src/ at `-O2`); 5E090, 87190, 87730,
@@ -1131,12 +1131,13 @@ the data in the same file (docs/LIBULTRA.md, "Data"). So do the game's
 objects after main_code's cut that have jump tables, strings or
 constants (995C0, 54BE0: `.rodata` only), or whose `.data`/`.bss` is all
 their own (53D70, 530C0, 412F0, AFBF0: all three sections, jp's .data
-its own size); everything else they use stays `extern`.
+its own size; 80580: .data and .rodata, since a function's `static`
+counter puts its .data in the C); everything else they use stays `extern`.
 Build the object once (the link fails, the `.o` is there), run `--place`
 for each version with `--ref build/us/src/<object>.c.o`, add the lines,
 regenerate the configs and extract again. `--place` finds an object named
 by its image offset (`995C0`) as well as a named one.
-Asm that points into the middle of a C object's data (80580 passes
+A symbol in the middle of a C object's data (80580 passes
 `&D_802AD680.maxDMAs`, 85A10's, as `D_802AD684`) gets no definition from
 splat, which leaves the section to the C: `tools/postsplit.py` defines it
 as `D_802AD684 = D_802AD680 + 0x4;` in module_syms_auto.txt, unless the C

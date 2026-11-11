@@ -125,6 +125,10 @@ main_code 7D840 0x80 0x10 0x10
 main_code @us 7D840 data=0x802A11B0 rodata=0x802A3A60 bss=0x802AD0D0
 main_code @eu 7D840 data=0x802A11B0 rodata=0x802A3A50 bss=0x802AD0C0
 main_code @jp 7D840 data=0x802A0810 rodata=0x802A2C90 bss=0x802AC300
+main_code 80580 0x120 0xE0 0
+main_code @us 80580 data=0x802A1250 rodata=0x802A3A70
+main_code @eu 80580 data=0x802A1250 rodata=0x802A3A60
+main_code @jp 80580 data=0x802A08B0 rodata=0x802A2CA0
 main_code 85A10 0x10 0 0x25A0
 main_code @us 85A10 data=0x802A1370 bss=0x802AD680
 main_code @eu 85A10 data=0x802A1370 bss=0x802AD670
