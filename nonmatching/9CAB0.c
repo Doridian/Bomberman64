@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 127, eu 127, jp 127
+ * differing words: us 123, eu 123, jp 123
  */
 #include "common.h"
 
@@ -290,7 +290,7 @@ static s32 func_80282AD8(UnkStruct_80288040 *act);
 static s32 func_80282AE0(UnkStruct_80288040 *act);
 static s32 func_80282AE8(UnkStruct_80288040 *act);
 static void func_80283014();
-static void func_80283304();
+static u8 func_80283304(UnkStruct_80288040 *p, s32 n);
 void func_8028330C();
 static void func_80283784();
 void func_8028378C();
@@ -1984,56 +1984,11 @@ static void func_802836F0(UnkStruct_80288040 *arg0, s32 arg1) {
     arg0->unk1C = func_80283314(arg0, mode, arg1) << 5;
 }
 
-static void func_80283304() {
-}
-
-static void func_8028330C() {
-}
-
-static u8 func_80283314(UnkStruct_80288040 *arg2, s32 arg0, s32 arg1) {
-    s32 n;
+static u8 func_80283304(UnkStruct_80288040 *p, s32 n) {
     s32 i;
     s32 dir;
     s32 d;
-    UnkStruct_80288040 *p;
 
-    func_8028330C();
-    func_80283304();
-    p = arg2;
-    switch (arg0) {
-    case 0:
-        n = func_8025E63C() * 5.0;
-        break;
-    case 1:
-        if ((s32) (func_8025E63C() * 10.0) >= 3) {
-            n = 0;
-        } else if ((s32) (func_8025E63C() * 2) == 1) {
-            n = 1;
-        } else if ((s32) (func_8025E63C() * 2) == 1) {
-            n = 2;
-        } else if ((s32) (func_8025E63C() * 2) == 1) {
-            n = 3;
-        } else {
-            n = 4;
-        }
-        break;
-    case 2:
-        if ((s32) (func_8025E63C() * 10.0) >= 3) {
-            n = 4;
-        } else if ((s32) (func_8025E63C() * 2) == 1) {
-            n = 3;
-        } else if ((s32) (func_8025E63C() * 2) == 1) {
-            n = 2;
-        } else if ((s32) (func_8025E63C() * 2) == 1) {
-            n = 1;
-        } else {
-            n = 0;
-        }
-        break;
-    }
-    if (n < arg1) {
-        n = arg1;
-    }
     dir = p->unk1C >> 5;
     for (i = n; i >= 0; i--) {
         d = dir + i;
@@ -2072,6 +2027,55 @@ static u8 func_80283314(UnkStruct_80288040 *arg2, s32 arg0, s32 arg1) {
         if (i < 5) goto loop;
     }
     return dir | 1;
+}
+
+static void func_8028330C() {
+}
+
+static u8 func_80283314(UnkStruct_80288040 *arg2, s32 arg0, s32 arg1) {
+    s32 n;
+    s32 i;
+    s32 dir;
+    s32 d;
+    UnkStruct_80288040 *p;
+
+    func_8028330C();
+    p = arg2;
+    switch (arg0) {
+    case 0:
+        n = func_8025E63C() * 5.0;
+        break;
+    case 1:
+        if ((s32) (func_8025E63C() * 10.0) >= 3) {
+            n = 0;
+        } else if ((s32) (func_8025E63C() * 2) == 1) {
+            n = 1;
+        } else if ((s32) (func_8025E63C() * 2) == 1) {
+            n = 2;
+        } else if ((s32) (func_8025E63C() * 2) == 1) {
+            n = 3;
+        } else {
+            n = 4;
+        }
+        break;
+    case 2:
+        if ((s32) (func_8025E63C() * 10.0) >= 3) {
+            n = 4;
+        } else if ((s32) (func_8025E63C() * 2) == 1) {
+            n = 3;
+        } else if ((s32) (func_8025E63C() * 2) == 1) {
+            n = 2;
+        } else if ((s32) (func_8025E63C() * 2) == 1) {
+            n = 1;
+        } else {
+            n = 0;
+        }
+        break;
+    }
+    if (n < arg1) {
+        n = arg1;
+    }
+    return func_80283304(p, n);
 }
 
 f32 func_8028322C(UnkStruct_80288040 *arg0) {
