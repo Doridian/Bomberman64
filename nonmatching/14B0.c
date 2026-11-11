@@ -9,17 +9,18 @@
  * module 1, hands the times out and starts over). Not built into the
  * ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 228, eu 228, jp 228
+ * differing words: us 0, eu 0, jp 0
  *
- * The code is the same in every version. Everything but
- * func_8000101C matches; func_80000A88's one word is its jump table's
- * relocation (the .rodata isn't this object's in the asm build).
- * func_8000101C: the original leaves the load delay after
- * `lw t9,0(s7)` (D_80019FA0) empty and stores the count before the
- * call to func_80000E58, with sc's spill in its delay slot; here the
- * spill fills the load delay, so the RETRACE case is a word shorter and
- * everything after is shifted. The empty label after the increment
- * (from the permuter) took it from 265 words to 227.
+ * Every function matches in all three versions (pass 2). Pass 1's
+ * 227 words in func_8000101C were two behaviour errors, not schedule:
+ * the retrace count (D_80019FA0) is only stepped when the timing starts
+ * (inside `if (D_80019FAC == 0)`), and the RSP done handler hands a
+ * task to func_80000C7C only when it didn't yield. func_80000A88's
+ * jump table word was a real .rodata layout difference: strings go to
+ * .rodata in parse order, and the original has the dead
+ * "sc->curRDPTask == gfx" assert's strings last, after func_80000908's,
+ * so the dead call sits in func_800008B0 (defined last) rather than in
+ * func_80000A88, which puts the jump table at jtbl_8001B754.
  *
  * -O3 evidence: func_80000908 and func_80000E58 take their arguments in
  * s registers (IPA statics), func_80000A88 keeps sc in t0, and the
@@ -43,7 +44,7 @@
  * - func_800008B0's frame (0x28, the local at 0x18) is a 4-word array.
  * - D_80019FB8 is a function-scope static of func_80000C7C (one lui per
  *   access); the unreferenced "sc->curRDPTask == gfx" string is a dead
- *   assert in func_80000A88.
+ *   assert, placed last (above).
  *
  * Asserts call func_800018A8 (2350's empty stub) with the expression,
  * "sched.c" and the line.
@@ -268,9 +269,6 @@ s32 func_80000A88(OSSched *sc, OSScTask **sp, OSScTask **dp, s32 availRCP) {
             }
         }
     }
-    if (0) {
-        SC_ASSERT(sc->curRDPTask == gfx, 0);
-    }
     if (avail != availRCP) {
         return func_80000A88(sc, sp, dp, avail);
     }
@@ -288,9 +286,8 @@ void func_8000101C(void *arg) {
                 if (D_80019FAC == 0) {
                     D_80019FAC = 1;
                     D_8001C460 = osGetTime();
+                    D_80019FA0++;
                 }
-                D_80019FA0++;
-                goto l1; l1:; /* permuter: 265 to 227 words */
                 func_80000E58(sc);
                 break;
             case SC_MSG_RSP_DONE:
@@ -363,8 +360,8 @@ static void func_8000101C_inl1(OSSched *sc) {
         }
     } else {
         t->state &= ~OS_SC_NEEDS_RSP;
+        func_80000C7C(sc, t);
     }
-    func_80000C7C(sc, t);
     state = ((sc->curRSPTask == NULL) << 1) | (sc->curRDPTask == NULL);
     if (func_80000A88(sc, &sp, &dp, state) != state) {
         func_80000908(sc, sp, dp);
@@ -484,6 +481,9 @@ OSScTask *func_800008B0(OSScTask *t) {
             return NULL;
         }
         return t;
+    }
+    if (0) {
+        func_800018A8("sc->curRDPTask == gfx", "sched.c", 0);
     }
     return NULL;
 }
