@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1452, eu 1452, jp 1452
+ * differing words: us 1250, eu 1250, jp 1250
  */
 #include "common.h"
 
@@ -355,7 +355,7 @@ s32 func_802875B0(UnkStructA *arg0) {
     if (a == NULL) {
         return 0;
     }
-    if (((a->unk7A & 0xF) != 1) && (D_800BA8E8[a->unk84].unk0 != 0x19)) {
+    if (((u8) (a->unk7A & 0xF) != 1) && (D_800BA8E8[a->unk84].unk0 != 0x19)) {
         return 0;
     }
     switch ((u8) (a->unk7A & 0xF0)) {
@@ -379,7 +379,7 @@ void func_80287440(UnkStructA *arg0) {
     a = func_80287024(arg0);
     f = 4;
     if (a != NULL) {
-        if ((a->unk7A & 0xF0) == 0x20) {
+        if ((u8) (a->unk7A & 0xF0) == 0x20) {
             a->unk6E = 120;
             a->unk4 = (a->unk0->unk40->unk10 + 50.0f) * 0.01;
             a->unk8 = func_8026EE18(a->unk0->unk40->unk14);
@@ -389,7 +389,7 @@ void func_80287440(UnkStructA *arg0) {
         a->unk7A &= 0xF;
         a->unk68 = 0;
         func_802313DC(a->unk0, 0x20400);
-        if ((a->unk7A & 0xF) != 1) {
+        if ((u8) (a->unk7A & 0xF) != 1) {
             f = func_802824B4(a) | 4;
         }
         func_80231408(a->unk0, f);
@@ -457,7 +457,7 @@ s32 func_802871D0(UnkStruct_80288040 *arg0) {
         break;
     }
     if (st == 0) {
-        switch (arg0->unk7A & 0xF) {
+        switch ((u8) (arg0->unk7A & 0xF)) {
         case 2:
             an = 0x18;
             break;
@@ -468,7 +468,7 @@ s32 func_802871D0(UnkStruct_80288040 *arg0) {
             an = 0x20;
             break;
         }
-        if ((arg0->unk7A & 0xF0) == 0x10) {
+        if (((u8) (arg0->unk7A & 0xF0)) == 0x10) {
             an = 0x10;
         }
     }
@@ -510,7 +510,7 @@ s32 func_802870A8(UnkStructA *arg0, s32 arg1) {
     if (a == NULL) {
         return 0;
     }
-    if ((D_800BA8E8[a->unk84].unk0 != 0x19) && ((a->unk7A & 0xF0) != 0x10)) {
+    if ((D_800BA8E8[a->unk84].unk0 != 0x19) && (((u8) (a->unk7A & 0xF0)) != 0x10)) {
         return 0;
     }
     func_802313DC(a->unk0, 0x10000);
@@ -857,7 +857,7 @@ static void func_80285F8C(void) {
                 task->unkC = func_80284FD4(a);
                 if (task->unkC != 1) {
                     func_802313DC(a->unk0, 0x3FFFF);
-                    if ((a->unk7A & 0xF) == 1) {
+                    if (((u8) (a->unk7A & 0xF)) == 1) {
                         if (a->unk79 != -1) {
                             func_8028A4E0(a->unk79);
                             a->unk79 = -1;
@@ -1186,7 +1186,7 @@ static s32 func_80284FD4(UnkStruct_80288040 *arg0) {
         ret = func_8028456C(arg0);
         func_80283FCC(arg0);
         target = func_8028322C(arg0);
-        st = arg0->unk7A & 0xF;
+        st = (u8) (arg0->unk7A & 0xF);
         step = 2.0f * arg0->unk2C;
         if ((st == 0) || (st == 2)) {
             while (arg0->unk0->unk40->unk20 >= 360.0f) {
@@ -1219,7 +1219,7 @@ static s32 func_80284FD4(UnkStruct_80288040 *arg0) {
         }
         break;
     case 0x20:
-        if ((arg0->unk7A & 0xF) == 3) {
+        if (((u8) (arg0->unk7A & 0xF)) == 3) {
             func_802831A8(arg0);
         }
         func_802727D8(arg0->unk68);
@@ -1275,7 +1275,7 @@ static s32 func_80284CAC(UnkStruct_80288040 *arg0) {
                 func_8028805C(arg0);
             }
             arg0->unk40 = 0;
-            if ((arg0->unk7A & 0xF) == 1) {
+            if (((u8) (arg0->unk7A & 0xF)) == 1) {
                 if (arg0->unk79 != -1) {
                     func_8028A4E0(arg0->unk79);
                     arg0->unk79 = -1;
@@ -1328,7 +1328,7 @@ static void func_80284B30(UnkStruct_80288040 *arg0) {
     func_80284B28();
     func_80284B20();
     step = 0.0f;
-    switch (arg0->unk7A & 0xF) {
+    switch ((u8) (arg0->unk7A & 0xF)) {
     case 3:
     case 4:
     case 5:
@@ -1654,7 +1654,7 @@ static void func_80283FCC(UnkStruct_80288040 *arg0) {
         arg0->unk0->unk40->unk18 = arg0->unk0->unk60;
         flags = arg0->unk7A;
         if (!(flags & 0xF0) && ((arg0->unk0->unk68 != 0.0f) || (arg0->unk0->unk6C != 0.0f))) {
-            if ((flags & 0xF) == 2) {
+            if (((u8) (flags & 0xF)) == 2) {
                 if (arg0->unk48 != 0) {
                     func_8028805C(arg0);
                 }
@@ -1700,7 +1700,7 @@ static void func_80283DF0(s32 arg0, UnkStruct_80288040 *arg1) {
     } else if (arg0 == 2) {
         func_802836F0(arg1, 1);
     } else if (arg0 == 1) {
-        if (!(arg1->unk7A & 0xF)) {
+        if (!((u8) (arg1->unk7A & 0xF))) {
             switch (arg1->unk1F) {
             case 4:
             case 5:
@@ -2088,7 +2088,7 @@ static void func_802831A8(UnkStruct_80288040 *arg0) {
         arg0->unk6E = 0;
         func_802313DC(arg0->unk0, 0x40000);
         arg0->unk78 = 0;
-        if ((arg0->unk7A & 0xF0) == 0x10) {
+        if (((u8) (arg0->unk7A & 0xF0)) == 0x10) {
             func_8028304C(arg0, 1);
         } else {
             func_80231408(arg0->unk0, func_802824B4(arg0) | 4);
@@ -2098,13 +2098,13 @@ static void func_802831A8(UnkStruct_80288040 *arg0) {
 }
 
 static void func_8028304C(UnkStruct_80288040 *arg0, s32 arg1) {
-    if ((arg0->unk6C & 0x10) && ((arg0->unk7A & 0xF) != 1)) {
+    if ((arg0->unk6C & 0x10) && (((u8) (arg0->unk7A & 0xF)) != 1)) {
         if (arg0->unk48 != 0) {
             func_8028805C(arg0);
         }
         arg0->unk40 = 0;
         func_80229E38(arg0->unk0->unk40, 1, 0);
-        if ((arg0->unk7A & 0xF) != 1) {
+        if (((u8) (arg0->unk7A & 0xF)) != 1) {
             if (arg0->unk79 != -1) {
                 func_8028A4E0(arg0->unk79);
                 arg0->unk79 = -1;
@@ -2343,7 +2343,7 @@ void func_8028275C(f32 arg0, f32 arg1, f32 arg2) {
 }
 
 static void func_80282714(UnkStruct_80288040 *arg0) {
-    if ((arg0->unk7A & 0xF0) == 0x10) {
+    if (((u8) (arg0->unk7A & 0xF0)) == 0x10) {
         func_80270BA4(arg0->unk0);
         func_80282430(arg0, 0xF0, 0);
     }
@@ -2362,7 +2362,7 @@ static void func_80282598(UnkStruct_800BB340 *arg0, s32 arg1) {
     obj->unk0 = 2;
     obj->unk14.unk8C = 0;
     act = &obj->unk14;
-    if ((obj->unk14.unk7A & 0xF) == 1) {
+    if (((u8) (obj->unk14.unk7A & 0xF)) == 1) {
         if (act->unk79 != -1) {
             func_8028A4E0(act->unk79);
             act->unk79 = -1;
