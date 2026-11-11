@@ -5,7 +5,7 @@
  * global, emitted in the original's order. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 434, eu 434, jp 434
+ * differing words: us 383, eu 383, jp 383
  *
  * 36 of 47 match. Biggest left: func_802741D8 461, func_8027655C 436,
  * func_80274994 320 (still m2c's control flow and untyped offsets),
@@ -803,13 +803,13 @@ s32 func_8027655C(Ent88 *arg0) {
     if (D_802A14B4 == 1) {
         return 0;
     }
-    if ((s16) (arg0->unk64 & 2)) {
+    if (func_802712A8_inl(&arg0->unk64, 2)) {
         arg0->unk68--;
     }
     if (arg0->unk68 < 15) {
         if (arg0->unk10 & 0x800) {
             arg0->unk80 = 13.0f;
-        } else if ((s16) (arg0->unk64 & 0x80)) {
+        } else if (func_802712A8_inl(&arg0->unk64, 0x80)) {
             arg0->unk80 = 2.0f;
         } else {
             arg0->unk80 = 1.3f;
@@ -821,7 +821,7 @@ s32 func_8027655C(Ent88 *arg0) {
         func_80275948((s16 *) arg0);
     }
     sp168 = 0.0f;
-    if ((s16) (arg0->unk64 & 4)) {
+    if (func_802712A8_inl(&arg0->unk64, 4)) {
         sp168 = 15.0f;
     }
     func_80291944(arg0->obj, func_80272024(arg0->unk74), sp168);
@@ -829,13 +829,13 @@ s32 func_8027655C(Ent88 *arg0) {
     arg0->y = arg0->xf->y;
     arg0->z = arg0->xf->z;
     func_802763DC((s16 *) arg0);
-    if (!(s16) (arg0->unk64 & 0x200) && !(s16) (arg0->unk64 & 0x10)) {
+    if (!func_802712A8_inl(&arg0->unk64, 0x200) && !func_802712A8_inl(&arg0->unk64, 0x10)) {
         arg0->obj->unk70 = 1.6333334f;
         sp158 = arg0->obj->unk6C;
         arg0->unk64 &= ~8;
         func_80230914(arg0->obj);
         if (arg0->obj->unk6C == 0.0f && arg0->obj->unk68 == 0.0f) {
-            if (!(s16) (arg0->unk64 & 0x800)) {
+            if (!func_802712A8_inl(&arg0->unk64, 0x800)) {
                 arg0->unk64 |= 8;
                 arg0->unk64 |= 0x800;
             }
@@ -852,9 +852,9 @@ s32 func_8027655C(Ent88 *arg0) {
         arg0->z = arg0->xf->z;
     }
     fl = arg0->unk64 & 0x10;
-    if (!fl && !(s16) (arg0->unk64 & 0x200)) {
+    if (!fl && !func_802712A8_inl(&arg0->unk64, 0x200)) {
         if (func_802909FC(arg0->obj, FN_80277378) && func_8023369C(arg0->xf->x, arg0->obj->unk58, 1.0f)
-            && func_8023369C(arg0->xf->z, arg0->obj->unk60, 1.0f) && (s16) (arg0->unk64 & 4)) {
+            && func_8023369C(arg0->xf->z, arg0->obj->unk60, 1.0f) && func_802712A8_inl(&arg0->unk64, 4)) {
             func_802712C4((s16 *) arg0);
         }
         f4 = arg0->unk64 & 4;
@@ -868,7 +868,7 @@ s32 func_8027655C(Ent88 *arg0) {
     arg0->x = arg0->xf->x;
     arg0->y = arg0->xf->y;
     arg0->z = arg0->xf->z;
-    if (f4 || (s16) (arg0->unk64 & 8)) {
+    if (f4 || func_802712A8_inl(&arg0->unk64, 8)) {
         func_802714C4();
         OBJ_DD8->unk40->x = OBJ_DD8->unk58 = arg0->x;
         OBJ_DD8->unk40->y = OBJ_DD8->unk5C = arg0->y;
@@ -878,10 +878,10 @@ s32 func_8027655C(Ent88 *arg0) {
         OBJ_DD8->unk30 = 1;
         OBJ_DD8->unk34 = 40.0f;
         OBJ_DD8->unk38 = 40.0f;
-        if (!(s16) (arg0->unk64 & 0x400) && !func_80232D18(OBJ_DD8, 1)) {
+        if (!func_802712A8_inl(&arg0->unk64, 0x400) && !func_80232D18(OBJ_DD8, 1)) {
             arg0->unk64 |= 0x400;
         }
-        if ((s16) (arg0->unk64 & 0x400)) {
+        if (func_802712A8_inl(&arg0->unk64, 0x400)) {
             sp154 = func_802308B8(arg0->obj, 0x16);
         } else {
             sp154 = (void *) func_8022F4AC((s32) arg0->obj, 0x16, (s32) func_802443F4(arg0->unkE));
@@ -892,7 +892,7 @@ s32 func_8027655C(Ent88 *arg0) {
             arg0->z = arg0->xf->z = arg0->obj->unk60;
             func_80276184((s16 *) arg0, sp154);
             func_802712C4((s16 *) arg0);
-            if ((s16) (arg0->unk64 & 8)) {
+            if (func_802712A8_inl(&arg0->unk64, 8)) {
                 void *r = func_802700EC((u8 *) arg0->obj, sp154, func_80272024(arg0->unk74), sp168);
                 arg0->unk64 |= 0x200;
                 arg0->unk38 = r;
@@ -901,15 +901,15 @@ s32 func_8027655C(Ent88 *arg0) {
             OBJ_DD8->unk40->x = OBJ_DD8->unk58 = arg0->x;
             OBJ_DD8->unk40->y = OBJ_DD8->unk5C = arg0->y;
             OBJ_DD8->unk40->z = OBJ_DD8->unk60 = arg0->z;
-            if ((s16) (arg0->unk64 & 0x400) && func_80232D18(OBJ_DD8, 1)) {
+            if (func_802712A8_inl(&arg0->unk64, 0x400) && func_80232D18(OBJ_DD8, 1)) {
                 arg0->unk64 &= ~0x400;
             }
         }
     }
-    if ((s16) (arg0->unk64 & 0x40)) {
+    if (func_802712A8_inl(&arg0->unk64, 0x40)) {
         arg0->unk64 |= 1;
     }
-    if ((s16) (arg0->unk64 & 1)) {
+    if (func_802712A8_inl(&arg0->unk64, 1)) {
         func_80275948((s16 *) arg0);
         return 1;
     }
