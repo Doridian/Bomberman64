@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 803, eu 803, jp 806
+ * differing words: us 778, eu 778, jp 781
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -837,15 +837,14 @@ static void func_80242994() {
     func_80238DFC(0x70, 0x70, 0);
     func_802510F0();
     for (i = 0; i < 4; i++) {
-        if ((M2C_FIELD(D_800AEDF0 + i * 0xC8, s32 *, 0x24) == 1) || (M2C_FIELD(D_800AEDF0 + i * 0xC8, s32 *, 0x24) == 2)) {
+        if ((PLAYERS[i].unk24 == 1) || (PLAYERS[i].unk24 == 2)) {
             func_8024585C(i);
             func_80247C50(i);
             func_802452E8(1);
         }
     }
-    n = 0;
-    for (i = 0; i < 4; i++) {
-        if ((M2C_FIELD(D_800AEDF0 + i * 0xC8, s32 *, 0x24) != 0) && (M2C_FIELD(D_800AEDF0 + i * 0xC8, s32 *, 0x24) != 3) &&
+    for (i = 0, n = 0; i < 4; i++) {
+        if ((PLAYERS[i].unk24 != 0) && (PLAYERS[i].unk24 != 3) &&
             (func_80243EF0(i) == 0)) {
             n++;
         }
@@ -884,7 +883,7 @@ static void func_80242994() {
         func_8026C8E8();
         func_8026C894();
         for (i = 0; i < 4; i++) {
-            if ((M2C_FIELD(D_800AEDF0 + i * 0xC8, s32 *, 0x24) != 0) && (M2C_FIELD(D_800AEDF0 + i * 0xC8, s32 *, 0x24) != 3) &&
+            if ((PLAYERS[i].unk24 != 0) && (PLAYERS[i].unk24 != 3) &&
                 (func_80243EF0(i) == 0)) {
                 break;
             }
@@ -960,6 +959,7 @@ void func_80242270(s32 arg0, Gfx **gdl) {
     gDPSetTexturePersp(gfx++, G_TP_NONE);
     gDPSetTextureLUT(gfx++, G_TT_RGBA16);
     r = D_802A0774;
+    if (!t) {}
     do {
         tf = D_802A0758;
         gDPLoadTLUT_pal256(gfx++, (u8 *) tf + tf->entries[r->idx + 1].offset);
