@@ -7,7 +7,7 @@
  * order. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 186, eu 186, jp 186
+ * differing words: us 119, eu 119, jp 119
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file (475 words in the one-file draft, 39
@@ -15,11 +15,11 @@
  * The entity flag helpers func_80270354/func_8027036C/func_802712A8 and
  * the tests func_80270384/func_802702BC are inlined by umerge where the
  * original calls them; the callers call them rather than spell them out.
- * 49 of 54 match. Left: func_80271BB8 92 (the
- * original also inlines func_80271178, and its frame is 8 bytes
- * smaller than ours with that), func_80270C24 55, func_80270770 35
- * (flags and ok in v1/a0 where the original has a0/a1), func_8027241C 3,
- * func_80271010 1 (one add.s with its operands swapped).
+ * 49 of 54 match. Left: func_80270C24 55, func_80270770 35 (flags
+ * and ok in v1/a0 where the original has a0/a1), func_80271BB8 25 (the
+ * s temp's slot at 68, the second unk40 pointer in v1, the tail's
+ * schedule), func_8027241C 3, func_80271010 1 (one add.s with its
+ * operands swapped).
  */
 #include "common.h"
 
@@ -1143,12 +1143,10 @@ void func_80271BB8(s16 arg0) {
     f32 dx;
     f32 dz;
     Obj8E *pl;
-    s32 pad[1];
+    Sub8E *t;
     f32 ppos[3];
     f32 opos[3];
-    f32 s;
     Obj8E *obj;
-    Sub8E *t;
 
     if (func_80270714(arg0) != 0) {
         return;
@@ -1202,15 +1200,13 @@ void func_80271BB8(s16 arg0) {
         func_80231408(obj, 0x10000);
         func_80232AC8((s32) pl, (s32) obj);
         func_80231408(obj, 0x200000);
-        if (func_802702BC(arg0) == 0) {
-            SLOTS[arg0].unkC = (s32) obj;
-        }
+        func_80271178(arg0, (s32) obj);
         func_80271010((u8 *) obj, arg0);
         obj->unk40->rot = pl->unk40->rot;
-        s = func_80234434(pl->unk40->rot);
-        dx = func_80270F44((u8 *) pl) * s;
-        s = func_80234408(pl->unk40->rot);
-        dz = func_80270F44((u8 *) pl) * s;
+        dx = func_80234434(pl->unk40->rot);
+        dx = func_80270F44((u8 *) pl) * dx;
+        dz = func_80234408(pl->unk40->rot);
+        dz = func_80270F44((u8 *) pl) * dz;
         if (func_802336E4(dx) != 0) {
             dx = 0.0f;
         }
@@ -1439,18 +1435,8 @@ void func_802711C8(s16 *arg0) {
 }
 
 void func_80271178(s16 arg0, s32 arg1) {
-    s32 var_v0;
-
-    if (arg0 >= 0) {
-        var_v0 = 1;
-        if (arg0 < 5) {
-            var_v0 = 0;
-        }
-    } else {
-        var_v0 = 1;
-    }
-    if (var_v0 == 0) {
-        *(s32 *)(D_802AFCF4 + (arg0 * 0x30)) = arg1;
+    if (func_802702BC(arg0) == 0) {
+        SLOTS[arg0].unkC = arg1;
     }
 }
 
