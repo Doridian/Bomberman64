@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 749, eu 749, jp 752
+ * differing words: us 738, eu 738, jp 741
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -954,7 +954,9 @@ void func_80242270(s32 arg0, Gfx **gdl) {
     } while (i != 2);
     gfx = *gdl;
     gDPSetRenderMode(gfx++, 0x553048, 0);
+    do {} while (0);
     gDPSetCombine(gfx++, 0xFFFFFF, 0xFFFCF279);
+    do {} while (0);
     gSPTexture(gfx++, 0x8000, 0x8000, 0, G_TX_RENDERTILE, 1);
     gDPSetTexturePersp(gfx++, G_TP_NONE);
     gDPSetTextureLUT(gfx++, G_TT_RGBA16);
@@ -972,6 +974,7 @@ void func_80242270(s32 arg0, Gfx **gdl) {
     tf = D_802A075C;
     count = D_802A076C;
     xs = D_802A0764;
+    if (!count) {}
     do {
         x = *xs;
         j = 0;
@@ -996,6 +999,8 @@ void func_80242270(s32 arg0, Gfx **gdl) {
         count++;
         xs++;
     } while (count != (s32 *) D_802A0774);
+    if (!j) {}
+    if (!x) {}
     gDPSetTexturePersp(gfx++, G_TP_PERSP);
     gDPSetTextureLUT(gfx++, G_TT_NONE);
     *gdl = gfx;
