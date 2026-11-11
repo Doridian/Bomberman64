@@ -1,7 +1,7 @@
 /*
  * NON_MATCHING: main_code's 96540, complete: the controller pak save.
  * flags: -O3
- * differing words: us 12, eu 12, jp 12
+ * differing words: us 8, eu 8, jp 8
  */
 #include "common.h"
 #include "ultralib/PR/os_pfs.h"
@@ -458,11 +458,13 @@ static s32 func_8027C18C(s32 ch, s32 file, u8 *buf) {
     s32 i;
     s32 ret;
 
-    for (i = 0; i < 3; i++) {
+    i = 0;
+    while (i < 3) {
         ret = func_8027C184(ch, file, buf);
         if (ret == 0 || ret == 2 || ret == 9) {
             break;
         }
+        i++;
     }
     return ret;
 }
