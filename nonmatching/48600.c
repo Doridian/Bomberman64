@@ -7,7 +7,7 @@
  * "NON_MATCHING drafts"). src/48300.c, before it, is another object:
  * func_80232E60 calls its func_8022DB00 with a jal (text_objects.txt).
  * flags: -O3
- * differing words: us 368, eu 368, jp 368
+ * differing words: us 336, eu 336, jp 336
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does. An 8-byte stub (jr ra; nop) is an inlined
@@ -48,17 +48,13 @@
  *     in-loop la (rebuilt in s0 every pass) apart from the stores' base.
  *   - func_802320A8's t is a volatile scalar: the original stores it in
  *     both arms and reloads it after the join (then x = t; x = x - n).
- * Left: func_8022E884 (70 words). 32 are .bss relocations: fcmp
- * resolves a static by its name, so only sym+k accesses depend on our
- * layout, and IDO lays .bss out in ugen's .lcomm order (a 256-bucket
- * hash on cfe's symbol number; within a bucket function-local statics
- * come first). D_802A5708-D_802A5760 are f32[5]/f32[5]/f32[8]/f32[8] and
- * D_802A59D0-D_802A5A00 f32[5] each, so each run keeps the original's
- * spacing; D_802A59D0.. follow func_8022E4DC's Vec3fs (defined after
- * it, which doesn't move any code), but the original has 0x1E0 bytes of
- * other statics (D_802A5780-D_802A5958, some of them function-local in
- * func_8023017C, func_8022F844 and func_8022E3D4) between D_802A5760
- * and D_802A5960, so D_802A5708's run is off. The code
+ * Left: func_8022E884 (38 words). IDO lays .bss out in ugen's .lcomm
+ * order (a 256-bucket hash on cfe's symbol number; within a bucket
+ * function-local statics come first), and fcmp resolves a static by its
+ * name, so only sym+k accesses depend on our layout. D_802A59D0-
+ * D_802A5A00 are f32[5] statics defined after func_8022E4DC (moved up
+ * above the stubs, which moves no code), so they follow its Vec3fs as in
+ * the original; D_802A5708-D_802A5760 are extern (see there). The code
  * left is case 12/20's four stores before the loop: uopt keeps the ball's
  * address in v0 (a block-local CSE of the four istr) where the original
  * uses lui/%lo for each, with p[0], p[1], p[3] loaded in that order.
@@ -1874,10 +1870,16 @@ static s32 func_8022F3F8(s32 arg0, f32 *arg1, f32 *arg2, s32 arg3) {
     return r;
 }
 
-static f32 D_802A5708[5];
-static f32 D_802A5720[5];
-static f32 D_802A5738[8];
-static f32 D_802A5760[8];
+/*
+ * Module bss (f32[5], f32[5], f32[8], f32[8]); extern, not static, until the
+ * whole 0x802A5560-0x802A5A24 can be defined in the original's order: as
+ * statics they can't sit 0x258 before func_8022E4DC's Vec3fs, so every
+ * sym+k access would land wrong. Static or extern gives the same code.
+ */
+extern f32 D_802A5708[];
+extern f32 D_802A5720[];
+extern f32 D_802A5738[];
+extern f32 D_802A5760[];
 
 static s32 func_8022E4DC(f32 *a, f32 *b) {
     static Vec3f p;
