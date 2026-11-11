@@ -7,7 +7,7 @@
  * order. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 682, eu 682, jp 682
+ * differing words: us 575, eu 575, jp 575
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file (475 words in the one-file draft, 39
@@ -245,7 +245,7 @@ void func_8027F820(void);
 void func_8027F858(s32, s32);
 s32 func_80286CA8(s32, f32, f32, f32);
 s32 func_802870A8();
-s32 func_80287440(void);
+s32 func_80287440(Obj8E *arg0);
 s32 func_802875B0();
 s32 func_8028A4E0(s32);
 s32 func_8028A81C(s32, f32, f32, f32, s32);
@@ -1120,18 +1120,17 @@ s32 func_80272024(s16 arg0) {
 }
 
 void func_80271F74(s32 *arg0) {
-    s32 temp_v0;
+    Ctl87 *c = (Ctl87 *) arg0;
 
-    func_802313DC(M2C_FIELD(arg0, void **, 4), 0x20000);
-    temp_v0 = M2C_FIELD(arg0, s32 *, 0x10);
-    if (temp_v0 & 2) {
-        func_80270EF0(M2C_FIELD(arg0, void **, 4));
-    } else if (temp_v0 & 8) {
-        func_8027B440(M2C_FIELD(arg0, void **, 4));
-    } else if (temp_v0 & 4) {
-        func_80287440();
-    } else if (temp_v0 & 1) {
-        func_80244E04(M2C_FIELD(arg0, void **, 4));
+    func_802313DC(c->obj, 0x20000);
+    if (c->flags & 2) {
+        func_80270EF0((u8 *) c->obj);
+    } else if (c->flags & 8) {
+        func_8027B440(c->obj);
+    } else if (c->flags & 4) {
+        func_80287440(c->obj);
+    } else if (c->flags & 1) {
+        func_80244E04(c->obj);
     }
     func_80270A80(arg0);
     free(arg0);
@@ -1412,48 +1411,28 @@ s16 func_802712A8(s16 *arg0, s16 arg1) {
 }
 
 void func_802711C8(s16 *arg0) {
-    s16 *temp_v0;
-    s16 temp_t9;
-    s16 var_a0;
-    s16 var_a1;
-    s32 var_at;
-    s32 var_t6;
-    s32 var_t8;
-    s32 var_v0;
+    s16 v;
+    s16 found;
+    s16 i;
+    s16 j;
 
-    var_v0 = 0;
-    var_a1 = 0;
-    var_t6 = 0 * 8;
-loop_1:
-    var_a0 = 0;
-    var_t8 = 0 * 2;
-loop_2:
-    if (*arg0 == *(((var_t6 + var_a1) * 2) + D_802AFC78 + var_t8)) {
-        var_v0 = 1;
-    } else {
-        var_a0 += 1;
-        var_t8 = var_a0 * 2;
-        if (var_a0 < 8) {
-            goto loop_2;
+    found = 0;
+    v = *arg0;
+    for (i = 0; i < 6; i++) {
+        for (j = 0; j < 8; j++) {
+            if (v == ((s16 (*)[9]) D_802AFC78)[i][j]) {
+                found = 1;
+                break;
+            }
+        }
+        if (found == 1) {
+            break;
         }
     }
-    var_at = var_a1 < 6;
-    if (var_v0 != 1) {
-        var_a1 += 1;
-        var_t6 = var_a1 * 8;
-        if (var_a1 >= 6) {
-            var_at = var_a1 < 6;
-        } else {
-            goto loop_1;
+    if (i < 6) {
+        for (; j < 8; j++) {
+            ((s16 (*)[9]) D_802AFC78)[i][j] = ((s16 (*)[9]) D_802AFC78)[i][j + 1];
         }
-    }
-    if ((var_at != 0) && (var_a0 < 8)) {
-        do {
-            temp_v0 = (var_a1 * 0x12) + D_802AFC78 + (var_a0 * 2);
-            temp_t9 = M2C_FIELD(temp_v0, s16 *, 2);
-            var_a0 += 1;
-            M2C_FIELD(temp_v0, s16 *, 0) = temp_t9;
-        } while (var_a0 < 8);
     }
 }
 
@@ -1665,29 +1644,20 @@ void func_80270B20(u8 *arg0) {
 }
 
 void func_80270A80(s32 *arg0) {
-    Node87 *var_a1;
-    Node87 *var_v1;
-    s32 var_v0;
+    Node87 *p;
+    s32 found;
 
-    if ((D_802AFE58.next != NULL) && ((s32) arg0 != (s32) NULL)) {
-        var_v1 = &D_802AFDE0;
-        var_v0 = 0;
-        if (D_802AFDE0.next->next != NULL) {
-            var_a1 = D_802AFDE0.next;
-loop_4:
-            if ((s32) arg0 == (s32) var_a1) {
-                var_v0 = 1;
-            } else {
-                var_v1 = var_a1;
-                var_a1 = var_a1->next;
-                if (var_a1->next != NULL) {
-                    goto loop_4;
-                }
+    if (*(s32 *) &D_802AFE58 != 0 && arg0 != NULL) {
+        found = 0;
+        for (p = &D_802AFDE0; p->next->next != NULL; p = p->next) {
+            if ((Node87 *) arg0 == p->next) {
+                found = 1;
+                break;
             }
         }
-        if (var_v0 == 1) {
-            var_v1->next = (Node87 *) *arg0;
-            D_802AFE58.next -= 1;
+        if (found == 1) {
+            p->next = (Node87 *) *arg0;
+            (*(s32 *) &D_802AFE58)--;
         }
     }
 }
