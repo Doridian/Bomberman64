@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1219, eu 1219, jp 1222
+ * differing words: us 1115, eu 1115, jp 1118
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -1305,7 +1305,7 @@ void func_8023FD08() {
     u8 *obj;
     s32 msg;
     void *model;
-    UnkStruct_8023FD08 **p;
+    s32 pad;
     u8 buf[12];
     UnkStruct_8023FD08 *o;
     f32 y4;
@@ -1313,7 +1313,7 @@ void func_8023FD08() {
     f32 y2;
     f32 y1;
     f32 dx;
-    s32 *q;
+    UnkStruct_8023FD08 **p;
 
     D_802AC5D0 |= 0x90;
     func_80270770(0, 1);
@@ -1495,10 +1495,10 @@ void func_8023FD08() {
             D_802AC80C++;
         }
     }
-    q = &t.h[t.n];
+    p = (UnkStruct_8023FD08 **) &t.h[t.n];
     func_8023903C(0x1E);
     func_8023B450(D_802AC610.unk30, buf, 8);
-    *q = func_802811F0(buf, 0xA0, (u32) y2, 0.6f, 0.8f, 2);
+    *(s32 *) p = func_802811F0(buf, 0xA0, (u32) y2, 0.6f, 0.8f, 2);
     t.n++;
     if (D_802AC610.unk28 >= D_802AC610.unk30) {
         p = &D_802AC7F8[i];
