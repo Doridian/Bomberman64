@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 7005, eu 7005, jp 6965
+ * differing words: us 7003, eu 7003, jp 6963
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -3566,7 +3566,7 @@ static void func_80255350(f32 *arg0) {
         *M2C_FIELD(M2C_FIELD(arg0, void **, 0x98), s32 **, 0x28) = 1;
         M2C_FIELD(M2C_FIELD(M2C_FIELD(arg0, void **, 0x98), s32 **, 0x28), s16 *, 4) = 0x4000;
         *M2C_FIELD(M2C_FIELD(arg0, void **, 0x98), s32 **, 0x2C) = 1;
-        M2C_FIELD(M2C_FIELD(M2C_FIELD(arg0, void **, 0x98), s32 **, 0x2C), s16 *, 4) = 0x8000;
+        M2C_FIELD(M2C_FIELD(M2C_FIELD(arg0, void **, 0x98), s32 **, 0x2C), u16 *, 4) = 0x8000;
     }
 }
 
@@ -4725,7 +4725,7 @@ static s32 func_80251EE0(f32 *arg0) {
 static void func_80251E5C(f32 *arg0) {
     if (func_80251D30(arg0, 0, 0, 2) == 0) {
         *M2C_FIELD(M2C_FIELD(arg0, void **, 0x98), s32 **, 0x2C) = 1;
-        M2C_FIELD(M2C_FIELD(M2C_FIELD(arg0, void **, 0x98), s32 **, 0x2C), s16 *, 4) = 0x8000;
+        M2C_FIELD(M2C_FIELD(M2C_FIELD(arg0, void **, 0x98), s32 **, 0x2C), u16 *, 4) = 0x8000;
         M2C_FIELD(M2C_FIELD(M2C_FIELD(arg0, void **, 0x98), s32 **, 0x2C), s32 *, 8) = 2;
         M2C_FIELD(M2C_FIELD(M2C_FIELD(arg0, void **, 0x98), s32 **, 0x2C), s16 *, 0xC) = 0;
     }
