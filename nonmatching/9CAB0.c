@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 254, eu 254, jp 254
+ * differing words: us 249, eu 249, jp 249
  */
 #include "common.h"
 
@@ -794,6 +794,7 @@ static void func_80286400(s32 arg4, s32 arg0, s32 arg5, f32 arg1, f32 arg2, f32 
         size = 0xC0;
         break;
     }
+    if (p) {}
     m = func_80230CB4(D_800BA8E8[a->unk84].unk2, -1, 0, size, NULL);
     m->unk40->unk10 = p->x - grid.o.x;
     m->unk40->unk14 = p->y - grid.o.y;
