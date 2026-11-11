@@ -5,7 +5,7 @@
  * global, emitted in the original's order. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 676, eu 676, jp 676
+ * differing words: us 526, eu 526, jp 526
  *
  * 36 of 47 match. Biggest left: func_802741D8 461, func_8027655C 436,
  * func_80274994 320 (still m2c's control flow and untyped offsets),
@@ -314,7 +314,7 @@ void func_802757E0(s16 *arg0);
 void func_80275948(s16 *arg0);
 void func_80275C08(u8 *arg0, u8 *arg1);
 void func_80275C7C(s16 arg0, u8 *arg1, s16 arg2);
-s32 func_80275DD8(s16 *arg0, s16 *arg1);
+s32 func_80275DD8(Ent88 *a, Ent88 *b);
 void func_80276184(s16 *arg0, u8 *arg1);
 static void func_80271448_inl(f32 arg0, f32 arg1, f32 arg2, f32 *arg3, f32 *arg4, f32 *arg5);
 void func_802763DC(s16 *arg0);
@@ -985,7 +985,7 @@ void func_80276184(s16 *arg0, u8 *arg1) {
                 if ((f = tf & 0x200) != 0) {
                     func_80271F74(t->unk38);
                 }
-                if (func_80275DD8(arg0, (s16 *) t) != 0) {
+                if (func_80275DD8((Ent88 *) arg0, t) != 0) {
                     func_80275C7C(((Ent88 *) arg0)->unkE, (u8 *) t->obj, ((Ent88 *) arg0)->unk74);
                 }
             } else {
@@ -997,9 +997,12 @@ void func_80276184(s16 *arg0, u8 *arg1) {
     }
 }
 
-s32 func_80275DD8(s16 *arg0, s16 *arg1) {
+s32 func_80275DD8(Ent88 *arg0, Ent88 *arg1) {
+    s32 pad[14];
     f32 sp14;
+    s32 p1;
     f32 spC;
+    s32 p2;
     f32 sp4;
     f32 temp_fa0;
     f32 temp_fa1;
@@ -1015,9 +1018,8 @@ s32 func_80275DD8(s16 *arg0, s16 *arg1) {
     f32 var_ft5_4;
     f32 var_fv0;
     f32 var_fv1;
-    s16 var_a2;
-    s32 var_v0;
-    s32 var_v1;
+    s16 dir;
+    s32 r;
     u16 temp_t2;
     u8 *temp_v0;
     u8 *temp_v1;
@@ -1028,12 +1030,12 @@ s32 func_80275DD8(s16 *arg0, s16 *arg1) {
     temp_ft4 = M2C_FIELD(temp_v1, f32 *, 0x10);
     temp_fv1 = M2C_FIELD(temp_v0, f32 *, 0x18);
     temp_fa0 = M2C_FIELD(temp_v1, f32 *, 0x18);
-    var_a2 = 0;
+    dir = 0;
     if (temp_ft4 <= temp_fa1) {
-        var_a2 = 4;
+        dir = 4;
     }
     if (temp_fv1 < temp_fa0) {
-        var_a2 += 2;
+        dir += 2;
     }
     if (temp_fa1 < 0.0f) {
         var_ft5 = -temp_fa1;
@@ -1087,10 +1089,11 @@ s32 func_80275DD8(s16 *arg0, s16 *arg1) {
             var_ft4_2 = temp_fv1;
         }
         if (temp_fa0 < 0.0f) {
-            var_fv1 = -(var_ft4_2 - -temp_fa0);
+            var_fv0 = -temp_fa0;
         } else {
-            var_fv1 = -(var_ft4_2 - temp_fa0);
+            var_fv0 = temp_fa0;
         }
+        var_fv1 = -(var_ft4_2 - var_fv0);
     } else {
         if (temp_fv1 < 0.0f) {
             var_ft4_3 = -temp_fv1;
@@ -1105,56 +1108,52 @@ s32 func_80275DD8(s16 *arg0, s16 *arg1) {
         var_fv1 = var_ft4_3 - var_fv0;
     }
     if (var_fv1 <= var_fa1) {
-        var_a2 += 1;
+        dir += 1;
     }
-    temp_t2 = M2C_FIELD(arg0, u16 *, 0x74);
-    var_v1 = 0;
-    switch (temp_t2) {
+    r = 0;
+    switch (*(u16 *) &arg0->unk74) {
     case 0:
-        if ((var_a2 == 0) || (var_a2 == 1) || (var_a2 == 4) || (var_v0 = 0, (var_a2 == 5))) {
-block_88:
-            var_v1 = 1;
-        default:
-            var_v0 = var_v1;
+        if (dir == 0 || dir == 1 || dir == 4 || dir == 5) {
+            r = 1;
         }
         break;
     case 1:
-        if ((var_a2 == 0) || (var_a2 == 1) || (var_a2 == 3) || (var_v0 = 0, (var_a2 == 4))) {
-            goto block_88;
+        if (dir == 0 || dir == 1 || dir == 3 || dir == 4) {
+            r = 1;
         }
         break;
     case 2:
-        if ((var_a2 == 0) || (var_a2 == 1) || (var_a2 == 2) || (var_v0 = 0, (var_a2 == 3))) {
-            goto block_88;
+        if (dir == 0 || dir == 1 || dir == 2 || dir == 3) {
+            r = 1;
         }
         break;
     case 3:
-        if ((var_a2 == 1) || (var_a2 == 2) || (var_a2 == 3) || (var_v0 = 0, (var_a2 == 6))) {
-            goto block_88;
+        if (dir == 1 || dir == 2 || dir == 3 || dir == 6) {
+            r = 1;
         }
         break;
     case 4:
-        if ((var_a2 == 2) || (var_a2 == 3) || (var_a2 == 6) || (var_v0 = 0, (var_a2 == 7))) {
-            goto block_88;
+        if (dir == 2 || dir == 3 || dir == 6 || dir == 7) {
+            r = 1;
         }
         break;
     case 5:
-        if ((var_a2 == 2) || (var_a2 == 5) || (var_a2 == 6) || (var_v0 = 0, (var_a2 == 7))) {
-            goto block_88;
+        if (dir == 2 || dir == 5 || dir == 6 || dir == 7) {
+            r = 1;
         }
         break;
     case 6:
-        if ((var_a2 == 4) || (var_a2 == 5) || (var_a2 == 6) || (var_v0 = 0, (var_a2 == 7))) {
-            goto block_88;
+        if (dir == 4 || dir == 5 || dir == 6 || dir == 7) {
+            r = 1;
         }
         break;
     case 7:
-        if ((var_a2 == 0) || (var_a2 == 4) || (var_a2 == 5) || (var_v0 = 0, (var_a2 == 7))) {
-            goto block_88;
+        if (dir == 0 || dir == 4 || dir == 5 || dir == 7) {
+            r = 1;
         }
         break;
     }
-    return var_v0;
+    return r;
 }
 
 void func_80275C7C(s16 arg0, u8 *arg1, s16 arg2) {
