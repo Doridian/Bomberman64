@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2201, eu 2201, jp 2192
+ * differing words: us 2182, eu 2182, jp 2173
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -558,9 +558,19 @@ extern u8 D_8029FB10_jp[];
 #endif
 
 void func_80243824(s32 arg0) {
-    s32 *var_a1;
-    s32 var_v1;
+    s32 idx;
+    s32 n;
 
+    idx = D_802AC608;
+    for (n = 0; n < 10; n++) {
+        if ((&D_802AC7A0)[idx] == -1) {
+            break;
+        }
+        if (++idx >= 10) {
+            idx = 0;
+        }
+    }
+    (&D_802AC7A0)[idx] = arg0;
     if (0) {
         func_80238A10(func_802434F8, 0, 0, 0, 0);
         func_80238A10(func_80242FB4, 0, 0, 0, 0);
@@ -578,20 +588,6 @@ void func_80243824(s32 arg0) {
         func_80238A10(func_8023F26C, 0, 0, 0, 0);
         func_80238A10(func_8023DB0C, 0, 0, 0, 0);
     }
-    var_a1 = &(&D_802AC7A0)[D_802AC608];
-    var_v1 = 0;
-loop_1:
-    var_v1 += 1;
-    if (*var_a1 != -1) {
-        var_a1 = (void *) ((u8 *)var_a1 + 4);
-        if ((u32) var_a1 >= (u32) &D_802AC7C8) {
-            var_a1 = &D_802AC7A0;
-        }
-        if (var_v1 != 0xA) {
-            goto loop_1;
-        }
-    }
-    *var_a1 = arg0;
 }
 
 void func_80243810(s32 arg0, s32 arg1) {
