@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 395, eu 395, jp 398
+ * differing words: us 387, eu 387, jp 390
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -968,8 +968,7 @@ void func_80242270(s32 arg0, Gfx **gdl) {
         gDPLoadTLUT_pal256(gfx++, (u8 *) tf + tf->entries[r->idx + 1].offset);
         gDPLoadTextureBlock_4b(gfx++, (u8 *) tf + tf->entries[r->idx].offset, G_IM_FMT_CI, 16, 16, 0,
                                G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMASK, G_TX_NOMASK, G_TX_NOLOD, G_TX_NOLOD);
-        gSPTextureRectangleYX(gfx++, r->xl, r->yl, r->xh, r->yh, G_TX_RENDERTILE, 0, 0, 0x400, 0x400);
-        r++;
+        gSPTextureRectangleYX(gfx++, r->xl, r->yl, r->xh, r->yh, G_TX_RENDERTILE, 0, 0, 0x400, 0x400); r++;
     } while (r != (Rect54E40 *) D_802A079C);
     n = 0;
     tf = D_802A075C;
@@ -996,8 +995,7 @@ void func_80242270(s32 arg0, Gfx **gdl) {
                 x += 10;
             } while (j < *count);
         }
-        count++;
-        xs++;
+        count++; xs++;
     } while (count != (s32 *) D_802A0774);
     if (!j) {}
     if (!x) {}
@@ -1070,8 +1068,7 @@ void func_80241BB0(s32 arg0, Gfx **gdl) {
     } while (i != 5);
     n = 0;
     tf = D_802A075C;
-    count = D_802A07B8;
-    xs = D_802A079C;
+    count = D_802A07B8; xs = D_802A079C;
     j = 0;
     do {
         x = *xs;
@@ -1146,8 +1143,7 @@ void func_80241590(s32 arg0, Gfx **gdl) {
     }
     n = 0;
     tf = D_802A075C;
-    count = D_802A08D8;
-    xs = D_802A0838;
+    count = D_802A08D8; xs = D_802A0838;
     do {
         x = *xs;
         j = 0;
@@ -1168,8 +1164,7 @@ void func_80241590(s32 arg0, Gfx **gdl) {
                 x += 10;
             } while (j < *count);
         }
-        count++;
-        xs++;
+        count++; xs++;
     } while (count != (s32 *) D_802A08EC);
     if (!j) {}
     gDPSetTexturePersp(gfx++, G_TP_PERSP);
