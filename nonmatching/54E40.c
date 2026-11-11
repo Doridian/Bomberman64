@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 590, eu 590, jp 593
+ * differing words: us 581, eu 581, jp 584
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -3051,15 +3051,11 @@ static void func_8023B8D0() {
 }
 
 static void func_8023B7C0(f32 arg0) {
-    u8 sp24;
-    s32 temp_t7;
-    s32 var_s0;
+    u8 buf[12];
 
-    func_8023B450(D_802AC610.unk28, &sp24, 8);
-    var_s0 = (u32) arg0;
-    temp_t7 = var_s0 & 0xFFFF;
-    D_802AC7E4 = func_802811F0(&D_802A039C, 0x2DU, temp_t7 & 0xFFFF, 0.6f, 0.8f, 2U);
-    D_802AC7E8 = func_802811F0(&sp24, X_B7C0, temp_t7 & 0xFFFF, 0.6f, 0.8f, 3U);
+    func_8023B450(D_802AC610.unk28, buf, 8);
+    D_802AC7E4 = func_802811F0(&D_802A039C, 0x2D, (u32) arg0, 0.6f, 0.8f, 2);
+    D_802AC7E8 = func_802811F0(buf, X_B7C0, (u32) arg0, 0.6f, 0.8f, 3);
 }
 
 static void func_8023B450(s32 value, u8 *buf, s32 n) {
