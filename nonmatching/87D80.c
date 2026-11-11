@@ -7,7 +7,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4350, eu 4350, jp 4350
+ * differing words: us 4335, eu 4335, jp 4335
  *
  * 33 of 97 match. func_8026D5F8 and func_8026D5C0 (cell and slot of a
  * point) are inlined by func_8026D620/func_8026D7D8, which is what the
@@ -107,9 +107,10 @@ typedef struct {
     /* 0x10 */ s16 unk10;
     /* 0x12 */ u8 pad12[0x1C - 0x12];
     /* 0x1C */ f32 unk1C;
-    /* 0x20 */ u8 pad20[4];
+    /* 0x20 */ f32 unk20;
     /* 0x24 */ f32 unk24;
-    /* 0x28 */ u8 pad28[8];
+    /* 0x28 */ f32 unk28;
+    /* 0x2C */ f32 unk2C;
 } Slot30; /* size 0x30 */
 
 typedef struct {
@@ -813,44 +814,41 @@ void func_802731A4(Obj8E *arg0, s16 arg1) {
 }
 
 void func_80272FC0(Obj8E *arg0, s16 arg1) {
-    f32 sp3C;
-    f32 sp38;
-    f32 sp28;
-    f32 temp_fv0;
-    f32 temp_fv1;
-    f32 temp_fv1_2;
-    u8 *temp_v0;
-    u8 *temp_v0_2;
+    f32 dx;
+    f32 dz;
+    Slot30 *sl;
+    f32 h;
+    Obj8E *o;
+    f32 s;
+    s32 pad[1];
 
-    temp_v0 = func_802443F4((s32) arg1);
-    sp28 = func_80234434(M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x20));
-    sp3C = func_80270F44(arg0) * sp28;
-    sp28 = func_80234408(M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x20));
-    sp38 = func_80270F44(arg0) * sp28;
-    if (func_802336E4(sp3C) != 0) {
-        sp3C = 0.0f;
+    o = func_802443F4(arg1);
+    s = func_80234434(o->unk40->rot);
+    dx = func_80270F44(arg0) * s;
+    s = func_80234408(o->unk40->rot);
+    dz = func_80270F44(arg0) * s;
+    if (func_802336E4(dx) != 0) {
+        dx = 0.0f;
     }
-    if (func_802336E4(sp38) != 0) {
-        sp38 = 0.0f;
+    if (func_802336E4(dz) != 0) {
+        dz = 0.0f;
     }
-    temp_v0_2 = (arg1 * 0x30) + D_802AFCE8;
-    M2C_FIELD(arg0, f32 *, 0x4C) = (f32) (sp3C - M2C_FIELD(temp_v0_2, f32 *, 0x1C));
-    temp_fv0 = M2C_FIELD(temp_v0_2, f32 *, 0x1C);
-    M2C_FIELD(temp_v0_2, f32 *, 0x1C) = (f32) (temp_fv0 - (temp_fv0 / (f32) M2C_FIELD(temp_v0_2, s16 *, 0x10)));
-    M2C_FIELD(arg0, f32 *, 0x54) = (f32) (sp38 - M2C_FIELD(temp_v0_2, f32 *, 0x24));
-    temp_fv1 = M2C_FIELD(temp_v0_2, f32 *, 0x24);
-    M2C_FIELD(temp_v0_2, f32 *, 0x24) = (f32) (temp_fv1 - (temp_fv1 / (f32) M2C_FIELD(temp_v0_2, s16 *, 0x10)));
-    temp_fv1_2 = func_80234434(M2C_FIELD(temp_v0_2, f32 *, 0x20)) * M2C_FIELD(temp_v0_2, f32 *, 0x2C);
-    M2C_FIELD(arg0, f32 *, 0x50) = (f32) (M2C_FIELD(arg0, f32 *, 0x50) + (temp_fv1_2 - M2C_FIELD(temp_v0_2, f32 *, 0x28)));
-    M2C_FIELD(temp_v0_2, s16 *, 0x10) = (s16) (M2C_FIELD(temp_v0_2, s16 *, 0x10) - 1);
-    M2C_FIELD(temp_v0_2, f32 *, 0x28) = temp_fv1_2;
-    M2C_FIELD(temp_v0_2, f32 *, 0x20) = (f32) (M2C_FIELD(temp_v0_2, f32 *, 0x20) + 4.5f);
-    if (M2C_FIELD(temp_v0_2, s16 *, 0x10) <= 0) {
+    sl = &SLOTS[arg1];
+    arg0->unk4C = dx - sl->unk1C;
+    sl->unk1C -= sl->unk1C / sl->unk10;
+    arg0->unk54 = dz - sl->unk24;
+    sl->unk24 -= sl->unk24 / sl->unk10;
+    h = func_80234434(sl->unk20) * sl->unk2C;
+    arg0->unk50 += h - sl->unk28;
+    sl->unk10--;
+    sl->unk28 = h;
+    sl->unk20 += 4.5f;
+    if (sl->unk10 <= 0) {
         func_802313DC(arg0, 0x200000);
         func_80231408(arg0, 0x600000);
-        M2C_FIELD(arg0, f32 *, 0x4C) = 0.0f;
-        M2C_FIELD(arg0, f32 *, 0x50) = func_80270FC0(temp_v0);
-        M2C_FIELD(arg0, f32 *, 0x54) = func_80270F44(arg0);
+        arg0->unk4C = 0.0f;
+        arg0->unk50 = func_80270FC0(o);
+        arg0->unk54 = func_80270F44(arg0);
     }
 }
 
