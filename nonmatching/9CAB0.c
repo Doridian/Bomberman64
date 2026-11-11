@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4168, eu 4168, jp 4168
+ * differing words: us 4145, eu 4145, jp 4145
  */
 #include "common.h"
 
@@ -320,8 +320,8 @@ static void func_80285554();
 void func_8028555C();
 static void func_80285564();
 static void func_80285650();
-static s32 func_80285A6C(f32 arg0, f32 arg1, f32 arg2, f32 arg3);
-static UnkStruct_800BA900 *func_80285A74(Vec3f *arg0);
+static void func_80285A6C();
+static void func_80285A74();
 static void func_80285A7C(UnkStruct_80288040 *a_, s32 i_);
 static void func_80285A84(UnkStruct_80288040 *a_);
 static void func_80285A8C(UnkStruct_80288040 *a_, s32 i_);
@@ -336,44 +336,6 @@ static void func_802867DC(UnkStruct_800BA900 *arg0);
 static UnkStruct_800BB340 *func_802872D8(UnkStruct_800BA900 *arg0);
 static void func_80287690();
 void func_80287698();
-
-#define FREESLOT_802867CC(r_) \
-    { \
-        UnkStruct_800BA900 *s_; \
-        s32 i_; \
-        (r_) = -1; \
-        s_ = D_800BA900; \
-        for (i_ = 0; i_ < 16; i_++, s_++) { \
-            if (s_->unk0 == 0) { \
-                (r_) = i_; \
-                break; \
-            } \
-        } \
-    }
-
-#define FREETASK_802867D4(r_) \
-    { \
-        UnkStruct_800BB340 *t_; \
-        s32 i_; \
-        s32 n_; \
-        n_ = 0; \
-        (r_) = -1; \
-        t_ = D_800BB340; \
-        for (i_ = 1; i_ < 16; i_++, t_++) { \
-            if (t_->unk4 != 0) { \
-                n_++; \
-            } \
-        } \
-        if (n_ < D_800BB480) { \
-            t_ = D_800BB340; \
-            for (i_ = 0; i_ < 16; i_++, t_++) { \
-                if (t_->unk4 == 0) { \
-                    (r_) = i_; \
-                    break; \
-                } \
-            } \
-        } \
-    }
 
 #define DEC_80284CA4(a_) ((--(a_)->unk6D == 0) ? 1 : 0)
 
@@ -907,47 +869,10 @@ static void func_80285F8C(void) {
     }
 }
 
-static s32 func_80285A6C(f32 arg0, f32 arg1, f32 arg2, f32 arg3) {
-    f32 c;
-
-    if (arg0 < arg1) {
-        c = arg0 + 1100.0f;
-        if (((c - 50.0f) < arg1) && (arg1 < (c + 50.0f)) && ((arg2 - 1100.0f) < arg3) && (arg3 < (arg2 + 1100.0f))) {
-            return 1;
-        }
-    } else {
-        c = arg0 - 1100.0f;
-        if (((c - 50.0f) < arg1) && (arg1 < (c + 50.0f)) && ((arg2 - 1100.0f) < arg3) && (arg3 < (arg2 + 1100.0f))) {
-            return 1;
-        }
-    }
-    return 0;
+static void func_80285A6C() {
 }
 
-static UnkStruct_800BA900 *func_80285A74(Vec3f *arg0) {
-    UnkStruct_800BA900 *s;
-    UnkStructA_40 *p;
-    s32 i;
-
-    s = D_800BA900;
-    for (i = 0; i < 16; i++, s++) {
-        if (s->unk0 == 2) {
-            p = s->unk14.unk0->unk40;
-            if (s->unk4 == 0) {
-                if (func_80285A6C(arg0->x, p->unk10, arg0->z, p->unk18) ||
-                    func_80285A6C(arg0->z, p->unk18, arg0->x, p->unk10)) {
-                    return s;
-                }
-            } else if ((arg0->x < (p->unk10 - 1100.0f)) || ((p->unk10 + 1100.0f) < arg0->x) ||
-                       (arg0->z < (p->unk18 - 1100.0f)) || ((p->unk18 + 1100.0f) < arg0->z)) {
-                s->unk4--;
-                if (s->unk4 <= 0) {
-                    s->unk4 = 0;
-                }
-            }
-        }
-    }
-    return NULL;
+static void func_80285A74() {
 }
 
 static void func_80285A8C(UnkStruct_80288040 *a_, s32 i_) {
@@ -996,16 +921,61 @@ static void func_80285A84(UnkStruct_80288040 *a_) {
 static void func_80285A9C(UnkStruct_800BB340 *arg0) {
     Vec3f pos;
     UnkStruct_800BA900 *s;
+    UnkStruct_800BA900 *r;
+    UnkStructA_40 *p;
+    s32 i;
+    f32 c;
 
+    func_80285A6C();
+    func_80285A74();
     func_80250338(func_80243DDC(), &pos);
-    s = func_80285A74(&pos);
-    if (s != NULL) {
-        func_80285A7C(&s->unk14, s->unk14.unk84);
-        s->unk14.unk0->unk40->unk28 = 1.0f;
-        s->unk14.unk0->unk40->unk2C = 1.0f;
-        s->unk14.unk0->unk40->unk30 = 1.0f;
-        func_80285A84(&s->unk14);
-        func_80285658(s, arg0);
+    s = D_800BA900;
+    r = NULL;
+    for (i = 0; i < 16; i++, s++) {
+        if (s->unk0 == 2) {
+            if (s->unk4 == 0) {
+                p = s->unk14.unk0->unk40;
+                if (pos.x < p->unk10) {
+                    c = pos.x + 1100.0f;
+                    if (((c - 50.0f) < p->unk10) && (p->unk10 < (c + 50.0f)) && ((pos.z - 1100.0f) < p->unk18) && (p->unk18 < (pos.z + 1100.0f))) {
+                        r = s; break;
+                    }
+                } else {
+                    c = pos.x - 1100.0f;
+                    if (((c - 50.0f) < p->unk10) && (p->unk10 < (c + 50.0f)) && ((pos.z - 1100.0f) < p->unk18) && (p->unk18 < (pos.z + 1100.0f))) {
+                        r = s; break;
+                    }
+                }
+                if (pos.z < p->unk18) {
+                    c = pos.z + 1100.0f;
+                    if (((c - 50.0f) < p->unk18) && (p->unk18 < (c + 50.0f)) && ((pos.x - 1100.0f) < p->unk10) && (p->unk10 < (pos.x + 1100.0f))) {
+                        r = s; break;
+                    }
+                } else {
+                    c = pos.z - 1100.0f;
+                    if (((c - 50.0f) < p->unk18) && (p->unk18 < (c + 50.0f)) && ((pos.x - 1100.0f) < p->unk10) && (p->unk10 < (pos.x + 1100.0f))) {
+                        r = s; break;
+                    }
+                }
+            } else {
+                p = s->unk14.unk0->unk40;
+                if ((pos.x < (p->unk10 - 1100.0f)) || ((p->unk10 + 1100.0f) < pos.x) ||
+                    (pos.z < (p->unk18 - 1100.0f)) || ((p->unk18 + 1100.0f) < pos.z)) {
+                    s->unk4--;
+                    if (s->unk4 <= 0) {
+                        s->unk4 = 0;
+                    }
+                }
+            }
+        }
+    }
+    if (r != NULL) {
+        func_80285A7C(&r->unk14, r->unk14.unk84);
+        r->unk14.unk0->unk40->unk28 = 1.0f;
+        r->unk14.unk0->unk40->unk2C = 1.0f;
+        r->unk14.unk0->unk40->unk30 = 1.0f;
+        func_80285A84(&r->unk14);
+        func_80285658(r, arg0);
     }
 }
 
