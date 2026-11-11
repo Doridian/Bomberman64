@@ -8,7 +8,7 @@
  * text_objects.txt). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 698, eu 698, jp 698
+ * differing words: us 555, eu 555, jp 555
  *
  * The code is the same in every version.
  *
@@ -20,11 +20,11 @@
  * compare is what keeps the counter's store-then-reload.
  *
  * Left:
- * - func_8022C530 (124), func_8022BCC8 (96), func_8022C2A4 (85),
- *   func_8022CFC8 (80), func_8022CD98 (75), func_8022BE48 (58):
+ * - func_8022BCC8 (96), func_8022C2A4 (85), func_8022CFC8 (80),
+ *   func_8022CD98 (75), func_8022BE48 (58):
  *   registers and float scheduling, sizes differ by 2-6 words.
- * - func_8022C8B8 (103): same size and shape; register colouring of
- *   D_802A54D4 and D_802A54EC in the channel loop.
+ * - func_8022C8B8 (84): same size and shape; temporaries numbered
+ *   from one lower (the channel's address is in v1 in the original).
  * - func_8022C184 (20), func_8022AA50 and func_8022AB48 (18 each),
  *   func_8022C09C (11), func_8022BB88 (10): registers only.
  */
@@ -499,6 +499,7 @@ UnkAnim *func_8022C8B8(UnkInst *arg0, s32 arg1) {
     UnkTrack *track;
     UnkChan *chan;
     UnkChanKeys *k;
+    s32 t;
 
     if (arg0->unk0 != 1) {
         return NULL;
@@ -515,8 +516,8 @@ UnkAnim *func_8022C8B8(UnkInst *arg0, s32 arg1) {
     for (D_802A54D4 = 0; D_802A54D4 < D_802A54E4; D_802A54D4++) {
         D_802A5504 = &D_802A5500->unk14[D_802A54D4];
         D_802A54E0 = 0;
-        D_802A5504->unk4 = D_802A54FC[D_802A54D4].unk0;
-        switch (D_802A5504->unk4) {
+        D_802A5504->unk4 = t = D_802A54FC[D_802A54D4].unk0;
+        switch (t) {
             case 0x2F:
                 k = (UnkChanKeys *)&D_802A54FC[D_802A54D4].unk4;
                 D_802A54E8 = k->unk4;
@@ -536,9 +537,9 @@ UnkAnim *func_8022C8B8(UnkInst *arg0, s32 arg1) {
             case 0x30:
                 chan = &D_802A54FC[D_802A54D4];
                 D_802A5504->unk10 = (s32 *)chan->unkC;
-                D_802A5504->unk14 = (s32 *)chan->unk8;
-                D_802A5504->unk18 = (s32)&chan->unk10;
                 D_802A54E0 = chan->unk8;
+                D_802A5504->unk14 = (s32 *)D_802A54E0;
+                D_802A5504->unk18 = (s32)&chan->unk10;
                 D_802A54EC = chan->unk4;
                 D_802A54F0 = chan->unk4 + chan->unk8;
                 break;
@@ -581,9 +582,11 @@ void func_8022C530(UnkAnim *arg0, f32 arg1, s32 arg2) {
     UnkTrack *track;
     s32 i;
     s32 j;
-    s32 *s;
-    s32 *k;
     f32 t;
+    f32 u;
+    s32 n;
+    s32 *times;
+    s32 *keys;
 
     inst = arg0->unk0;
     arg0->unk4 = arg1;
@@ -597,26 +600,27 @@ void func_8022C530(UnkAnim *arg0, f32 arg1, s32 arg2) {
         }
         t = arg1 - (f32)track->unk8;
         if (track->unk4 == 0x2F) {
-            for (j = 1; j < track->unk18; j++) {
-                if ((s32)t < track->unk14[j]) {
+            n = track->unk18;
+            times = track->unk14;
+            keys = track->unk10;
+            for (j = 1; j < n; j++) {
+                if ((s32)t < times[j]) {
                     break;
                 }
             }
-            s = &track->unk14[j];
-            if (j == track->unk18 && t == (s32)t) {
+            if (j == n && t == (s32)t) {
                 j--;
-                s--;
             }
-            k = &track->unk10[j];
-            if (track->unk20 != k[-1]) {
-                track->unk20 = k[-1];
-                func_8022C2A4(track->unk1C, k[-1], 0, inst);
+            if (track->unk20 != keys[j - 1]) {
+                track->unk20 = keys[j - 1];
+                func_8022C2A4(track->unk1C, keys[j - 1], 0, inst);
             }
-            if (track->unk24 != k[0]) {
-                track->unk24 = k[0];
-                func_8022C2A4(track->unk1C, k[0], 1, inst);
+            if (track->unk24 != keys[j]) {
+                track->unk24 = keys[j];
+                func_8022C2A4(track->unk1C, keys[j], 1, inst);
             }
-            func_8022C09C(track->unk1C, (t - s[-1]) / (s[0] - s[-1]));
+            u = (t - times[j - 1]) / (times[j] - times[j - 1]);
+            func_8022C09C(track->unk1C, u);
         } else if (track->unk4 == 0x30) {
             func_8022BCC8(inst, (s32)track->unk10, func_8022BE48((UnkCurve *)track->unk18, t));
         }
