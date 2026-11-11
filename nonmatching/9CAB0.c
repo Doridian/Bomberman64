@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 101, eu 101, jp 101
+ * differing words: us 99, eu 99, jp 99
  */
 #include "common.h"
 
@@ -1383,7 +1383,6 @@ static void func_802848E0() {
 
 static void func_802848E8(UnkStruct_80288040 *arg0) {
     f32 amp;
-    UnkStructA_40 *p;
 
     func_802848E0();
     func_802848D8();
@@ -1406,18 +1405,16 @@ static void func_802848E8(UnkStruct_80288040 *arg0) {
         if (arg0->unk34 >= 360.0f) {
             arg0->unk34 -= 360.0f;
         }
-        p = arg0->unk0->unk40;
-        if ((arg0->unk38 + 100.0f) < p->unk14) {
-            p->unk14 -= p->unk14 - (arg0->unk38 + 100.0f);
-        } else if (p->unk14 < (arg0->unk38 - 100.0f)) {
-            p->unk14 += (arg0->unk38 - 100.0f) - p->unk14;
+        if ((arg0->unk38 + 100.0f) < arg0->unk0->unk40->unk14) {
+            arg0->unk0->unk40->unk14 -= arg0->unk0->unk40->unk14 - (arg0->unk38 + 100.0f);
+        } else if (arg0->unk0->unk40->unk14 < (arg0->unk38 - 100.0f)) {
+            arg0->unk0->unk40->unk14 += (arg0->unk38 - 100.0f) - arg0->unk0->unk40->unk14;
         }
         break;
     case 1:
         break;
     case 2:
         if ((arg0->unk0->unk68 == 0.0f) && (arg0->unk0->unk6C == 0.0f)) {
-            if (p) {}
             arg0->unk30 = 3;
             arg0->unk0->unk68 = 2.0f;
             arg0->unk0->unk6C = 0.0f;
