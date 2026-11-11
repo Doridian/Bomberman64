@@ -8,7 +8,7 @@
  * stack layout and loop forms; func_8027B828 in two registers. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 38, eu 38, jp 38
+ * differing words: us 30, eu 30, jp 30
  */
 #include "common.h"
 
@@ -545,9 +545,7 @@ void func_8027B0BC(s16 arg0) {
     UnkStruct_80279050_14 *obj;
     UnkStruct_800BB4A8 *node;
 
-    n = 0;
-    prev = 0;
-    while (TRUE) {
+    for (n = 0, prev = 0; ; prev = n) {
         if (D_800BA8A0[arg0].unk4 != 0) {
             D_800BA8A0[arg0].unk4--;
             kinds[n++] = 2;
@@ -579,7 +577,6 @@ void func_8027B0BC(s16 arg0) {
         if (n == prev) {
             break;
         }
-        prev = n;
     }
     obj = func_802443F4(arg0);
     range = 7;
@@ -592,9 +589,9 @@ void func_8027B0BC(s16 arg0) {
         }
         node = func_8027AA74(kinds[n], obj->unk40->unk10, obj->unk40->unk14 + 200.0f, obj->unk40->unk18, 1, 0, 0);
         if (node != NULL) {
-            i = 0;
             func_80270354(&node->unk54, 2);
-            for (r = func_80234248(range); r >= 0; i++) {
+            r = func_80234248(range);
+            for (i = 0; r >= 0; i++) {
                 if (slots[i] == -1) {
                     r--;
                 }
