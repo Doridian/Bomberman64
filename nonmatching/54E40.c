@@ -175,9 +175,16 @@ typedef struct {
 
 /* A player (D_800AEDF0[4], 0xC8 bytes). */
 typedef struct {
-    /* 0x00 */ u8 unk0[0x24];
+    /* 0x00 */ u8 unk0[0x14];
+    /* 0x14 */ s32 unk14;
+    /* 0x18 */ s32 unk18;
+    /* 0x1C */ u8 unk1C[4];
+    /* 0x20 */ s32 unk20;
     /* 0x24 */ s32 unk24;
-    /* 0x28 */ u8 unk28[0xC8 - 0x28];
+    /* 0x28 */ u8 unk28[0x94 - 0x28];
+    /* 0x94 */ s32 unk94;
+    /* 0x98 */ s32 unk98;
+    /* 0x9C */ u8 unk9C[0xC8 - 0x9C];
 } Player54E40; /* size 0xC8 */
 
 #define PLAYERS ((Player54E40 *) D_800AEDF0)
@@ -648,8 +655,8 @@ void func_80243718() {
     func_8028A0B4();
     if (D_802AC610.unk40 == 0) {
         func_80277DF4(0x407);
-        if (M2C_FIELD(D_800AEDF0, s32 *, 0x20) >= 5) {
-            M2C_FIELD(D_800AEDF0, s32 *, 0x20) = 4;
+        if (PLAYERS[0].unk20 >= 5) {
+            PLAYERS[0].unk20 = 4;
         }
     }
     D_802AC610.unk30 = 0;
@@ -2215,8 +2222,8 @@ void func_8023DB0C() {
     D_802AC610.unk2C = 0;
     func_8028A0B4();
     if (D_802AC610.unk40 != 0) {
-        M2C_FIELD(D_800AEDF0, s32 *, 0x18) |= 0x200;
-        M2C_FIELD(D_800AEDF0, s32 *, 0x18) |= 3;
+        PLAYERS[0].unk18 |= 0x200;
+        PLAYERS[0].unk18 |= 3;
         func_80278E84(0, 8);
         func_80277AF8(0, 8);
     } else {
@@ -2224,7 +2231,7 @@ void func_8023DB0C() {
     }
     D_802AC610.unk0 |= 1;
     D_802AC660.unk0 = 0;
-    M2C_FIELD(D_800AEDF0, s32 *, 0x14) = 1;
+    PLAYERS[0].unk14 = 1;
     do {} while (0);
     for (i = 0; i < 4; i++) {
         D_802AC660.unk4[i] = 1;
@@ -2385,14 +2392,14 @@ void func_8023DA04(s32 arg0) {
     D_802AC610.unk2C = 0;
     func_8028A0B4();
     if (D_802AC610.unk40 != 0) {
-        M2C_FIELD(D_800AEDF0, s32 *, 0x18) |= 0x200;
-        M2C_FIELD(D_800AEDF0, s32 *, 0x18) |= 3;
+        PLAYERS[0].unk18 |= 0x200;
+        PLAYERS[0].unk18 |= 3;
         func_80278E84(0, 8);
         func_80277AF8(0, 8);
     } else {
         func_80277E1C();
     }
-    M2C_FIELD(D_800AEDF0, s32 *, 0x14) = 1;
+    PLAYERS[0].unk14 = 1;
 }
 
 static void func_8023D9FC(void) {
@@ -2474,7 +2481,7 @@ static s32 func_8023D0F8() {
     }
     if ((D_802AC5D0 & 2) && (D_802AC610.unk14 != 0)) {
         D_802AC610.unk14--;
-        M2C_FIELD(D_800AEDF0, s32 *, 0x14) = 1;
+        PLAYERS[0].unk14 = 1;
         skip = 1;
         D_802AC7CC = 0x20;
     } else {
@@ -2490,7 +2497,7 @@ static s32 func_8023D0F8() {
     D_800AEFE8 = 0;
     D_800AF06C = 0;
     D_800AF0B0 = 0;
-    M2C_FIELD(D_800AEDF0, s32 *, 0x24) = 1;
+    PLAYERS[0].unk24 = 1;
     M2C_FIELD(D_800AEDF0, s32 *, 0x344) = 0;
     func_80234858(&yaw, NULL, NULL);
     a = (s32) (yaw / 45.0f) * 45;
@@ -2741,10 +2748,10 @@ static void func_8023CA94() {
         D_802AC660.unk34 = FPS;
         func_80277E1C();
         for (i = 0; i < 4; i++) {
-            M2C_FIELD(D_800AEDF0 + i * 0xC8, s32 *, 0x20) = 3;
-            M2C_FIELD(D_800AEDF0 + i * 0xC8, s32 *, 0x14) = 1;
-            M2C_FIELD(D_800AEDF0 + i * 0xC8, s32 *, 0x98) = 3;
-            M2C_FIELD(D_800AEDF0 + i * 0xC8, s32 *, 0x94) = M2C_FIELD(D_800AEDF0 + i * 0xC8, s32 *, 0x18);
+            PLAYERS[i].unk20 = 3;
+            PLAYERS[i].unk14 = 1;
+            PLAYERS[i].unk98 = 3;
+            PLAYERS[i].unk94 = PLAYERS[i].unk18;
             D_802AC660.unkB4[i] &= ~2;
             if (D_802AC660.unk4[i] == 2) {
                 func_80251804(i);
