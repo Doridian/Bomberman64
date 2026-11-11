@@ -38,17 +38,36 @@
  *   - each inlined call adds its own frame area (rounded to 8), its
  *     parameters then its locals in declaration order; func_8022E884's
  *     frame is the original's 0xC0.
- * Left: func_8022E884 (657 words, 0x70 bytes short: the original keeps
- * D_802A5708 in a3 and D_802A5738 in a2 over case 1/8's calls, ours s4
- * and a3; uopt colours D_802A5738 first and a2 is barred from it in one
- * block; hit and ret share v1 where the original has v0 and v1);
- * func_802320A8 (398: the original keeps n in fs3 over the whole loop,
- * loaded from its home before it and stored after, which IDO does only
- * for a variable live into the loop; the use in the first switch's
- * default stands in for whatever made it live there, at the cost of its
- * two words; t stays in memory); func_802334CC's 9 are the text's size
- * (its padding); func_8022DF68 (2: load order) and func_80230914 (1: an
- * add.s's operand order).
+ *   - func_8022E884's inlined statics sit where its stubs say: E0A4 is
+ *     case 20's loop, E170 case 4's y test, E264 case 12's loop, E328
+ *     case 5's y test, E874 case 2's and E87C case 1's helper (the stubs
+ *     come out in a post-order walk from E884, callees in reverse call
+ *     order). Case 4's y test uses a[4] (the height) on both sides.
+ *   - the case 12/20 loops pass their ball to the test as
+ *     D_802A59D0 + 6 (+ 12): a different symbol+offset keeps the
+ *     in-loop la (rebuilt in s0 every pass) apart from the stores' base.
+ *   - func_802320A8's t is a volatile scalar: the original stores it in
+ *     both arms and reloads it after the join (then x = t; x = x - n).
+ * Left: func_8022E884 (89 words). About 51 are .bss relocations: our
+ * statics are laid out by IDO (file statics first, f32[4] each, then the
+ * function-local ones), not as the original's module bss (D_802A5734 sits
+ * inside D_802A5720's 0x18, D_802A5780.. between D_802A5760 and
+ * D_802A59D0), so every sym+k access maps to the wrong address; that
+ * needs the whole 0x802A5560-0x802A5A24 bss defined in order. The code
+ * left is case 12/20's four stores before the loop: uopt keeps the ball's
+ * address in v0 (a block-local CSE of the four istr) where the original
+ * uses lui/%lo for each, with p[0], p[1], p[3] loaded in that order.
+ * func_802320A8 (295, the size right): 32 opcodes differ (prologue
+ * order, spBC[0] loaded before the mode switch for case 2, case 2's
+ * a/b/c computed before the sp128 stores, three mov.s), the rest is
+ * register naming: case 1/2's a and b swapped (f22/f24: equal priority,
+ * a has the lower bit), the angle wraps' x one float register up (a
+ * separately coloured spE4[1] - 90), obj->unk3C in v0 not v1, and the
+ * obj+0x58 slot at 0x60 not 0x68. The default case's store keeps n
+ * live into the loop (the original loads it into fs3 before the loop).
+ * func_8022DF68 (2: load order in func_8022E0AC) and func_80230914 (1:
+ * an add.s's operand order; writing the operands the other way round
+ * changes nothing).
  */
 #include "common.h"
 
