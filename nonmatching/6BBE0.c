@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 7128, eu 7128, jp 7088
+ * differing words: us 7115, eu 7115, jp 7075
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -4501,33 +4501,21 @@ static s32 func_802529A4(u8 *arg0, s32 arg1, s32 arg2, f32 arg3) {
 }
 
 static s32 func_80252918(s32 *arg1, s32 arg0, s32 arg2) {
-    s32 sv_a2;
-    s32 temp_a0;
-    s32 var_s0;
-    s32 var_s1;
-    s32 var_s2;
-    u8 *temp_s3;
+    s32 *d;
+    s32 i;
+    s32 x;
+    s32 z;
 
-    temp_s3 = (arg0 * 8) + D_802A0EF0;
-    var_s2 = 0;
-    var_s0 = M2C_FIELD(temp_s3, s32 *, 0) + M2C_FIELD(arg1, s32 *, 0);
-    var_s1 = M2C_FIELD(temp_s3, s32 *, 4) + M2C_FIELD(arg1, s32 *, 8);
-    if (arg2 > 0) {
-loop_1:
-        temp_a0 = func_8026D7D8(var_s0, M2C_FIELD(arg1, s32 *, 4), var_s1);
-        sv_a2 = 0 /* FIXME unset $a2 */;
-        if (func_80251AC8(temp_a0) != 0) {
+    d = ((s32 (*)[2]) D_802A0EF0)[arg0];
+    x = arg1[0] + d[0];
+    z = arg1[2] + d[1];
+    for (i = 0; i < arg2; i++) {
+        if (func_80251AC8(func_8026D7D8(x, arg1[1], z)) != 0) {
             return 0;
         }
-        var_s2 += 1;
-        var_s0 += M2C_FIELD(temp_s3, s32 *, 0);
-        var_s1 += M2C_FIELD(temp_s3, s32 *, 4);
-        if (var_s2 == arg2) {
-            goto block_4;
-        }
-        goto loop_1;
+        x += d[0];
+        z += d[1];
     }
-block_4:
     return 1;
 }
 
