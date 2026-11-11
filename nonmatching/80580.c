@@ -8,9 +8,9 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4, eu 4, jp 4
+ * differing words: us 0, eu 0, jp 0
  *
- * The object is the same in all three versions. 78 of the 79 original
+ * The object is the same in all three versions. All 79 original
  * procedures match (stubs included). The IPA statics
  * (s-registers used unsaved, or arguments in odd registers) are static
  * here: 80266D8C, 8026706C (num, def: the original's num is homed at
@@ -31,24 +31,15 @@
  * and 80268440's pad give the original's frame sizes.
  * 80267A18 has the original's size and s-registers: the dead `if (op ==
  * K) {}` tests and `if (idx) {}` give its constants their s-registers.
- * What is left (4 words) is its frame: def sits at 0x78 against the
- * original's 0x80 and one spill at 0x24 against 0x20, though the frame
- * size is right. The front-end frame (td) is the function's own locals
- * (block-scoped ones too: s, v, pc, num+ch, op, lp, cs, rounded to 8)
- * then one area per inlined call in call order (80267A10's def, 802679C0,
- * 802679A8, 802679B0's vol, 802679A0, the 802679B8s); uopt's spill
- * slots go below it (idx 1 at -(td + 8) from the top, frame =
- * round8(24 + 12 + td)). The original has def 35 bytes down, vol 82 and
- * td 140; this draft has 35, 74 and 136 (us). So the original has one
- * own-local word fewer, 8 more bytes between def and vol, and 4 more
- * below vol. Sharing lp for cs and an `s32 pad` in 802679A8 give all but
- * the last (2 words, not kept: both artificial); no pad, alone or in
- * pairs, in 802679A0/B0/B8 adds just 4 below vol (B8's are inlined three
- * times, A0's cost 8), and calling 80266928 for the cs block puts vol at
- * 102. 8026706C matched once the volume static returned s16
- * (its (s16) conversion before the sh is dead and as1 drops it, but it
- * used up a ugen temp) and the script id lost its inner (u8) cast (one
- * `and` fewer).
+ * Its frame (def at 0x80, vol at 0x5E, a spill at 0x20) is built from
+ * the inlined statics' areas, laid out in call order: the stop loop
+ * resets each child through 80266928 (no block-scoped local in
+ * 80267A18), the clamp 802679B8 takes only the upper bound (lower 0,
+ * so each of its three areas is smaller) and 802679A8's fade ratio has
+ * a local of its own (t, not the pitch's r). 8026706C matched once the
+ * volume static returned s16 (its (s16) conversion before the sh is
+ * dead and as1 drops it, but it used up a ugen temp) and the script id
+ * lost its inner (u8) cast (one `and` fewer).
  */
 #include "common.h"
 
@@ -415,7 +406,7 @@ extern u8 D_802AD674;
 extern u8 D_802AD675;
 extern u8 D_802AD684[];
 static s16 func_80267A10(s16 num);
-static void func_802679B8(s16 *p, s16 lo, s16 hi);
+static void func_802679B8(s16 *p, s16 hi);
 static void func_802679A8(VoiceScript *s);
 static void func_802679B0(VoiceScript *s, Voice *v);
 static void func_802679A0(VoiceScript *s, Voice *v);
@@ -1787,11 +1778,7 @@ static void func_80267A18(s16 idx) {
                                 v->flags |= 0x2000;
                             }
                             v->unk1F = 0;
-                            {
-                                VoiceScript *cs = &D_802AD65C[num];
-                                cs->script = -1;
-                                cs->flags = 0;
-                            }
+                            func_80266928(num);
                         }
                     }
                 }
@@ -1815,9 +1802,9 @@ static s16 func_80267A10(s16 num) {
     return func_80266D8C(def.prio, 1);
 }
 
-static void func_802679B8(s16 *p, s16 lo, s16 hi) {
-    if (*p < lo) {
-        *p = lo;
+static void func_802679B8(s16 *p, s16 hi) {
+    if (*p < 0) {
+        *p = 0;
     } else if (*p > hi) {
         *p = hi;
     }
@@ -1826,6 +1813,7 @@ static void func_802679B8(s16 *p, s16 lo, s16 hi) {
 static void func_802679A8(VoiceScript *s) {
     f32 f;
     f32 r;
+    f32 t;
 
     f = 0.0f;
     if (s->unk20 == 0) {
@@ -1850,8 +1838,8 @@ static void func_802679A8(VoiceScript *s) {
             s->unkE += s->unk28;
             f = 0.1f;
         } else {
-            r = (f32) s->unk2A / (f32) s->unk2C;
-            f = s->unk28 * r + f;
+            t = (f32) s->unk2A / (f32) s->unk2C;
+            f = s->unk28 * t + f;
         }
     }
     s->unkE += (s16) f;
@@ -1860,7 +1848,7 @@ static void func_802679A8(VoiceScript *s) {
 static void func_802679B0(VoiceScript *s, Voice *v) {
     s16 vol;
 
-    func_802679B8(&s->unk12, 0, 0x7F);
+    func_802679B8(&s->unk12, 0x7F);
     if (s->flags & 0x18) {
         if (s->flags & 8) {
             s->unk2E++;
@@ -1876,7 +1864,7 @@ static void func_802679B0(VoiceScript *s, Voice *v) {
             }
         }
         vol = (s->unk2E * 127.0f) / s->unk30;
-        func_802679B8(&vol, 0, 0x7F);
+        func_802679B8(&vol, 0x7F);
         s->unk12 = (u8) vol;
     }
     if (v->unk19 != s->unk12) {
@@ -1888,7 +1876,7 @@ static void func_802679B0(VoiceScript *s, Voice *v) {
 static void func_802679A0(VoiceScript *s, Voice *v) {
     s16 vol;
 
-    func_802679B8(&s->unk10, 0, 0x7F);
+    func_802679B8(&s->unk10, 0x7F);
     vol = func_80265FBC(s->unk10);
     if (vol != v->unk16) {
         v->unk16 = vol;
