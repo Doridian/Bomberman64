@@ -5,7 +5,7 @@
  * global, emitted in the original's order. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 87, eu 87, jp 87
+ * differing words: us 85, eu 85, jp 85
  *
  * 36 of 47 match. Biggest left: func_802741D8 461, func_8027655C 436,
  * func_80274994 320 (still m2c's control flow and untyped offsets),
@@ -318,6 +318,7 @@ s32 func_80275DD8(Ent88 *a, Ent88 *b);
 void func_80276184(s16 *arg0, u8 *arg1);
 static void func_80271448_inl(f32 arg0, f32 arg1, f32 arg2, f32 *arg3, f32 *arg4, f32 *arg5);
 static s16 func_802712A8_inl(s16 *arg0, s16 arg1);
+static void frame8_8027655C(void);
 void func_802763DC(s16 *arg0);
 s32 func_8027655C(Ent88 *arg0);
 void func_80276D68(Ent88 *arg0);
@@ -795,7 +796,7 @@ s32 func_8027655C(Ent88 *arg0) {
     struct { f32 z, y, x; } v;
     f32 sp158;
     void *sp154;
-    s32 pad[17];
+    s32 pad[16];
     s16 fl;
     s32 f4;
     s32 f8;
@@ -916,11 +917,20 @@ s32 func_8027655C(Ent88 *arg0) {
         return 1;
     }
     func_80271448_inl(arg0->x, arg0->y, arg0->z, &v.x, &v.y, &v.z);
+    frame8_8027655C();
     if ((func_8026D7D8((s32) v.x, (s32) v.y, (s32) v.z) & 0xF) == 9) {
         func_80275948((s16 *) arg0);
     }
     func_80275034((s16 *) arg0);
     return 0;
+}
+
+/*
+ * Stands for 8 bytes the original's func_8027655C frame has below the
+ * inlined func_80271448's buffer (its origin is not known): an inlined
+ * (void) static called after it adds an 8-byte area there.
+ */
+static void frame8_8027655C(void) {
 }
 
 static s16 func_802712A8_inl(s16 *arg0, s16 arg1) {
