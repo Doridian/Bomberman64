@@ -9,7 +9,7 @@
  * after it follow. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3, eu 3, jp 3
+ * differing words: us 1, eu 1, jp 1
  */
 #include "common.h"
 
@@ -901,10 +901,9 @@ void func_8027A640(void) {
             p += 3;
         }
         for (i = 0; i < 3; i++) {
-            val = *p;
+            val = *p++;
             D_802AFE88[c][i] = val;
             sums[i] += val;
-            p++;
         }
         if (mode == 1) {
             p += 3;
