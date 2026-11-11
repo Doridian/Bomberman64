@@ -6,7 +6,7 @@
  * boxes, func_8022E884). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3419, eu 3419, jp 3419
+ * differing words: us 3240, eu 3240, jp 3240
  *
  * A first draft: functions in the reverse of the ROM's order, which IDO
  * now emits exactly as the original does (stubs included); a handful by
@@ -35,6 +35,14 @@ typedef s8 M2C_UNK8;
 typedef s16 M2C_UNK16;
 typedef s32 M2C_UNK32;
 
+/* A collision shape's placement. */
+typedef struct {
+    /* 0x00 */ u8 pad0[0x10];
+    /* 0x10 */ f32 pos[3];
+    /* 0x1C */ f32 rot[3];
+    /* 0x28 */ f32 scale[3];
+} Shape;
+
 /* Probably the whole of structs.h's UnkStructA, but this file stores
  * 0x7FFFFFFF in 0x18 and 0x1C, which UnkStructA has as floats. */
 typedef struct UnkStructA80 {
@@ -54,7 +62,7 @@ typedef struct UnkStructA80 {
     /* 0x34 */ f32 unk34;
     /* 0x38 */ f32 unk38;
     /* 0x3C */ void *unk3C;
-    /* 0x40 */ void *unk40;
+    /* 0x40 */ Shape *unk40;
     /* 0x44 */ struct UnkStructA80 *unk44;
     /* 0x48 */ s32 unk48;
     /* 0x4C */ f32 unk4C[3];
@@ -158,10 +166,12 @@ void func_8022DE00(void);
 void func_8022DE6C(void);
 f32 func_8022DF68(f32 *arg0, f32 *arg1);
 static s32 func_8022DFBC(f32 *arg0, f32 *arg1);
-static void func_8022E0AC(f32 *arg0, f32 *arg1);
+static void func_8022E0A4();
+static void func_8022E0AC(UnkStructA80 *arg0, f32 *arg1);
 void func_8022E170(void);
 static s32 func_8022E178(f32 *arg0, f32 *arg1);
-static void func_8022E26C(f32 *arg0, f32 *arg1);
+static void func_8022E264();
+static void func_8022E26C(UnkStructA80 *arg0, f32 *arg1);
 void func_8022E328(void);
 f32 func_8022E330(f32 *arg0, f32 *arg1);
 void func_8022E364(u8 *arg0, u8 *arg1, f32 *arg2);
@@ -2194,119 +2204,98 @@ void func_8022E328() {
 
 }
 
-static void func_8022E26C(f32 *arg0, f32 *arg1) {
-    f32 temp_fa0;
-    f32 temp_fv1;
-    f32 var_fv0;
-    f32 var_fv1;
-    u8 *temp_v0;
-
-    if (M2C_FIELD(arg0, s32 *, 0x30) & 0x20) {
-        var_fv1 = 1.0f;
-        var_fv0 = 1.0f;
-    } else {
-        temp_v0 = M2C_FIELD(arg0, void **, 0x40);
-        var_fv0 = M2C_FIELD(temp_v0, f32 *, 0x28);
-        temp_fa0 = M2C_FIELD(temp_v0, f32 *, 0x2C);
-        if (var_fv0 < temp_fa0) {
-            var_fv0 = temp_fa0;
-        }
-        temp_fv1 = M2C_FIELD(temp_v0, f32 *, 0x30);
-        if (var_fv0 < temp_fv1) {
-            var_fv0 = temp_fv1;
-        }
-        var_fv1 = temp_fa0;
-    }
-    M2C_FIELD(arg1, f32 *, 0) = M2C_FIELD(M2C_FIELD(arg0, void **, 0x40), f32 *, 0x10);
-    arg1[1] = M2C_FIELD(M2C_FIELD(arg0, void **, 0x40), f32 *, 0x14) + (M2C_FIELD(arg0, f32 *, 0x38) * var_fv1);
-    arg1[2] = M2C_FIELD(M2C_FIELD(arg0, void **, 0x40), f32 *, 0x18);
-    arg1[3] = M2C_FIELD(arg0, f32 *, 0x34) * var_fv0;
+static void func_8022E264() {
 }
 
-static s32 func_8022E178(f32 *arg0, f32 *arg1) {
-    f32 temp_fv0;
-    f32 temp_fv1;
-    s32 var_v0;
+static void func_8022E26C(UnkStructA80 *arg0, f32 *arg1) {
+    f32 h;
+    f32 r;
 
-    temp_fv1 = M2C_FIELD(arg0, f32 *, 0);
-    temp_fv0 = M2C_FIELD(arg1, f32 *, 0);
-    if (temp_fv1 <= temp_fv0) {
-        if ((temp_fv1 + arg0[3]) <= temp_fv0) {
+    func_8022E264();
+    if (arg0->unk30 & 0x20) {
+        h = r = 1.0f;
+    } else {
+        r = arg0->unk40->scale[0];
+        if (r < arg0->unk40->scale[1]) {
+            r = arg0->unk40->scale[1];
+        }
+        if (r < arg0->unk40->scale[2]) {
+            r = arg0->unk40->scale[2];
+        }
+        h = arg0->unk40->scale[1];
+    }
+    arg1[0] = arg0->unk40->pos[0];
+    arg1[1] = arg0->unk40->pos[1] + arg0->unk38 * h;
+    arg1[2] = arg0->unk40->pos[2];
+    arg1[3] = arg0->unk34 * r;
+}
+
+static s32 func_8022E178(f32 *a, f32 *b) {
+    if (a[0] <= b[0]) {
+        if (a[0] + a[3] <= b[0]) {
             return 0;
         }
-        goto block_5;
-    }
-    if ((temp_fv0 + M2C_FIELD(arg1, f32 *, 0x10)) <= (temp_fv1 - arg0[3])) {
+    } else if (b[0] + b[4] <= a[0] - a[3]) {
         return 0;
     }
-block_5:
     D_802A5780[0] = 0.0f;
-    D_802A5780[1] = arg0[1];
+    D_802A5780[1] = a[1];
+    D_802A5780[2] = a[2];
     D_802A5790[0] = 0.0f;
-    D_802A5780[2] = arg0[2];
-    D_802A5790[1] = M2C_FIELD(arg1, f32 *, 4);
-    D_802A5790[2] = M2C_FIELD(arg1, f32 *, 8);
-    var_v0 = 1;
-    if ((arg0[3] + M2C_FIELD(arg1, f32 *, 0xC)) <= func_8022DF68(D_802A5780, D_802A5790)) {
-        var_v0 = 0;
+    D_802A5790[1] = b[1];
+    D_802A5790[2] = b[2];
+    if (a[3] + b[3] <= func_8022DF68(D_802A5780, D_802A5790)) {
+        return 0;
     }
-    return var_v0;
+    return 1;
 }
 
 void func_8022E170() {
 
 }
 
-static void func_8022E0AC(f32 *arg0, f32 *arg1) {
-    f32 temp_fv1;
-    f32 var_fv0;
-    u8 *temp_v0;
-
-    temp_v0 = M2C_FIELD(arg0, void **, 0x40);
-    var_fv0 = M2C_FIELD(temp_v0, f32 *, 0x28);
-    temp_fv1 = M2C_FIELD(temp_v0, f32 *, 0x30);
-    if (var_fv0 < temp_fv1) {
-        var_fv0 = temp_fv1;
-    }
-    M2C_FIELD(arg1, f32 *, 0) = M2C_FIELD(temp_v0, f32 *, 0x10);
-    arg1[1] = M2C_FIELD(M2C_FIELD(arg0, void **, 0x40), f32 *, 0x14);
-    arg1[2] = M2C_FIELD(M2C_FIELD(arg0, void **, 0x40), f32 *, 0x18);
-    M2C_FIELD(arg1, f32 *, 0x14) = (f32) M2C_FIELD(M2C_FIELD(arg0, void **, 0x40), f32 *, 0x1C);
-    M2C_FIELD(arg1, f32 *, 0x18) = (f32) M2C_FIELD(M2C_FIELD(arg0, void **, 0x40), f32 *, 0x20);
-    M2C_FIELD(arg1, f32 *, 0x1C) = (f32) M2C_FIELD(M2C_FIELD(arg0, void **, 0x40), f32 *, 0x24);
-    arg1[3] = M2C_FIELD(arg0, f32 *, 0x34) * var_fv0;
-    M2C_FIELD(arg1, f32 *, 0x10) = (f32) (M2C_FIELD(arg0, f32 *, 0x38) * M2C_FIELD(M2C_FIELD(arg0, void **, 0x40), f32 *, 0x2C));
-
+static void func_8022E0A4() {
 }
 
-static s32 func_8022DFBC(f32 *arg0, f32 *arg1) {
-    f32 temp_fv0;
-    f32 temp_fv1;
-    s32 var_v0;
+static void func_8022E0AC(UnkStructA80 *arg0, f32 *arg1) {
+    f32 r;
 
-    temp_fv1 = arg0[2];
-    temp_fv0 = M2C_FIELD(arg1, f32 *, 8);
-    if (temp_fv1 <= temp_fv0) {
-        if ((temp_fv1 + arg0[3]) <= temp_fv0) {
+    func_8022E0A4();
+    r = arg0->unk40->scale[0];
+    if (r < arg0->unk40->scale[2]) {
+        r = arg0->unk40->scale[2];
+    }
+    arg1[0] = arg0->unk40->pos[0];
+    arg1[1] = arg0->unk40->pos[1];
+    arg1[2] = arg0->unk40->pos[2];
+    arg1[5] = arg0->unk40->rot[0];
+    arg1[6] = arg0->unk40->rot[1];
+    arg1[7] = arg0->unk40->rot[2];
+    arg1[3] = arg0->unk34 * r;
+    arg1[4] = arg0->unk38 * arg0->unk40->scale[1];
+}
+
+static s32 func_8022DFBC(f32 *a, f32 *b) {
+    s32 r;
+    f32 d;
+
+    if (a[2] <= b[2]) {
+        if (a[2] + a[3] <= b[2]) {
             return 0;
         }
-        goto block_5;
-    }
-    if ((temp_fv0 + M2C_FIELD(arg1, f32 *, 0x10)) <= (temp_fv1 - arg0[3])) {
+    } else if (b[2] + b[4] <= a[2] - a[3]) {
         return 0;
     }
-block_5:
-    D_802A5780[0] = M2C_FIELD(arg0, f32 *, 0);
+    D_802A5780[0] = a[0];
+    D_802A5780[1] = a[1];
     D_802A5780[2] = 0.0f;
-    D_802A5780[1] = arg0[1];
-    D_802A5790[0] = M2C_FIELD(arg1, f32 *, 0);
+    D_802A5790[0] = b[0];
+    D_802A5790[1] = b[1];
     D_802A5790[2] = 0.0f;
-    D_802A5790[1] = M2C_FIELD(arg1, f32 *, 4);
-    var_v0 = 1;
-    if ((arg0[3] + M2C_FIELD(arg1, f32 *, 0xC)) <= func_8022DF68(D_802A5780, D_802A5790)) {
-        var_v0 = 0;
+    if (a[3] + b[3] <= func_8022DF68(D_802A5780, D_802A5790)) {
+        return 0;
     }
-    return var_v0;
+    return 1;
 }
 
 f32 func_8022DF68(f32 *arg0, f32 *arg1) {
@@ -2343,8 +2332,8 @@ s32 func_8022E884(UnkStructA80 *arg0, UnkStructA80 *arg1) {
     sa = arg0->unk30 & ~0x20;
     switch (sa | (arg1->unk30 & ~0x20)) {
     case 1:
-        func_8022E26C((f32 *) arg0, D_802A5708);
-        func_8022E26C((f32 *) arg1, D_802A5720);
+        func_8022E26C(arg0, D_802A5708);
+        func_8022E26C(arg1, D_802A5720);
         r = D_802A5708[3] + D_802A5720[3];
         dx = D_802A5708[0] - D_802A5720[0];
         dy = D_802A5708[1] - D_802A5720[1];
@@ -2356,8 +2345,8 @@ s32 func_8022E884(UnkStructA80 *arg0, UnkStructA80 *arg1) {
         }
         break;
     case 2:
-        func_8022E0AC((f32 *) arg0, D_802A5738);
-        func_8022E0AC((f32 *) arg1, D_802A5760);
+        func_8022E0AC(arg0, D_802A5738);
+        func_8022E0AC(arg1, D_802A5760);
         hit = 0;
         if (D_802A5738[4] + D_802A5738[3] + D_802A5760[4] + D_802A5760[3] < func_8022DF68(D_802A5738, D_802A5760)) {
             break;
@@ -2390,12 +2379,12 @@ s32 func_8022E884(UnkStructA80 *arg0, UnkStructA80 *arg1) {
     case 3:
         switch (sa) {
         case 1:
-            func_8022E26C((f32 *) arg0, D_802A5708);
-            func_8022E0AC((f32 *) arg1, D_802A5738);
+            func_8022E26C(arg0, D_802A5708);
+            func_8022E0AC(arg1, D_802A5738);
             break;
         case 2:
-            func_8022E0AC((f32 *) arg0, D_802A5738);
-            func_8022E26C((f32 *) arg1, D_802A5708);
+            func_8022E0AC(arg0, D_802A5738);
+            func_8022E26C(arg1, D_802A5708);
             break;
         default:
             for (;;) {
@@ -2407,12 +2396,12 @@ s32 func_8022E884(UnkStructA80 *arg0, UnkStructA80 *arg1) {
     case 9:
         switch (sa) {
         case 1:
-            func_8022E26C((f32 *) arg0, D_802A5708);
-            func_8022E0AC((f32 *) arg1, D_802A5738);
+            func_8022E26C(arg0, D_802A5708);
+            func_8022E0AC(arg1, D_802A5738);
             break;
         case 8:
-            func_8022E0AC((f32 *) arg0, D_802A5738);
-            func_8022E26C((f32 *) arg1, D_802A5708);
+            func_8022E0AC(arg0, D_802A5738);
+            func_8022E26C(arg1, D_802A5708);
             break;
         default:
             for (;;) {
@@ -2423,12 +2412,12 @@ s32 func_8022E884(UnkStructA80 *arg0, UnkStructA80 *arg1) {
     case 5:
         switch (sa) {
         case 1:
-            func_8022E26C((f32 *) arg0, D_802A5708);
-            func_8022E0AC((f32 *) arg1, D_802A5738);
+            func_8022E26C(arg0, D_802A5708);
+            func_8022E0AC(arg1, D_802A5738);
             break;
         case 4:
-            func_8022E0AC((f32 *) arg0, D_802A5738);
-            func_8022E26C((f32 *) arg1, D_802A5708);
+            func_8022E0AC(arg0, D_802A5738);
+            func_8022E26C(arg1, D_802A5708);
             break;
         default:
             for (;;) {
@@ -2458,12 +2447,12 @@ s32 func_8022E884(UnkStructA80 *arg0, UnkStructA80 *arg1) {
     case 17:
         switch (sa) {
         case 1:
-            func_8022E26C((f32 *) arg0, D_802A5708);
-            func_8022E0AC((f32 *) arg1, D_802A5738);
+            func_8022E26C(arg0, D_802A5708);
+            func_8022E0AC(arg1, D_802A5738);
             break;
         case 16:
-            func_8022E0AC((f32 *) arg0, D_802A5738);
-            func_8022E26C((f32 *) arg1, D_802A5708);
+            func_8022E0AC(arg0, D_802A5738);
+            func_8022E26C(arg1, D_802A5708);
             break;
         default:
             for (;;) {
@@ -2472,8 +2461,8 @@ s32 func_8022E884(UnkStructA80 *arg0, UnkStructA80 *arg1) {
         hit = func_8022DFBC(D_802A5708, D_802A5738);
         break;
     case 12:
-        func_8022E0AC((f32 *) arg0, D_802A5738);
-        func_8022E0AC((f32 *) arg1, D_802A5760);
+        func_8022E0AC(arg0, D_802A5738);
+        func_8022E0AC(arg1, D_802A5760);
         D_802A59E8[0] = D_802A5738[0];
         D_802A59E8[1] = D_802A5738[1] + D_802A5738[3];
         D_802A59E8[3] = D_802A5738[3];
@@ -2495,8 +2484,8 @@ s32 func_8022E884(UnkStructA80 *arg0, UnkStructA80 *arg1) {
         break;
     case 4:
         func_8022E170();
-        func_8022E0AC((f32 *) arg0, D_802A5738);
-        func_8022E0AC((f32 *) arg1, D_802A5760);
+        func_8022E0AC(arg0, D_802A5738);
+        func_8022E0AC(arg1, D_802A5760);
         if (D_802A5738[1] <= D_802A5760[1]) {
             if (D_802A5738[1] + D_802A5738[4] <= D_802A5760[1]) {
                 hit = 0;
@@ -2519,8 +2508,8 @@ s32 func_8022E884(UnkStructA80 *arg0, UnkStructA80 *arg1) {
         }
         break;
     case 20:
-        func_8022E0AC((f32 *) arg0, D_802A5738);
-        func_8022E0AC((f32 *) arg1, D_802A5760);
+        func_8022E0AC(arg0, D_802A5738);
+        func_8022E0AC(arg1, D_802A5760);
         D_802A5A00[0] = D_802A5738[0];
         D_802A5A00[1] = D_802A5738[1] + D_802A5738[3];
         D_802A5A00[3] = D_802A5738[3];
