@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1763, eu 1763, jp 1754
+ * differing words: us 1628, eu 1628, jp 1619
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -45,6 +45,9 @@
  *   ranges is the order the expressions first appear: the digit store
  *   `buf[j++] = value / div + 0x10` names buf before the division, and
  *   `t = value / div * div` reuses it, with no d.
+ * - func_8023C170 (IPA static, s0-s2 unsaved) uses one counter for both
+ *   its loops; with two, its register use moved func_8023DB0C's
+ *   s-registers.
  * - The count is positional: a function one instruction short shifts
  *   every word after it, so its size matters more than its registers.
  *   What fixed sizes here: a separate index (`D_802AC770[k++]`, k = 0)
@@ -2231,9 +2234,10 @@ void func_8023DB0C() {
             D_802A01B8 = 0;
             func_802268F4(0xC);
             if (!(D_802AC5E4 & 1)) {
-                a = 0;
                 if (D_802AC5E4 & 4) {
                     a = 0xFF;
+                } else {
+                    a = 0;
                 }
                 func_80281A88(a, a, a, D_802AC7CC);
                 func_80281A40();
@@ -2831,72 +2835,51 @@ void func_8023C374() {
 }
 
 static void func_8023C170() {
-    u8 *var_s1;
-    s32 temp_a0;
-    s32 temp_v0;
-    s32 temp_v1;
-    s32 var_s0;
-    s32 var_s0_2;
-    u8 *temp_v0_2;
+    s32 i;
+    UnkStruct_8023FD08 *o;
 
     if (D_802AC660.unk0 == 0) {
-        if (D_802AC758 >= 2) {
-            goto block_5;
+        if (D_802AC758 < 2) {
+            return;
         }
-    } else if (M2C_FIELD(&D_802AC760, s32 *, 0) == 1) {
-        if (M2C_FIELD(&D_802AC760, s32 *, 4) == 1) {
-block_5:
-            D_802AC854 = 1;
-            func_802510F0();
-            func_8026C660(0x1E7);
-            func_8026C93C(0x2E);
-            var_s1 = D_800AEDF0;
-            var_s0 = 0;
-            do {
-                temp_v0 = M2C_FIELD(var_s1, s32 *, 0x24);
-                if ((temp_v0 != 3) && (temp_v0 != 0)) {
-                    func_8024585C(var_s0);
-                    func_80247C50(var_s0);
-                    func_802452E8(1);
-                }
-                var_s0 += 1;
-                var_s1 += 0xC8;
-            } while (var_s0 < 4);
-            func_80238DFC(0xD0, 0xD0, 0U);
-            func_8024585C(0);
-            func_8023903C(0x3C);
-            func_8026C660(0x1E1);
-            temp_v0_2 = func_8022A6C4(func_8026CE28(0x3F), 0);
-            M2C_FIELD(temp_v0_2, s32 *, 0xC) = (s32) (M2C_FIELD(temp_v0_2, s32 *, 0xC) | 0x100);
-            M2C_FIELD(temp_v0_2, f32 *, 0x28) = 0.1f;
-            M2C_FIELD(temp_v0_2, f32 *, 0x2C) = 0.1f;
-            M2C_FIELD(temp_v0_2, f32 *, 0x30) = 0.1f;
-            M2C_FIELD(temp_v0_2, s16 *, 0x34) = (s16) D_802AC5CC;
-            M2C_FIELD(temp_v0_2, f32 *, 0x10) = 0.0f;
-            M2C_FIELD(temp_v0_2, f32 *, 0x14) = 0.0f;
-            M2C_FIELD(temp_v0_2, f32 *, 0x18) = 0.0f;
-            var_s0_2 = 0;
-            do {
-                M2C_FIELD(temp_v0_2, f32 *, 0x18) = (f32) ((f32) var_s0_2 * 11.111111f);
-                func_80239094();
-                var_s0_2 += 1;
-            } while (var_s0_2 != 0x5A);
-            func_8022A1E8(temp_v0_2);
-            func_8026CCBC(0x3F);
-            func_8026C8E8();
-            func_8026C894();
-            temp_v1 = D_802AC5D4;
-            temp_a0 = D_802AC5D8;
-            if (!(D_802AC5D0 & 1) && (D_802A01B4 == 0)) {
-                D_802AC5D4 = temp_v1;
-                D_802AC5DC = D_802AC5D4;
-                D_802AC5D8 = temp_a0;
-                D_802AC5E0 = D_802AC5D8;
-                D_802AC5D0 |= 1;
-                D_802AC5E4 = 0;
-            }
+    } else if (((&D_802AC760)[0] != 1) || ((&D_802AC760)[1] != 1)) {
+        return;
+    }
+    D_802AC854 = 1;
+    func_802510F0();
+    func_8026C660(0x1E7);
+    func_8026C93C(0x2E);
+    for (i = 0; i < 4; i++) {
+        if ((M2C_FIELD(D_800AEDF0 + i * 0xC8, s32 *, 0x24) != 3) && (M2C_FIELD(D_800AEDF0 + i * 0xC8, s32 *, 0x24) != 0)) {
+            func_8024585C(i);
+            func_80247C50(i);
+            func_802452E8(1);
         }
     }
+    func_80238DFC(0xD0, 0xD0, 0U);
+    func_8024585C(0);
+    func_8023903C(0x3C);
+    func_8026C660(0x1E1);
+    o = func_8022A6C4(func_8026CE28(0x3F), 0);
+    o->unkC |= 0x100;
+    o->unk28 = 0.1f;
+    o->unk2C = 0.1f;
+    o->unk30 = 0.1f;
+    o->unk34 = D_802AC5CC;
+    o->unk10 = 0.0f;
+    o->unk14 = 0.0f;
+    o->unk18 = 0.0f;
+    i = 0;
+    do {
+        o->unk18 = i * 11.111111f;
+        func_80239094();
+        i++;
+    } while (i != 0x5A);
+    func_8022A1E8(o);
+    func_8026CCBC(0x3F);
+    func_8026C8E8();
+    func_8026C894();
+    func_8023AE6C(D_802AC5D4, D_802AC5D8, 0);
 }
 
 s32 func_8023BBCC() {
