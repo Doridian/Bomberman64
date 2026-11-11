@@ -1,7 +1,7 @@
 /*
  * NON_MATCHING: main_code's 96540, complete: the controller pak save.
  * flags: -O3
- * differing words: us 654, eu 654, jp 654
+ * differing words: us 534, eu 534, jp 534
  */
 #include "common.h"
 #include "ultralib/PR/os_pfs.h"
@@ -107,17 +107,17 @@ void *D_802A1534[] = {
 };
 
 static s32 func_8027BD74(s32 err, s32 mode);
-static s32 func_8027C0DC(u8 **pp, s32 unused, s32 len, s32 err);
+static s32 func_8027C0DC(u8 **pp, s32 len, s32 err);
 static s32 func_8027C18C(s32 ch, s32 file, u8 *buf);
 static s32 func_8027C3DC(s32 *file);
 static s32 func_8027C4F4(s32 ch, s32 *file);
 static void func_8027C560(s32 len, u8 *p);
 static void func_8027CA14(s32 ch, s32 retried);
 static void func_8027BF30();
-static void func_8027C0D4();
-static void func_8027C174();
-static void func_8027C17C();
-static void func_8027C184();
+static s32 func_8027C0D4(u8 **pp, u8 v);
+static s32 func_8027C174(u8 *buf);
+static s32 func_8027C17C(u8 *buf);
+static s32 func_8027C184(s32 ch, s32 file, u8 *buf);
 static void func_8027C3D4();
 static void func_8027C4EC();
 static void func_8027C8F8();
@@ -363,81 +363,86 @@ static s32 func_8027C3DC(s32 *file) {
     return ret;
 }
 
-static void func_8027C184() {
+/* Reads the file into buf and checks D_802B0128 (the file just written);
+ * 9 means good. */
+static s32 func_8027C184(s32 ch, s32 file, u8 *buf) {
+    s32 ret;
+
+    switch (func_80298848(&D_802AFF70[ch], file, PFS_READ, 0, 0x20, buf)) {
+        case 0:
+            if (func_8027C17C(D_802B0128)) {
+                ret = 0xB;
+            } else if (func_8027C174(D_802B0128)) {
+                ret = 0xA;
+            } else {
+                ret = 9;
+            }
+            break;
+        case 1:
+            ret = 0;
+            break;
+        case 2:
+            ret = 2;
+            break;
+        case 3:
+            ret = 4;
+            break;
+        case 5:
+            ret = 7;
+            break;
+        case 6:
+            ret = 0xC;
+            break;
+        default:
+            ret = 0;
+            break;
+    }
+    return ret;
 }
 
-static void func_8027C17C() {
+/* The revision byte. */
+static s32 func_8027C17C(u8 *buf) {
+    s32 bad = 0;
+
+    if (buf[4] != 1) {
+        bad = 1;
+    }
+    return bad;
 }
 
-static void func_8027C174() {
+/* The checksums and the fixed bytes: the number of the first bad part. */
+static s32 func_8027C174(u8 *buf) {
+    s32 err = 0;
+    u8 *p = buf;
+
+    if (func_8027C0DC(&p, 8, 1)) {
+        err = 1;
+    } else if (func_8027C0DC(&p, 9, 2)) {
+        err = 2;
+    } else if (func_8027C0DC(&p, 5, 3)) {
+        err = 3;
+    } else if (func_8027C0DC(&p, 5, 4)) {
+        err = 4;
+    } else if (func_8027C0D4(&p, 0xFE)) {
+        err = 5;
+    } else if (func_8027C0D4(&p, 0)) {
+        err = 6;
+    } else if (func_8027C0D4(&p, 0)) {
+        err = 7;
+    } else if (func_8027C0D4(&p, 0)) {
+        err = 8;
+    } else if (func_8027C0D4(&p, 0)) {
+        err = 9;
+    }
+    return err;
 }
 
 static s32 func_8027C18C(s32 ch, s32 file, u8 *buf) {
     s32 i;
     s32 ret;
-    s32 err;
-    u8 *p;
 
-    func_8027C174();
-    func_8027C17C();
-    func_8027C184();
     for (i = 0; i < 3; i++) {
-        switch (func_80298848(&D_802AFF70[ch], file, PFS_READ, 0, 0x20, buf)) {
-            case 0:
-                err = 0;
-                ret = 0;
-                if (D_802B0128[4] != 1) {
-                    ret = 1;
-                }
-                if (ret) {
-                    ret = 0xB;
-                    break;
-                }
-                p = D_802B0128;
-                if (func_8027C0DC(&p, 0, 8, 1)) {
-                    err = 1;
-                } else if (func_8027C0DC(&p, 0, 9, 2)) {
-                    err = 2;
-                } else if (func_8027C0DC(&p, 0, 5, 3)) {
-                    err = 3;
-                } else if (func_8027C0DC(&p, 0, 5, 4)) {
-                    err = 4;
-                } else if (*p++ != 0xFE) {
-                    err = 5;
-                } else if (*p++ != 0) {
-                    err = 6;
-                } else if (*p++ != 0) {
-                    err = 7;
-                } else if (*p++ != 0) {
-                    err = 8;
-                } else if (*p++ != 0) {
-                    err = 9;
-                }
-                if (err) {
-                    ret = 0xA;
-                } else {
-                    ret = 9;
-                }
-                break;
-            case 1:
-                ret = 0;
-                break;
-            case 2:
-                ret = 2;
-                break;
-            case 3:
-                ret = 4;
-                break;
-            case 5:
-                ret = 7;
-                break;
-            case 6:
-                ret = 0xC;
-                break;
-            default:
-                ret = 0;
-                break;
-        }
+        ret = func_8027C184(ch, file, buf);
         if (ret == 0 || ret == 2 || ret == 9) {
             break;
         }
@@ -445,12 +450,11 @@ static s32 func_8027C18C(s32 ch, s32 file, u8 *buf) {
     return ret;
 }
 
-static s32 func_8027C0DC(u8 **pp, s32 unused, s32 len, s32 err) {
+static s32 func_8027C0DC(u8 **pp, s32 len, s32 err) {
     u8 *p = *pp;
     u8 sum = 0;
     s32 i;
 
-    func_8027C0D4();
     for (i = 0; i < len; i++) {
         sum += *p++;
     }
@@ -461,13 +465,15 @@ static s32 func_8027C0DC(u8 **pp, s32 unused, s32 len, s32 err) {
     return 0;
 }
 
-static void func_8027C0D4() {
+static s32 func_8027C0D4(u8 **pp, u8 v) {
+    return *(*pp)++ != v;
 }
 
 s32 func_8027BF38(PakDir *dir) {
     s32 ret = 9;
     s32 i;
     s32 j;
+    s32 pad;
     OSPfsState state;
 
     func_8027BF30();
@@ -558,8 +564,6 @@ static s32 func_8027BD74(s32 err, s32 mode) {
                 case 2:
                     return 1;
             }
-            return ret;
-        case 1:
             break;
         case 2:
             return 2;
