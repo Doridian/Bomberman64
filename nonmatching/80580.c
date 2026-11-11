@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 92, eu 92, jp 92
+ * differing words: us 91, eu 91, jp 91
  *
  * The object is the same in all three versions. 70 of the 79 original
  * procedures match (stubs included). The IPA statics
@@ -475,7 +475,7 @@ void func_8026910C(void);
 static void func_80269144(void *dst, s32 size, s32 rom);
 void func_802691A8(void);
 s16 *func_80269680(u32 arg0);
-void func_80269704(s16 arg0);
+void func_80269704(u8 arg0);
 s32 func_802697A0(void);
 s32 func_802697C0(void);
 s32 func_802697E0(void);
@@ -1161,12 +1161,12 @@ s32 func_802697A0() {
     return M2C_FIELD(func_8026B79C(), s32 *, 0xC);
 }
 
-void func_80269704(s16 arg0) {
+void func_80269704(u8 arg0) {
     Voice *v;
     s32 i;
 
     D_802AD218 = 0;
-    D_802AD218 |= arg0 & 1;
+    D_802AD218 |= (u8) (arg0 & 1);
     func_802983A8(D_802AD218);
     for (i = 0; i < D_802A12BC; i++) {
         v = &D_802AD654[i];
