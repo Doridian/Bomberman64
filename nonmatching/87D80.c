@@ -18,8 +18,8 @@
  * original's dead stores to it), not in three variables.
  * 32 of 43 match. Left: func_8026EAF8 105, func_8026E3AC 74,
  * func_8026D6C0 69, func_8026D7D8 48, func_8026D620 32, func_8026DCAC 26,
- * func_8026EE18 26, func_8026FC08 25, func_8026F5E8 8, func_8026E938 3
- * (saved-register order), func_8026F8B0 2 (one delay slot).
+ * func_8026EE18 26, func_8026FC08 25, func_8026F5E8 8, func_8026E938 3 (one
+ * float store's stack slot), func_8026F8B0 2 (one delay slot).
  */
 #include "common.h"
 
