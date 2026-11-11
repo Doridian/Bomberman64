@@ -7,7 +7,7 @@
  * "NON_MATCHING drafts"). src/48300.c, before it, is another object:
  * func_80232E60 calls its func_8022DB00 with a jal (text_objects.txt).
  * flags: -O3
- * differing words: us 336, eu 336, jp 336
+ * differing words: us 335, eu 335, jp 335
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does. An 8-byte stub (jr ra; nop) is an inlined
@@ -66,9 +66,11 @@
  * separately coloured spE4[1] - 90), obj->unk3C in v0 not v1, and the
  * obj+0x58 slot at 0x60 not 0x68. The default case's store keeps n
  * live into the loop (the original loads it into fs3 before the loop).
- * func_8022DF68 (2: load order in func_8022E0AC) and func_80230914 (1:
- * an add.s's operand order; writing the operands the other way round
- * changes nothing).
+ * func_8022DF68 (2: a mul.s's operand order in func_8022E0AC; writing
+ * the operands the other way round changes nothing). In func_80230914 the
+ * same add.s order came right with a store of y back to o->unk6C before
+ * o->unk6C += o->unk70 (a permuter find): uopt's operand order for a
+ * commutative op depends on whether an operand is a variable or a load.
  */
 #include "common.h"
 
@@ -1386,7 +1388,8 @@ void func_80230914(u8 *arg0) {
         o->unk40->pos[1] -= o->unk6C;
         y = o->unk6C;
         if (y <= o->unk74) {
-            o->unk6C = y + o->unk70;
+            o->unk6C = y;
+            o->unk6C += o->unk70;
         } else {
             o->unk6C = o->unk74;
         }
