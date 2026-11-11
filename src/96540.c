@@ -1,17 +1,14 @@
 /*
- * NON_MATCHING: main_code's 96540, complete: the controller pak save
- * (osPfs calls through ZeroJump module 0x16, the per-port status in
- * D_802B0118, the save file's header check and read/write/verify retries,
- * the file listing for the pak menu). One object: text 8027BD40-8027CE10,
- * .data D_802A1520-802A1570, .rodata 802A3FC0-802A4040 (jump tables),
- * .bss 802AFF70-802B0180. Every function is in C, last function first;
- * the statics are inlined (IPA register conventions tie them to their
- * callers) and leave their 8-byte stubs. Not built into the ROM
- * (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * main_code's 96540, IDO -O3; it matches in us, eu and jp: the controller
+ * pak save (osPfs calls through ZeroJump module 0x16, the per-port status
+ * in D_802B0118, the save file's header check and read/write/verify
+ * retries, the file listing for the pak menu). One object: text
+ * 8027BD40-8027CE10, .data D_802A1520-802A1570, .rodata 802A3FC0-802A4040
+ * (jump tables), .bss 802AFF70-802B0180, all its own and placed in
+ * data_split.txt. Every function is in C, last function first; the
+ * statics are inlined (IPA register conventions tie them to their
+ * callers) and leave their 8-byte stubs.
  *
- * All 15 functions match (fcmp); not yet moved to src/.
  * func_8027BF38's name copy indexes the dst with `(u32) j`: uopt emits
  * a loop preheader's induction inits in the bit order of their target
  * expressions, and without the cast the name loop's dst address is the
@@ -102,11 +99,11 @@ u8 D_802A1530[4] = { 0 };
 #endif
 
 /* .bss */
-extern OSPfs D_802AFF70[4];
-extern UnkStruct_8023A834 *D_802B0110;
-extern s32 D_802B0118[4];
-extern u8 D_802B0128[];
-extern u8 D_802B0150[];
+OSPfs D_802AFF70[4];
+UnkStruct_8023A834 *D_802B0110;
+s32 D_802B0118[4];
+u8 D_802B0128[0x28];
+u8 D_802B0150[0x30];
 
 void func_8027CDA4(OSMesgQueue *mq);
 void func_8027CBD4(void);

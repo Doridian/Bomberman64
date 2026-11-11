@@ -140,6 +140,10 @@ main_code 93850 0 0x110 0
 main_code @us 93850 rodata=0x802A3EB0
 main_code @eu 93850 rodata=0x802A3EA0
 main_code @jp 93850 rodata=0x802A30E0
+main_code 96540 0x50 0x80 0x210
+main_code @us 96540 data=0x802A1520 rodata=0x802A3FC0 bss=0x802AFF70
+main_code @eu 96540 data=0x802A1520 rodata=0x802A3FB0 bss=0x802AFF60
+main_code @jp 96540 data=0x802A0B80 rodata=0x802A31F0 bss=0x802AF1A0
 main_code 995C0 0 0x10 0
 main_code @us 995C0 rodata=0x802A4040
 main_code @eu 995C0 rodata=0x802A4030
