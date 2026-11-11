@@ -9,7 +9,7 @@
  * after it follow. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 27, eu 27, jp 27
+ * differing words: us 21, eu 21, jp 21
  */
 #include "common.h"
 
@@ -863,7 +863,8 @@ void func_8027A640(void) {
     do {
         if (x == p[0] && y == p[1] && z == p[2]) {
             found = 1;
-            off = (p[3] << 8) + p[4];
+            off = p[3] << 8;
+            off += p[4];
         }
         p += 7;
     } while (*p != 0x80);
