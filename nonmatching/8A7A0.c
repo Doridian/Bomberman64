@@ -7,7 +7,7 @@
  * order. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 221, eu 221, jp 221
+ * differing words: us 186, eu 186, jp 186
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file (475 words in the one-file draft, 39
@@ -17,8 +17,8 @@
  * original calls them; the callers call them rather than spell them out.
  * 49 of 54 match. Left: func_80271BB8 92 (the
  * original also inlines func_80271178, and its frame is 8 bytes
- * smaller than ours with that), func_80270770 70 (one zero constant in
- * case 0 and the reload of speed), func_80270C24 55, func_8027241C 3,
+ * smaller than ours with that), func_80270C24 55, func_80270770 35
+ * (flags and ok in v1/a0 where the original has a0/a1), func_8027241C 3,
  * func_80271010 1 (one add.s with its operands swapped).
  */
 #include "common.h"
@@ -1681,6 +1681,8 @@ void func_80270770(s16 arg0, s16 arg1) {
     switch (arg1) {
         case 0:
             speed = 0.0f;
+            if (D_802AFC5C == 0.0f) { /* fake: lets speed's 0.0f serve h's store too */
+            }
             h = 0.0f;
             break;
         case 1:
@@ -1699,6 +1701,8 @@ void func_80270770(s16 arg0, s16 arg1) {
             speed = 10.0f;
     }
     c = malloc(sizeof(Ctl87));
+    goto next; /* fake: a block boundary, so speed is reloaded and saved again around func_802443F4 */
+next:
     o = func_802443F4(arg0);
     c->obj = obj;
     c->unk14 = func_802704F8(o->unk40->rot);
@@ -1714,14 +1718,12 @@ void func_80270770(s16 arg0, s16 arg1) {
     c->unk34 = obj->unk40->x;
     c->unk38 = obj->unk40->z;
     flags = SLOTS[arg0].unk8;
-    if (h) { /* fake: keeps h live past the stores (permuter find) */
-    }
     c->flags = flags;
     if (flags & 2) {
         ok = func_80270438((u8 *) obj, (s32 *) c);
-    } else if (c->flags & 8) {
+    } else if (flags & 8) {
         ok = func_8027A1F4(obj, (s32) c);
-    } else if (c->flags & 4) {
+    } else if (flags & 4) {
         ok = func_802870A8(obj, c);
     } else if (flags & 1) {
         ok = func_80244F34(obj, (s32) c);
