@@ -7,7 +7,7 @@
  * order. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 845, eu 845, jp 845
+ * differing words: us 794, eu 794, jp 794
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file (475 words in the one-file draft, 39
@@ -656,20 +656,15 @@ void func_80273544(u8 *arg0) {
 }
 
 void func_802734BC(u8 *arg0) {
-    s16 *temp_v0;
-    s32 var_v0;
+    s16 *e;
 
-    temp_v0 = func_802703B4(arg0);
-    if (temp_v0 != NULL) {
-        var_v0 = 0;
-        if (M2C_FIELD(temp_v0, f32 *, 0x40) != 1e7f) {
-            var_v0 = 1;
+    e = func_802703B4(arg0);
+    if (e != NULL) {
+        if (func_80270384((u8 *) e)) {
+            func_80273414(e);
         }
-        if (var_v0 != 0) {
-            func_80273414(temp_v0);
-        }
-        func_802733F8(temp_v0);
-        func_80238EA8(M2C_FIELD(temp_v0, s32 *, 4));
+        func_802733F8(e);
+        func_80238EA8(((Ent88 *) e)->unk4);
         func_80239094();
     }
 }
@@ -1845,28 +1840,12 @@ s32 func_80270438(u8 *arg0, s32 *arg1) {
 }
 
 s16 *func_802703B4(u8 *arg0) {
-    s16 *var_a1;
-    s16 *var_v1;
-    s32 var_v0;
+    Ent88 *e;
 
-    var_v1 = D_8008F44C;
-    var_a1 = M2C_FIELD(var_v1, s16 **, 0x14);
-    if (var_a1 != NULL) {
-loop_2:
-        var_v0 = 0;
-        if (M2C_FIELD(var_v1, f32 *, 0x40) != 1e7f) {
-            var_v0 = 1;
+    for (e = ENT_HEAD; e->next != NULL; e = e->next) {
+        if (func_80270384((u8 *) e) && (Obj8E *) arg0 == e->obj) {
+            return (s16 *) e;
         }
-        if ((var_v0 != 0) && ((s32) arg0 == M2C_FIELD(var_v1, s32 *, 0x1C))) {
-            return var_v1;
-        }
-        var_v1 = var_a1;
-        var_a1 = M2C_FIELD(var_a1, s16 **, 0x14);
-        if (var_a1 == NULL) {
-            /* Duplicate return node #9. Try simplifying control flow for better match */
-            return NULL;
-        }
-        goto loop_2;
     }
     return NULL;
 }
