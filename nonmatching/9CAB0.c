@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 311, eu 311, jp 311
+ * differing words: us 265, eu 265, jp 265
  */
 #include "common.h"
 
@@ -2048,21 +2048,25 @@ static u8 func_80283314(UnkStruct_80288040 *arg2, s32 arg0, s32 arg1) {
             return d;
         }
     }
-    for (; n < 5; n++) {
-        d = dir + n;
+    i = n;
+    if (i < 5) {
+    loop:
+        d = dir + i;
         if (d >= 8) {
             d -= 8;
         }
         if (!(arg2->unk28 & (1 << d))) {
             return d;
         }
-        d = dir - n;
+        d = dir - i;
         if (d < 0) {
             d += 8;
         }
         if (!(arg2->unk28 & (1 << d))) {
             return d;
         }
+        i++;
+        if (i < 5) goto loop;
     }
     return dir | 1;
 }
