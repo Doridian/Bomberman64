@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 88, eu 88, jp 88
+ * differing words: us 86, eu 86, jp 86
  */
 #include "common.h"
 
@@ -741,6 +741,7 @@ static void func_80286400(s32 arg4, s32 arg0, s32 arg5, f32 arg1, f32 arg2, f32 
         s32 g[3];
         Vec3f o;
     } grid;
+    s32 pad[5]; /* fake: the original's frame is 24 bytes bigger */
 
     s = &D_800BA900[arg4];
     func_80282340(s);
