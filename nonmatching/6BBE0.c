@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 7160, eu 7160, jp 7120
+ * differing words: us 7141, eu 7141, jp 7101
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -4831,15 +4831,17 @@ static s32 func_80251AC8(s32 arg0) {
 }
 
 static s32 func_80251A24(s32 arg0, f32 *arg1, f32 arg2) {
+    s32 dir;
     f32 size[3];
     f32 pos[3];
-    s32 *d;
 
-    size[2] = size[1] = size[0] = 40.0f;
-    d = (s32 *) (D_802A0EF0 + func_802519B4(arg2) * 8);
-    pos[0] = (f32) (d[0] * 100) + arg1[0];
+    size[2] = 40.0f;
+    size[1] = 40.0f;
+    size[0] = 40.0f;
+    dir = func_802519B4(arg2);
+    pos[0] = arg1[0] + (f32) (((s32 (*)[2]) D_802A0EF0)[dir][0] * 100);
     pos[1] = arg1[1];
-    pos[2] = (f32) (d[1] * 100) + arg1[2];
+    pos[2] = arg1[2] + (f32) (((s32 (*)[2]) D_802A0EF0)[dir][1] * 100);
     return func_8022F77C(arg0, (s32) pos, (s32) size);
 }
 
