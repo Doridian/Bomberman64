@@ -6,7 +6,7 @@
  * boxes, func_8022E884). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1330, eu 1330, jp 1330
+ * differing words: us 1323, eu 1323, jp 1323
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does (the stubs at 0x8022E0A4-0x8022E87C are
@@ -670,9 +670,9 @@ void func_802320A8() {
         spB0[1] = spD4[1] - spB0[1];
         switch (obj->unk3C->flags & 0xFFFF) {
         case 1:
-            a = func_80234434(spB0[1]) * (spBC[0] - obj->unk40->pos[0]) * obj->unk3C->unkC;
-            b = func_80234434(spB0[1]) * (spBC[1] - obj->unk40->pos[1]) * obj->unk3C->unkC;
-            c = func_80234434(spB0[1]) * (spBC[2] - obj->unk40->pos[2]) * obj->unk3C->unkC;
+            a = (spBC[0] - obj->unk40->pos[0]) * func_80234434(spB0[1]) * obj->unk3C->unkC;
+            b = (spBC[1] - obj->unk40->pos[1]) * func_80234434(spB0[1]) * obj->unk3C->unkC;
+            c = (spBC[2] - obj->unk40->pos[2]) * func_80234434(spB0[1]) * obj->unk3C->unkC;
             d = func_80234408(spB0[1]) * ((obj->unk40->pos[0] - obj->unk58[0]) * obj->unk3C->unk10);
             e = func_80234408(spB0[1]) * ((obj->unk40->pos[1] - obj->unk58[1]) * obj->unk3C->unk10);
             f = func_80234408(spB0[1]) * ((obj->unk40->pos[2] - obj->unk58[2]) * obj->unk3C->unk10);
@@ -1783,8 +1783,8 @@ static s32 func_8022F5E4(f32 *arg0, u8 *arg1, u8 *arg2) {
     f32 *c = (f32 *) arg1;
     f32 *r = (f32 *) arg2;
 
-    if (c[0] - r[0] <= n[4] && n[4] <= c[0] + r[0] && c[1] - r[1] <= n[5] && n[5] <= c[1] + r[1] &&
-        c[2] - r[2] <= n[6] && n[6] <= c[2] + r[2]) {
+    if (c[0] - r[0] <= n[4] && n[4] <= r[0] + c[0] && c[1] - r[1] <= n[5] && n[5] <= r[1] + c[1] &&
+        c[2] - r[2] <= n[6] && n[6] <= r[2] + c[2]) {
         return 1;
     }
     return 0;
