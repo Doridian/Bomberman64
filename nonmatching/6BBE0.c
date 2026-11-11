@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 7246, eu 7246, jp 7206
+ * differing words: us 7210, eu 7210, jp 7170
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -4098,53 +4098,53 @@ static void func_802530A8(f32 *arg0) {
                     grid[0] = M2C_FIELD(arg0, s32 *, 0x38);
                     grid[1] = M2C_FIELD(arg0, s32 *, 0x3C);
                     grid[2] = M2C_FIELD(arg0, s32 *, 0x40);
-                    dirX = (side & 1) ? 2 : 6;
+                    dir = (side & 1) ? 2 : 6;
                     dirZ = (side & 2) ? 0 : 4;
                     if (dx < dz) {
                         if (func_80252918(grid, dirZ, (s32) (dz * 0.01f)) != 0) {
                             grid[2] += ((s32 (*)[2]) D_802A0EF0)[dirZ][1];
-                            if (func_80252918(grid, dirX, (s32) (dx * 0.01f)) != 0) {
+                            if (func_80252918(grid, dir, (s32) (dx * 0.01f)) != 0) {
                                 if (dz != 0) {
                                     M2C_FIELD(arg0, f32 *, 0x74) = dirZ * 45;
                                 } else {
-                                    M2C_FIELD(arg0, f32 *, 0x74) = dirX * 45;
+                                    M2C_FIELD(arg0, f32 *, 0x74) = dir * 45;
                                 }
                                 break;
                             }
                             grid[2] -= ((s32 (*)[2]) D_802A0EF0)[dirZ][1];
                         }
-                        if (func_80252918(grid, dirX, (s32) (dx * 0.01f)) != 0) {
-                            grid[0] += ((s32 (*)[2]) D_802A0EF0)[dirX][0];
+                        if (func_80252918(grid, dir, (s32) (dx * 0.01f)) != 0) {
+                            grid[0] += ((s32 (*)[2]) D_802A0EF0)[dir][0];
                             if (func_80252918(grid, dirZ, (s32) (dz * 0.01f)) != 0) {
                                 if (dx != 0) {
-                                    M2C_FIELD(arg0, f32 *, 0x74) = dirX * 45;
+                                    M2C_FIELD(arg0, f32 *, 0x74) = dir * 45;
                                 } else {
                                     M2C_FIELD(arg0, f32 *, 0x74) = dirZ * 45;
                                 }
                                 break;
                             }
-                            grid[0] -= ((s32 (*)[2]) D_802A0EF0)[dirX][0];
+                            grid[0] -= ((s32 (*)[2]) D_802A0EF0)[dir][0];
                         }
                     } else {
-                        if (func_80252918(grid, dirX, (s32) (dx * 0.01f)) != 0) {
-                            grid[0] += ((s32 (*)[2]) D_802A0EF0)[dirX][0];
+                        if (func_80252918(grid, dir, (s32) (dx * 0.01f)) != 0) {
+                            grid[0] += ((s32 (*)[2]) D_802A0EF0)[dir][0];
                             if (func_80252918(grid, dirZ, (s32) (dz * 0.01f)) != 0) {
                                 if (dx != 0) {
-                                    M2C_FIELD(arg0, f32 *, 0x74) = dirX * 45;
+                                    M2C_FIELD(arg0, f32 *, 0x74) = dir * 45;
                                 } else {
                                     M2C_FIELD(arg0, f32 *, 0x74) = dirZ * 45;
                                 }
                                 break;
                             }
-                            grid[0] -= ((s32 (*)[2]) D_802A0EF0)[dirX][0];
+                            grid[0] -= ((s32 (*)[2]) D_802A0EF0)[dir][0];
                         }
                         if (func_80252918(grid, dirZ, (s32) (dz * 0.01f)) != 0) {
                             grid[2] += ((s32 (*)[2]) D_802A0EF0)[dirZ][1];
-                            if (func_80252918(grid, dirX, (s32) (dx * 0.01f)) != 0) {
+                            if (func_80252918(grid, dir, (s32) (dx * 0.01f)) != 0) {
                                 if (dz != 0) {
                                     M2C_FIELD(arg0, f32 *, 0x74) = dirZ * 45;
                                 } else {
-                                    M2C_FIELD(arg0, f32 *, 0x74) = dirX * 45;
+                                    M2C_FIELD(arg0, f32 *, 0x74) = dir * 45;
                                 }
                                 break;
                             }
