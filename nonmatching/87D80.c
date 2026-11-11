@@ -7,7 +7,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4134, eu 4134, jp 4134
+ * differing words: us 4081, eu 4081, jp 4081
  *
  * 33 of 97 match. func_8026D5F8 and func_8026D5C0 (cell and slot of a
  * point) are inlined by func_8026D620/func_8026D7D8, which is what the
@@ -248,7 +248,7 @@ void func_8027F858(s32, s32);
 s32 func_80286CA8(s32, f32, f32, f32);
 s32 func_802870A8();
 s32 func_80287440(void);
-s32 func_802875B0(void);
+s32 func_802875B0();
 s32 func_8028A4E0(s32);
 s32 func_8028A81C(s32, f32, f32, f32, s32);
 s32 func_802909FC(void *, void *);
@@ -1256,128 +1256,90 @@ void func_80271F74(s32 *arg0) {
 }
 
 void func_80271BB8(s16 arg0) {
-    s32 sp70;
-    f32 sp6C;
-    f32 sp68;
-    u8 *sp64;
-    f32 sp5C;
-    f32 sp58;
-    f32 sp54;
-    f32 sp50;
-    f32 sp4C;
-    f32 sp48;
-    f32 sp44;
-    s16 temp_a0;
-    s32 temp_v0;
-    s32 temp_v0_3;
-    s32 var_v0;
-    s32 var_v0_2;
-    s32 var_v0_3;
-    s32 var_v1;
-    u8 *temp_v0_2;
-    u8 *temp_v0_4;
-    u8 *temp_v1;
+    s32 flags;
+    s32 hit;
+    f32 dx;
+    f32 dz;
+    Obj8E *pl;
+    s32 pad[1];
+    f32 ppos[3];
+    f32 opos[3];
+    f32 s;
+    Obj8E *obj;
+    Slot30 *sl;
+    Sub8E *t;
 
-    temp_a0 = arg0;
-    if (arg0 >= 0) {
-        var_v0 = 1;
-        if (arg0 < 5) {
-            var_v0 = 0;
+    if (func_80270714(arg0) != 0) {
+        return;
+    }
+    pl = func_802443F4(arg0);
+    obj = (Obj8E *) func_80271540(arg0);
+    if (obj == NULL) {
+        return;
+    }
+    t = pl->unk40;
+    ppos[0] = t->x;
+    ppos[1] = t->y;
+    ppos[2] = t->z;
+    t = obj->unk40;
+    opos[0] = t->x;
+    opos[1] = t->y;
+    opos[2] = t->z;
+    if (func_802716F8(arg0) == NULL) {
+        return;
+    }
+    flags = obj->unk8;
+    hit = 0;
+    if (flags & 2) {
+        if (func_8027130C((u8 *) obj) == 0) {
+            hit = 1;
+        }
+    } else if (flags & 8) {
+        if (func_8027B5A8(obj) == 0) {
+            hit = 1;
+        }
+    } else if (flags & 4) {
+        if (func_802875B0(obj) == 0) {
+            hit = 1;
+        }
+    } else if (flags & 1) {
+        if (func_80244FF8(obj) == 0) {
+            hit = 1;
         }
     } else {
-        var_v0 = 1;
+        hit = 1;
     }
-    if (var_v0 != 0) {
-        var_v0_2 = 0;
+    if (hit == 1) {
+        pl->unk40->x = ppos[0];
+        pl->unk40->y = ppos[1];
+        pl->unk40->z = ppos[2];
+        obj->unk40->x = opos[0];
+        obj->unk40->y = opos[1];
+        obj->unk40->z = opos[2];
     } else {
-        var_v0_2 = *(s32 *)(D_802AFCF4 + (temp_a0 * 0x30));
-    }
-    if (var_v0_2 == 0) {
-        arg0 = temp_a0;
-        sp64 = func_802443F4((s32) temp_a0);
-        temp_v0 = func_80271540(arg0);
-        if (temp_v0 != 0) {
-            temp_v0_2 = M2C_FIELD(sp64, void **, 0x40);
-            sp54 = M2C_FIELD(temp_v0_2, f32 *, 0x10);
-            sp58 = M2C_FIELD(temp_v0_2, f32 *, 0x14);
-            sp5C = M2C_FIELD(temp_v0_2, f32 *, 0x18);
-            temp_v1 = M2C_FIELD(temp_v0, void **, 0x40);
-            sp48 = M2C_FIELD(temp_v1, f32 *, 0x10);
-            sp4C = M2C_FIELD(temp_v1, f32 *, 0x14);
-            sp50 = M2C_FIELD(temp_v1, f32 *, 0x18);
-            if (func_802716F8(arg0) != NULL) {
-                temp_v0_3 = M2C_FIELD(temp_v0, s32 *, 8);
-                if (temp_v0_3 & 2) {
-                    sp70 = 0;
-                    var_v1 = sp70;
-                    if (func_8027130C((void *) temp_v0) == 0) {
-                        goto block_22;
-                    }
-                } else if (temp_v0_3 & 8) {
-                    sp70 = 0;
-                    var_v1 = 0;
-                    if (func_8027B5A8((void *) temp_v0) == 0) {
-                        goto block_22;
-                    }
-                } else if (temp_v0_3 & 4) {
-                    sp70 = 0;
-                    var_v1 = 0;
-                    if (func_802875B0() == 0) {
-                        goto block_22;
-                    }
-                } else if (temp_v0_3 & 1) {
-                    sp70 = 0;
-                    var_v1 = 0;
-                    if (func_80244FF8((void *) temp_v0) == 0) {
-                        goto block_22;
-                    }
-                } else {
-block_22:
-                    var_v1 = 1;
-                }
-                if (var_v1 == 1) {
-                    M2C_FIELD(M2C_FIELD(sp64, void **, 0x40), f32 *, 0x10) = sp54;
-                    M2C_FIELD(M2C_FIELD(sp64, void **, 0x40), f32 *, 0x14) = sp58;
-                    M2C_FIELD(M2C_FIELD(sp64, void **, 0x40), f32 *, 0x18) = sp5C;
-                    M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x10) = sp48;
-                    M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x14) = sp4C;
-                    M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x18) = sp50;
-                } else {
-                    temp_v0_4 = (arg0 * 0x30) + D_802AFCE8;
-                    func_80231408((void *) temp_v0, 0x10000);
-                    func_80232AC8((s32) sp64, temp_v0);
-                    func_80231408((void *) temp_v0, 0x200000);
-                    if (arg0 >= 0) {
-                        var_v0_3 = 1;
-                        if (arg0 < 5) {
-                            var_v0_3 = 0;
-                        }
-                    } else {
-                        var_v0_3 = 1;
-                    }
-                    if (var_v0_3 == 0) {
-                        M2C_FIELD(temp_v0_4, s32 *, 0xC) = temp_v0;
-                    }
-                    func_80271010((void *) temp_v0, arg0);
-                    M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x20) = (f32) M2C_FIELD(M2C_FIELD(sp64, void **, 0x40), f32 *, 0x20);
-                    sp44 = func_80234434(M2C_FIELD(M2C_FIELD(sp64, void **, 0x40), f32 *, 0x20));
-                    sp6C = func_80270F44(sp64) * sp44;
-                    sp44 = func_80234408(M2C_FIELD(M2C_FIELD(sp64, void **, 0x40), f32 *, 0x20));
-                    sp68 = func_80270F44(sp64) * sp44;
-                    if (func_802336E4(sp6C) != 0) {
-                        sp6C = 0.0f;
-                    }
-                    if (func_802336E4(sp68) != 0) {
-                        sp68 = 0.0f;
-                    }
-                    M2C_FIELD(temp_v0, f32 *, 0x4C) = (f32) (sp6C - M2C_FIELD(temp_v0_4, f32 *, 0x1C));
-                    M2C_FIELD(temp_v0, f32 *, 0x50) = (f32) (M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x14) - M2C_FIELD(M2C_FIELD(sp64, void **, 0x40), f32 *, 0x14));
-                    M2C_FIELD(temp_v0, f32 *, 0x6C) = 1.0f;
-                    M2C_FIELD(temp_v0, f32 *, 0x54) = (f32) (sp68 - M2C_FIELD(temp_v0_4, f32 *, 0x24));
-                    M2C_FIELD(temp_v0, f32 *, 0x70) = 1.6333334f;
-                }
-            }
+        sl = &SLOTS[arg0];
+        sl->unk8 = flags;
+        func_80231408(obj, 0x10000);
+        func_80232AC8((s32) pl, (s32) obj);
+        func_80231408(obj, 0x200000);
+        func_80271178(arg0, (s32) obj);
+        func_80271010((u8 *) obj, arg0);
+        obj->unk40->rot = pl->unk40->rot;
+        s = func_80234434(pl->unk40->rot);
+        dx = func_80270F44((u8 *) pl) * s;
+        s = func_80234408(pl->unk40->rot);
+        dz = func_80270F44((u8 *) pl) * s;
+        if (func_802336E4(dx) != 0) {
+            dx = 0.0f;
         }
+        if (func_802336E4(dz) != 0) {
+            dz = 0.0f;
+        }
+        obj->unk4C = dx - sl->unk1C;
+        obj->unk50 = obj->unk40->y - pl->unk40->y;
+        obj->unk6C = 1.0f;
+        obj->unk54 = dz - sl->unk24;
+        obj->unk70 = 1.6333334f;
     }
 }
 
