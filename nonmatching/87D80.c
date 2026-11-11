@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 825, eu 825, jp 825
+ * differing words: us 824, eu 824, jp 824
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -1290,11 +1290,12 @@ void func_8026DCAC(f32 arg0, f32 arg1, f32 arg2, void *arg3, s32 arg4) {
             }
             break;
         }
-        ry = h;
         if (h == iy) {
             ((Unk8026DCAC *) arg3)->i[1] = layer;
+            ry = h;
             break;
         }
+        ry = h;
         h += m->unk10;
     }
     if (D_800B15D8->unk0 < layer) {
