@@ -235,9 +235,9 @@ matches, drop the `#ifdef` and the asm.
   its wrappers call 4DE50's compares with a `jal`, which -O3 would inline
   in one file), 4ED50, 52270 (jp's func_8023876C has no TV-type
   switch: `#if VERSION_JP`), 530C0, 53D70, 78CA0, 78F60, 80580, 85A10, 86680,
-  949A0 (split off 93850 at 0x8027A1A0, text_objects.txt has why), 96540, 97610, 995C0, 9A5F0, 9BFD0, A8DE0, ACA00, AD5B0,
-  AFBF0, B11F0, B6680 (`-mips2`), ovl_0A_02-05's, ovl_0C_03's, ovl_0E_09's, ovl_12_02's, ovl_12_04's, ovl_17_01's and ovl_17_10's objects are `-O3`, and
-  so is 93850 (a draft in nonmatching/, src/ at `-O2`); 5E090, 87190, 87730,
+  93850 and 949A0 (949A0 split off 93850 at 0x8027A1A0, text_objects.txt
+  has why), 96540, 97610, 995C0, 9A5F0, 9BFD0, A8DE0, ACA00, AD5B0,
+  AFBF0, B11F0, B6680 (`-mips2`), ovl_0A_02-05's, ovl_0C_03's, ovl_0E_09's, ovl_12_02's, ovl_12_04's, ovl_17_01's and ovl_17_10's objects are `-O3`; 5E090, 87190, 87730,
   99F40 and A4860 are `-O2` (no
   inlining between functions that call each other, no cross-call
   registers; A4860's func_8028A318 calls three small functions of its
