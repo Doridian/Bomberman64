@@ -8,7 +8,7 @@
  * stack layout and loop forms; func_8027B828 in two registers. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 389, eu 389, jp 389
+ * differing words: us 166, eu 166, jp 166
  */
 #include "common.h"
 
@@ -651,17 +651,18 @@ s16 func_8027AF70(void) {
 }
 
 UnkStruct_800BB4A8 *func_8027AA74(s16 arg0, f32 arg1, f32 arg2, f32 arg3, s32 arg4, s32 arg5, s32 arg6) {
-    UnkStruct_800BB4A8 *node;
-    UnkStruct_80279050_14 *obj;
-    UnkStruct_80279050_10 *pos;
     s16 model;
+    UnkStruct_800BB4A8 *node;
+    UnkStruct_80279050_10 *pos;
     s32 item;
     s32 r;
     f32 dx;
     f32 dz;
+    UnkStruct_80279050_14 *obj;
+    s32 *flags;
 
     func_8027A950();
-    if ((D_802AC5D0 & 4) && arg5 == 1 && func_8027A574(arg0) <= 0) {
+    if ((D_802AC5D0 & 4) && ((s16 *)&arg5)[1] == 1 && func_8027A574(arg0) <= 0) {
         return NULL;
     }
     item = 0;
@@ -726,9 +727,9 @@ UnkStruct_800BB4A8 *func_8027AA74(s16 arg0, f32 arg1, f32 arg2, f32 arg3, s32 ar
     obj->unk34 = 50.0f;
     obj->unk38 = 50.0f;
     node->unk14 = obj;
+    node->unk10 = obj->unk40;
     node->unk1C = 0;
     node->unk1E = 0;
-    node->unk10 = obj->unk40;
     node->unk20 = arg0;
     obj->unk58 = arg1;
     node->unk10->unk10 = node->unk24 = node->unk14->unk58;
@@ -744,7 +745,7 @@ UnkStruct_800BB4A8 *func_8027AA74(s16 arg0, f32 arg1, f32 arg2, f32 arg3, s32 ar
         pos = func_802443F4(0)->unk40;
         dx = ABSF(pos->unk10) - ABSF(arg1);
         dz = ABSF(pos->unk18) - ABSF(arg3);
-        if (ABSF(dz) < ABSF(dx)) {
+        if (ABSF(dx) > ABSF(dz)) {
             if (dx > 0.0f) {
                 node->unk30 = 2;
             } else {
@@ -760,26 +761,27 @@ UnkStruct_800BB4A8 *func_8027AA74(s16 arg0, f32 arg1, f32 arg2, f32 arg3, s32 ar
     }
     node->unk48 = 360;
     node->unk50 = 0.0f;
-    func_8027036C(&node->unk54, 2);
-    func_8027036C(&node->unk54, 1);
-    func_80270354(&node->unk54, 8);
-    func_8027036C(&node->unk54, 0x10);
-    if (arg5 == 1) {
-        func_80270354(&node->unk54, 0x40);
+    flags = &node->unk54;
+    func_8027036C(flags, 2);
+    func_8027036C(flags, 1);
+    func_80270354(flags, 8);
+    func_8027036C(flags, 0x10);
+    if (((s16 *)&arg5)[1] == 1) {
+        func_80270354(flags, 0x40);
     } else {
-        func_8027036C(&node->unk54, 0x40);
+        func_8027036C(flags, 0x40);
     }
-    if (arg6 == 1) {
-        func_80270354(&node->unk54, 0x80);
+    if (((s16 *)&arg6)[1] == 1) {
+        func_80270354(flags, 0x80);
     } else {
-        func_8027036C(&node->unk54, 0x80);
+        func_8027036C(flags, 0x80);
     }
-    func_8027036C(&node->unk54, 0x20);
-    if (arg4 == 1) {
+    func_8027036C(flags, 0x20);
+    if (((s16 *)&arg4)[1] == 1) {
         func_8028A81C(3, node->unk24, node->unk28 + 70.0f, node->unk2C, 0);
         func_8026C51C(3, node->unk24, node->unk28, node->unk2C);
     }
-    if ((D_802AC5D0 & 4) && arg5 == 1) {
+    if ((D_802AC5D0 & 4) && ((s16 *)&arg5)[1] == 1) {
         func_8027A380(arg0);
     }
     return node;
