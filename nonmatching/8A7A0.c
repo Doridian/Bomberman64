@@ -7,7 +7,7 @@
  * order. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 1820, eu 1820, jp 1820
+ * differing words: us 1642, eu 1642, jp 1642
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file (475 words in the one-file draft, 39
@@ -497,7 +497,7 @@ void *func_8027361C(s16 arg0, f32 arg1, f32 arg2, f32 arg3, s16 arg4) {
     s32 flags;
     Ent88 *e;
     Obj8E *obj;
-    s32 pad[24];
+    s32 pad[25]; /* the frame is 0xA8 */
 
     idx = func_802735CC();
     if (idx == -1) {
@@ -538,18 +538,20 @@ void *func_8027361C(s16 arg0, f32 arg1, f32 arg2, f32 arg3, s16 arg4) {
     e->unk8 = -1;
     e->unkC = 0;
     e->obj = obj;
+    e->xf = obj->unk40;
     e->unk30 = obj;
     e->unk34 = obj;
     e->unk3C = 0;
     e->unkE = arg4;
-    e->xf = obj->unk40;
     e->unk10 = arg0;
     if (e->unk10 & 0x400) {
         e->unk68 = 0x3C;
     } else {
         e->unk68 = 0x96;
     }
-    e->unk5C = e->unk5E = e->unk60 = e->unk62 = 0;
+    e->unk5C = 0;
+    e->unk5E = 0;
+    e->unk60 = e->unk62 = 0;
     if (e->unk10 & 2) {
         e->unk64 &= ~2;
     } else {
@@ -564,7 +566,7 @@ void *func_8027361C(s16 arg0, f32 arg1, f32 arg2, f32 arg3, s16 arg4) {
     e->y = e->obj->unk5C = e->xf->y;
     e->xf->z = arg3;
     e->z = e->obj->unk60 = e->xf->z;
-    e->obj->unk6C = 1.0f;
+    e->obj->unk6C = 1.0; /* a double: 1.0f would share the else branch's 1.0f */
     e->unk4C = 0.0f;
     e->unk50 = 0.0f;
     e->unk54 = 0.0f;
@@ -584,8 +586,8 @@ void *func_8027361C(s16 arg0, f32 arg1, f32 arg2, f32 arg3, s16 arg4) {
         e->xf->sy = 1.0f;
         e->xf->sz = 1.0f;
         e->unk78 = 1.0f;
-        e->unk80 = 1.0f;
         e->unk7C = 0.9f;
+        e->unk80 = 1.0f;
         if (e->unk10 & 0x400) {
             e->unk84 = 0.008333334f;
         } else {
