@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1865, eu 1865, jp 1856
+ * differing words: us 1789, eu 1789, jp 1780
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -40,8 +40,11 @@
  *   doesn't exist) with the x fixed, and jp's text and x positions are
  *   #if VERSION_JP arms; every function's calls match jp's. eu differs
  *   only in its 50 Hz constants (FPS, FRAME_STEP, TIME_LIMIT).
- * - func_8023B450 takes (value, buf, n): the original's registers for
- *   it are still not ours (value t0, buf a2 there; a2, t0 here).
+ * - func_8023B450 takes (value, buf, n). Its IPA registers (value t0,
+ *   buf a2) follow uopt's colouring, which for these unconstrained
+ *   ranges is the order the expressions first appear: the digit store
+ *   `buf[j++] = value / div + 0x10` names buf before the division, and
+ *   `t = value / div * div` reuses it, with no d.
  * - The count is positional: a function one instruction short shifts
  *   every word after it, so its size matters more than its registers.
  *   What fixed sizes here: a separate index (`D_802AC770[k++]`, k = 0)
@@ -3059,17 +3062,15 @@ static void func_8023B450(s32 value, u8 *buf, s32 n) {
     s32 i;
     s32 div;
     s32 j;
-    s32 d;
     s32 t;
 
-    for (i = 1, div = 1; i < n; i++) {
+    for (i = 0, div = 1; i < n - 1; i++) {
         div *= 10;
     }
     j = 0;
     for (i = 0; i < n; i++) {
-        d = value / div;
-        buf[j++] = d + 0x10;
-        t = d * div;
+        buf[j++] = value / div + 0x10;
+        t = value / div * div;
         if (value >= t) {
             value -= t;
         }
