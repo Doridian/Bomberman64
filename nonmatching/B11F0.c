@@ -2,13 +2,15 @@
  * NON_MATCHING: main_code's B11F0, complete first draft.
  * flags: -O3
  * (-O3: func_80297564 keeps its argument in t4, func_80296C10 in t0.)
- * differing words: us 31, eu 31, jp 31
+ * differing words: us 20, eu 20, jp 20
  *
- * 22 of 25 functions match. Left: func_80296B3C (5, t1 for a2),
- * func_80296C10 (11, the original keeps y in s0) and func_80296D4C (15,
- * frame 0x98 with dw/dh spilled at 0x60/0x64). func_80297114 matched once
- * its entry pointer came from the getter func_80296BEC (inlined: its
- * parameter is a variable, coloured v1).
+ * 23 of 25 functions match. Left: func_80296B3C (5, t1 for a2: the
+ * original's a2 piece of arg0 stops at func_8022946C's call, the store
+ * after it reloads arg0 from its home) and func_80296D4C (15, frame 0x98
+ * with dw/dh spilled at 0x60/0x64). func_80297114 matched once its entry
+ * pointer came from the getter func_80296BEC (inlined: its parameter is
+ * a variable, coloured v1); func_80296C10's frame once `start` was
+ * declared last.
  */
 #include "common.h"
 #define F3DEX_GBI
@@ -419,10 +421,10 @@ void func_80296D4C(u16 *arg0, UnkStruct_80296D4C *arg1, UnkStruct_80297858 **arg
 }
 
 void func_80296C10(u16 *arg0, s32 x, s32 y, s32 w, s32 h) {
-    u16 *start;
     u16 *src;
     s32 i;
     s32 j;
+    u16 *start;
 
     func_80226E40(0);
     func_8023903C(8);
