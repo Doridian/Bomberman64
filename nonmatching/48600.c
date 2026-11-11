@@ -7,7 +7,7 @@
  * "NON_MATCHING drafts"). src/48300.c, before it, is another object:
  * func_80232E60 calls its func_8022DB00 with a jal (text_objects.txt).
  * flags: -O3
- * differing words: us 413, eu 413, jp 413
+ * differing words: us 387, eu 387, jp 387
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does. An 8-byte stub (jr ra; nop) is an inlined
@@ -1941,12 +1941,12 @@ static s32 func_8022E264(f32 *p, f32 *r) {
     r[2] = p[2];
     step = p[3] * 2;
     for (t = 0.0f; t < p[4];) {
-        if (func_8022E178(r, D_802A5760) != 0) {
+        if (func_8022E178((D_802A59D0 + 6), D_802A5760) != 0) {
             return 1;
         }
         t += step;
         if (t + step <= p[4]) {
-            D_802A59E8[1] += step;
+            r[1] += step;
         } else {
             r[1] += p[4] - t;
         }
@@ -2129,12 +2129,12 @@ static s32 func_8022E0A4(f32 *p, f32 *r) {
     r[2] = p[2];
     step = p[3] * 2;
     for (t = 0.0f; t < p[4];) {
-        if (func_8022DFBC(r, D_802A5760) != 0) {
+        if (func_8022DFBC((D_802A59D0 + 12), D_802A5760) != 0) {
             return 1;
         }
         t += step;
         if (t + step <= p[4]) {
-            D_802A5A00[1] += step;
+            r[1] += step;
         } else {
             r[1] += p[4] - t;
         }
