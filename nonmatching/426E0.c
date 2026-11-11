@@ -9,7 +9,7 @@
  * func_80228500 kept). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 686, eu 686, jp 686
+ * differing words: us 682, eu 682, jp 682
  *
  * The code is the same in every version.
  *
@@ -54,8 +54,9 @@
  *   promoted here.
  * - func_80229C10 (18): a rotation of a0/a1/a3/t0/t1 (the original's
  *   dl a3, first t0, i t1, 2 in a0); `if (!chunks) {}` keeps model+12 a
- *   value of its own. func_80229448 (8: the original keeps an empty
- *   4-step loop after storing its arguments; IDO deletes ours).
+ *   value of its own. func_80229448 (4): the empty loop survives only
+ *   as `i * 4 != 16` (a plain `i < 4` is deleted); the original has
+ *   the counter in v0 and 16 in v1, ours the other way round.
  */
 #include "common.h"
 
@@ -930,11 +931,7 @@ void func_8022946C(UnkObj *arg0, s32 arg1) {
 
 void func_80229448(s32 arg0, s32 arg1) {
     s32 i;
-    s32 *p;
-
-    p = &arg0;
-    for (i = 0; i < 4; i++) {
-        p[i] = p[i];
+    for (i = 0; i * 4 != 16; i++) {
     }
 }
 
