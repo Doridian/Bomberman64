@@ -5,7 +5,7 @@
  * global, emitted in the original's order. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 85, eu 85, jp 85
+ * differing words: us 83, eu 83, jp 83
  *
  * 36 of 47 match. Biggest left: func_802741D8 461, func_8027655C 436,
  * func_80274994 320 (still m2c's control flow and untyped offsets),
@@ -16,6 +16,7 @@
  * register or stack-slot order.
  */
 #include "common.h"
+#line 20 "8E730.c"
 
 #define M2C_FIELD(expr, type, offset) (*(type)((u8 *)(expr) + (offset)))
 #define M2C_BITWISE(type, expr) ((type)(expr))
@@ -401,6 +402,27 @@ s16 func_80277CC0(u8 *arg0) {
     return M2C_FIELD(func_802703B4(arg0), s16 *, 0xE);
 }
 
+/*
+ * The original's func_80277B54 ends in a block as1 left unscheduled
+ * (lw ra, addiu sp, jr ra, nop): its last statements come from another
+ * file's code, whose .file directive ends the block. Here a K&R static
+ * (no frame) defined under a #line of another file stands for it.
+ */
+#line 1 "tail.c"
+static void tail_80277B54() {
+    ENTS[0].next = ENT_4C0;
+    ENTS[0].prev = NULL;
+    ENTS[0].xf = (Sub8E *) -1;
+    ENT_4C0->next = NULL;
+    ENT_4C0->prev = ENTS;
+    ENT_4C0->xf = (Sub8E *) -1;
+    D_802AFDE0.next = &D_802AFE1C;
+    D_802AFDE0.unk4 = 0;
+    D_802AFE1C.next = NULL;
+    D_802AFE1C.unk4 = 0;
+}
+#line 425 "8E730.c"
+
 void func_80277B54() {
     s16 i;
     Ent88 *e;
@@ -424,16 +446,7 @@ void func_80277B54() {
     for (i = 0; i < 6; i++) {
         IDS[i][0] = -1;
     }
-    ENTS[0].next = ENT_4C0;
-    ENTS[0].prev = NULL;
-    ENTS[0].xf = (Sub8E *) -1;
-    ENT_4C0->next = NULL;
-    ENT_4C0->prev = ENTS;
-    ENT_4C0->xf = (Sub8E *) -1;
-    D_802AFDE0.next = &D_802AFE1C;
-    D_802AFDE0.unk4 = 0;
-    D_802AFE1C.next = NULL;
-    D_802AFE1C.unk4 = 0;
+    tail_80277B54();
 }
 
 void func_80277AF8(s16 arg0, s16 arg1) {
