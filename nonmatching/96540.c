@@ -1,7 +1,7 @@
 /*
  * NON_MATCHING: main_code's 96540, complete: the controller pak save.
  * flags: -O3
- * differing words: us 351, eu 351, jp 351
+ * differing words: us 256, eu 256, jp 256
  */
 #include "common.h"
 #include "ultralib/PR/os_pfs.h"
@@ -255,6 +255,7 @@ void func_8027C5E0(s32 slot) {
     u8 *buf = D_802B0128;
     s32 i;
     s32 j;
+    SaveSlot96540 *save = &D_80063000[slot];
 
     buf[0] = 'B';
     buf[1] = 'A';
@@ -266,19 +267,18 @@ void func_8027C5E0(s32 slot) {
     func_8027C560(7, buf);
     j = 8;
     for (i = 0; i < 8; i++) {
-        buf[j++] = D_80063000[slot].unk10[i];
+        buf[j++] = save->unk10[i];
     }
     func_8027C560(8, &D_802B0128[8]);
     j++;
-    buf[j++] = 0;
-    buf[j++] = 0;
-    buf[j++] = 0;
-    buf[j++] = 0;
+    for (i = 0; i < 4; i++) {
+        buf[j++] = 0;
+    }
     buf[j++] = 0xFF;
-    buf[j++] = D_80063000[slot].unk1B & 0xF;
-    buf[j++] = (D_80063000[slot].unk1B >> 4) & 0xF;
-    buf[j++] = D_80063000[slot].unk1C & 0xF;
-    buf[j++] = (D_80063000[slot].unk1C >> 4) & 0xF;
+    buf[j++] = save->unk1B & 0xF;
+    buf[j++] = (save->unk1B >> 4) & 0xF;
+    buf[j++] = save->unk1C & 0xF;
+    buf[j++] = (save->unk1C >> 4) & 0xF;
     func_8027C560(4, &D_802B0128[0x16]);
     j++;
     buf[j++] = 0xFE;
