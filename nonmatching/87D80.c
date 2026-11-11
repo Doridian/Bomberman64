@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1418, eu 1418, jp 1418
+ * differing words: us 1143, eu 1143, jp 1143
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -633,6 +633,7 @@ s32 func_8026F068(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
     s32 f;
     s32 g;
     s32 h;
+    s32 i;
     s32 type;
     s32 ret;
 
@@ -648,8 +649,9 @@ s32 func_8026F068(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
         f = func_8026D7D8(arg0 + 1, arg1, arg2) & 0x60;
         g = func_8026D7D8(arg0 - 1, arg1, arg2) & 0x60;
         h = func_8026D7D8(arg0 - 1, arg1, arg2 - 1) & 0x60;
+        i = func_8026D7D8(arg0, arg1, arg2 - 1) & 0x60;
         if ((a == arg3 && b == arg3 && c == arg3) || (d == arg3 && e == arg3 && f == arg3) ||
-            (g == arg3 && h == arg3 && (func_8026D7D8(arg0, arg1, arg2 - 1) & 0x60) == arg3)) {
+            (g == arg3 && h == arg3 && i == arg3)) {
             ok = 0;
         }
     }
@@ -746,7 +748,7 @@ void func_8026EEF0(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     if (arg4 == 1) {
         v |= arg3;
     } else {
-        v &= ~arg3;
+        v &= arg3 ^ 0xFFFF;
     }
     func_8026D620(arg0, arg1, arg2, v);
 }
