@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 609, eu 609, jp 609
+ * differing words: us 547, eu 547, jp 547
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -951,8 +951,9 @@ f32 func_8026E8B8() {
 }
 
 void func_8026E6E4(u8 *arg0, f32 *arg1, f32 *arg2) {
+    s32 pad[3];
     s32 sp78[3];
-    M2C_UNK sp6C[3];
+    f32 sp6C[3];
     f32 temp_fs3;
     f32 temp_fs4;
     f32 var_fs0;
@@ -962,22 +963,16 @@ void func_8026E6E4(u8 *arg0, f32 *arg1, f32 *arg2) {
     temp_fs3 = M2C_FIELD(arg0, f32 *, 0x10);
     var_fs0 = M2C_FIELD(arg0, f32 *, 0x14);
     temp_fs4 = M2C_FIELD(arg0, f32 *, 0x18);
-loop_1:
-    func_8026DCAC(temp_fs3, var_fs0, temp_fs4, sp78, 2);
-    temp_v0 = func_8026D7D8(sp78[0], sp78[1], sp78[2]);
-    temp_v1 = temp_v0 & 0xF;
-    if ((temp_v1 == 0) && (var_fs0 >= 0.0f)) {
-        var_fs0 -= 100.0f;
-    }
-    if (temp_v1 == 0) {
-        if (!(var_fs0 >= 0.0f)) {
-
-        } else {
-            goto loop_1;
+    do {
+        func_8026DCAC(temp_fs3, var_fs0, temp_fs4, sp78, 2);
+        temp_v0 = func_8026D7D8(sp78[0], sp78[1], sp78[2]);
+        temp_v1 = temp_v0 & 0xF;
+        if ((temp_v1 == 0) && (var_fs0 >= 0.0f)) {
+            var_fs0 -= 100.0f;
         }
-    }
+    } while ((temp_v1 == 0) && (var_fs0 >= 0.0f));
     *arg1 = 0.0f;
-    switch (temp_v1) {                              /* irregular */
+    switch (temp_v1) {
     case 3:
         *arg2 = 180.0f;
         break;
@@ -992,7 +987,6 @@ loop_1:
         break;
     default:
         *arg2 = 0.0f;
-        break;
     }
     if (func_8026E278(temp_v0) != 0) {
         func_8026DFB8(temp_fs3 + 50.0f, var_fs0, temp_fs4 + 50.0f, sp6C);
