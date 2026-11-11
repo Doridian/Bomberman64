@@ -13,23 +13,24 @@
  * function-scope static) and __clearAudioDMA (8026B238's), inlined.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 14, eu 14, jp 14
+ * differing words: us 7, eu 7, jp 7
  *
  * jp's 8026B9CC has no osTvType test (always 60 fields a second).
- * func_8026B72C, 8026B79C, 8026B7A8 and 8026B7D4 match (8026B7D4's run
+ * func_8026B9CC, 8026B72C, 8026B79C, 8026B7A8 and 8026B7D4 match
+ * (8026B7D4's run
  * includes the static 8026B804, __amDMA).
  * - func_8026B210 (7 words; the statics' run from 8026B210 to 8026B72C):
  *   __amMain's lastInfo, msg and spill are at 0x5C/0x54/0x58, the
  *   original's 0x50/0x54/0x58 (declaration order and the inlined
  *   samplesLeft set them); __clearAudioDMA's iomsg is at sp+0x28, the
  *   original's sp+0x30.
- * - func_8026B9CC (7 words): the same code shape and frame (locals
- *   declared i, fsize, buffs, err, then fps, which gets no slot below err).
- *   The peaks zeroed in one chain, flags first (`flags = maxDMAs = ... = 0`),
- *   use up ugen's three temps the original's t-registers show. Left: err's
- *   `sh` before D_802AF938's store, and amc reloaded into v0, not v1, after
- *   the queues. The chained `D_802AF938 = D_802AF93C = D_802AF948
- *   = 0` gives the original's address registers (v1, a2).
+ * - func_8026B9CC matched with the locals declared i, fsize, buffs, err,
+ *   fps (fps gets no slot below err), err = 0 first, the peaks zeroed in
+ *   one chain, flags first (it uses up ugen's three temps the original's
+ *   t-registers show), and osCreateMesgQueue (func_80297D80) void, which
+ *   moves amc's reloads from v1 to v0. The chained `D_802AF938 =
+ *   D_802AF93C = D_802AF948 = 0` gives the original's address registers
+ *   (v1, a2).
  */
 #include "common.h"
 
@@ -164,7 +165,7 @@ typedef struct {
 } UnkStruct_802AF960;
 
 void *func_80297D48(void *);
-s32 func_80297D80(void *, void *, s32);
+void func_80297D80(void *, void *, s32);
 s32 func_80297D90(void *, void *, s32);
 s32 func_80297D98(void *, void *, s32);
 void func_80297DA8(void *, s32, void *, void *, void *, s32);
@@ -226,9 +227,9 @@ s16 func_8026B9CC(UnkStruct_8026B9CC_0 *c, UnkStruct_8026B9CC_1 *amc) {
     f32 fps;
 #endif
 
+    err = 0;
     D_802AD680.flags = D_802AD680.maxDMAs = D_802AD680.maxBuffers = D_802AD680.maxCmds = 0;
     D_802AF938 = D_802AF93C = D_802AF948 = 0;
-    err = 0;
     D_802AF940 = amc->numDMABuffers;
     D_802AF944 = amc->dmaBufferLength;
     D_802AF928 = c->heap;
