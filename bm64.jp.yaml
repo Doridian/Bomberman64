@@ -31,12 +31,12 @@ segments:
     exclusive_ram_id: boot_code
     subsegments:
       - [0x1000, hasm, entry]
-      - [0x1050, asm]
-      - [0x10D0, asm]
-      - [0x13F0, asm]
+      - [0x1050, c]
+      - [0x10D0, c]
+      - [0x13F0, c]
       - [0x14B0, asm]
-      - [0x2350, asm]
-      - [0x2620, asm, 2630]
+      - [0x2350, c]
+      - [0x2620, hasm, 2630]
       - [0x2640, c, libultra/audio/synstartvoiceparam]
       - [0x2730, asm, 2740]
       - [0x27F0, asm, 2800]
@@ -279,7 +279,11 @@ segments:
       - [0x19F00, c, libultra/libc/xldtob]
       - [0x1A9C0, asm, 1A9D0]
       - [0x1A9E0, asm, 1A9F0]
-      - [0x1AB70, data]
+      - [0x1AB70, .data, 1050]
+      - [0x1AB80, .data, 13F0]
+      - [0x1AB90, data]
+      - [0x1ABB0, .data, 2350]
+      - [0x1AF40, data]
       - [0x1BCD0, .data, libultra/io/aisetnextbuf]
       - [0x1BCE0, data]
       - [0x1BD30, .data, libultra/os/exceptasm]
@@ -292,7 +296,11 @@ segments:
       - [0x1C950, .rodata, libultra/libc/xprintf]
       - [0x1CA50, rodata]
       - [0x1CB40, .rodata, libultra/libc/xldtob]
-      - {type: bss, vram: 0x8001BFA0}
+      - {type: .bss, vram: 0x8001BFA0, name: 1050}
+      - {type: .bss, vram: 0x8001C3A0, name: 10D0}
+      - {type: bss, vram: 0x8001C420}
+      - {type: .bss, vram: 0x8001C490, name: 2350}
+      - {type: bss, vram: 0x80024900, name: bss_80024900}
       - {type: .bss, vram: 0x80027110, name: libultra/io/cartrominit}
       - {type: .bss, vram: 0x80027190, name: libultra/io/leodiskinit}
       - {type: bss, vram: 0x80027210, name: bss_80027210}

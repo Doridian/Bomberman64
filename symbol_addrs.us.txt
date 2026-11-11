@@ -1,2 +1,13 @@
 // zerojump's stub: the page boot_code DMAs to 0x80042000 and maps at virtual 0.
 func_80042000 = 0x80042000; // type:func rom:0x1CBC0
+// boot_code functions reached only through ZeroJump's tables (10D0's PI
+// DMA, 14B0's timing and stubs), which splat would label as data.
+func_800004D0 = 0x800004D0; // type:func rom:0x10D0
+func_80000524 = 0x80000524; // type:func rom:0x1124
+func_80000570 = 0x80000570; // type:func rom:0x1170
+func_8000059C = 0x8000059C; // type:func rom:0x119C
+func_8000064C = 0x8000064C; // type:func rom:0x124C
+func_80000768 = 0x80000768; // type:func rom:0x1368
+func_80000D44 = 0x80000D44; // type:func rom:0x1944
+func_80000E0C = 0x80000E0C; // type:func rom:0x1A0C
+func_80000E48 = 0x80000E48; // type:func rom:0x1A48

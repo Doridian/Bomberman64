@@ -496,9 +496,9 @@ def cut_data(name, vram, data, text_end, region_end, bss_size, text_objs, split,
 
     Returns (subsegments [(offset, kind, name)], bss lines, bss size)."""
     objs, starts, islands = split or ([], {}, {})
-    # the listed objects must be the module's first, in order (the
-    # handwritten ZeroJump stub block has no data)
-    order = [o for o in text_objs if o != f"{name}_zerojmp"]
+    # the listed objects must be the module's first, in order (text_objs
+    # leaves out the game's handwritten objects: they have no data)
+    order = list(text_objs)
     listed = [o[0] for o in objs]
     assert listed == order[:len(listed)], \
         f"{name}: data_split.txt lists {listed}, the module's objects start {order[:len(listed)]}"
@@ -628,6 +628,16 @@ def lib_source(obj):
     return None
 
 
+# The game's handwritten objects past the entries, which code_segment()
+# makes `hasm` (splat's disassembly, kept as asm; no C compiles to them):
+# - 2630 (boot_code's func_80001A30, `table[id] = p` for ZeroJump's module
+#   table): a leaf that builds the address in t0/t1 with the %lo in an
+#   addiu, then stores through 0(t0).  IDO 5.3 builds the same C (at -O1,
+#   -O2 and -O3) as sll t6; lui at; addu at,at,t6; sw a1,%lo(D)(at): the
+#   %lo in the store, and its temporaries start at t6.
+GAME_HASM = {"2630"}
+
+
 def source_exists(seg_dir, obj):
     """Whether a text object is C or source asm (cut_data())."""
     return c_source(seg_dir, obj).exists() or \
@@ -678,8 +688,14 @@ def code_segment(name, start, vram, data, bss_size, first_hasm=None,
         code(pos, text_end)
     seg_dir = None if vram != OVERLAY_VRAM else f"overlays/{name}"
     subs = [(off, kind, sub or given.get(off) or namer(off)) for off, kind, sub in subs]
+    subs = [(off, "hasm" if kind == "asm" and sub in GAME_HASM else kind, sub)
+            for off, kind, sub in subs]
     text_objs = [sub for _, _, sub in subs]
     assert len(set(text_objs)) == len(text_objs), f"{name}: two text objects with one name"
+    # the game's handwritten objects (the entry, the ZeroJump stubs, 2630)
+    # have no data, so the data cut passes over them
+    data_objs = [sub for _, kind, sub in subs
+                 if not (kind == "hasm" and not sub.startswith("libultra/"))]
 
     region_end = len(data)
     if persist is not None:
@@ -689,7 +705,7 @@ def code_segment(name, start, vram, data, bss_size, first_hasm=None,
     # as asm (one rodata block where nothing is cut, so that spimdisasm
     # labels the jump tables in it)
     data_subs, bss_lines, bss_size = cut_data(
-        name, vram, data, text_end, region_end, bss_size, text_objs, split, seg_dir)
+        name, vram, data, text_end, region_end, bss_size, data_objs, split, seg_dir)
     subs += data_subs
     if persist is not None:
         subs.append((persist, "rodata", f"{name}_persist"))
