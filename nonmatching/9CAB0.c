@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3568, eu 3568, jp 3568
+ * differing words: us 3277, eu 3277, jp 3277
  */
 #include "common.h"
 
@@ -290,8 +290,8 @@ static s32 func_80282AD8(UnkStruct_80288040 *act);
 static s32 func_80282AE0(UnkStruct_80288040 *act);
 static s32 func_80282AE8(UnkStruct_80288040 *act);
 static void func_80283014();
-static s32 func_80283304(void);
-static s32 func_8028330C(void);
+static void func_80283304();
+void func_8028330C();
 static void func_80283784();
 void func_8028378C();
 static void func_80283AFC();
@@ -1981,32 +1981,10 @@ static void func_802836F0(UnkStruct_80288040 *arg0, s32 arg1) {
     arg0->unk1C = func_80283314(mode, arg1, arg0) << 5;
 }
 
-static s32 func_8028330C(void) {
-    if ((s32) (func_8025E63C() * 10.0) >= 3) {
-        return 0;
-    } else if ((s32) (func_8025E63C() * 2) == 1) {
-        return 1;
-    } else if ((s32) (func_8025E63C() * 2) == 1) {
-        return 2;
-    } else if ((s32) (func_8025E63C() * 2) == 1) {
-        return 3;
-    } else {
-        return 4;
-    }
+static void func_80283304() {
 }
 
-static s32 func_80283304(void) {
-    if ((s32) (func_8025E63C() * 10.0) >= 3) {
-        return 4;
-    } else if ((s32) (func_8025E63C() * 2) == 1) {
-        return 3;
-    } else if ((s32) (func_8025E63C() * 2) == 1) {
-        return 2;
-    } else if ((s32) (func_8025E63C() * 2) == 1) {
-        return 1;
-    } else {
-        return 0;
-    }
+static void func_8028330C() {
 }
 
 static u8 func_80283314(s32 arg0, s32 arg1, UnkStruct_80288040 *arg2) {
@@ -2015,15 +1993,37 @@ static u8 func_80283314(s32 arg0, s32 arg1, UnkStruct_80288040 *arg2) {
     s32 dir;
     s32 d;
 
+    func_8028330C();
+    func_80283304();
     switch (arg0) {
     case 0:
         n = func_8025E63C() * 5.0;
         break;
     case 1:
-        n = func_8028330C();
+        if ((s32) (func_8025E63C() * 10.0) >= 3) {
+            n = 0;
+        } else if ((s32) (func_8025E63C() * 2) == 1) {
+            n = 1;
+        } else if ((s32) (func_8025E63C() * 2) == 1) {
+            n = 2;
+        } else if ((s32) (func_8025E63C() * 2) == 1) {
+            n = 3;
+        } else {
+            n = 4;
+        }
         break;
     case 2:
-        n = func_80283304();
+        if ((s32) (func_8025E63C() * 10.0) >= 3) {
+            n = 4;
+        } else if ((s32) (func_8025E63C() * 2) == 1) {
+            n = 3;
+        } else if ((s32) (func_8025E63C() * 2) == 1) {
+            n = 2;
+        } else if ((s32) (func_8025E63C() * 2) == 1) {
+            n = 1;
+        } else {
+            n = 0;
+        }
         break;
     }
     if (n < arg1) {
