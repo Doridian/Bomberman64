@@ -1044,6 +1044,7 @@ Cut so far (the same in us, eu and jp):
 |---|---|---|
 | ovl_09_01 | all: `ovl_09_01_entry`, `120010` (.data 0x30, .rodata 0x50: the handler's jump table, .bss 0x50) | 0x80044990 (the compiler's) |
 | main_code | `main_code_entry`, `40040` (.data 0x30: two tables), `40300` (.data 0x10: the bump pointer) after the RSP code at 0x8029D250-0x8029F570 | not shown yet: none of the three has .rodata |
+| boot_code | `1050` (.data 0x10, .bss 0x400), `10D0` (.bss 0x80), `13F0` (.data 0x10) cut from the module's start, the entry skipped as hasm; `2350` (.data 0x3A0, jp 0x390: the jp table is an entry shorter; .bss 0x8470) placed on its own with `@<version>` lines, since 14B0 (the scheduler, in `nonmatching/`) and 2630 (hasm) come between | not cut yet |
 
 The sizes are the same in every version as long as the C is. Where a
 version's C builds to other sizes (`#if VERSION_JP` data: jp's text), a
