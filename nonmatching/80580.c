@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1644, eu 1644, jp 1644
+ * differing words: us 895, eu 895, jp 895
  *
  * The object is the same in all three versions. 66 of the 79 original
  * procedures match (stubs included). The IPA statics
@@ -1598,6 +1598,7 @@ static void func_80267A18(s16 idx) {
     s16 ch;
     s16 vol;
     f32 f;
+    f32 r;
 
     if (D_802AD658 != NULL) {
         s = &D_802AD65C[idx];
@@ -1740,8 +1741,9 @@ static void func_80267A18(s16 idx) {
                     s->unk20 = 0;
                     f = -s->unk32;
                 } else {
-                    f = sinf(((f32) s->unk20 / (f32) s->unk22) * 6.28318530000000042) * s->unk24;
-                    s->unk32 += (s32) f;
+                    r = (f32) s->unk20 / (f32) s->unk22;
+                    f = sinf(r * 6.28318530000000042) * s->unk24;
+                    s->unk32 += (s16) f;
                 }
             }
             if (s->unk26 == 1) {
@@ -1751,14 +1753,15 @@ static void func_80267A18(s16 idx) {
                     s->unkE += s->unk28;
                     f = 0.1f;
                 } else {
-                    f += s->unk28 * ((f32) s->unk2A / (f32) s->unk2C);
+                    r = (f32) s->unk2A / (f32) s->unk2C;
+                    f += s->unk28 * r;
                 }
             }
-            s->unkE += (s32) f;
+            s->unkE += (s16) f;
             if (s->unkE >= 0x4B1) {
                 s->unkE = 0x4B0;
             }
-            if (s->unkE != v->unk12) {
+            if (v->unk12 != s->unkE) {
                 v->unk12 = s->unkE;
                 v->flags |= 1;
             }
@@ -1879,55 +1882,40 @@ static f32 func_802679C0(u8 depth) {
 }
 
 static void func_80267784(s16 arg0) {
-    Voice *temp_s0;
-    s16 temp_a1;
-    s16 var_v0_2;
-    s32 temp_v0;
-    s32 var_at;
-    s32 var_t6;
-    s32 var_t7;
-    s32 var_v0;
+    Voice *v;
+    s16 vol;
+    s16 pan;
 
-    temp_s0 = &D_802AD654[arg0];
-    temp_a1 = temp_s0->sndId;
-    if (temp_a1 >= 0) {
-        func_802986F0(D_802AD64C, temp_a1);
-        var_v0 = temp_s0->flags;
-        if (var_v0 & 2) {
-            func_80298718(D_802AD64C, (s16) ((s32) ((s16) ((s32) (temp_s0->unk16 * temp_s0->unk14) / 32767) * D_802AD66E) / 32767));
-            var_v0 = temp_s0->flags & ~2;
-            temp_s0->flags = var_v0;
+    v = &D_802AD654[arg0];
+    if (v->sndId >= 0) {
+        func_802986F0(D_802AD64C, v->sndId);
+        if (v->flags & 2) {
+            vol = (v->unk16 * v->unk14) / 32767;
+            func_80298718(D_802AD64C, (vol * D_802AD66E) / 32767);
+            v->flags &= ~2;
         }
-        var_t7 = var_v0 & 8;
-        if (var_v0 & 1) {
-            func_80298720(D_802AD64C, func_80298550(temp_s0->unk12 + temp_s0->unk10) * temp_s0->pitch);
-            var_v0 = temp_s0->flags & ~1;
-            temp_s0->flags = var_v0;
-            var_t7 = var_v0 & 8;
+        if (v->flags & 1) {
+            func_80298720(D_802AD64C, func_80298550(v->unk12 + v->unk10) * v->pitch);
+            v->flags &= ~1;
         }
-        var_t6 = var_v0 & 4;
-        if (var_t7 != 0) {
-            func_80298738(D_802AD64C, temp_s0->unk1E);
-            temp_v0 = temp_s0->flags & ~8;
-            temp_s0->flags = temp_v0;
-            var_t6 = temp_v0 & 4;
+        if (v->flags & 8) {
+            func_80298738(D_802AD64C, v->unk1E);
+            v->flags &= ~8;
         }
-        if (var_t6 != 0) {
+        if (v->flags & 4) {
             if (D_802AD218 & 1) {
-                func_80298728(D_802AD64C, 0x40U);
+                func_80298728(D_802AD64C, 0x40);
             } else {
-                var_v0_2 = (temp_s0->unk18 + temp_s0->unk19) - 0x40;
-                var_at = var_v0_2 < 0x80;
-                if (var_v0_2 < 0) {
-                    var_v0_2 = 0;
-                    var_at = 0 < 0x80;
+                pan = (v->unk18 + v->unk19) - 0x40;
+                if (pan < 0) {
+                    pan = 0;
                 }
-                if (var_at == 0) {
-                    var_v0_2 = 0x7F;
+                if (pan >= 0x80) {
+                    pan = 0x7F;
                 }
-                func_80298728(D_802AD64C, var_v0_2 & 0xFF);
+                func_80298728(D_802AD64C, pan);
             }
-            temp_s0->flags &= ~4;
+            v->flags &= ~4;
         }
     }
 }
