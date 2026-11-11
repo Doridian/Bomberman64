@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 63, eu 63, jp 63
+ * differing words: us 50, eu 50, jp 50
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -20,7 +20,7 @@
  * original's dead stores to it), not in three variables.
  * func_8026E938's tail calls the getters func_8026E8C8 (the map's sign
  * bit, inlined as `lui v0; lb`) and func_8026E8B8.
- * 40 of 43 match. Left: func_8026DCAC 21, func_8026EE18 22,
+ * 40 of 43 match. Left: func_8026DCAC 8, func_8026EE18 22,
  * func_8026FC08 20.
  */
 #include "common.h"
@@ -1265,7 +1265,10 @@ void func_8026DCAC(f32 arg0, f32 arg1, f32 arg2, void *arg3, s32 arg4) {
         m = &D_800B15D8[layer];
         if (iy < h) {
             if (layer > 0) {
-                ((Unk8026DCAC *) arg3)->i[1] = layer - 1;
+                /* fake: h is dead after the break; this keeps the
+                 * ugen temporaries below in step with the original */
+                h = layer - 1;
+                ((Unk8026DCAC *) arg3)->i[1] = h;
             } else {
                 ((Unk8026DCAC *) arg3)->i[1] = layer;
             }
