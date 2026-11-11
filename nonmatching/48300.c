@@ -6,7 +6,7 @@
  * boxes, func_8022E884). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1494, eu 1494, jp 1494
+ * differing words: us 1478, eu 1478, jp 1478
  *
  * A first draft: functions in the reverse of the ROM's order, which IDO
  * now emits exactly as the original does (stubs included); a handful by
@@ -1904,7 +1904,10 @@ static s32 func_8022E4DC(f32 *a, f32 *b) {
     if (b[3] + a[3] <= d / sqrtf(qp.x * qp.x + qp.y * qp.y + qp.z * qp.z)) {
         return 0;
     }
-    if (func_8022E330(&pq.x, &ap.x) > 0.0f || func_8022E330(&qp.x, &aq.x) > 0.0f) {
+    if (func_8022E330(&pq.x, &ap.x) > 0.0f) {
+        return 0;
+    }
+    if (func_8022E330(&qp.x, &aq.x) > 0.0f) {
         return 0;
     }
     return 1;
