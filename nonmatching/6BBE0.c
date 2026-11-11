@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 8863, eu 8863, jp 8441
+ * differing words: us 8687, eu 8687, jp 8260
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -56,6 +56,11 @@
  * jp lacks one height test in func_802553D4 (VERSION_JP); eu is us.
  */
 #include "common.h"
+
+typedef struct { s32 n; f32 f4; s32 unk8; f32 fC; } SeqA; /* 0x10 */
+typedef struct { s32 n; u16 v; } SeqB; /* 0x8 */
+typedef struct { s32 len[3]; s32 idx[3]; s32 cnt[3]; SeqA *a; SeqB *b; SeqB *c; } Seq;
+typedef struct { f32 f0; f32 f4; f32 f8; u16 vC; u16 vE; } SeqOut;
 
 #define M2C_FIELD(expr, type, offset) (*(type)((u8 *)(expr) + (offset)))
 #define FDIFF(a, b) ((a) < (b) ? -((a) - (b)) : ((a) - (b)))
@@ -4347,105 +4352,61 @@ block_301:
 }
 
 static s32 func_80252EA4(f32 *arg0) {
-    f32 temp_fv0;
-    f32 temp_fv0_2;
-    s32 temp_a3;
-    s32 temp_a3_2;
-    s32 temp_a3_3;
-    s32 temp_t0;
-    s32 temp_t0_2;
-    s32 temp_t0_3;
-    s32 temp_t0_4;
-    s32 temp_t0_5;
-    s32 temp_t0_6;
-    s32 temp_t0_7;
-    s32 temp_t0_8;
-    s32 temp_t0_9;
-    s32 temp_t8;
-    s32 temp_t8_2;
-    s32 temp_t9;
-    s32 var_a1;
-    s32 var_a2;
-    s32 var_v1;
-    u8 *temp_v0;
+    Seq *p = M2C_FIELD(arg0, Seq **, 0x98);
+    f32 f;
+    s32 c = 1;
+    s32 b = 1;
+    s32 a = 1;
 
-    temp_v0 = M2C_FIELD(arg0, void **, 0x98);
-    var_v1 = 1;
-    temp_a3 = M2C_FIELD(temp_v0, s32 *, 0);
-    var_a1 = 1;
-    var_a2 = 1;
-    if (temp_a3 != 0) {
-        temp_t0 = M2C_FIELD(temp_v0, s32 *, 0x18);
-        var_a2 = 0;
-        if (temp_t0 != 0) {
-            M2C_FIELD(temp_v0, s32 *, 0x18) = (s32) (temp_t0 - 1);
+    if (p->len[0] != 0) {
+        a = 0;
+        if (p->cnt[0] != 0) {
+            p->cnt[0]--;
+        } else if (p->len[0] != p->idx[0]) {
+            f = p->a[p->idx[0]].fC;
+            M2C_FIELD(arg0, f32 *, 0x7C) = f;
+            M2C_FIELD(arg0, SeqOut **, 0x9C)->f8 = f;
+            f = p->a[p->idx[0]].f4;
+            M2C_FIELD(arg0, f32 *, 0x74) = f;
+            M2C_FIELD(arg0, SeqOut **, 0x9C)->f0 = f;
+            p->cnt[0] = p->a[p->idx[0]].n;
+            p->idx[0]++;
+            p->cnt[0]--;
         } else {
-            temp_t0_2 = M2C_FIELD(temp_v0, s32 *, 0xC);
-            if (temp_a3 != temp_t0_2) {
-                temp_fv0 = M2C_FIELD((M2C_FIELD(temp_v0, u8 **, 0x24) + (temp_t0_2 * 0x10)), f32 *, 0xC);
-                M2C_FIELD(arg0, f32 *, 0x7C) = temp_fv0;
-                M2C_FIELD(M2C_FIELD(arg0, void **, 0x9C), f32 *, 8) = temp_fv0;
-                temp_fv0_2 = M2C_FIELD((M2C_FIELD(temp_v0, u8 **, 0x24) + (M2C_FIELD(temp_v0, s32 *, 0xC) * 0x10)), f32 *, 4);
-                M2C_FIELD(arg0, f32 *, 0x74) = temp_fv0_2;
-                M2C_FIELD(M2C_FIELD(arg0, void **, 0x9C), f32 *, 0) = temp_fv0_2;
-                temp_t0_3 = M2C_FIELD(temp_v0, s32 *, 0xC);
-                temp_t8 = *(s32 *)(M2C_FIELD(temp_v0, u8 **, 0x24) + (temp_t0_3 * 0x10));
-                M2C_FIELD(temp_v0, s32 *, 0x18) = temp_t8;
-                if (!M2C_FIELD(temp_v0, s32 *, 0x18) && !M2C_FIELD(temp_v0, s32 *, 0x18)) {}
-                M2C_FIELD(temp_v0, s32 *, 0xC) = (s32) (temp_t0_3 + 1);
-                M2C_FIELD(temp_v0, s32 *, 0x18) = (s32) (temp_t8 - 1);
-            } else {
-                M2C_FIELD(arg0, f32 *, 0x7C) = 0.0f;
-                var_a2 = 1;
-                M2C_FIELD(M2C_FIELD(arg0, void **, 0x9C), f32 *, 8) = 0.0f;
-            }
+            M2C_FIELD(arg0, f32 *, 0x7C) = 0.0f;
+            a = 1;
+            M2C_FIELD(arg0, SeqOut **, 0x9C)->f8 = 0.0f;
         }
     }
-    temp_a3_2 = M2C_FIELD(temp_v0, s32 *, 4);
-    if (temp_a3_2 != 0) {
-        temp_t0_4 = M2C_FIELD(temp_v0, s32 *, 0x1C);
-        var_a1 = 0;
-        if (temp_t0_4 != 0) {
-            M2C_FIELD(temp_v0, s32 *, 0x1C) = (s32) (temp_t0_4 - 1);
+    if (p->len[1] != 0) {
+        b = 0;
+        if (p->cnt[1] != 0) {
+            p->cnt[1]--;
+        } else if (p->len[1] != p->idx[1]) {
+            M2C_FIELD(arg0, SeqOut **, 0x9C)->vC = p->b[p->idx[1]].v;
+            p->cnt[1] = p->b[p->idx[1]].n;
+            p->idx[1]++;
+            p->cnt[1]--;
         } else {
-            temp_t0_5 = M2C_FIELD(temp_v0, s32 *, 0x10);
-            if (temp_a3_2 != temp_t0_5) {
-                M2C_FIELD(M2C_FIELD(arg0, void **, 0x9C), u16 *, 0xC) = (u16) M2C_FIELD((M2C_FIELD(temp_v0, u8 **, 0x28) + (temp_t0_5 * 8)), u16 *, 4);
-                temp_t0_6 = M2C_FIELD(temp_v0, s32 *, 0x10);
-                temp_t9 = *(s32 *)(M2C_FIELD(temp_v0, u8 **, 0x28) + (temp_t0_6 * 8));
-                M2C_FIELD(temp_v0, s32 *, 0x1C) = temp_t9;
-                if (!M2C_FIELD(temp_v0, s32 *, 0x1C) && !M2C_FIELD(temp_v0, s32 *, 0x1C)) {}
-                M2C_FIELD(temp_v0, s32 *, 0x10) = (s32) (temp_t0_6 + 1);
-                M2C_FIELD(temp_v0, s32 *, 0x1C) = (s32) (temp_t9 - 1);
-            } else {
-                var_a1 = 1;
-                M2C_FIELD(M2C_FIELD(arg0, void **, 0x9C), u16 *, 0xC) = 0U;
-            }
+            b = 1;
+            M2C_FIELD(arg0, SeqOut **, 0x9C)->vC = 0;
         }
     }
-    temp_a3_3 = M2C_FIELD(temp_v0, s32 *, 8);
-    if (temp_a3_3 != 0) {
-        temp_t0_7 = M2C_FIELD(temp_v0, s32 *, 0x20);
-        var_v1 = 0;
-        if (temp_t0_7 != 0) {
-            M2C_FIELD(temp_v0, s32 *, 0x20) = (s32) (temp_t0_7 - 1);
+    if (p->len[2] != 0) {
+        c = 0;
+        if (p->cnt[2] != 0) {
+            p->cnt[2]--;
+        } else if (p->len[2] != p->idx[2]) {
+            M2C_FIELD(arg0, SeqOut **, 0x9C)->vE = p->c[p->idx[2]].v;
+            p->cnt[2] = p->c[p->idx[2]].n;
+            p->idx[2]++;
+            p->cnt[2]--;
         } else {
-            temp_t0_8 = M2C_FIELD(temp_v0, s32 *, 0x14);
-            if (temp_a3_3 != temp_t0_8) {
-                M2C_FIELD(M2C_FIELD(arg0, void **, 0x9C), u16 *, 0xE) = (u16) M2C_FIELD((M2C_FIELD(temp_v0, u8 **, 0x2C) + (temp_t0_8 * 8)), u16 *, 4);
-                temp_t0_9 = M2C_FIELD(temp_v0, s32 *, 0x14);
-                temp_t8_2 = *(s32 *)(M2C_FIELD(temp_v0, u8 **, 0x2C) + (temp_t0_9 * 8));
-                M2C_FIELD(temp_v0, s32 *, 0x20) = temp_t8_2;
-                if (!M2C_FIELD(temp_v0, s32 *, 0x20) && !M2C_FIELD(temp_v0, s32 *, 0x20)) {}
-                M2C_FIELD(temp_v0, s32 *, 0x14) = (s32) (temp_t0_9 + 1);
-                M2C_FIELD(temp_v0, s32 *, 0x20) = (s32) (temp_t8_2 - 1);
-            } else {
-                var_v1 = 1;
-                M2C_FIELD(M2C_FIELD(arg0, void **, 0x9C), u16 *, 0xE) = 0U;
-            }
+            c = 1;
+            M2C_FIELD(arg0, SeqOut **, 0x9C)->vE = 0;
         }
     }
-    if ((var_a2 == 1) && (var_a1 == 1) && (var_v1 == 1)) {
+    if (a == 1 && b == 1 && c == 1) {
         return 1;
     }
     return 0;
