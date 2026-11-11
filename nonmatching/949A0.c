@@ -8,7 +8,7 @@
  * stack layout and loop forms; func_8027B828 in two registers. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 475, eu 475, jp 475
+ * differing words: us 447, eu 447, jp 447
  */
 #include "common.h"
 
@@ -822,19 +822,21 @@ void func_8027A950(void) {
 }
 
 void func_8027A640(void) {
-    s16 sums[3];
-    s16 x;
-    s16 y;
-    s16 z;
-    s32 mode;
-    struct UnkStruct_80225CC0 *file;
     UnkStruct_8023A840 *st;
     u8 *p;
     s32 found;
     s32 off;
     s32 i;
-    s32 j;
+    s16 x;
+    s16 y;
+    s16 z;
     u8 c;
+    s16 sums[3];
+    s32 j;
+    s32 mode;
+    struct UnkStruct_80225CC0 *file;
+    s32 d1;
+    s32 d2;
 
     if (D_802AFE84 != NULL) {
         free(D_802AFE84);
@@ -888,19 +890,25 @@ void func_8027A640(void) {
     for (j = 0; j < 3; j++) {
         sums[j] = 0;
     }
-    while ((c = *p++) != 0xF0) {
+    d2 = 0;
+    do {
+        c = *p++;
+        if (c == 0xF0) {
+            break;
+        }
         if (mode == 0) {
             p += 3;
         }
         for (j = 0; j < 3; j++) {
-            D_802AFE88[c][j] = *p;
-            sums[j] += *p;
+            d1 = *p;
+            D_802AFE88[c][j] = d1;
+            sums[j] += d1;
             p++;
         }
         if (mode == 1) {
             p += 3;
         }
-    }
+    } while (d2 == 0);
     for (j = 0; j < 3; j++) {
         if (sums[j] <= 100) {
             D_802AFE88[9][j] = 100 - sums[j];
