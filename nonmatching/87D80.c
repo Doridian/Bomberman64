@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 663, eu 663, jp 663
+ * differing words: us 609, eu 609, jp 609
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -1332,79 +1332,49 @@ void func_8026DB88(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5, s
 }
 
 void func_8026DA2C(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) {
-    s32 sp44[3];
-    s32 temp_s2;
-    s32 temp_s2_2;
-    s32 var_a0;
-    s32 var_at;
-    s32 var_at_2;
-    s32 var_at_3;
-    s32 var_s0;
-    s32 var_s0_2;
-    s32 var_s2;
-    s32 var_s6;
-    s32 var_s7;
-    s32 var_v0;
+    s32 i;
+    s32 j;
+    s32 size[3];
 
-    var_s7 = arg0;
-    var_s0 = arg2;
-    var_s6 = arg3;
-    func_802438BC(sp44);
-    temp_s2 = var_s7;
-    if (var_s6 < var_s7) {
-        var_s7 = var_s6;
-        var_s6 = temp_s2;
+    func_802438BC(size);
+    i = arg0;
+    if (arg3 < arg0) {
+        arg0 = arg3;
+        arg3 = i;
     }
-    if (var_s7 < 0) {
-        var_s7 = 0;
+    if (arg0 < 0) {
+        arg0 = 0;
     }
-    if (var_s6 < 0) {
-        var_s6 = 0;
+    if (arg3 < 0) {
+        arg3 = 0;
     }
-    temp_s2_2 = var_s0;
-    if (sp44[0] < var_s7) {
-        var_s7 = sp44[0];
+    if (size[0] < arg0) {
+        arg0 = size[0];
     }
-    if (sp44[0] < var_s6) {
-        var_s6 = sp44[0];
+    if (size[0] < arg3) {
+        arg3 = size[0];
     }
-    var_v0 = arg4;
-    if (var_v0 < var_s0) {
-        var_s0 = var_v0;
-        var_v0 = temp_s2_2;
+    i = arg2;
+    if (arg4 < arg2) {
+        arg2 = arg4;
+        arg4 = i;
     }
-    if (var_s0 < 0) {
-        var_s0 = 0;
+    if (arg2 < 0) {
+        arg2 = 0;
     }
-    if (var_v0 < 0) {
-        var_v0 = 0;
+    if (arg4 < 0) {
+        arg4 = 0;
     }
-    var_at = sp44[2] < var_v0;
-    if (sp44[2] < var_s0) {
-        var_s0 = sp44[2];
-        var_at = sp44[2] < var_v0;
+    if (size[2] < arg2) {
+        arg2 = size[2];
     }
-    var_at_2 = var_v0 < var_s0;
-    if (var_at != 0) {
-        var_v0 = sp44[2];
-        var_at_2 = var_v0 < var_s0;
+    if (size[2] < arg4) {
+        arg4 = size[2];
     }
-    var_s2 = var_s0;
-    if (var_at_2 == 0) {
-        var_at_3 = var_s6 < var_s7;
-        do {
-            var_s0_2 = var_s7;
-            if (var_at_3 == 0) {
-                var_a0 = var_s0_2;
-                do {
-                    func_8026D620(var_a0, arg1, var_s2, (u16) arg5);
-                    var_s0_2 += 1;
-                    var_a0 = var_s0_2;
-                } while ((var_s6 + 1) != var_s0_2);
-            }
-            var_s2 += 1;
-            var_at_3 = var_s6 < var_s7;
-        } while ((var_v0 + 1) != var_s2);
+    for (i = arg2; i <= arg4; i++) {
+        for (j = arg0; j <= arg3; j++) {
+            func_8026D620(j, arg1, i, arg5);
+        }
     }
 }
 
