@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 517, eu 517, jp 517
+ * differing words: us 509, eu 509, jp 509
  */
 #include "common.h"
 
@@ -239,7 +239,7 @@ static s32 func_80283794(UnkStruct_80288040 *arg0, u8 arg1);
 void func_80283B04(UnkStruct_80288040 *arg0, Vec3f *arg1);
 static void func_80283CF0(UnkStruct_80288040 *arg0);
 static s32 func_80283D9C(UnkStruct_80288040 *arg0);
-void func_80283DF0(s32 arg0, UnkStruct_80288040 *arg1);
+void func_80283DF0(UnkStruct_80288040 *arg1, s32 arg0);
 static void func_80283F38(UnkStruct_80288040 *arg0);
 static void func_80283FCC(UnkStruct_80288040 *arg0);
 static void func_8028425C(UnkStruct_80288040 *arg0);
@@ -806,7 +806,7 @@ static void func_80286400(s32 arg0, f32 arg1, f32 arg2, f32 arg3, s32 arg4, s32 
     a->unk0 = m;
     func_802847E4(a, 0);
     func_80231408(func_802311E8(m), 0x2100000);
-    func_80283DF0(1, a);
+    func_80283DF0(a, 1);
     func_80285A84(a);
 }
 
@@ -1171,7 +1171,7 @@ static s32 func_80284FD4(UnkStruct_80288040 *arg0) {
                 arg0->unk6E = 0;
                 func_80282454(arg0);
                 func_80283F30(arg0);
-                func_80283DF0(2, arg0);
+                func_80283DF0(arg0, 2);
             } else if (arg0->unk6E >= 52) {
                 arg0->unk0->unk40->unk20 -= 2.0f * arg0->unk2C;
             } else if (arg0->unk6E >= 45) {
@@ -1605,7 +1605,7 @@ static void func_8028425C(UnkStruct_80288040 *arg0) {
             arg0->unk1C |= 1;
         } else if (arg0->unk20 >= n) {
             arg0->unk20 = 0;
-            func_80283DF0(1, arg0);
+            func_80283DF0(arg0, 1);
             func_80283F30(arg0);
         }
         if (func_80283D9C(arg0) == 3) {
@@ -1641,7 +1641,7 @@ static void func_80283FCC(UnkStruct_80288040 *arg0) {
     D_800BB484 = arg0;
     if (func_802909FC(arg0->unk0, func_8028556C) != 0) {
         func_80283F38(arg0);
-        func_80283DF0(0, arg0);
+        func_80283DF0(arg0, 0);
     }
     if (D_800BA8E8[arg0->unk84].unk0 == 0x1C) {
         p = func_8022F550(arg0->unk0, 0xF);
@@ -1673,7 +1673,7 @@ static void func_80283FCC(UnkStruct_80288040 *arg0) {
             }
         }
         func_80283F38(arg0);
-        func_80283DF0(2, arg0);
+        func_80283DF0(arg0, 2);
     }
     func_80232DB4(arg0->unk0);
 }
@@ -1701,7 +1701,7 @@ static void func_80283F38(UnkStruct_80288040 *arg0) {
     func_80283F30(arg0);
 }
 
-static void func_80283DF0(s32 arg0, UnkStruct_80288040 *arg1) {
+static void func_80283DF0(UnkStruct_80288040 *arg1, s32 arg0) {
     if (arg0 == 0) {
         func_802836F0(arg1, 0);
     } else if (arg0 == 2) {
