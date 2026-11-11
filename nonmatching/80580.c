@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1660, eu 1660, jp 1660
+ * differing words: us 1644, eu 1644, jp 1644
  *
  * The object is the same in all three versions. 66 of the 79 original
  * procedures match (stubs included). The IPA statics
@@ -1602,10 +1602,10 @@ static void func_80267A18(s16 idx) {
     if (D_802AD658 != NULL) {
         s = &D_802AD65C[idx];
         if (s->script >= 0) {
-            pc = s->pc;
             v = &D_802AD654[idx];
+            pc = s->pc;
             while (s->wait == 0) {
-                u32 op = pc[0];
+                s32 op = pc[0];
                 s->wait = (pc[1] << 8) + pc[2];
                 pc += 3;
                 if (op == 0x105) {}
@@ -1644,11 +1644,12 @@ static void func_80267A18(s16 idx) {
                         } else {
                             *lp = pc[0];
                         }
-                        pc += (s16) ((pc[1] << 8) + pc[2]) - 3;
+                        pc = (s16) ((pc[1] << 8) + pc[2]) + pc;
+                        pc -= 3;
                         break;
                     }
                     case 5:
-                        pc += (s16) ((pc[0] << 8) + pc[1]) - 3;
+                        pc = (s16) ((pc[0] << 8) + pc[1]) + pc - 3;
                         break;
                     case 8:
                         s->unk1D = pc[0];
@@ -1673,25 +1674,25 @@ static void func_80267A18(s16 idx) {
                         pc += 1;
                         break;
                     case 26:
-                        if (pc[0] & 1) {
+                        if (*pc++ & 1) {
                             s->flags |= 8;
                         } else {
                             s->flags |= 0x10;
                         }
-                        s->unk30 = (pc[1] << 8) + pc[2];
-                        pc += 3;
-                        s->unk2E = (s->unk30 * (u32) s->unk12) / 127;
+                        s->unk30 = (pc[0] << 8) + pc[1];
+                        pc += 2;
+                        s->unk2E = (s->unk30 * s->unk12) / 127;
                         break;
                     case 32:
                         s->unkE = (pc[0] << 8) + pc[1];
                         pc += 2;
                         break;
                     case 33:
-                        s->unkE += (pc[0] << 8) + pc[1];
+                        s->unkE += (s16) ((pc[0] << 8) + pc[1]);
                         pc += 2;
                         break;
                     case 34:
-                        if (*pc++ != 0) {
+                        if (*pc++) {
                             s->unk22 = 0x105 - s->unk1F;
                             f = func_802679C0(s->unk1E);
                             s->unk20 = 0;
@@ -1709,8 +1710,8 @@ static void func_80267A18(s16 idx) {
                         pc += 5;
                         break;
                     case 40:
-                        v->flags |= 8;
                         v->unk1E = *pc++;
+                        v->flags |= 8;
                         break;
                     case 0:
                         s->flags |= 0x100;
@@ -1727,8 +1728,8 @@ static void func_80267A18(s16 idx) {
                 }
                 if (idx) {}
             }
-            f = 0.0f;
             s->wait--;
+            f = 0.0f;
             s->pc = pc;
             if (s->unk20 == 0) {
                 s->unk32 = 0;
@@ -1788,8 +1789,11 @@ static void func_80267A18(s16 idx) {
                                 v->flags |= 0x2000;
                             }
                             v->unk1F = 0;
-                            D_802AD65C[num].script = -1;
-                            D_802AD65C[num].flags = 0;
+                            {
+                                VoiceScript *cs = &D_802AD65C[num];
+                                cs->script = -1;
+                                cs->flags = 0;
+                            }
                         }
                     }
                 }
