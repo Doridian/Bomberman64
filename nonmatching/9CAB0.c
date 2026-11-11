@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1128, eu 1128, jp 1128
+ * differing words: us 1043, eu 1043, jp 1043
  */
 #include "common.h"
 
@@ -186,7 +186,7 @@ void func_80270BA4(void *);
 void func_80270C24(UnkStructA *, s32, s32);
 void func_802727D8(s32);
 void func_802733C8(void *);
-void func_8027B7C4(s32, f32, f32, f32);
+void func_8027B7C4(s16, f32, f32, f32);
 void func_8027F820(UnkStructA *);
 void func_8027F858(UnkStructA *, s32);
 void func_8028805C(void *);
@@ -215,7 +215,7 @@ static void func_802822D8();
 static void func_802822E0(UnkStruct_800BB340 *arg0);
 static void func_80282340(UnkStruct_800BA900 *arg0);
 static void func_80282428();
-void func_80282430(UnkStruct_80288040 *arg0, s32 arg1, s32 arg2);
+void func_80282430();
 static void func_80282454(UnkStruct_80288040 *arg0);
 static s32 func_802824B4(UnkStruct_80288040 *arg0);
 s32 func_80282524(UnkStruct_80288040 *arg1);
@@ -225,7 +225,7 @@ static void func_80282714(UnkStruct_80288040 *arg0);
 void func_8028275C(f32 arg0, f32 arg1, f32 arg2);
 void func_80282934(void);
 void func_80282978(Vec3f *arg0);
-static s32 func_802829AC(s32 arg0, Vec3f *arg1);
+static s32 func_802829AC(Vec3f *arg1, s32 arg0);
 static void func_80282AD0();
 s32 func_80282AF0(UnkStruct_800BB340 *arg0, s32 arg1);
 static void func_80282F44(UnkStruct_800BB340 *arg0, s32 arg1);
@@ -814,7 +814,7 @@ static void func_802863E0() {
 }
 
 void func_802863B0(Vec3f *arg0) {
-    func_802829AC(2, arg0);
+    func_802829AC(arg0, 2);
 }
 
 static void func_80285F84(void) {
@@ -822,7 +822,9 @@ static void func_80285F84(void) {
 
 static void func_80285F8C(void) {
     UnkStruct_800BB340 *task;
+    s32 padA[2];
     Vec3f pos2;
+    s32 padB[2];
     UnkStruct_80288040 *a;
     s32 pad[3];
     Vec3f pos;
@@ -891,7 +893,7 @@ static void func_80285F8C(void) {
             pos2.x = a2->unk0->unk40->unk10;
             pos2.y = a2->unk0->unk40->unk14;
             pos2.z = a2->unk0->unk40->unk18;
-            func_802829AC(3, &pos2);
+            func_802829AC(&pos2, 3);
             func_80282598(task, 1);
             break;
         }
@@ -2255,7 +2257,7 @@ static s32 func_80282AF0(UnkStruct_800BB340 *arg0, s32 arg1) {
         pos.x = act->unk0->unk40->unk10;
         pos.y = act->unk0->unk40->unk14;
         pos.z = act->unk0->unk40->unk18;
-        if (func_802829AC(arg0->unkC, &pos) == 0) {
+        if (func_802829AC(&pos, arg0->unkC) == 0) {
             if ((arg1 != 3) && (act->unk7C >= (s32) (func_8025E63C() * 100.0))) {
                 p = act->unk0->unk40;
                 func_8027B7C4(act->unk7E, p->unk10, p->unk14 + 150.0f, p->unk18);
@@ -2271,7 +2273,7 @@ static void func_80282AD0() {
 static void func_802829A4() {
 }
 
-static s32 func_802829AC(s32 arg0, Vec3f *arg1) {
+static s32 func_802829AC(Vec3f *arg1, s32 arg0) {
     s32 ret = 0;
     UnkStruct_8023A840 *p;
     s32 kind;
@@ -2427,21 +2429,29 @@ static s32 func_802824B4(UnkStruct_80288040 *arg0) {
 
     switch (arg0->unk44) {
     case 0:
-        return 0x200;
+        ret = 0x200;
+        break;
     case 1:
-        return 0x400;
+        ret = 0x400;
+        break;
     case 2:
-        return 0x800;
+        ret = 0x800;
+        break;
     case 3:
-        return 0x1000;
+        ret = 0x1000;
+        break;
     case 4:
-        return 0x100;
+        ret = 0x100;
+        break;
     case 5:
-        return 0x80;
+        ret = 0x80;
+        break;
     case 6:
-        return 0x20;
+        ret = 0x20;
+        break;
     case 7:
         ret = 0x40;
+        break;
     case 8:
         break;
     }
@@ -2457,7 +2467,11 @@ static void func_80282454(UnkStruct_80288040 *arg0) {
     }
 }
 
-void func_80282430(UnkStruct_80288040 *arg0, s32 arg1, s32 arg2) {
+void func_80282430(arg0, arg1, arg2)
+    UnkStruct_80288040 *arg0;
+    u8 arg1;
+    u8 arg2;
+{
     func_80282428();
     arg0->unk7A &= ~arg1;
     arg0->unk7A |= arg2;
@@ -2465,9 +2479,6 @@ void func_80282430(UnkStruct_80288040 *arg0, s32 arg1, s32 arg2) {
         func_80282340(NULL);
         func_802822E0(NULL);
         func_802822BC(NULL);
-    }
-    if (0) {
-        D_800BC520 = (s32) &arg1;
     }
 }
 
