@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 412, eu 412, jp 415
+ * differing words: us 405, eu 405, jp 408
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -1130,7 +1130,7 @@ void func_80241590(s32 arg0, Gfx **gdl) {
     gSPTexture(gfx++, 0x8000, 0x8000, 0, G_TX_RENDERTILE, 1);
     gDPSetTexturePersp(gfx++, G_TP_NONE);
     gDPSetTextureLUT(gfx++, G_TT_RGBA16);
-    i = 0;
+    j = 0;
     if (D_802AC7C8 > 0) {
         r = (Rect54E40 *) D_802A084C;
         do {
@@ -1140,9 +1140,9 @@ void func_80241590(s32 arg0, Gfx **gdl) {
             gDPLoadTextureBlock_4b(gfx++, (u8 *) tf + e[r->idx].offset, G_IM_FMT_CI, 16, 16, 0,
                                    G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMASK, G_TX_NOMASK, G_TX_NOLOD, G_TX_NOLOD);
             gSPTextureRectangleYX(gfx++, r->xl, r->yl, r->xh, r->yh, G_TX_RENDERTILE, 0, 0, 0x400, 0x400);
-            i++;
+            j++;
             r++;
-        } while (i < D_802AC7C8);
+        } while (j < D_802AC7C8);
     }
     n = 0;
     tf = D_802A075C;
