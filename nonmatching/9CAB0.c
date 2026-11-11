@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 163, eu 163, jp 163
+ * differing words: us 150, eu 150, jp 150
  */
 #include "common.h"
 
@@ -2000,9 +2000,11 @@ static u8 func_80283314(UnkStruct_80288040 *arg2, s32 arg0, s32 arg1) {
     s32 i;
     s32 dir;
     s32 d;
+    UnkStruct_80288040 *p;
 
     func_8028330C();
     func_80283304();
+    p = arg2;
     switch (arg0) {
     case 0:
         n = func_8025E63C() * 5.0;
@@ -2037,20 +2039,20 @@ static u8 func_80283314(UnkStruct_80288040 *arg2, s32 arg0, s32 arg1) {
     if (n < arg1) {
         n = arg1;
     }
-    dir = arg2->unk1C >> 5;
+    dir = p->unk1C >> 5;
     for (i = n; i >= 0; i--) {
         d = dir + i;
         if (d >= 8) {
             d -= 8;
         }
-        if (!(arg2->unk28 & (1 << d))) {
+        if (!(p->unk28 & (1 << d))) {
             return d;
         }
         d = dir - i;
         if (d < 0) {
             d += 8;
         }
-        if (!(arg2->unk28 & (1 << d))) {
+        if (!(p->unk28 & (1 << d))) {
             return d;
         }
     }
@@ -2061,14 +2063,14 @@ static u8 func_80283314(UnkStruct_80288040 *arg2, s32 arg0, s32 arg1) {
         if (d >= 8) {
             d -= 8;
         }
-        if (!(arg2->unk28 & (1 << d))) {
+        if (!(p->unk28 & (1 << d))) {
             return d;
         }
         d = dir - i;
         if (d < 0) {
             d += 8;
         }
-        if (!(arg2->unk28 & (1 << d))) {
+        if (!(p->unk28 & (1 << d))) {
             return d;
         }
         i++;
