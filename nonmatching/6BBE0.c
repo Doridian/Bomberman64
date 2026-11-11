@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 6994, eu 6994, jp 6954
+ * differing words: us 6972, eu 6972, jp 6932
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -4250,10 +4250,9 @@ static void func_802530A8(f32 *arg0) {
                     v = func_80251A24(1, (f32 *) ((u8 *)arg0 + 0x20), M2C_FIELD(arg0, f32 *, 0x74));
                     if ((tile & 0x60) || (v != 0)) {
                         func_80251E5C(arg0);
-                        v = M2C_FIELD(arg0, s32 *, 4);
+                        M2C_FIELD(arg0, s32 *, 8) = M2C_FIELD(arg0, s32 *, 4);
                         M2C_FIELD(arg0, s32 *, 4) = 5;
                         M2C_FIELD(arg0, f32 *, 0x7C) = 0.0f;
-                        M2C_FIELD(arg0, s32 *, 8) = v;
                     } else {
                         target = func_80251D10(M2C_FIELD(arg0, f32 **, 0x18), &dist);
                         if ((target != NULL) && (entry = func_80251C88((s32) target), angle = (entry != NULL) ? (f32) M2C_FIELD(entry, s16 *, 0x36) : 2.0f, (dist < (angle * 100.0f)))) {
@@ -4261,16 +4260,14 @@ static void func_802530A8(f32 *arg0) {
                         } else {
                             dist = func_80251C48((f32 *) ((u8 *)arg0 + 0x2C), (f32 *) ((u8 *)arg0 + 0x20));
                             if ((dist >= 400.0f) && (dist <= 500.0f)) {
-                                dirX = M2C_FIELD(arg0, s32 *, 4);
+                                M2C_FIELD(arg0, s32 *, 8) = M2C_FIELD(arg0, s32 *, 4);
                                 M2C_FIELD(arg0, s32 *, 4) = 0x40;
-                                M2C_FIELD(arg0, s32 *, 8) = dirX;
                                 break;
                             }
                             if ((func_80251BDC((f32 *) ((u8 *)arg0 + 0x2C), (f32 *) ((u8 *)arg0 + 0x20)) != -1) && (M2C_FIELD(arg0, f32 *, 0x30) <= M2C_FIELD(arg0, f32 *, 0x24)) && (limit = func_80251994((f32 *) ((u8 *)arg0 + 0x20), (f32 *) ((u8 *)arg0 + 0x2C)), dir = func_802519B4(limit), func_80251B08(1, (s32 *) ((u8 *)arg0 + 0x38), dir) != NULL)) {
                                 M2C_FIELD(arg0, f32 *, 0x74) = func_80251994((f32 *) ((u8 *)arg0 + 0x20), (f32 *) ((u8 *)arg0 + 0x2C));
-                                dirX = M2C_FIELD(arg0, s32 *, 4);
+                                M2C_FIELD(arg0, s32 *, 8) = M2C_FIELD(arg0, s32 *, 4);
                                 M2C_FIELD(arg0, s32 *, 4) = 0x80;
-                                M2C_FIELD(arg0, s32 *, 8) = dirX;
                             } else {
                                 goto block_296;
                             }
@@ -4281,9 +4278,8 @@ block_296:
                     if ((M2C_FIELD(arg0, s32 *, 4) & 0xF) != 6) {
                         target = func_80251974(M2C_FIELD(arg0, f32 **, 0x18), &dist);
                         if ((target != NULL) && (M2C_FIELD(M2C_FIELD(target, void **, 0x40), f32 *, 0x14) <= M2C_FIELD(M2C_FIELD(M2C_FIELD(arg0, f32 **, 0x18), void **, 0x40), f32 *, 0x14)) && (dist <= 500.0f)) {
-                            dirX = M2C_FIELD(arg0, s32 *, 4);
+                            M2C_FIELD(arg0, s32 *, 8) = M2C_FIELD(arg0, s32 *, 4);
                             M2C_FIELD(arg0, s32 *, 4) = 6;
-                            M2C_FIELD(arg0, s32 *, 8) = dirX;
                         }
                     }
                 }
