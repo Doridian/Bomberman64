@@ -7,7 +7,7 @@
  * "NON_MATCHING drafts"). src/48300.c, before it, is another object:
  * func_80232E60 calls its func_8022DB00 with a jal (text_objects.txt).
  * flags: -O3
- * differing words: us 1067, eu 1067, jp 1067
+ * differing words: us 779, eu 779, jp 779
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does. An 8-byte stub (jr ra; nop) is an inlined
@@ -188,6 +188,7 @@ void func_8022DE00(void);
 void func_8022DE6C(void);
 f32 func_8022DF68(f32 *arg0, f32 *arg1);
 static s32 func_8022DFBC(f32 *arg0, f32 *arg1);
+static s32 func_8022E0A4(f32 *arg0, f32 *arg1);
 static void func_8022E0AC(UnkStructA80 *arg0, f32 *arg1);
 static s32 func_8022E178(f32 *arg0, f32 *arg1);
 static void func_8022E26C(UnkStructA80 *arg0, f32 *arg1);
@@ -1908,18 +1909,24 @@ static s32 func_8022E874(f32 *p, f32 *r) {
     return 0;
 }
 
-static s32 func_8022E328(s32 sa, UnkStructA80 *arg0, UnkStructA80 *arg1) {
-    if (sa == 1) {
-        func_8022E26C(arg0, D_802A5708);
-        func_8022E0AC(arg1, D_802A5738);
-    } else if (sa == 8) {
-        func_8022E0AC(arg0, D_802A5738);
-        func_8022E26C(arg1, D_802A5708);
-    } else {
-        for (;;) {
+static s32 func_8022E328(f32 *a, f32 *b) {
+    if (a[1] <= b[1]) {
+        if (a[1] + a[3] <= b[1]) {
+            return 0;
         }
+    } else if (b[1] + b[4] <= a[1] - a[3]) {
+        return 0;
     }
-    return func_8022E178(D_802A5708, D_802A5738);
+    D_802A5780[0] = a[0];
+    D_802A5780[1] = 0.0f;
+    D_802A5780[2] = a[2];
+    D_802A5790[0] = b[0];
+    D_802A5790[1] = 0.0f;
+    D_802A5790[2] = b[2];
+    if (a[3] + b[3] <= func_8022DF68(D_802A5780, D_802A5790)) {
+        return 0;
+    }
+    return 1;
 }
 
 static s32 func_8022E264(f32 *p, f32 *r) {
@@ -1945,29 +1952,24 @@ static s32 func_8022E264(f32 *p, f32 *r) {
     return 0;
 }
 
-static s32 func_8022E170(UnkStructA80 *arg0, UnkStructA80 *arg1, f32 *p, f32 *r) {
-    f32 t;
-    f32 step;
-
-    func_8022E0AC(arg0, p);
-    func_8022E0AC(arg1, D_802A5760);
-    r[0] = p[0];
-    r[1] = p[1] + p[3];
-    r[3] = p[3];
-    r[2] = p[2];
-    step = p[3] * 2;
-    for (t = 0.0f; t < p[4];) {
-        if (func_8022DFBC(r, D_802A5760) != 0) {
-            return 1;
+static s32 func_8022E170(f32 *a, f32 *b) {
+    if (a[1] <= b[1]) {
+        if (a[1] + a[3] <= b[1]) {
+            return 0;
         }
-        t += step;
-        if (t + step <= p[4]) {
-            r[1] += step;
-        } else {
-            r[1] += p[4] - t;
-        }
+    } else if (b[1] + b[4] <= a[1] - a[3]) {
+        return 0;
     }
-    return 0;
+    D_802A5780[0] = a[0];
+    D_802A5780[1] = 0.0f;
+    D_802A5780[2] = a[2];
+    D_802A5790[0] = b[0];
+    D_802A5790[1] = 0.0f;
+    D_802A5790[2] = b[2];
+    if (a[3] + b[3] <= func_8022DF68(D_802A5780, D_802A5790)) {
+        return 0;
+    }
+    return 1;
 }
 
 static s32 func_8022E4DC(f32 *a, f32 *b) {
@@ -2097,13 +2099,10 @@ static s32 func_8022E178(f32 *a, f32 *b) {
     return 1;
 }
 
-static void func_8022E0A4() {
-}
 
 static void func_8022E0AC(UnkStructA80 *arg0, f32 *arg1) {
     f32 r;
 
-    func_8022E0A4();
     r = arg0->unk40->scale[0];
     if (r < arg0->unk40->scale[2]) {
         r = arg0->unk40->scale[2];
@@ -2116,6 +2115,29 @@ static void func_8022E0AC(UnkStructA80 *arg0, f32 *arg1) {
     arg1[7] = arg0->unk40->rot[2];
     arg1[3] = arg0->unk34 * r;
     arg1[4] = arg0->unk38 * arg0->unk40->scale[1];
+}
+
+static s32 func_8022E0A4(f32 *p, f32 *r) {
+    f32 t;
+    f32 step;
+
+    r[0] = p[0];
+    r[1] = p[1] + p[3];
+    r[3] = p[3];
+    r[2] = p[2];
+    step = p[3] * 2;
+    for (t = 0.0f; t < p[4];) {
+        if (func_8022DFBC(r, D_802A5760) != 0) {
+            return 1;
+        }
+        t += step;
+        if (t + step <= p[4]) {
+            r[1] += step;
+        } else {
+            r[1] += p[4] - t;
+        }
+    }
+    return 0;
 }
 
 static s32 func_8022DFBC(f32 *a, f32 *b) {
@@ -2188,7 +2210,20 @@ s32 func_8022E884(UnkStructA80 *arg0, UnkStructA80 *arg1) {
         hit = func_8022E4DC(D_802A5708, D_802A5738);
         break;
     case 9:
-        hit = func_8022E328(sa, arg0, arg1);
+            switch (sa) {
+            case 1:
+                func_8022E26C(arg0, D_802A5708);
+                func_8022E0AC(arg1, D_802A5738);
+                break;
+            case 8:
+                func_8022E0AC(arg0, D_802A5738);
+                func_8022E26C(arg1, D_802A5708);
+                break;
+            default:
+                for (;;) {
+                }
+            }
+        hit = func_8022E178(D_802A5708, D_802A5738);
         break;
     case 5:
             switch (sa) {
@@ -2204,26 +2239,7 @@ s32 func_8022E884(UnkStructA80 *arg0, UnkStructA80 *arg1) {
                 for (;;) {
                 }
             }
-        if (D_802A5708[1] <= D_802A5738[1]) {
-            if (D_802A5708[1] + D_802A5708[3] <= D_802A5738[1]) {
-                hit = 0;
-                break;
-            }
-        } else if (D_802A5738[1] + D_802A5738[4] <= D_802A5708[1] - D_802A5708[3]) {
-            hit = 0;
-            break;
-        }
-        D_802A5780[0] = D_802A5708[0];
-        D_802A5780[1] = 0.0f;
-        D_802A5780[2] = D_802A5708[2];
-        D_802A5790[0] = D_802A5738[0];
-        D_802A5790[1] = 0.0f;
-        D_802A5790[2] = D_802A5738[2];
-        if (D_802A5708[3] + D_802A5738[3] <= func_8022DF68(D_802A5780, D_802A5790)) {
-            hit = 0;
-            break;
-        }
-        hit = 1;
+        hit = func_8022E328(D_802A5708, D_802A5738);
         break;
     case 17:
             switch (sa) {
@@ -2249,29 +2265,12 @@ s32 func_8022E884(UnkStructA80 *arg0, UnkStructA80 *arg1) {
     case 4:
         func_8022E0AC(arg0, D_802A5738);
         func_8022E0AC(arg1, D_802A5760);
-        if (D_802A5738[1] <= D_802A5760[1]) {
-            if (D_802A5738[1] + D_802A5738[3] <= D_802A5760[1]) {
-                hit = 0;
-                break;
-            }
-        } else if (D_802A5760[1] + D_802A5760[4] <= D_802A5738[1] - D_802A5738[3]) {
-            hit = 0;
-            break;
-        }
-        D_802A5780[0] = D_802A5738[0];
-        D_802A5780[1] = 0.0f;
-        D_802A5780[2] = D_802A5738[2];
-        D_802A5790[0] = D_802A5760[0];
-        D_802A5790[1] = 0.0f;
-        D_802A5790[2] = D_802A5760[2];
-        if (D_802A5738[3] + D_802A5760[3] <= func_8022DF68(D_802A5780, D_802A5790)) {
-            hit = 0;
-            break;
-        }
-        hit = 1;
+        hit = func_8022E170(D_802A5738, D_802A5760);
         break;
     case 20:
-        hit = func_8022E170(arg0, arg1, D_802A5738, D_802A5A00);
+        func_8022E0AC(arg0, D_802A5738);
+        func_8022E0AC(arg1, D_802A5760);
+        hit = func_8022E0A4(D_802A5738, D_802A5A00);
         break;
     default:
         for (;;) {
