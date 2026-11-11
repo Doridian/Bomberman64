@@ -8,7 +8,7 @@
  * stack layout and loop forms; func_8027B828 in two registers. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 102, eu 102, jp 102
+ * differing words: us 38, eu 38, jp 38
  */
 #include "common.h"
 
@@ -551,12 +551,11 @@ void func_8027B0BC(s16 arg0) {
         if (D_800BA8A0[arg0].unk4 != 0) {
             D_800BA8A0[arg0].unk4--;
             kinds[n++] = 2;
-            if (0) {}
             if (n >= 5) {
                 break;
             }
         }
-        if (D_802AFEC4 == 1 && D_802AFED0[arg0].unk8 != -1) {
+        if (D_802AFEC4 == 1 && func_8027B094(arg0) != -1) {
             func_8027AFB8(arg0);
             kinds[n++] = 5;
             if (n >= 5) {
