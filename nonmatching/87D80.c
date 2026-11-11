@@ -7,7 +7,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4498, eu 4498, jp 4498
+ * differing words: us 4475, eu 4475, jp 4475
  *
  * 33 of 97 match. func_8026D5F8 and func_8026D5C0 (cell and slot of a
  * point) are inlined by func_8026D620/func_8026D7D8, which is what the
@@ -401,45 +401,11 @@ void func_80273F0C() {
 }
 
 void func_80273E2C(s16 arg0) {
-    s16 *temp_v0;
-    s32 var_v0;
-    s32 var_v0_2;
-    s32 var_v0_3;
-    u8 *var_v0_4;
+    s16 *p;
 
-    if (arg0 >= 0) {
-        if (arg0 < 5) {
-            if (arg0 >= 0) {
-                var_v0 = 1;
-                if (arg0 < 5) {
-                    var_v0 = 0;
-                }
-            } else {
-                var_v0 = 1;
-            }
-            if (var_v0 != 0) {
-                var_v0_2 = 0;
-            } else {
-                var_v0_2 = *(s32 *)(D_802AFCF4 + (arg0 * 0x30));
-            }
-            if (var_v0_2 != 0) {
-                if (arg0 >= 0) {
-                    var_v0_3 = 1;
-                    if (arg0 < 5) {
-                        var_v0_3 = 0;
-                    }
-                } else {
-                    var_v0_3 = 1;
-                }
-                if (var_v0_3 != 0) {
-                    var_v0_4 = NULL;
-                } else {
-                    var_v0_4 = *(s32 *)(D_802AFCF4 + (arg0 * 0x30));
-                }
-                temp_v0 = func_802703B4(var_v0_4);
-                M2C_FIELD(temp_v0, s16 *, 0x5C) = (s16) (M2C_FIELD(temp_v0, s16 *, 0x5C) + 0x1E);
-            }
-        }
+    if (arg0 >= 0 && arg0 < 5 && func_80270714(arg0) != 0) {
+        p = func_802703B4((u8 *) func_80270714(arg0));
+        p[0x2E] += 0x1E;
     }
 }
 
