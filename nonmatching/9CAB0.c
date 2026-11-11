@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 482, eu 482, jp 482
+ * differing words: us 474, eu 474, jp 474
  */
 #include "common.h"
 
@@ -255,7 +255,7 @@ static void func_80285A9C(UnkStruct_800BB340 *arg0);
 static void func_80285F8C(void);
 void func_802863B0(Vec3f *arg0);
 static void func_802863E0();
-void func_80286400(s32 arg0, f32 arg1, f32 arg2, s32 arg5, s32 arg4, f32 arg3);
+void func_80286400(s32 arg4, s32 arg0, s32 arg5, f32 arg1, f32 arg2, f32 arg3);
 UnkStruct_80288040 *func_802867E4(s32 arg0, f32 arg1, f32 arg2, f32 arg3);
 s32 func_80286CA8(s32 arg0, f32 arg1, f32 arg2, f32 arg3);
 void func_80286E60(void);
@@ -629,7 +629,7 @@ static s32 func_802867CC(s32 arg0, f32 arg1, f32 arg2, f32 arg3) {
 
     slot = func_802863F8();
     if (slot != -1) {
-        func_80286400(arg0, arg1, arg2, 2, slot, arg3);
+        func_80286400(slot, arg0, 2, arg1, arg2, arg3);
     }
     return slot;
 }
@@ -710,7 +710,7 @@ UnkStruct_80288040 *func_802867E4(s32 arg0, f32 arg1, f32 arg2, f32 arg3) {
     }
     if (special) {
         if (slot != -1) {
-            func_80286400(arg0, arg1, arg2, 2, slot, arg3);
+            func_80286400(slot, arg0, 2, arg1, arg2, arg3);
         }
     } else {
         slot = func_802867CC(arg0, arg1, arg2, arg3);
@@ -737,7 +737,7 @@ UnkStruct_80288040 *func_802867E4(s32 arg0, f32 arg1, f32 arg2, f32 arg3) {
     return ret;
 }
 
-static void func_80286400(s32 arg0, f32 arg1, f32 arg2, s32 arg5, s32 arg4, f32 arg3) {
+static void func_80286400(s32 arg4, s32 arg0, s32 arg5, f32 arg1, f32 arg2, f32 arg3) {
     UnkStruct_800BA900 *s;
     UnkStruct_80288040 *a;
     UnkStructA *m;
