@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 44, eu 44, jp 44
+ * differing words: us 39, eu 39, jp 39
  *
  * The object is the same in all three versions. 70 of the 79 original
  * procedures match (stubs included). The IPA statics
@@ -472,7 +472,7 @@ s32 func_80268F70(void);
 s32 func_80268F94(s16 arg0);
 void func_802690DC(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
 void func_8026910C(void);
-static void func_80269144(void *dst, s32 size, s32 rom);
+static void func_80269144(s32 rom, void *dst, s32 size);
 void func_802691A8(void);
 s16 *func_80269680(u32 arg0);
 void func_80269704(u8 arg0);
@@ -856,7 +856,7 @@ static s32 func_8026A108(s32 size) {
     if (p == NULL) {
         return 1;
     }
-    func_80269144(p, size, D_802A1330);
+    func_80269144(D_802A1330, p, size);
     return 0;
 }
 
@@ -931,7 +931,7 @@ static s16 func_80269AFC() {
             if (hdr == NULL) {
                 return 1;
             }
-            func_80269144(hdr, 0x1C, rom);
+            func_80269144(rom, hdr, 0x1C);
             rc = func_80269A84(hdr);
             if (rc != 0) {
                 return rc - 1;
@@ -968,7 +968,7 @@ static s32 func_80269A8C(s32 size) {
     if (D_802A1344 == 0) {
         p->magic = 0;
     } else {
-        func_80269144(p, size, D_802A1344);
+        func_80269144(D_802A1344, p, size);
     }
     return 0;
 }
@@ -994,7 +994,7 @@ static s32 func_80269A84(SndHeader *hdr) {
         return 2;
     }
     D_802A1348 = hdr->rom;
-    func_80269144(D_802AD648, size, D_802A1348);
+    func_80269144(D_802A1348, D_802AD648, size);
     for (k = 0; k < hdr->count; k++) {
         snd = (SndSound *) ((u8 *) D_802AD648 + k * 16);
         if (snd->flags != 0) {
@@ -1035,7 +1035,7 @@ static s32 func_80269A7C(SndHeader *hdr) {
         return 2;
     }
     hdr->scriptRom += D_802A1344;
-    func_80269144(D_802AD658, total, hdr->scriptRom);
+    func_80269144(hdr->scriptRom, D_802AD658, total);
     *D_802AD658 = (u16 *) ((u8 *) *D_802AD658 + (u32) D_802AD658);
     total = D_802A12BC * sizeof(VoiceScript);
     D_802AD65C = func_8026B72C(total);
@@ -1086,7 +1086,7 @@ static s32 func_802699C8() {
     if (p == NULL) {
         return 2;
     }
-    func_80269144(p, size, D_802A1348);
+    func_80269144(D_802A1348, p, size);
     p = D_802AD648;
     if (p->revision != 0x4231) {
         D_802A1348 = 0;
@@ -1261,13 +1261,13 @@ static void func_802691A0(void) {
         if (len & 1) {
             len++;
         }
-        func_80269144(D_802AD224, len, (s32) sd->offset);
+        func_80269144((s32) sd->offset, D_802AD224, len);
     } else {
         len = D_802A1334 - D_802A1330;
         if (len & 1) {
             len++;
         }
-        func_80269144(D_802AD224, len, D_802A1330);
+        func_80269144(D_802A1330, D_802AD224, len);
     }
     func_80298510(D_802AD228, D_802AD224);
     if (D_802AD22C->revision == 0x5332) {
@@ -1288,7 +1288,7 @@ static void func_802691A0(void) {
     if (rom == D_802AD234) {
         goto play;
     }
-    func_80269144(D_802AD21C, len, rom);
+    func_80269144(rom, D_802AD21C, len);
     if (D_802AD21C->revision == 0x4231) {
         func_802983E8(D_802AD21C, (void *) table);
         D_802AD234 = rom;
@@ -1303,7 +1303,7 @@ play:
     }
 }
 
-static void func_80269144(void *dst, s32 size, s32 rom) {
+static void func_80269144(s32 rom, void *dst, s32 size) {
     struct {
         u32 w[6];
     } mb; /* OSIoMesg */
