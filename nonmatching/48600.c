@@ -7,7 +7,7 @@
  * "NON_MATCHING drafts"). src/48300.c, before it, is another object:
  * func_80232E60 calls its func_8022DB00 with a jal (text_objects.txt).
  * flags: -O3
- * differing words: us 262, eu 262, jp 262
+ * differing words: us 246, eu 246, jp 246
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does. An 8-byte stub (jr ra; nop) is an inlined
@@ -58,22 +58,21 @@
  * left is case 12/20's four stores before the loop: uopt keeps the ball's
  * address in v0 (a block-local CSE of the four istr) where the original
  * uses lui/%lo for each, with p[0], p[1], p[3] loaded in that order.
- * func_802320A8 (224, the size right): a few opcodes differ (prologue
+ * func_802320A8 (208, the size right): a few opcodes differ (prologue
  * order, spBC[0] loaded before the mode switch for case 2, three
- * mov.s), the rest is
- * register naming: case 1/2's a and b swapped (f22/f24: equal priority,
- * a has the lower bit), the angle wraps' x one float register up (a
- * separately coloured spE4[1] - 90), obj->unk3C in v0 not v1, and the
- * obj+0x58 slot at 0x60 not 0x68. The default case's store keeps n
- * live into the loop (the original loads it into fs3 before the loop).
+ * mov.s), the rest is register naming: obj->unk3C in v0 not v1, float
+ * temporaries a register apart, and the obj+0x58 slot at 0x60 not 0x68.
+ * The default case's store keeps n live into the loop (the original
+ * loads it into fs3 before the loop).
  * uopt puts a commutative op's operands in its own order, not the
  * source's, but the form of an operand counts: func_8022E0AC's mul.s
  * takes the original's order with (*arg0).unk38 (not arg0->unk38) on the
  * right, and func_80230914's add.s with a store of y back to o->unk6C
  * before o->unk6C += o->unk70 (both permuter finds). In func_802320A8,
- * case 2 stores sp128[1] last, and case 1's middle term reuses x (one
- * local fewer moves the colouring; also permuter finds), with e kept
- * declared and unused: its stack slot puts sp80 at 0x80.
+ * case 2 stores sp128[1] last, case 1's middle term reuses x, and the
+ * 0x20000 case has a dead read of obj->unk3C->unkC (permuter finds: they
+ * move the colouring); e stays declared and unused, its stack slot puts
+ * sp80 at 0x80, and pos = sp110 + spC8 is written spC8 + sp110.
  */
 #include "common.h"
 
@@ -801,6 +800,7 @@ void func_802320A8() {
             }
             x = sp80[1] - 90.0f;
             if (x >= 360.0f) {
+                y = obj->unk3C->unkC;
                 sp80[1] = x - 360.0f;
             } else {
                 if (sp80[1] < 90.0f) {
