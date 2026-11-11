@@ -16,6 +16,16 @@
  * D_802A54D4..D_802A5504) as function-scope statics: only then does a
  * store to one not kill pointer loads, and each access gets its own lui.
  * Moving this file to src/ has to check where IDO puts those in .bss.
+ *
+ * This is likely two objects, split at func_8022BB00 (16-byte aligned,
+ * with func_8022AF1C ending exactly there). No call crosses that line.
+ * The first object's .bss is D_802A54A0..C8 padded to 0x802A54D0, and
+ * its .data is D_8029F880 padded to 0x8029F890. The second object's
+ * .bss starts with the global D_802A54D0 and then func_8022C8B8's
+ * statics, and its .data starts at 0x8029F890. In one file, IDO lays
+ * function-scope statics out in source order. That would put
+ * func_8022C8B8's statics (written first) before func_8022AF1C's,
+ * which is not the original's layout.
  * D_802A54B0 is s32 against arg0->unk4's u32 on purpose: the unsigned
  * compare is what keeps the counter's store-then-reload.
  *
