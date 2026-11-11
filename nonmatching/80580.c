@@ -8,9 +8,9 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 9, eu 9, jp 9
+ * differing words: us 4, eu 4, jp 4
  *
- * The object is the same in all three versions. 77 of the 79 original
+ * The object is the same in all three versions. 78 of the 79 original
  * procedures match (stubs included). The IPA statics
  * (s-registers used unsaved, or arguments in odd registers) are static
  * here: 80266D8C, 8026706C (num, def: the original's num is homed at
@@ -33,9 +33,10 @@
  * K) {}` tests and `if (idx) {}` give its constants their s-registers.
  * What is left (4 words) is its frame: def sits at 0x78 against the
  * original's 0x80 and one spill at 0x24 against 0x20, though the frame
- * size is right. 8026706C (5 words): the 'T2' case's volume and pan
- * arm uses one ugen temp more than the original's, so the temps after it
- * are named two apart.
+ * size is right. 8026706C matched once the volume static returned s16
+ * (its (s16) conversion before the sh is dead and as1 drops it, but it
+ * used up a ugen temp) and the script id lost its inner (u8) cast (one
+ * `and` fewer).
  */
 #include "common.h"
 
@@ -440,7 +441,7 @@ u8 func_80266CD4(s16 arg0);
 s32 func_80266CFC(void);
 s16 func_80266D0C(s16 arg0);
 static s16 func_80266D8C(u8 prio, s32 arg1);
-static s32 func_80267064(s8 vol);
+static s16 func_80267064(s8 vol);
 static void func_8026706C(s16 num, SndDef *def);
 s16 func_8026724C(s16 num);
 s16 func_802675F4(s16 arg0, s16 arg1, f32 arg2);
@@ -2118,14 +2119,14 @@ static void func_8026706C(s16 num, SndDef *def) {
                 def->vol = func_80267064(e->unk1 & 0x7F);
                 def->pan = e->unk0;
             } else if (D_802AD658 != NULL) {
-                def->script = ((u8) (e->unk0 & 0x7F) << 8) + (u8) e->unk1;
+                def->script = ((e->unk0 & 0x7F) << 8) + (u8) e->unk1;
             }
             def->unkE = e->unk2;
             break;
     }
 }
 
-static s32 func_80267064(s8 vol) {
+static s16 func_80267064(s8 vol) {
     s32 v;
 
     if (vol > 0) {
