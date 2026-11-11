@@ -7,7 +7,7 @@
  * "NON_MATCHING drafts"). src/48300.c, before it, is another object:
  * func_80232E60 calls its func_8022DB00 with a jal (text_objects.txt).
  * flags: -O3
- * differing words: us 220, eu 220, jp 220
+ * differing words: us 164, eu 164, jp 164
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does. An 8-byte stub (jr ra; nop) is an inlined
@@ -58,26 +58,35 @@
  * left is case 12/20's four stores before the loop: uopt keeps the ball's
  * address in v0 (a block-local CSE of the four istr) where the original
  * uses lui/%lo for each, with p[0], p[1], p[3] loaded in that order.
- * func_802320A8 (199, the size right): a few opcodes differ (prologue
- * order, spBC[0] loaded before the mode switch for case 2, three
- * mov.s), the rest is register naming: obj->unk3C in v0 not v1, float
- * temporaries a register apart, and the obj+0x58 slot at 0x60 not 0x68.
- * The default case's store keeps n live into the loop (the original
- * loads it into fs3 before the loop). The original's case 2 computes
- * a, b and c before the three stores (sp128[0], [1], [2] in order, pos
- * reloaded after each): written so, with e used in case 1, case 2's
- * opcodes match, but uopt needs one more reemit temp (frame 0x148, the
- * locals 8 bytes up), which costs more words than it saves (374).
+ * func_802320A8 (126, the size right): what's left is register naming:
+ * ugen's float temporaries from case 1 on have f16 and f18 the other way
+ * round, a and b swap f22/f24, the first wrap keeps 90.0 in f2 (not
+ * f12), obj+0x58's slot is 0x64 not 0x68, and the default's delay slot
+ * holds the store to t (the original has a nop). What is understood:
+ *   - the default case is an endless loop storing n to the volatile t:
+ *     a read of n there keeps it live through the outer loop (the
+ *     original loads it into fs3 before the loop and stores it after),
+ *     and the volatile store stays in the loop, in the branch's delay
+ *     slot. A plain store is hoisted out of the loop (one word more);
+ *     with no read of n it is dead and the function is 6 words shorter.
+ *   - case 2 computes a, b and c before the three stores, and case 1's
+ *     d, e and f put the call on the right: func_80234408(x) * (...)
+ *     makes cfe spill the call's result to a stack temporary, which grows
+ *     the frame.
+ *   - the wraps are written out (spE4[1] - 90.0f each time) with no
+ *     shared x: one variable keeps one register over all its live
+ *     ranges, so x in all three forced mov.s copies.
+ *   - goto dl; dl: in the no-gp branch splits its block: ugen hands out
+ *     float temporaries least recently freed first, and the split moves
+ *     case 1's first one to f4, as in the original (a permuter find).
  * uopt puts a commutative op's operands in its own order, not the
  * source's, but the form of an operand counts: func_8022E0AC's mul.s
  * takes the original's order with (*arg0).unk38 (not arg0->unk38) on the
  * right, and func_80230914's add.s with a store of y back to o->unk6C
  * before o->unk6C += o->unk70 (both permuter finds). In func_802320A8,
- * case 2 stores sp128[1] last, case 1 passes spB0[1] to the first
- * func_80234408 through x and its middle term reuses x, and the
- * 0x20000 case has a dead read of obj->unk3C->unkC (permuter finds: they
- * move the colouring); e stays declared and unused, its stack slot puts
- * sp80 at 0x80, and pos = sp110 + spC8 is written spC8 + sp110.
+ * the 0x20000 case has a dead read of obj->unk3C->unkC (a permuter find:
+ * it moves the colouring), and pos = sp110 + spC8 is written
+ * spC8 + sp110.
  */
 #include "common.h"
 
@@ -676,14 +685,13 @@ void func_802320A8() {
             func_8022F808((f32 *) gp, sp11C);
             func_8022FF58(sp11C, sp110, spE4);
             sp104[0] = spE4[0];
-            x = spE4[1] - 90.0f;
-            if (x >= 360.0f) {
-                sp104[1] = x - 360.0f;
+            if ((spE4[1] - 90.0f) >= 360.0f) {
+                sp104[1] = (spE4[1] - 90.0f) - 360.0f;
             } else {
                 if (spE4[1] < 90.0f) {
-                    n = x + 360.0f;
+                    n = (spE4[1] - 90.0f) + 360.0f;
                 } else {
-                    n = x;
+                    n = (spE4[1] - 90.0f);
                 }
                 sp104[1] = n;
             }
@@ -697,6 +705,8 @@ void func_802320A8() {
             spE4[1] = 0.0f;
             spE4[2] = 0.0f;
             spBC[0] = sp110[0];
+            goto dl;
+        dl:
             spBC[1] = sp110[1] - obj->unk3C->unk4;
             spBC[2] = sp110[2];
         }
@@ -707,37 +717,35 @@ void func_802320A8() {
             a = (spBC[0] - obj->unk40->pos[0]) * func_80234434(spB0[1]) * obj->unk3C->unkC;
             b = (spBC[1] - obj->unk40->pos[1]) * func_80234434(spB0[1]) * obj->unk3C->unkC;
             c = (spBC[2] - obj->unk40->pos[2]) * func_80234434(spB0[1]) * obj->unk3C->unkC;
-            x = spB0[1];
-            d = func_80234408(x) * ((obj->unk40->pos[0] - obj->unk58[0]) * obj->unk3C->unk10);
-            x = func_80234408(spB0[1]) * ((obj->unk40->pos[1] - obj->unk58[1]) * obj->unk3C->unk10);
-            f = func_80234408(spB0[1]) * ((obj->unk40->pos[2] - obj->unk58[2]) * obj->unk3C->unk10);
+            d = ((obj->unk40->pos[0] - obj->unk58[0]) * obj->unk3C->unk10) * func_80234408(spB0[1]);
+            e = ((obj->unk40->pos[1] - obj->unk58[1]) * obj->unk3C->unk10) * func_80234408(spB0[1]);
+            f = ((obj->unk40->pos[2] - obj->unk58[2]) * obj->unk3C->unk10) * func_80234408(spB0[1]);
             sp128[0] = obj->unk40->pos[0] + d + a;
-            sp128[1] = obj->unk40->pos[1] + x + b - h;
+            sp128[1] = obj->unk40->pos[1] + e + b - h;
             sp128[2] = obj->unk40->pos[2] + f + c;
             break;
         case 2:
             y = obj->unk3C->unkC;
             a = (spBC[0] - obj->unk40->pos[0]) * y;
-            sp128[0] = obj->unk40->pos[0] + a;
             b = (spBC[1] - obj->unk40->pos[1]) * y;
             c = (spBC[2] - obj->unk40->pos[2]) * y;
-            sp128[2] = obj->unk40->pos[2] + c;
+            sp128[0] = obj->unk40->pos[0] + a;
             sp128[1] = obj->unk40->pos[1] + b - h;
+            sp128[2] = obj->unk40->pos[2] + c;
             break;
         default:
-            for (;;) { obj->unk4C[1] = n; }
+            for (;;) { t = n; }
         }
         func_8022F808((f32 *) obj, obj->unk58);
         func_8022FF58(sp110, sp128, spD4);
         spF8[0] = spD4[0];
-        x = spD4[1] - 90.0f;
-        if (x >= 360.0f) {
-            spF8[1] = x - 360.0f;
+        if ((spD4[1] - 90.0f) >= 360.0f) {
+            spF8[1] = (spD4[1] - 90.0f) - 360.0f;
         } else {
             if (spD4[1] < 90.0f) {
-                n = x + 360.0f;
+                n = (spD4[1] - 90.0f) + 360.0f;
             } else {
-                n = x;
+                n = (spD4[1] - 90.0f);
             }
             spF8[1] = n;
         }
@@ -745,14 +753,13 @@ void func_802320A8() {
         func_8022FEAC(spF8, spC8);
         if (!(obj->unk8 & 0xF00000)) {
             obj->unk4C[0] = spF8[0];
-            x = spF8[1] + 90.0f;
-            if (x >= 360.0f) {
-                obj->unk4C[1] = x - 360.0f;
+            if ((spF8[1] + 90.0f) >= 360.0f) {
+                obj->unk4C[1] = (spF8[1] + 90.0f) - 360.0f;
             } else {
-                if (x < 0.0f) {
-                    n = x + 360.0f;
+                if ((spF8[1] + 90.0f) < 0.0f) {
+                    n = (spF8[1] + 90.0f) + 360.0f;
                 } else {
-                    n = x;
+                    n = (spF8[1] + 90.0f);
                 }
                 obj->unk4C[1] = n;
             }
