@@ -2,20 +2,22 @@
  * NON_MATCHING: main_code's 93850, complete: the list of bonus items at
  * D_800BB4A8 (func_80279050 to func_8027A144, the list's thread). The
  * C is written last function first, as -O3 emits it. func_802797BC
- * keeps the D_800AEDF0 address of cases 2, 3 and 4 in v0 where the
- * original has v1, and differs in the order of two sra in the default
- * case. Its fakes: the dead `if (sound) {}` that ends cases 2 and 3 lets
- * as1 fill the delay slot after the func_80243DDC compare with li a1,32
- * as the original does (without it, a nop and one word more), and the
- * dead `if (i) {}` after their D_800AEDF0 store keeps the D_800BA8A0
- * load after that store, as in the original (without them, ugen marks
- * the two tables .noalias and as1 moves the load up). func_8027036C is
+ * differs in the order of two sra in the default case. Its fakes: the
+ * dead `if (sound) {}` that ends cases 2 and 3 lets as1 fill the delay
+ * slot after the func_80243DDC compare with li a1,32 as the original
+ * does (without it, a nop and one word more), and the dead
+ * `if (&D_800BA8A0[i] == 0) {}` after their D_800AEDF0 store makes the
+ * D_800BA8A0 address live across that store, so the D_800AEDF0 address
+ * (one live range over cases 2, 3 and 4) takes v1 as in the original;
+ * it also keeps the D_800BA8A0 load after the store (without a dead read
+ * there, ugen marks the two tables .noalias and as1 moves the load up).
+ * func_8027036C is
  * declared s32 here, as an implicit declaration would make it (it
  * returns nothing): with void, func_80279DC8's arg0->unk14 reload took
  * v0 where the original has v1. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 17, eu 17, jp 17
+ * differing words: us 2, eu 2, jp 2
  */
 #include "common.h"
 
@@ -418,7 +420,7 @@ void func_802797BC(UnkStruct_80279050_14 *arg0, UnkStruct_800BB4A8 *arg1) {
             break;
         case 2:
             D_800AEDF0[i].unk18 |= 1;
-            if (i) {} /* fake: see the header */
+            if (&D_800BA8A0[i] == 0) {} /* fake: see the header */
             sound = 5;
             D_800BA8A0[i].unk4++;
             if (sound) { /* fake: see the header */
@@ -426,7 +428,7 @@ void func_802797BC(UnkStruct_80279050_14 *arg0, UnkStruct_800BB4A8 *arg1) {
             break;
         case 3:
             D_800AEDF0[i].unk18 |= 2;
-            if (i) {} /* fake: see the header */
+            if (&D_800BA8A0[i] == 0) {} /* fake: see the header */
             sound = 5;
             D_800BA8A0[i].unk6++;
             if (sound) { /* fake: see the header */
