@@ -7,12 +7,14 @@
  * function emitted in the original's order. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2, eu 2, jp 2
+ * differing words: us 0, eu 0, jp 0
  *
- * 17 of 18 functions match. func_80225FB8's unused local gives its frame.
- * - func_80225EBC (2 words): the page table's address is built in a2
- *   from `lui a2`, where the original's %hi goes to a3 (`lui a3;
- *   addiu a2, a3, %lo`).
+ * Every function matches. func_80225FB8's unused local gives its frame.
+ * func_80225EBC's page table address is built `lui a3; addiu a2, a3,
+ * %lo` because func_80297ED0's third parameter is an integer: the cast
+ * from the pointer is its own expression, coloured in a3 and moved to
+ * a2 (as1 folds the move into the addiu). Passed as a pointer, it was
+ * `lui a2` (2 words).
  */
 #include "common.h"
 
@@ -30,7 +32,7 @@ typedef struct {
     /* 0x04 */ s32 unk4;
 } UnkStruct_8014B008; /* size 0x8 */
 
-void func_80297ED0(s32, s32, void *);
+void func_80297ED0(s32, s32, uintptr_t);
 void func_80225E2C(s32);
 void func_802260A8(UnkStruct_80225CC0 *, u32);
 
@@ -278,7 +280,7 @@ s32 func_80225FB8(void *arg0, s32 arg1, s32 arg2, UnkStruct_80225CC0 *arg3) {
         return 0;
     }
     D_802A530C = 1;
-    func_80297ED0(arg3->unk4 + arg3->unk8, arg1 * arg2, arg0);
+    func_80297ED0(arg3->unk4 + arg3->unk8, arg1 * arg2, (uintptr_t) arg0);
     arg3->unk8 += arg1 * arg2;
     arg3->unkC = arg3->unk8;
     entry.unk0 = arg3->unk4 - D_8014B000.unk0;
@@ -307,7 +309,7 @@ void func_80225EBC(u32 arg0, UnkStruct_8014B008 *arg1) {
     entry = &D_8014B008[arg0 & 0xFF];
     entry->unk0 = arg1->unk0 - D_8014B000.unk0;
     entry->unk4 = arg1->unk4;
-    func_80297ED0(cur * 8 + D_802A5300, 0x800, D_8014B008);
+    func_80297ED0(cur * 8 + D_802A5300, 0x800, (uintptr_t) D_8014B008);
     if (sp24 != -1) {
         func_80225E2C(sp24);
     }
@@ -317,7 +319,7 @@ void func_80225EBC(u32 arg0, UnkStruct_8014B008 *arg1) {
 void func_80225E2C(s32 arg0) {
     if (arg0 != D_802A5310) {
         if (D_802A530C != 0) {
-            func_80297ED0(D_802A5310 * 8 + D_802A5300, 0x800, D_8014B008);
+            func_80297ED0(D_802A5310 * 8 + D_802A5300, 0x800, (uintptr_t) D_8014B008);
         }
         D_802A530C = 0;
         D_802A5310 = arg0;
@@ -327,13 +329,13 @@ void func_80225E2C(s32 arg0) {
 
 void func_80225DDC(void) {
     if (D_802A530C != 0) {
-        func_80297ED0(D_802A5310 * 8 + D_802A5300, 0x800, D_8014B008);
+        func_80297ED0(D_802A5310 * 8 + D_802A5300, 0x800, (uintptr_t) D_8014B008);
     }
     D_802A530C = 0;
 }
 
 void func_80225D9C(void) {
-    func_80297ED0(D_802A5310 * 8 + D_802A5300, 0x800, D_8014B008);
+    func_80297ED0(D_802A5310 * 8 + D_802A5300, 0x800, (uintptr_t) D_8014B008);
 }
 
 s32 func_80225CCC(UnkStruct_80225CC0 *arg0, s32 arg1, s32 arg2) {
