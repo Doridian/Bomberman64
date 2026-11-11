@@ -1,7 +1,7 @@
 /*
  * NON_MATCHING: main_code's 96540, complete: the controller pak save.
  * flags: -O3
- * differing words: us 520, eu 520, jp 520
+ * differing words: us 400, eu 400, jp 400
  */
 #include "common.h"
 #include "ultralib/PR/os_pfs.h"
@@ -118,7 +118,7 @@ static void func_8027C0D4();
 static s32 func_8027C174(u8 *buf);
 static s32 func_8027C17C(u8 *buf);
 static s32 func_8027C184(s32 ch, s32 file, u8 *buf);
-static void func_8027C3D4();
+static s32 func_8027C3D4(s32 file, u8 *a, u8 *b);
 static void func_8027C4EC();
 static void func_8027C8F8();
 static void func_8027CBC4();
@@ -327,34 +327,40 @@ static s32 func_8027C4F4(s32 ch, s32 *file) {
     return func_8027BD74(func_80298838(&D_802AFF70[ch], COMPANY_CODE, GAME_CODE, D_802A1520, D_802A1530, file), 1);
 }
 
-static void func_8027C3D4() {
+/* Reads the file back into b and compares it with a. */
+static s32 func_8027C3D4(s32 file, u8 *a, u8 *b) {
+    s32 ret;
+    s32 j;
+    s32 diff;
+
+    ret = func_8027C18C(0, file, b);
+    if (ret != 9) {
+        return ret;
+    }
+    for (j = 0; j < 0x20; j++) {
+        if (a[j] != b[j]) {
+            diff = 1;
+            goto done;
+        }
+    }
+    diff = 0;
+done:
+    if (diff == 1) {
+        return 0x10;
+    }
+    return 9;
 }
 
 static s32 func_8027C3DC(s32 *file) {
     s32 i;
-    s32 j;
     s32 ret;
-    s32 diff;
+    u8 *a = D_802B0128;
+    u8 *b = D_802B0150;
 
-    func_8027C3D4();
     for (i = 0; i < 3; i++) {
-        ret = func_8027BD74(func_80298848(D_802AFF70, *file, PFS_WRITE, 0, 0x20, D_802B0128), 0);
+        ret = func_8027BD74(func_80298848(D_802AFF70, *file, PFS_WRITE, 0, 0x20, a), 0);
         if (ret == 9) {
-            ret = func_8027C18C(0, *file, D_802B0150);
-            if (ret == 9) {
-                for (j = 0; j < 0x20; j++) {
-                    if (D_802B0128[j] != D_802B0150[j]) {
-                        diff = 1;
-                        goto done;
-                    }
-                }
-                diff = 0;
-            done:
-                ret = 9;
-                if (diff == 1) {
-                    ret = 0x10;
-                }
-            }
+            ret = func_8027C3D4(*file, a, b);
             if (ret == 9) {
                 break;
             }
