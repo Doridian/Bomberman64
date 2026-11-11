@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 7096, eu 7096, jp 7056
+ * differing words: us 7071, eu 7071, jp 7031
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -4875,29 +4875,21 @@ void func_80251804(s32 arg0) {
 }
 
 static s32 func_80251708(s32 arg0) {
-    s32 temp_v0;
-    s32 temp_v0_2;
-    s32 temp_v1;
-    u8 *temp_s0;
+    u8 *g;
+    s32 p;
 
-    temp_s0 = func_8023A834();
-    temp_v0 = func_80234248(3);
-    temp_v1 = D_800AEDF0[temp_v0].unk24;
-    if (((temp_v1 == 1) || (temp_v1 == 2)) && (func_80243EF0(temp_v0) == 0)) {
-        temp_v0_2 = M2C_FIELD(temp_s0, s32 *, 0);
-        if ((temp_v0_2 == 1) && (M2C_FIELD((temp_s0 + (temp_v0 * 4)), s32 *, 0x90) == M2C_FIELD((temp_s0 + (arg0 * 4)), s32 *, 0x90))) {
-            goto block_12;
-        }
-        if ((temp_v0_2 == 0) && ((M2C_FIELD(temp_s0, s32 *, 0x24) - M2C_FIELD((temp_s0 + (temp_v0 * 4)), s32 *, 0xA4)) != 1) && (func_80234248(0x64) < 0x33)) {
-block_12:
-            /* Duplicate return node #13. Try simplifying control flow for better match */
+    g = func_8023A834();
+    p = func_80234248(3);
+    if ((D_800AEDF0[p].unk24 == 1 || D_800AEDF0[p].unk24 == 2) && func_80243EF0(p) == 0) {
+        if (M2C_FIELD(g, s32 *, 0) == 1 && ((s32 *) (g + 0x90))[p] == ((s32 *) (g + 0x90))[arg0]) {
             return -1;
         }
-        if (temp_v0 != arg0) {
-            return temp_v0;
+        if (M2C_FIELD(g, s32 *, 0) == 0 && (M2C_FIELD(g, s32 *, 0x24) - ((s32 *) (g + 0xA4))[p]) != 1 && func_80234248(100) < 51) {
+            return -1;
         }
-        /* Duplicate return node #13. Try simplifying control flow for better match */
-        return -1;
+        if (p != arg0) {
+            return p;
+        }
     }
     return -1;
 }
