@@ -6,7 +6,7 @@
  * boxes, func_8022E884). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1222, eu 1222, jp 1222
+ * differing words: us 1218, eu 1218, jp 1218
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does (the stubs at 0x8022E0A4-0x8022E87C are
@@ -22,7 +22,9 @@
  *     are global: as statics IPA moved func_80232FF8's register saves
  *     into func_802334CC, and the others would get only t6-t9;
  *   - float sums are written (a*b + c*d + e*f) + g, and int and float
- *     constants (90, 0 in compares) are kept apart as the original's are.
+ *     constants (90, 0 in compares) are kept apart as the original's are;
+ *   - a variable keeps one register over all its live ranges, so
+ *     func_8022FF58's two angle wraps have a variable each.
  *   - IDO -O3 gives a static function's parameters registers in the
  *     order its body first uses them, and its callers set them in the
  *     source's order: func_8022F3F8's mask is its first parameter (the
@@ -34,7 +36,6 @@
  * which IDO does only for a variable live into the loop; the use in the
  * first switch's default stands in for whatever made it live there, at
  * the cost of its two words; t stays in memory),
- * func_8022FF58 (4),
  * func_8022FC90 (14: the found value belongs in v0), func_80232E60 (12:
  * IDO inlines func_8022DB00 into it, the original doesn't).
  */
@@ -1556,7 +1557,7 @@ void func_8022FF58(f32 *arg0, f32 *arg1, f32 *arg2) {
     if (func_8023372C(arg2[1], 0.002f)) {
         arg2[1] = 0.0f;
     }
-    arg2[2] = sqrtf(dy * dy + arg2[2] * arg2[2]);
+    arg2[2] = sqrtf(arg2[2] * arg2[2] + (v = dy) * v);
 }
 
 void func_8022FEAC(f32 *arg0, f32 *arg1) {
