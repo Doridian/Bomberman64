@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3455, eu 3455, jp 3455
+ * differing words: us 3217, eu 3217, jp 3217
  *
  * The object is the same in all three versions. 36 of the 79 original
  * procedures match (8 of them inlined-static stubs). The IPA statics
@@ -394,10 +394,10 @@ static void func_802679A8(s16 *p, s16 lo, s16 hi);
 static void func_802679B0(VoiceScript *s);
 static void func_802679A0(s16 *p, s16 lo, s16 hi);
 static void func_802691A0(void);
-static void func_80266154(s16 idx, s8 vol);
-static void func_80266298(s16 idx, s16 pitch);
-static void func_802663D8(s16 idx, u8 pan);
-static void func_80266508(s16 idx, s8 vol);
+static void func_80266154();
+static void func_80266298();
+static void func_802663D8();
+static void func_80266508();
 
 s8 func_80265D80(void);
 s16 func_80265D90(void);
@@ -410,13 +410,13 @@ s16 func_80265FBC(s8 arg0);
 void func_80265FF8(s8 arg0);
 static void func_802660B4(void);
 void func_80266118(s8 arg0);
-static void func_80266154(s16 idx, s8 vol);
+static void func_80266154();
 void func_8026615C(s16 idx, s8 vol);
-static void func_80266298(s16 idx, s16 pitch);
+static void func_80266298();
 void func_802662A0(s16 idx, s16 pitch);
-static void func_802663D8(s16 idx, u8 pan);
+static void func_802663D8();
 void func_802663E0(s16 idx, u8 pan);
-static void func_80266508(s16 idx, s8 vol);
+static void func_80266508();
 void func_80266510(s16 idx, s8 vol);
 void func_80266644(s16 arg0, s16 arg1, f32 arg2);
 void func_802668D4(s16 arg0);
@@ -2424,21 +2424,21 @@ void func_80266644(s16 arg0, s16 arg1, f32 arg2) {
 }
 
 void func_80266510(s16 idx, s8 vol) {
-    func_80266508(idx, vol);
-}
-
-static void func_80266508(s16 idx, s8 vol) {
     Voice *v;
     VoiceScript *s;
     s16 i;
 
+    func_80266508();
+    if (!idx) {}
     v = &D_802AD654[idx];
     if (v->state == 1) {
         if (!(v->flags & 0x1000)) {
             v->flags |= 2;
             if (v->unk1F == 2) {
                 s = &D_802AD65C[idx];
-                for (i = s->nchild - 1; i >= 0; i--) {
+                i = s->nchild;
+                while (i > 0) {
+                    i--;
                     if (idx == D_802AD65C[s->child[i]].parent) {
                         func_80266510(s->child[i], vol);
                     }
@@ -2449,15 +2449,16 @@ static void func_80266508(s16 idx, s8 vol) {
     }
 }
 
-void func_802663E0(s16 idx, u8 pan) {
-    func_802663D8(idx, pan);
+static void func_80266508() {
 }
 
-static void func_802663D8(s16 idx, u8 pan) {
+void func_802663E0(s16 idx, u8 pan) {
     Voice *v;
     VoiceScript *s;
     s16 i;
 
+    func_802663D8();
+    if (!idx) {}
     v = &D_802AD654[idx];
     if (v->state == 1) {
         if (pan >= 0x80) {
@@ -2467,7 +2468,9 @@ static void func_802663D8(s16 idx, u8 pan) {
             v->flags |= 4;
             if (v->unk1F == 2) {
                 s = &D_802AD65C[idx];
-                for (i = s->nchild - 1; i >= 0; i--) {
+                i = s->nchild;
+                while (i > 0) {
+                    i--;
                     if (idx == D_802AD65C[s->child[i]].parent) {
                         func_802663E0(s->child[i], pan);
                     }
@@ -2478,15 +2481,16 @@ static void func_802663D8(s16 idx, u8 pan) {
     }
 }
 
-void func_802662A0(s16 idx, s16 pitch) {
-    func_80266298(idx, pitch);
+static void func_802663D8() {
 }
 
-static void func_80266298(s16 idx, s16 pitch) {
+void func_802662A0(s16 idx, s16 pitch) {
     Voice *v;
     VoiceScript *s;
     s16 i;
 
+    func_80266298();
+    if (!idx) {}
     v = &D_802AD654[idx];
     if (v->state == 1) {
         if (pitch >= 0x4B1) {
@@ -2496,7 +2500,9 @@ static void func_80266298(s16 idx, s16 pitch) {
             v->flags |= 1;
             if (v->unk1F == 2) {
                 s = &D_802AD65C[idx];
-                for (i = s->nchild - 1; i >= 0; i--) {
+                i = s->nchild;
+                while (i > 0) {
+                    i--;
                     if (idx == D_802AD65C[s->child[i]].parent) {
                         func_802662A0(s->child[i], pitch);
                     }
@@ -2507,15 +2513,15 @@ static void func_80266298(s16 idx, s16 pitch) {
     }
 }
 
-void func_8026615C(s16 idx, s8 vol) {
-    func_80266154(idx, vol);
+static void func_80266298() {
 }
 
-static void func_80266154(s16 idx, s8 vol) {
+void func_8026615C(s16 idx, s8 vol) {
     Voice *v;
     VoiceScript *s;
     s16 i;
 
+    func_80266154();
     v = &D_802AD654[idx];
     if (v->state == 1 && !(v->flags & 0x10)) {
         if (vol < 0) {
@@ -2525,7 +2531,9 @@ static void func_80266154(s16 idx, s8 vol) {
             v->flags |= 8;
             if (v->unk1F == 2) {
                 s = &D_802AD65C[idx];
-                for (i = s->nchild - 1; i >= 0; i--) {
+                i = s->nchild;
+                while (i > 0) {
+                    i--;
                     if (idx == D_802AD65C[s->child[i]].parent) {
                         func_8026615C(s->child[i], vol);
                     }
@@ -2534,6 +2542,9 @@ static void func_80266154(s16 idx, s8 vol) {
         }
         v->unk1E = vol;
     }
+}
+
+static void func_80266154() {
 }
 
 void func_80266118(s8 arg0) {
