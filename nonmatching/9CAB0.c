@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3207, eu 3207, jp 3207
+ * differing words: us 2775, eu 2775, jp 2775
  */
 #include "common.h"
 
@@ -1432,16 +1432,17 @@ static s32 func_8028456C(UnkStruct_80288040 *arg0) {
     if (arg0->unk30 != 3) {
         arg0->unk40++;
         arg0->unk40 &= 0x7FFF;
-        if ((arg0->unk3D != 0) && (st != 1) && (st != 3) &&
+        if ((arg0->unk3D != 0) && ((u8) st != 1) && ((u8) st != 3) &&
             ((arg0->unk48 != 0) || ((u32) arg0->unk40 >= arg0->unk3E))) {
             func_802881A0(arg0);
             if (arg0->unk48 != 0) {
                 arg0->unk40 = 0;
             }
         }
+        st = arg0->unk7A & 0xF;
     }
     speed = arg0->unk2C;
-    switch (arg0->unk7A & 0xF) {
+    switch ((u8) st) {
     case 2:
     case 4:
         break;
