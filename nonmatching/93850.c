@@ -11,11 +11,11 @@
  * load after that store, as in the original (without them, ugen marks
  * the two tables .noalias and as1 moves the load up); func_80279DC8 loads
  * arg0->unk14 into v0 where the original uses v1, so its ret = 1 moves
- * and it is one word short; func_8027A144 differs only in the padding
- * after it. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
+ * (the dead `if (pos) {}` after arg0->unk3C's store, a fake, keeps it
+ * the original's size, which sets func_8027A144's padding right). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 51, eu 51, jp 51
+ * differing words: us 37, eu 37, jp 37
  */
 #include "common.h"
 
@@ -333,6 +333,7 @@ s32 func_80279DC8(UnkStruct_800BB4A8 *arg0, f32 arg1) {
     if (arg0->unk14->unk6C == 0.0f && arg0->unk14->unk68 == 0.0f) {
         func_8027036C(&arg0->unk54, 1);
         arg0->unk3C = 0.0f;
+        if (pos) {} /* fake: see the header */
     }
     pos = arg0->unk10;
     if (arg0->unk14->unk58 == pos->unk10) {
