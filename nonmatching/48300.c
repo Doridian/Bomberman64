@@ -6,7 +6,7 @@
  * boxes, func_8022E884). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1090, eu 1090, jp 1090
+ * differing words: us 1076, eu 1076, jp 1076
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does (the stubs at 0x8022E0A4-0x8022E87C are
@@ -209,7 +209,7 @@ void func_8022FA10(f32 *arg0, s32 arg1, f32 *arg2);
 void func_8022FA88(f32 *arg0, s32 arg1, f32 *arg2);
 f32 func_8022FB00(u8 *arg0);
 void func_8022FC0C(s32 arg0);
-void func_8022FC18(void);
+static UnkStructA80 *func_8022FC18(UnkStructA80 *arg0);
 static void func_8022FC20(s32 *arg0, u8 *arg1);
 static void func_8022FC50(u8 *arg0);
 s32 func_8022FC90(UnkStructA80 *arg0);
@@ -1594,8 +1594,6 @@ void func_8022FDE8() {
 }
 
 s32 func_8022FC90(UnkStructA80 *arg0) {
-    UnkStructA80 *child;
-    UnkStructA80 *p;
 
     if (D_802A56FC <= 0) {
         return -1;
@@ -1610,21 +1608,7 @@ s32 func_8022FC90(UnkStructA80 *arg0) {
         arg0->unk44->unk48--;
     }
     while (arg0->unk48 != 0) {
-        child = NULL;
-        for (p = D_802A5578.unk7C; p != NULL; p = p->unk7C) {
-            if (p->unk44 == arg0) {
-                child = p;
-                goto found;
-            }
-        }
-        for (p = D_802A5678.unk7C; p != NULL; p = p->unk7C) {
-            if (p->unk44 == arg0) {
-                child = p;
-                break;
-            }
-        }
-    found:
-        func_8022FC90(child);
+        func_8022FC90(func_8022FC18(arg0));
     }
     D_802A56FC--;
     return arg0->unk0;
@@ -1654,8 +1638,20 @@ static void func_8022FC20(s32 *arg0, u8 *arg1) {
     }
 }
 
-void func_8022FC18() {
+static UnkStructA80 *func_8022FC18(UnkStructA80 *arg0) {
+    UnkStructA80 *p;
 
+    for (p = D_802A5578.unk7C; p != NULL; p = p->unk7C) {
+        if (p->unk44 == arg0) {
+            return p;
+        }
+    }
+    for (p = D_802A5678.unk7C; p != NULL; p = p->unk7C) {
+        if (p->unk44 == arg0) {
+            return p;
+        }
+    }
+    return NULL;
 }
 
 void func_8022FC0C(s32 arg0) {
@@ -1927,8 +1923,8 @@ static s32 func_8022E328(s32 sa, UnkStructA80 *arg0, UnkStructA80 *arg1) {
 }
 
 static s32 func_8022E264(f32 *p, f32 *r) {
-    f32 step;
     f32 t;
+    f32 step;
 
     r[0] = p[0];
     r[1] = p[1] + p[3];
@@ -1950,8 +1946,8 @@ static s32 func_8022E264(f32 *p, f32 *r) {
 }
 
 static s32 func_8022E170(UnkStructA80 *arg0, UnkStructA80 *arg1, f32 *p, f32 *r) {
-    f32 step;
     f32 t;
+    f32 step;
 
     func_8022E0AC(arg0, p);
     func_8022E0AC(arg1, D_802A5760);
