@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 179, eu 179, jp 179
+ * differing words: us 144, eu 144, jp 144
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -1720,7 +1720,6 @@ void func_8024D8C4(Ctl58 *arg0) {
     } else {
         target[1] = pos[1];
     }
-    if (!D_802ACA8C && !D_802ACA8C) {}
     target[2] = D_802ACA8C;
     angle = obj->unk40->unk20;
     func_8022FF58(pos, target, rot);
@@ -1745,16 +1744,15 @@ void func_8024D8C4(Ctl58 *arg0) {
     if ((D_802AC8BC != 0x100 && D_802AC8BC != 0x200) || b0 != 1) {
         if (dist >= 1.0f) {
             arg0->unk4 = func_80243F50(rot[0]);
-        if (!dist && !dist) {}
         }
     }
     if (dist <= 1.0f) {
         if (!b0) {
-            dz = dx = dy = 0.0f;
+            dx = 0; dy = dx; dz = dx;
             switch (D_802AC8BC) {
             case 0x0:
-                angle = 180.0f;
                 dz = -D_802AC8C4;
+                angle = 180.0f;
                 break;
             case 0x80:
                 angle = 0.0f;
