@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 919, eu 919, jp 919
+ * differing words: us 882, eu 882, jp 882
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -1268,9 +1268,9 @@ void func_8026DCAC(f32 arg0, f32 arg1, f32 arg2, void *arg3, s32 arg4) {
     s32 iy;
     s32 h;
     s32 layer;
-    s32 n;
     s32 ry;
     UnkStruct_800B15D8 *m;
+
     ry = 0;
     ((Unk8026DCAC *) arg3)->i[0] = (s32) (arg0 * 0.01f);
     ((Unk8026DCAC *) arg3)->i[2] = (s32) (arg2 * 0.01f);
@@ -1281,9 +1281,9 @@ void func_8026DCAC(f32 arg0, f32 arg1, f32 arg2, void *arg3, s32 arg4) {
         ((Unk8026DCAC *) arg3)->i[2]--;
     }
     h = 0;
-    n = D_800B15D8->unk0 + 1;
-    for (layer = 0; layer < n; layer++) {
+    for (layer = 0; layer < D_800B15D8->unk0 + 1; layer++) {
         iy = (s32) (arg1 * 0.01f);
+        m = &D_800B15D8[layer];
         if (iy < h) {
             if (layer > 0) {
                 ((Unk8026DCAC *) arg3)->i[1] = layer - 1;
@@ -1295,10 +1295,9 @@ void func_8026DCAC(f32 arg0, f32 arg1, f32 arg2, void *arg3, s32 arg4) {
         ry = h;
         if (h == iy) {
             ((Unk8026DCAC *) arg3)->i[1] = layer;
-            ry = h;
             break;
         }
-        h += D_800B15D8[layer].unk10;
+        h += m->unk10;
     }
     if (D_800B15D8->unk0 < layer) {
         ((Unk8026DCAC *) arg3)->i[1] = D_800B15D8->unk0;
