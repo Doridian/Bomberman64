@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2208, eu 2208, jp 2208
+ * differing words: us 2036, eu 2036, jp 2036
  *
  * The object is the same in all three versions. 66 of the 79 original
  * procedures match (stubs included). The IPA statics
@@ -654,7 +654,6 @@ s32 func_8026A8B4(void **oscState, f32 *initVal, u8 oscType, u8 oscRate, u8 oscD
             } break;
             default:
                 deltaTime = 255 << 14;
-                break;
         }
     }
     return deltaTime;
