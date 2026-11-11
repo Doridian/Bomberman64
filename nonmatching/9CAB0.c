@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 336, eu 336, jp 336
+ * differing words: us 323, eu 323, jp 323
  */
 #include "common.h"
 
@@ -907,7 +907,7 @@ static void func_80285A6C() {
 static UnkStruct_800BA900 *func_80285A74() {
     s32 pada[1];
     Vec3f pos;
-    s32 padb[18];
+    s32 padb[17];
     UnkStruct_800BA900 *s;
     UnkStructA_40 *p;
     s32 i;
