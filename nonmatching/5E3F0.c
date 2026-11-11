@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 292, eu 292, jp 292
+ * differing words: us 283, eu 283, jp 283
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -1700,7 +1700,7 @@ void func_8024D8C4(Ctl58 *arg0) {
     s32 b1;
     s32 b0;
     s32 id;
-    s32 pad[3];
+    s32 pad[1];
 
     id = func_80243DDC();
     b0 = D_802AC968[id] & 1;
@@ -1838,7 +1838,7 @@ void func_8024D8C4(Ctl58 *arg0) {
             }
             D_800AEDF0[id].unk48 = 1;
             obj->unk70 = 1.6333334f;
-            func_8024D108(id, D_800AEDF0[id].unk44);
+            func_8024D108(id, func_802443CC(id));
         }
         arg0->unk0 = 0.0f;
         obj->unk40->unk10 = target[0];
