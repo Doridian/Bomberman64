@@ -1,7 +1,7 @@
 /*
  * NON_MATCHING: main_code's 96540, complete: the controller pak save.
  * flags: -O3
- * differing words: us 144, eu 144, jp 144
+ * differing words: us 12, eu 12, jp 12
  */
 #include "common.h"
 #include "ultralib/PR/os_pfs.h"
@@ -145,15 +145,16 @@ void func_8027CBD4(void) {
     s32 i;
     s32 bytes;
     s32 ret;
+    s32 k;
+    s32 j;
 
     func_8027CBC4();
     func_8027CBCC();
     D_802B0110 = func_8023A834();
     for (i = 0; i < 4; i++) {
-        D_802B0110->unk50[i][0] = 0;
-        D_802B0110->unk50[i][1] = 0;
-        D_802B0110->unk50[i][2] = 0;
-        D_802B0110->unk50[i][3] = 0;
+        for (k = 0; k < 4; k++) {
+            D_802B0110->unk50[i][k] = 0;
+        }
 #if VERSION_JP
         D_802B0110->unkC4[i][0] = 0x9F;
         D_802B0110->unkC4[i][1] = 0x5F;
@@ -173,16 +174,16 @@ void func_8027CBD4(void) {
         D_802B0110->unkC4[i][7] = 0;
         D_802B0110->unkC4[i][8] = 0;
     }
-    for (i = 0; i < 4; i++) {
-        ret = func_8027BD74(func_80298870(&D_802AFF70[i], &bytes), 2);
+    for (j = 0; j < 4; j++) {
+        ret = func_8027BD74(func_80298870(&D_802AFF70[j], &bytes), 2);
         if (ret == 1 || ret == 0) {
-            D_802B0118[i] = ret;
+            D_802B0118[j] = ret;
         } else {
-            D_802B0118[i] = func_8027C8A4(i);
+            D_802B0118[j] = func_8027C8A4(j);
         }
     }
-    for (i = 0; i < 4; i++) {
-        func_8027CA14(i, 0);
+    for (k = 0; k < 4; k++) {
+        func_8027CA14(k, 0);
     }
 }
 
@@ -503,6 +504,7 @@ s32 func_8027BF38(PakDir *dir) {
                         dir->files[i].ext[j] = state.ext_name[j];
                     }
                     for (j = 0; j < 16; j++) {
+                        if (dir) {}
                         dir->files[i].name[j] = state.game_name[j];
                     }
                 } else {
