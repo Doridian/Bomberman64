@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 96, eu 96, jp 96
+ * differing words: us 90, eu 90, jp 90
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -18,9 +18,8 @@
  * D_800B15D8[0].unkN (the latter swaps the multiply's registers).
  * func_8026F5E8 and func_8026E3AC keep their x/y/z in an f32[3] (the
  * original's dead stores to it), not in three variables.
- * 36 of 43 match. Left: func_8026DCAC 26, func_8026EE18 26,
- * func_8026FC08 25, func_8026F5E8 8, func_8026EAF8 6 (s1/s2 swapped
- * between the map and the constant 0xF), func_8026E938 3 (one float
+ * 37 of 43 match. Left: func_8026DCAC 26, func_8026EE18 26,
+ * func_8026FC08 25, func_8026F5E8 8, func_8026E938 3 (one float
  * store's stack slot), func_8026F8B0 2 (one delay slot).
  */
 #include "common.h"
@@ -857,6 +856,8 @@ f32 func_8026EAF8(u8 *arg0) {
                 more = 1;
             }
         } while (more);
+        if (D_800B15D8) { /* fake: lifts the map address above the 0xF constant (s1) */
+        }
         if (pos.i[1] >= D_800B15D8->unk0) {
             r = ((Obj8E *) arg0)->unk40->y;
         } else {
