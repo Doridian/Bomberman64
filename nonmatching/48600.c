@@ -7,7 +7,7 @@
  * "NON_MATCHING drafts"). src/48300.c, before it, is another object:
  * func_80232E60 calls its func_8022DB00 with a jal (text_objects.txt).
  * flags: -O3
- * differing words: us 387, eu 387, jp 387
+ * differing words: us 368, eu 368, jp 368
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does. An 8-byte stub (jr ra; nop) is an inlined
@@ -48,12 +48,17 @@
  *     in-loop la (rebuilt in s0 every pass) apart from the stores' base.
  *   - func_802320A8's t is a volatile scalar: the original stores it in
  *     both arms and reloads it after the join (then x = t; x = x - n).
- * Left: func_8022E884 (89 words). About 51 are .bss relocations: our
- * statics are laid out by IDO (file statics first, f32[4] each, then the
- * function-local ones), not as the original's module bss (D_802A5734 sits
- * inside D_802A5720's 0x18, D_802A5780.. between D_802A5760 and
- * D_802A59D0), so every sym+k access maps to the wrong address; that
- * needs the whole 0x802A5560-0x802A5A24 bss defined in order. The code
+ * Left: func_8022E884 (70 words). 32 are .bss relocations: fcmp
+ * resolves a static by its name, so only sym+k accesses depend on our
+ * layout, and IDO lays .bss out in ugen's .lcomm order (a 256-bucket
+ * hash on cfe's symbol number; within a bucket function-local statics
+ * come first). D_802A5708-D_802A5760 are f32[5]/f32[5]/f32[8]/f32[8] and
+ * D_802A59D0-D_802A5A00 f32[5] each, so each run keeps the original's
+ * spacing; D_802A59D0.. follow func_8022E4DC's Vec3fs (defined after
+ * it, which doesn't move any code), but the original has 0x1E0 bytes of
+ * other statics (D_802A5780-D_802A5958, some of them function-local in
+ * func_8023017C, func_8022F844 and func_8022E3D4) between D_802A5760
+ * and D_802A5960, so D_802A5708's run is off. The code
  * left is case 12/20's four stores before the loop: uopt keeps the ball's
  * address in v0 (a block-local CSE of the four istr) where the original
  * uses lui/%lo for each, with p[0], p[1], p[3] loaded in that order.
@@ -1869,13 +1874,70 @@ static s32 func_8022F3F8(s32 arg0, f32 *arg1, f32 *arg2, s32 arg3) {
     return r;
 }
 
-static f32 D_802A5708[4];
-static f32 D_802A5720[4];
+static f32 D_802A5708[5];
+static f32 D_802A5720[5];
 static f32 D_802A5738[8];
 static f32 D_802A5760[8];
-static f32 D_802A59D0[4];
-static f32 D_802A59E8[4];
-static f32 D_802A5A00[4];
+
+static s32 func_8022E4DC(f32 *a, f32 *b) {
+    static Vec3f p;
+    static Vec3f q;
+    static Vec3f ap;
+    static Vec3f qp;
+    static Vec3f aq;
+    static Vec3f pq;
+    static Vec3f n;
+    f32 d;
+
+    if (b[4] + a[3] + b[3] < func_8022DF68(a, b)) {
+        return 0;
+    }
+    guMtxIdentF((f32 (*)[4]) D_802A57C0);
+    func_8029C8D0((f32 (*)[4]) D_802A57C0, b[5], b[6], b[7]);
+    func_8029CA80((f32 (*)[4]) D_802A57C0, 0.0f, a[3] + b[4], 0.0f);
+    p.x = 0.0f;
+    p.y = 0.0f;
+    p.z = 0.0f;
+    func_8022E3D4((f32 (*)[4]) D_802A57C0, &p.x);
+    p.x += b[0];
+    p.y += b[1];
+    p.z += b[2];
+    guMtxIdentF((f32 (*)[4]) D_802A57C0);
+    func_8029C8D0((f32 (*)[4]) D_802A57C0, b[5], b[6], b[7]);
+    func_8029CA80((f32 (*)[4]) D_802A57C0, 0.0f, a[3] * -1.0f, 0.0f);
+    q.x = 0.0f;
+    q.y = 0.0f;
+    q.z = 0.0f;
+    func_8022E3D4((f32 (*)[4]) D_802A57C0, &q.x);
+    q.x += b[0];
+    q.y += b[1];
+    q.z += b[2];
+    ap.x = a[0] - p.x;
+    ap.y = a[1] - p.y;
+    ap.z = a[2] - p.z;
+    qp.x = q.x - p.x;
+    qp.y = q.y - p.y;
+    qp.z = q.z - p.z;
+    pq.x = p.x - q.x;
+    pq.y = p.y - q.y;
+    pq.z = p.z - q.z;
+    aq.x = a[0] - q.x;
+    aq.y = a[1] - q.y;
+    aq.z = a[2] - q.z;
+    func_8022E364(&ap.x, &qp.x, &n.x);
+    d = sqrtf(n.x * n.x + n.y * n.y + n.z * n.z);
+    if (b[3] + a[3] <= d / sqrtf(qp.x * qp.x + qp.y * qp.y + qp.z * qp.z)) {
+        return 0;
+    }
+    if (func_8022E330(&pq.x, &ap.x) > 0 || func_8022E330(&qp.x, &aq.x) > 0) {
+        return 0;
+    }
+    return 1;
+}
+
+static f32 D_802A59D0[5];
+static f32 D_802A59E8[5];
+static f32 D_802A5A00[5];
 
 static s32 func_8022E87C(void) {
     s32 r;
@@ -1993,61 +2055,6 @@ static s32 func_8022E170(f32 *a, f32 *b) {
     return 1;
 }
 
-static s32 func_8022E4DC(f32 *a, f32 *b) {
-    static Vec3f p;
-    static Vec3f q;
-    static Vec3f ap;
-    static Vec3f qp;
-    static Vec3f aq;
-    static Vec3f pq;
-    static Vec3f n;
-    f32 d;
-
-    if (b[4] + a[3] + b[3] < func_8022DF68(a, b)) {
-        return 0;
-    }
-    guMtxIdentF((f32 (*)[4]) D_802A57C0);
-    func_8029C8D0((f32 (*)[4]) D_802A57C0, b[5], b[6], b[7]);
-    func_8029CA80((f32 (*)[4]) D_802A57C0, 0.0f, a[3] + b[4], 0.0f);
-    p.x = 0.0f;
-    p.y = 0.0f;
-    p.z = 0.0f;
-    func_8022E3D4((f32 (*)[4]) D_802A57C0, &p.x);
-    p.x += b[0];
-    p.y += b[1];
-    p.z += b[2];
-    guMtxIdentF((f32 (*)[4]) D_802A57C0);
-    func_8029C8D0((f32 (*)[4]) D_802A57C0, b[5], b[6], b[7]);
-    func_8029CA80((f32 (*)[4]) D_802A57C0, 0.0f, a[3] * -1.0f, 0.0f);
-    q.x = 0.0f;
-    q.y = 0.0f;
-    q.z = 0.0f;
-    func_8022E3D4((f32 (*)[4]) D_802A57C0, &q.x);
-    q.x += b[0];
-    q.y += b[1];
-    q.z += b[2];
-    ap.x = a[0] - p.x;
-    ap.y = a[1] - p.y;
-    ap.z = a[2] - p.z;
-    qp.x = q.x - p.x;
-    qp.y = q.y - p.y;
-    qp.z = q.z - p.z;
-    pq.x = p.x - q.x;
-    pq.y = p.y - q.y;
-    pq.z = p.z - q.z;
-    aq.x = a[0] - q.x;
-    aq.y = a[1] - q.y;
-    aq.z = a[2] - q.z;
-    func_8022E364(&ap.x, &qp.x, &n.x);
-    d = sqrtf(n.x * n.x + n.y * n.y + n.z * n.z);
-    if (b[3] + a[3] <= d / sqrtf(qp.x * qp.x + qp.y * qp.y + qp.z * qp.z)) {
-        return 0;
-    }
-    if (func_8022E330(&pq.x, &ap.x) > 0 || func_8022E330(&qp.x, &aq.x) > 0) {
-        return 0;
-    }
-    return 1;
-}
 
 void func_8022E3D4(f32 m[4][4], f32 *v) {
     static f32 D_802A594C;
