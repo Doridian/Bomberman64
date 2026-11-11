@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 838, eu 838, jp 838
+ * differing words: us 825, eu 825, jp 825
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -1213,7 +1213,7 @@ void func_8026DFB8(f32 arg0, f32 arg1, f32 arg2, f32 *arg3) {
             base = spA8.f[0];
             break;
         default:
-            lo = hi = 0.0f;
+            hi = lo = 0;
             kind = 0;
             break;
     }
