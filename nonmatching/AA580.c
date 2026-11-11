@@ -6,7 +6,7 @@
  * Every function is emitted in the original's order. Not built into the
  * ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3, eu 3, jp 3
+ * differing words: us 0, eu 0, jp 0
  *
  * func_802921C4 and func_8029217C match; of the statics (compared as one
  * run from func_8028FD80, 402 words), func_8028FD88 matches. The inlined
@@ -169,7 +169,15 @@
  *   load res into v0 in the first store's delay slot (4 -> 0). A plain
  *   copy folds away; the dead kill of res keeps it (res = -1, res++ and
  *   other copies (i, code2, ...) work the same).
- * Left (3): FFA8 half B's ctx->unk0 (dx/dz) in v0, v1 in the original.
+ * p8 (3 -> 0 in every version; every function matches):
+ * - FFA8 half B: a fake "if (ctx->unk10 * ctx->unk10 == ctx->unk10 +
+ *   ctx->unk14 + ctx->unk18) {}" right after dz. The repeated
+ *   ctx->unk10 CSE is coloured first and takes v0, leaving v1 to
+ *   ctx->unk0. The other two ctx field reads keep ctx's priority from
+ *   dropping below half A's b (a fake with one ctx use takes v0 too,
+ *   but then b wins the tie and ctx and b swap s2/s3). as1 deletes the
+ *   fake's code.
+ * Before p8 (3): FFA8 half B's ctx->unk0 (dx/dz) in v0, v1 in the original.
  *   uopt gives the CSE cost 0 everywhere, nothing forbidden. An inlined
  *   static returning ctx->unk0 (func_8028FD80(ctx)->unk58, with the
  *   error print written into FD88's default so the stub count holds)
@@ -469,6 +477,8 @@ static s32 func_8028FFA8_b(UnkStruct_802909FC *ctx, Vec3i *dir, s32 code2, s32 f
     }
     dx = ctx->unk4 - ctx->unk0->unk58;
     dz = ctx->unkC - ctx->unk0->unk60;
+    /* fake: a CSE in v0 ahead of ctx->unk0's, and two more uses of ctx */
+    if (ctx->unk10 * ctx->unk10 == ctx->unk10 + ctx->unk14 + ctx->unk18) {}
     res = 0;
     if (v.unk0 == a) {
         t = dx; t *= a;
