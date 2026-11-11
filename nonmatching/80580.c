@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 563, eu 563, jp 563
+ * differing words: us 467, eu 467, jp 467
  *
  * The object is the same in all three versions. 70 of the 79 original
  * procedures match (stubs included). The IPA statics
@@ -752,6 +752,7 @@ static s16 func_8026A164() {
     u32 maxLen;
     u32 bankLen;
     u32 i;
+    oscData *os;
     u32 n;
 
     D_802AD220 = func_8026B72C(0x7C);
@@ -811,8 +812,8 @@ static s16 func_8026A164() {
             break;
         default:
             maxLen = D_802A1334 - D_802A1330;
-            D_802AD22C->seqCount = 1;
             bankLen = D_802A133C - D_802A1338;
+            D_802AD22C->seqCount = 1;
     }
     if (bankLen == 0 || maxLen == 0) {
         D_802A1330 = 0;
@@ -836,11 +837,13 @@ static s16 func_8026A164() {
     if (D_802AD21C == NULL) {
         return 1;
     }
-    D_802AD3C4 = &D_802AD3C8[0];
+    os = &D_802AD3C8[0];
+    D_802AD3C4 = os;
     for (i = 0; i < 31; i++) {
-        D_802AD3C8[i].next = &D_802AD3C8[i + 1];
+        os->next = &D_802AD3C8[i + 1];
+        os = os->next;
     }
-    D_802AD3C8[i].next = NULL;
+    os->next = NULL;
     return 0;
 }
 
