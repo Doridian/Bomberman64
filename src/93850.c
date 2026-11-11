@@ -489,7 +489,17 @@ void func_8027A478(UnkStruct_800BB4A8 *arg0) {
     arg0->unkC = last;
 }
 
-#pragma GLOBAL_ASM("asm/nonmatchings/93850/func_8027A4A0.s")
+UnkStruct_800BB4A8 *func_8027A4A0(void) {
+    UnkStruct_800BB4A8 *end = &D_800BB4A0[48];
+    UnkStruct_800BB4A8 *node;
+
+    for (node = &D_800BB4A0[2]; node < end; node++) {
+        if (node->unk2 == 1) {
+            return node;
+        }
+    }
+    return NULL;
+}
 
 s16 func_8027A4E8(s16 arg0) {
     s32 temp = func_8027911C(arg0);
