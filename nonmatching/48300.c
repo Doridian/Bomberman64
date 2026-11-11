@@ -6,7 +6,7 @@
  * boxes, func_8022E884). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3232, eu 3232, jp 3232
+ * differing words: us 3161, eu 3161, jp 3161
  *
  * A first draft: functions in the reverse of the ROM's order, which IDO
  * now emits exactly as the original does (stubs included); a handful by
@@ -1712,63 +1712,57 @@ static void func_8023017C(s32 arg0, u8 *arg1, f32 *arg2, s32 arg3) {
 }
 
 void func_8022FF58(f32 *arg0, f32 *arg1, f32 *arg2) {
-    f32 sp28;
-    f32 temp_fv0;
-    f32 temp_fv0_2;
-    f32 temp_fv0_3;
-    f32 temp_fv0_4;
-    f32 temp_fv1;
-    f32 temp_fv1_2;
-    f32 var_fa0;
-    f32 var_fa0_2;
+    f32 dz;
+    f32 dy;
+    f32 dx;
+    f32 v;
+    f32 w;
 
-    temp_fv1 = M2C_FIELD(arg1, f32 *, 0) - M2C_FIELD(arg0, f32 *, 0);
-    sp28 = arg1[1] - arg0[1];
-    temp_fv0 = arg1[2] - arg0[2];
-    temp_fv0_2 = sqrtf((temp_fv1 * temp_fv1) + (temp_fv0 * temp_fv0));
-    M2C_FIELD(arg2, f32 *, 8) = temp_fv0_2;
-    if (func_8023372C(temp_fv0_2, 0.002f) != 0) {
-        M2C_FIELD(arg2, f32 *, 8) = 0.0f;
-        M2C_FIELD(arg2, f32 *, 0) = 0.0f;
-        if (func_80233768(sp28) == -1) {
-            M2C_FIELD(arg2, f32 *, 4) = 0.0f;
+    dx = arg1[0] - arg0[0];
+    dy = arg1[1] - arg0[1];
+    dz = arg1[2] - arg0[2];
+    arg2[2] = sqrtf(dx * dx + dz * dz);
+    if (func_8023372C(arg2[2], 0.002f)) {
+        arg2[2] = 0.0f;
+        arg2[0] = 0.0f;
+        if (func_80233768(dy) == -1) {
+            arg2[1] = 0.0f;
         } else {
-            M2C_FIELD(arg2, f32 *, 4) = 180.0f;
+            arg2[1] = 180.0f;
         }
     } else {
-        M2C_FIELD(arg2, f32 *, 0) = (f32) ((f64) func_8029CB40(temp_fv1 / temp_fv0) * 57.29577951308232);
-        if (temp_fv0 < 0.0f) {
-            M2C_FIELD(arg2, f32 *, 0) -= 180.0f;
+        arg2[0] = func_8029CB40(dx / dz) * 57.29577951308232;
+        if (dz < 0.0f) {
+            arg2[0] -= 180.0f;
         }
-        temp_fv1_2 = M2C_FIELD(arg2, f32 *, 0);
-        M2C_FIELD(arg2, f32 *, 4) = (f32) ((f64) func_8029CB40(sp28 / M2C_FIELD(arg2, f32 *, 8)) * 57.29577951308232);
-        if (temp_fv1_2 >= 360.0f) {
-            M2C_FIELD(arg2, f32 *, 0) = temp_fv1_2 - 360.0f;
+        arg2[1] = func_8029CB40(dy / arg2[2]) * 57.29577951308232;
+        v = arg2[0];
+        if (v >= 360.0f) {
+            arg2[0] = v - 360.0f;
         } else {
-            if (temp_fv1_2 < 0.0f) {
-                var_fa0 = temp_fv1_2 + 360.0f;
+            if (v < 0.0f) {
+                w = v + 360.0f;
             } else {
-                var_fa0 = temp_fv1_2;
+                w = v;
             }
-            M2C_FIELD(arg2, f32 *, 0) = var_fa0;
+            arg2[0] = w;
         }
-        temp_fv0_3 = M2C_FIELD(arg2, f32 *, 4) + 90.0f;
-        if (temp_fv0_3 >= 360.0f) {
-            M2C_FIELD(arg2, f32 *, 4) = (f32) (temp_fv0_3 - 360.0f);
+        v = arg2[1] + 90.0f;
+        if (v >= 360.0f) {
+            arg2[1] = v - 360.0f;
         } else {
-            if (temp_fv0_3 < 0.0f) {
-                var_fa0_2 = temp_fv0_3 + 360.0f;
+            if (v < 0.0f) {
+                w = v + 360.0f;
             } else {
-                var_fa0_2 = temp_fv0_3;
+                w = v;
             }
-            M2C_FIELD(arg2, f32 *, 4) = var_fa0_2;
+            arg2[1] = w;
         }
     }
-    if (func_8023372C(M2C_FIELD(arg2, f32 *, 4), 0.002f) != 0) {
-        M2C_FIELD(arg2, f32 *, 4) = 0.0f;
+    if (func_8023372C(arg2[1], 0.002f)) {
+        arg2[1] = 0.0f;
     }
-    temp_fv0_4 = M2C_FIELD(arg2, f32 *, 8);
-    M2C_FIELD(arg2, f32 *, 8) = sqrtf((sp28 * sp28) + (temp_fv0_4 * temp_fv0_4));
+    arg2[2] = sqrtf(dy * dy + arg2[2] * arg2[2]);
 }
 
 void func_8022FEAC(f32 *arg0, f32 *arg1) {
