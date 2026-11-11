@@ -6,7 +6,7 @@
  * boxes, func_8022E884). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1286, eu 1286, jp 1286
+ * differing words: us 1284, eu 1284, jp 1284
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does (the stubs at 0x8022E0A4-0x8022E87C are
@@ -1474,11 +1474,11 @@ static void func_8023017C(s32 arg0, u8 *arg1, f32 *arg2, s32 arg3) {
     f32 *out = (f32 *) arg1;
     f32 n;
 
+    arg0 &= 0x3FFFF;
     D_802A5734 = D_802A55F4;
     out[0] = 0.0f;
     out[1] = 0.0f;
     out[2] = 0.0f;
-    arg0 &= 0x3FFFF;
     D_802A5758 = 0;
     func_8022F808(arg2, D_802A5790);
     for (; D_802A5734 != NULL; D_802A5734 = D_802A5734->unk7C) {
