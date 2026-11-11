@@ -5,7 +5,7 @@
  * global, emitted in the original's order. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 693, eu 693, jp 693
+ * differing words: us 688, eu 688, jp 688
  *
  * 36 of 47 match. Biggest left: func_802741D8 461, func_8027655C 436,
  * func_80274994 320 (still m2c's control flow and untyped offsets),
@@ -316,6 +316,7 @@ void func_80275C08(u8 *arg0, u8 *arg1);
 void func_80275C7C(s16 arg0, u8 *arg1, s16 arg2);
 s32 func_80275DD8(s16 *arg0, s16 *arg1);
 void func_80276184(s16 *arg0, u8 *arg1);
+static void func_80271448_inl(f32 arg0, f32 arg1, f32 arg2, f32 *arg3, f32 *arg4, f32 *arg5);
 void func_802763DC(s16 *arg0);
 s32 func_8027655C(Ent88 *arg0);
 void func_80276D68(Ent88 *arg0);
@@ -793,11 +794,10 @@ s32 func_8027655C(Ent88 *arg0) {
     struct { f32 z, y, x; } v;
     f32 sp158;
     void *sp154;
-    s32 pad[60];
-    s32 sp38[3];
+    s32 pad[55];
     s16 fl;
     s16 f4;
-    s16 f;
+    s32 padB[1];
 
     if (D_802A14B4 == 1) {
         return 0;
@@ -912,14 +912,7 @@ s32 func_8027655C(Ent88 *arg0) {
         func_80275948((s16 *) arg0);
         return 1;
     }
-    {
-        f32 x = arg0->x, y = arg0->y, z = arg0->z;
-        f32 *px = &v.x, *py = &v.y, *pz = &v.z;
-        func_8026DCAC(x, y, z, sp38, 2);
-        *px = sp38[0];
-        *py = sp38[1];
-        *pz = sp38[2];
-    }
+    func_80271448_inl(arg0->x, arg0->y, arg0->z, &v.x, &v.y, &v.z);
     if ((func_8026D7D8((s32) v.x, (s32) v.y, (s32) v.z) & 0xF) == 9) {
         func_80275948((s16 *) arg0);
     }
