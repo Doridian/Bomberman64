@@ -2,12 +2,13 @@
  * NON_MATCHING: main_code's B11F0, complete first draft.
  * flags: -O3
  * (-O3: func_80297564 keeps its argument in t4, func_80296C10 in t0.)
- * differing words: us 55, eu 55, jp 55
+ * differing words: us 31, eu 31, jp 31
  *
- * 21 of 25 functions match. Left: func_80296B3C (5, t1 for a2),
- * func_80296C10 (11, the original keeps y in s0), func_80296D4C (15,
- * frame 0x98 with dw/dh spilled at 0x60/0x64) and func_80297114 (24,
- * t-register numbering one off, D_802B03A4 reloaded into v1).
+ * 22 of 25 functions match. Left: func_80296B3C (5, t1 for a2),
+ * func_80296C10 (11, the original keeps y in s0) and func_80296D4C (15,
+ * frame 0x98 with dw/dh spilled at 0x60/0x64). func_80297114 matched once
+ * its entry pointer came from the getter func_80296BEC (inlined: its
+ * parameter is a variable, coloured v1).
  */
 #include "common.h"
 #define F3DEX_GBI
@@ -123,6 +124,7 @@ void func_80297858(UnkStruct_80297858 *arg0, UnkStruct_80297564 **arg1);
 void func_80297564(void *arg0, UnkStruct_80297564 **arg1);
 void func_80297114(void);
 void func_80297A34(void);
+UnkStruct_802B03C0 *func_80296BEC(s32 arg0);
 
 void func_80297ADC(void) {
     s32 *flags = func_8023A840();
@@ -332,7 +334,7 @@ void func_80297114(void) {
     func_802362B8(0x10);
     func_802346C8(0.0f, 0.0f, 0.0f);
     func_80234778(0.0f, 0.0f, 1000.0f);
-    e = &D_802B03C0[D_802B03A4];
+    e = func_80296BEC(D_802B03A4);
     func_80296B3C(e);
     e->unkC->unk10 = 0.0f;
     e->unkC->unk14 = D_802A4740;
