@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4194, eu 4194, jp 4194
+ * differing words: us 4168, eu 4168, jp 4168
  */
 #include "common.h"
 
@@ -322,10 +322,10 @@ static void func_80285564();
 static void func_80285650();
 static s32 func_80285A6C(f32 arg0, f32 arg1, f32 arg2, f32 arg3);
 static UnkStruct_800BA900 *func_80285A74(Vec3f *arg0);
-static void func_80285A7C();
-void func_80285A84();
-static void func_80285A8C();
-void func_80285A94();
+static void func_80285A7C(UnkStruct_80288040 *a_, s32 i_);
+static void func_80285A84(UnkStruct_80288040 *a_);
+static void func_80285A8C(UnkStruct_80288040 *a_, s32 i_);
+static void func_80285A94(UnkStruct_80288040 *a_);
 static s32 func_80285F84(UnkStruct_80288040 *arg0);
 static s32 func_802863E8(s32 arg0);
 static s32 func_802863F0(void);
@@ -336,40 +336,6 @@ static void func_802867DC(UnkStruct_800BA900 *arg0);
 static UnkStruct_800BB340 *func_802872D8(UnkStruct_800BA900 *arg0);
 static void func_80287690();
 void func_80287698();
-
-#define LOAD_80285A7C(a_, i_) \
-    { \
-        void *f; \
-        f = func_80226604(0xDD, 1); \
-        func_80225CCC((void *) f, D_800BA8E8[(i_)].unk0 * 20, 0); \
-        func_8022616C(D_800BB488, 1, 20, f); \
-        func_80226368(f); \
-        (a_)->unk1F = D_800BB488[0]; \
-        (a_)->unk3E = D_800BB488[1]; \
-        (a_)->unk3C = D_800BB488[2]; \
-        (a_)->unk3D = D_800BB488[3]; \
-        (a_)->unk50.b[0] = D_800BB488[4]; \
-        (a_)->unk1E = D_800BB488[5]; \
-        (a_)->unk24 = (D_800BB488[6] << 24) + (D_800BB488[7] << 16) + (D_800BB488[8] << 8) + D_800BB488[9]; \
-        (a_)->unk2C = 2.0f * (s16) ((D_800BB488[10] << 8) + D_800BB488[11]) * 0.01f; \
-        (a_)->unk1D = D_800BB488[12]; \
-        (a_)->unk44 = D_800BB488[13]; \
-        (a_)->unk6C = D_800BB488[14]; \
-        (a_)->unk6D = D_800BB488[15]; \
-        (a_)->unk70 = (u32) D_800BB488[16]; \
-        (a_)->unk74 = (u32) D_800BB488[17]; \
-        (a_)->unk7C = D_800BB488[18]; \
-        (a_)->unk7E = D_800BB488[19]; \
-    }
-
-#define HARD_80285A84(a_) \
-    if (func_8023A840()->unk10 == 0) { \
-        (a_)->unk2C *= 0.5f; \
-        if ((a_)->unk6D >= 2) { \
-            (a_)->unk6D--; \
-        } \
-        (a_)->unk3E *= 2; \
-    }
 
 #define FREESLOT_802867CC(r_) \
     { \
@@ -808,7 +774,7 @@ static void func_80286400(s32 arg0, f32 arg1, f32 arg2, f32 arg3, s32 arg4, s32 
     s->unk8.z = arg3;
     s->unk14.unk80 = arg4;
     s->unk14.unk84 = arg0;
-    LOAD_80285A7C(&s->unk14, arg0);
+    func_80285A7C(&s->unk14, arg0);
     a = &s->unk14;
     s->unk0 = 2;
     func_8026DCAC(s->unk8.x, s->unk8.y, s->unk8.z, &grid, 0);
@@ -855,7 +821,7 @@ static void func_80286400(s32 arg0, f32 arg1, f32 arg2, f32 arg3, s32 arg4, s32 
     func_802847E4(a, 0);
     func_80231408(func_802311E8(m), 0x2100000);
     func_80283DF0(1, a);
-    HARD_80285A84(a);
+    func_80285A84(a);
 }
 
 static void func_802863E0() {
@@ -984,34 +950,61 @@ static UnkStruct_800BA900 *func_80285A74(Vec3f *arg0) {
     return NULL;
 }
 
-static void func_80285A7C() {
+static void func_80285A8C(UnkStruct_80288040 *a_, s32 i_) {
+    void *f;
+
+    f = func_80226604(0xDD, 1);
+    func_80225CCC((void *) f, D_800BA8E8[(i_)].unk0 * 20, 0);
+    func_8022616C(D_800BB488, 1, 20, f);
+    func_80226368(f);
+    (a_)->unk1F = D_800BB488[0];
+    (a_)->unk3E = D_800BB488[1];
+    (a_)->unk3C = D_800BB488[2];
+    (a_)->unk3D = D_800BB488[3];
+    (a_)->unk50.b[0] = D_800BB488[4];
+    (a_)->unk1E = D_800BB488[5];
+    (a_)->unk24 = (D_800BB488[6] << 24) + (D_800BB488[7] << 16) + (D_800BB488[8] << 8) + D_800BB488[9];
+    (a_)->unk2C = 2.0f * (s16) ((D_800BB488[10] << 8) + D_800BB488[11]) * 0.01f;
+    (a_)->unk1D = D_800BB488[12];
+    (a_)->unk44 = D_800BB488[13];
+    (a_)->unk6C = D_800BB488[14];
+    (a_)->unk6D = D_800BB488[15];
+    (a_)->unk70 = (u32) D_800BB488[16];
+    (a_)->unk74 = (u32) D_800BB488[17];
+    (a_)->unk7C = D_800BB488[18];
+    (a_)->unk7E = D_800BB488[19];
 }
 
-static void func_80285A84() {
+static void func_80285A94(UnkStruct_80288040 *a_) {
+    if (func_8023A840()->unk10 == 0) {
+        (a_)->unk2C *= 0.5f;
+        if ((a_)->unk6D >= 2) {
+            (a_)->unk6D--;
+        }
+        (a_)->unk3E *= 2;
+    }
 }
 
-static void func_80285A8C() {
+static void func_80285A7C(UnkStruct_80288040 *a_, s32 i_) {
+    func_80285A8C(a_, i_);
 }
 
-static void func_80285A94() {
+static void func_80285A84(UnkStruct_80288040 *a_) {
+    func_80285A94(a_);
 }
 
 static void func_80285A9C(UnkStruct_800BB340 *arg0) {
     Vec3f pos;
     UnkStruct_800BA900 *s;
 
-    func_80285A94();
-    func_80285A8C();
-    func_80285A84();
-    func_80285A7C();
     func_80250338(func_80243DDC(), &pos);
     s = func_80285A74(&pos);
     if (s != NULL) {
-        LOAD_80285A7C(&s->unk14, s->unk14.unk84);
+        func_80285A7C(&s->unk14, s->unk14.unk84);
         s->unk14.unk0->unk40->unk28 = 1.0f;
         s->unk14.unk0->unk40->unk2C = 1.0f;
         s->unk14.unk0->unk40->unk30 = 1.0f;
-        HARD_80285A84(&s->unk14);
+        func_80285A84(&s->unk14);
         func_80285658(s, arg0);
     }
 }
