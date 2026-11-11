@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 509, eu 509, jp 509
+ * differing words: us 507, eu 507, jp 507
  */
 #include "common.h"
 
@@ -233,7 +233,7 @@ void func_8028301C(UnkStruct_80288040 *arg0, s32 arg1, f32 arg2, f32 arg3, f32 a
 static void func_8028304C(UnkStruct_80288040 *arg0, s32 arg1);
 static void func_802831A8(UnkStruct_80288040 *arg0);
 f32 func_8028322C(UnkStruct_80288040 *arg0);
-static u8 func_80283314(s32 arg0, s32 arg1, UnkStruct_80288040 *arg2);
+static u8 func_80283314(UnkStruct_80288040 *arg2, s32 arg0, s32 arg1);
 static void func_802836F0(UnkStruct_80288040 *arg0, s32 arg1);
 static s32 func_80283794(UnkStruct_80288040 *arg0, u8 arg1);
 void func_80283B04(UnkStruct_80288040 *arg0, Vec3f *arg1);
@@ -1825,7 +1825,7 @@ void func_80283B04(UnkStruct_80288040 *arg0, Vec3f *arg1) {
         }
     }
     if ((failed != 0) || (func_80283794(arg0, arg0->unk1C) != 0)) {
-        arg0->unk1C = func_80283314(1, 1, arg0) << 5;
+        arg0->unk1C = func_80283314(arg0, 1, 1) << 5;
     }
     if (0) {
         func_802836F0(NULL, 0);
@@ -1976,7 +1976,7 @@ static void func_802836F0(UnkStruct_80288040 *arg0, s32 arg1) {
         mode = 2;
         break;
     }
-    arg0->unk1C = func_80283314(mode, arg1, arg0) << 5;
+    arg0->unk1C = func_80283314(arg0, mode, arg1) << 5;
 }
 
 static void func_80283304() {
@@ -1985,7 +1985,7 @@ static void func_80283304() {
 static void func_8028330C() {
 }
 
-static u8 func_80283314(s32 arg0, s32 arg1, UnkStruct_80288040 *arg2) {
+static u8 func_80283314(UnkStruct_80288040 *arg2, s32 arg0, s32 arg1) {
     s32 n;
     s32 i;
     s32 dir;
