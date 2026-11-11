@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2389, eu 2389, jp 2389
+ * differing words: us 2280, eu 2280, jp 2280
  *
  * The object is the same in all three versions. 61 of the 79 original
  * procedures match (stubs included). The IPA statics
@@ -251,7 +251,7 @@ typedef struct ChlState {
 extern SeqFile *D_802AD22C;
 extern SeqInfo *D_802AD230;
 extern SndBankFile *D_802AD21C;
-extern s16 **D_802AD658;
+extern u16 **D_802AD658;
 extern ChlState D_802AD340[16];
 extern void *D_802AD220; /* ALCSPlayer */
 extern void *D_802AD224; /* the sequence */
@@ -278,8 +278,8 @@ extern void *D_802AD64C; /* ALSndPlayer */
         }                                                     \
     }
 
-static void func_80268438();
-static void func_80268430();
+static void *func_80268438(s16 num);
+static void func_80268430(s16 idx, s16 script, s8 type);
 static void func_802699C0();
 static void func_80266928(s16 idx);
 void *func_8026B72C(s32);
@@ -968,7 +968,7 @@ static s16 func_80269AFC() {
                     } else {
                         hdr->scriptRom += D_802A1344;
                         func_80269144(D_802AD658, total, hdr->scriptRom);
-                        *D_802AD658 = (s16 *) ((u8 *) *D_802AD658 + (u32) D_802AD658);
+                        *D_802AD658 = (u16 *) ((u8 *) *D_802AD658 + (u32) D_802AD658);
                         D_802AD65C = func_8026B72C((s16) (D_802A12BC * sizeof(VoiceScript)));
                         if (D_802AD65C == NULL) {
                             rc = 2;
@@ -1532,25 +1532,60 @@ block_18:
     }
 }
 
-static void func_80268430() {
-}
-
-static void func_80268438() {
-}
-
-static void func_80268440(s16 idx) {
-    Voice *v;
+static void func_80268430(s16 idx, s16 script, s8 type) {
     VoiceScript *s;
+
+    if (D_802AD658 != NULL) {
+        s = &D_802AD65C[idx];
+        if (type != 3) {
+            s->parent = -1;
+        }
+        s->flags = 0;
+        s->script = script;
+        if (script >= 0) {
+            s->pc = (u8 *) D_802AD658 + (*D_802AD658)[script];
+            s->wait = 0;
+            s->nchild = 0;
+            s->loop = 0;
+            s->unk26 = 0;
+            s->unkE = 0;
+            s->unk10 = 0x7F;
+            s->unk12 = 0x40;
+        }
+    }
+}
+
+static void *func_80268438(s16 num) {
     SndBank *bank;
     SndInst *inst;
     s16 n;
     s16 i;
     s16 j;
     s16 k;
-    SndDef def;
+    void *snd;
 
-    func_80268438();
-    func_80268430();
+    n = 0;
+    for (i = 0; i < D_802AD648->bankCount; i++) {
+        bank = D_802AD648->bankArray[i];
+        for (j = 0; j < bank->instCount; j++) {
+            inst = bank->instArray[j];
+            for (k = 0; k < inst->soundCount; k++) {
+                snd = inst->soundArray[k];
+                if (n == num) {
+                    return snd;
+                }
+                n++;
+            }
+        }
+    }
+    return NULL;
+}
+
+static void func_80268440(s16 idx) {
+    Voice *v;
+    SndDef def;
+    s32 pad[2];
+
     v = &D_802AD654[idx];
     v->flags &= ~0x1000;
     v->state = 0;
@@ -1558,45 +1593,14 @@ static void func_80268440(s16 idx) {
         func_8026706C(v->num, &def);
         v->sound = def.sound;
     } else {
-        n = 0;
-        for (i = 0; i < D_802AD648->bankCount; i++) {
-            bank = D_802AD648->bankArray[i];
-            for (j = 0; j < bank->instCount; j++) {
-                inst = bank->instArray[j];
-                for (k = 0; k < inst->soundCount; k++, n++) {
-                    if (n == v->num) {
-                        v->sound = inst->soundArray[k];
-                        goto found;
-                    }
-                }
-            }
-        }
-        v->sound = NULL;
-    found:
+        v->sound = func_80268438(v->num);
         def.script = -1;
     }
     if (v->sound != NULL) {
         v->sndId = func_802986E0(D_802AD64C, v->sound);
         if (v->sndId >= 0) {
             func_80298730(D_802AD64C, v->sndId, v->unk1A + 11);
-            if (D_802AD658 != NULL) {
-                s = &D_802AD65C[idx];
-                if (v->unk1F != 3) {
-                    s->parent = -1;
-                }
-                s->flags = 0;
-                s->script = def.script;
-                if (def.script >= 0) {
-                    s->pc = (u8 *) D_802AD658 + (*D_802AD658)[def.script];
-                    s->wait = 0;
-                    s->nchild = 0;
-                    s->loop = 0;
-                    s->unk26 = 0;
-                    s->unkE = 0;
-                    s->unk10 = 0x7F;
-                    s->unk12 = 0x40;
-                }
-            }
+            func_80268430(idx, def.script, v->unk1F);
             func_80267A18(idx);
             v->flags |= 0xF;
             func_80267784(idx);
@@ -2274,20 +2278,22 @@ void func_80266930(s16 idx) {
                 while (s->nchild > 0) {
                     s->nchild--;
                     c = s->child[s->nchild];
-                    if (idx == D_802AD65C[c].parent) {
-                        v = &D_802AD654[c];
-                        if (v->state == 1) {
-                            if (v->flags & 0x1000) {
-                                v->flags &= ~0x1000;
-                            } else {
-                                func_802986F0(D_802AD64C, v->sndId);
-                                func_80298710(D_802AD64C);
-                                v->flags |= 0x2000;
-                            }
-                            v->unk1F = 0;
-                            func_80266928(c);
-                        }
+                    if (idx != D_802AD65C[c].parent) {
+                        continue;
                     }
+                    v = &D_802AD654[c];
+                    if (v->state != 1) {
+                        continue;
+                    }
+                    if (v->flags & 0x1000) {
+                        v->flags &= ~0x1000;
+                    } else {
+                        func_802986F0(D_802AD64C, v->sndId);
+                        func_80298710(D_802AD64C);
+                        v->flags |= 0x2000;
+                    }
+                    v->unk1F = 0;
+                    func_80266928(c);
                 }
             }
         }
