@@ -33,7 +33,19 @@
  * K) {}` tests and `if (idx) {}` give its constants their s-registers.
  * What is left (4 words) is its frame: def sits at 0x78 against the
  * original's 0x80 and one spill at 0x24 against 0x20, though the frame
- * size is right. 8026706C matched once the volume static returned s16
+ * size is right. The front-end frame (td) is the function's own locals
+ * (block-scoped ones too: s, v, pc, num+ch, op, lp, cs, rounded to 8)
+ * then one area per inlined call in call order (80267A10's def, 802679C0,
+ * 802679A8, 802679B0's vol, 802679A0, the 802679B8s); uopt's spill
+ * slots go below it (idx 1 at -(td + 8) from the top, frame =
+ * round8(24 + 12 + td)). The original has def 35 bytes down, vol 82 and
+ * td 140; this draft has 35, 74 and 136 (us). So the original has one
+ * own-local word fewer, 8 more bytes between def and vol, and 4 more
+ * below vol. Sharing lp for cs and an `s32 pad` in 802679A8 give all but
+ * the last (2 words, not kept: both artificial); no pad, alone or in
+ * pairs, in 802679A0/B0/B8 adds just 4 below vol (B8's are inlined three
+ * times, A0's cost 8), and calling 80266928 for the cs block puts vol at
+ * 102. 8026706C matched once the volume static returned s16
  * (its (s16) conversion before the sh is dead and as1 drops it, but it
  * used up a ugen temp) and the script id lost its inner (u8) cast (one
  * `and` fewer).
