@@ -1,23 +1,17 @@
 /*
- * NON_MATCHING: main_code's 45170, complete: func_8022AF1C reads a model
- * file's chunks 1, 2, 3 and 7 into a skeleton, func_8022AEDC attaches
- * one to an instance (with index tables of its key sets and channels),
- * and the rest free one. Every function is in C, written last function
- * first (-O3 emits a file's functions in reverse). Its text matches in
- * every version; the data is not checked yet (below). 46300 after it
- * is the node tree and the animation tracks (nonmatching/46300.c,
- * text_objects.txt). Not built into the ROM (docs/DECOMPILING.md,
- * "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * main_code's 45170, IDO -O3; it matches in us, eu and jp: func_8022AF1C
+ * reads a model file's chunks 1, 2, 3 and 7 into a skeleton,
+ * func_8022AEDC attaches one to an instance (with index tables of its
+ * key sets and channels), and the rest free one. Every function is
+ * written last function first (-O3 emits a file's functions in
+ * reverse). 46300 after it is the node tree and the animation tracks
+ * (nonmatching/46300.c). Its .data (D_8029F880) and .bss
+ * (D_802A54A0..AC, and func_8022AF1C's statics D_802A54B0..C8) are its
+ * own, placed in data_split.txt.
  *
- * The code is the same in every version.
- *
- * func_8022AF1C keeps its globals (D_802A54B0..C8) as function-scope
- * statics: only then does a store to one not kill pointer loads, and
- * each access gets its own lui. Moving this file to src/ has to check
- * where IDO puts those in .bss (D_802A54A0..C8, padded to 0x802A54D0;
- * .data D_8029F880, padded to 0x8029F890).
+ * func_8022AF1C keeps its globals as function-scope statics: only then
+ * does a store to one not kill pointer loads, and each access gets its
+ * own lui.
  * D_802A54B0 is s32 against arg0->unk4's u32 on purpose: the unsigned
  * compare is what keeps the counter's store-then-reload.
  */
@@ -174,11 +168,11 @@ typedef struct {
     /* 0x14 */ UnkTrack *unk14;
 } UnkAnim; /* size 0x18 */
 
-extern s32 *D_8029F880;
-extern s32 D_802A54A0;
-extern s32 D_802A54A4;
-extern s32 D_802A54A8;
-extern s32 D_802A54AC;
+s32 *D_8029F880 = NULL;
+s32 D_802A54A0;
+s32 D_802A54A4;
+s32 D_802A54A8;
+s32 D_802A54AC;
 
 void func_8022A970(UnkChan *arg0, s32 arg1);
 void func_8022AA50(UnkSkel *arg0);

@@ -2,8 +2,9 @@
 
 /*
  * -O3. func_8022D1D0 alone: it builds a skeleton instance from a model's
- * chunk. The rest of the skeleton code is 45170 and 46300 (nonmatching/ has
- * the structures in full); only the fields used here are named.
+ * chunk. The rest of the skeleton code is 45170 and 46300 (src/45170.c and
+ * nonmatching/46300.c have the structures in full); only the fields used
+ * here are named.
  */
 
 void *malloc(u32);
