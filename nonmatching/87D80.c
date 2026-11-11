@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1854, eu 1854, jp 1854
+ * differing words: us 1754, eu 1754, jp 1754
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -397,6 +397,8 @@ s32 func_80273AD4(s16 arg0, f32 arg1, f32 arg2, f32 arg3);
 void func_80273E2C(s16 arg0);
 void func_80273F0C(void);
 void func_8027723C(void);
+
+static const char D_802A3B60[] = "atrpos>remain=100\n";
 
 void func_8026FF94(s32 arg0) {
     D_802AFC58 = arg0;
@@ -1262,77 +1264,64 @@ void func_8026DF74(f32 arg0, f32 arg1, f32 arg2) {
 }
 
 void func_8026DCAC(f32 arg0, f32 arg1, f32 arg2, void *arg3, s32 arg4) {
-    s32 temp_a3;
-    s32 temp_ft1;
-    s32 temp_ft2;
-    s32 temp_v0_2;
-    s32 var_a2;
-    s32 var_t1;
-    s32 var_v1;
-    u8 *var_a1;
-    u8 temp_v0;
-
-    temp_ft1 = (s32) (arg0 * 0.01f);
-    var_t1 = 0;
-    M2C_FIELD(arg3, s32 *, 0) = temp_ft1;
-    M2C_FIELD(arg3, s32 *, 8) = (s32) (arg2 * 0.01f);
+    s32 ix;
+    s32 iy;
+    s32 h;
+    s32 layer;
+    s32 n;
+    s32 ry;
+    UnkStruct_800B15D8 *m;
+    ry = 0;
+    ((Unk8026DCAC *) arg3)->i[0] = (s32) (arg0 * 0.01f);
+    ((Unk8026DCAC *) arg3)->i[2] = (s32) (arg2 * 0.01f);
     if (arg0 < 0.0f) {
-        M2C_FIELD(arg3, s32 *, 0) = (s32) (temp_ft1 - 1);
+        ((Unk8026DCAC *) arg3)->i[0]--;
     }
     if (arg2 < 0.0f) {
-        M2C_FIELD(arg3, s32 *, 8) = (s32) (M2C_FIELD(arg3, s32 *, 8) - 1);
+        ((Unk8026DCAC *) arg3)->i[2]--;
     }
-    var_v1 = 0;
-    temp_a3 = D_800B15D8->unk0 + 1;
-    var_a2 = 0;
-    if (temp_a3 > 0) {
-        var_a1 = D_800B15D8;
-        temp_ft2 = (s32) (arg1 * 0.01f);
-loop_6:
-        if (temp_ft2 < var_v1) {
-            if (var_a2 > 0) {
-                M2C_FIELD(arg3, s32 *, 4) = (s32) (var_a2 - 1);
+    h = 0;
+    n = D_800B15D8->unk0 + 1;
+    for (layer = 0; layer < n; layer++) {
+        iy = (s32) (arg1 * 0.01f);
+        if (iy < h) {
+            if (layer > 0) {
+                ((Unk8026DCAC *) arg3)->i[1] = layer - 1;
             } else {
-                M2C_FIELD(arg3, s32 *, 4) = var_a2;
+                ((Unk8026DCAC *) arg3)->i[1] = layer;
             }
-        } else {
-            var_t1 = var_v1;
-            if (var_v1 == temp_ft2) {
-                M2C_FIELD(arg3, s32 *, 4) = var_a2;
-                var_t1 = var_v1;
-            } else {
-                temp_v0 = M2C_FIELD(var_a1, u8 *, 0x10);
-                var_a2 += 1;
-                var_a1 += 0xC34;
-                var_v1 += temp_v0;
-                if (var_a2 < temp_a3) {
-                    goto loop_6;
-                }
-            }
+            break;
         }
+        ry = h;
+        if (h == iy) {
+            ((Unk8026DCAC *) arg3)->i[1] = layer;
+            ry = h;
+            break;
+        }
+        h += D_800B15D8[layer].unk10;
     }
-    if (D_800B15D8->unk0 < var_a2) {
-        M2C_FIELD(arg3, s32 *, 4) = D_800B15D8->unk0;
+    if (D_800B15D8->unk0 < layer) {
+        ((Unk8026DCAC *) arg3)->i[1] = D_800B15D8->unk0;
     }
     if (arg1 < 0.0f) {
-        M2C_FIELD(arg3, s32 *, 4) = -1;
+        ((Unk8026DCAC *) arg3)->i[1] = -1;
     }
-    temp_v0_2 = M2C_FIELD(arg3, s32 *, 0);
-    M2C_FIELD(arg3, f32 *, 0xC) = (f32) (arg0 - ((f32) temp_v0_2 * 100.0f));
-    M2C_FIELD(arg3, f32 *, 0x10) = (f32) (arg1 - ((f32) var_t1 * 100.0f));
-    M2C_FIELD(arg3, f32 *, 0x14) = (f32) (arg2 - ((f32) M2C_FIELD(arg3, s32 *, 8) * 100.0f));
+    ix = ((Unk8026DCAC *) arg3)->i[0];
+    ((Unk8026DCAC *) arg3)->f[0] = arg0 - (f32) ix * 100.0f;
+    ((Unk8026DCAC *) arg3)->f[1] = arg1 - (f32) ry * 100.0f;
+    ((Unk8026DCAC *) arg3)->f[2] = arg2 - (f32) ((Unk8026DCAC *) arg3)->i[2] * 100.0f;
     if (arg4 & 2) {
-        if (M2C_FIELD(arg3, f32 *, 0xC) >= 50.0f) {
-            M2C_FIELD(arg3, s32 *, 0) = (s32) (temp_v0_2 + 1);
+        if (((Unk8026DCAC *) arg3)->f[0] >= 50.0f) {
+            ((Unk8026DCAC *) arg3)->i[0] = ix + 1;
         }
-        if (M2C_FIELD(arg3, f32 *, 0x14) >= 50.0f) {
-            M2C_FIELD(arg3, s32 *, 8) = (s32) (M2C_FIELD(arg3, s32 *, 8) + 1);
+        if (((Unk8026DCAC *) arg3)->f[2] >= 50.0f) {
+            ((Unk8026DCAC *) arg3)->i[2]++;
         }
-        M2C_FIELD(arg3, f32 *, 0xC) = (f32) ((f64) M2C_FIELD(arg3, f32 *, 0xC) - 50.0);
-        M2C_FIELD(arg3, f32 *, 0x14) = (f32) ((f64) M2C_FIELD(arg3, f32 *, 0x14) - 50.0);
+        ((Unk8026DCAC *) arg3)->f[0] = ((Unk8026DCAC *) arg3)->f[0] - 50.0;
+        ((Unk8026DCAC *) arg3)->f[2] = ((Unk8026DCAC *) arg3)->f[2] - 50.0;
     }
-    if ((D_802AC8A0 == 1) && ((M2C_FIELD(arg3, f32 *, 0xC) == 100.0f) || (M2C_FIELD(arg3, f32 *, 0x10) == 100.0f) || (M2C_FIELD(arg3, f32 *, 0x14) == 100.0f))) {
-        func_80297D38("atrpos>remain=100\n");
+    if (D_802AC8A0 == 1 && (((Unk8026DCAC *) arg3)->f[0] == 100.0f || ((Unk8026DCAC *) arg3)->f[1] == 100.0f || ((Unk8026DCAC *) arg3)->f[2] == 100.0f)) {
+        func_80297D38(D_802A3B60);
     }
 }
 
