@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2432, eu 2432, jp 2432
+ * differing words: us 2389, eu 2389, jp 2389
  *
  * The object is the same in all three versions. 61 of the 79 original
  * procedures match (stubs included). The IPA statics
@@ -462,6 +462,7 @@ static void func_80269144(void *dst, s32 size, s32 rom);
 void func_802691A8(void);
 s16 *func_80269680(u32 arg0);
 typedef struct SndFlags { u8 pad : 7; u8 mono : 1; } SndFlags;
+void func_80269704(s32 arg0);
 s32 func_802697A0(void);
 s32 func_802697C0(void);
 s32 func_802697E0(void);
@@ -1128,7 +1129,6 @@ s32 func_802697A0() {
     return M2C_FIELD(func_8026B79C(), s32 *, 0xC);
 }
 
-void func_80269704(s32 arg0);
 void func_80269704(s32 arg0) {
     Voice *v;
     s32 i;
@@ -1138,9 +1138,10 @@ void func_80269704(s32 arg0) {
     func_802983A8(D_802AD218);
     for (i = 0; i < D_802A12BC; i++) {
         v = &D_802AD654[i];
-        if (v->state == 1) {
-            v->flags |= 4;
+        if (v->state != 1) {
+            continue;
         }
+        v->flags |= 4;
     }
 }
 
@@ -1290,41 +1291,37 @@ void func_802690DC(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     D_802A1340 = arg4;
 }
 
-s32 func_80268F94(s16 arg0) {
-    s16 temp_v1;
-    s8 var_a0;
+s32 func_80268F94(s16 num) {
+    s8 vol;
 
     if (D_802A1330 == 0) {
         return -1;
     }
-    if ((arg0 >= D_802AD22C->seqCount) || (arg0 < 0)) {
+    if (num >= D_802AD22C->seqCount || num < 0) {
         return -1;
     }
-    temp_v1 = D_802AD22C->revision;
-    if (temp_v1 != 0x5331) {
-        if (temp_v1 == 0x5332) {
-            if (D_802AD22C->seqArray[arg0].len < 0) {
+    switch (D_802AD22C->revision) {
+        case 0x5332:
+            if (D_802AD22C->seqArray[num].len < 0) {
                 return -1;
             }
-            var_a0 = D_802AD230[arg0].vol;
-            goto block_13;
-        }
-        var_a0 = 0x7F;
-        goto block_13;
+            vol = D_802AD230[num].vol;
+            break;
+        case 0x5331:
+            if (D_802AD22C->seqArray[num].len < 0) {
+                return -1;
+            }
+        default:
+            vol = 0x7F;
+            break;
     }
-    var_a0 = 0x7F;
-    if (D_802AD22C->seqArray[arg0].len < 0) {
-        return -1;
-    }
-block_13:
-    D_802AD248 = func_80265FBC(var_a0);
-    if ((D_802AD238 == 1) && (D_802AD24C == 0)) {
-        arg0 = 0 /* FIXME unset $a1 */;
+    D_802AD248 = func_80265FBC(vol);
+    if (D_802AD238 == 1 && D_802AD24C == 0) {
         func_80298640(D_802AD220);
     } else {
         D_802AD238 = 1;
     }
-    D_802AD244 = 0 /* FIXME unset $a1 */;
+    D_802AD244 = num;
     D_802AD24C = 1;
     return 0;
 }
@@ -2226,33 +2223,28 @@ s16 func_80266CA0() {
 }
 
 void func_80266B50() {
-    Voice *temp_s0;
-    VoiceScript *temp_v0_2;
-    s16 var_s1;
-    s32 temp_v0;
+    Voice *v;
+    VoiceScript *s;
+    s16 i;
 
-    var_s1 = 0;
-    if (D_802A12BC > 0) {
-        do {
-            temp_s0 = &D_802AD654[var_s1];
-            if (temp_s0->state == 1) {
-                temp_v0 = temp_s0->flags;
-                if (temp_v0 & 0x1000) {
-                    temp_s0->flags = temp_v0 & ~0x1000;
-                } else {
-                    func_802986F0(D_802AD64C, temp_s0->sndId);
-                    func_80298710(D_802AD64C);
-                    temp_s0->flags |= 0x2000;
-                }
-                if (D_802AD658 != NULL) {
-                    temp_v0_2 = &D_802AD65C[var_s1];
-                    temp_v0_2->script = -1;
-                    temp_v0_2->flags = 0;
-                }
-                temp_s0->unk1F = 0;
-            }
-            var_s1 += 1;
-        } while (var_s1 < D_802A12BC);
+    for (i = 0; i < D_802A12BC; i++) {
+        v = &D_802AD654[i];
+        if (v->state != 1) {
+            continue;
+        }
+        if (v->flags & 0x1000) {
+            v->flags &= ~0x1000;
+        } else {
+            func_802986F0(D_802AD64C, v->sndId);
+            func_80298710(D_802AD64C);
+            v->flags |= 0x2000;
+        }
+        if (D_802AD658 != NULL) {
+            s = &D_802AD65C[i];
+            s->script = -1;
+            s->flags = 0;
+        }
+        v->unk1F = 0;
     }
 }
 
@@ -2549,12 +2541,13 @@ void func_80265F1C(u8 arg0) {
     }
     for (i = 0; i < D_802A12BC; i++) {
         v = &D_802AD654[i];
-        if (v->state == 1) {
-            if (!(v->flags & 0x1000) && v->unk18 != arg0) {
-                v->flags |= 4;
-            }
-            v->unk18 = arg0;
+        if (v->state != 1) {
+            continue;
         }
+        if (!(v->flags & 0x1000) && v->unk18 != arg0) {
+            v->flags |= 4;
+        }
+        v->unk18 = arg0;
     }
     D_802AD674 = arg0;
 }
@@ -2568,12 +2561,13 @@ void func_80265E7C(s16 arg0) {
     }
     for (i = 0; i < D_802A12BC; i++) {
         v = &D_802AD654[i];
-        if (v->state == 1) {
-            if (!(v->flags & 0x1000) && arg0 != v->unk10) {
-                v->flags |= 1;
-            }
-            v->unk10 = arg0;
+        if (v->state != 1) {
+            continue;
         }
+        if (!(v->flags & 0x1000) && arg0 != v->unk10) {
+            v->flags |= 1;
+        }
+        v->unk10 = arg0;
     }
     D_802AD670 = arg0;
 }
@@ -2587,12 +2581,13 @@ void func_80265DD8(s8 arg0) {
     }
     for (i = 0; i < D_802A12BC; i++) {
         v = &D_802AD654[i];
-        if (v->state == 1 && !(v->flags & 0x10)) {
-            if (!(v->flags & 0x1000) && (u8) arg0 != v->unk1E) {
-                v->flags |= 8;
-            }
-            v->unk1E = arg0;
+        if (v->state != 1 || (v->flags & 0x10)) {
+            continue;
         }
+        if (!(v->flags & 0x1000) && v->unk1E != (u8) arg0) {
+            v->flags |= 8;
+        }
+        v->unk1E = arg0;
     }
     D_802AD675 = arg0;
 }
