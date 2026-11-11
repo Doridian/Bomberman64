@@ -7,7 +7,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4152, eu 4152, jp 4152
+ * differing words: us 4134, eu 4134, jp 4134
  *
  * 33 of 97 match. func_8026D5F8 and func_8026D5C0 (cell and slot of a
  * point) are inlined by func_8026D620/func_8026D7D8, which is what the
@@ -121,7 +121,7 @@ typedef struct {
     /* 0x10 */ s32 flags;
     /* 0x14 */ s16 unk14;
     /* 0x16 */ s16 unk16;
-    /* 0x18 */ u8 pad18[4];
+    /* 0x18 */ f32 unk18;
     /* 0x1C */ f32 unk1C;
     /* 0x20 */ s32 unk20;
     /* 0x24 */ f32 unk24;
@@ -246,7 +246,7 @@ s32 func_8027E8EC(s16, s16, s16, s16);
 void func_8027F820(void);
 void func_8027F858(s32, s32);
 s32 func_80286CA8(s32, f32, f32, f32);
-s32 func_802870A8(void);
+s32 func_802870A8();
 s32 func_80287440(void);
 s32 func_802875B0(void);
 s32 func_8028A4E0(s32);
@@ -1919,125 +1919,80 @@ loop_4:
 }
 
 void func_80270770(s16 arg0, s16 arg1) {
-    f32 sp5C;
-    f32 sp58;
-    f32 var_fv0;
-    s32 *temp_s0;
-    s32 temp_a0;
-    s32 temp_v1;
-    s32 var_a1;
-    s32 var_v0;
-    s32 var_v0_2;
-    s32 var_v0_3;
-    s32 var_v0_5;
-    u8 *temp_a3;
-    u8 *temp_v0;
-    u8 *var_v0_4;
+    s32 pad[2];
+    f32 speed;
+    f32 h;
+    Obj8E *o;
+    Ctl87 *c;
+    Obj8E *obj;
+    s32 ok;
 
-    if (arg0 >= 0) {
-        var_v0 = 1;
-        if (arg0 < 5) {
-            var_v0 = 0;
-        }
-    } else {
-        var_v0 = 1;
+    if (func_80270714(arg0) == 0) {
+        return;
     }
-    if (var_v0 != 0) {
-        var_v0_2 = 0;
-    } else {
-        var_v0_2 = *(s32 *)(D_802AFCF4 + (arg0 * 0x30));
-    }
-    if (var_v0_2 != 0) {
-        temp_v1 = arg0 * 0x30;
-        temp_a3 = temp_v1 + D_802AFCE8;
-        if (arg0 >= 0) {
-            var_v0_3 = 1;
-            if (arg0 < 5) {
-                var_v0_3 = 0;
-            }
-        } else {
-            var_v0_3 = 1;
-        }
-        if (var_v0_3 != 0) {
-            var_v0_4 = NULL;
-        } else {
-            var_v0_4 = M2C_FIELD(temp_a3, void **, 0xC);
-        }
-        switch (arg1) {                             /* irregular */
+    obj = (Obj8E *) func_80270714(arg0);
+    switch (arg1) {
         case 0:
-            var_fv0 = 0.0f;
-            sp58 = 0.0f;
+            speed = 0.0f;
+            h = 0.0f;
             break;
         case 1:
-            var_fv0 = 25.0f;
-            sp58 = 8.25f;
+            speed = 25.0f;
+            h = 8.25f;
             break;
         case 2:
-            var_fv0 = 25.0f;
-            sp58 = 11.0f;
+            speed = 25.0f;
+            h = 11.0f;
             break;
         case 3:
-            var_fv0 = 25.0f;
-            sp58 = 14.0f;
+            speed = 25.0f;
+            h = 14.0f;
             break;
         default:
-            var_fv0 = 10.0f;
+            speed = 10.0f;
             break;
-        }
-        arg0 = arg0;
-        sp5C = var_fv0;
-        temp_s0 = malloc(0x3C);
-        sp5C = var_fv0;
-        temp_v0 = func_802443F4((s32) arg0);
-        M2C_FIELD(temp_s0, void **, 4) = var_v0_4;
-        M2C_FIELD(temp_s0, s16 *, 0x14) = func_802704F8(M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x20));
-        M2C_FIELD(temp_s0, f32 *, 0x18) = var_fv0;
-        M2C_FIELD(temp_s0, s32 *, 0x20) = 1;
-        M2C_FIELD(temp_s0, s32 *, 0x28) = 0;
-        M2C_FIELD(temp_s0, s16 *, 0x16) = 0;
-        M2C_FIELD(temp_s0, f32 *, 0x1C) = sp58;
-        M2C_FIELD(temp_s0, f32 *, 0x24) = 0.0f;
-        M2C_FIELD(temp_s0, s32 *, 0x30) = 0;
-        M2C_FIELD(temp_s0, f32 *, 0x2C) = 10000.0f;
-        var_a1 = 0;
-        M2C_FIELD(temp_s0, f32 *, 0x34) = (f32) M2C_FIELD(M2C_FIELD(var_v0_4, void **, 0x40), f32 *, 0x10);
-        M2C_FIELD(temp_s0, f32 *, 0x38) = (f32) M2C_FIELD(M2C_FIELD(var_v0_4, void **, 0x40), f32 *, 0x18);
-        temp_a0 = M2C_FIELD(temp_a3, s32 *, 8);
-        M2C_FIELD(temp_s0, s32 *, 0x10) = temp_a0;
-        if (temp_a0 & 2) {
-            var_v0_5 = func_80270438(var_v0_4, temp_s0);
-            goto block_34;
-        }
-        if (temp_a0 & 8) {
-            var_v0_5 = func_8027A1F4(var_v0_4, (s32) temp_s0);
-            goto block_34;
-        }
-        if (temp_a0 & 4) {
-            var_v0_5 = func_802870A8();
-            goto block_34;
-        }
-        if (temp_a0 & 1) {
-            var_v0_5 = func_80244F34(var_v0_4, (s32) temp_s0);
-block_34:
-            var_a1 = var_v0_5;
-        }
-        if (var_a1 != 0) {
-            func_80270080(temp_s0);
-            func_80231408(var_v0_4, 0x20000);
-            M2C_FIELD(var_v0_4, f32 *, 0x68) = (f32) M2C_FIELD(temp_s0, f32 *, 0x18);
-            M2C_FIELD(var_v0_4, f32 *, 0x6C) = 1.0f;
-            M2C_FIELD(temp_s0, void **, 8) = var_v0_4;
-            M2C_FIELD(temp_s0, void **, 0xC) = var_v0_4;
-            func_802702EC(arg0);
-            func_802313DC(var_v0_4, 0x10000);
-            *(&D_802AFCF8 + temp_v1) = 0;
-            func_80232AA8((s32) var_v0_4);
-            func_802313DC(var_v0_4, 0x200000);
-            func_802313DC(var_v0_4, 0x600000);
-            return;
-        }
-        free(temp_s0);
     }
+    c = malloc(sizeof(Ctl87));
+    o = func_802443F4(arg0);
+    c->obj = obj;
+    c->unk14 = func_802704F8(o->unk40->rot);
+    c->unk18 = speed;
+    c->unk20 = 1;
+    c->unk28 = 0;
+    c->unk16 = 0;
+    c->unk1C = h;
+    c->unk24 = 0.0f;
+    c->unk30 = 0;
+    c->unk2C = 10000.0f;
+    ok = 0;
+    c->unk34 = obj->unk40->x;
+    c->unk38 = obj->unk40->z;
+    c->flags = SLOTS[arg0].unk8;
+    if (c->flags & 2) {
+        ok = func_80270438((u8 *) obj, (s32 *) c);
+    } else if (c->flags & 8) {
+        ok = func_8027A1F4(obj, (s32) c);
+    } else if (c->flags & 4) {
+        ok = func_802870A8(obj, c);
+    } else if (c->flags & 1) {
+        ok = func_80244F34(obj, (s32) c);
+    }
+    if (ok != 0) {
+        func_80270080((s32 *) c);
+        func_80231408(obj, 0x20000);
+        obj->unk68 = c->unk18;
+        obj->unk6C = 1.0f;
+        c->unk8 = obj;
+        c->unkC = obj;
+        func_802702EC(arg0);
+        func_802313DC(obj, 0x10000);
+        SLOTS[arg0].unk10 = 0;
+        func_80232AA8((s32) obj);
+        func_802313DC(obj, 0x200000);
+        func_802313DC(obj, 0x600000);
+        return;
+    }
+    free(c);
 }
 
 s32 func_80270714(s16 arg0) {
