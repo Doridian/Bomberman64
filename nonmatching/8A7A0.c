@@ -7,7 +7,7 @@
  * order. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 939, eu 939, jp 939
+ * differing words: us 920, eu 920, jp 920
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file (475 words in the one-file draft, 39
@@ -342,8 +342,8 @@ void func_80270080(s32 *arg0);
 void *func_802700EC(u8 *arg0, u8 *arg1, s16 arg2, f32 arg3);
 s32 func_802702BC(s16 arg0);
 void func_802702EC(s16 arg0);
-void func_80270354(s16 *arg0, s32 arg1);
-void func_8027036C(s16 *arg0, s32 arg1);
+void func_80270354(s16 *arg0, s16 arg1);
+void func_8027036C(s16 *arg0, s16 arg1);
 s32 func_80270384(u8 *arg0);
 s16 *func_802703B4(u8 *arg0);
 s32 func_80270438(u8 *arg0, s32 *arg1);
@@ -361,7 +361,7 @@ f32 func_80270FC0(u8 *arg0);
 void func_80271010(u8 *arg0, s16 arg1);
 void func_80271178(s16 arg0, s32 arg1);
 void func_802711C8(s16 *arg0);
-s16 func_802712A8(s16 *arg0, s32 arg1);
+s16 func_802712A8(s16 *arg0, s16 arg1);
 void func_802712C4(s16 *arg0);
 s32 func_8027130C(u8 *arg0);
 void func_80271448(f32 arg0, f32 arg1, f32 arg2, f32 *arg3, f32 *arg4, f32 *arg5);
@@ -1427,8 +1427,8 @@ void func_802712C4(s16 *arg0) {
     }
 }
 
-s16 func_802712A8(s16 *arg0, s32 arg1) {
-    return (s16) (*arg0 & arg1);
+s16 func_802712A8(s16 *arg0, s16 arg1) {
+    return *arg0 & arg1;
 }
 
 void func_802711C8(s16 *arg0) {
@@ -1887,11 +1887,11 @@ s32 func_80270384(u8 *arg0) {
     return 0;
 }
 
-void func_8027036C(s16 *arg0, s32 arg1) {
+void func_8027036C(s16 *arg0, s16 arg1) {
     *arg0 &= ~arg1;
 }
 
-void func_80270354(s16 *arg0, s32 arg1) {
+void func_80270354(s16 *arg0, s16 arg1) {
     *arg0 |= arg1;
 }
 
