@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1547, eu 1547, jp 1547
+ * differing words: us 1418, eu 1418, jp 1418
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -303,9 +303,9 @@ void func_8026D580(void);
 void func_8026D5B4(s32 arg0);
 s32 func_8026D5C0(s32 arg0, s32 arg1, s32 arg2);
 s32 func_8026D5F8(s32 arg0, s32 arg1, s32 arg2);
-void func_8026D620(s32 arg0, s32 arg1, s32 arg2, u16 arg3);
+void func_8026D620(s32 arg0, s32 arg1, s32 arg2, s32 arg3);
 void func_8026D6C0(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5);
-u16 func_8026D7D8(s32 arg0, s32 arg1, s32 arg2);
+s32 func_8026D7D8(s32 arg0, s32 arg1, s32 arg2);
 void func_8026D92C(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5, s32 arg6, s32 arg7);
 void func_8026DA1C(u8 *arg0, s32 arg1, s32 arg2, s32 arg3);
 void func_8026DA2C(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5);
@@ -740,16 +740,15 @@ u16 func_8026EF50(f32 arg0, f32 arg1, f32 arg2) {
 }
 
 void func_8026EEF0(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
-    u16 temp_v0;
-    u16 var_a3;
+    s32 v;
 
-    temp_v0 = func_8026D7D8(arg0, arg1, arg2);
+    v = func_8026D7D8(arg0, arg1, arg2);
     if (arg4 == 1) {
-        var_a3 = temp_v0 | arg3;
+        v |= arg3;
     } else {
-        var_a3 = temp_v0 & (arg3 ^ 0xFFFF);
+        v &= ~arg3;
     }
-    func_8026D620(arg0, arg1, arg2, var_a3);
+    func_8026D620(arg0, arg1, arg2, v);
 }
 
 u8 func_8026EE18(f32 arg0) {
@@ -993,7 +992,7 @@ void func_8026E6E4(u8 *arg0, f32 *arg1, f32 *arg2) {
     f32 temp_fs4;
     f32 var_fs0;
     s32 temp_v1;
-    u16 temp_v0;
+    s32 temp_v0;
 
     temp_fs3 = M2C_FIELD(arg0, f32 *, 0x10);
     var_fs0 = M2C_FIELD(arg0, f32 *, 0x14);
@@ -1493,7 +1492,7 @@ void func_8026D92C(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5, s
     }
 }
 
-u16 func_8026D7D8(s32 arg0, s32 arg1, s32 arg2) {
+s32 func_8026D7D8(s32 arg0, s32 arg1, s32 arg2) {
     s32 var_v1;
     u16 var_a0;
 
@@ -1527,8 +1526,13 @@ void func_8026D6C0(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) {
     }
 }
 
-void func_8026D620(s32 arg0, s32 arg1, s32 arg2, u16 arg3) {
-    D_800B15D8[arg1].unk12[func_8026D5F8(arg0, arg1, arg2)].unk2[func_8026D5C0(arg0, arg1, arg2)] = arg3;
+void func_8026D620(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
+    s32 cell;
+    s32 slot;
+
+    cell = func_8026D5F8(arg0, arg1, arg2);
+    slot = func_8026D5C0(arg0, arg1, arg2);
+    D_800B15D8[arg1].unk12[cell].unk2[slot] = arg3;
 }
 
 s32 func_8026D5F8(s32 arg0, s32 arg1, s32 arg2) {
