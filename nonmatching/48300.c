@@ -6,7 +6,7 @@
  * boxes, func_8022E884). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1430, eu 1430, jp 1430
+ * differing words: us 1400, eu 1400, jp 1400
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does (the stubs at 0x8022E0A4-0x8022E87C are
@@ -18,8 +18,9 @@
  *     func_802304C0, D_802A5560-70 in func_80230604, D_802A57A0-A8 and
  *     D_802A5734/58/8C in func_8023017C) are reached with lui/%lo at
  *     every access, as the original does;
- *   - func_80232FF8 and func_80232FA8 are global: as statics IPA moved
- *     func_80232FF8's register saves into func_802334CC;
+ *   - func_80232FF8, func_80232FA8 and func_802312AC are global: as
+ *     statics IPA moved func_80232FF8's register saves into
+ *     func_802334CC, and func_802312AC would get only t6-t9;
  *   - float sums are written (a*b + c*d + e*f) + g, and int and float
  *     constants (90, 0 in compares) are kept apart as the original's are.
  * Biggest left: func_8022E884 (758 words: the original reaches case 1's
@@ -27,7 +28,7 @@
  * keep them in s registers), func_80231D88 with its static func_802320A8 (477: the
  * original promotes a loop variable to fs3 and doesn't hoist 90.0f),
  * func_8022FF58 with func_8023017C (72: colouring, and the argument
- * a3 is set first in the original's calls), func_80231274 (30),
+ * a3 is set first in the original's calls),
  * func_8022FC90 (14: the found value belongs in v0), func_80232E60 (12:
  * IDO inlines func_8022DB00 into it, the original doesn't).
  */
@@ -235,7 +236,7 @@ void *func_8023116C(s32 arg0, s32 arg1, f32 arg2, f32 arg3, f32 arg4);
 void *func_802311E8(u8 *arg0);
 void func_80231244(s32 arg0, s32 arg1, s32 arg2, s32 arg3);
 void func_80231274(s32 arg0, s32 arg1, s32 arg2, s32 arg3);
-static void func_802312AC(u8 *arg0);
+void func_802312AC(u8 *arg0);
 void func_802313B0(u8 *arg0, s32 arg1);
 void func_802313DC(u8 *arg0, s32 arg1);
 void func_80231408(u8 *arg0, s32 arg1);
@@ -1071,37 +1072,32 @@ void func_802313B0(u8 *arg0, s32 arg1) {
     func_802312AC(arg0);
 }
 
-static void func_802312AC(u8 *arg0) {
-    u8 *temp_a0;
-    u8 *temp_a0_2;
-    u8 *temp_a0_3;
-    u8 *temp_a0_4;
-    u8 *temp_a0_5;
-    u8 *temp_a0_6;
+void func_802312AC(u8 *arg0) {
+    u8 *p;
 
     if (M2C_FIELD(arg0, s32 *, 8) & 0x04000000) {
-        temp_a0 = M2C_FIELD(arg0, void **, 0x40);
-        M2C_FIELD(temp_a0, s32 *, 0xC) = (s32) (M2C_FIELD(temp_a0, s32 *, 0xC) & ~0x40);
+        p = M2C_FIELD(arg0, void **, 0x40);
+        M2C_FIELD(p, s32 *, 0xC) &= ~0x40;
     } else {
-        temp_a0_2 = M2C_FIELD(arg0, void **, 0x40);
-        M2C_FIELD(temp_a0_2, s32 *, 0xC) = (s32) (M2C_FIELD(temp_a0_2, s32 *, 0xC) | 0x40);
+        p = M2C_FIELD(arg0, void **, 0x40);
+        M2C_FIELD(p, s32 *, 0xC) |= 0x40;
     }
     if (M2C_FIELD(arg0, s32 *, 8) & 0x08000000) {
-        temp_a0_3 = M2C_FIELD(arg0, void **, 0x40);
-        M2C_FIELD(temp_a0_3, s32 *, 0xC) = (s32) (M2C_FIELD(temp_a0_3, s32 *, 0xC) & ~0x20);
+        p = M2C_FIELD(arg0, void **, 0x40);
+        M2C_FIELD(p, s32 *, 0xC) &= ~0x20;
     } else {
-        temp_a0_4 = M2C_FIELD(arg0, void **, 0x40);
-        M2C_FIELD(temp_a0_4, s32 *, 0xC) = (s32) (M2C_FIELD(temp_a0_4, s32 *, 0xC) | 0x20);
+        p = M2C_FIELD(arg0, void **, 0x40);
+        M2C_FIELD(p, s32 *, 0xC) |= 0x20;
     }
     if (M2C_FIELD(arg0, s32 *, 8) & 0x80000) {
-        temp_a0_5 = M2C_FIELD(arg0, void **, 0x40);
-        if (M2C_FIELD(temp_a0_5, s32 *, 8) != 0x60) {
-            func_8022946C(temp_a0_5, 0x60);
+        p = M2C_FIELD(arg0, void **, 0x40);
+        if (M2C_FIELD(p, s32 *, 8) != 0x60) {
+            func_8022946C(p, 0x60);
         }
     } else {
-        temp_a0_6 = M2C_FIELD(arg0, void **, 0x40);
-        if (M2C_FIELD(temp_a0_6, s32 *, 8) != 0x40) {
-            func_8022946C(temp_a0_6, 0x40);
+        p = M2C_FIELD(arg0, void **, 0x40);
+        if (M2C_FIELD(p, s32 *, 8) != 0x40) {
+            func_8022946C(p, 0x40);
         }
     }
 }
