@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1552, eu 1552, jp 1549
+ * differing words: us 1538, eu 1538, jp 1535
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -2643,7 +2643,6 @@ void func_8023CD1C() {
     s32 i;
     s32 v;
     s32 d;
-    s32 q;
     s32 t;
 
     n = 0;
@@ -2651,9 +2650,8 @@ void func_8023CD1C() {
         v = D_802AC660.unk2C;
         d = 1;
         for (i = 0; i < 1; i++) {
-            q = v / d;
-            D_802AC770[n++] = q * 2;
-            t = q * d;
+            D_802AC770[n++] = v / d * 2;
+            t = v / d * d;
             if (v >= t) {
                 v -= t;
             }
@@ -2663,9 +2661,8 @@ void func_8023CD1C() {
         v = D_802AC660.unk30;
         d = 10;
         for (i = 0; i < 2; i++) {
-            q = v / d;
-            D_802AC770[n++] = q * 2;
-            t = q * d;
+            D_802AC770[n++] = v / d * 2;
+            t = v / d * d;
             if (v >= t) {
                 v -= t;
             }
