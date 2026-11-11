@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 7279, eu 7279, jp 7239
+ * differing words: us 7273, eu 7273, jp 7233
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -3779,11 +3779,11 @@ static void func_802530A8(f32 *arg0) {
             dist = M2C_FIELD(arg0, f32 *, 0x74);
             side = func_80252658((f32 *) ((u8 *)arg0 + 0x68), (f32 *) ((u8 *)arg0 + 0x20));
             if (M2C_FIELD(arg0, f32 *, 0x20) < M2C_FIELD(arg0, f32 *, 0x68)) {
-                angle = -(M2C_FIELD(arg0, f32 *, 0x20) - M2C_FIELD(arg0, f32 *, 0x68));
+                wrap = -(M2C_FIELD(arg0, f32 *, 0x20) - M2C_FIELD(arg0, f32 *, 0x68));
             } else {
-                angle = M2C_FIELD(arg0, f32 *, 0x20) - M2C_FIELD(arg0, f32 *, 0x68);
+                wrap = M2C_FIELD(arg0, f32 *, 0x20) - M2C_FIELD(arg0, f32 *, 0x68);
             }
-            if (angle > 50.0f) {
+            if (wrap > 50.0f) {
                 if ((side & 1) && func_80252CD4((u8 *) arg0, 90.0f)) {
                     M2C_FIELD(arg0, f32 *, 0x74) = 90.0f;
                 } else if (!(side & 1) && func_80252CD4((u8 *) arg0, 270.0f)) {
