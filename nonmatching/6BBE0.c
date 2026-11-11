@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 7267, eu 7267, jp 7227
+ * differing words: us 7246, eu 7246, jp 7206
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -3907,13 +3907,13 @@ static void func_802530A8(f32 *arg0) {
                 }
                 limit = (f32) range * 110.0f;
                 if (dist <= limit) {
-                    angle = dist * 0.01f;
-                    if (angle >= 0) {
-                        angle = angle + 0.5f;
+                    wrap = dist * 0.01f;
+                    if (wrap >= 0) {
+                        wrap = wrap + 0.5f;
                     } else {
-                        angle = angle - 0.5f;
+                        wrap = wrap - 0.5f;
                     }
-                    range = (range - (s32) angle) + 1;
+                    range = (range - (s32) wrap) + 1;
                     dir = func_802519B4(M2C_FIELD(arg0, f32 *, 0x74));
                     if (func_80252AF8(dir, (s32 *) ((u8 *)arg0 + 0x38), range) != 0) {
                         dir = func_80252BF8(dir ^ 4, (s32 *) ((u8 *)arg0 + 0x38));
@@ -3976,13 +3976,13 @@ static void func_802530A8(f32 *arg0) {
                 }
                 if (dist <= (f32) range * 110.0f) {
                     limit = (f32) range * 110.0f;
-                    angle = dist * 0.01f;
-                    if (angle >= 0) {
-                        angle = angle + 0.5f;
+                    wrap = dist * 0.01f;
+                    if (wrap >= 0) {
+                        wrap = wrap + 0.5f;
                     } else {
-                        angle = angle - 0.5f;
+                        wrap = wrap - 0.5f;
                     }
-                    range = (range - (s32) angle) + 1;
+                    range = (range - (s32) wrap) + 1;
                     dir = func_802519B4(M2C_FIELD(arg0, f32 *, 0x74));
                     if (func_80252AF8(dir, (s32 *) ((u8 *)arg0 + 0x38), range) != 0) {
                         dir = func_80252BF8(dir ^ 4, (s32 *) ((u8 *)arg0 + 0x38));
