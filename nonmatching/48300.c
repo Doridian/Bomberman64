@@ -6,7 +6,7 @@
  * boxes, func_8022E884). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3549, eu 3549, jp 3549
+ * differing words: us 3419, eu 3419, jp 3419
  *
  * A first draft: functions in the reverse of the ROM's order, which IDO
  * now emits exactly as the original does (stubs included); a handful by
@@ -68,6 +68,17 @@ typedef struct UnkStructA80 {
     /* 0x7C */ struct UnkStructA80 *unk7C;
 } UnkStructA80; /* size 0x80 */
 
+/* A screen rectangle (0x40 bytes from func_8022A6C4). */
+typedef struct {
+    /* 0x00 */ u8 pad0[0x10];
+    /* 0x10 */ f32 x0;
+    /* 0x14 */ f32 y0;
+    /* 0x18 */ f32 x1;
+    /* 0x1C */ f32 y1;
+    /* 0x20 */ f32 unk20;
+    /* 0x24 */ f32 unk24;
+} Rect40;
+
 
 
 
@@ -107,7 +118,7 @@ f32 sqrtf(f32);
 extern UnkStructA80 D_800A3F00[];
 extern f32 D_800A7F00;
 extern s32 D_800A7F04;
-extern void *D_800A7F08;
+extern Rect40 *D_800A7F08[8];
 extern void *D_800A7F28;
 extern u8 D_8029FD40[];
 extern f32 *D_802A5560;
@@ -140,7 +151,7 @@ extern s32 D_802A5938;
 void func_8022DB00(void);
 static void func_8022DB28(void);
 void func_8022DBBC(s32 arg0);
-static void func_8022DBF4(u8 **arg0, f32 arg1, f32 arg2, s32 *arg3, s32 arg4);
+static void func_8022DBF4(Rect40 **arg0, f32 arg1, f32 arg2, s32 *arg3, s32 arg4);
 static void func_8022DD6C(void);
 void func_8022DDB4(s32 arg0);
 void func_8022DE00(void);
@@ -2557,37 +2568,29 @@ s32 func_8022E884(UnkStructA80 *arg0, UnkStructA80 *arg1) {
 }
 
 void func_8022DE6C() {
-    void **var_s0;
-    u8 *temp_t8;
-    u8 *temp_v0;
+    s32 i;
 
     if (!(*func_8023A840() & 2)) {
         D_800A7F28 = func_8026CE28(0x34E);
-        var_s0 = &D_800A7F08;
-        do {
-            temp_v0 = func_8022A6C4(D_800A7F28, 0x40);
-            *var_s0 = temp_v0;
-            M2C_FIELD(temp_v0, f32 *, 0x10) = 291.0f;
-            temp_t8 = *var_s0;
-            var_s0 += 4;
-            M2C_FIELD(temp_t8, f32 *, 0x14) = 56.0f;
-            M2C_FIELD(M2C_FIELD(var_s0, void **, -4), f32 *, 0x18) = 291.0f;
-            M2C_FIELD(M2C_FIELD(var_s0, void **, -4), f32 *, 0x1C) = 56.0f;
-            M2C_FIELD(M2C_FIELD(var_s0, void **, -4), f32 *, 0x20) = 0.0f;
-            M2C_FIELD(M2C_FIELD(var_s0, void **, -4), f32 *, 0x24) = 0.0f;
-        } while ((void *) var_s0 != (void *) &D_800A7F28);
+        for (i = 0; i < 8; i++) {
+            D_800A7F08[i] = func_8022A6C4(D_800A7F28, 0x40);
+            D_800A7F08[i]->x0 = 291.0f;
+            D_800A7F08[i]->y0 = 56.0f;
+            D_800A7F08[i]->x1 = 291.0f;
+            D_800A7F08[i]->y1 = 56.0f;
+            D_800A7F08[i]->unk20 = 0.0f;
+            D_800A7F08[i]->unk24 = 0.0f;
+        }
     }
 }
 
 void func_8022DE00() {
-    void **var_s0;
+    s32 i;
 
-    var_s0 = &D_800A7F08;
     if (!(*func_8023A840() & 2)) {
-        do {
-            func_8022A1E8(*var_s0);
-            var_s0 += 4;
-        } while ((void *) var_s0 != (void *) &D_800A7F28);
+        for (i = 0; i < 8; i++) {
+            func_8022A1E8(D_800A7F08[i]);
+        }
         func_8026CCBC(0x34E);
         D_800A7F28 = NULL;
     }
@@ -2600,51 +2603,46 @@ void func_8022DDB4(s32 arg0) {
 }
 
 static void func_8022DD6C() {
-    func_8022DBF4(&D_800A7F08, 291.0f, 56.0f, func_802391F0(), 0);
+    func_8022DBF4(D_800A7F08, 291.0f, 56.0f, func_802391F0(), 0);
     func_80239430();
 }
 
-static void func_8022DBF4(u8 **arg0, f32 arg1, f32 arg2, s32 *arg3, s32 arg4) {
-    f32 temp_fv0;
-    s32 var_at;
-    s32 var_s0;
-    s32 var_s1;
-    s32 var_v0;
-    u8 *temp_s2;
+static void func_8022DBF4(Rect40 **arg0, f32 arg1, f32 arg2, s32 *arg3, s32 arg4) {
+    Rect40 *r;
+    s32 cur;
+    s32 tgt;
+    s32 n;
+    f32 f;
 
-    temp_s2 = *arg0;
-    var_s0 = 0;
-loop_1:
-    var_s1 = 8;
-    var_v0 = *arg3 - arg4;
-    var_at = var_v0 < 3;
-    if (var_v0 < 0) {
-        var_v0 = 0;
-        var_at = 0 < 3;
-    }
-    if (var_at != 0) {
-        var_s1 = var_v0 * 4;
-    }
-    if (var_s0 != var_s1) {
-block_7:
-        if ((var_s0 == var_s1) && (var_v0 >= 3)) {
-            func_8022DBF4(arg0 + 4, arg1, arg2 + 16.0f + 4.0f, arg3, arg4 + 2);
+    r = *arg0;
+    cur = 0;
+    while (TRUE) {
+        n = *arg3 - arg4;
+        if (n < 0) {
+            n = 0;
         }
-        if (var_s0 < var_s1) {
-            var_s0 += 1;
-        } else if (var_s1 < var_s0) {
-            var_s0 -= 1;
+        if (n < 3) {
+            tgt = n * 4;
+        } else {
+            tgt = 8;
         }
-        temp_fv0 = (f32) var_s0;
-        M2C_FIELD(temp_s2, f32 *, 0x10) = (f32) (arg1 - temp_fv0);
-        M2C_FIELD(temp_s2, f32 *, 0x14) = (f32) (arg2 - temp_fv0);
-        M2C_FIELD(temp_s2, f32 *, 0x18) = (f32) (temp_fv0 + arg1);
-        M2C_FIELD(temp_s2, f32 *, 0x1C) = (f32) (temp_fv0 + arg2);
+        if (cur == tgt && n == 0) {
+            break;
+        }
+        if (cur == tgt && n >= 3) {
+            func_8022DBF4(arg0 + 1, arg1, arg2 + 16.0f + 4.0f, arg3, arg4 + 2);
+        }
+        if (cur < tgt) {
+            cur++;
+        } else if (tgt < cur) {
+            cur--;
+        }
+        f = cur;
+        r->x0 = arg1 - f;
+        r->y0 = arg2 - f;
+        r->x1 = f + arg1;
+        r->y1 = f + arg2;
         func_8023903C(2);
-        goto loop_1;
-    }
-    if (var_v0 != 0) {
-        goto block_7;
     }
 }
 
@@ -2653,23 +2651,18 @@ void func_8022DBBC(s32 arg0) {
 }
 
 static void func_8022DB28() {
-    s32 temp_s2;
-    s32 temp_s3;
-    s32 var_s0;
-    u8 *temp_s1;
-    u8 *temp_v0;
+    s32 *args;
+    Rect40 *r;
+    s32 id;
+    s32 n;
+    s32 i;
 
-    temp_v0 = func_802391F0();
-    temp_s1 = M2C_FIELD(temp_v0, void **, 0);
-    temp_s3 = M2C_FIELD(temp_v0, s32 *, 8);
-    temp_s2 = func_8026C51C(M2C_FIELD(temp_v0, s32 *, 4), M2C_FIELD(temp_s1, f32 *, 0x10), M2C_FIELD(temp_s1, f32 *, 0x14), M2C_FIELD(temp_s1, f32 *, 0x18));
-    var_s0 = 0;
-    if (temp_s3 > 0) {
-        do {
-            func_8026C454(temp_s2, M2C_FIELD(temp_s1, f32 *, 0x10), M2C_FIELD(temp_s1, f32 *, 0x14), M2C_FIELD(temp_s1, f32 *, 0x18));
-            func_80239094();
-            var_s0 += 1;
-        } while (var_s0 != temp_s3);
+    args = (s32 *) func_802391F0();
+    r = (Rect40 *) args[0]; id = args[1]; n = args[2];
+    id = func_8026C51C(id, r->x0, r->y0, r->x1);
+    for (i = 0; i < n; i++) {
+        func_8026C454(id, r->x0, r->y0, r->x1);
+        func_80239094();
     }
     func_80239430();
 }
