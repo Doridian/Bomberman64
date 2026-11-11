@@ -84,8 +84,8 @@ typedef s32 M2C_UNK32;
 #define _SHIFTR(v, s, w) ((unsigned int)(((unsigned int)(v) >> (s)) & ((0x01 << (w)) - 1)))
 #include "ultralib/PR/gbi.h"
 
-/* gSPTextureRectangle with yh's term before xh's in the first word (the
- * order the original evaluates them in). */
+/* gSPTextureRectangle with the y terms before the x terms in both words
+ * (the order the original evaluates them in). */
 #define gSPTextureRectangleYX(pkt, xl, yl, xh, yh, tile, s, t, dsdx, dtdy) \
 { \
     Gfx *_g = (Gfx *)(pkt); \
