@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 895, eu 895, jp 895
+ * differing words: us 892, eu 892, jp 892
  *
  * The object is the same in all three versions. 66 of the 79 original
  * procedures match (stubs included). The IPA statics
@@ -435,7 +435,7 @@ s32 func_80266CFC(void);
 s16 func_80266D0C(s16 arg0);
 static s16 func_80266D8C(u8 prio, s32 arg1);
 static s32 func_80267064(s8 vol);
-static void func_8026706C(SndDef *def, s16 num);
+static void func_8026706C(s16 num, SndDef *def);
 s16 func_8026724C(s16 num);
 s16 func_802675F4(s16 arg0, s16 arg1, f32 arg2);
 void func_80267654(s16 arg0, f32 arg1, f32 arg2, f32 arg3, f32 arg4);
@@ -1570,7 +1570,7 @@ static void func_80268440(s16 idx) {
     v->flags &= ~0x1000;
     v->state = 0;
     if (D_802AD650->magic == 0x5431 || D_802AD650->magic == 0x5432) {
-        func_8026706C(&def, v->num);
+        func_8026706C(v->num, &def);
         v->sound = def.sound;
     } else {
         v->sound = func_80268438(v->num);
@@ -1816,7 +1816,7 @@ static s16 func_80267A10(s16 num) {
     if (num >= D_802AD650->count || num < 0) {
         return -1;
     }
-    func_8026706C(&def, num);
+    func_8026706C(num, &def);
     return func_80266D8C(def.prio, 1);
 }
 
@@ -1982,7 +1982,7 @@ s16 func_8026724C(s16 num) {
         return -1;
     }
     if (D_802AD650->magic == 0x5431 || D_802AD650->magic == 0x5432) {
-        func_8026706C(&def, num);
+        func_8026706C(num, &def);
         idx = func_80266D8C(def.prio, 0);
         if (idx < 0) {
             return -1;
@@ -2047,7 +2047,7 @@ s16 func_8026724C(s16 num) {
     return idx;
 }
 
-static void func_8026706C(SndDef *def, s16 num) {
+static void func_8026706C(s16 num, SndDef *def) {
     SndEntry *e;
     SndBank *bank;
     SndInst *inst;
