@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3277, eu 3277, jp 3277
+ * differing words: us 3207, eu 3207, jp 3207
  */
 #include "common.h"
 
@@ -294,8 +294,7 @@ static void func_80283304();
 void func_8028330C();
 static void func_80283784();
 void func_8028378C();
-static void func_80283AFC();
-static void func_80283DE8();
+static s32 func_80283AFC(UnkStructA_40 *p, Vec3f *arg1);
 static s32 func_80283F28(UnkStruct_80288040 *arg0);
 static void func_80283F30(UnkStruct_80288040 *arg0);
 static void func_80283FAC();
@@ -307,7 +306,7 @@ void func_80284234();
 static void func_8028423C();
 void func_80284244();
 static void func_8028424C();
-void func_80284254();
+static s32 func_80284254(UnkStruct_80288040 *arg0);
 static void func_802847DC();
 static void func_802848D8();
 void func_802848E0();
@@ -1491,7 +1490,58 @@ static void func_80284244() {
 static void func_8028424C() {
 }
 
-static void func_80284254() {
+static s32 func_80284254(UnkStruct_80288040 *arg0) {
+    switch (func_80283D9C(arg0)) {
+    case 1:
+        switch (arg0->unk1F) {
+        case 0:
+            return 1;
+        case 1:
+            return 2;
+        case 2:
+            return 3;
+        case 3:
+            return 4;
+        case 4:
+            return 2;
+        case 5:
+            return 4;
+        }
+        break;
+    case 2:
+        switch (arg0->unk1F) {
+        case 20:
+            return 1;
+        case 21:
+            return 2;
+        case 22:
+            return 3;
+        case 23:
+            return 4;
+        case 24:
+            return 4;
+        case 25:
+            return 6;
+        }
+        break;
+    case 3:
+        switch (arg0->unk1F) {
+        case 40:
+            return 0;
+        case 41:
+            return 2;
+        case 42:
+            return 6;
+        case 43:
+            return 3;
+        case 44:
+            return 4;
+        case 45:
+            return 2;
+        }
+        break;
+    }
+    return 0;
 }
 
 static void func_8028425C(UnkStruct_80288040 *arg0) {
@@ -1499,7 +1549,6 @@ static void func_8028425C(UnkStruct_80288040 *arg0) {
     s32 r;
     s32 x;
 
-    func_80284254();
     func_8028424C();
     func_80284244();
     func_8028423C();
@@ -1510,86 +1559,7 @@ static void func_8028425C(UnkStruct_80288040 *arg0) {
         ((u8) (s32) ((arg0->unk0->unk40->unk18 + 50.0f) * 0.01) != arg0->unk18)) {
         arg0->unk10 = x;
         arg0->unk18 = (u8) (s32) ((arg0->unk0->unk40->unk18 + 50.0f) * 0.01);
-        switch (func_80283D9C(arg0)) {
-        case 1:
-            switch (arg0->unk1F) {
-            case 0:
-                n = 1;
-                break;
-            case 1:
-                n = 2;
-                break;
-            case 2:
-                n = 3;
-                break;
-            case 3:
-                n = 4;
-                break;
-            case 4:
-                n = 2;
-                break;
-            case 5:
-                n = 4;
-                break;
-            default:
-                n = 0;
-                break;
-            }
-            break;
-        case 2:
-            switch (arg0->unk1F) {
-            case 20:
-                n = 1;
-                break;
-            case 21:
-                n = 2;
-                break;
-            case 22:
-                n = 3;
-                break;
-            case 23:
-                n = 4;
-                break;
-            case 24:
-                n = 4;
-                break;
-            case 25:
-                n = 6;
-                break;
-            default:
-                n = 0;
-                break;
-            }
-            break;
-        case 3:
-            switch (arg0->unk1F) {
-            case 40:
-                n = 0;
-                break;
-            case 41:
-                n = 2;
-                break;
-            case 42:
-                n = 6;
-                break;
-            case 43:
-                n = 3;
-                break;
-            case 44:
-                n = 4;
-                break;
-            case 45:
-                n = 2;
-                break;
-            default:
-                n = 0;
-                break;
-            }
-            break;
-        default:
-            n = 0;
-            break;
-        }
+        n = func_80284254(arg0);
         arg0->unk20++;
         if (n == 0) {
             arg0->unk1C |= 1;
@@ -1607,7 +1577,6 @@ static void func_8028425C(UnkStruct_80288040 *arg0) {
         }
     }
 }
-
 static void func_80283FAC() {
 }
 
@@ -1638,8 +1607,8 @@ static void func_80283FCC(UnkStruct_80288040 *arg0) {
     if (D_800BA8E8[arg0->unk84].unk0 == 0x1C) {
         q = func_8022F550(arg0->unk0, 0xF);
         if (q == NULL) {
-            if (arg0->unk0->unk20 != NULL) {
-                q = arg0->unk0->unk20;
+            if (*(UnkStructA **) arg0->unk0->unk20 != NULL) {
+                q = *(UnkStructA **) arg0->unk0->unk20;
             }
         }
         if ((q != NULL) && (func_8022F4AC(q, 0x10, arg0->unk0) == 0)) {
@@ -1693,11 +1662,7 @@ static void func_80283F38(UnkStruct_80288040 *arg0) {
     func_80283F30(arg0);
 }
 
-static void func_80283DE8() {
-}
-
 static void func_80283DF0(s32 arg0, UnkStruct_80288040 *arg1) {
-    func_80283DE8();
     if (arg0 == 0) {
         func_802836F0(arg1, 0);
     } else if (arg0 == 2) {
@@ -1768,42 +1733,38 @@ static void func_80283CF0(UnkStruct_80288040 *arg0) {
     }
 }
 
-static void func_80283AFC() {
+static s32 func_80283AFC(UnkStructA_40 *p, Vec3f *arg1) {
+    if ((p->unk10 + 50.0f) < arg1->x) {
+        if ((p->unk18 + 50.0f) < arg1->z) {
+            return 3;
+        } else if (arg1->z < (p->unk18 - 50.0f)) {
+            return 1;
+        } else {
+            return 2;
+        }
+    } else if (arg1->x < (p->unk10 - 50.0f)) {
+        if ((p->unk18 + 50.0f) < arg1->z) {
+            return 5;
+        } else if (arg1->z < (p->unk18 - 50.0f)) {
+            return 7;
+        } else {
+            return 6;
+        }
+    }
+    if (p->unk18 < arg1->z) {
+        return 4;
+    }
+    return 0;
 }
 
 void func_80283B04(UnkStruct_80288040 *arg0, Vec3f *arg1) {
-    UnkStructA_40 *p;
     s32 failed;
     s32 i;
     s32 dir;
     s32 d;
 
-    func_80283AFC();
-    p = arg0->unk0->unk40;
     failed = 1;
-    if ((p->unk10 + 50.0f) < arg1->x) {
-        if ((p->unk18 + 50.0f) < arg1->z) {
-            dir = 3;
-        } else if (arg1->z < (p->unk18 - 50.0f)) {
-            dir = 1;
-        } else {
-            dir = 2;
-        }
-    } else if (arg1->x < (p->unk10 - 50.0f)) {
-        if ((p->unk18 + 50.0f) < arg1->z) {
-            dir = 5;
-        } else if (arg1->z < (p->unk18 - 50.0f)) {
-            dir = 7;
-        } else {
-            dir = 6;
-        }
-    } else {
-        dir = 0;
-        if (p->unk18 < arg1->z) {
-            dir = 4;
-        }
-    }
-    dir &= 0xFF;
+    dir = func_80283AFC(arg0->unk0->unk40, arg1) & 0xFF;
     for (i = 0; i < 4; i++) {
         d = dir + i;
         if (d >= 8) {
@@ -1831,7 +1792,6 @@ void func_80283B04(UnkStruct_80288040 *arg0, Vec3f *arg1) {
         func_802836F0(NULL, 0);
     }
 }
-
 static void func_80283784() {
 }
 
