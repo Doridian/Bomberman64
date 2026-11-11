@@ -9,17 +9,15 @@
  * callers) and leave their 8-byte stubs. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2, eu 2, jp 2
+ * differing words: us 0, eu 0, jp 0
  *
- * 14 of 15 functions match. func_8027BF38: `move v1,a0` is scheduled
- * one slot earlier in the name-copy loop (2 words): uopt emits the
- * preheader's dst copy before the src address (the original has the
- * reverse), and as1 keeps that order. Hand-edited asm with the two
- * swapped, or either given its own .loc, matches. A named pointer for
- * the dst gives the right order but is strength-reduced with the i
- * loop's pointer (+4, not the a0 = dir + i * 28 CSE). Tried without
- * effect: #line/split for headers, dead reads everywhere, expression
- * spellings of the copy, temporaries.
+ * All 15 functions match (fcmp); not yet moved to src/.
+ * func_8027BF38's name copy indexes the dst with `(u32) j`: uopt emits
+ * a loop preheader's induction inits in the bit order of their target
+ * expressions, and without the cast the name loop's dst address is the
+ * same expression as the ext loop's (offsets fold into the sb), so it
+ * kept the ext loop's dst-before-src order. The cast makes it a new
+ * expression, created after the (shared) src one.
  * func_8027C900 matches with `do {` on the header's line: the hoisted
  * loop constants then carry the prologue's .loc and go ahead of `sw ra`.
  * The empty stubs' parameters (func_8027C4EC's two, func_8027CBC4's
@@ -531,7 +529,7 @@ s32 func_8027BF38(PakDir *dir) {
                     }
                     for (j = 0; j < 16; j++) {
                         if (dir) {}
-                        dir->files[i].name[j] = state.game_name[j];
+                        dir->files[i].name[(u32) j] = state.game_name[j];
                     }
                 } else {
                     dir->files[i].used = 0;
