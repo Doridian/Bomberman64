@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 7061, eu 7061, jp 7021
+ * differing words: us 7055, eu 7055, jp 7015
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -4446,9 +4446,10 @@ static s32 func_80252AF8(s32 arg0, s32 *arg1, s32 arg2) {
 
 static s32 func_802529A4(u8 *arg0, s32 arg1, s32 arg2, f32 arg3) {
     f32 sp3C;
+    u8 *temp_v0;
+    s32 side;
     f32 sp28[3];
     f32 sp1C[3];
-    u8 *temp_v0;
 
     temp_v0 = func_8022FA88(arg0, arg1, &sp3C);
     if ((temp_v0 != NULL) && (sp3C <= arg3)) {
@@ -4458,7 +4459,8 @@ static s32 func_802529A4(u8 *arg0, s32 arg1, s32 arg2, f32 arg3) {
         sp1C[0] = M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x10);
         sp1C[1] = M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x14);
         sp1C[2] = M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x18);
-        switch (func_80252658(sp1C, sp28)) {
+        side = func_80252658(sp1C, sp28);
+        switch (side) {
         case 0:
             if (arg2 >= 4 && arg2 < 7) {
                 return 1;
