@@ -6,7 +6,7 @@
  * boxes, func_8022E884). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1730, eu 1730, jp 1730
+ * differing words: us 1729, eu 1729, jp 1729
  *
  * A first draft: functions in the reverse of the ROM's order, which IDO
  * now emits exactly as the original does (stubs included); a handful by
@@ -201,7 +201,7 @@ void func_8022FC0C(s32 arg0);
 void func_8022FC18(void);
 static void func_8022FC20(u8 *arg0, s32 *arg1);
 static void func_8022FC50(u8 *arg0);
-s32 func_8022FC90(u8 *arg0);
+s32 func_8022FC90(UnkStructA80 *arg0);
 void func_8022FDE8(void);
 void func_8022FE94(s32 arg0);
 void func_8022FEA0(f32 arg0);
@@ -1580,13 +1580,13 @@ void func_8022FDE8() {
     temp_s0 = M2C_FIELD(&D_802A5578, void **, 0x7C);
     if (temp_s0 != NULL) {
         do {
-            func_8022FC90(temp_s0);
+            func_8022FC90((UnkStructA80 *) temp_s0);
         } while ((s32) M2C_FIELD(&D_802A5578, void **, 0x7C) != NULL);
     }
     temp_s0_2 = M2C_FIELD(&D_802A5678, void **, 0x7C);
     if (temp_s0_2 != NULL) {
         do {
-            func_8022FC90(temp_s0_2);
+            func_8022FC90((UnkStructA80 *) temp_s0_2);
         } while ((s32) M2C_FIELD(&D_802A5678, void **, 0x7C) != NULL);
     }
     D_802A5938 = 0;
@@ -1595,64 +1595,41 @@ void func_8022FDE8() {
     D_802A5804 = 1;
 }
 
-s32 func_8022FC90(u8 *arg0) {
-    s32 *sv_a1;
-    void *sv_a0;
-    u8 *temp_v0;
-    u8 *var_v0;
-    u8 *var_v1;
-    u8 *var_v1_2;
+s32 func_8022FC90(UnkStructA80 *arg0) {
+    UnkStructA80 *child;
+    UnkStructA80 *p;
 
     if (D_802A56FC <= 0) {
         return -1;
     }
-    M2C_FIELD(arg0, s32 *, 8) = 0;
-    sv_a0 = arg0;
-    func_8022FC50(arg0);
-    sv_a1 = &D_802A55F8;
-    func_8022FC20(arg0, &D_802A55F8);
-    func_8022A1E8(M2C_FIELD(arg0, void **, 0x40));
-    func_8026CCBC(M2C_FIELD(arg0, s32 *, 0x28));
-    temp_v0 = M2C_FIELD(arg0, void **, 0x44);
-    M2C_FIELD(arg0, s32 *, 0x28) = -1;
-    if (temp_v0 != NULL) {
-        M2C_FIELD(temp_v0, s32 *, 0x48) = (s32) (M2C_FIELD(temp_v0, s32 *, 0x48) - 1);
+    arg0->unk8 = 0;
+    func_8022FC50((u8 *) arg0);
+    func_8022FC20((u8 *) arg0, (s32 *) &D_802A55F8);
+    func_8022A1E8(arg0->unk40);
+    func_8026CCBC(arg0->unk28);
+    arg0->unk28 = -1;
+    if (arg0->unk44 != NULL) {
+        arg0->unk44->unk48--;
     }
-    if (M2C_FIELD(arg0, s32 *, 0x48) != 0) {
-        do {
-            var_v1 = M2C_FIELD(&D_802A5578, void **, 0x7C);
-            var_v0 = NULL;
-            if (var_v1 != NULL) {
-loop_7:
-                if ((s32) arg0 == M2C_FIELD(var_v1, s32 *, 0x44)) {
-                    var_v0 = var_v1;
-                } else {
-                    var_v1 = M2C_FIELD(var_v1, void **, 0x7C);
-                    if (var_v1 == NULL) {
-                        goto block_10;
-                    }
-                    goto loop_7;
-                }
-            } else {
-block_10:
-                var_v1_2 = M2C_FIELD(&D_802A5678, void **, 0x7C);
-                if (var_v1_2 != NULL) {
-loop_11:
-                    if ((s32) arg0 == M2C_FIELD(var_v1_2, s32 *, 0x44)) {
-                        var_v0 = var_v1_2;
-                    } else {
-                        var_v1_2 = M2C_FIELD(var_v1_2, void **, 0x7C);
-                        if (var_v1_2 != NULL) {
-                            goto loop_11;
-                        }
-                    }
-                }
+    while (arg0->unk48 != 0) {
+        child = NULL;
+        for (p = D_802A5578.unk7C; p != NULL; p = p->unk7C) {
+            if (p->unk44 == arg0) {
+                child = p;
+                goto found;
             }
-            func_8022FC90(var_v0);
-        } while (M2C_FIELD(arg0, s32 *, 0x48) != 0);
+        }
+        for (p = D_802A5678.unk7C; p != NULL; p = p->unk7C) {
+            if (p->unk44 == arg0) {
+                child = p;
+                break;
+            }
+        }
+    found:
+        func_8022FC90(child);
     }
-    D_802A56FC -= 1;
-    return M2C_FIELD(arg0, s32 *, 0);
+    D_802A56FC--;
+    return arg0->unk0;
 }
 
 static void func_8022FC50(u8 *arg0) {
@@ -1963,7 +1940,7 @@ void func_8022E364(f32 *a, f32 *b, f32 *c) {
 }
 
 f32 func_8022E330(f32 *a, f32 *b) {
-    return a[0] * b[0] + a[1] * b[1] + b[2] * a[2];
+    return a[2] * b[2] + (a[1] * b[1] + b[0] * a[0]);
 }
 
 void func_8022E328() {
