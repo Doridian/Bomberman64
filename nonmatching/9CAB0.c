@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2550, eu 2550, jp 2550
+ * differing words: us 2436, eu 2436, jp 2436
  */
 #include "common.h"
 
@@ -187,7 +187,7 @@ void func_80270C24(UnkStructA *, s32, s32);
 void func_802727D8(s32);
 void func_802733C8(void *);
 void func_8027B7C4(s32, f32, f32, f32);
-void func_8027F820(void);
+void func_8027F820(UnkStructA *);
 void func_8027F858(UnkStructA *, s32);
 void func_8028805C(void *);
 void func_802881A0(void *);
@@ -1071,11 +1071,14 @@ static s32 func_8028556C(s32 arg0) {
 }
 
 static s32 func_80284FCC(UnkStruct_80288040 *arg0) {
+    s32 r;
+
+    r = 0;
     if (arg0->unk0->unk10 & 0x40000000) {
-        func_8027F820();
-        return 1;
+        func_8027F820(arg0->unk0);
+        r = 1;
     }
-    return 0;
+    return r;
 }
 
 static s32 func_80284FD4(UnkStruct_80288040 *arg0) {
@@ -1084,7 +1087,6 @@ static s32 func_80284FD4(UnkStruct_80288040 *arg0) {
     f32 target;
     f32 step;
     f32 diff;
-    UnkStructA_40 *p;
 
     if (func_80284FCC(arg0)) {
         return 3;
@@ -1164,26 +1166,25 @@ static s32 func_80284FD4(UnkStruct_80288040 *arg0) {
             while (arg0->unk0->unk40->unk20 < 0.0f) {
                 arg0->unk0->unk40->unk20 += 360.0f;
             }
-            p = arg0->unk0->unk40;
-            if (target < p->unk20) {
-                diff = p->unk20 - target;
+            if (target < arg0->unk0->unk40->unk20) {
+                diff = arg0->unk0->unk40->unk20 - target;
                 if (diff < step) {
                     step = diff;
                 }
-                if (diff <= ((target + 360.0f) - p->unk20)) {
-                    p->unk20 -= step;
+                if (diff <= ((target + 360.0f) - arg0->unk0->unk40->unk20)) {
+                    arg0->unk0->unk40->unk20 -= step;
                 } else {
-                    p->unk20 += step;
+                    arg0->unk0->unk40->unk20 += step;
                 }
             } else {
-                diff = target - p->unk20;
+                diff = target - arg0->unk0->unk40->unk20;
                 if (diff < step) {
                     step = diff;
                 }
-                if (diff < ((p->unk20 + 360.0f) - target)) {
-                    p->unk20 += step;
+                if (diff < ((arg0->unk0->unk40->unk20 + 360.0f) - target)) {
+                    arg0->unk0->unk40->unk20 += step;
                 } else {
-                    p->unk20 -= step;
+                    arg0->unk0->unk40->unk20 -= step;
                 }
             }
         }
