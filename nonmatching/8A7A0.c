@@ -7,7 +7,7 @@
  * order. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 1024, eu 1024, jp 1024
+ * differing words: us 939, eu 939, jp 939
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file (475 words in the one-file draft, 39
@@ -1925,50 +1925,48 @@ s32 func_802702BC(s16 arg0) {
 }
 
 void *func_802700EC(u8 *arg0, u8 *arg1, s16 arg2, f32 arg3) {
-    s32 *temp_v0;
-    u8 *temp_v0_2;
-    u8 *temp_v0_3;
-    u8 *temp_v0_4;
+    Ctl87 *c;
+    Sub8E *t;
 
-    if (M2C_FIELD(arg0, s32 *, 8) & 0x20000) {
-loop_1:
-        func_80239094();
-        goto loop_1;
+    if (((Obj8E *) arg0)->unk8 & 0x20000) {
+        for (;;) {
+            func_80239094();
+        }
     }
-    temp_v0 = malloc(0x3C);
-    func_80270080(temp_v0);
-    M2C_FIELD(temp_v0, void **, 4) = arg0;
-    M2C_FIELD(temp_v0, void **, 8) = arg0;
-    M2C_FIELD(temp_v0, void **, 0xC) = arg0;
-    M2C_FIELD(temp_v0, s32 *, 0x10) = (s32) M2C_FIELD(arg0, s32 *, 8);
-    M2C_FIELD(temp_v0, s16 *, 0x14) = func_8026FFA0(arg2);
-    M2C_FIELD(temp_v0, f32 *, 0x18) = 22.5f;
-    M2C_FIELD(temp_v0, s32 *, 0x20) = 1;
-    M2C_FIELD(temp_v0, s16 *, 0x16) = 0;
-    M2C_FIELD(temp_v0, f32 *, 0x1C) = arg3;
-    M2C_FIELD(temp_v0, f32 *, 0x24) = 0.0f;
-    M2C_FIELD(temp_v0, s32 *, 0x30) = 0;
-    M2C_FIELD(temp_v0, f32 *, 0x2C) = 10000.0f;
-    M2C_FIELD(temp_v0, f32 *, 0x34) = (f32) M2C_FIELD(M2C_FIELD(arg0, void **, 0x40), f32 *, 0x10);
-    M2C_FIELD(temp_v0, f32 *, 0x38) = (f32) M2C_FIELD(M2C_FIELD(arg0, void **, 0x40), f32 *, 0x18);
-    if (M2C_FIELD(M2C_FIELD(arg1, void **, 0x40), f32 *, 0x14) <= M2C_FIELD(M2C_FIELD(arg0, void **, 0x40), f32 *, 0x14)) {
+    c = malloc(sizeof(Ctl87));
+    func_80270080((s32 *) c);
+    c->obj = (Obj8E *) arg0;
+    c->unk8 = (Obj8E *) arg0;
+    c->unkC = (Obj8E *) arg0;
+    c->flags = ((Obj8E *) arg0)->unk8;
+    c->unk14 = func_8026FFA0(arg2);
+    c->unk18 = 22.5f;
+    c->unk1C = arg3;
+    c->unk20 = 1;
+    c->unk16 = 0;
+    c->unk24 = 0.0f;
+    c->unk2C = 10000.0f;
+    c->unk30 = 0;
+    c->unk34 = ((Obj8E *) arg0)->unk40->x;
+    c->unk38 = ((Obj8E *) arg0)->unk40->z;
+    if (((Obj8E *) arg1)->unk40->y <= ((Obj8E *) arg0)->unk40->y) {
         func_80231408(arg0, 0x20000);
-        temp_v0_2 = M2C_FIELD(arg0, void **, 0x40);
-        M2C_FIELD(arg0, f32 *, 0x68) = 22.5f;
-        M2C_FIELD(arg0, f32 *, 0x6C) = 2.0f;
-        func_8028A81C(0, M2C_FIELD(temp_v0_2, f32 *, 0x10), M2C_FIELD(temp_v0_2, f32 *, 0x14) + 100.0f, M2C_FIELD(temp_v0_2, f32 *, 0x18), 0);
-        if (M2C_FIELD(arg0, s32 *, 8) & 2) {
-            temp_v0_3 = M2C_FIELD(arg0, void **, 0x40);
-            func_8026C51C(0x23, M2C_FIELD(temp_v0_3, f32 *, 0x10), M2C_FIELD(temp_v0_3, f32 *, 0x14), M2C_FIELD(temp_v0_3, f32 *, 0x18));
+        t = ((Obj8E *) arg0)->unk40;
+        ((Obj8E *) arg0)->unk68 = 22.5f;
+        ((Obj8E *) arg0)->unk6C = 2.0f;
+        func_8028A81C(0, t->x, t->y + 100.0f, t->z, 0);
+        if (((Obj8E *) arg0)->unk8 & 2) {
+            t = ((Obj8E *) arg0)->unk40;
+            func_8026C51C(0x23, t->x, t->y, t->z);
         } else {
-            temp_v0_4 = M2C_FIELD(arg0, void **, 0x40);
-            func_8026C51C(0x22, M2C_FIELD(temp_v0_4, f32 *, 0x10), M2C_FIELD(temp_v0_4, f32 *, 0x14), M2C_FIELD(temp_v0_4, f32 *, 0x18));
+            t = ((Obj8E *) arg0)->unk40;
+            func_8026C51C(0x22, t->x, t->y, t->z);
         }
     } else {
-        M2C_FIELD(arg0, f32 *, 0x68) = 0.0f;
-        M2C_FIELD(arg0, f32 *, 0x6C) = 2.0f;
+        ((Obj8E *) arg0)->unk68 = 0.0f;
+        ((Obj8E *) arg0)->unk6C = 2.0f;
     }
-    return temp_v0;
+    return c;
 }
 
 void func_80270080(s32 *arg0) {
