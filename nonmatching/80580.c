@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 84, eu 84, jp 84
+ * differing words: us 82, eu 82, jp 82
  *
  * The object is the same in all three versions. 70 of the 79 original
  * procedures match (stubs included). The IPA statics
@@ -1223,8 +1223,7 @@ void func_802691A8() {
             } else if (D_802AD240 != 0.0f) {
                 vol = D_802AD24A - D_802AD240;
                 if (vol != D_802AD246) {
-                    func_80298670(D_802AD220, (vol * D_802AD248) / 32767);
-                    D_802AD246 = vol;
+                    func_80298670(D_802AD220, (vol * D_802AD248) / 32767); D_802AD246 = vol;
                 }
             }
         }
