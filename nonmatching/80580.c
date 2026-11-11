@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2018, eu 2018, jp 2018
+ * differing words: us 1680, eu 1680, jp 1680
  *
  * The object is the same in all three versions. 66 of the 79 original
  * procedures match (stubs included). The IPA statics
@@ -844,10 +844,12 @@ static s32 func_8026A108(s32 size) {
     return 0;
 }
 
+static s32 func_80269A84(SndHeader *hdr);
+static s32 func_80269A7C(SndHeader *hdr);
 static s16 func_80269AFC() {
     s32 i;
     s32 j;
-    s32 k;
+    s16 k;
     s32 rc;
     s32 size;
     s32 rom;
@@ -855,6 +857,8 @@ static s16 func_80269AFC() {
     SndHeader *hdr;
     SndSound *snd;
     SndWave *wave;
+    s16 bi;
+    s16 ii;
 
     D_802AD658 = NULL;
     D_802A12BC = D_802A12B4 + D_802A12B8;
@@ -893,7 +897,7 @@ static s16 func_80269AFC() {
     switch (D_802AD650->magic) {
         case 0x5431:
             if (D_802A1348 == 0) {
-                break;
+                return 0;
             }
             size = D_802AD650->count * 8 + 4;
             if (func_80269A8C(size) != 0) {
@@ -915,90 +919,27 @@ static s16 func_80269AFC() {
                 return 1;
             }
             func_80269144(hdr, 0x1C, rom);
-            size = hdr->len;
-            hdr->rom += D_802A1344;
-            hdr->table += D_802A1344;
-            if (size == 0) {
-                D_802A1348 = 0;
-                rc = 1;
-            } else {
-                if (size & 1) {
-                    size++;
-                }
-                D_802AD648 = func_8026B72C(size);
-                if (D_802AD648 == NULL) {
-                    rc = 2;
-                } else {
-                    D_802A1348 = hdr->rom;
-                    func_80269144(D_802AD648, size, D_802A1348);
-                    for (k = 0; k < hdr->count * 0x10; k += 0x10) {
-                        snd = (SndSound *) ((u8 *) D_802AD648 + k);
-                        if (snd->flags == 0) {
-                            snd->flags = 1;
-                            snd->envelope = (u8 *) snd->envelope + (u32) D_802AD648;
-                            wave = snd->wavetable = (SndWave *) ((u8 *) snd->wavetable + (u32) D_802AD648);
-                            if (wave->flags == 0) {
-                                wave->flags = 1;
-                                wave->base += hdr->table;
-                                wave->book = (u8 *) wave->book + (u32) D_802AD648;
-                                if (wave->loop != NULL) {
-                                    wave->loop = (u8 *) wave->loop + (u32) D_802AD648;
-                                }
-                            }
-                        }
-                    }
-                    rc = 0;
-                }
-            }
+            rc = func_80269A84(hdr);
             if (rc != 0) {
                 return rc - 1;
             }
-            if (hdr->scriptRom == 0) {
-                rc = 1;
-            } else {
-                total = hdr->scriptLen;
-                if (total == 0) {
-                    rc = 1;
-                } else {
-                    if (total & 1) {
-                        total++;
-                    }
-                    D_802AD658 = func_8026B72C(total);
-                    if (D_802AD658 == NULL) {
-                        rc = 2;
-                    } else {
-                        hdr->scriptRom += D_802A1344;
-                        func_80269144(D_802AD658, total, hdr->scriptRom);
-                        *D_802AD658 = (u16 *) ((u8 *) *D_802AD658 + (u32) D_802AD658);
-                        D_802AD65C = func_8026B72C((s16) (D_802A12BC * sizeof(VoiceScript)));
-                        if (D_802AD65C == NULL) {
-                            rc = 2;
-                        } else {
-                            for (i = 0; i < D_802A12BC; i++) {
-                                D_802AD65C[i].script = -1;
-                                D_802AD65C[i].flags = 0;
-                            }
-                            rc = 0;
-                        }
-                    }
-                }
-            }
+            rc = func_80269A7C(hdr);
             if (rc != 0) {
                 return rc - 1;
             }
             break;
         default:
             if (D_802A1348 == 0) {
-                break;
+                return 0;
             }
             rc = func_802699C8();
             if (rc != 0) {
                 return rc - 1;
             }
             total = 0;
-            for (i = 0; i < D_802AD648->bankCount; i++) {
-                for (j = 0; j < D_802AD648->bankArray[i]->instCount; j++) {
-                    total += D_802AD648->bankArray[i]->instArray[j]->soundCount;
+            for (bi = 0; bi < D_802AD648->bankCount; bi++) {
+                for (ii = 0; ii < D_802AD648->bankArray[bi]->instCount; ii++) {
+                    total += D_802AD648->bankArray[bi]->instArray[ii]->soundCount;
                 }
             }
             D_802AD650->count = total;
@@ -1007,13 +948,9 @@ static s16 func_80269AFC() {
     return 0;
 }
 
-static void func_80269A7C();
-static void func_80269A84();
 static s32 func_80269A8C(s32 size) {
     SndTable *p;
 
-    func_80269A7C();
-    func_80269A84();
     if (size & 1) {
         size++;
     }
@@ -1029,10 +966,81 @@ static s32 func_80269A8C(s32 size) {
     return 0;
 }
 
-static void func_80269A84() {
+static s32 func_80269A84(SndHeader *hdr) {
+    s32 size;
+    s32 k;
+    SndSound *snd;
+    SndWave *wave;
+
+    hdr->rom += D_802A1344;
+    hdr->table += D_802A1344;
+    size = hdr->len;
+    if (size == 0) {
+        D_802A1348 = 0;
+        return 1;
+    }
+    if (size & 1) {
+        size++;
+    }
+    D_802AD648 = func_8026B72C(size);
+    if (D_802AD648 == NULL) {
+        return 2;
+    }
+    D_802A1348 = hdr->rom;
+    func_80269144(D_802AD648, size, D_802A1348);
+    for (k = 0; k < hdr->count; k++) {
+        snd = (SndSound *) ((u8 *) D_802AD648 + k * 16);
+        if (snd->flags != 0) {
+            continue;
+        }
+        snd->flags = 1;
+        snd->envelope = (u8 *) snd->envelope + (u32) D_802AD648;
+        wave = snd->wavetable = (SndWave *) ((u8 *) snd->wavetable + (u32) D_802AD648);
+        if (wave->flags != 0) {
+            continue;
+        }
+        wave->flags = 1;
+        wave->base += hdr->table;
+        wave->book = (u8 *) wave->book + (u32) D_802AD648;
+        if (wave->loop != NULL) {
+            wave->loop = (u8 *) wave->loop + (u32) D_802AD648;
+        }
+    }
+    return 0;
 }
 
-static void func_80269A7C() {
+static s32 func_80269A7C(SndHeader *hdr) {
+    s16 total;
+    s16 i;
+
+    if (hdr->scriptRom == 0) {
+        return 1;
+    }
+    total = hdr->scriptLen;
+    if (total == 0) {
+        return 1;
+    }
+    if (total & 1) {
+        total++;
+    }
+    D_802AD658 = func_8026B72C(total);
+    if (D_802AD658 == NULL) {
+        return 2;
+    }
+    hdr->scriptRom += D_802A1344;
+    func_80269144(D_802AD658, total, hdr->scriptRom);
+    *D_802AD658 = (u16 *) ((u8 *) *D_802AD658 + (u32) D_802AD658);
+    total = D_802A12BC * sizeof(VoiceScript);
+    D_802AD65C = func_8026B72C(total);
+    if (D_802AD65C == NULL) {
+        return 2;
+    }
+    for (i = 0; i < D_802A12BC; i++) {
+        VoiceScript *s = &D_802AD65C[i];
+        s->script = -1;
+        s->flags = 0;
+    }
+    return 0;
 }
 
 static void func_802699C0() {
