@@ -183,6 +183,17 @@ where us calls 0x250C/0x250D.
     object, so they are above it in the source. A global is inlined only
     if small (4E030's func_80233C30 isn't); a `static` of the same size
     is.
+  - does all this per file only: `cc -O3 a.c b.c -c -o x.o` (uld links
+    the files' ucode, usplit/umerge then treat them as one) makes one
+    object, not two, and behaves as for the files concatenated, so a
+    "unit" is just a file. The sign of a function inlined from a part of
+    the asm that splits off by padding or order: it leaves no stub (an
+    inlined static leaves its `jr ra` stub, an inlined global its body,
+    and either adds its 8-byte frame area to the caller, so a macro
+    doesn't stand in). 8A7A0 is such a case: its second half (8E730 in
+    the asm before) inlines the first half's helpers without stubs, and
+    as one file defined in three runs (nonmatching/8A7A0.c's header) it
+    comes out in the asm's order with the asm's `.rodata`.
   - moves a float argument that arrives in an integer register straight
     to a float register (`mtc1 $a2, $f16`), where `-O2` stores it to its
     home slot and reloads it (`sw $a2, 8($sp)` ... `lwc1`). A function
