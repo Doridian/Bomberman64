@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 872, eu 872, jp 875
+ * differing words: us 803, eu 803, jp 806
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -170,6 +170,15 @@ typedef struct {
     /* 0x36 */ u8 unk36[0x12];
     /* 0x48 */ UnkStruct_8023FD08_48 *unk48;
 } UnkStruct_8023FD08;
+
+/* A player (D_800AEDF0[4], 0xC8 bytes). */
+typedef struct {
+    /* 0x00 */ u8 unk0[0x24];
+    /* 0x24 */ s32 unk24;
+    /* 0x28 */ u8 unk28[0xC8 - 0x28];
+} Player54E40; /* size 0xC8 */
+
+#define PLAYERS ((Player54E40 *) D_800AEDF0)
 
 /* One entry of a texture file's table (12 bytes, after a 12-byte header). */
 typedef struct {
@@ -1004,7 +1013,7 @@ void func_80241BB0(s32 arg0, Gfx **gdl) {
     Gfx *gfx;
     TexFile *tf;
     Rect54E40 *r;
-    u8 *pl;
+    Player54E40 *pl;
     TexEntry *e;
     s32 *count;
     s32 *xs;
@@ -1018,17 +1027,17 @@ void func_80241BB0(s32 arg0, Gfx **gdl) {
         func_8023CD1C();
     }
     r = D_802A07D4;
-    pl = D_800AEDF0;
+    pl = PLAYERS;
     i = 0;
     k = 0;
     do {
-        if (M2C_FIELD(pl, s32 *, 0x24) == 3 || func_80243EF0(i) != 0) {
+        if (pl->unk24 == 3 || func_80243EF0(i) != 0) {
             r[1].idx = k + 8;
         } else {
             r[1].idx = k;
         }
         i++;
-        pl += 0xC8;
+        pl++;
         r++;
         k += 2;
     } while (i < 4);
@@ -1041,9 +1050,11 @@ void func_80241BB0(s32 arg0, Gfx **gdl) {
     i = 0;
     do {
         tf = D_802A0758;
-        if (i == 0 || *(s32 *) (D_800AED4C + i * 0xC8) != 0) {
-            e = tf->entries;
+        e = tf->entries;
+        if (!e) {}
+        if (i == 0 || PLAYERS[i - 1].unk24 != 0) {
             r = &D_802A07D4[i];
+            if (!r) {}
             gDPLoadTLUT_pal256(gfx++, (u8 *) tf + e[r->idx + 1].offset);
             gDPLoadTextureBlock_4b(gfx++, (u8 *) tf + e[r->idx].offset, G_IM_FMT_CI, 16, 16, 0,
                                    G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMASK, G_TX_NOMASK, G_TX_NOLOD, G_TX_NOLOD);
@@ -1055,16 +1066,16 @@ void func_80241BB0(s32 arg0, Gfx **gdl) {
     tf = D_802A075C;
     count = D_802A07B8;
     xs = D_802A079C;
-    i = 0;
+    j = 0;
     do {
         x = *xs;
-        j = 0;
+        i = 0;
         if (*count > 0) {
             do {
-                j++;
-                if (i < 3 || *(s32 *) (D_800AEBBC + i * 0xC8) != 0) {
+                i++;
+                if (j < 3 || *(s32 *) (D_800AEBBC + j * 0xC8) != 0) {
                     e = tf->entries;
-                    if (i >= 3 || D_802AC660.unk2C > 0) {
+                    if (j >= 3 || D_802AC660.unk2C > 0) {
                         gDPLoadTLUT_pal16(gfx++, 0, (u8 *) tf + e[1].offset);
                     } else {
                         gDPLoadTLUT_pal16(gfx++, 0, (u8 *) tf + e[25].offset);
@@ -1075,15 +1086,18 @@ void func_80241BB0(s32 arg0, Gfx **gdl) {
                 }
                 x += 10;
                 n++;
-            } while (j < *count);
+            } while (i < *count);
         }
-        i++;
+        j++;
         xs++;
         count++;
-    } while (i != 7);
+    } while (j != 7);
     gDPSetTexturePersp(gfx++, G_TP_PERSP);
     gDPSetTextureLUT(gfx++, G_TT_NONE);
     *gdl = gfx;
+    if (0) {
+        func_80241590(0, (Gfx **) &xs);
+    }
 }
 
 void func_80241590(s32 arg0, Gfx **gdl) {
