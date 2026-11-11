@@ -68,7 +68,10 @@
  *   spilled across the call) are one inlined static, func_8023AB4C,
  *   indexing `items[i]` (an index used in an address gets SR+LFTR; a
  *   `p++` form keeps a counter); its timer is the loop counter i, and
- *   func_8027EFA8 returns a u16 (the `move v1,v0` copy into keys).
+ *   func_8027EFA8 returns a u16 (the `move v1,v0` copy into keys). The
+ *   first written-out site uses a block-local `TextItem *items` and a
+ *   count in sel, which puts its spill at 72 as in the original; the
+ *   same block at the second site costs 8 bytes of frame.
  */
 #include "common.h"
 
