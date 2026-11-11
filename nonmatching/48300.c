@@ -6,11 +6,13 @@
  * boxes, func_8022E884). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1197, eu 1197, jp 1197
+ * differing words: us 1186, eu 1186, jp 1186
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does (the stubs at 0x8022E0A4-0x8022E87C are
- * func_8022E884's cases, static and inlined, named for their stubs).
+ * func_8022E884's cases, static and inlined, named for their stubs;
+ * func_80232FF0 is likewise func_80232FF8's D_802A5804 switch: IDO puts
+ * an inlined static's stub just below its caller).
  * 48 of 72 global blocks match. What is understood:
  *   - the function-local statics (D_802A5708-D_802A5770 and
  *     D_802A59D0-D_802A5A0C in func_8022E884, D_802A593C-48 in
@@ -262,6 +264,7 @@ s32 func_80232D18(f32 *arg0, s32 arg1);
 void func_80232DB4(f32 *arg0);
 void func_80232E60(void);
 void func_80232FA8(UnkStructA80 *arg0);
+static void func_80232FF0(UnkStructA80 *arg0);
 void func_80232FF8(UnkStructA80 *arg0, s32 *arg1);
 void func_802334CC(void);
 void func_8023357C(UnkStructA80 *arg0);
@@ -322,14 +325,59 @@ void func_802334CC(void) {
     }
 }
 
-void func_80232FF8(UnkStructA80 *arg0, s32 *arg1) {
-    s32 f;
-    s32 g;
+static void func_80232FF0(UnkStructA80 *arg0) {
     f32 b[3];
     f32 a[3];
     f32 c[3];
     f32 d[3];
     f32 e[3];
+
+    switch (D_802A5804) {
+    case 1:
+        switch (func_80234768()) {
+        case 0:
+            func_802348B4(&a[0], &a[1], &a[2]);
+            func_80234900(&b[0], &b[1], &b[2]);
+            break;
+        case 1:
+            func_80234900(&a[0], &a[1], &a[2]);
+            func_802348B4(&b[0], &b[1], &b[2]);
+            break;
+        }
+        func_8022FF58(a, b, c);
+        e[0] = arg0->unk40->pos[0];
+        e[1] = arg0->unk40->pos[1];
+        e[2] = arg0->unk40->pos[2];
+        func_8022FF58(b, e, d);
+        c[2] *= 0.7;
+        if (c[2] <= d[2]) {
+            arg0->unk40->unkC |= 1;
+            arg0->unk8 &= ~0x20000000;
+        } else {
+            arg0->unk8 |= 0x20000000;
+        }
+        break;
+    case 2:
+        b[0] = D_802A5808[0];
+        b[1] = D_802A5808[1];
+        b[2] = D_802A5808[2];
+        c[2] = D_802A5814;
+        e[0] = arg0->unk40->pos[0];
+        e[1] = arg0->unk40->pos[1];
+        e[2] = arg0->unk40->pos[2];
+        func_8022FF58(b, e, d);
+        if (c[2] <= d[2]) {
+            arg0->unk40->unkC |= 1;
+            arg0->unk8 &= ~0x20000000;
+        } else {
+            arg0->unk8 |= 0x20000000;
+        }
+        break;
+    }
+}
+
+void func_80232FF8(UnkStructA80 *arg0, s32 *arg1) {
+    s32 f;
 
     for (; arg0 != NULL; arg0 = arg0->unk7C) {
         if (arg0->unk8 & 0x01000000) {
@@ -345,48 +393,7 @@ void func_80232FF8(UnkStructA80 *arg0, s32 *arg1) {
                 }
             }
             if (D_802A5804 != 0 && (arg0->unk8 & 0x01000000) && (arg0->unk8 & 0x02000000)) {
-                switch (D_802A5804) {
-                case 1:
-                    switch (func_80234768()) {
-                    case 0:
-                        func_802348B4(&a[0], &a[1], &a[2]);
-                        func_80234900(&b[0], &b[1], &b[2]);
-                        break;
-                    case 1:
-                        func_80234900(&a[0], &a[1], &a[2]);
-                        func_802348B4(&b[0], &b[1], &b[2]);
-                        break;
-                    }
-                    func_8022FF58(a, b, c);
-                    e[0] = arg0->unk40->pos[0];
-                    e[1] = arg0->unk40->pos[1];
-                    e[2] = arg0->unk40->pos[2];
-                    func_8022FF58(b, e, d);
-                    c[2] *= 0.7;
-                    if (c[2] <= d[2]) {
-                        arg0->unk40->unkC |= 1;
-                        arg0->unk8 &= ~0x20000000;
-                    } else {
-                        arg0->unk8 |= 0x20000000;
-                    }
-                    break;
-                case 2:
-                    b[0] = D_802A5808[0];
-                    b[1] = D_802A5808[1];
-                    b[2] = D_802A5808[2];
-                    c[2] = D_802A5814;
-                    e[0] = arg0->unk40->pos[0];
-                    e[1] = arg0->unk40->pos[1];
-                    e[2] = arg0->unk40->pos[2];
-                    func_8022FF58(b, e, d);
-                    if (c[2] <= d[2]) {
-                        arg0->unk40->unkC |= 1;
-                        arg0->unk8 &= ~0x20000000;
-                    } else {
-                        arg0->unk8 |= 0x20000000;
-                    }
-                    break;
-                }
+                func_80232FF0(arg0);
             } else if (arg0->unk8 & 0x02000000) {
                 arg0->unk8 |= 0x20000000;
             }
