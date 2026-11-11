@@ -188,11 +188,11 @@ where us calls 0x250C/0x250D.
     home slot and reloads it (`sw $a2, 8($sp)` ... `lwc1`). A function
     taking three floats shows it at once (4DE50's func_80234500, 4ED50's
     func_802346C8).
-  Seen so far: 40FB0, 412F0, 41FD0, 4DE50, 4E030 (4DE50's second half:
+  Seen so far: 404C0, 40FB0, 412F0, 41FD0, 4DE50, 4E030 (4DE50's second half:
   its wrappers call 4DE50's compares with a `jal`, which -O3 would inline
   in one file), 4ED50, 52270 (jp's func_8023876C has no TV-type
   switch: `#if VERSION_JP`), 530C0, 53D70, 78CA0, 78F60, 86680, 995C0, 9A5F0, 9BFD0, A8DE0, ACA00, AD5B0,
-  AFBF0, B6680 (`-mips2`), ovl_0A_02-05's, ovl_0C_03's, ovl_0E_09's, ovl_12_02's, ovl_12_04's, ovl_17_01's and ovl_17_10's objects are `-O3`; 404C0, 5E090, 87190, 87730,
+  AFBF0, B6680 (`-mips2`), ovl_0A_02-05's, ovl_0C_03's, ovl_0E_09's, ovl_12_02's, ovl_12_04's, ovl_17_01's and ovl_17_10's objects are `-O3`; 5E090, 87190, 87730,
   99F40, A4860 and B11F0 are `-O2` (no
   inlining between functions that call each other, no cross-call
   registers; A4860's func_8028A318 calls three small functions of its
@@ -205,11 +205,10 @@ where us calls 0x250C/0x250D.
   spills it to its home slot only around a call is `-O3`; IDO 5.3 `-O2`
   stores every such argument to its home slot in the prologue and reloads
   it (`sw a0, 32(sp)` ... `lw`), however the C is written. That puts the
-  `-O2` list above in doubt: 404C0's func_80225FB8 matches only at `-O3`
-  (with an unused local ahead of its `entry` struct for the frame), and the
-  whole of 404C0 written last function first matches at `-O3` but for one
-  register in func_80225EBC (`lui a3` where ours is `lui a2`; drafts in
-  scratch/main_code/ of the main checkout). 85A10 (func_8026B72C's
+  `-O2` list above in doubt: 404C0 was on it, but its func_80225FB8
+  matches only at `-O3` (with an unused local ahead of its `entry` struct
+  for the frame), and the whole of 404C0, written last function first,
+  is `-O3` C. 85A10 (func_8026B72C's
   argument; func_8026B238 uses `s` registers it never saves), B11F0
   (func_80297564's `move t4, a1`) and A2840 (func_802884D4 reads `f16`
   unset) show it too. Their GLOBAL_ASM functions are the ones `-O2` can't

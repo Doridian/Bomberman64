@@ -1,34 +1,15 @@
 /*
- * NON_MATCHING: main_code's AA580 ("move.c"), complete: an object's
- * movement over the tile grid (func_802909FC steps it and resolves the
- * walls, slopes and edges around it; func_80291944 turns it toward a
- * direction; func_8029217C does both; func_802921C4 registers the three).
- * Every function is emitted in the original's order. Not built into the
- * ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * main_code's AA580 ("move.c"), IDO -O3; it matches in us, eu and jp:
+ * an object's movement over the tile grid (func_802909FC steps it and
+ * resolves the walls, slopes and edges around it; func_80291944 turns
+ * it toward a direction; func_8029217C does both; func_802921C4
+ * registers the three). Every function is emitted in the original's
+ * order. The inlined static named func_8029085C is the one whose stub is
+ * there. Its .data (the function table D_802A1D60) and .rodata (jump
+ * tables and constants) are its own, placed in data_split.txt.
  *
- * func_802921C4 and func_8029217C match; of the statics (compared as one
- * run from func_8028FD80, 402 words), func_8028FD88 matches. The inlined
- * static named func_8029085C is the one whose stub is there.
- * - func_8028FFA8 (static, two inlined halves): the original keeps branch
- *   A's values in s1/s3 and branch B's in s0/s3/s5 with b = 0 hoisted
- *   above the else; its locals sit at 0x7C/0x44 against our 0x8C/0x4C.
- *   One result variable returned once (rather than a return per branch)
- *   took it from 258 words to 87.
- * - func_80290498 (static): frame 0xA0 against the original's 0xA8.
- * - func_80290708 (static): reads an uninitialised dy at 0x18(sp), as
- *   the original does; register choices differ. Four inlined statics'
- *   stubs come before func_8029087C in the original, one in ours.
- * - func_802909FC: frame and slots match (the callback lives in the
- *   context at 0x30; pads in the locals). The direction index comes out
- *   in v0 in the original (a1 in ours: perhaps an inlined static's
- *   result, but a static with branches isn't inlined here); in the
- *   corner case the original doesn't fold r = 1 | 2 into 3; the spill of
- *   c is at 0x58 against our 0x54.
- * - func_80291944: the join after the sdir reload and the bc1f delay
- *   slots are scheduled differently, which moves every later branch.
- *
+ * How it was matched, pass by pass (each "Left" is as of that pass; the
+ * fakes and spellings in the code are explained here):
  * p2 (1701 -> 849 in every version; per function, jp allf: FFA8 51,
  * 90498 16, 90708 0 (matches), stubs 6, 09FC 246, 1944 359):
  * - 09FC: the quadrant result goes into dx (not i) for the FD88 call;

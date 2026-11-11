@@ -161,12 +161,20 @@ main_code A2840 0x90 0x90 0
 main_code @us A2840 data=0x802A1B70 rodata=0x802A4350
 main_code @eu A2840 data=0x802A1B70 rodata=0x802A4340
 main_code @jp A2840 data=0x802A0DC0 rodata=0x802A3580
+main_code A4CE0 0xC0 0x150 0
+main_code @us A4CE0 data=0x802A1C40 rodata=0x802A43E0
+main_code @eu A4CE0 data=0x802A1C40 rodata=0x802A43D0
+main_code @jp A4CE0 data=0x802A0E90 rodata=0x802A3610
 # A8DE0: .data is its spawn table D_802A1D00 and its two function tables;
 # its 16 objects at 0x800BC770 are outside main_code (no .bss)
 main_code A8DE0 0x60 0x70 0
 main_code @us A8DE0 data=0x802A1D00 rodata=0x802A4530
 main_code @eu A8DE0 data=0x802A1D00 rodata=0x802A4520
 main_code @jp A8DE0 data=0x802A0F50 rodata=0x802A3760
+main_code AA580 0x10 0xC0 0
+main_code @us AA580 data=0x802A1D60 rodata=0x802A45A0
+main_code @eu AA580 data=0x802A1D60 rodata=0x802A4590
+main_code @jp AA580 data=0x802A0FB0 rodata=0x802A37D0
 main_code ACA00 0x20 0 0
 main_code @us ACA00 data=0x802A1D70
 main_code @eu ACA00 data=0x802A1D70

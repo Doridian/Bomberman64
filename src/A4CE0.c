@@ -1,15 +1,12 @@
 /*
- * NON_MATCHING: main_code's A4CE0, complete: the 16 effects at
- * 0x800BC528 (func_8028A5C4 starts one with its coroutine from
- * D_802A1C40, func_8028A4E0 stops one, func_8028A87C registers the
- * spawners) and the effect coroutines themselves. Every function and stub
- * is emitted in the original's order and at the original's size. Not
- * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * main_code's A4CE0, IDO -O3; it matches in us, eu and jp: the 16
+ * effects at 0x800BC528 (func_8028A5C4 starts one with its coroutine
+ * from D_802A1C40, func_8028A4E0 stops one, func_8028A87C registers the
+ * spawners) and the effect coroutines themselves. Every function and
+ * stub is emitted in the original's order and at the original's size.
+ * Its .data (D_802A1C40 and func_8028A87C's D_802A1CE4) and .rodata
+ * (floats and jump tables) are its own, placed in data_split.txt.
  *
- * Every function matches (the statics are compared as one run from
- * func_8028A8A4).
  * - func_8028BD20's spawn loop: a fake "if (pos == (f32 *) (i * i) ||
  *   i == 5) {}" at the top of SPAWN1 (n is the loop counter). Without it
  *   kind (save 15) is coloured before i (10.3) and takes s2. The i * i
