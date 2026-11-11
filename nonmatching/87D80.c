@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1112, eu 1112, jp 1112
+ * differing words: us 1105, eu 1105, jp 1105
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -414,7 +414,6 @@ void func_8026FC08(s32 arg0) {
     u8 *src;
     u8 *p;
     UnkStruct_800B15D8 *m;
-    UnkCell_800B15D8 *cell;
     s32 layers;
     s32 n;
     s32 i;
@@ -425,19 +424,18 @@ void func_8026FC08(s32 arg0) {
     D_802AFC50 = arg0;
     D_800B15D8->unk4 = 0;
     D_800B15D8->unk8 = 0;
-    src = func_8026CE28(arg0);
-    D_802AFC6C = src;
+    src = D_802AFC6C = func_8026CE28(arg0);
     D_802AFC60 = 0.0f;
     D_802AFC64 = 1.6333334f;
     D_802AFC68 = 0.0f;
-    layers = D_800B15D8->unk0 = src[0];
-    D_800B15D8->unk1 = src[1];
-    D_800B15D8->unk2 = src[2];
-    D_800B15D8->unk3 = src[3];
-    D_800B15D8->unkC = src[4];
-    p = src + 5;
+    p = src;
+    layers = D_800B15D8->unk0 = *p++;
+    D_800B15D8->unk1 = *p++;
+    D_800B15D8->unk2 = *p++;
+    D_800B15D8->unk3 = *p++;
+    D_800B15D8->unkC = v = *p++;
     m = D_800B15D8;
-    D_802AFC5C = -(src[4] & 0x7F) * 100.0f;
+    D_802AFC5C = -(v & 0x7F) * 100.0f;
     for (n = 0; n < layers; n++) {
         m->unkE = *p++;
         m->unkF = *p++;
@@ -454,7 +452,7 @@ void func_8026FC08(s32 arg0) {
         p += cnt * sizeof(UnkCell_800B15D8);
         m++;
     }
-    p = src + 5;
+    p = (u8 *) D_802AFC6C + 5;
     m = D_800B15D8;
     for (n = 0; n < layers; n++) {
         m->unkE = *p++;
@@ -466,16 +464,14 @@ void func_8026FC08(s32 arg0) {
             }
         }
         p++;
-        cell = D_800B15D8[n].unk12;
         for (i = 0; i < cnt; i++) {
-            cell->unk0 = *p++;
-            cell->unk1 = *p++;
+            D_800B15D8[n].unk12[i].unk0 = *p++;
+            D_800B15D8[n].unk12[i].unk1 = *p++;
             for (j = 0; j < 64; j++) {
-                func_8026D620(cell->unk0 * 8 + D_800B15D8->unk1 + j % 8, D_800B15D8->unk2 + n,
-                              cell->unk1 * 8 + D_800B15D8->unk3 + (j >> 3), p[1] + (p[0] << 8));
+                func_8026D620(D_800B15D8[n].unk12[i].unk0 * 8 + D_800B15D8->unk1 + j % 8, D_800B15D8->unk2 + n,
+                              D_800B15D8[n].unk12[i].unk1 * 8 + D_800B15D8->unk3 + (j >> 3), p[1] + (p[0] << 8));
                 p += 2;
             }
-            cell++;
         }
         m++;
     }
