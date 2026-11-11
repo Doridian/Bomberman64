@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 562, eu 562, jp 562
+ * differing words: us 523, eu 523, jp 523
  */
 #include "common.h"
 
@@ -1090,17 +1090,20 @@ static void func_80285564() {
 }
 
 static s32 func_8028556C(s32 arg0) {
+    UnkStruct_80288040 *p;
+
     func_80285564();
     func_8028555C();
     func_80285554();
+    p = D_800BB484;
     if ((arg0 & 0x2000) ||
-        (!(D_800BB484->unk24 & 0x20) && ((arg0 & 0xF) == 0xF)) ||
-        (!(D_800BB484->unk24 & 0x10) && (arg0 & 0x60)) ||
-        (!(D_800BB484->unk24 & 1) && !(arg0 & 0xF)) ||
-        (!(D_800BB484->unk24 & 8) && (((arg0 & 0xF) == 3) || ((arg0 & 0xF) == 4) || ((arg0 & 0xF) == 5) || ((arg0 & 0xF) == 6))) ||
-        (!(D_800BB484->unk24 & 4) && (((arg0 & 0xF) == 9) || ((arg0 & 0xF) == 2) || ((arg0 & 0xF) == 10) || ((arg0 & 0xF) == 11))) ||
-        (!(D_800BB484->unk24 & 0x40) && ((arg0 & 0xF) == 0x1C00)) ||
-        (!(D_800BB484->unk24 & 2) && ((arg0 & 0xF) == 1))) {
+        (!(p->unk24 & 0x20) && ((arg0 & 0xF) == 0xF)) ||
+        (!(p->unk24 & 0x10) && (arg0 & 0x60)) ||
+        (!(p->unk24 & 1) && !(arg0 & 0xF)) ||
+        (!(p->unk24 & 8) && (((arg0 & 0xF) == 3) || ((arg0 & 0xF) == 4) || ((arg0 & 0xF) == 5) || ((arg0 & 0xF) == 6))) ||
+        (!(p->unk24 & 4) && (((arg0 & 0xF) == 9) || ((arg0 & 0xF) == 2) || ((arg0 & 0xF) == 10) || ((arg0 & 0xF) == 11))) ||
+        (!(p->unk24 & 0x40) && ((arg0 & 0xF) == 0x1C00)) ||
+        (!(p->unk24 & 2) && ((arg0 & 0xF) == 1))) {
         return 0;
     }
     return 1;
