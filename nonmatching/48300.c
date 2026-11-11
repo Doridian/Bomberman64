@@ -6,7 +6,7 @@
  * boxes, func_8022E884). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1100, eu 1100, jp 1100
+ * differing words: us 1096, eu 1096, jp 1096
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does (the stubs at 0x8022E0A4-0x8022E87C are
@@ -1868,7 +1868,7 @@ static s32 func_8022E87C(UnkStructA80 *arg0, UnkStructA80 *arg1) {
 
     func_8022E26C(arg0, D_802A5708);
     func_8022E26C(arg1, D_802A5720);
-    r = D_802A5708[3] + D_802A5720[3];
+    r = D_802A5720[3] + D_802A5708[3];
     r *= r;
     dx = D_802A5708[0] - D_802A5720[0];
     dx *= dx;
@@ -1876,10 +1876,10 @@ static s32 func_8022E87C(UnkStructA80 *arg0, UnkStructA80 *arg1) {
     dy *= dy;
     dz = D_802A5708[2] - D_802A5720[2];
     dz *= dz;
-    if (dx + dz + dy < r) {
-        return 1;
+    if (dx + dz + dy >= r) {
+        return 0;
     }
-    return 0;
+    return 1;
 }
 
 static s32 func_8022E874(UnkStructA80 *arg0, UnkStructA80 *arg1, f32 *p, f32 *q, f32 *r) {
@@ -1891,7 +1891,7 @@ static s32 func_8022E874(UnkStructA80 *arg0, UnkStructA80 *arg1, f32 *p, f32 *q,
     if (p[4] + p[3] + q[4] + q[3] < func_8022DF68(p, q)) {
         return 0;
     }
-    n = p[4] / (p[3] * 2.0f);
+    n = p[4] / (p[3] * 2);
     y = p[3];
     r[3] = p[3];
     while (n > 0.0f) {
@@ -1940,7 +1940,7 @@ static s32 func_8022E264(UnkStructA80 *arg0, UnkStructA80 *arg1) {
     D_802A59E8[1] = D_802A5738[1] + D_802A5738[3];
     D_802A59E8[3] = D_802A5738[3];
     D_802A59E8[2] = D_802A5738[2];
-    step = D_802A5738[3] * 2.0f;
+    step = D_802A5738[3] * 2;
     for (t = 0.0f; t < D_802A5738[4];) {
         if (func_8022E178(D_802A59E8, D_802A5760) != 0) {
             return 1;
@@ -1965,7 +1965,7 @@ static s32 func_8022E170(UnkStructA80 *arg0, UnkStructA80 *arg1, f32 *p, f32 *q,
     r[1] = p[1] + p[3];
     r[3] = p[3];
     r[2] = p[2];
-    step = p[3] * 2.0f;
+    step = p[3] * 2;
     for (t = 0.0f; t < p[4];) {
         if (func_8022DFBC(r, q) != 0) {
             return 1;
