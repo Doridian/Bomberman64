@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4485, eu 4485, jp 4485
+ * differing words: us 4213, eu 4213, jp 4213
  */
 #include "common.h"
 
@@ -327,7 +327,7 @@ void func_80285A84();
 static void func_80285A8C();
 void func_80285A94();
 static s32 func_80285F84(UnkStruct_80288040 *arg0);
-static void func_802863E8();
+static s32 func_802863E8(s32 arg0);
 static s32 func_802863F0(void);
 static s32 func_802863F8(void);
 static s32 func_802867CC(s32 arg0, f32 arg1, f32 arg2, f32 arg3);
@@ -712,6 +712,22 @@ static s32 func_802863F0(void) {
 static s32 func_802867D4(void) {
     return func_802863F0();
 }
+static s32 func_802863E8(s32 arg0) {
+    s32 t;
+    UnkStruct_800BB340 *task;
+
+    t = func_802867D4();
+    if (t != -1) {
+        task = &D_800BB340[t];
+        task->unk4 = arg0;
+        task->unk0 = t;
+        task->unkC = 0;
+        task->unk8 = func_80238A10(func_80285F8C, task, 0, 0, 0xD0);
+        task->unk10 = NULL;
+    }
+    return t;
+}
+
 static void func_802867DC(UnkStruct_800BA900 *arg0) {
     if (arg0->unk0 != 0) {
         func_8022FC90(arg0->unk14.unk0);
@@ -729,6 +745,7 @@ UnkStruct_80288040 *func_802867E4(s32 arg0, f32 arg1, f32 arg2, f32 arg3) {
     ret = NULL;
     slot = -1;
     special = 0;
+    if (0) { D_800BC520 = (s32) &slot; }
     if ((arg0 == 0) && (D_800BA8E8[arg0].unk0 == 0x19) && (D_800BA8E8[arg0].unk2 == 0x1E)) {
         slot = 13;
         special = 1;
@@ -752,15 +769,7 @@ UnkStruct_80288040 *func_802867E4(s32 arg0, f32 arg1, f32 arg2, f32 arg3) {
     if (slot != -1) {
         if (D_800BB480 + 1 < 16) {
             D_800BB480++;
-            t = func_802867D4();
-            if (t != -1) {
-                task = &D_800BB340[t];
-                task->unk4 = 2;
-                task->unk0 = t;
-                task->unkC = 0;
-                task->unk8 = func_80238A10(func_80285F8C, task, 0, 0, 0xD0);
-                task->unk10 = NULL;
-            }
+            t = func_802863E8(2);
             if (t != -1) {
                 if (func_80285658(&D_800BA900[slot], &D_800BB340[t]) == 0) {
                     func_802867DC(&D_800BA900[slot]);
@@ -779,9 +788,6 @@ UnkStruct_80288040 *func_802867E4(s32 arg0, f32 arg1, f32 arg2, f32 arg3) {
     return ret;
 }
 
-static void func_802863E8() {
-}
-
 static void func_80286400(s32 arg0, f32 arg1, f32 arg2, f32 arg3, s32 arg4, s32 arg5) {
     UnkStruct_800BA900 *s;
     UnkStruct_80288040 *a;
@@ -792,8 +798,6 @@ static void func_80286400(s32 arg0, f32 arg1, f32 arg2, f32 arg3, s32 arg4, s32 
         Vec3f o;
     } grid;
 
-    func_802863E8();
-    func_802863E0();
     s = &D_800BA900[arg4];
     func_80282340(s);
     s->unk0 = arg5;
