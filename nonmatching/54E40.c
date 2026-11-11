@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1115, eu 1115, jp 1118
+ * differing words: us 947, eu 947, jp 950
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -62,6 +62,11 @@
  *   calls m2c shows in both branches are both there (func_8023B8D0).
  *   func_8023AC38's dead call to func_8023AB90 keeps the order once
  *   func_8023AB54 is inlined.
+ * - func_8023E1D8's three handle loops (sltu against the end, pointer
+ *   spilled across the call) are one inlined static, func_8023AB4C,
+ *   indexing `items[i]` (an index used in an address gets SR+LFTR; a
+ *   `p++` form keeps a counter); its timer is the loop counter i, and
+ *   its keys are a u16 (the `move v1,v0` copy).
  */
 #include "common.h"
 
@@ -2053,10 +2058,9 @@ void func_8023E1D8() {
     s32 h2;
     u8 buf[28];
     s32 i;
-    s32 t;
     s32 k;
     s32 sel;
-    s32 keys;
+    u16 keys;
     u8 *cur;
 
     for (i = 0; i < 5; i++) {
@@ -2095,7 +2099,7 @@ void func_8023E1D8() {
         M2C_FIELD(cur, f32 *, 0x18) = 137.0f;
         M2C_FIELD(cur, f32 *, 0x1C) = 122.0f;
         func_8026C93C(0x26);
-        t = 0;
+        i = 0;
         k = 9;
         sel = 0;
         while (TRUE) {
@@ -2120,10 +2124,10 @@ void func_8023E1D8() {
                 D_802AC810 = -1;
                 break;
             }
-            t++;
-            if (t >= FPS) {
+            i++;
+            if (i >= FPS) {
                 k--;
-                t = 0;
+                i = 0;
                 if (k < 0) {
                     D_802AC810 = -1;
                     break;
@@ -2151,9 +2155,7 @@ void func_8023E1D8() {
             func_8023903C(0x3C);
             func_8023AE6C(0x20, 0x11, 0);
         }
-        for (i = 0; i < 4; i++) {
-            func_80280DB4(D_802A0ACC[i].handle);
-        }
+        func_8023AB4C(D_802A0ACC, 4);
         func_80280DB4(h1);
         func_80280DB4(h2);
     }
@@ -3207,8 +3209,7 @@ static void func_8023AB4C(TextItem *items, s32 n) {
     s32 i;
 
     for (i = 0; i < n; i++) {
-        func_80280DB4(items->handle);
-        items++;
+        func_80280DB4(items[i].handle);
     }
 }
 
