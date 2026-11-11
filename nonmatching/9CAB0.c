@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4145, eu 4145, jp 4145
+ * differing words: us 4024, eu 4024, jp 4024
  */
 #include "common.h"
 
@@ -286,9 +286,9 @@ void func_80287FD4(void);
 void func_80282338();
 static void func_80282590();
 void func_802829A4();
-static void func_80282AD8();
-void func_80282AE0();
-static void func_80282AE8();
+static s32 func_80282AD8(UnkStruct_80288040 *act);
+static s32 func_80282AE0(UnkStruct_80288040 *act);
+static s32 func_80282AE8(UnkStruct_80288040 *act);
 static void func_80283014();
 static void func_80283304();
 void func_8028330C();
@@ -2183,13 +2183,58 @@ static void func_80282F44(UnkStruct_800BB340 *arg0, s32 arg1) {
     }
 }
 
-static void func_80282AD8() {
+static s32 func_80282AE8(UnkStruct_80288040 *act) {
+    UnkStructA_40 *p;
+
+    if (act->unk20++ >= 50) {
+        return 1;
+    }
+    act->unk0->unk40->unk20 += 14.0f;
+    act->unk0->unk40->unk28 -= 0.01f;
+    act->unk0->unk40->unk2C -= 0.01f;
+    act->unk0->unk40->unk30 -= 0.01f;
+    if (act->unk20 == 1) {
+        act->unk0->unk68 = 15.0f;
+        act->unk0->unk6C = 0.8f;
+        act->unk0->unk70 = 0.8f;
+        p = act->unk0->unk40;
+        func_8028A81C(7, p->unk10, p->unk14 + 100.0f, p->unk18, 0);
+    } else if (act->unk20 == 10) {
+        p = act->unk0->unk40;
+        func_8028A81C(7, p->unk10 + 30.0f, p->unk14 + 50.0f, p->unk18 - 30.0f, 0);
+    } else if (act->unk20 == 18) {
+        p = act->unk0->unk40;
+        func_8028A81C(13, p->unk10, p->unk14 + 100.0f, p->unk18, 0);
+    }
+    func_80230914(act->unk0);
+    return 0;
 }
 
-static void func_80282AE0() {
+static s32 func_80282AE0(UnkStruct_80288040 *act) {
+    UnkStructA_40 *p;
+
+    if (act->unk20++ < 3) {
+        act->unk0->unk40->unk2C -= 0.12;
+    } else if (act->unk20 < 8) {
+        act->unk0->unk40->unk2C -= 0.08;
+    } else if (act->unk20 < 15) {
+        act->unk0->unk40->unk2C -= 0.04;
+    } else {
+        p = act->unk0->unk40;
+        func_8028A81C(1, p->unk10, p->unk14 + 100.0f, p->unk18, 0);
+        return 1;
+    }
+    return 0;
 }
 
-static void func_80282AE8() {
+static s32 func_80282AD8(UnkStruct_80288040 *act) {
+    if (act->unk20++ >= 30) {
+        return 1;
+    }
+    if (act->unk20 == 1) {
+        func_80231408(act->unk0, 0x40000);
+    }
+    return 0;
 }
 
 static s32 func_80282AF0(UnkStruct_800BB340 *arg0, s32 arg1) {
@@ -2198,62 +2243,18 @@ static s32 func_80282AF0(UnkStruct_800BB340 *arg0, s32 arg1) {
     UnkStructA_40 *p;
     s32 ret;
 
-    func_80282AE8();
-    func_80282AE0();
-    func_80282AD8();
     func_80282AD0();
     act = &arg0->unk10->unk14;
     ret = 0;
     switch (arg1) {
     case 0:
-        ret = 1;
-        if (act->unk20++ < 50) {
-            act->unk0->unk40->unk20 += 14.0f;
-            act->unk0->unk40->unk28 -= 0.01f;
-            act->unk0->unk40->unk2C -= 0.01f;
-            act->unk0->unk40->unk30 -= 0.01f;
-            if (act->unk20 == 1) {
-                act->unk0->unk68 = 15.0f;
-                act->unk0->unk6C = 0.8f;
-                act->unk0->unk70 = 0.8f;
-                p = act->unk0->unk40;
-                func_8028A81C(7, p->unk10, p->unk14 + 100.0f, p->unk18, 0);
-            } else if (act->unk20 == 10) {
-                p = act->unk0->unk40;
-                func_8028A81C(7, p->unk10 + 30.0f, p->unk14 + 50.0f, p->unk18 - 30.0f, 0);
-            } else if (act->unk20 == 18) {
-                p = act->unk0->unk40;
-                func_8028A81C(13, p->unk10, p->unk14 + 100.0f, p->unk18, 0);
-            }
-            func_80230914(act->unk0);
-            ret = 0;
-        }
+        ret = func_80282AE8(act);
         break;
     case 2:
-        if (act->unk20++ < 3) {
-            act->unk0->unk40->unk2C -= 0.12;
-            ret = 0;
-        } else if (act->unk20 < 8) {
-            act->unk0->unk40->unk2C -= 0.08;
-            ret = 0;
-        } else if (act->unk20 < 15) {
-            act->unk0->unk40->unk2C -= 0.04;
-            ret = 0;
-        } else {
-            p = act->unk0->unk40;
-            func_8028A81C(1, p->unk10, p->unk14 + 100.0f, p->unk18, 0);
-            ret = 1;
-        }
+        ret = func_80282AE0(act);
         break;
     case 1:
-        if (act->unk20++ < 30) {
-            if (act->unk20 == 1) {
-                func_80231408(act->unk0, 0x40000);
-            }
-            ret = 0;
-        } else {
-            ret = 1;
-        }
+        ret = func_80282AD8(act);
         break;
     }
     func_80291944(act->unk0, act->unk1C & 0xF0, 0.0f);
