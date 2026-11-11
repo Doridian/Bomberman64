@@ -8,39 +8,34 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 11, eu 11, jp 11
+ * differing words: us 9, eu 9, jp 9
  *
- * The object is the same in all three versions. 70 of the 79 original
+ * The object is the same in all three versions. 77 of the 79 original
  * procedures match (stubs included). The IPA statics
  * (s-registers used unsaved, or arguments in odd registers) are static
  * here: 80266D8C, 8026706C (num, def: the original's num is homed at
  * 0(sp) though -O3 passes it in a1), 80267784, 802679C0, 80267A18,
  * 80268440, 80269144, 802699C8, 80269A8C, 80269AFC, 8026A108, 8026A164.
  * The 8-byte stubs are statics inlined into the function after them:
- * 80267A10 (a sound's free voice), 802679A0-B8 (the script's clamps and
- * fade), 802691A0 (the sequence load), 80267064 (a volume, returning
- * from both arms), 80266928 (a script's reset), 80268430/38 (80268440's
- * script setup and bank search), 80269A7C/84 (empty statics whose calls
- * 80269AFC keeps), the recursive setters' stubs 80266154/298/3D8/508
- * (empty, the setters recurse themselves).
+ * 80267A10 (a sound's free voice), 802679A8/B0/A0 (a script's pitch,
+ * fade and volume) with 802679B8 (the clamp all three use), 802691A0
+ * (the sequence load; its caller clears the stop flag), 80267064 (a
+ * volume), 80266928 (a script's reset), 80268430/38 (80268440's script
+ * setup and bank search), 80269A7C/84 (80269AFC's table loads),
+ * 802699C0 (the sounds of a 'T1' file counted, for 80269AFC), the
+ * recursive setters' stubs 80266154/298/3D8/508 (empty, the setters
+ * recurse themselves). 80269144, the DMA, takes the ROM address first.
  * func_80265FBC is a static too (callers keep registers live across
  * it), inlined only into 80265FF8: a dead `if (0)` store keeps IDO
  * from inlining it into the others. 8026724C's unused second SndDef
  * and 80268440's pad give the original's frame sizes.
  * 80267A18 has the original's size and s-registers: the dead `if (op ==
- * K) {}` tests and `if (idx) {}` give its constants their s-registers,
- * the stop loop reuses v and num, the vibrato and sweep convert with
- * (s16), and their quotients go through r. What is left there is its
- * frame (0xA0 against 0xB0, so every sp offset), case 3's argument
- * order and temp names. Biggest left: 8026A164 (2 words short: the
- * loop's s4 count tests blez where the original tests beq, and a
- * subtraction scheduled ahead of its call), 802691A8 (a word long: its
- * flag tests are laid out the other way), 80267A18, 80266D8C (a word
- * short: D_802A1368's address is kept in a register where the original
- * rebuilds it with lui at each time and stores it twice), 8026706C
- * (temp names and D_802AD648 in a3, the original's v0), 80269AFC (a
- * store scheduled two slots apart), 80268440 (registers only),
- * 80268F94 (the original reuses one constant 1 for both flags).
+ * K) {}` tests and `if (idx) {}` give its constants their s-registers.
+ * What is left (4 words) is its frame: def sits at 0x78 against the
+ * original's 0x80 and one spill at 0x24 against 0x20, though the frame
+ * size is right. 8026706C (5 words): the 'T2' case's volume and pan
+ * arm uses one ugen temp more than the original's, so the temps after it
+ * are named two apart.
  */
 #include "common.h"
 
@@ -1167,7 +1162,8 @@ void func_80269704(u8 arg0) {
     s32 i;
 
     D_802AD218 = 0;
-    D_802AD218 |= (u8) (arg0 & 1);
+    arg0 &= 1;
+    D_802AD218 |= arg0;
     func_802983A8(D_802AD218);
     for (i = 0; i < D_802A12BC; i++) {
         v = &D_802AD654[i];
