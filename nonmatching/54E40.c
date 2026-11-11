@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 944, eu 944, jp 947
+ * differing words: us 890, eu 890, jp 893
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -50,8 +50,10 @@
  *   s-registers.
  * - D_802AC7A0[10] is defined here (the rest of the bss is still
  *   extern): func_8023A640's two peeled stores share a `lui` only when
- *   as1 knows the array. func_8023DB0C then keeps an extra nop of
- *   alignment until func_8023A734 has its size (8 bytes short).
+ *   as1 knows the array.
+ * - func_8023A734 tests the row index (`arg1 == 0/2/3`), not the row
+ *   pointer: uopt still compares the pointer, but with fresh addresses
+ *   kept apart from the loads' base (D_802A0BA8 is s32[][11]).
  * - The count is positional: a function one instruction short shifts
  *   every word after it, so its size matters more than its registers.
  *   What fixed sizes here: a separate index (`D_802AC770[k++]`, k = 0)
@@ -403,11 +405,9 @@ extern s32 D_802A0B80;
 extern u8 D_802A0B84[];
 extern s32 D_802A0B94;
 extern u8 D_802A0B98[];
-extern u8 D_802A0BA8[];
-extern u8 D_802A0C00[];
-extern u8 D_802A0C2C[];
-extern u8 D_802A0CB0[];
-extern u8 D_802A0CC8[];
+extern s32 D_802A0BA8[][11];
+extern s32 D_802A0CB0[];
+extern s32 D_802A0CC8[];
 extern u8 D_802A0CF4[];
 extern s32 D_802AC5CC;
 extern s32 D_802AC5D0;
@@ -3324,17 +3324,17 @@ s32 *func_8023A834() {
 }
 
 void func_8023A734(s32 arg0, s32 arg1, s32 arg2) {
-    func_80228008(arg0, *(s32 *) (D_802A0CB0 + arg1 * 4), *(s32 *) (arg1 * 0x2C + D_802A0BA8 + arg2 * 4));
-    if (arg1 * 0x2C + D_802A0BA8 == D_802A0BA8) {
-        if (*(s32 *) (D_802A0CC8 + arg2 * 4) != 0) {
+    func_80228008(arg0, D_802A0CB0[arg1], D_802A0BA8[arg1][arg2]);
+    if (arg1 == 0) {
+        if (D_802A0CC8[arg2] != 0) {
             func_80228008(arg0, 8, -1);
         } else {
             func_80228008(arg0, 8, 0x4F);
         }
-    } else if (arg1 * 0x2C + D_802A0BA8 == D_802A0C00) {
-        func_80228008(arg0, 5, *(s32 *) (D_802A0C00 + 0x58 + arg2 * 4));
-    } else if (arg1 * 0x2C + D_802A0BA8 == D_802A0C2C) {
-        func_80228008(arg0, 0xC, *(s32 *) (D_802A0C2C + 0x58 + arg2 * 4));
+    } else if (arg1 == 2) {
+        func_80228008(arg0, 5, D_802A0BA8[4][arg2]);
+    } else if (arg1 == 3) {
+        func_80228008(arg0, 0xC, D_802A0BA8[5][arg2]);
     }
 }
 
