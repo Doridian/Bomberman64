@@ -7,7 +7,7 @@
  * order. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 464, eu 464, jp 464
+ * differing words: us 380, eu 380, jp 380
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file (475 words in the one-file draft, 39
@@ -1165,19 +1165,19 @@ void func_80271BB8(s16 arg0) {
     }
     flags = obj->unk8;
     hit = 0;
-    if (flags & 2) {
+    if (obj->unk8 & 2) {
         if (func_8027130C((u8 *) obj) == 0) {
             hit = 1;
         }
-    } else if (flags & 8) {
+    } else if (obj->unk8 & 8) {
         if (func_8027B5A8(obj) == 0) {
             hit = 1;
         }
-    } else if (flags & 4) {
+    } else if (obj->unk8 & 4) {
         if (func_802875B0(obj) == 0) {
             hit = 1;
         }
-    } else if (flags & 1) {
+    } else if (obj->unk8 & 1) {
         if (func_80244FF8(obj) == 0) {
             hit = 1;
         }
