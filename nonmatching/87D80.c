@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 824, eu 824, jp 824
+ * differing words: us 784, eu 784, jp 784
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -801,32 +801,18 @@ void func_8026EE08(s32 arg0) {
 }
 
 void func_8026ECF4() {
-    s32 var_s1;
-    u8 *var_s0;
-    u8 *var_s0_2;
+    s32 i;
 
     func_80297D38("*** MAP INFORMATION ***\n");
     func_80297D38("Offset:%d,%d,%d\n", D_800B15D8->unk1, D_800B15D8->unk2, D_800B15D8->unk3);
     func_80297D38("Layer :%d\n", D_800B15D8->unk0);
     func_80297D38("Size  :%d x %d\n", D_800B15D8->unk4, D_800B15D8->unk8);
-    var_s1 = 0;
-    if (D_800B15D8->unk0 > 0) {
-        var_s0 = D_800B15D8;
-        do {
-            func_80297D38("   (%d):%d x %d\n", var_s1, M2C_FIELD(var_s0, u8 *, 0xE), M2C_FIELD(var_s0, u8 *, 0xF));
-            var_s1 += 1;
-            var_s0 += 0xC34;
-        } while (var_s1 < D_800B15D8->unk0);
-        var_s1 = 0;
+    for (i = 0; i < D_800B15D8->unk0; i++) {
+        func_80297D38("   (%d):%d x %d\n", i, D_800B15D8[i].unkE, D_800B15D8[i].unkF);
     }
     func_80297D38("Layer Unit\n");
-    var_s0_2 = D_800B15D8;
-    if (D_800B15D8->unk0 > 0) {
-        do {
-            func_80297D38("   [%d]:%d\n", var_s1, M2C_FIELD(var_s0_2, u8 *, 0x10));
-            var_s1 += 1;
-            var_s0_2 += 0xC34;
-        } while (var_s1 < D_800B15D8->unk0);
+    for (i = 0; i < D_800B15D8->unk0; i++) {
+        func_80297D38("   [%d]:%d\n", i, D_800B15D8[i].unk10);
     }
 }
 
