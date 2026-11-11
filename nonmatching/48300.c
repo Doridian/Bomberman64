@@ -6,7 +6,7 @@
  * boxes, func_8022E884). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2286, eu 2286, jp 2286
+ * differing words: us 2162, eu 2162, jp 2162
  *
  * A first draft: functions in the reverse of the ROM's order, which IDO
  * now emits exactly as the original does (stubs included); a handful by
@@ -884,103 +884,90 @@ block_52:
 }
 
 void func_80231D88(u8 *arg0, u8 *arg1, f32 *arg2, f32 *arg3) {
-    f32 sp24;
-    f32 temp_fa0;
-    f32 temp_fa1;
-    f32 temp_fv0;
-    f32 temp_fv0_2;
-    f32 temp_fv0_3;
-    f32 temp_fv0_4;
-    f32 var_ft0;
-    f32 var_fv1;
-    f32 var_fv1_2;
-    f32 var_fv1_3;
-    s32 temp_v0;
-    s32 temp_v0_2;
+    f32 dz;
+    f32 dy;
+    f32 dx;
+    f32 x;
+    f32 w;
 
-    temp_fa1 = M2C_FIELD(arg1, f32 *, 0) - M2C_FIELD(arg0, f32 *, 0);
-    temp_fa0 = (M2C_FIELD(arg1, f32 *, 4) - M2C_FIELD(arg0, f32 *, 4)) * -1.0f;
-    sp24 = M2C_FIELD(arg1, f32 *, 8) - M2C_FIELD(arg0, f32 *, 8);
-    if (func_802336E4(temp_fa0) != 0) {
-        temp_v0 = func_802337EC(temp_fa1);
-        switch (temp_v0) {                          /* switch 1; irregular */
-        case 0:                                     /* switch 1 */
+    dx = ((f32 *) arg1)[0] - ((f32 *) arg0)[0];
+    dy = ((f32 *) arg1)[1] - ((f32 *) arg0)[1];
+    dz = ((f32 *) arg1)[2] - ((f32 *) arg0)[2];
+    dy *= -1.0f;
+    if (func_802336E4(dy)) {
+        switch (func_802337EC(dx)) {
+        case 0:
             *arg2 = 0.0f;
             break;
-        case 1:                                     /* switch 1 */
+        case 1:
             *arg2 = 90.0f;
             break;
-        case -1:                                    /* switch 1 */
+        case -1:
             *arg2 = 270.0f;
             break;
         }
-        temp_v0_2 = func_802337EC(sp24);
-        switch (temp_v0_2) {                        /* switch 2; irregular */
-        case 0:                                     /* switch 2 */
+        switch (func_802337EC(dz)) {
+        case 0:
             *arg3 = 0.0f;
             break;
-        case 1:                                     /* switch 2 */
-            var_ft0 = 90.0f;
-            goto block_20;
-        case -1:                                    /* switch 2 */
+        case 1:
+            *arg3 = 90.0f;
+            break;
+        case -1:
             *arg3 = 270.0f;
             break;
         }
     } else {
-        *arg2 = (f32) ((f64) func_8029CB40(temp_fa1 / temp_fa0) * 57.29577951308232);
-        var_ft0 = (f32) ((f64) func_8029CB40(sp24 / temp_fa0) * 57.29577951308232);
-block_20:
-        *arg3 = var_ft0;
+        *arg2 = func_8029CB40(dx / dy) * 57.29577951308232;
+        *arg3 = func_8029CB40(dz / dy) * 57.29577951308232;
     }
-    arg2 = arg2;
-    arg3 = arg3;
-    if (func_802337EC(temp_fa0) == -1) {
-        temp_fv0 = *arg2 + 180.0f;
-        if (temp_fv0 >= 360.0f) {
-            *arg2 = temp_fv0 - 360.0f;
+    if (func_802337EC(dy) == -1) {
+        x = *arg2 + 180.0f;
+        if (x >= 360.0f) {
+            *arg2 = x - 360.0f;
         } else {
-            if (temp_fv0 < 0.0f) {
-                var_fv1 = temp_fv0 + 360.0f;
+            if (x < 0.0f) {
+                w = x + 360.0f;
             } else {
-                var_fv1 = temp_fv0;
+                w = x;
             }
-            *arg2 = var_fv1;
+            *arg2 = w;
         }
-        temp_fv0_2 = *arg3 + 180.0f;
-        if (temp_fv0_2 >= 360.0f) {
-            *arg3 = temp_fv0_2 - 360.0f;
-            return;
-        }
-        if (temp_fv0_2 < 0.0f) {
-            var_fv1_2 = temp_fv0_2 + 360.0f;
+        x = *arg3 + 180.0f;
+        if (x >= 360.0f) {
+            *arg3 = x - 360.0f;
         } else {
-            var_fv1_2 = temp_fv0_2;
+            if (x < 0.0f) {
+                w = x + 360.0f;
+            } else {
+                w = x;
+            }
+            *arg3 = w;
         }
-        goto block_45;
-    }
-    temp_fv0_3 = *arg2;
-    if (temp_fv0_3 >= 360.0f) {
-        *arg2 = temp_fv0_3 - 360.0f;
     } else {
-        if (temp_fv0_3 < 0.0f) {
-            var_fv1_3 = temp_fv0_3 + 360.0f;
+        x = *arg2;
+        if (x >= 360.0f) {
+            *arg2 = x - 360.0f;
         } else {
-            var_fv1_3 = temp_fv0_3;
+            if (x < 0.0f) {
+                w = x + 360.0f;
+            } else {
+                w = x;
+            }
+            *arg2 = w;
         }
-        *arg2 = var_fv1_3;
+        x = *arg3;
+        if (x >= 360.0f) {
+            *arg3 = x - 360.0f;
+        } else {
+            if (x < 0.0f) {
+                w = x + 360.0f;
+            } else {
+                w = x;
+            }
+            *arg3 = w;
+        }
     }
-    temp_fv0_4 = *arg3;
-    if (temp_fv0_4 >= 360.0f) {
-        *arg3 = temp_fv0_4 - 360.0f;
-        return;
-    }
-    if (temp_fv0_4 < 0.0f) {
-        var_fv1_2 = temp_fv0_4 + 360.0f;
-    } else {
-        var_fv1_2 = temp_fv0_4;
-    }
-block_45:
-    *arg3 = var_fv1_2;
 }
 
 void func_80231D60(f32 arg0, f32 arg1, f32 arg2, f32 arg3) {
