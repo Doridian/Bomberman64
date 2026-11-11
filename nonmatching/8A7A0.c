@@ -7,7 +7,7 @@
  * order. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 1145, eu 1145, jp 1145
+ * differing words: us 1079, eu 1079, jp 1079
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file (475 words in the one-file draft, 39
@@ -372,7 +372,7 @@ void func_80271BB8(s16 arg0);
 void func_80271F74(s32 *arg0);
 s32 func_80272024(s16 arg0);
 void func_802720C8(u8 *arg0);
-s32 func_802721D4(u8 *arg0, s32 arg1, s32 *arg2);
+s32 func_802721D4(Obj8E *arg0, s32 arg1, Ctl87 *arg2);
 s16 func_8027241C(s16 arg0);
 void func_80272494(Obj8E *arg0, Obj8E *arg1, Ctl87 *arg2);
 void func_802727D8(Ctl87 *arg0);
@@ -997,7 +997,7 @@ void func_80272494(Obj8E *arg0, Obj8E *arg1, Ctl87 *arg2) {
         for (r = 10.0f; r < d; r += 10.0f) {
             arg2->unk1C = r;
             arg2->unk14 = dir;
-            res = func_802721D4((u8 *) arg0, (s32) arg1, (s32 *) arg2);
+            res = func_802721D4(arg0, (s32) arg1, arg2);
             if (res == 2) {
                 break;
             }
@@ -1008,7 +1008,7 @@ void func_80272494(Obj8E *arg0, Obj8E *arg1, Ctl87 *arg2) {
         if (d <= r) {
             arg2->unk1C = d;
             arg2->unk14 = dir;
-            if (func_802721D4((u8 *) arg0, (s32) arg1, (s32 *) arg2) == 1) {
+            if (func_802721D4(arg0, (s32) arg1, arg2) == 1) {
                 return;
             }
         }
@@ -1043,52 +1043,38 @@ s16 func_8027241C(s16 arg0) {
     }
 }
 
-s32 func_802721D4(u8 *arg0, s32 arg1, s32 *arg2) {
-    f32 temp_fv0;
-    f32 temp_fv0_2;
-    f32 temp_fv0_3;
-    s32 var_v0;
-    u8 *temp_a0;
-
+s32 func_802721D4(Obj8E *arg0, s32 arg1, Ctl87 *arg2) {
     func_802714C4();
-    temp_fv0 = M2C_FIELD(arg0, f32 *, 0x58);
-    M2C_FIELD(D_802AFDD8, f32 *, 0x58) = temp_fv0;
-    M2C_FIELD(M2C_FIELD(D_802AFDD8, void **, 0x40), f32 *, 0x10) = temp_fv0;
-    temp_fv0_2 = M2C_FIELD(arg0, f32 *, 0x5C);
-    M2C_FIELD(D_802AFDD8, f32 *, 0x5C) = temp_fv0_2;
-    M2C_FIELD(M2C_FIELD(D_802AFDD8, void **, 0x40), f32 *, 0x14) = temp_fv0_2;
-    temp_fv0_3 = M2C_FIELD(arg0, f32 *, 0x60);
-    M2C_FIELD(D_802AFDD8, f32 *, 0x60) = temp_fv0_3;
-    M2C_FIELD(M2C_FIELD(D_802AFDD8, void **, 0x40), f32 *, 0x18) = temp_fv0_3;
-    M2C_FIELD(M2C_FIELD(D_802AFDD8, void **, 0x40), f32 *, 0x28) = (f32) M2C_FIELD(M2C_FIELD(arg0, void **, 0x40), f32 *, 0x28);
-    M2C_FIELD(M2C_FIELD(D_802AFDD8, void **, 0x40), f32 *, 0x2C) = (f32) M2C_FIELD(M2C_FIELD(arg0, void **, 0x40), f32 *, 0x2C);
-    M2C_FIELD(M2C_FIELD(D_802AFDD8, void **, 0x40), f32 *, 0x30) = (f32) M2C_FIELD(M2C_FIELD(arg0, void **, 0x40), f32 *, 0x30);
-    M2C_FIELD(D_802AFDD8, s32 *, 0x30) = 1;
-    M2C_FIELD(D_802AFDD8, f32 *, 0x34) = (f32) M2C_FIELD(arg0, f32 *, 0x34);
-    M2C_FIELD(D_802AFDD8, f32 *, 0x38) = (f32) M2C_FIELD(arg0, f32 *, 0x38);
-    func_80291944(D_802AFDD8, func_80272024(M2C_FIELD(arg2, s16 *, 0x14)), M2C_FIELD(arg2, f32 *, 0x1C));
-    temp_a0 = D_802AFDD8;
-    if (M2C_FIELD(temp_a0, s32 *, 8) & 1) {
-        M2C_FIELD(arg2, s32 *, 0x20) = func_80272024(M2C_FIELD(arg2, s16 *, 0x14));
-        M2C_FIELD(arg2, f32 *, 0x24) = 0.0f;
-        func_802441F4(arg0, func_80272024(M2C_FIELD(arg2, s16 *, 0x14)), (u8 *)arg2 + 0x20, (f32 *) ((u8 *)arg2 + 0x24));
-        func_80291944(D_802AFDD8, M2C_FIELD(arg2, s32 *, 0x20), M2C_FIELD(arg2, f32 *, 0x24));
-        M2C_FIELD(arg2, s32 *, 0x20) = 1;
-        M2C_FIELD(arg2, f32 *, 0x24) = 0.0f;
+    OBJ_DD8->unk40->x = OBJ_DD8->unk58 = arg0->unk58;
+    OBJ_DD8->unk40->y = OBJ_DD8->unk5C = arg0->unk5C;
+    OBJ_DD8->unk40->z = OBJ_DD8->unk60 = arg0->unk60;
+    OBJ_DD8->unk40->sx = arg0->unk40->sx;
+    OBJ_DD8->unk40->sy = arg0->unk40->sy;
+    OBJ_DD8->unk40->sz = arg0->unk40->sz;
+    OBJ_DD8->unk30 = 1;
+    OBJ_DD8->unk34 = arg0->unk34;
+    OBJ_DD8->unk38 = arg0->unk38;
+    func_80291944(OBJ_DD8, func_80272024(arg2->unk14), arg2->unk1C);
+    if (OBJ_DD8->unk8 & 1) {
+        arg2->unk20 = func_80272024(arg2->unk14);
+        arg2->unk24 = 0.0f;
+        func_802441F4(arg0, func_80272024(arg2->unk14), &arg2->unk20, &arg2->unk24);
+        func_80291944(OBJ_DD8, arg2->unk20, arg2->unk24);
+        arg2->unk20 = 1;
+        arg2->unk24 = 0.0f;
     }
-    func_802720C8(temp_a0);
-    M2C_FIELD(D_802AFDD8, f32 *, 0x70) = 1.6333334f;
-    M2C_FIELD(D_802AFDD8, f32 *, 0x6C) = 2.0f;
-    M2C_FIELD(D_802AFDD8, f32 *, 0x68) = 22.5f;
-    func_80230914(D_802AFDD8);
-    if (func_802909FC(D_802AFDD8, func_80277378) != 0) {
+    func_802720C8((u8 *) OBJ_DD8);
+    OBJ_DD8->unk70 = 1.6333334f;
+    OBJ_DD8->unk6C = 2.0f;
+    OBJ_DD8->unk68 = 22.5f;
+    func_80230914(OBJ_DD8);
+    if (func_802909FC(OBJ_DD8, func_80277378) != 0) {
         return 2;
     }
-    var_v0 = 1;
-    if (func_8022E884((s32) D_802AFDD8, arg1) != 0) {
-        var_v0 = 0;
+    if (func_8022E884((s32) OBJ_DD8, arg1) != 0) {
+        return 0;
     }
-    return var_v0;
+    return 1;
 }
 
 void func_802720C8(u8 *arg0) {
@@ -1757,7 +1743,6 @@ void func_80270770(s16 arg0, s16 arg1) {
             break;
         default:
             speed = 10.0f;
-            break;
     }
     c = malloc(sizeof(Ctl87));
     o = func_802443F4(arg0);
