@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 797, eu 797, jp 796
+ * differing words: us 774, eu 774, jp 773
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -2114,49 +2114,47 @@ void func_8024CEB8(s32 arg0) {
 void func_8024CC58(s32 arg0) {
     Obj88 *obj;
     s32 r;
-    s32 pad;
     f32 vec[3];
-    UnkStruct_800AEDF0 *p;
     s32 i;
 
-    p = &D_800AEDF0[arg0];
     obj = (Obj88 *)func_802443F4(arg0);
-    if (i) {}
     if (func_80243EB4(arg0, 0x2000)) {
-        i = p->unkA4;
+        UnkObj *o2;
+        i = D_800AEDF0[arg0].unkA4;
+        o2 = (UnkObj *)func_802443F4(i);
         vec[2] = 70.0f;
         vec[1] = D_802ACE90[i];
         vec[0] = 180.0f;
-        func_8022FEAC(vec, D_800AEDF0[i].unk28->unk4C);
+        func_8022FEAC(vec, o2->unk4C);
         D_802ACE90[i] -= 1.0f;
     }
-    if (obj->unk40->unk48->unk4->unk4 == 2.0f && !(p->unk38 & 0x80)) {
-        if (p->unk3C == 0) {
+    if (obj->unk40->unk48->unk4->unk4 == 2.0f && !(D_800AEDF0[arg0].unk38 & 0x80)) {
+        if (D_800AEDF0[arg0].unk3C == 0) {
             r = func_80271540((s16)arg0);
             if (r != 0) {
                 func_80271BB8((s16)arg0);
-                p->unk2C = r;
+                D_800AEDF0[arg0].unk2C = r;
             } else {
                 func_80244354(arg0, 0xA0, 0);
                 func_802444B8(arg0, 0);
-                p->unk2C = 0;
+                D_800AEDF0[arg0].unk2C = 0;
             }
         } else {
             func_802741D8((s16)arg0);
-            p->unk2C = func_80270714((s16)arg0);
-            if (p->unk2C == 0) {
+            D_800AEDF0[arg0].unk2C = func_80270714((s16)arg0);
+            if (D_800AEDF0[arg0].unk2C == 0) {
                 func_80244354(arg0, 0xA0, 0);
                 func_802444B8(arg0, 0);
             }
         }
-        p->unk38 |= 0x80;
+        D_800AEDF0[arg0].unk38 |= 0x80;
     }
     if ((obj->unk40->unk48->unk4->unk8 & 0x40) && func_80277CEC(arg0)) {
         func_80244354(arg0, 0xA0, 0);
         func_80244354(arg0, 0x8000, 1);
         func_802444B8(arg0, 0xC);
     }
-    if (p->unk2C != 0 && (s32)obj != M2C_FIELD(p->unk2C, s32 *, 0x44)) {
+    if (D_800AEDF0[arg0].unk2C != 0 && (s32)obj != M2C_FIELD(D_800AEDF0[arg0].unk2C, s32 *, 0x44)) {
         func_80244C30(arg0, 0);
     }
 }
