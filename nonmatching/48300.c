@@ -6,7 +6,7 @@
  * boxes, func_8022E884). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1749, eu 1749, jp 1749
+ * differing words: us 1730, eu 1730, jp 1730
  *
  * A first draft: functions in the reverse of the ROM's order, which IDO
  * now emits exactly as the original does (stubs included); a handful by
@@ -252,7 +252,7 @@ s32 func_80232C74(f32 *arg0, s32 arg1);
 s32 func_80232D18(f32 *arg0, s32 arg1);
 void func_80232DB4(f32 *arg0);
 void func_80232E60(void);
-void func_80232FA8(u8 *arg0);
+void func_80232FA8(UnkStructA80 *arg0);
 void func_80232FF8(UnkStructA80 *arg0, s32 *arg1);
 void func_802334CC(void);
 void func_8023357C(u8 *arg0);
@@ -417,26 +417,14 @@ void func_80232FF8(UnkStructA80 *arg0, s32 *arg1) {
     }
 }
 
-void func_80232FA8(u8 *arg0) {
-    s32 temp_t6;
-    s32 temp_t7;
-    s32 temp_t8;
-    u8 *var_a0;
-
-    var_a0 = arg0;
-    if (var_a0 != NULL) {
-        do {
-            temp_t6 = M2C_FIELD(var_a0, s32 *, 0x14);
-            temp_t7 = M2C_FIELD(var_a0, s32 *, 0x1C);
-            temp_t8 = M2C_FIELD(var_a0, s32 *, 0x24);
-            M2C_FIELD(var_a0, s32 *, 0x14) = 0;
-            M2C_FIELD(var_a0, s32 *, 0x1C) = 0x7FFFFFFF;
-            M2C_FIELD(var_a0, s32 *, 0x24) = 0;
-            M2C_FIELD(var_a0, s32 *, 0x10) = temp_t6;
-            M2C_FIELD(var_a0, s32 *, 0x18) = temp_t7;
-            M2C_FIELD(var_a0, s32 *, 0x20) = temp_t8;
-            var_a0 = M2C_FIELD(var_a0, void **, 0x7C);
-        } while (var_a0 != NULL);
+void func_80232FA8(UnkStructA80 *arg0) {
+    for (; arg0 != NULL; arg0 = arg0->unk7C) {
+        arg0->unk10 = arg0->unk14;
+        arg0->unk14 = 0;
+        arg0->unk18 = arg0->unk1C;
+        arg0->unk1C = 0x7FFFFFFF;
+        arg0->unk20 = arg0->unk24;
+        arg0->unk24 = 0;
     }
 }
 
