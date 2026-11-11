@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 412, eu 412, jp 412
+ * differing words: us 336, eu 336, jp 336
  */
 #include "common.h"
 
@@ -958,6 +958,7 @@ static UnkStruct_800BA900 *func_80285A74() {
 
 static void func_80285A8C(UnkStruct_80288040 *a_, UnkStruct_800BA8E8 *e_) {
     void *f;
+    s32 v;
 
     f = func_80226604(0xDD, 1);
     func_80225CCC((void *) f, e_->unk0 * 20, 0);
@@ -970,7 +971,9 @@ static void func_80285A8C(UnkStruct_80288040 *a_, UnkStruct_800BA8E8 *e_) {
     (a_)->unk50.b[0] = D_800BB488[4];
     (a_)->unk1E = D_800BB488[5];
     (a_)->unk24 = (D_800BB488[6] << 24) + (D_800BB488[7] << 16) + (D_800BB488[8] << 8) + D_800BB488[9];
-    (a_)->unk2C = 2.0f * (s16) ((D_800BB488[10] << 8) + D_800BB488[11]) * 0.01f;
+    v = (D_800BB488[10] << 8);
+    v = (s16) (v + D_800BB488[11]);
+    (a_)->unk2C = 2.0f * v * 0.01f;
     (a_)->unk1D = D_800BB488[12];
     (a_)->unk44 = D_800BB488[13];
     (a_)->unk6C = D_800BB488[14];
@@ -1010,6 +1013,7 @@ static void func_80285A9C(UnkStruct_800BB340 *arg0) {
         func_80285A7C(a, &D_800BA8E8[a->unk84]);
         goto L;
     L:
+        if (D_800BA8E8[0].unk0) {}
         a->unk0->unk40->unk28 = 1.0f;
         a->unk0->unk40->unk2C = 1.0f;
         a->unk0->unk40->unk30 = 1.0f;
