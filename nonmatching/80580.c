@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3523, eu 3523, jp 3523
+ * differing words: us 3455, eu 3455, jp 3455
  *
  * The object is the same in all three versions. 36 of the 79 original
  * procedures match (8 of them inlined-static stubs). The IPA statics
@@ -2542,57 +2542,46 @@ void func_80266118(s8 arg0) {
     D_802AD664 = 0.0f;
 }
 
-static void func_802660B4() {
-    Voice *temp_a0;
-    s32 var_at;
-    s32 var_v0;
-    u8 temp_t8;
+static void func_802660B4(void) {
+    s32 i;
+    Voice *v;
 
-    var_v0 = 0;
-    if (D_802A12BC > 0) {
-        do {
-            temp_a0 = &D_802AD654[var_v0];
-            temp_t8 = temp_a0->state;
-            var_v0 += 1;
-            var_at = var_v0 < D_802A12BC;
-            if (temp_t8 == 1) {
-                temp_a0->flags |= 2;
-                var_at = var_v0 < D_802A12BC;
-            }
-        } while (var_at != 0);
+    if (0) {
+        func_80298710(0);
+    }
+    for (i = 0; i < D_802A12BC; i++) {
+        v = &D_802AD654[i];
+        if (v->state == 1) {
+            v->flags |= 2;
+        }
     }
 }
 
-void func_80265FF8(s8 arg0) {
-    Voice *temp_v0;
-    s16 var_v1;
-    s32 temp_a0;
-    s32 var_at;
-    s32 var_v1_2;
-    u8 temp_t1;
+static s16 func_80265FF8_s(s8 arg0) {
+    s32 v;
 
     if (arg0 > 0) {
-        var_v1 = (arg0 << 8) + 0xFF;
+        v = (arg0 << 8) + 0xFF;
     } else {
-        var_v1 = 0;
+        v = 0;
     }
-    D_802AD672 = var_v1;
-    var_v1_2 = 0;
-    if (D_802A12BC > 0) {
-        do {
-            temp_v0 = &D_802AD654[var_v1_2];
-            temp_t1 = temp_v0->state;
-            var_v1_2 += 1;
-            var_at = var_v1_2 < D_802A12BC;
-            if (temp_t1 == 1) {
-                temp_a0 = temp_v0->flags;
-                if (!(temp_a0 & 0x1000) && (D_802AD672 != temp_v0->unk14)) {
-                    temp_v0->flags = temp_a0 | 2;
-                }
-                temp_v0->unk14 = D_802AD672;
-                var_at = var_v1_2 < D_802A12BC;
+    return v;
+}
+
+void func_80265FF8(s8 arg0) {
+    s32 i;
+    Voice *v;
+    s32 t;
+
+    D_802AD672 = func_80265FF8_s(arg0);
+    for (i = 0; i < D_802A12BC; i++) {
+        v = &D_802AD654[i];
+        if (v->state == 1) {
+            if (!(v->flags & 0x1000) && v->unk14 != D_802AD672) {
+                v->flags |= 2;
             }
-        } while (var_at != 0);
+            v->unk14 = D_802AD672;
+        }
     }
 }
 
