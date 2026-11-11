@@ -5,7 +5,7 @@
  * global, emitted in the original's order. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 526, eu 526, jp 526
+ * differing words: us 468, eu 468, jp 468
  *
  * 36 of 47 match. Biggest left: func_802741D8 461, func_8027655C 436,
  * func_80274994 320 (still m2c's control flow and untyped offsets),
@@ -317,6 +317,7 @@ void func_80275C7C(s16 arg0, u8 *arg1, s16 arg2);
 s32 func_80275DD8(Ent88 *a, Ent88 *b);
 void func_80276184(s16 *arg0, u8 *arg1);
 static void func_80271448_inl(f32 arg0, f32 arg1, f32 arg2, f32 *arg3, f32 *arg4, f32 *arg5);
+static s16 func_802712A8_inl(s16 *arg0, s16 arg1);
 void func_802763DC(s16 *arg0);
 s32 func_8027655C(Ent88 *arg0);
 void func_80276D68(Ent88 *arg0);
@@ -920,6 +921,10 @@ s32 func_8027655C(Ent88 *arg0) {
     return 0;
 }
 
+static s16 func_802712A8_inl(s16 *arg0, s16 arg1) {
+    return *arg0 & arg1;
+}
+
 static void func_80271448_inl(f32 arg0, f32 arg1, f32 arg2, f32 *arg3, f32 *arg4, f32 *arg5) {
     s32 sp20[6];
 
@@ -954,17 +959,13 @@ void func_802763DC(s16 *arg0) {
 
 void func_80276184(s16 *arg0, u8 *arg1) {
     Ent88 *t;
-    s16 f;
-    s16 fl;
-    s16 tf;
-    s16 fl2;
 
     if (arg1 != NULL && (((Obj8E *) arg1)->unk8 & 0x14) && !(((Obj8E *) arg1)->unk8 & 0x8002)) {
         func_80275C08(arg1, (u8 *) ((Ent88 *) arg0)->obj);
         func_802712C4(arg0);
         func_8026C51C(0x22, ((Ent88 *) arg0)->obj->unk40->x, ((Ent88 *) arg0)->obj->unk40->y, ((Ent88 *) arg0)->obj->unk40->z);
     }
-    if (arg1 != NULL && (((Obj8E *) arg1)->unk8 & 4) && (fl = ((Ent88 *) arg0)->unk64, (s16) (fl & 0x80) != 0)) {
+    if (arg1 != NULL && (((Obj8E *) arg1)->unk8 & 4) && func_802712A8_inl(&((Ent88 *) arg0)->unk64, 0x80) != 0) {
         ((Ent88 *) arg0)->unk74 = 9;
     }
     if (arg1 != NULL && (((Obj8E *) arg1)->unk8 & 0x8000)) {
@@ -978,11 +979,9 @@ void func_80276184(s16 *arg0, u8 *arg1) {
     }
     if (arg1 != NULL && (((Obj8E *) arg1)->unk8 & 2) && !(((Obj8E *) arg1)->unk8 & 0x8000)) {
         t = (Ent88 *) func_802703B4(arg1);
-        fl2 = ((Ent88 *) arg0)->unk64;
-        if ((s16) (fl2 & 4) != 0) {
-            tf = t->unk64;
-            if ((f = tf & 4) == 0) {
-                if ((f = tf & 0x200) != 0) {
+        if (func_802712A8_inl(&((Ent88 *) arg0)->unk64, 4) != 0) {
+            if (func_802712A8_inl(&t->unk64, 4) == 0) {
+                if (func_802712A8_inl(&t->unk64, 0x200) != 0) {
                     func_80271F74(t->unk38);
                 }
                 if (func_80275DD8((Ent88 *) arg0, t) != 0) {
