@@ -7,7 +7,7 @@
  * order. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 303, eu 303, jp 303
+ * differing words: us 294, eu 294, jp 294
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file (475 words in the one-file draft, 39
@@ -17,8 +17,8 @@
  * original calls them; the callers call them rather than spell them out.
  * 49 of 54 match. Left: func_80270770 143, func_80271BB8 92 (the
  * original also inlines func_80271178, and its frame is 8 bytes
- * smaller than ours with that), func_80270C24 64, func_80271010 10,
- * func_8027241C 3.
+ * smaller than ours with that), func_80270C24 55, func_8027241C 3,
+ * func_80271010 1 (one add.s with its operands swapped).
  */
 #include "common.h"
 
@@ -1594,10 +1594,14 @@ void func_80270C24(u8 *arg0, s16 arg1, s32 arg2) {
         ok = func_80270438(arg0, (s32 *) c);
     } else if (c->flags & 8) {
         ok = func_8027A1F4(arg0, (s32) c);
-    } else if (c->flags & 4) {
-        ok = func_802870A8(arg0, c);
-    } else if (c->flags & 1) {
-        ok = func_80244F34(arg0, (s32) c);
+    } else {
+        if (h) { /* fake: keeps h live into the chain (permuter find) */
+        }
+        if (c->flags & 4) {
+            ok = func_802870A8(arg0, c);
+        } else if (c->flags & 1) {
+            ok = func_80244F34(arg0, (s32) c);
+        }
     }
     if (ok != 0) {
         func_80270080((s32 *) c);

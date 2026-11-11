@@ -16,7 +16,7 @@
  * D_800B15D8[0].unkN (the latter swaps the multiply's registers).
  * func_8026F5E8 and func_8026E3AC keep their x/y/z in an f32[3] (the
  * original's dead stores to it), not in three variables.
- * 24 of 43 match. Biggest left: func_8026EAF8 105, func_8026E938 96,
+ * 26 of 43 match. Biggest left: func_8026EAF8 105, func_8026E938 96,
  * func_8026DA2C 90, func_8026E3AC 74, func_8026D6C0 69.
  */
 #include "common.h"
