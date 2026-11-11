@@ -9,7 +9,7 @@
  * func_80228500 kept). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 795, eu 795, jp 795
+ * differing words: us 787, eu 787, jp 787
  *
  * The code is the same in every version.
  *
@@ -39,7 +39,7 @@
  *   with a 0x160 frame (ours 0x140, obj in t4 and spilled); its texture
  *   loop spills obj to 0xB0(sp), keeps 0xBC000000 in t5 with its own
  *   ori 6, and strength-reduces the slot offset.
- * - func_8022A328 (166): mostly registers. The original keeps j in t0
+ * - func_8022A328 (158): mostly registers. The original keeps j in t0
  *   for the two failure exits (ours stores zero and merges them) and
  *   re-materialises the pool base after the free-slot search.
  * - func_8022928C (92, the 3x3 inverse): nine element locals and
@@ -534,13 +534,13 @@ UnkObj *func_8022A328(UnkModel *arg0, s32 arg1, s32 arg2, u32 arg3, s32 arg4) {
     UnkSkel *skel;
     f32 f;
 
-    j = 0;
     i = 2;
     while (D_800A0D00[i].unk3C != NULL) {
         if (++i >= 0xA1) {
             break;
         }
     }
+    j = 0;
     if (arg1 >= 0xA0) {
         D_802A5478 = j;
         D_802A5474 = i;
