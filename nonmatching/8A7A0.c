@@ -7,7 +7,7 @@
  * order. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 119, eu 119, jp 119
+ * differing words: us 72, eu 72, jp 72
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file (475 words in the one-file draft, 39
@@ -15,10 +15,11 @@
  * The entity flag helpers func_80270354/func_8027036C/func_802712A8 and
  * the tests func_80270384/func_802702BC are inlined by umerge where the
  * original calls them; the callers call them rather than spell them out.
- * 49 of 54 match. Left: func_80270C24 55, func_80270770 35 (flags
- * and ok in v1/a0 where the original has a0/a1), func_80271BB8 25 (the
- * s temp's slot at 68, the second unk40 pointer in v1, the tail's
- * schedule), func_8027241C 3, func_80271010 1 (one add.s with its
+ * 49 of 54 match. Left: func_80270770 35 (flags and ok in v1/a0
+ * where the original has a0/a1), func_80271BB8 25 (the s temp's slot
+ * at 68, the second unk40 pointer in v1, the tail's schedule),
+ * func_80270C24 8 (the flag tests' t registers one higher than the
+ * original's), func_8027241C 3, func_80271010 1 (one add.s with its
  * operands swapped).
  */
 #include "common.h"
@@ -1545,6 +1546,8 @@ void func_80270C24(u8 *arg0, s16 arg1, s32 arg2) {
     switch (arg2) {
         case 0:
             r = 0.0f;
+            if (D_802AFC5C == 0.0f) {
+            }
             h = 0.0f;
             break;
         case 1:
@@ -1563,16 +1566,18 @@ void func_80270C24(u8 *arg0, s16 arg1, s32 arg2) {
             r = 10.0f;
     }
     c = malloc(sizeof(Ctl87));
+    goto next;
+next:
     c->obj = (Obj8E *) arg0;
     c->unk14 = func_8026FFA0(arg1);
     c->unk18 = r;
+    c->unk1C = h;
     c->unk20 = 1;
     c->unk28 = 0;
     c->unk16 = 0;
-    c->unk1C = h;
     c->unk24 = 0.0f;
-    c->unk30 = 0;
     c->unk2C = 10000.0f;
+    c->unk30 = 0;
     ok = 0;
     c->unk34 = ((Obj8E *) arg0)->unk40->x;
     c->unk38 = ((Obj8E *) arg0)->unk40->z;
@@ -1582,8 +1587,6 @@ void func_80270C24(u8 *arg0, s16 arg1, s32 arg2) {
     } else if (c->flags & 8) {
         ok = func_8027A1F4(arg0, (s32) c);
     } else {
-        if (h) { /* fake: keeps h live into the chain (permuter find) */
-        }
         if (c->flags & 4) {
             ok = func_802870A8(arg0, c);
         } else if (c->flags & 1) {
