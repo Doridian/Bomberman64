@@ -2,15 +2,16 @@
  * NON_MATCHING: main_code's B11F0, complete first draft.
  * flags: -O3
  * (-O3: func_80297564 keeps its argument in t4, func_80296C10 in t0.)
- * differing words: us 20, eu 20, jp 20
+ * differing words: us 5, eu 5, jp 5
  *
- * 23 of 25 functions match. Left: func_80296B3C (5, t1 for a2: the
+ * 24 of 25 functions match. Left: func_80296B3C (5, t1 for a2: the
  * original's a2 piece of arg0 stops at func_8022946C's call, the store
- * after it reloads arg0 from its home) and func_80296D4C (15, frame 0x98
- * with dw/dh spilled at 0x60/0x64). func_80297114 matched once its entry
- * pointer came from the getter func_80296BEC (inlined: its parameter is
- * a variable, coloured v1); func_80296C10's frame once `start` was
- * declared last.
+ * after it reloads arg0 from its home). func_80297114 matched once its
+ * entry pointer came from the getter func_80296BEC (inlined: its
+ * parameter is a variable, coloured v1); func_80296C10's frame once
+ * `start` was declared last; func_80296D4C with `dst` set right after the
+ * call (as1 puts its addiu ahead of the header stores) and an unexplained
+ * 24 bytes of frame as `s32 pad[6]`.
  */
 #include "common.h"
 #define F3DEX_GBI
@@ -351,6 +352,7 @@ void func_80297114(void) {
 void func_80296C10(u16 *arg0, s32 x, s32 y, s32 w, s32 h);
 
 void func_80296D4C(u16 *arg0, UnkStruct_80296D4C *arg1, UnkStruct_80297858 **arg2) {
+    s32 pad[6]; /* frame: 0x98 (unexplained 24 bytes above the locals) */
     f32 x = 8.0f;
     f32 y = 6.0f;
     f32 w = 304.0f;
@@ -369,6 +371,7 @@ void func_80296D4C(u16 *arg0, UnkStruct_80296D4C *arg1, UnkStruct_80297858 **arg
     func_80227870();
     func_8023903C(10);
     src = func_80226E4C(1);
+    dst = arg1->unk18;
     arg1->unk4 = 1;
     arg1->unk0 = 0x36340037;
     arg1->unk8 = 4;
@@ -379,7 +382,6 @@ void func_80296D4C(u16 *arg0, UnkStruct_80296D4C *arg1, UnkStruct_80297858 **arg
     arg1->unk10 = 320;
     arg1->unk12 = 240;
     arg1->unk14 = 0x18;
-    dst = arg1->unk18;
     for (i = 0; i < 320 * 240; i++) {
         *dst++ = *src++ | 1;
     }
