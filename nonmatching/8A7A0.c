@@ -7,7 +7,7 @@
  * order. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 510, eu 510, jp 510
+ * differing words: us 504, eu 504, jp 504
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file (475 words in the one-file draft, 39
@@ -710,20 +710,16 @@ void func_802733C8(u8 *arg0) {
 }
 
 void *func_80273370(s32 arg0) {
-    s16 var_v0;
-    u8 *temp_v1;
+    s16 i;
+    Slot30 *p;
 
-    var_v0 = 0;
-loop_1:
-    temp_v1 = D_802AFCE8 + (var_v0 * 0x30);
-    if (arg0 == M2C_FIELD(temp_v1, s32 *, 0xC)) {
-        return temp_v1;
+    for (i = 0; i < 5; i++) {
+        p = &SLOTS[i];
+        if (arg0 == p->unkC) {
+            return p;
+        }
     }
-    var_v0 += 1;
-    if (var_v0 >= 5) {
-        return NULL;
-    }
-    goto loop_1;
+    return NULL;
 }
 
 void func_802731A4(Obj8E *arg0, s16 arg1) {
@@ -942,9 +938,9 @@ void func_802727D8(Ctl87 *arg0) {
     if (obj->unk6C == 0.0f && obj->unk68 == 0.0f) {
         if (arg0->flags & 8) {
             v = (s32) func_8027A1A0(arg0->obj);
-            if (v != 0 && (w = *(s16 *) (v + 0x54), (s16) (w & 0x40) == 0) && arg0->unk28 < 2) {
-                v = (obj->unk40->y <= func_8026E8B8()) ? 1 : 0;
-                if (v == 0) {
+            if (v != 0 && func_802712A8((s16 *) (v + 0x54), 0x40) == 0 && arg0->unk28 < 2) {
+                w = (obj->unk40->y <= func_8026E8B8()) ? 1 : 0;
+                if (w == 0) {
                     arg0->unk28++;
                     done = 1;
                     obj->unk6C = 2.0f;
@@ -1623,18 +1619,14 @@ void func_80270BA4(u8 *arg0) {
 }
 
 s16 func_80270B4C(s32 arg0) {
-    s16 var_v1;
+    s16 i;
 
-    var_v1 = 0;
-loop_1:
-    if (arg0 == M2C_FIELD((D_802AFCE8 + (var_v1 * 0x30)), s32 *, 0xC)) {
-        return var_v1;
+    for (i = 0; i < 5; i++) {
+        if (arg0 == SLOTS[i].unkC) {
+            return i;
+        }
     }
-    var_v1 += 1;
-    if (var_v1 >= 5) {
-        return -1;
-    }
-    goto loop_1;
+    return -1;
 }
 
 void func_80270B20(u8 *arg0) {
