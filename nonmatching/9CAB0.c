@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 112, eu 112, jp 112
+ * differing words: us 101, eu 101, jp 101
  */
 #include "common.h"
 
@@ -1471,7 +1471,7 @@ static void func_802847E4(UnkStruct_80288040 *arg0, s32 arg1) {
 
 static s32 func_8028456C(UnkStruct_80288040 *arg0) {
     f32 speed;
-    s32 st;
+    u8 st;
     u16 tile;
 
     func_8028425C(arg0);
@@ -1479,17 +1479,16 @@ static s32 func_8028456C(UnkStruct_80288040 *arg0) {
     if (arg0->unk30 != 3) {
         arg0->unk40++;
         arg0->unk40 &= 0x7FFF;
-        if ((arg0->unk3D != 0) && ((u8) st != 1) && ((u8) st != 3) &&
-            ((arg0->unk48 != 0) || ((u32) arg0->unk40 >= arg0->unk3E))) {
+        if ((arg0->unk3D != 0) && (st != 1) && (st != 3) && ((arg0->unk48 != 0) || ((u32) arg0->unk40 >= arg0->unk3E))) {
             func_802881A0(arg0);
             if (arg0->unk48 != 0) {
                 arg0->unk40 = 0;
             }
         }
-        st = arg0->unk7A & 0xF;
+        ;
     }
     speed = arg0->unk2C;
-    switch ((u8) st) {
+    switch ((u8) (arg0->unk7A & 0xF)) {
     case 2:
     case 4:
         break;
@@ -1509,8 +1508,7 @@ static s32 func_8028456C(UnkStruct_80288040 *arg0) {
         break;
     }
     func_80291944(arg0->unk0, arg0->unk1C & 0xF0, speed);
-    tile = func_8026D7D8((s32) ((arg0->unk0->unk40->unk10 + 50.0f) * 0.01), func_8026EE18(arg0->unk0->unk40->unk14),
-                         (s32) ((arg0->unk0->unk40->unk18 + 50.0f) * 0.01));
+    tile = func_8026D7D8((s32) ((arg0->unk0->unk40->unk10 + 50.0f) * 0.01), func_8026EE18(arg0->unk0->unk40->unk14), (s32) ((arg0->unk0->unk40->unk18 + 50.0f) * 0.01));
     if (arg0->unk6C & 0x20) {
         if (tile & 0x1C00) {
             func_8027F858(arg0->unk0, tile >> 10);
