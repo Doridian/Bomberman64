@@ -7,7 +7,7 @@
  * order. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 294, eu 294, jp 294
+ * differing words: us 230, eu 230, jp 230
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file (475 words in the one-file draft, 39
@@ -15,9 +15,10 @@
  * The entity flag helpers func_80270354/func_8027036C/func_802712A8 and
  * the tests func_80270384/func_802702BC are inlined by umerge where the
  * original calls them; the callers call them rather than spell them out.
- * 49 of 54 match. Left: func_80270770 143, func_80271BB8 92 (the
+ * 49 of 54 match. Left: func_80271BB8 92 (the
  * original also inlines func_80271178, and its frame is 8 bytes
- * smaller than ours with that), func_80270C24 55, func_8027241C 3,
+ * smaller than ours with that), func_80270770 79 (frame homes of h
+ * and speed, one zero constant), func_80270C24 55, func_8027241C 3,
  * func_80271010 1 (one add.s with its operands swapped).
  */
 #include "common.h"
@@ -1665,13 +1666,13 @@ void func_80270A80(s32 *arg0) {
 }
 
 void func_80270770(s16 arg0, s16 arg1) {
-    s32 pad[2];
     f32 speed;
     f32 h;
     Obj8E *o;
     Ctl87 *c;
     Obj8E *obj;
     s32 ok;
+    s32 flags;
 
     if (func_80270714(arg0) == 0) {
         return;
@@ -1712,14 +1713,15 @@ void func_80270770(s16 arg0, s16 arg1) {
     ok = 0;
     c->unk34 = obj->unk40->x;
     c->unk38 = obj->unk40->z;
-    c->flags = SLOTS[arg0].unk8;
-    if (c->flags & 2) {
+    flags = SLOTS[arg0].unk8;
+    c->flags = flags;
+    if (flags & 2) {
         ok = func_80270438((u8 *) obj, (s32 *) c);
     } else if (c->flags & 8) {
         ok = func_8027A1F4(obj, (s32) c);
     } else if (c->flags & 4) {
         ok = func_802870A8(obj, c);
-    } else if (c->flags & 1) {
+    } else if (flags & 1) {
         ok = func_80244F34(obj, (s32) c);
     }
     if (ok != 0) {
@@ -1731,7 +1733,7 @@ void func_80270770(s16 arg0, s16 arg1) {
         c->unkC = obj;
         func_802702EC(arg0);
         func_802313DC(obj, 0x10000);
-        SLOTS[arg0].unk10 = 0;
+        *(s16 *) (D_802AFCE8 + arg0 * 0x30 + 0x10) = 0;
         func_80232AA8((s32) obj);
         func_802313DC(obj, 0x200000);
         func_802313DC(obj, 0x600000);
