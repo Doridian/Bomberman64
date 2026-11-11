@@ -1,16 +1,18 @@
 /*
  * NON_MATCHING: main_code's 93850, complete: the list of bonus items at
  * D_800BB4A8 (func_80279050 to func_8027A144, the list's thread). The
- * C is written last function first, as -O3 emits it. func_802797BC is
- * one word long (as1 leaves a nop after the func_80243DDC compare where
- * the original has li a1,32) and differs in the scheduling of cases 2
- * and 3 (ugen marks the two tables .noalias); func_80279DC8 loads
+ * C is written last function first, as -O3 emits it. func_802797BC
+ * differs in the scheduling of cases 2 and 3 (ugen marks the two tables
+ * .noalias) and the order of two sra in the default case; the dead
+ * `if (sound) {}` that ends cases 2 and 3 (fake) is what lets as1 fill
+ * the delay slot after the func_80243DDC compare with li a1,32 as the
+ * original does (without it, a nop and one word more); func_80279DC8 loads
  * arg0->unk14 into v0 where the original uses v1, so its ret = 1 moves
  * and it is one word short; func_8027A144 differs only in the padding
  * after it. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 139, eu 139, jp 139
+ * differing words: us 70, eu 70, jp 70
  */
 #include "common.h"
 
@@ -418,11 +420,15 @@ void func_802797BC(UnkStruct_80279050_14 *arg0, UnkStruct_800BB4A8 *arg1) {
             D_800AEDF0[i].unk18 |= 1;
             sound = 5;
             D_800BA8A0[i].unk4++;
+            if (sound) { /* fake: see the header */
+            }
             break;
         case 3:
             D_800AEDF0[i].unk18 |= 2;
             sound = 5;
             D_800BA8A0[i].unk6++;
+            if (sound) { /* fake: see the header */
+            }
             break;
         case 4:
             if ((D_802AC5D0 & 8) && i != 0) {
