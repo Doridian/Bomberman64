@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 172, eu 172, jp 172
+ * differing words: us 161, eu 161, jp 161
  *
  * The object is the same in all three versions. 70 of the 79 original
  * procedures match (stubs included). The IPA statics
@@ -408,9 +408,9 @@ extern u8 D_802AD675;
 extern u8 D_802AD684[];
 static s16 func_80267A10(s16 num);
 static void func_802679B8(s16 *p, s16 lo, s16 hi);
-static void func_802679A8(s16 *p, s16 lo, s16 hi);
-static void func_802679B0(VoiceScript *s);
-static void func_802679A0(s16 *p, s16 lo, s16 hi);
+static void func_802679A8(VoiceScript *s);
+static void func_802679B0(VoiceScript *s, Voice *v);
+static void func_802679A0(VoiceScript *s, Voice *v);
 static void func_802691A0(void);
 static void func_80266154();
 static void func_80266298();
@@ -1613,9 +1613,6 @@ static void func_80267A18(s16 idx) {
     u8 *pc;
     s16 num;
     s16 ch;
-    s16 vol;
-    f32 f;
-    f32 r;
 
     if (D_802AD658 != NULL) {
         s = &D_802AD65C[idx];
@@ -1712,9 +1709,8 @@ static void func_80267A18(s16 idx) {
                     case 34:
                         if (*pc++) {
                             s->unk22 = 0x105 - s->unk1F;
-                            f = func_802679C0(s->unk1E);
+                            s->unk24 = (s16) func_802679C0(s->unk1E) >> 1;
                             s->unk20 = 0;
-                            s->unk24 = (s16) f >> 1;
                             s->flags |= 2;
                         } else {
                             s->flags &= ~2;
@@ -1747,35 +1743,8 @@ static void func_80267A18(s16 idx) {
                 if (idx) {}
             }
             s->wait--;
-            f = 0.0f;
             s->pc = pc;
-            if (s->unk20 == 0) {
-                s->unk32 = 0;
-            }
-            if ((s->flags & 2) && s->unk1D == 1) {
-                if (s->unk20) {}
-                s->unk20 += 2;
-                if (s->unk20 >= s->unk22) {
-                    s->unk20 = 0;
-                    f = -s->unk32;
-                } else {
-                    r = (f32) s->unk20 / (f32) s->unk22;
-                    f = sinf(r * 6.28318530000000042) * s->unk24;
-                    s->unk32 += (s16) f;
-                }
-            }
-            if (s->unk26 == 1) {
-                s->unk2A++;
-                if (s->unk2A >= s->unk2C) {
-                    s->unk26 = 0;
-                    s->unkE += s->unk28;
-                    f = 0.1f;
-                } else {
-                    r = (f32) s->unk2A / (f32) s->unk2C;
-                    f += s->unk28 * r;
-                }
-            }
-            s->unkE += (s16) f;
+            func_802679A8(s);
             if (s->unkE >= 0x4B1) {
                 s->unkE = 0x4B0;
             }
@@ -1783,18 +1752,8 @@ static void func_80267A18(s16 idx) {
                 v->unk12 = s->unkE;
                 v->flags |= 1;
             }
-            func_802679B8(&s->unk12, 0, 0x7F);
-            func_802679B0(s);
-            if (s->unk12 != v->unk19) {
-                v->unk19 = s->unk12;
-                v->flags |= 4;
-            }
-            func_802679A0(&s->unk10, 0, 0x7F);
-            vol = func_80265FBC(s->unk10);
-            if (vol != v->unk16) {
-                v->unk16 = vol;
-                v->flags |= 2;
-            }
+            func_802679B0(s, v);
+            func_802679A0(s, v);
             if (s->flags & 0x100) {
                 while (s->nchild > 0) {
                     s->nchild--;
@@ -1846,17 +1805,44 @@ static void func_802679B8(s16 *p, s16 lo, s16 hi) {
     }
 }
 
-static void func_802679A8(s16 *p, s16 lo, s16 hi) {
-    if (*p < lo) {
-        *p = lo;
-    } else if (*p > hi) {
-        *p = hi;
+static void func_802679A8(VoiceScript *s) {
+    f32 f;
+    f32 r;
+
+    f = 0.0f;
+    if (s->unk20 == 0) {
+        s->unk32 = 0;
     }
+    if ((s->flags & 2) && s->unk1D == 1) {
+        if (s->unk20) {}
+        s->unk20 += 2;
+        if (s->unk20 >= s->unk22) {
+            s->unk20 = 0;
+            f = -s->unk32;
+        } else {
+            r = (f32) s->unk20 / (f32) s->unk22;
+            f = sinf(r * 6.28318530000000042) * s->unk24;
+            s->unk32 += (s16) f;
+        }
+    }
+    if (s->unk26 == 1) {
+        s->unk2A++;
+        if (s->unk2A >= s->unk2C) {
+            s->unk26 = 0;
+            s->unkE += s->unk28;
+            f = 0.1f;
+        } else {
+            r = (f32) s->unk2A / (f32) s->unk2C;
+            f = s->unk28 * r + f;
+        }
+    }
+    s->unkE += (s16) f;
 }
 
-static void func_802679B0(VoiceScript *s) {
+static void func_802679B0(VoiceScript *s, Voice *v) {
     s16 vol;
 
+    func_802679B8(&s->unk12, 0, 0x7F);
     if (s->flags & 0x18) {
         if (s->flags & 8) {
             s->unk2E++;
@@ -1872,16 +1858,23 @@ static void func_802679B0(VoiceScript *s) {
             }
         }
         vol = (s->unk2E * 127.0f) / s->unk30;
-        func_802679A8(&vol, 0, 0x7F);
+        func_802679B8(&vol, 0, 0x7F);
         s->unk12 = (u8) vol;
+    }
+    if (v->unk19 != s->unk12) {
+        v->unk19 = s->unk12;
+        v->flags |= 4;
     }
 }
 
-static void func_802679A0(s16 *p, s16 lo, s16 hi) {
-    if (*p < lo) {
-        *p = lo;
-    } else if (*p > hi) {
-        *p = hi;
+static void func_802679A0(VoiceScript *s, Voice *v) {
+    s16 vol;
+
+    func_802679B8(&s->unk10, 0, 0x7F);
+    vol = func_80265FBC(s->unk10);
+    if (vol != v->unk16) {
+        v->unk16 = vol;
+        v->flags |= 2;
     }
 }
 
