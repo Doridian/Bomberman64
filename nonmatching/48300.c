@@ -8,23 +8,28 @@
  * flags: -O3
  * differing words: us 1450, eu 1450, jp 1450
  *
- * A first draft: functions in the reverse of the ROM's order, which IDO
- * now emits exactly as the original does (stubs included); a handful by
- * hand, the rest m2c's with the fixes the -O3 build needs. 35 of 72
- * global blocks match. What is understood:
+ * Functions in the reverse of the ROM's order, which IDO emits exactly
+ * as the original does (the stubs at 0x8022E874/7C are empty globals).
+ * 48 of 72 global blocks match. What is understood:
  *   - the function-local statics (D_802A5708-D_802A5770 and
  *     D_802A59D0-D_802A5A0C in func_8022E884, D_802A593C-48 in
  *     func_8022F844, D_802A5960-C8 in func_8022E4DC, D_802A5A14-20 in
- *     func_802304C0, D_802A5734/58/8C in func_8023017C) are reached with
- *     lui/%lo at every access, as the original does;
+ *     func_802304C0, D_802A5560-70 in func_80230604, D_802A57A0-A8 and
+ *     D_802A5734/58/8C in func_8023017C) are reached with lui/%lo at
+ *     every access, as the original does;
  *   - func_80232FF8 and func_80232FA8 are global: as statics IPA moved
- *     func_80232FF8's register saves into func_802334CC.
- * Biggest left: func_8022E884 (the frame is 0xC0 in the original, with
- * stubs at 0x8022E874/7C, 0x8022E170 and 0x8022E328: its cases are
- * probably inlined static helpers), func_80231D88 and func_80231434
- * (still m2c's), func_80232FF8 (m2c's locals: a 0xE0 frame against
- * 0x98), func_8022E4DC (the original copies vectors through three stack
- * slots, 0x18-0x20), func_8022FF58.
+ *     func_80232FF8's register saves into func_802334CC;
+ *   - float sums are written (a*b + c*d + e*f) + g, and int and float
+ *     constants (90, 0 in compares) are kept apart as the original's are.
+ * Biggest left: func_8022E884 (766 words: the frame is 0xC0 against our
+ * 0x88; the original spills only two per-case floats and keeps the rest
+ * in s0-s4 and fs0-fs3, so its cases are probably inlined static
+ * helpers), func_80231D88 with its static func_802320A8 (477: the
+ * original promotes a loop variable to fs3 and doesn't hoist 90.0f),
+ * func_8022FF58 with func_8023017C (72: colouring, and the argument
+ * a3 is set first in the original's calls), func_80231274 (30),
+ * func_8022FC90 (14: the found value belongs in v0), func_80232E60 (12:
+ * IDO inlines func_8022DB00 into it, the original doesn't).
  */
 #include "common.h"
 
