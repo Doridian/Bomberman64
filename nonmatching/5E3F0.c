@@ -48,9 +48,21 @@
  * into loads, calling the getter again gives the original's frame (each
  * inlined copy keeps its frame area) and registers. Declaration order
  * of a variable initialised from a getter moves the code and the
- * stack slots (8024C0D8, 80250398, 8024D108). Many functions still
- * spill the entry pointer to sp+0x18 where the original uses sp+0x1C
- * (8024BC20, 80247D74, 8024694C); nothing found yet moves it.
+ * stack slots (8024C0D8, 80250398, 8024D108). The same goes for
+ * func_80244BE0 (its arg1 is s16): the `func_80270770(); unk2C = 0;`
+ * pairs in 80244C30, 8024694C, 8024C884, 80249E30 and 8024D20C are
+ * its inlined copies (80244C30's duplicate store comes from it).
+ * Where the original indexes D_800AEDF0[arg0] directly, an entry
+ * pointer variable or an `id = arg0` copy costs 8 bytes of frame or
+ * moves a spill slot (8024BC20, 80244E04, 80246C3C, 80249648). An
+ * empty `do {} while (0);` splits a block and changes uopt's choices
+ * (80246F00, 8024B444, 8024C334, 8024878C, 80244FF8). 80247D74 still
+ * spills the entry pointer to sp+0x18 where the original uses sp+0x1C.
+ * One object: no jal goes forward, there's no nop padding between
+ * functions, and .rodata and .data run in function order with no
+ * internal pads; split after func_80244354 (the only out-of-line
+ * function, 16-aligned end), the rest no longer inlines the getters
+ * before it.
  */
 #include "common.h"
 
