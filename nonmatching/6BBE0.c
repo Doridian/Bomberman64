@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 7035, eu 7035, jp 6995
+ * differing words: us 7032, eu 7032, jp 6992
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -289,7 +289,7 @@ typedef struct { Pt2 p[4]; } Pt2x4;
 extern Pt2x4 D_802A0FA0;
 extern f32 D_802A0FC0;
 extern u8 D_802A1008[];
-extern u8 D_802A1038[];
+extern s32 D_802A1038[];
 extern u8 D_802A1044[];
 extern u8 D_802A10C4[];
 extern u8 D_802A10E4[];
@@ -4843,8 +4843,8 @@ static void *func_80251974(f32 *arg0, f32 *arg1) {
 }
 
 void func_80251804(s32 arg0) {
-    u8 *sp40;
     f32 *temp_s4;
+    u8 *sp40;
     s32 temp_v0;
 
     temp_s4 = (arg0 * 0x128) + D_800BCFE8;
@@ -4873,7 +4873,7 @@ void func_80251804(s32 arg0) {
     D_802ACFB0 = 80.0f;
     D_802ACFB4 = 60.0f;
     D_802ACFB8 = 60.0f;
-    D_802ACFC4 = *(D_802A1038 + (M2C_FIELD((sp40 + (arg0 * 4)), s32 *, 0x14) * 4));
+    D_802ACFC4 = D_802A1038[((s32 *) (sp40 + 0x14))[arg0]];
     func_80238A10(func_802553D4, (s32) temp_s4, 0, 0, 0x130);
 }
 
