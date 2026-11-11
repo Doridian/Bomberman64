@@ -9,7 +9,7 @@
  * func_80228500 kept). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 346, eu 346, jp 346
+ * differing words: us 266, eu 266, jp 266
  *
  * The code is the same in every version.
  *
@@ -23,9 +23,12 @@
  * - `s->unk14 += s->unkC` with the same sum in the test gives the
  *   original's path-specific CSE; prev/next locals stop reloads after
  *   the link stores.
- * - func_8022A6C4: the first two chunk searches use a local index and a
- *   `chunks` local (the original walks model+12 with a pointer); the
- *   third stores D_802A547C and D_802A5484 on both exits.
+ * - func_8022A6C4: D_802A547C..D_802A548C are its function-scope
+ *   statics (model, chunks, index, found index, an unused one), which
+ *   uopt keeps in registers and stores back where a region ends; the
+ *   kind stays a local. `kind | 0` as the call argument keeps kind out
+ *   of a2 (the chunk count takes it), and `if (arg0) {}` first gives
+ *   arg0's copy t0 before kind.
  * - func_8022946C: `i = D_800A0D00[idx].unk0` before `p = ...` (i first
  *   seen first takes v1). func_8022997C: `s = D_80098C68; do {` on one
  *   line orders the preheader's addiu s1 before addiu s0.
@@ -63,10 +66,6 @@
  *   loaded in the loop's preheader and again after it, as in the
  *   original. Left: registers (the slot is t0 where the original has
  *   v1, and one more shift each way).
- * - func_8022A6C4 (80): the original's third search keeps D_802A547C
- *   and D_802A5484 in registers (stores on each exit, a duplicate pair
- *   IDO merges in ours); a global loop counter, static or not, isn't
- *   promoted here.
  * - func_80229C10 (2): `if (!chunks) {}` keeps model+12 a value of its
  *   own; `if (!arg1) {}` first and `if (!arg0) {}` after the loop keep
  *   the arguments' registers busy, so dl takes a3, first t0 and i t1 as
@@ -409,11 +408,6 @@ extern s32 D_802A5464;
 extern f32 D_802A5468;
 extern f32 D_802A546C;
 extern s32 D_802A5470;
-extern UnkModel *D_802A547C;
-extern UnkChunk *D_802A5480;
-extern u32 D_802A5484;
-extern u32 D_802A5488;
-extern s32 D_802A548C;
 extern s32 D_802A5490;
 extern s32 D_802AC5C8;
 
@@ -501,57 +495,48 @@ void func_8022A858(void) {
 }
 
 void *func_8022A6C4(void *arg0, s32 arg1) {
-    UnkModel *model;
-    UnkChunk *chunks;
+    static UnkModel *D_802A547C;
+    static UnkChunk *D_802A5480;
+    static u32 D_802A5484;
+    static u32 D_802A5488;
+    static s32 D_802A548C;
     s32 kind;
-    u32 idx;
-    u32 i;
 
+    if (arg0) {}
     D_802A548C = 0;
-    idx = 0;
+    D_802A5488 = 0;
     kind = -1;
     if (arg0 != (void *)-1) {
-        model = arg0;
-        chunks = model->unkC;
-        for (i = 0; i < model->unk4; i++) {
-            if (chunks[i].unk0 < 0x10) {
-                idx = i;
+        D_802A547C = arg0;
+        D_802A5480 = D_802A547C->unkC;
+        for (D_802A5484 = 0; D_802A5484 < D_802A547C->unk4; D_802A5484++) {
+            if (D_802A5480[D_802A5484].unk0 < 0x10) {
+                D_802A5488 = D_802A5484;
                 kind = 2;
                 break;
             }
         }
-        for (i = 0; i < model->unk4; i++) {
-            if (chunks[i].unk0 == 1) {
-                idx = i;
+        for (D_802A5484 = 0; D_802A5484 < D_802A547C->unk4; D_802A5484++) {
+            if (D_802A5480[D_802A5484].unk0 == 1) {
+                D_802A5488 = D_802A5484;
                 kind = 2;
                 break;
             }
         }
-        i = 0;
-        D_802A5484 = i;
-        D_802A547C = model;
-        for (; i < model->unk4; i++) {
-            if (chunks[i].unk0 == 3) {
-                D_802A547C = model;
-                D_802A5484 = i;
+        for (D_802A5484 = 0; D_802A5484 < D_802A547C->unk4; D_802A5484++) {
+            if (D_802A5480[D_802A5484].unk0 == 3) {
                 kind = 3;
-                goto found;
+                break;
             }
         }
-        D_802A547C = model;
-        D_802A5484 = i;
-    found:
-        D_802A5480 = chunks;
         if (kind == -1) {
-            D_802A5480 = chunks;
-            if (chunks->unk0 >= 0x10) {
+            if (D_802A5480->unk0 >= 0x10) {
                 kind = 4;
             }
         }
     }
     D_8029F850 = kind;
-    D_802A5488 = idx;
-    return func_8022A328(arg0, arg1, kind, idx, 0);
+    return func_8022A328(arg0, arg1, kind | 0, D_802A5488, 0);
 }
 
 UnkObj *func_8022A328(UnkModel *arg0, s32 arg1, s32 arg2, u32 arg3, s32 arg4) {
