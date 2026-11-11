@@ -5,7 +5,7 @@
  * global, emitted in the original's order. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 227, eu 227, jp 227
+ * differing words: us 87, eu 87, jp 87
  *
  * 36 of 47 match. Biggest left: func_802741D8 461, func_8027655C 436,
  * func_80274994 320 (still m2c's control flow and untyped offsets),
@@ -270,7 +270,7 @@ void func_8026DCAC(f32 arg0, f32 arg1, f32 arg2, void *arg3, s32 arg4);
 void func_8026E338(f32 arg0, f32 arg1, f32 arg2, f32 *arg3, s32 arg4);
 f32 func_8026E8B8(void);
 f32 func_8026E938(u8 *arg0);
-void *func_802700EC(u8 *arg0, u8 *arg1, s16 arg2, f32 arg3);
+void *func_802700EC(u8 *arg0, u8 *arg1, s32 arg2, f32 arg3);
 void func_802702EC(s16 arg0);
 s16 *func_802703B4(u8 *arg0);
 s32 func_802704F8(f32 arg0);
@@ -795,7 +795,7 @@ s32 func_8027655C(Ent88 *arg0) {
     struct { f32 z, y, x; } v;
     f32 sp158;
     void *sp154;
-    s32 pad[19];
+    s32 pad[17];
     s16 fl;
     s32 f4;
     s32 f8;
