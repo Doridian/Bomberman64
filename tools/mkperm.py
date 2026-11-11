@@ -24,13 +24,13 @@ tmp = os.path.join(out, "tmp")
 os.makedirs(tmp, exist_ok=True)
 cc = (f"{W}/tools/ido/5.3/cc -c -G 0 -Xfullwarn -Xcpluscomm -nostdinc -non_shared -Wab,-r4300_mul "
       f"-D_LANGUAGE_C -D_FINALROM -DVERSION_{VERSION.upper()} -woff 649,838,712,807 -I {W}/include -I {W}/include/PR "
-      f"{opt} {isa} -32")
+      f"-I {W}/src -I {W}/include/ultralib {opt} {isa} -32")
 # preprocess (keep it C89-ish for pycparser: drop line markers)
 # A draft that steers with #line keeps its line numbers (as `#line`s,
 # which pycparser reads): -P would drop them and change the code.
 keep_lines = "#line" in open(cfile).read()
 pp = subprocess.run(["cpp"] + ([] if keep_lines else ["-P"]) + ["-undef", "-D_LANGUAGE_C", "-D_FINALROM", f"-DVERSION_{VERSION.upper()}", "-D__sgi",
-                     "-I", f"{W}/include", "-I", f"{W}/include/PR", cfile],
+                     "-I", f"{W}/include", "-I", f"{W}/include/PR", "-I", f"{W}/src", "-I", f"{W}/include/ultralib", cfile],
                     capture_output=True, text=True, check=True).stdout
 import re as _re
 if keep_lines:

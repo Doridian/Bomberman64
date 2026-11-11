@@ -233,7 +233,7 @@ def compare(cfile, opt="-O2", isa="-mips1", extra=(), verbose=None, root=ROOT, o
         obj = os.path.join(tmp, "a.o")
         cmd = (f"{root}/tools/ido/5.3/cc -c -G 0 -Xfullwarn -Xcpluscomm -nostdinc -non_shared -Wab,-r4300_mul "
                f"-D_LANGUAGE_C -D_FINALROM -DVERSION_{ver.upper()} -woff 649,838,712,807 -I {root}/include -I {root}/include/PR "
-               f"-I {root}/src {opt} {isa} -32 {' '.join(extra)} -o {obj} {os.path.abspath(cfile)}")
+               f"-I {root}/src -I {root}/include/ultralib {opt} {isa} -32 {' '.join(extra)} -o {obj} {os.path.abspath(cfile)}")
         r = subprocess.run(cmd, shell=True, cwd=tmp, capture_output=True, text=True)
         if r.returncode:
             raise CompileError(r.stdout + r.stderr)
