@@ -8,7 +8,7 @@
  * text_objects.txt). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 175, eu 175, jp 175
+ * differing words: us 108, eu 108, jp 108
  *
  * The code is the same in every version.
  *
@@ -22,9 +22,9 @@
  * Left:
  * - func_8022C8B8 (84): same size and shape; temporaries numbered
  *   from one lower (the channel's address is in v1 in the original).
- * - func_8022C184 (20), func_8022AA50 and func_8022AB48 (18 each),
- *   func_8022BE48 (14), func_8022C09C (11), func_8022BB88 (10):
- *   registers only.
+ * - func_8022BE48 (14): n, i and (s32)arg1 coloured a2/a3/v0 in the
+ *   original, v0/a2/a3 here; the add's operands swapped.
+ * - func_8022BB88 (10): the count and count * 40 in v1/a0, here a1/v1.
  */
 #include "common.h"
 
@@ -677,13 +677,15 @@ void func_8022C2A4(UnkTree *arg0, s32 arg1, s32 arg2, UnkInst *arg3) {
 
 void func_8022C184(UnkInst *arg0, UnkTree *arg1, s32 arg2) {
     UnkJoint *joint;
+    Vec3f *d;
     s32 i;
 
     if (arg1 != NULL) {
+        d = arg1->unk18[arg2];
         joint = &arg0->unk2C[arg1->unk0->unk4];
-        arg1->unk18[arg2][0] = joint->unk4;
-        arg1->unk18[arg2][1] = joint->unk10;
-        arg1->unk18[arg2][2] = joint->unk1C;
+        d[0] = joint->unk4;
+        d[1] = joint->unk10;
+        d[2] = joint->unk1C;
         arg1->unk10[arg2] = 0;
         for (i = 0; i < arg1->unkC; i++) {
             func_8022C184(arg0, arg1->unk8[i], arg2);
@@ -692,19 +694,19 @@ void func_8022C184(UnkInst *arg0, UnkTree *arg1, s32 arg2) {
 }
 
 void func_8022C09C(UnkTree *arg0, f32 arg1) {
+    s32 i;
     Vec3f *a;
     Vec3f *b;
-    UnkNode *node;
-    s32 i;
+    Vec3f *c;
 
     if (arg0 != NULL) {
         a = arg0->unk18[0];
         b = arg0->unk18[1];
-        if (arg0->unk10[1] | arg0->unk10[0]) {
-            node = arg0->unk0;
-            func_8022BF44(&a[0], &b[0], &node->unk14, arg1);
-            func_8022C008(&a[1], &b[1], &node->unk20, arg1);
-            func_8022BF44(&a[2], &b[2], &node->unk2C, arg1);
+        if (arg0->unk10[0] | arg0->unk10[1]) {
+            c = &arg0->unk0->unk14;
+            func_8022BF44(&a[0], &b[0], &c[0], arg1);
+            func_8022C008(&a[1], &b[1], &c[1], arg1);
+            func_8022BF44(&a[2], &b[2], &c[2], arg1);
         }
         for (i = 0; i < arg0->unkC; i++) {
             func_8022C09C(arg0->unk8[i], arg1);
@@ -1018,9 +1020,10 @@ void func_8022ABCC(UnkSkel *arg0) {
 
 void func_8022AB48(UnkSkel *arg0) {
     s32 i;
+    UnkKeySet *p;
 
-    for (i = 0; i < arg0->unk2C; i++) {
-        func_8022AAD4(arg0->unk28[i].unk4, arg0->unk28[i].unk8);
+    for (i = 0, p = arg0->unk28; i < arg0->unk2C; i++) {
+        func_8022AAD4(p[i].unk4, p[i].unk8);
     }
     free(arg0->unk28);
     arg0->unk28 = NULL;
@@ -1040,9 +1043,10 @@ void func_8022AAD4(UnkKey *arg0, s32 arg1) {
 
 void func_8022AA50(UnkSkel *arg0) {
     s32 i;
+    UnkChanSet *p;
 
-    for (i = 0; i < arg0->unk34; i++) {
-        func_8022A970(arg0->unk30[i].unk4, arg0->unk30[i].unk8);
+    for (i = 0, p = arg0->unk30; i < arg0->unk34; i++) {
+        func_8022A970(p[i].unk4, p[i].unk8);
     }
     free(arg0->unk30);
     arg0->unk30 = NULL;
