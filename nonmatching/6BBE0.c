@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 7055, eu 7055, jp 7015
+ * differing words: us 7047, eu 7047, jp 7007
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -4583,21 +4583,24 @@ static f32 func_80252598(f32 *arg0, f32 *arg1) {
 }
 
 static f32 func_80252490(f32 *arg0) {
-    s32 temp_hi;
-    s32 temp_hi_2;
+    s32 x;
+    s32 z;
+    f32 ret;
 
-    temp_hi = (s32) M2C_FIELD(arg0, f32 *, 0x20) % 100;
-    temp_hi_2 = (s32) M2C_FIELD(arg0, f32 *, 0x28) % 100;
-    if (temp_hi_2 < temp_hi) {
-        if (temp_hi >= 0x32) {
-            return 270.0f;
+    x = (s32) M2C_FIELD(arg0, f32 *, 0x20) % 100;
+    z = (s32) M2C_FIELD(arg0, f32 *, 0x28) % 100;
+    if (z < x) {
+        if (x >= 50) {
+            ret = 270.0f;
+        } else {
+            ret = 90.0f;
         }
-        return 90.0f;
+    } else if (z >= 50) {
+        ret = 0.0f;
+    } else {
+        ret = 180.0f;
     }
-    if (temp_hi_2 >= 0x32) {
-        return 0.0f;
-    }
-    return 180.0f;
+    return ret;
 }
 
 static f32 func_802523E0(f32 *arg0) {
