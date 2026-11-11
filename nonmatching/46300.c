@@ -7,7 +7,7 @@
  * (src/479D0.c, text_objects.txt). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 108, eu 108, jp 108
+ * differing words: us 84, eu 84, jp 84
  *
  * The code is the same in every version.
  *
@@ -17,12 +17,14 @@
  * the global D_802A54D0, then those statics; its .data at 0x8029F890.
  * Moving this file to src/ has to check where IDO puts them.
  *
+ * func_8022BE48 matches with (s32)arg1 held in r (set first, so it is
+ * coloured v0 before keys, vals and n) and `ret = (ret = ret) + ...`
+ * for the add's operand order; func_8022BB88 with a dead read of the
+ * count at the loop's end (count coloured before count * 40).
+ *
  * Left:
  * - func_8022C8B8 (84): same size and shape; temporaries numbered
  *   from one lower (the channel's address is in v1 in the original).
- * - func_8022BE48 (14): n, i and (s32)arg1 coloured a2/a3/v0 in the
- *   original, v0/a2/a3 here; the add's operands swapped.
- * - func_8022BB88 (10): the count and count * 40 in v1/a0, here a1/v1.
  */
 #include "common.h"
 
@@ -559,26 +561,27 @@ void func_8022BF44(Vec3f *arg0, Vec3f *arg1, Vec3f *arg2, f32 arg3) {
 
 f32 func_8022BE48(UnkCurve *arg0, f32 arg1) {
     s32 i;
-    f32 r;
+    s32 r;
     f32 ret;
     s32 n;
     s32 *keys;
     f32 *vals;
 
     if (arg0->unk0 == 0x31) {
-        n = arg0->unk4;
+        r = arg1; /* the loop's (s32)arg1, coloured first */
         keys = arg0->unk8;
         vals = arg0->unkC;
+        n = arg0->unk4;
         for (i = 0; i < n; i++) {
-            if (keys[i] >= (s32)arg1) {
+            if (keys[i] >= r) {
                 break;
             }
         }
         if ((s32)arg1 == keys[i]) {
             ret = vals[i];
         } else {
-            ret = vals[i - 1];
-            ret += (arg1 - keys[i - 1]) * ((vals[i] - vals[i - 1]) / (keys[i] - keys[i - 1]));
+            ret = vals[i - 1]; /* (ret = ret) below: the add.s operand order */
+            ret = (ret = ret) + ((vals[i] - vals[i - 1]) / (keys[i] - keys[i - 1])) * (arg1 - keys[i - 1]);
         }
     }
     return ret;
@@ -627,6 +630,7 @@ void func_8022BB88(UnkAnim *arg0) {
             case 0x30:
                 break;
         }
+        if (!arg0->unk10) {} /* fake: count before count * 40 */
     }
     free(arg0->unk14);
     free(arg0);
