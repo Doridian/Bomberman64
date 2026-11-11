@@ -7,7 +7,7 @@
  * order. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 41, eu 41, jp 41
+ * differing words: us 37, eu 37, jp 37
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file (475 words in the one-file draft, 39
@@ -15,10 +15,9 @@
  * The entity flag helpers func_80270354/func_8027036C/func_802712A8 and
  * the tests func_80270384/func_802702BC are inlined by umerge where the
  * original calls them; the callers call them rather than spell them out.
- * 51 of 54 match. Left: func_80270770 35 (flags and ok in v1/a0
- * where the original has a0/a1), func_80271BB8 4 (the second unk40
- * pointer in v0 where the original has v1), func_80270C24 2 (the first
- * flag test in a3 where the original has t3).
+ * 52 of 54 match. Left: func_80270770 35 (flags and ok in v1/a0
+ * where the original has a0/a1), func_80270C24 2 (the first flag test
+ * in a3 where the original has t3).
  */
 #include "common.h"
 
@@ -1149,9 +1148,13 @@ void func_80271BB8(s16 arg0) {
     f32 dx;
     f32 dz;
     Obj8E *pl;
-    Sub8E *t;
-    f32 ppos[3];
-    f32 opos[3];
+    Sub8E *t; /* unused: its home is the original's empty slot at 96 */
+    f32 pz; /* scalars, not arrays: the copies can't alias unk40, so it stays in v0/v1 */
+    f32 py;
+    f32 px;
+    f32 oz;
+    f32 oy;
+    f32 ox;
     f32 s;
     Obj8E *obj;
 
@@ -1164,14 +1167,12 @@ void func_80271BB8(s16 arg0) {
     if (obj == NULL) {
         return;
     }
-    t = pl->unk40;
-    ppos[0] = t->x;
-    ppos[1] = t->y;
-    ppos[2] = t->z;
-    t = obj->unk40;
-    opos[0] = t->x;
-    opos[1] = t->y;
-    opos[2] = t->z;
+    px = pl->unk40->x;
+    py = pl->unk40->y;
+    pz = pl->unk40->z;
+    ox = obj->unk40->x;
+    oy = obj->unk40->y;
+    oz = obj->unk40->z;
     if (func_802716F8(arg0) == NULL) {
         return;
     }
@@ -1197,12 +1198,12 @@ void func_80271BB8(s16 arg0) {
         hit = 1;
     }
     if (hit == 1) {
-        pl->unk40->x = ppos[0];
-        pl->unk40->y = ppos[1];
-        pl->unk40->z = ppos[2];
-        obj->unk40->x = opos[0];
-        obj->unk40->y = opos[1];
-        obj->unk40->z = opos[2];
+        pl->unk40->x = px;
+        pl->unk40->y = py;
+        pl->unk40->z = pz;
+        obj->unk40->x = ox;
+        obj->unk40->y = oy;
+        obj->unk40->z = oz;
     } else {
         SLOTS[arg0].unk8 = flags;
         func_80231408(obj, 0x10000);
