@@ -7,7 +7,7 @@
  * order. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 504, eu 504, jp 504
+ * differing words: us 488, eu 488, jp 488
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file (475 words in the one-file draft, 39
@@ -413,9 +413,9 @@ s32 func_80273AD4(s16 arg0, f32 arg1, f32 arg2, f32 arg3) {
     Ent88 *e;
     f32 v[3];
     s32 pb[7];
-    Unk8026DCAC info;
     Ent88 *n;
     s16 cnt;
+    Unk8026DCAC info;
     s32 live;
 
     func_802714C4();
@@ -426,10 +426,10 @@ s32 func_80273AD4(s16 arg0, f32 arg1, f32 arg2, f32 arg3) {
     if (func_80273A5C(v[2], v[1], v[0]) == 0) {
         return 0;
     }
-    e = ENT_HEAD;
-    n = e->next;
     pl = &PLAYERS[arg0];
     cnt = pl->unk1E;
+    e = ENT_HEAD;
+    n = e->next;
     while (n != NULL) {
         live = (e->x != 1e7f) ? 1 : 0;
         if (live && e->xf != NULL && arg0 == e->unkE) {
@@ -1074,7 +1074,8 @@ void func_802720C8(u8 *arg0) {
     p[2] = info.i[0];
     p[1] = info.i[1];
     p[0] = info.i[2];
-    t = func_8026D7D8(p[2], p[1], p[0]) & 0x1C00;
+    t = func_8026D7D8(p[2], p[1], p[0]);
+    t &= 0x1C00;
     if (t != 0) {
         func_8027F858((s32) arg0, t >> 10);
     }
