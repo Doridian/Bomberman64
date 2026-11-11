@@ -1,7 +1,7 @@
 /*
  * NON_MATCHING: main_code's 96540, complete: the controller pak save.
  * flags: -O3
- * differing words: us 8, eu 8, jp 8
+ * differing words: us 5, eu 5, jp 5
  */
 #include "common.h"
 #include "ultralib/PR/os_pfs.h"
@@ -121,7 +121,7 @@ static s32 func_8027C184(s32 ch, s32 file, u8 *buf);
 static s32 func_8027C3D4(s32 file, u8 *a, u8 *b);
 static void func_8027C4EC(s32 a, s32 b);
 static void func_8027C8F8();
-static void func_8027CBC4();
+static void func_8027CBC4(u8 *s);
 static void func_8027CBCC();
 
 void func_8027CDA4(OSMesgQueue *mq) {
@@ -138,17 +138,18 @@ void func_8027CDA4(OSMesgQueue *mq) {
 static void func_8027CBCC() {
 }
 
-static void func_8027CBC4() {
+static void func_8027CBC4(u8 *s) {
 }
 
 void func_8027CBD4(void) {
+    u8 tmp[20];
     s32 i;
     s32 bytes;
     s32 ret;
     s32 k;
     s32 j;
 
-    func_8027CBC4();
+    func_8027CBC4(tmp);
     func_8027CBCC();
     D_802B0110 = func_8023A834();
     for (i = 0; i < 4; i++) {
