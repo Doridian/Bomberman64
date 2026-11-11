@@ -16,7 +16,7 @@
  * "NON_MATCHING drafts"). The prelude (types, externs, prototypes) is
  * 87D80.c's.
  * flags: -O3
- * differing words: us 104, eu 104, jp 104
+ * differing words: us 89, eu 89, jp 89
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file, and 8E730 calls 926A0 (src/926A0.c,
@@ -24,14 +24,17 @@
  * (if (0) func_802731A4(0, 0)): without it umerge inlines it into
  * func_8027655C (296 more words). The #line directives keep each
  * part's own line numbers (and .loc), as in the two drafts this
- * was. 94 of 101 match. Left: func_80270770 35 (flags and ok in v1/a0
+ * was. 95 of 101 match. Left: func_80270770 35 (flags and ok in v1/a0
  * where the original has a0/a1), func_802741D8 17 (slot kept in a0,
  * the 6C store's schedule), func_80277B54 17 (the list-init tail
- * stores in ugen order), func_80276D68 15 (the 0x20 flag in v1, the
- * unk10 |= 0x100 store's slot), func_802763DC 7 and func_8027655C 6
+ * stores in ugen order), func_802763DC 9 and func_8027655C 6
  * (an and-result's register), func_80275120 3 (c.eq.s operand order),
+ * func_80277AF8 2,
  * and the two stubs (frame8_8027655C, tail_80277B54) that set
  * func_8027655C's frame and func_80277B54's .loc.
+ * func_80276D68 matches with a dead `if (f) {}` in its first else
+ * (it puts the 0x20 flag in the original's register) and a second
+ * local `g` for the 0x80 test's load.
  * func_80270C24 reads the flags into a local `fl` declared last,
  * stores it and tests it (the original's `lw v1; sw v1` with no ugen
  * temporary for the load).
@@ -1038,6 +1041,7 @@ void func_8027723C() {
 
 void func_80276D68(Ent88 *arg0) {
     s16 f;
+    s16 g;
 
     if (D_802A14B4 == 1) {
         return;
@@ -1061,6 +1065,7 @@ void func_80276D68(Ent88 *arg0) {
                 arg0->unk84 = 0.008333334f;
             } else {
                 arg0->unk84 = 0.0033333334f;
+                if (f) {} /* fake: see the header */
             }
             f = arg0->unk64 & 0x20;
         } else {
@@ -1102,7 +1107,7 @@ void func_80276D68(Ent88 *arg0) {
     if (arg0->unk62 > 0) {
         arg0->unk62--;
     }
-    if (!(arg0->unk10 & 0x800) && (s16) ((f = arg0->unk64) & 0x80) == 0) {
+    if (!(arg0->unk10 & 0x800) && (s16) ((g = arg0->unk64) & 0x80) == 0) {
         arg0->unk80 = 1.0f;
         arg0->unk7C = 0.9f;
         if (arg0->unk5C < 100) {
@@ -1131,8 +1136,8 @@ void func_80276D68(Ent88 *arg0) {
             arg0->obj->unk38 = 70.0f;
             if (func_80232D18(arg0->obj, 0x10) == 0) {
                 arg0->unk80 = 1.9f;
-                arg0->unk10 |= 0x100;
                 arg0->unk7C = 1.7f;
+                arg0->unk10 |= 0x100;
                 func_80231408(arg0->obj, 0x2000);
                 func_8026C660(0x1A);
                 arg0->unk8 = func_8028A81C(0x15, 0.0f, 100.0f, 0.0f, (s32) arg0->obj);
