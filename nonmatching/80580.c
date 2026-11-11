@@ -10,25 +10,37 @@
  * flags: -O3
  * differing words: us 866, eu 866, jp 866
  *
- * The object is the same in all three versions. 66 of the 79 original
+ * The object is the same in all three versions. 70 of the 79 original
  * procedures match (stubs included). The IPA statics
  * (s-registers used unsaved, or arguments in odd registers) are static
- * here: 80266D8C, 8026706C (def, num), 80267784, 802679C0, 80267A18,
+ * here: 80266D8C, 8026706C (num, def: the original's num is homed at
+ * 0(sp) though -O3 passes it in a1), 80267784, 802679C0, 80267A18,
  * 80268440, 80269144, 802699C8, 80269A8C, 80269AFC, 8026A108, 8026A164.
  * The 8-byte stubs are statics inlined into the function after them:
  * 80267A10 (a sound's free voice), 802679A0-B8 (the script's clamps and
- * fade), 802691A0 (the sequence load), 80267064 (a volume), 80266928
- * (a script's reset), 80268430/38 (80268440's script setup and bank
- * search), 80269A7C/84 (empty), the recursive setters' stubs
- * 80266154/298/3D8/508 (empty, the setters recurse themselves).
+ * fade), 802691A0 (the sequence load), 80267064 (a volume, returning
+ * from both arms), 80266928 (a script's reset), 80268430/38 (80268440's
+ * script setup and bank search), 80269A7C/84 (empty statics whose calls
+ * 80269AFC keeps), the recursive setters' stubs 80266154/298/3D8/508
+ * (empty, the setters recurse themselves).
  * func_80265FBC is a static too (callers keep registers live across
  * it), inlined only into 80265FF8: a dead `if (0)` store keeps IDO
  * from inlining it into the others. 8026724C's unused second SndDef
- * and 80268440's pad give the original's frame sizes. Biggest left:
- * 80267A18 (the script interpreter: s-register choice; 802686B8 and
- * 80268440 differ only in the s-register its clobbers leave them),
- * 80269AFC, 8026A164, 802691A8, 8026A8B4 (the switch's default is
- * emitted first, the original's last), 80266D8C, 8026706C.
+ * and 80268440's pad give the original's frame sizes.
+ * 80267A18 has the original's size and s-registers: the dead `if (op ==
+ * K) {}` tests and `if (idx) {}` give its constants their s-registers,
+ * the stop loop reuses v and num, the vibrato and sweep convert with
+ * (s16), and their quotients go through r. What is left there is its
+ * frame (0xA0 against 0xB0, so every sp offset), case 3's argument
+ * order and temp names. Biggest left: 8026A164 (2 words short: the
+ * loop's s4 count tests blez where the original tests beq, and a
+ * subtraction scheduled ahead of its call), 802691A8 (a word long: its
+ * flag tests are laid out the other way), 80267A18, 80266D8C (a word
+ * short: D_802A1368's address is kept in a register where the original
+ * rebuilds it with lui at each time and stores it twice), 8026706C
+ * (temp names and D_802AD648 in a3, the original's v0), 80269AFC (a
+ * store scheduled two slots apart), 80268440 (registers only),
+ * 80268F94 (the original reuses one constant 1 for both flags).
  */
 #include "common.h"
 
