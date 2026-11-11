@@ -7,7 +7,7 @@
  * order. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 37, eu 37, jp 37
+ * differing words: us 35, eu 35, jp 35
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file (475 words in the one-file draft, 39
@@ -15,9 +15,10 @@
  * The entity flag helpers func_80270354/func_8027036C/func_802712A8 and
  * the tests func_80270384/func_802702BC are inlined by umerge where the
  * original calls them; the callers call them rather than spell them out.
- * 52 of 54 match. Left: func_80270770 35 (flags and ok in v1/a0
- * where the original has a0/a1), func_80270C24 2 (the first flag test
- * in a3 where the original has t3).
+ * 53 of 54 match. Left: func_80270770 35 (flags and ok in v1/a0
+ * where the original has a0/a1). func_80270C24 reads the flags into a
+ * local `fl` declared last, stores it and tests it (the original's
+ * `lw v1; sw v1` with no ugen temporary for the load).
  */
 #include "common.h"
 
@@ -1537,6 +1538,7 @@ void func_80270C24(u8 *arg0, s16 arg1, s32 arg2) {
     s32 ok;
     f32 r;
     f32 h;
+    s32 fl;
 
     for (i = 0; i < 5; i++) {
         if (func_80270714(i) == (s32) arg0) {
@@ -1590,16 +1592,16 @@ next:
     ok = 0;
     c->unk34 = ((Obj8E *) arg0)->unk40->x;
     c->unk38 = ((Obj8E *) arg0)->unk40->z;
-    c->flags = ((Obj8E *) arg0)->unk8;
-    i = c->flags & 2; /* fake (permuter find): the flag tests' t registers */
-    if (i) {
+    fl = ((Obj8E *) arg0)->unk8;
+    c->flags = fl;
+    if (fl & 2) {
         ok = func_80270438(arg0, (s32 *) c);
-    } else if (c->flags & 8) {
+    } else if (fl & 8) {
         ok = func_8027A1F4(arg0, (s32) c);
     } else {
-        if (c->flags & 4) {
+        if (fl & 4) {
             ok = func_802870A8(arg0, c);
-        } else if (c->flags & 1) {
+        } else if (fl & 1) {
             ok = func_80244F34(arg0, (s32) c);
         }
     }
