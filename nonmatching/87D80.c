@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 547, eu 547, jp 547
+ * differing words: us 465, eu 465, jp 465
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -879,51 +879,52 @@ f32 func_8026EAF8(u8 *arg0) {
 }
 
 f32 func_8026E938(u8 *arg0) {
-    f32 sp80;
-    s32 sp68[3];
-    f32 temp_fa0;
-    f32 temp_fa1;
-    f32 temp_fv0;
-    f32 var_fv1;
-    s32 temp_s0;
-    s32 temp_v1;
-    s32 var_s1;
-    u16 temp_s2;
-    u16 temp_v0;
+    s32 padA[1];
+    f32 fx;
+    f32 fy;
+    f32 fz;
+    s32 padB[2];
+    Unk8026DCAC v;
+    Unk8026DCAC pos;
+    s32 padD[3];
+    f32 r;
+    s32 x;
+    s32 y;
+    s32 z;
+    s32 a;
+    s32 b;
 
     if ((D_802AFC54 != 0) && (func_8026E8E0((s32) arg0) != 0)) {
-        var_fv1 = M2C_FIELD(arg0, f32 *, 0x14);
+        r = M2C_FIELD(arg0, f32 *, 0x14);
     } else {
-        temp_fv0 = M2C_FIELD(arg0, f32 *, 0x18);
-        temp_fa0 = M2C_FIELD(arg0, f32 *, 0x10);
-        temp_fa1 = M2C_FIELD(arg0, f32 *, 0x14);
-        func_8026DCAC(temp_fa0, temp_fa1, temp_fv0, sp68, 2);
-        var_s1 = sp68[1];
-loop_4:
-        temp_s0 = var_s1 - 1;
-        temp_s2 = func_8026D7D8(sp68[0], var_s1, sp68[2]);
-        temp_v0 = func_8026D7D8(sp68[0], temp_s0, sp68[2]);
-        temp_v1 = temp_s2 & 0xF;
-        if ((temp_v1 == 0) && !(temp_v0 & 0x60)) {
-            var_s1 = temp_s0;
-        }
-        if ((temp_v1 == 0) && !(temp_v0 & 0x60) && (var_s1 >= 0)) {
-            goto loop_4;
-        }
-        if (var_s1 >= 0) {
-            if (func_8026E278(temp_s2) != 0) {
-                var_fv1 = func_8026E3AC(temp_fa0 + 50.0f, temp_fa1, temp_fv0 + 50.0f);
+        fz = M2C_FIELD(arg0, f32 *, 0x18);
+        fx = M2C_FIELD(arg0, f32 *, 0x10);
+        fy = M2C_FIELD(arg0, f32 *, 0x14);
+        func_8026DCAC(fx, fy, fz, &pos, 2);
+        x = pos.i[0];
+        y = pos.i[1];
+        z = pos.i[2];
+        do {
+            a = func_8026D7D8(x, y, z);
+            b = func_8026D7D8(x, y - 1, z);
+            if (((a & 0xF) == 0) && !(b & 0x60)) {
+                y--;
+            }
+        } while (((a & 0xF) == 0) && !(b & 0x60) && (y >= 0));
+        if (y >= 0) {
+            if (func_8026E278(a) != 0) {
+                r = func_8026E3AC(fx + 50.0f, fy, fz + 50.0f);
             } else {
-                sp80 = (f32) sp68[0] * 100.0f;
-                var_fv1 = func_8026E2B0((s32) (f32) var_s1);
+                v.f[0] = x * 100.0f;
+                r = func_8026E2B0((s32) (f32) y);
             }
         } else if (D_800B15D8->unkC < 0) {
-            var_fv1 = 20000.0f;
+            r = 20000.0f;
         } else {
-            var_fv1 = D_802AFC5C;
+            r = D_802AFC5C;
         }
     }
-    return var_fv1;
+    return r;
 }
 
 s32 func_8026E8E0(s32 arg0) {
