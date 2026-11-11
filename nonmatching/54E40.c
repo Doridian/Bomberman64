@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1628, eu 1628, jp 1619
+ * differing words: us 1568, eu 1568, jp 1563
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -2788,13 +2788,13 @@ void func_8023C374() {
     D_802A01C4[6] = (s8) (D_802AC5EC + 0x11);
     sp6C = func_802811F0(D_802A01C4, func_8023B2AC(D_802A01C4, 0.8f), 0x3CU, 0.8f, 0.8f, 0U);
     sp68 = func_802811F0(D_802A01D0, func_8023B2AC(D_802A01D0, 0.8f), 0x5AU, 0.8f, 0.8f, 0U);
-    temp_a0 = ((u8 **) D_802A08F8)[D_802AC5EC + D_802AC5E8 * 4];
+    temp_a0 = ((u8 **) D_802A08F8)[D_802AC5E8 * 4 + D_802AC5EC];
     sp60 = func_802811F0(temp_a0, func_8023B2AC(temp_a0, 0.6f), 0x78U, 0.6f, 0.8f, 0U);
     func_8023AF5C(163.0f, 150.0f);
     if (D_802AC610.unk10 == 0) {
-        D_802AC610.unk28 = ((s32 *) D_802A0958)[D_802AC5EC + D_802AC5E8 * 4];
+        D_802AC610.unk28 = D_802A0958[D_802AC5E8][D_802AC5EC];
     } else {
-        D_802AC610.unk28 = ((s32 *) D_802A09B8)[D_802AC5EC + D_802AC5E8 * 4];
+        D_802AC610.unk28 = D_802A09B8[D_802AC5E8][D_802AC5EC];
     }
     func_8023B7C0(180.0f);
     func_8023903C(0xB4);
