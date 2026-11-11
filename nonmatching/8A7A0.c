@@ -7,7 +7,7 @@
  * order. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 1079, eu 1079, jp 1079
+ * differing words: us 1024, eu 1024, jp 1024
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file (475 words in the one-file draft, 39
@@ -1078,19 +1078,20 @@ s32 func_802721D4(Obj8E *arg0, s32 arg1, Ctl87 *arg2) {
 }
 
 void func_802720C8(u8 *arg0) {
-    s32 sp20[3];
-    f32 temp_fa0;
-    f32 temp_fv0;
-    f32 temp_fv1;
-    s16 temp_t5;
+    f32 z;
+    f32 p[3];
+    s32 pad[5]; /* places info at the original's offset */
+    s16 t;
+    Unk8026DCAC info;
 
-    func_8026DCAC(M2C_FIELD(arg0, f32 *, 0x58), M2C_FIELD(arg0, f32 *, 0x5C), M2C_FIELD(arg0, f32 *, 0x60), sp20, 2);
-    temp_fv0 = (f32) sp20[0];
-    temp_fv1 = (f32) sp20[1];
-    temp_fa0 = (f32) sp20[2];
-    temp_t5 = func_8026D7D8((s32) temp_fv0, (s32) temp_fv1, (s32) temp_fa0) & 0x1C00;
-    if (temp_t5 != 0) {
-        func_8027F858((s32) arg0, temp_t5 >> 0xA);
+    z = ((Obj8E *) arg0)->unk60;
+    func_8026DCAC(((Obj8E *) arg0)->unk58, ((Obj8E *) arg0)->unk5C, z, &info, 2);
+    p[2] = info.i[0];
+    p[1] = info.i[1];
+    p[0] = info.i[2];
+    t = func_8026D7D8(p[2], p[1], p[0]) & 0x1C00;
+    if (t != 0) {
+        func_8027F858((s32) arg0, t >> 10);
     }
 }
 
