@@ -13,7 +13,7 @@
  * function-scope static) and __clearAudioDMA (8026B238's), inlined.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 110, eu 110, jp 107
+ * differing words: us 106, eu 106, jp 103
  *
  * jp's 8026B9CC has no osTvType test (always 60 fields a second).
  * func_8026B72C, 8026B79C, 8026B7A8 and 8026B7D4 match (8026B7D4's run
@@ -23,9 +23,10 @@
  *   original's 0x50/0x54/0x58 (declaration order and the inlined
  *   samplesLeft set them); __clearAudioDMA's iomsg is at sp+0x28, the
  *   original's sp+0x30.
- * - func_8026B9CC (103 words): the same code shape, but our frame is 8
- *   bytes bigger (a hole at sp+0x38: err at 0x42, not 0x3A, amc's home
- *   0x54, not 0x4C). The chained `D_802AF938 = D_802AF93C = D_802AF948
+ * - func_8026B9CC (99 words): the same code shape and frame (locals
+ *   declared i, fsize, buffs, err, then fps, which gets no slot below err);
+ *   ugen's t-registers run three behind the original's from the first
+ *   lhu (t8 for t1). The chained `D_802AF938 = D_802AF93C = D_802AF948
  *   = 0` gives the original's address registers (v1, a2).
  */
 #include "common.h"
@@ -217,11 +218,11 @@ static void *func_8026B210(UnkStruct_802AF930 **state);
 s16 func_8026B9CC(UnkStruct_8026B9CC_0 *c, UnkStruct_8026B9CC_1 *amc) {
     s32 i;
     f32 fsize;
+    UnkStruct_8026B804 *buffs;
+    s16 err;
 #if !VERSION_JP
     f32 fps;
 #endif
-    s16 err;
-    UnkStruct_8026B804 *buffs;
 
     D_802AD680.maxCmds = 0;
     D_802AD680.maxBuffers = 0;
