@@ -142,7 +142,8 @@ typedef struct {
     /* 0x90 */ s32 unk90[4];
     /* 0xA0 */ s32 unkA0;
     /* 0xA4 */ s32 unkA4[4];
-    /* 0xB4 */ u8 unkB4[0x34];
+    /* 0xB4 */ s32 unkB4[4];
+    /* 0xC4 */ u8 unkC4[0x24];
     /* 0xE8 */ s32 unkE8[4];
 } UnkStruct_802AC660; /* size >= 0xF8 */
 
@@ -2750,10 +2751,10 @@ static void func_8023CA94() {
             M2C_FIELD(D_800AEDF0 + i * 0xC8, s32 *, 0x14) = 1;
             M2C_FIELD(D_800AEDF0 + i * 0xC8, s32 *, 0x98) = 3;
             M2C_FIELD(D_800AEDF0 + i * 0xC8, s32 *, 0x94) = M2C_FIELD(D_800AEDF0 + i * 0xC8, s32 *, 0x18);
-            ((s32 *) D_802AC660.unkB4)[i] &= ~2;
+            D_802AC660.unkB4[i] &= ~2;
             if (D_802AC660.unk4[i] == 2) {
                 func_80251804(i);
-                ((s32 *) D_802AC660.unkB4)[i] |= 8;
+                D_802AC660.unkB4[i] |= 8;
             } else if ((D_802AC660.unk4[i] == 1) && (D_802AC660.unk40[i] == 1)) {
                 D_802AC660.unkE8[i] = func_802280F4(M2C_FIELD(func_802443F4(i), s32 *, 0x40), 0xF);
                 q = D_802AC660.unk50[i];
