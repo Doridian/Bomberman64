@@ -1,7 +1,7 @@
 /*
  * NON_MATCHING: main_code's 96540, complete: the controller pak save.
  * flags: -O3
- * differing words: us 534, eu 534, jp 534
+ * differing words: us 520, eu 520, jp 520
  */
 #include "common.h"
 #include "ultralib/PR/os_pfs.h"
@@ -114,7 +114,7 @@ static s32 func_8027C4F4(s32 ch, s32 *file);
 static void func_8027C560(s32 len, u8 *p);
 static void func_8027CA14(s32 ch, s32 retried);
 static void func_8027BF30();
-static s32 func_8027C0D4(u8 **pp, u8 v);
+static void func_8027C0D4();
 static s32 func_8027C174(u8 *buf);
 static s32 func_8027C17C(u8 *buf);
 static s32 func_8027C184(s32 ch, s32 file, u8 *buf);
@@ -406,14 +406,16 @@ static s32 func_8027C17C(u8 *buf) {
 
     if (buf[4] != 1) {
         bad = 1;
+        goto end;
     }
+end:
     return bad;
 }
 
 /* The checksums and the fixed bytes: the number of the first bad part. */
 static s32 func_8027C174(u8 *buf) {
-    s32 err = 0;
     u8 *p = buf;
+    s32 err = 0;
 
     if (func_8027C0DC(&p, 8, 1)) {
         err = 1;
@@ -423,15 +425,15 @@ static s32 func_8027C174(u8 *buf) {
         err = 3;
     } else if (func_8027C0DC(&p, 5, 4)) {
         err = 4;
-    } else if (func_8027C0D4(&p, 0xFE)) {
+    } else if (*p++ != 0xFE) {
         err = 5;
-    } else if (func_8027C0D4(&p, 0)) {
+    } else if (*p++ != 0) {
         err = 6;
-    } else if (func_8027C0D4(&p, 0)) {
+    } else if (*p++ != 0) {
         err = 7;
-    } else if (func_8027C0D4(&p, 0)) {
+    } else if (*p++ != 0) {
         err = 8;
-    } else if (func_8027C0D4(&p, 0)) {
+    } else if (*p++ != 0) {
         err = 9;
     }
     return err;
@@ -455,6 +457,7 @@ static s32 func_8027C0DC(u8 **pp, s32 len, s32 err) {
     u8 sum = 0;
     s32 i;
 
+    func_8027C0D4();
     for (i = 0; i < len; i++) {
         sum += *p++;
     }
@@ -465,8 +468,7 @@ static s32 func_8027C0DC(u8 **pp, s32 len, s32 err) {
     return 0;
 }
 
-static s32 func_8027C0D4(u8 **pp, u8 v) {
-    return *(*pp)++ != v;
+static void func_8027C0D4() {
 }
 
 s32 func_8027BF38(PakDir *dir) {
