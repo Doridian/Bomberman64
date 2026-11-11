@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 949, eu 949, jp 948
+ * differing words: us 849, eu 849, jp 848
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -471,7 +471,7 @@ s32 func_802443F4(s32 arg0);
 f32 func_8024441C(s32 arg0, s32 arg1);
 void func_802444B8(s32 arg0, s32 arg1);
 s32 func_80244BA4(s32 arg0, s32 arg1);
-void func_80244BE0(s32 arg0, s32 arg1);
+void func_80244BE0(s32 arg0, s16 arg1);
 void func_80244C30(s32 arg0, s32 arg1);
 void func_80244E04(void *arg0);
 s32 func_80244F34(void *arg0, s32 arg1);
@@ -2447,11 +2447,9 @@ void func_8024BC94(s32 arg0) {
 }
 
 void func_8024BC20(s32 arg0) {
-    UnkStruct_800AEDF0 *p = &D_800AEDF0[arg0];
-
-    if (--p->unkB8 == 0) {
-        func_8022FC90((void *)p->unkB4);
-        p->unkB4 = 0;
+    if (--D_800AEDF0[arg0].unkB8 == 0) {
+        func_8022FC90((void *)D_800AEDF0[arg0].unkB4);
+        D_800AEDF0[arg0].unkB4 = 0;
         func_80243D90(arg0, 0x20000, 0);
     }
 }
@@ -3045,11 +3043,12 @@ void func_80249FD4(s32 arg0, s32 arg1) {
     func_80244354(arg0, 0xA0, 1);
     p = &D_800AEDF0[arg0];
     p->unk3C = arg1;
-    if ((D_802AC5D0 & 4) || p == D_800AEDF0) {
+    if ((D_802AC5D0 & 4) || arg0 == 0) {
         func_802479F0(tbl.v);
     }
     if (func_80243EB4(arg0, 0x2000)) {
-        D_802ACE90[p->unkA4] = 60.0f;
+        s32 k = p->unkA4;
+        D_802ACE90[k] = 60.0f;
     }
     p->unk38 &= ~0x80;
 }
@@ -3151,6 +3150,7 @@ void func_80249AD4(s32 arg0) {
 }
 
 void func_80249A30(s32 arg0) {
+    s32 pad[3];
     s32 ipos[3];
     UnkObj *obj;
 
@@ -3192,9 +3192,9 @@ void func_80249810(s32 arg0, s32 arg1, s32 arg2) {
         func_802444B8(arg0, 0x10);
     }
     func_80244354(arg0, 0x120, 1);
-    D_800AEDF0[arg0].unk38 &= ~0x100;
     D_800AEDF0[arg0].unk30 = arg1;
     D_800AEDF0[arg0].unkBC = arg2;
+    D_800AEDF0[arg0].unk38 &= ~0x100;
 }
 
 void func_802497D8(s32 arg0) {
@@ -3232,10 +3232,8 @@ void func_80249648(s32 arg0, UnkObj *arg1, s32 arg2) {
 void func_8024946C(s32 arg0, s32 arg1) {
     UnkObj *o;
     f32 pos[3];
-    s32 pad[2];
-    UnkStruct_800AEDF0 *e = &D_800AEDF0[arg0];
 
-    o = e->unk28;
+    o = (UnkObj *)func_802443F4(arg0);
     if (!func_80244BA4(arg0, 0x1000)) {
         switch (arg1) {
             case 0:
@@ -3264,7 +3262,7 @@ void func_8024946C(s32 arg0, s32 arg1) {
     }
     func_80244354(arg0, 0x1C0, 0);
     func_80244354(arg0, 0x1020, 1);
-    e->unk38 &= ~0x1000;
+    D_800AEDF0[arg0].unk38 &= ~0x1000;
 }
 
 void func_8024891C(s32 arg0) {
@@ -3734,6 +3732,7 @@ void func_80247A54(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
     if (D_802AC8E8[arg0] != -1) {
         if (!p->unk2C && !p->unk2C) {}
         func_8028A4E0(D_802AC8E8[arg0]);
+        if (!obj && !obj) {}
         D_802AC8E8[arg0] = -1;
     }
     func_8022979C((s32)obj->unk40, 4, 4);
@@ -3992,22 +3991,21 @@ void func_80246D74(s32 arg0) {
 }
 
 void func_80246C3C(s32 arg0, s32 arg1, s32 arg2) {
-    UnkStruct_800AEDF0 *p = &D_800AEDF0[arg0];
     UnkObj *obj = (UnkObj *)func_802443F4(arg0);
 
     if (arg2 != 0) {
         func_80243D90(arg0, 0x100, 1);
-        p->unk8C = 0.0f;
-        p->unk88 = 0.2f;
-        p->unk84 = arg1;
+        D_800AEDF0[arg0].unk8C = 0.0f;
+        D_800AEDF0[arg0].unk88 = 0.2f;
+        D_800AEDF0[arg0].unk84 = arg1;
         func_8029279C(obj->unk40, 0, 0, 0, 0.0f);
-        p->unk90 = 60;
+        D_800AEDF0[arg0].unk90 = 60;
         if (func_80243EB4(arg0, 0x80)) {
-            p->unk90 = 1200;
+            D_800AEDF0[arg0].unk90 = 1200;
         }
-        if (p->unk18 & 0x404) {
+        if (D_800AEDF0[arg0].unk18 & 0x404) {
             func_80243D90(arg0, 0x10, 1);
-            p->unk78 = 1200;
+            D_800AEDF0[arg0].unk78 = 1200;
         }
     } else {
         if (func_80243EB4(arg0, 0x100)) {
@@ -4619,14 +4617,11 @@ s32 func_80244F34(void *arg0, s32 arg1) {
 
 void func_80244E04(void *arg0) {
     s32 id;
-    s32 pad[11];
-    UnkStruct_800AEDF0 *p;
     s32 flag;
 
     func_802313DC(arg0, 0x400);
     id = func_802441AC(arg0);
     func_80244354(id, 0x400000, 0);
-    p = &D_800AEDF0[id];
     flag = func_80244BA4(id, 0x1000);
     if (!flag) {
         flag = func_80244BA4(id, 0x80);
@@ -4643,7 +4638,7 @@ void func_80244E04(void *arg0) {
     } else {
         func_802444B8(id, 8);
     }
-    p->unk40 = 0;
+    D_800AEDF0[id].unk40 = 0;
 }
 
 void func_80244C30(s32 arg0, s32 arg1) {
@@ -4682,8 +4677,8 @@ void func_80244C30(s32 arg0, s32 arg1) {
     func_80244354(arg0, 0x80, 0);
 }
 
-void func_80244BE0(s32 arg0, s32 arg1) {
-    func_80270770((s16)arg0, (s16)arg1);
+void func_80244BE0(s32 arg0, s16 arg1) {
+    func_80270770((s16)arg0, arg1);
     D_800AEDF0[arg0].unk2C = 0;
 }
 
@@ -4878,14 +4873,11 @@ void func_802444B8(s32 arg0, s32 arg1) {
 
 f32 func_8024441C(s32 arg0, s32 arg1) {
     f32 ret = 0.0f;
-    UnkStruct_800AEDF0 *p;
     s32 v;
 
-    if (!D_800AEDF0[arg0].unk10 && !D_800AEDF0[arg0].unk10) {}
     if (arg1 == D_802AC9F8[arg0]) {
-        p = &D_800AEDF0[arg0];
-        v = p->unk44;
-        switch (v) {
+        if (!D_800AEDF0[arg0].unk10 && !D_800AEDF0[arg0].unk10) {}
+        switch (func_802443CC(arg0)) {
             case 1:
             case 2:
             case 3:
