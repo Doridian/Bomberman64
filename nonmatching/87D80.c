@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 715, eu 715, jp 715
+ * differing words: us 663, eu 663, jp 663
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -1305,42 +1305,29 @@ u8 func_8026DC74(s32 arg0) {
 }
 
 void func_8026DB88(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5, s32 arg6) {
-    s32 temp_s0;
-    s32 var_a1;
-    s32 var_at;
-    s32 var_at_2;
-    s32 var_s0;
-    s32 var_t0;
+    s32 i;
+    s32 n;
 
-    var_a1 = arg1;
-    var_t0 = arg4;
-    if (var_t0 < var_a1) {
-        temp_s0 = var_a1;
-        var_a1 = var_t0;
-        var_t0 = temp_s0;
+    n = D_800B15D8->unk0;
+    if (arg4 < arg1) {
+        i = arg1;
+        arg1 = arg4;
+        arg4 = i;
     }
-    if (var_a1 < 0) {
-        var_a1 = 0;
+    if (arg1 < 0) {
+        arg1 = 0;
     }
-    if (var_t0 < 0) {
-        var_t0 = 0;
+    if (arg4 < 0) {
+        arg4 = 0;
     }
-    var_at = D_800B15D8->unk0 < var_t0;
-    if (D_800B15D8->unk0 < var_a1) {
-        var_a1 = D_800B15D8->unk0;
-        var_at = D_800B15D8->unk0 < var_t0;
+    if (n < arg1) {
+        arg1 = n;
     }
-    var_at_2 = var_t0 < var_a1;
-    if (var_at != 0) {
-        var_t0 = D_800B15D8->unk0;
-        var_at_2 = var_t0 < var_a1;
+    if (n < arg4) {
+        arg4 = n;
     }
-    var_s0 = var_a1;
-    if (var_at_2 == 0) {
-        do {
-            func_8026DA2C(arg0, var_s0, arg2, arg3, arg5, arg6);
-            var_s0 += 1;
-        } while ((var_t0 + 1) != var_s0);
+    for (i = arg1; i <= arg4; i++) {
+        func_8026DA2C(arg0, i, arg2, arg3, arg5, arg6);
     }
 }
 
