@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 467, eu 467, jp 467
+ * differing words: us 379, eu 379, jp 379
  *
  * The object is the same in all three versions. 70 of the 79 original
  * procedures match (stubs included). The IPA statics
@@ -2067,12 +2067,15 @@ s16 func_8026724C(s16 num) {
 
 static void func_8026706C(s16 num, SndDef *def) {
     SndEntry *e;
+    SndBankFile *f;
     SndBank *bank;
     SndInst *inst;
     u8 b;
     u8 i;
     u8 k;
     void *snd;
+    s32 n;
+    s32 m;
 
     e = &D_802AD650->entries[num];
     def->vol = 0x7FFF;
@@ -2083,18 +2086,22 @@ static void func_8026706C(s16 num, SndDef *def) {
     def->unkF = 0;
     switch (D_802AD650->magic) {
         case 0x5431:
+            f = D_802AD648;
             b = e->unk0;
             i = e->unk1;
             k = e->unk2;
-            if (D_802AD648->bankCount < b) {
+            n = f->bankCount;
+            if (n < b) {
                 snd = NULL;
             } else {
-                bank = D_802AD648->bankArray[b];
-                if (bank->instCount < i) {
+                bank = f->bankArray[b];
+                n = bank->instCount;
+                if (n < i) {
                     snd = NULL;
                 } else {
                     inst = bank->instArray[i];
-                    if (inst->soundCount < k) {
+                    m = inst->soundCount;
+                    if (m < k) {
                         snd = NULL;
                     } else {
                         snd = inst->soundArray[k];
@@ -2186,6 +2193,7 @@ static s16 func_80266D8C(u8 prio, s32 arg1) {
                 D_802A1368 = min;
                 for (oldest = 0; oldest < D_802A12B4; oldest++) {
                     D_802AD654[oldest].unk1C += min;
+                    D_802A1368 = min;
                 }
             } else {
                 for (oldest = 0; oldest < D_802A12B4; oldest++) {
