@@ -9,7 +9,7 @@
  * func_80228500 kept). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 666, eu 666, jp 666
+ * differing words: us 620, eu 620, jp 620
  *
  * The code is the same in every version.
  *
@@ -40,11 +40,13 @@
  *   the other cofactors row-major, then the zeros and 1.0f.
  *
  * Left:
- * - func_802289C0 (the draw loop, 422): the original keeps obj in s2
- *   (ours t4, spilled around each call); its texture loop spills obj to
- *   0xB0(sp), keeps 0xBC000000 in t5 with its own ori 6, and
- *   strength-reduces the slot offset. The 0x160 frame comes from an
- *   unused `s32 pad[8]` in func_802284F0 (a guess at the 32 bytes).
+ * - func_802289C0 (the draw loop, 376): obj is in s2 as in the
+ *   original once the texture loop reads `unk4[i].unk0` beside a
+ *   `&unk4[i]` slot pointer (the i*8 is strength-reduced, and the loop's
+ *   pressure keeps obj out of the t registers). The original computes
+ *   the slot address once and keeps func_802284F0's obj in memory at
+ *   0xB0(sp) (ours colours it); the 0x160 frame comes from an unused
+ *   `s32 pad[6]` in func_802284F0 (a guess at the bytes).
  * - func_8022A328 (158): mostly registers. The original keeps j in t0
  *   for the two failure exits (ours stores zero and merges them) and
  *   re-materialises the pool base after the free-slot search.
@@ -1145,13 +1147,13 @@ static void func_802284F0(UnkObj *arg0, UnkGfx **arg1) {
     UnkTexSlot *slot;
     UnkTexAnim *anim;
     UnkModel *model;
-    s32 pad[8];
+    s32 pad[6];
 
     gfx = *arg1;
     for (i = 0; i < arg0->unk4C->unk0; i++) {
         slot = &arg0->unk4C->unk4[i];
         anim = &arg0->unk4C->unk8[i];
-        model = slot->unk0;
+        model = arg0->unk4C->unk4[i].unk0;
         if (arg0->unk4C->unk8 == NULL) {
             gSPSegment(gfx++, i + 3, (u8 *)model + model->unkC[slot->unk4].unk8);
         } else {
