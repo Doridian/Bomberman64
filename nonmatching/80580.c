@@ -8,24 +8,27 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2280, eu 2280, jp 2280
+ * differing words: us 2208, eu 2208, jp 2208
  *
- * The object is the same in all three versions. 61 of the 79 original
+ * The object is the same in all three versions. 66 of the 79 original
  * procedures match (stubs included). The IPA statics
  * (s-registers used unsaved, or arguments in odd registers) are static
- * here: 80266D8C, 8026706C (num in a1), 80267784, 802679C0, 80267A18,
+ * here: 80266D8C, 8026706C (def, num), 80267784, 802679C0, 80267A18,
  * 80268440, 80269144, 802699C8, 80269A8C, 80269AFC, 8026A108, 8026A164.
  * The 8-byte stubs are statics inlined into the function after them:
  * 80267A10 (a sound's free voice), 802679A0-B8 (the script's clamps and
  * fade), 802691A0 (the sequence load), 80267064 (a volume), 80266928
- * (a script's reset), 80269A7C/84 (empty), the recursive setters'
- * stubs 80266154/298/3D8/508 (empty, the setters recurse themselves).
+ * (a script's reset), 80268430/38 (80268440's script setup and bank
+ * search), 80269A7C/84 (empty), the recursive setters' stubs
+ * 80266154/298/3D8/508 (empty, the setters recurse themselves).
  * func_80265FBC is a static too (callers keep registers live across
  * it), inlined only into 80265FF8: a dead `if (0)` store keeps IDO
  * from inlining it into the others. 8026724C's unused second SndDef
- * gives the original's frame size. Biggest left: 80267A18 (the script
- * interpreter: s-register choice), 80269AFC, 8026A164, 802691A8,
- * 8026A8B4, 80268440, 80266D8C, 8026706C.
+ * and 80268440's pad give the original's frame sizes. Biggest left:
+ * 80267A18 (the script interpreter: s-register choice; 802686B8 and
+ * 80268440 differ only in the s-register its clobbers leave them),
+ * 80269AFC, 8026A164, 802691A8, 8026A8B4 (the switch's default is
+ * emitted first, the original's last), 80266D8C, 8026706C.
  */
 #include "common.h"
 
@@ -431,8 +434,8 @@ u8 func_80266CD4(s16 arg0);
 s32 func_80266CFC(void);
 s16 func_80266D0C(s16 arg0);
 static s16 func_80266D8C(u8 prio, s32 arg1);
-static s16 func_80267064(s8 vol);
-static void func_8026706C(s16 num, SndDef *def);
+static s32 func_80267064(s8 vol);
+static void func_8026706C(SndDef *def, s16 num);
 s16 func_8026724C(s16 num);
 s16 func_802675F4(s16 arg0, s16 arg1, f32 arg2);
 void func_80267654(s16 arg0, f32 arg1, f32 arg2, f32 arg3, f32 arg4);
@@ -1442,90 +1445,60 @@ void func_802689B4(s16 arg0) {
 }
 
 void func_802686B8() {
-    Voice *sp44;
-    s16 sp42;
-    Voice *temp_s0;
-    f32 temp_fa0;
-    s16 temp_a1;
-    s16 var_fp;
-    s32 temp_ft2;
-    s32 temp_v0_2;
-    s32 temp_v1;
-    s32 var_t6;
-    s32 var_t7;
-    u8 temp_v0;
+    Voice *v;
+    s16 i;
 
     D_802AD660 = 0;
-    var_fp = 0;
-    if (D_802A12BC > 0) {
-        do {
-            temp_s0 = &D_802AD654[var_fp];
-            temp_a1 = temp_s0->sndId;
-            if (temp_a1 >= 0) {
-                func_802986F0(D_802AD64C, temp_a1);
-                temp_v0 = func_80298740(D_802AD64C);
-                temp_v1 = temp_v0 & 0xFF;
-                temp_s0->state = temp_v0;
-                switch (temp_v1) {                  /* irregular */
+    for (i = 0; i < D_802A12BC; i++) {
+        v = &D_802AD654[i];
+        if (v->sndId >= 0) {
+            func_802986F0(D_802AD64C, v->sndId);
+            v->state = func_80298740(D_802AD64C);
+            switch (v->state) {
                 case 0:
-                    func_802986E8(D_802AD64C, temp_s0->sndId);
-                    temp_s0->sndId = -1;
-                    if (!(temp_s0->flags & 0x1000)) {
-                        temp_s0->unk1F = 0;
+                    func_802986E8(D_802AD64C, v->sndId);
+                    v->sndId = -1;
+                    if (!(v->flags & 0x1000)) {
+                        v->unk1F = 0;
                     }
-                    temp_s0->flags &= ~0x2000;
+                    v->flags &= ~0x2000;
                     break;
                 case 2:
-                    if (temp_s0->flags & 0x1000) {
-                        temp_s0->state = 1;
+                    if (v->flags & 0x1000) {
+                        v->state = 1;
                     } else {
-                        temp_s0->unk1F = 0;
+                        v->unk1F = 0;
                     }
-                    temp_s0->flags &= ~0x2000;
-                    var_t6 = D_802AD660 + 1;
-block_18:
-                    D_802AD660 = var_t6;
+                    v->flags &= ~0x2000;
+                    D_802AD660++;
                     break;
                 case 1:
-                    if (temp_s0->flags & 0x2000) {
+                    if (v->flags & 0x2000) {
                         func_80298710(D_802AD64C);
                     } else {
-                        sp44 = temp_s0;
-                        sp42 = var_fp;
-                        func_80267A18(var_fp);
+                        func_80267A18(i);
                     }
-                    var_t6 = D_802AD660 + 1;
-                    goto block_18;
-                }
+                    D_802AD660++;
+                    break;
             }
-            temp_v0_2 = temp_s0->flags;
-            var_t7 = temp_v0_2 & 0xF;
-            if (temp_v0_2 & 0x1000) {
-                var_t7 = temp_v0_2 & 0xF;
-                if (temp_s0->sndId < 0) {
-                    sp44 = temp_s0;
-                    sp42 = var_fp;
-                    func_80268440(var_fp);
-                    D_802AD660 += 1;
-                    var_t7 = temp_s0->flags & 0xF;
-                }
-            }
-            if (var_t7 != 0) {
-                func_80267784(var_fp);
-            }
-            var_fp += 1;
-        } while (var_fp < D_802A12BC);
+        }
+        if ((v->flags & 0x1000) && v->sndId < 0) {
+            func_80268440(i);
+            D_802AD660++;
+        }
+        if (v->flags & 0xF) {
+            func_80267784(i);
+        }
     }
     if (D_802AD664 > 0.0f) {
         D_802AD668 += D_802AD664;
-        temp_fa0 = (f32) D_802AD66C;
-        if (temp_fa0 <= D_802AD668) {
+        if (D_802AD66C <= D_802AD668) {
             func_80266B50();
             D_802AD664 = 0.0f;
         } else {
-            temp_ft2 = (s32) (temp_fa0 - D_802AD668);
-            if ((s16) temp_ft2 != D_802AD66E) {
-                D_802AD66E = (s16) temp_ft2;
+            i = D_802AD66C - D_802AD668;
+            if (i != D_802AD66E) {
+                D_802AD66E = i;
                 func_802660B4();
             }
         }
@@ -1590,7 +1563,7 @@ static void func_80268440(s16 idx) {
     v->flags &= ~0x1000;
     v->state = 0;
     if (D_802AD650->magic == 0x5431 || D_802AD650->magic == 0x5432) {
-        func_8026706C(v->num, &def);
+        func_8026706C(&def, v->num);
         v->sound = def.sound;
     } else {
         v->sound = func_80268438(v->num);
@@ -1810,7 +1783,7 @@ static s16 func_80267A10(s16 num) {
     if (num >= D_802AD650->count || num < 0) {
         return -1;
     }
-    func_8026706C(num, &def);
+    func_8026706C(&def, num);
     return func_80266D8C(def.prio, 1);
 }
 
@@ -1991,7 +1964,7 @@ s16 func_8026724C(s16 num) {
         return -1;
     }
     if (D_802AD650->magic == 0x5431 || D_802AD650->magic == 0x5432) {
-        func_8026706C(num, &def);
+        func_8026706C(&def, num);
         idx = func_80266D8C(def.prio, 0);
         if (idx < 0) {
             return -1;
@@ -2056,7 +2029,7 @@ s16 func_8026724C(s16 num) {
     return idx;
 }
 
-static void func_8026706C(s16 num, SndDef *def) {
+static void func_8026706C(SndDef *def, s16 num) {
     SndEntry *e;
     SndBank *bank;
     SndInst *inst;
@@ -2068,10 +2041,10 @@ static void func_8026706C(s16 num, SndDef *def) {
     def->vol = 0x7FFF;
     def->pan = 0x40;
     e = &D_802AD650->entries[num];
-    def->prio = D_802AD650->entries[num].unk3;
+    def->prio = e->unk3;
+    def->pitch = (f32) e->unk6 / (f32) D_802A1288;
     def->script = -1;
     def->unkF = 0;
-    def->pitch = (f32) e->unk6 / (f32) D_802A1288;
     switch (D_802AD650->magic) {
         case 0x5431:
             b = e->unk0;
@@ -2111,8 +2084,8 @@ static void func_8026706C(s16 num, SndDef *def) {
     }
 }
 
-static s16 func_80267064(s8 vol) {
-    s16 v = 0;
+static s32 func_80267064(s8 vol) {
+    s32 v = 0;
 
     if (vol > 0) {
         v = (vol << 8) + 0xFF;
