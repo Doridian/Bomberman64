@@ -6,7 +6,7 @@
  * boxes, func_8022E884). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1206, eu 1206, jp 1206
+ * differing words: us 1203, eu 1203, jp 1203
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does (the stubs at 0x8022E0A4-0x8022E87C are
@@ -1557,11 +1557,11 @@ void func_8022FF58(f32 *arg0, f32 *arg1, f32 *arg2) {
 void func_8022FEAC(f32 *arg0, f32 *arg1) {
     f32 sp24;
 
-    sp24 = func_80234434(M2C_FIELD(arg0, f32 *, 0));
-    M2C_FIELD(arg1, f32 *, 0) = func_80234408(M2C_FIELD(arg0, f32 *, 4)) * (M2C_FIELD(arg0, f32 *, 8) * sp24);
-    arg1[1] = func_80234434(M2C_FIELD(arg0, f32 *, 4)) * M2C_FIELD(arg0, f32 *, 8);
-    sp24 = func_80234408(M2C_FIELD(arg0, f32 *, 0));
-    arg1[2] = func_80234408(M2C_FIELD(arg0, f32 *, 4)) * (M2C_FIELD(arg0, f32 *, 8) * sp24);
+    sp24 = func_80234434(arg0[0]);
+    arg1[0] = (arg0[2] * sp24) * func_80234408(arg0[1]);
+    arg1[1] = arg0[2] * func_80234434(arg0[1]);
+    sp24 = func_80234408(arg0[0]);
+    arg1[2] = (arg0[2] * sp24) * func_80234408(arg0[1]);
 }
 
 void func_8022FEA0(f32 arg0) {
