@@ -97,7 +97,8 @@ its `_entry.c` if drafted). Nothing builds it into the ROM: the object
 stays asm, every sha1 is unchanged, and the C is there for the PC port and
 for the next matching pass. It is outside `src/` because `tools/layout.py`
 makes any `src/<seg>/<obj>.c` a C object. An `-O2` or `-g` object doesn't
-go there: its unmatched functions stay GLOBAL_ASM in `src/`.
+go there: it is compiled function by function, so a near miss stays in
+`src/`, beside its asm (below, "-O2 near misses").
 
 Each draft starts with a comment giving its flags, the words that still
 differ per version, and what differs, function by function:
@@ -135,6 +136,37 @@ target against the extracted asm, `R(wrong: ours vs orig)` with `-v`), but
 a call through a ZeroJump stub a version lacks (jp has fewer) only shows
 up when it is built. ovl_0A_06's jp calls 0x2501/0x2503
 where us calls 0x250C/0x250D.
+
+### -O2 near misses
+
+In an `-O2` (or `-g`) object each function is compiled on its own, so one
+that doesn't match yet keeps its asm in the ROM build and its C sits
+beside it in the same `src/` file:
+
+```
+#ifdef NON_MATCHING
+/* 15 differing words (us 15, eu 15, jp 15): the loop counter is kept
+   where the original tests the source pointer against its end */
+void func_8028A154(void) {
+    ...
+}
+#else
+#pragma GLOBAL_ASM("asm/nonmatchings/A4860/func_8028A154.s")
+#endif
+```
+
+The ROM build doesn't define `NON_MATCHING`, so it takes the asm and the
+sha1 is unchanged; the PC port builds with `-DNON_MATCHING` and gets the
+C. The comment right after the `#ifdef` gives the words that still differ
+per version (`tools/fcmp.py`'s count for that function) and what differs.
+
+`tools/nonmatching.py` checks these too: with no paths it takes every
+`src/` file with an `#ifdef NON_MATCHING` block besides `nonmatching/`,
+compiles it with `-DNON_MATCHING` and the Makefile's flags for it, holds
+each block's function to its comment's count for the extracted version,
+and requires every other C function in the file to match. So `make
+nonmatching-check` covers them, in each version extracted. When one
+matches, drop the `#ifdef` and the asm.
 
 ## Compiler flags: the evidence
 

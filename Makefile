@@ -170,8 +170,9 @@ shift-build:
 lzss-check: check $(LZSS_LIB)
 	$(PYTHON) $(TOOLS_DIR)/lzss_check.py $(BASEROM)
 
-# the NON_MATCHING drafts (nonmatching/, docs/DECOMPILING.md): each still
-# compiles and differs in no more words than its header records; needs the
+# the NON_MATCHING drafts (nonmatching/, and src/'s -O2 functions under
+# #ifdef NON_MATCHING, compiled with -DNON_MATCHING; docs/DECOMPILING.md):
+# each still compiles and differs in no more words than recorded; needs the
 # linked build's map for the functions already C in src/
 nonmatching-check: $(TARGET).elf
 	$(PYTHON) $(TOOLS_DIR)/nonmatching.py --check
