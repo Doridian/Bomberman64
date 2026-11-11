@@ -63,7 +63,76 @@ void func_8026CF90(void) {
     }
 }
 
+#ifdef NON_MATCHING
+/* 15 differing words (us 15, eu 15, jp 15): &D_802AFC44 is in s3 where
+   the original has s2 (and the next saved register shifts); the fake read
+   of D_802A13E0 before the count is the permuter's, which brought 166
+   words (a 64-byte frame against 72) down to these 15 */
+void func_8026CFF4(s32 arg0, s32 arg1, s32 arg2) {
+    s32 i;
+
+    D_802AFC40 = 0;
+    if (!(*func_8023A840() & 6)) {
+        func_8026C660(0x28);
+    }
+    func_8023A864(0);
+    func_80243698(1);
+    D_802AFC48 = func_8022A328(func_8026D2C4, 0x40, 1, 0, 0);
+    D_802AFC48->unkC |= 0x90;
+    D_802A13E0 = func_8026CE28(arg0);
+    D_802AFC44 = func_8022A6C4(D_802A13E0, 0x40);
+    D_802AFC44->unk10 = 32.0f;
+    D_802AFC44->unk14 = 174.0f;
+    D_802AFC44->unk18 = 288.0f;
+    D_802AFC44->unk1C = 222.0f;
+    D_802AFC44->unk20 = 0.0f;
+    D_802AFC44->unk24 = 0.0f;
+    D_802AFC44->unk28 = 256.0f;
+    D_802AFC44->unk2C = 48.0f;
+    D_802AFC44->unkC |= 0x280;
+    if (arg2 == 0) {
+        func_8023903C(2);
+    }
+    while (TRUE) {
+        if (arg2 != 0) {
+            for (i = 0; i < arg2; i++) {
+                if (D_802AFC40 != 0) {
+                    return;
+                }
+                func_80239094();
+            }
+        } else {
+            while (!(func_802399AC(0) & 0xC000)) {
+                func_80239094();
+            }
+        }
+        if (D_802A13E0 == NULL) {
+        }
+        if (--arg1 == 0) {
+            break;
+        }
+        for (i = 0; i < 48; i++) {
+            if (D_802AFC40 != 0) {
+                return;
+            }
+            D_802AFC44->unk24 += 1.0f;
+            func_80239094();
+        }
+    }
+    func_8022A1E8(D_802AFC44);
+    func_8022A1E8(D_802AFC48);
+    func_8026CBD4(D_802A13E0);
+    D_802A13E0 = NULL;
+    if (D_802AFC40 != 0) {
+        return;
+    }
+    func_80239094();
+    func_8023A864(1);
+    func_80243698(0);
+}
+#else
 #pragma GLOBAL_ASM("asm/nonmatchings/87730/func_8026CFF4.s")
+#endif
 
 void func_8026D2A4(s32 arg0, s32 arg1) {
     func_8026CFF4(arg0, arg1, 0);

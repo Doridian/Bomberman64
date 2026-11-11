@@ -8,6 +8,7 @@ typedef struct {
 extern UnkStruct_8008E570 D_8008E570;
 extern u8 D_8008E640[8];
 extern u8 D_802A1C00[];
+extern u8 D_802A1C2C[9];
 
 s32 *func_8028A060(s32 arg0) {
     if (arg0 < 0 || arg0 >= 45) {
@@ -43,7 +44,29 @@ void func_8028A0E4(void) {
     }
 }
 
+#ifdef NON_MATCHING
+/* 15 differing words (us 15, eu 15, jp 15): the original drops i and
+   ends the copy on the source pointer (D_802A1C2C + 9), and keeps the
+   destination in another register; taking it before the calls (the
+   permuter's) brought 19 down to 15 */
+void func_8028A154(void) {
+    s32 i;
+    u8 *dst;
+    u8 *src;
+
+    src = (u8 *)&D_8008E570.unk18[12];
+    func_8028A0E4();
+    func_8028A0B4();
+    func_8028A08C();
+    dst = src;
+    src = D_802A1C2C;
+    for (i = 0; i < 9; i++) {
+        *dst++ = *src++;
+    }
+}
+#else
 #pragma GLOBAL_ASM("asm/nonmatchings/A4860/func_8028A154.s")
+#endif
 
 s32 func_8028A1DC(s32 arg0) {
     if (arg0 < 0x400 || arg0 >= 0x440) {
