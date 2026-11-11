@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 7026, eu 7026, jp 6986
+ * differing words: us 7024, eu 7024, jp 6984
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -1056,27 +1056,28 @@ void func_8025C590(s32 arg0) {
 }
 
 s32 func_80255224(f32 *arg0, f32 *arg1, s32 arg2) {
-    s32 sp30;
-    f32 *var_s0;
-    f32 temp_fv0;
-    f32 var_fs0;
-    s32 var_s1;
+    s32 pad;
+    s32 best;
+    f32 *p;
+    f32 d;
+    f32 min;
+    s32 i;
 
-    var_fs0 = 10000.0f;
-    var_s1 = 0;
+    min = 10000.0f;
+    i = 0;
     if (arg2 > 0) {
-        var_s0 = arg1;
+        p = arg1;
         do {
-            temp_fv0 = func_80251C48(var_s0, arg0);
-            if (temp_fv0 <= var_fs0) {
-                var_fs0 = temp_fv0;
-                sp30 = var_s1;
+            d = func_80251C48(p, arg0);
+            if (d <= min) {
+                min = d;
+                best = i;
             }
-            var_s1 += 1;
-            var_s0 = (void *) ((u8 *)var_s0 + 0xC);
-        } while (var_s1 != arg2);
+            i++;
+            p += 3;
+        } while (i != arg2);
     }
-    return sp30;
+    return best;
 }
 
 void func_8025216C(void) {
