@@ -8,7 +8,7 @@
  * text_objects.txt). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 299, eu 299, jp 299
+ * differing words: us 175, eu 175, jp 175
  *
  * The code is the same in every version.
  *
@@ -22,10 +22,9 @@
  * Left:
  * - func_8022C8B8 (84): same size and shape; temporaries numbered
  *   from one lower (the channel's address is in v1 in the original).
- * - func_8022CFC8 (80), func_8022BE48 (58): registers and scheduling,
- *   sizes differ by 1-2 words.
  * - func_8022C184 (20), func_8022AA50 and func_8022AB48 (18 each),
- *   func_8022C09C (11), func_8022BB88 (10): registers only.
+ *   func_8022BE48 (14), func_8022C09C (11), func_8022BB88 (10):
+ *   registers only.
  */
 #include "common.h"
 
@@ -401,8 +400,8 @@ UnkNode *func_8022CFC8(UnkInst *arg0, UnkNode *arg1, s32 arg2) {
     D_802A54D0++;
     node = malloc(sizeof(UnkNode));
     node->unk8 = arg1;
-    node->unk4 = arg2;
     node->unk0 = arg0->unk2C[arg2].unk0;
+    node->unk4 = arg2;
     func_8022C3EC(arg0, node);
     if (arg0->unk2C[arg2].unk2C != 0) {
         n = 1;
@@ -737,22 +736,26 @@ void func_8022BF44(Vec3f *arg0, Vec3f *arg1, Vec3f *arg2, f32 arg3) {
 
 f32 func_8022BE48(UnkCurve *arg0, f32 arg1) {
     s32 i;
-    s32 *k;
-    f32 *v;
+    f32 r;
     f32 ret;
+    s32 n;
+    s32 *keys;
+    f32 *vals;
 
     if (arg0->unk0 == 0x31) {
-        for (i = 0; i < arg0->unk4; i++) {
-            if (arg0->unk8[i] >= (s32)arg1) {
+        n = arg0->unk4;
+        keys = arg0->unk8;
+        vals = arg0->unkC;
+        for (i = 0; i < n; i++) {
+            if (keys[i] >= (s32)arg1) {
                 break;
             }
         }
-        k = &arg0->unk8[i];
-        v = &arg0->unkC[i];
-        if ((s32)arg1 == k[0]) {
-            ret = arg0->unkC[i];
+        if ((s32)arg1 == keys[i]) {
+            ret = vals[i];
         } else {
-            ret = (arg1 - k[-1]) * ((v[0] - v[-1]) / (k[0] - k[-1])) + v[-1];
+            ret = vals[i - 1];
+            ret += (arg1 - keys[i - 1]) * ((vals[i] - vals[i - 1]) / (keys[i] - keys[i - 1]));
         }
     }
     return ret;
