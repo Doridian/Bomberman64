@@ -8,7 +8,7 @@
  * stack layout and loop forms; func_8027B828 in two registers. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 447, eu 447, jp 447
+ * differing words: us 391, eu 391, jp 391
  */
 #include "common.h"
 
@@ -887,8 +887,8 @@ void func_8027A640(void) {
             D_802AFE88[i][j] = 0;
         }
     }
-    for (j = 0; j < 3; j++) {
-        sums[j] = 0;
+    for (i = 0; i < 3; i++) {
+        sums[i] = 0;
     }
     d2 = 0;
     do {
@@ -899,19 +899,19 @@ void func_8027A640(void) {
         if (mode == 0) {
             p += 3;
         }
-        for (j = 0; j < 3; j++) {
+        for (i = 0; i < 3; i++) {
             d1 = *p;
-            D_802AFE88[c][j] = d1;
-            sums[j] += d1;
+            D_802AFE88[c][i] = d1;
+            sums[i] += d1;
             p++;
         }
         if (mode == 1) {
             p += 3;
         }
     } while (d2 == 0);
-    for (j = 0; j < 3; j++) {
-        if (sums[j] <= 100) {
-            D_802AFE88[9][j] = 100 - sums[j];
+    for (i = 0; i < 3; i++) {
+        if (sums[i] <= 100) {
+            D_802AFE88[9][i] = 100 - sums[i];
         }
     }
     func_80226368(file);
