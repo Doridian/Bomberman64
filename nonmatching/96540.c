@@ -1,7 +1,24 @@
 /*
- * NON_MATCHING: main_code's 96540, complete: the controller pak save.
+ * NON_MATCHING: main_code's 96540, complete: the controller pak save
+ * (osPfs calls through ZeroJump module 0x16, the per-port status in
+ * D_802B0118, the save file's header check and read/write/verify retries,
+ * the file listing for the pak menu). One object: text 8027BD40-8027CE10,
+ * .data D_802A1520-802A1570, .rodata 802A3FC0-802A4040 (jump tables),
+ * .bss 802AFF70-802B0180. Every function is in C, last function first;
+ * the statics are inlined (IPA register conventions tie them to their
+ * callers) and leave their 8-byte stubs. Not built into the ROM
+ * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
  * differing words: us 5, eu 5, jp 5
+ *
+ * 13 of 15 functions match. func_8027BF38: `move v1,a0` is scheduled
+ * one slot earlier in the name-copy loop (2 words). func_8027C900:
+ * `sw ra` goes ahead of the two hoisted loop constants (3 words).
+ * The empty stubs' parameters (func_8027C4EC's two, func_8027CBC4's
+ * 20-byte buffer) are guesses that give the original's frames.
+ * Versions: the game code ('NBME'/'NBMP'/'NBMJ') and company code (jp
+ * 0x3138) of the pak file, its name's bytes (D_802A1520), and jp's
+ * default name bytes in func_8027CBD4; the code is otherwise the same.
  */
 #include "common.h"
 #include "ultralib/PR/os_pfs.h"
