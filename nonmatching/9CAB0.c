@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1989, eu 1989, jp 1989
+ * differing words: us 1982, eu 1982, jp 1982
  */
 #include "common.h"
 
@@ -670,6 +670,7 @@ UnkStruct_80288040 *func_802867E4(s32 arg0, f32 arg1, f32 arg2, f32 arg3) {
     s32 t;
     UnkStruct_800BB340 *task;
 
+    func_802863E0();
     ret = NULL;
     slot = -1;
     special = 0;
@@ -721,12 +722,14 @@ static void func_80286400(s32 arg0, f32 arg1, f32 arg2, f32 arg3, s32 arg4, s32 
     UnkStruct_80288040 *a;
     UnkStructA *m;
     s32 size;
+    Vec3f *p;
     struct {
         s32 g[3];
         Vec3f o;
     } grid;
 
     s = &D_800BA900[arg4];
+    p = &s->unk8;
     func_80282340(s);
     s->unk0 = arg5;
     s->unk4 = 0;
@@ -738,14 +741,13 @@ static void func_80286400(s32 arg0, f32 arg1, f32 arg2, f32 arg3, s32 arg4, s32 
     func_80285A7C(&s->unk14, arg0);
     a = &s->unk14;
     s->unk0 = 2;
-    func_8026DCAC(s->unk8.x, s->unk8.y, s->unk8.z, &grid, 0);
+    func_8026DCAC(p->x, p->y, p->z, &grid, 0);
     a->unk4 = grid.g[0];
     a->unk8 = grid.g[1];
     a->unkC = grid.g[2];
     a->unk10 = grid.g[0];
     a->unk14 = grid.g[1];
     a->unk18 = grid.g[2];
-    size = 0xC0;
     switch (a->unk44) {
     case 0:
     case 1:
@@ -768,11 +770,14 @@ static void func_80286400(s32 arg0, f32 arg1, f32 arg2, f32 arg3, s32 arg4, s32 
     case 8:
         size = 0xC0;
         break;
+    default:
+        size = 0xC0;
+        break;
     }
     m = func_80230CB4(D_800BA8E8[a->unk84].unk2, -1, 0, size, NULL);
-    m->unk40->unk10 = s->unk8.x - grid.o.x;
-    m->unk40->unk14 = s->unk8.y - grid.o.y;
-    m->unk40->unk18 = s->unk8.z - grid.o.z;
+    m->unk40->unk10 = p->x - grid.o.x;
+    m->unk40->unk14 = p->y - grid.o.y;
+    m->unk40->unk18 = p->z - grid.o.z;
     m->unk58 = m->unk40->unk10;
     m->unk5C = m->unk40->unk14;
     m->unk60 = m->unk40->unk18;
@@ -907,7 +912,7 @@ static void func_80285A94(UnkStruct_80288040 *a_) {
         if ((a_)->unk6D >= 2) {
             (a_)->unk6D--;
         }
-        (a_)->unk3E *= 2;
+        (a_)->unk3E += (a_)->unk3E;
     }
 }
 
