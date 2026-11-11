@@ -6,7 +6,7 @@
  * boxes, func_8022E884). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2655, eu 2655, jp 2655
+ * differing words: us 2577, eu 2577, jp 2577
  *
  * A first draft: functions in the reverse of the ROM's order, which IDO
  * now emits exactly as the original does (stubs included); a handful by
@@ -1044,8 +1044,6 @@ void func_80231434(UnkStructA80 *arg0) {
     f32 sp38;
     f32 x;
     f32 w;
-    f32 s;
-    UnkStructA80 *p;
 
     switch (arg0->unk8 & 0xF00000) {
     case 0x200000:
@@ -1156,24 +1154,26 @@ void func_80231434(UnkStructA80 *arg0) {
         arg0->unk40->rot[1] = ang[0];
         break;
     case 0x100000:
-        p = arg0->unk44;
-        if (!(p->unk8 & 0x01000000) || ((p->unk8 & 0x02000000) && !(p->unk8 & 0x20000000))) {
+        if (!(arg0->unk44->unk8 & 0x01000000) || ((arg0->unk44->unk8 & 0x02000000) && !(arg0->unk44->unk8 & 0x20000000))) {
             arg0->unk40->unkC |= 1;
             break;
         }
-        arg0->unk40->pos[0] = p->unk40->pos[0];
+        arg0->unk40->pos[0] = arg0->unk44->unk40->pos[0];
         arg0->unk40->pos[2] = arg0->unk44->unk40->pos[2];
         arg0->unk40->pos[1] = func_8026E938(arg0->unk44->unk40);
         func_8026E6E4(arg0->unk44->unk40, sp3C, &sp38);
         arg0->unk40->rot[0] = sp3C[0];
         arg0->unk40->rot[1] = sp38;
         if (arg0->unk40->pos[1] <= arg0->unk44->unk40->pos[1]) {
-            s = ((arg0->unk44->unk40->pos[1] - arg0->unk40->pos[1]) - 2000.0f) * -1.0f / 2000.0f;
-            if (s <= 0.3f) {
-                s = 0.3f;
+            x = arg0->unk44->unk40->pos[1] - arg0->unk40->pos[1];
+            x -= 2000.0f;
+            x *= -1.0f;
+            x /= 2000.0f;
+            if (x <= 0.3f) {
+                x = 0.3f;
             }
-            arg0->unk40->scale[0] = s;
-            arg0->unk40->scale[2] = s;
+            arg0->unk40->scale[0] = x;
+            arg0->unk40->scale[2] = x;
             arg0->unk40->scale[0] *= arg0->unk4C[0];
             arg0->unk40->scale[1] *= arg0->unk4C[1];
             arg0->unk40->scale[2] *= arg0->unk4C[2];
