@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 195, eu 195, jp 195
+ * differing words: us 96, eu 96, jp 96
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -18,9 +18,10 @@
  * D_800B15D8[0].unkN (the latter swaps the multiply's registers).
  * func_8026F5E8 and func_8026E3AC keep their x/y/z in an f32[3] (the
  * original's dead stores to it), not in three variables.
- * 36 of 43 match. Left: func_8026EAF8 105, func_8026DCAC 26,
- * func_8026EE18 26, func_8026FC08 25, func_8026F5E8 8, func_8026E938 3
- * (one float store's stack slot), func_8026F8B0 2 (one delay slot).
+ * 36 of 43 match. Left: func_8026DCAC 26, func_8026EE18 26,
+ * func_8026FC08 25, func_8026F5E8 8, func_8026EAF8 6 (s1/s2 swapped
+ * between the map and the constant 0xF), func_8026E938 3 (one float
+ * store's stack slot), func_8026F8B0 2 (one delay slot).
  */
 #include "common.h"
 
@@ -821,64 +822,57 @@ void func_8026ECC0() {
 }
 
 f32 func_8026EAF8(u8 *arg0) {
-    s32 sp68[3];
-    f32 sp58;
-    f32 sp54;
-    f32 sp50;
-    f32 sp3C;
-    f32 temp_fa0;
-    f32 temp_fa1;
-    f32 temp_fv0;
-    f32 var_fv1;
-    s32 temp_a1;
-    s32 temp_t9;
-    s32 var_s0;
-    u16 temp_v0_2;
-    u16 temp_v0_3;
-    u16 var_a0;
-    u8 *temp_v0;
+    Unk8026DCAC pos;
+    f32 fx;
+    f32 fy;
+    f32 fz;
+    f32 ax;
+    f32 ay;
+    f32 az;
+    s32 attr;
+    s32 a;
+    s32 more;
+    f32 r;
+    f32 h;
 
-    temp_v0 = M2C_FIELD(arg0, void **, 0x40);
-    temp_fa0 = M2C_FIELD(temp_v0, f32 *, 0x10);
-    temp_fv0 = M2C_FIELD(temp_v0, f32 *, 0x18);
-    sp58 = temp_fa0 + 50.0f;
-    temp_fa1 = M2C_FIELD(temp_v0, f32 *, 0x14);
-    sp54 = temp_fa1 + 50.0f;
-    sp50 = temp_fv0 + 50.0f;
-    func_8026DCAC(temp_fa0, temp_fa1, temp_fv0, sp68, 2);
-    temp_a1 = sp68[1];
-    temp_v0_2 = func_8026D7D8(sp68[0], temp_a1, sp68[2]);
-    if (temp_v0_2 & 0x60) {
-        var_a0 = 0xF;
+    fx = ((Obj8E *) arg0)->unk40->x;
+    fz = ((Obj8E *) arg0)->unk40->z;
+    ax = ((Obj8E *) arg0)->unk40->x + 50.0f;
+    fy = ((Obj8E *) arg0)->unk40->y;
+    ay = ((Obj8E *) arg0)->unk40->y + 50.0f;
+    az = ((Obj8E *) arg0)->unk40->z + 50.0f;
+    func_8026DCAC(fx, fy, fz, pos.i, 2);
+    attr = func_8026D7D8(pos.i[0], pos.i[1], pos.i[2]);
+    if (attr & 0x60) {
+        a = 0xF;
     } else {
-        var_a0 = temp_v0_2 & 0xF;
+        a = attr & 0xF;
     }
-    if (var_a0 == 0xF) {
+    if (a == 0xF) {
         do {
-            temp_a1 = temp_a1 + 1;
-            var_s0 = 0;
-            temp_v0_3 = func_8026D7D8(sp68[0], temp_a1, sp68[2]);
-            temp_t9 = temp_v0_3 & 0x60;
-            if ((temp_a1 < D_800B15D8->unk0) && ((temp_t9 != 0) || ((temp_v0_3 & 0xF) == 0xF))) {
-                var_s0 = 1;
+            pos.i[1]++;
+            more = 0;
+            attr = func_8026D7D8(pos.i[0], pos.i[1], pos.i[2]);
+            if (pos.i[1] < D_800B15D8->unk0 && ((attr & 0x60) || (attr & 0xF) == 0xF)) {
+                more = 1;
             }
-        } while (var_s0 != 0);
-        if (temp_a1 >= D_800B15D8->unk0) {
-            var_fv1 = M2C_FIELD(M2C_FIELD(arg0, void **, 0x40), f32 *, 0x14);
+        } while (more);
+        if (pos.i[1] >= D_800B15D8->unk0) {
+            r = ((Obj8E *) arg0)->unk40->y;
         } else {
-            sp3C = func_8026E2B0(temp_a1);
-            if (func_8026E278((u16) temp_v0_3) != 0) {
-                var_fv1 = func_8026E3AC(temp_fa0 + 50.0f, sp3C + 50.0f, temp_fv0 + 50.0f);
+            h = func_8026E2B0(pos.i[1]);
+            if (func_8026E278(attr) != 0) {
+                r = func_8026E3AC(fx + 50.0f, h + 50.0f, fz + 50.0f);
             } else {
-                var_fv1 = sp3C;
+                r = h;
             }
         }
-    } else if (func_8026E278(var_a0) != 0) {
-        var_fv1 = func_8026E3AC(sp58, sp54, sp50);
+    } else if (func_8026E278(a) != 0) {
+        r = func_8026E3AC(ax, ay, az);
     } else {
-        var_fv1 = M2C_FIELD(M2C_FIELD(arg0, void **, 0x40), f32 *, 0x14);
+        r = ((Obj8E *) arg0)->unk40->y;
     }
-    return var_fv1;
+    return r;
 }
 
 f32 func_8026E938(u8 *arg0) {
