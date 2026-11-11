@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1043, eu 1043, jp 1043
+ * differing words: us 830, eu 830, jp 830
  */
 #include "common.h"
 
@@ -2181,13 +2181,14 @@ static void func_80282F44(UnkStruct_800BB340 *arg0, s32 arg1) {
 static s32 func_80282AE8(UnkStruct_80288040 *act) {
     UnkStructA_40 *p;
 
-    if (act->unk20++ >= 50) {
+    if (act->unk20++ < 50) {
+        act->unk0->unk40->unk20 += 14.0f;
+        act->unk0->unk40->unk28 -= 0.01f;
+        act->unk0->unk40->unk2C -= 0.01f;
+        act->unk0->unk40->unk30 -= 0.01f;
+    } else {
         return 1;
     }
-    act->unk0->unk40->unk20 += 14.0f;
-    act->unk0->unk40->unk28 -= 0.01f;
-    act->unk0->unk40->unk2C -= 0.01f;
-    act->unk0->unk40->unk30 -= 0.01f;
     if (act->unk20 == 1) {
         act->unk0->unk68 = 15.0f;
         act->unk0->unk6C = 0.8f;
@@ -2223,11 +2224,12 @@ static s32 func_80282AE0(UnkStruct_80288040 *act) {
 }
 
 static s32 func_80282AD8(UnkStruct_80288040 *act) {
-    if (act->unk20++ >= 30) {
+    if (act->unk20++ < 30) {
+        if (act->unk20 == 1) {
+            func_80231408(act->unk0, 0x40000);
+        }
+    } else {
         return 1;
-    }
-    if (act->unk20 == 1) {
-        func_80231408(act->unk0, 0x40000);
     }
     return 0;
 }
