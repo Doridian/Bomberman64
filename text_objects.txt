@@ -51,7 +51,8 @@ main_code AD5B0
 # boundaries where the one ends and the other begins.
 main_code 97610
 
-# 93850 and 949A0 are both -O3 (their drafts in nonmatching/). In one
+# 93850 and 949A0 are both -O3 (949A0 in src/, 93850's draft in
+# nonmatching/). In one
 # file, func_80279DC8's taking func_8027B480's address makes IDO emit
 # func_8027B480 just before func_80279DC8, wherever it is in the source;
 # the original has it 0x16B8 bytes later. Split after func_8027A144
