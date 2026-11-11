@@ -1169,7 +1169,6 @@ void func_80241590(s32 arg0, Gfx **gdl) {
         }
         count++; xs++;
     } while (count != (s32 *) D_802A08EC);
-    if (!j) {}
     gDPSetTexturePersp(gfx++, G_TP_PERSP);
     gDPSetTextureLUT(gfx++, G_TT_NONE);
     *gdl = gfx;
