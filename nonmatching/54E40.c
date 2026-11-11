@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1481, eu 1481, jp 1478
+ * differing words: us 1477, eu 1477, jp 1474
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -48,6 +48,10 @@
  * - func_8023C170 (IPA static, s0-s2 unsaved) uses one counter for both
  *   its loops; with two, its register use moved func_8023DB0C's
  *   s-registers.
+ * - D_802AC7A0[10] is defined here (the rest of the bss is still
+ *   extern): func_8023A640's two peeled stores share a `lui` only when
+ *   as1 knows the array. func_8023DB0C then keeps an extra nop of
+ *   alignment until func_8023A734 has its size (8 bytes short).
  * - The count is positional: a function one instruction short shifts
  *   every word after it, so its size matters more than its registers.
  *   What fixed sizes here: a separate index (`D_802AC770[k++]`, k = 0)
@@ -430,7 +434,7 @@ extern s32 (*D_802AC768)(void *);
 extern s32 D_802AC770[10];
 extern u8 D_802AC780[];
 extern s32 D_802AC798;
-extern s32 D_802AC7A0;
+s32 D_802AC7A0[10];
 extern s32 D_802AC7A4;
 extern u8 D_802AC7A8[];
 extern s32 D_802AC7C8;
@@ -569,14 +573,14 @@ void func_80243824(s32 arg0) {
 
     idx = D_802AC608;
     for (n = 0; n < 10; n++) {
-        if ((&D_802AC7A0)[idx] == -1) {
+        if (D_802AC7A0[idx] == -1) {
             break;
         }
         if (++idx >= 10) {
             idx = 0;
         }
     }
-    (&D_802AC7A0)[idx] = arg0;
+    D_802AC7A0[idx] = arg0;
     if (0) {
         func_80238A10(func_802434F8, 0, 0, 0, 0);
         func_80238A10(func_80242FB4, 0, 0, 0, 0);
@@ -2311,9 +2315,9 @@ void func_8023DB0C() {
                 }
             }
             for (i = 0; i < 10; i++) {
-                if ((&D_802AC7A0)[D_802AC608] != -1) {
-                    func_802268F4((&D_802AC7A0)[D_802AC608]);
-                    (&D_802AC7A0)[D_802AC608] = -1;
+                if (D_802AC7A0[D_802AC608] != -1) {
+                    func_802268F4(D_802AC7A0[D_802AC608]);
+                    D_802AC7A0[D_802AC608] = -1;
                 }
                 if (++D_802AC608 >= 10) {
                     D_802AC608 = 0;
@@ -3352,8 +3356,8 @@ void func_8023A68C() {
 void func_8023A640() {
     s32 i;
 
-    D_802AC608 = 0;
     for (i = 0; i < 10; i++) {
-        (&D_802AC7A0)[i] = -1;
+        D_802AC7A0[i] = -1;
     }
+    D_802AC608 = 0;
 }
