@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 947, eu 947, jp 950
+ * differing words: us 944, eu 944, jp 947
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -66,7 +66,7 @@
  *   spilled across the call) are one inlined static, func_8023AB4C,
  *   indexing `items[i]` (an index used in an address gets SR+LFTR; a
  *   `p++` form keeps a counter); its timer is the loop counter i, and
- *   its keys are a u16 (the `move v1,v0` copy).
+ *   func_8027EFA8 returns a u16 (the `move v1,v0` copy into keys).
  */
 #include "common.h"
 
@@ -291,7 +291,7 @@ void func_80277E1C(void);
 s32 func_80278E84(s32, s32);
 void func_8027BBC4(void);
 void func_8027EBCC(void);
-s32 func_8027EFA8(void);
+u16 func_8027EFA8(void);
 void func_8027F400(void);
 void func_8027F428(void);
 void func_8027F658(void *, void *, u16, u16, u16);
@@ -2060,7 +2060,7 @@ void func_8023E1D8() {
     s32 i;
     s32 k;
     s32 sel;
-    u16 keys;
+    s32 keys;
     u8 *cur;
 
     for (i = 0; i < 5; i++) {
