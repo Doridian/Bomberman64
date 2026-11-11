@@ -6,7 +6,7 @@
  * boxes, func_8022E884). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1729, eu 1729, jp 1729
+ * differing words: us 1494, eu 1494, jp 1494
  *
  * A first draft: functions in the reverse of the ROM's order, which IDO
  * now emits exactly as the original does (stubs included); a handful by
@@ -1921,10 +1921,10 @@ void func_8022E3D4(f32 m[4][4], f32 *v) {
     x = v[0];
     y = v[1];
     z = v[2];
-    tx = m[3][0] + (x * m[0][0] + y * m[1][0] + m[2][0] * z);
-    ty = m[3][1] + (x * m[0][1] + y * m[1][1] + m[2][1] * z);
-    tz = m[3][2] + (x * m[0][2] + y * m[1][2] + m[2][2] * z);
-    D_802A5958 = m[3][3] + (x * m[0][3] + y * m[1][3] + m[2][3] * z);
+    tx = (x * m[0][0] + y * m[1][0] + z * m[2][0]) + m[3][0];
+    ty = (x * m[0][1] + y * m[1][1] + z * m[2][1]) + m[3][1];
+    tz = (x * m[0][2] + y * m[1][2] + z * m[2][2]) + m[3][2];
+    D_802A5958 = (x * m[0][3] + y * m[1][3] + z * m[2][3]) + m[3][3];
     v[0] = tx * D_802A5958;
     v[1] = ty * D_802A5958;
     v[2] = tz * D_802A5958;
