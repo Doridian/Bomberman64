@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 563, eu 563, jp 563
+ * differing words: us 462, eu 462, jp 462
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -348,7 +348,7 @@ s32 func_802775D8(s32);
 s32 func_8027799C(s32);
 s32 func_80277CEC(s32);
 s32 func_80278E84(s32, s32);
-s32 func_8027B0BC(s32);
+s32 func_8027B0BC(s16);
 void func_8027B39C(s16, s16);
 void func_8027F820(void *);
 void func_8027F858(s32, s32);
@@ -3511,7 +3511,7 @@ void func_80248148(s32 arg0, s32 arg1) {
     s32 link;
     s32 pad;
     s32 other;
-    s32 pad2[5];
+    s32 pad2[3];
 
     if (D_800AEDF0[arg0].unk24 != 3) {
         if (arg1 == 3 || arg1 == 5) {
@@ -3525,9 +3525,7 @@ void func_80248148(s32 arg0, s32 arg1) {
         obj = (Obj88 *)D_800AEDF0[arg0].unk28;
         func_80244354(arg0, 0x21C0, 0);
         link = D_802AC5D0 & 4;
-        if (!link && !link) {}
-        func_80270770((s16)arg0, 1);
-        D_800AEDF0[arg0].unk2C = 0;
+        func_80244BE0(arg0, 1);
         if (D_802AC8E8[arg0] != -1) {
             func_8028A4E0(D_802AC8E8[arg0]);
             D_802AC8E8[arg0] = -1;
@@ -3535,7 +3533,6 @@ void func_80248148(s32 arg0, s32 arg1) {
             func_8022979C((s32)obj->unk40, 5, 5);
         }
         func_80247848(arg0, 0);
-        if (!arg1 && !arg1) {}
         if (D_800AEDF0[arg0].unk14 == 0) {
             if (func_8023A870(arg0, arg1)) {
                 if (link) {
@@ -3549,14 +3546,19 @@ void func_80248148(s32 arg0, s32 arg1) {
                         func_80243D90(other, 0x2000, 0);
                         func_802313DC(obj, 0x600000);
                     }
-                    if (!D_800AEDF0[arg0].unk2C && !D_800AEDF0[arg0].unk2C) {}
                     if (!func_80243EB4(arg0, 0x200)) {
                         func_8027B0BC((s16)arg0);
                     }
                 }
                 func_802313DC(obj, 1);
                 D_800AEDF0[arg0].unk24 = 3;
-                D_800AEDF0[arg0].unk10 = (obj->unk6C > 0.0f) ? (D_800AEDF0[arg0].unk10 & 0x400000) : 0;
+                {
+                    s32 v = 0;
+                    if (obj->unk6C > 0.0f) {
+                        v = D_800AEDF0[arg0].unk10 & 0x400000;
+                    }
+                    D_800AEDF0[arg0].unk10 = v;
+                }
             } else {
                 func_80244354(arg0, 0x161, 0);
                 D_800AEDF0[arg0].unk14 = 1;
