@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 486, eu 486, jp 486
+ * differing words: us 484, eu 484, jp 484
  */
 #include "common.h"
 
@@ -691,9 +691,9 @@ UnkStruct_80288040 *func_802867E4(s32 arg0, f32 arg1, f32 arg2, f32 arg3) {
     UnkStruct_800BB340 *task;
 
     func_802863E0();
+    special = 0;
     ret = NULL;
     slot = -1;
-    special = 0;
     if (0) { D_800BC520 = (s32) &slot; }
     if ((arg0 == 0) && (D_800BA8E8[arg0].unk0 == 0x19) && (D_800BA8E8[arg0].unk2 == 0x1E)) {
         slot = 13;
