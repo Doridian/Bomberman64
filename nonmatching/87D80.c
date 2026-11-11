@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 942, eu 942, jp 942
+ * differing words: us 935, eu 935, jp 935
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -312,7 +312,7 @@ void func_8026DA2C(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5);
 void func_8026DB88(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5, s32 arg6);
 u8 func_8026DC74(s32 arg0);
 void func_8026DCAC(f32 arg0, f32 arg1, f32 arg2, void *arg3, s32 arg4);
-void func_8026DF74(f32 arg0, f32 arg1, f32 arg2);
+s32 func_8026DF74(f32 arg0, f32 arg1, f32 arg2);
 void func_8026DFB8(f32 arg0, f32 arg1, f32 arg2, f32 *arg3);
 s32 func_8026E278(s32 arg0);
 f32 func_8026E2B0(s32 arg0);
@@ -333,8 +333,8 @@ void func_8026EE08(s32 arg0);
 void func_8026EE10(s32 arg0);
 u8 func_8026EE18(f32 arg0);
 void func_8026EEF0(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
-u16 func_8026EF50(f32 arg0, f32 arg1, f32 arg2);
-u16 func_8026EFD0(s32 arg0, s32 arg1, s32 arg2);
+s32 func_8026EF50(f32 arg0, f32 arg1, f32 arg2);
+s32 func_8026EFD0(s32 arg0, s32 arg1, s32 arg2);
 void func_8026F02C(void);
 s32 func_8026F068(s32 arg0, s32 arg1, s32 arg2, s32 arg3);
 void func_8026F5E8(s32 arg0, s32 arg1, s32 arg2);
@@ -694,29 +694,27 @@ void func_8026F02C() {
     }
 }
 
-u16 func_8026EFD0(s32 arg0, s32 arg1, s32 arg2) {
-    s32 sp1C;
-    s32 var_v1;
-    u16 temp_a0;
+s32 func_8026EFD0(s32 arg0, s32 arg1, s32 arg2) {
+    s32 restore;
+    s32 v;
 
-    var_v1 = 0;
+    restore = 0;
     if (D_802AC89C == 1) {
         D_802AC89C = 0;
-        var_v1 = 1;
+        restore = 1;
     }
-    sp1C = var_v1;
-    temp_a0 = func_8026D7D8(arg0, arg1, arg2);
-    if (var_v1 == 1) {
+    v = func_8026D7D8(arg0, arg1, arg2);
+    if (restore == 1) {
         D_802AC89C = 1;
     }
-    return temp_a0;
+    return v;
 }
 
-u16 func_8026EF50(f32 arg0, f32 arg1, f32 arg2) {
+s32 func_8026EF50(f32 arg0, f32 arg1, f32 arg2) {
     s32 sp54;
     s32 sp24[3];
     s32 var_v1;
-    u16 temp_a0;
+    s32 temp_a0;
 
     var_v1 = 0;
     if (D_802AC89C == 1) {
@@ -971,7 +969,7 @@ loop_1:
 }
 
 s32 func_8026E8C8() {
-    return D_800B15D8->unkC >> 7;
+    return (u8) D_800B15D8->unkC >> 7;
 }
 
 f32 func_8026E8B8() {
@@ -1260,11 +1258,11 @@ void func_8026DFB8(f32 arg0, f32 arg1, f32 arg2, f32 *arg3) {
     arg3[2] = var_fa0_2;
 }
 
-void func_8026DF74(f32 arg0, f32 arg1, f32 arg2) {
-    s32 sp24[3];
+s32 func_8026DF74(f32 arg0, f32 arg1, f32 arg2) {
+    s32 sp24[7]; /* only [0..2] are read; the size comes from the frame */
 
     func_8026DCAC(arg0, arg1, arg2, sp24, 2);
-    func_8026D7D8(sp24[0], sp24[1], sp24[2]);
+    return func_8026D7D8(sp24[0], sp24[1], sp24[2]);
 }
 
 void func_8026DCAC(f32 arg0, f32 arg1, f32 arg2, void *arg3, s32 arg4) {
