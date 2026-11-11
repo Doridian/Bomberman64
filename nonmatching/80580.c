@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 379, eu 379, jp 379
+ * differing words: us 339, eu 339, jp 339
  *
  * The object is the same in all three versions. 70 of the 79 original
  * procedures match (stubs included). The IPA statics
@@ -372,7 +372,6 @@ extern f32 D_802A1358;
 extern f32 D_802A135C;
 extern f32 D_802A1360;
 extern s16 D_802A1364;
-extern u8 D_802A1368;
 extern u8 D_802AD120[];
 extern u8 D_802AD130[];
 extern u8 D_802AD1F8[];
@@ -2143,7 +2142,7 @@ static s16 func_80266D8C(u8 prio, s32 arg1) {
     s32 i;
     s32 oldest;
     u8 min;
-
+    static u8 D_802A1368 = 1;
     i = prio & 0xF;
     if (D_802A12B8 == 0) {
         i = 0;
@@ -2188,12 +2187,11 @@ static s16 func_80266D8C(u8 prio, s32 arg1) {
                     min = v->unk1C;
                 }
             }
-            min = 0x100 - min;
-            if (min != 0) {
-                D_802A1368 = min;
+            arg1 = 0x100 - min;
+            D_802A1368 = arg1;
+            if (D_802A1368) {
                 for (oldest = 0; oldest < D_802A12B4; oldest++) {
-                    D_802AD654[oldest].unk1C += min;
-                    D_802A1368 = min;
+                    D_802AD654[oldest].unk1C += D_802A1368;
                 }
             } else {
                 for (oldest = 0; oldest < D_802A12B4; oldest++) {
