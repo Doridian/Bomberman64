@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 956, eu 956, jp 955
+ * differing words: us 952, eu 952, jp 951
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -3204,26 +3204,25 @@ void func_802497D8(s32 arg0) {
 
 void func_80249648(s32 arg0, UnkObj *arg1, s32 arg2) {
     UnkStruct_800AEDF0 *p = &D_800AEDF0[arg0];
-    s32 id = arg0;
     UnkObj *obj;
 
-    if (func_802452AC(id, 0x610400)) {
-        obj = p->unk28;
+    if (func_802452AC(arg0, 0x610400)) {
+        obj = (UnkObj *)func_802443F4(arg0);
         if (!(D_802A01B0 & 2) && (arg2 & 0x1E00) && M2C_FIELD(obj, s32 *, 0x44) == 0) {
-            if ((D_802AC5D0 & 4) || id == 0) {
+            if ((D_802AC5D0 & 4) || arg0 == 0) {
                 func_8026C660(0x196);
             }
-            func_80247D74(id, 14.0f, 6.0f, 1, arg1);
+            func_80247D74(arg0, 14.0f, 6.0f, 1, arg1);
             p->unk9C = arg2;
-            func_80244354(id, 0x2108, 0);
+            func_80244354(arg0, 0x2108, 0);
             if (p->unk9C & 0x200) {
-                func_8024946C(id, 0);
+                func_8024946C(arg0, 0);
             } else if (p->unk9C & 0x400) {
-                func_8024946C(id, 1);
+                func_8024946C(arg0, 1);
             } else if (p->unk9C & 0x800) {
-                func_8024946C(id, 2);
+                func_8024946C(arg0, 2);
             } else if (p->unk9C & 0x1000) {
-                func_80247C50(id);
+                func_80247C50(arg0);
             }
             p->unk9C = 0;
         }
@@ -3691,8 +3690,8 @@ void func_80247CD0(s32 arg0, s32 arg1) {
 
     D_802AC930[arg0] = arg1;
     func_80244354(arg0, 0x30020, 1);
-    o = func_802443F4(arg0);
     D_802AC918[arg0] = 0;
+    o = func_802443F4(arg0);
     D_802ACA48[arg0] = o->unk40->unk20;
     D_802ACA60[arg0] = D_802ACA48[arg0];
     func_80231408(o, 0x40000);
