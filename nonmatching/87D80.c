@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 78, eu 78, jp 78
+ * differing words: us 76, eu 76, jp 76
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -18,9 +18,10 @@
  * D_800B15D8[0].unkN (the latter swaps the multiply's registers).
  * func_8026F5E8 and func_8026E3AC keep their x/y/z in an f32[3] (the
  * original's dead stores to it), not in three variables.
- * 38 of 43 match. Left: func_8026DCAC 26, func_8026EE18 22,
- * func_8026FC08 20, func_8026F5E8 8, func_8026E938 2 (the map's
- * address in t1 where the original has v0).
+ * func_8026E938's tail calls the getters func_8026E8C8 (the map's sign
+ * bit, inlined as `lui v0; lb`) and func_8026E8B8.
+ * 39 of 43 match. Left: func_8026DCAC 26, func_8026EE18 22,
+ * func_8026FC08 20, func_8026F5E8 8.
  */
 #include "common.h"
 
@@ -918,10 +919,10 @@ f32 func_8026E938(u8 *arg0) {
                 v[0] = x * 100.0f;
                 r = func_8026E2B0((s32) (f32) y);
             }
-        } else if (D_800B15D8->unkC < 0) {
+        } else if (func_8026E8C8()) {
             r = 20000.0f;
         } else {
-            r = D_802AFC5C;
+            r = func_8026E8B8();
         }
         if (z) { /* fake: keeps z live (permuter find) */
         }
