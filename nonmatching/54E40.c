@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1789, eu 1789, jp 1780
+ * differing words: us 1778, eu 1778, jp 1769
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -3347,26 +3347,17 @@ s32 *func_8023A834() {
 }
 
 void func_8023A734(s32 arg0, s32 arg1, s32 arg2) {
-    s32 temp_v1;
-    u8 *temp_v0;
-
-    temp_v0 = (arg1 * 0x2C) + D_802A0BA8;
-    temp_v1 = arg2 * 4;
-    func_80228008(arg0, *(D_802A0CB0 + (arg1 * 4)), *(temp_v0 + temp_v1));
-    if ((s32) temp_v0 == (s32) D_802A0BA8) {
-        if (*(D_802A0CC8 + temp_v1) != 0) {
+    func_80228008(arg0, *(s32 *) (D_802A0CB0 + arg1 * 4), *(s32 *) (arg1 * 0x2C + D_802A0BA8 + arg2 * 4));
+    if (arg1 * 0x2C + D_802A0BA8 == D_802A0BA8) {
+        if (*(s32 *) (D_802A0CC8 + arg2 * 4) != 0) {
             func_80228008(arg0, 8, -1);
-            return;
+        } else {
+            func_80228008(arg0, 8, 0x4F);
         }
-        func_80228008(arg0, 8, 0x4F);
-        return;
-    }
-    if ((s32) temp_v0 == (s32) D_802A0C00) {
-        func_80228008(arg0, 5, M2C_FIELD((D_802A0BA8 + temp_v1), s32 *, 0xB0));
-        return;
-    }
-    if ((s32) temp_v0 == (s32) D_802A0C2C) {
-        func_80228008(arg0, 0xC, M2C_FIELD((D_802A0BA8 + temp_v1), s32 *, 0xDC));
+    } else if (arg1 * 0x2C + D_802A0BA8 == D_802A0C00) {
+        func_80228008(arg0, 5, *(s32 *) (D_802A0C00 + 0x58 + arg2 * 4));
+    } else if (arg1 * 0x2C + D_802A0BA8 == D_802A0C2C) {
+        func_80228008(arg0, 0xC, *(s32 *) (D_802A0C2C + 0x58 + arg2 * 4));
     }
 }
 
