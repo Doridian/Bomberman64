@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3058, eu 3058, jp 3058
+ * differing words: us 2974, eu 2974, jp 2974
  *
  * The object is the same in all three versions. 36 of the 79 original
  * procedures match (8 of them inlined-static stubs). The IPA statics
@@ -457,7 +457,7 @@ void func_8026910C(void);
 static void func_80269144(void *dst, s32 size, s32 rom);
 void func_802691A8(void);
 s16 *func_80269680(u32 arg0);
-void func_80269704(s32 arg0);
+typedef struct SndFlags { u8 pad : 7; u8 mono : 1; } SndFlags;
 s32 func_802697A0(void);
 s32 func_802697C0(void);
 s32 func_802697E0(void);
@@ -1112,29 +1112,19 @@ s32 func_802697A0() {
     return M2C_FIELD(func_8026B79C(), s32 *, 0xC);
 }
 
+void func_80269704(s32 arg0);
 void func_80269704(s32 arg0) {
-    Voice *temp_v0;
-    s32 var_at;
-    s32 var_v1;
-    u8 temp_t2;
-    u8 temp_t9;
+    Voice *v;
+    s32 i;
 
-    D_802AD218 = 0;
-    temp_t9 = 0 | (arg0 & 1);
-    D_802AD218 = temp_t9;
-    func_802983A8(temp_t9 & 0xFF);
-    var_v1 = 0;
-    if (D_802A12BC > 0) {
-        do {
-            temp_v0 = &D_802AD654[var_v1];
-            temp_t2 = temp_v0->state;
-            var_v1 += 1;
-            var_at = var_v1 < D_802A12BC;
-            if (temp_t2 == 1) {
-                temp_v0->flags |= 4;
-                var_at = var_v1 < D_802A12BC;
-            }
-        } while (var_at != 0);
+    *(u8 *)&D_802AD218 = 0;
+    ((SndFlags *) &D_802AD218)->mono = arg0;
+    func_802983A8(D_802AD218);
+    for (i = 0; i < D_802A12BC; i++) {
+        v = &D_802AD654[i];
+        if (v->state == 1) {
+            v->flags |= 4;
+        }
     }
 }
 
@@ -1377,23 +1367,16 @@ s8 func_80268D6C() {
 }
 
 void func_80268C54() {
-    ChlState *var_s1;
-    s32 temp_s0;
-    s32 var_s2;
+    s32 i;
 
-    if ((D_802AD3C0 == 0) && (D_802AD238 != 0) && ((D_802AD238 & 0xF) || (D_802AD24C != 1))) {
-        var_s1 = D_802AD340;
-        var_s2 = 0;
-        do {
-            temp_s0 = var_s2 & 0xFF;
-            var_s1->prog = func_80298680(D_802AD220, temp_s0 & 0xFF);
-            var_s1->fxmix = func_802986B0(D_802AD220, temp_s0 & 0xFF);
-            var_s1->vol = func_802986A0(D_802AD220, temp_s0 & 0xFF);
-            var_s1->pan = func_802986C0(D_802AD220, temp_s0 & 0xFF);
-            var_s2 += 1;
-            var_s1 += 8;
-            M2C_FIELD(var_s1, u8 *, -1) = func_80298690(D_802AD220, temp_s0 & 0xFF);
-        } while (var_s2 != 0x10);
+    if (D_802AD3C0 == 0 && D_802AD238 != 0 && ((D_802AD238 & 0xF) || D_802AD24C != 1)) {
+    for (i = 0; i < 16; i++) {
+        D_802AD340[i].prog = func_80298680(D_802AD220, i);
+        D_802AD340[i].fxmix = func_802986B0(D_802AD220, i);
+        D_802AD340[i].vol = func_802986A0(D_802AD220, i);
+        D_802AD340[i].pan = func_802986C0(D_802AD220, i);
+        D_802AD340[i].prio = func_80298690(D_802AD220, i);
+    }
         D_802AD3C0 = func_80268BB8();
         func_80298548(D_802AD228, D_802AD250);
         func_80298640(D_802AD220);
