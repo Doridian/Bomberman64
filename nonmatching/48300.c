@@ -6,7 +6,7 @@
  * boxes, func_8022E884). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2072, eu 2072, jp 2072
+ * differing words: us 2017, eu 2017, jp 2017
  *
  * A first draft: functions in the reverse of the ROM's order, which IDO
  * now emits exactly as the original does (stubs included); a handful by
@@ -1743,47 +1743,29 @@ void func_8022FC0C(s32 arg0) {
 }
 
 f32 func_8022FB00(u8 *arg0) {
+    s32 f;
+    s32 g;
+    s32 h;
     s32 sp50[3];
-    f32 temp_ft1;
-    f32 var_fs0;
-    s32 temp_v0_2;
-    s32 var_s0;
-    u8 temp_ft3;
-    u8 *temp_v0;
+    f32 sum;
+    s32 i;
+    s32 t;
+    Shape *obj;
 
-    temp_v0 = M2C_FIELD(arg0, void **, 0x40);
-    func_8026DCAC(M2C_FIELD(temp_v0, f32 *, 0x10), M2C_FIELD(temp_v0, f32 *, 0x14), M2C_FIELD(temp_v0, f32 *, 0x18), sp50, 2);
-    var_fs0 = 0.0f;
-    var_s0 = 0;
-    if (sp50[1] >= 0) {
-        do {
-            temp_ft1 = (f32) func_8026DC74(var_s0);
-            var_s0 += 1;
-            var_fs0 += temp_ft1 * 100.0f;
-        } while (sp50[1] >= var_s0);
+    obj = ((UnkStructA80 *) arg0)->unk40;
+    func_8026DCAC(obj->pos[0], obj->pos[1], obj->pos[2], sp50, 2);
+    sum = 0.0f;
+    for (i = 0; i <= sp50[1]; i++) {
+        sum += (s32) func_8026DC74(i) * 100.0f;
     }
-    if (var_s0 < 6) {
-loop_4:
-        temp_v0_2 = func_8026D7D8(sp50[0], var_s0, sp50[2]);
-        if (temp_v0_2 != 0x2010) {
-            if (!(temp_v0_2 & 0xF)) {
-                if (!(temp_v0_2 & 0x60)) {
-                    goto block_7;
-                }
-            }
-        } else {
-block_7:
-            temp_ft3 = func_8026DC74(var_s0);
-            var_s0 += 1;
-            var_fs0 += (f32) temp_ft3 * 100.0f;
-            if (var_s0 >= 6) {
-
-            } else {
-                goto loop_4;
-            }
+    for (; i < 6; i++) {
+        t = func_8026D7D8(sp50[0], i, sp50[2]);
+        if (t != 0x2010 && ((t & 0xF) || (t & 0x60))) {
+            break;
         }
+        sum += (s32) func_8026DC74(i) * 100.0f;
     }
-    return var_fs0;
+    return sum;
 }
 
 void func_8022FA88(f32 *arg0, s32 arg1, f32 *arg2) {
