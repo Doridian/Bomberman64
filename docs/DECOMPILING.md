@@ -234,7 +234,7 @@ matches, drop the `#ifdef` and the asm.
   Seen so far: 404C0, 40FB0, 412F0, 41FD0, 4DE50, 4E030 (4DE50's second half:
   its wrappers call 4DE50's compares with a `jal`, which -O3 would inline
   in one file), 4ED50, 52270 (jp's func_8023876C has no TV-type
-  switch: `#if VERSION_JP`), 530C0, 53D70, 78CA0, 78F60, 85A10, 86680, 96540, 995C0, 9A5F0, 9BFD0, A8DE0, ACA00, AD5B0,
+  switch: `#if VERSION_JP`), 530C0, 53D70, 78CA0, 78F60, 85A10, 86680, 96540, 97610, 995C0, 9A5F0, 9BFD0, A8DE0, ACA00, AD5B0,
   AFBF0, B11F0, B6680 (`-mips2`), ovl_0A_02-05's, ovl_0C_03's, ovl_0E_09's, ovl_12_02's, ovl_12_04's, ovl_17_01's and ovl_17_10's objects are `-O3`; 5E090, 87190, 87730,
   99F40 and A4860 are `-O2` (no
   inlining between functions that call each other, no cross-call
@@ -258,6 +258,13 @@ matches, drop the `#ifdef` and the asm.
   unset) show it too. Their GLOBAL_ASM functions are the ones `-O2` can't
   give; 87190, 87730, 99F40 and A4860 match their remaining functions at
   `-O2` so far (A4860's func_8028A154 inlines func_8028A08C at `-O3`).
+  97610 too (func_8027D398 keeps `arg0` in a `t` register; the whole
+  file, last function first, is `-O3` C, once func_8028A7CC is declared
+  `s32` there: with `void`, func_8027DFAC counts its first loop in `v0`
+  instead of `v1`, so the original most likely called it undeclared).
+  87730's func_8026CFF4 and 99F40's func_8027FC78 build the same at
+  either level and give no evidence either way; they stay `-O2` with their
+  C under `#ifdef NON_MATCHING`, as does A4860's func_8028A154.
   78CA0 (func_8025E5EC keeps `&D_802ACFE0` in `a3` across a `jal` to
   its own file's func_8025E4A0), 7D840 (func_802639E4 passes
   func_80263040 arguments in `t1`-`t4`) and 96540 (func_8027C5E0 keeps
