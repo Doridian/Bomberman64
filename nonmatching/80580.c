@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 866, eu 866, jp 866
+ * differing words: us 735, eu 735, jp 735
  *
  * The object is the same in all three versions. 70 of the 79 original
  * procedures match (stubs included). The IPA statics
@@ -751,7 +751,8 @@ static s16 func_8026A164() {
     s16 count;
     u32 maxLen;
     u32 bankLen;
-    s32 i;
+    u32 i;
+    u32 n;
 
     D_802AD220 = func_8026B72C(0x7C);
     if (D_802AD220 == NULL) {
@@ -773,7 +774,8 @@ static s16 func_8026A164() {
     count = D_802AD22C->seqCount;
     switch (D_802AD22C->revision) {
         case 0x5331:
-            if (func_8026A108(count * 8 + 4) != 0) {
+            n = count;
+            if (func_8026A108(n * 8 + 4) != 0) {
                 return 1;
             }
             func_802983F0(D_802AD22C, (void *) D_802A1330);
@@ -786,7 +788,8 @@ static s16 func_8026A164() {
             bankLen = D_802A133C - D_802A1338;
             break;
         case 0x5332:
-            if (func_8026A108(count * 0x18 + 4) != 0) {
+            n = count;
+            if (func_8026A108(n * 0x18 + 4) != 0) {
                 return 1;
             }
             D_802AD230 = (SeqInfo *) &D_802AD22C->seqArray[count];
@@ -810,7 +813,6 @@ static s16 func_8026A164() {
             maxLen = D_802A1334 - D_802A1330;
             D_802AD22C->seqCount = 1;
             bankLen = D_802A133C - D_802A1338;
-            break;
     }
     if (bankLen == 0 || maxLen == 0) {
         D_802A1330 = 0;
