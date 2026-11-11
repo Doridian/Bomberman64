@@ -65,6 +65,19 @@ main_code 78F60
 main_code 8E730
 main_code 926A0
 
+# 8A7A0 (-O3, func_8026FFA0 to func_80273F0C) is the objects on the
+# stage map; 87D80 before it is the map itself (func_8026D580 to
+# func_8026FF94) and its attribute queries.  func_8026FF94 ends exactly
+# on the 16-byte boundary where func_8026FFA0 starts, and no call goes
+# forward across it.  func_802727D8 calls func_8026E8B8 (a short,
+# straight-line query) with a jal; in one -O3 file it is inlined there.
+# The data agree: 87D80's .rodata ends with func_8026FC08's float at
+# 0x802A3C3C and 8A7A0's starts on 16 at 0x802A3C40 (func_802700EC's);
+# 87D80's .bss (D_802AFC50..D_802AFC6C) ends at 0x802AFC70, where the
+# second half's references start; and its only .data, D_802A1450, is
+# func_8026D580's alone (8A7A0 has none).
+main_code 8A7A0
+
 # A1EA0 (func_802876A0..func_80287FD4) is a second object after 9CAB0:
 # 9CAB0's IPA statics (s-register parameters, func_802822E0..func_80286400)
 # tie its callers from func_80282598 to func_802875B0 together, and none
