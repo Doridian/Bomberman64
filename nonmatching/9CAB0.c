@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 173, eu 173, jp 173
+ * differing words: us 165, eu 165, jp 165
  */
 #include "common.h"
 
@@ -741,7 +741,7 @@ static void func_80286400(s32 arg4, s32 arg0, s32 arg5, f32 arg1, f32 arg2, f32 
     UnkStruct_800BA900 *s;
     UnkStruct_80288040 *a;
     UnkStructA *m;
-    s32 size;
+    u16 size;
     Vec3f *p;
     struct {
         s32 g[3];
@@ -768,6 +768,7 @@ static void func_80286400(s32 arg4, s32 arg0, s32 arg5, f32 arg1, f32 arg2, f32 
     a->unk10 = grid.g[0];
     a->unk14 = grid.g[1];
     a->unk18 = grid.g[2];
+    if (p) {}
     switch (a->unk44) {
     case 0:
     case 1:
