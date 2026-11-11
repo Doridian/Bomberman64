@@ -9,7 +9,7 @@
  * func_80228500 kept). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 682, eu 682, jp 682
+ * differing words: us 666, eu 666, jp 666
  *
  * The code is the same in every version.
  *
@@ -52,9 +52,11 @@
  *   and D_802A5484 in registers (stores on each exit, a duplicate pair
  *   IDO merges in ours); a global loop counter, static or not, isn't
  *   promoted here.
- * - func_80229C10 (18): a rotation of a0/a1/a3/t0/t1 (the original's
- *   dl a3, first t0, i t1, 2 in a0); `if (!chunks) {}` keeps model+12 a
- *   value of its own. func_80229448 (4): the empty loop survives only
+ * - func_80229C10 (2): `if (!chunks) {}` keeps model+12 a value of its
+ *   own; `if (!arg1) {}` first and `if (!arg0) {}` after the loop keep
+ *   the arguments' registers busy, so dl takes a3, first t0 and i t1 as
+ *   in the original. The loop bound 2 is left in a1 (a0 in the
+ *   original). func_80229448 (4): the empty loop survives only
  *   as `i * 4 != 16` (a plain `i < 4` is deleted); the original has
  *   the counter in v0 and 16 in v1, ours the other way round.
  */
@@ -772,6 +774,7 @@ u32 func_80229C10(UnkObj *arg0, s32 arg1, UnkVtx **arg2) {
     u32 w;
     s32 i;
 
+    if (!arg1) {}
     model = arg0->unk3C;
     if (!arg2) {}
     chunks = model->unkC;
@@ -785,7 +788,8 @@ u32 func_80229C10(UnkObj *arg0, s32 arg1, UnkVtx **arg2) {
         dl++;
     }
     w = dl[-1].w1;
-    *arg2 = (UnkVtx *)((u8 *)model + (w & 0xFFFFFF));
+    if (!arg0) {}
+    *arg2 = (UnkVtx *)((w & 0xFFFFFF) + (u32)model);
     return (first - w) >> 4;
 }
 
