@@ -8,7 +8,7 @@
  * text_objects.txt). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 555, eu 555, jp 555
+ * differing words: us 299, eu 299, jp 299
  *
  * The code is the same in every version.
  *
@@ -20,11 +20,10 @@
  * compare is what keeps the counter's store-then-reload.
  *
  * Left:
- * - func_8022BCC8 (96), func_8022C2A4 (85), func_8022CFC8 (80),
- *   func_8022CD98 (75), func_8022BE48 (58):
- *   registers and float scheduling, sizes differ by 2-6 words.
  * - func_8022C8B8 (84): same size and shape; temporaries numbered
  *   from one lower (the channel's address is in v1 in the original).
+ * - func_8022CFC8 (80), func_8022BE48 (58): registers and scheduling,
+ *   sizes differ by 1-2 words.
  * - func_8022C184 (20), func_8022AA50 and func_8022AB48 (18 each),
  *   func_8022C09C (11), func_8022BB88 (10): registers only.
  */
@@ -451,8 +450,8 @@ void func_8022CEE4(UnkNode *arg0) {
 }
 
 void func_8022CD98(UnkInst *arg0, s32 arg1, s32 arg2) {
-    UnkKeySet *set;
-    UnkKey *key;
+    UnkKey *keys;
+    s32 n;
     UnkNode *node;
     s32 i;
     s32 j;
@@ -461,16 +460,16 @@ void func_8022CD98(UnkInst *arg0, s32 arg1, s32 arg2) {
         if (arg2 != 0 && arg0->unk0 == 1) {
             func_8022C480(arg0, arg0->unk28);
         }
-        set = &arg0->unk30[arg0->unk38[arg1]];
-        for (i = 0; i < set->unk8; i++) {
-            key = &set->unk4[i];
+        n = arg0->unk30[arg0->unk38[arg1]].unk8;
+        keys = arg0->unk30[arg0->unk38[arg1]].unk4;
+        for (i = 0; i < n; i++) {
             node = arg0->unk28;
-            for (j = 1; j < key->unk4; j++) {
-                node = node->unkC[key->unk0[j]];
+            for (j = 1; j < keys[i].unk4; j++) {
+                node = node->unkC[keys[i].unk0[j]];
             }
-            node->unk14 = key->unk8;
-            node->unk20 = key->unk14;
-            node->unk2C = key->unk20;
+            node->unk14 = keys[i].unk8;
+            node->unk20 = keys[i].unk14;
+            node->unk2C = keys[i].unk20;
             node->unk38 = 1;
         }
     }
@@ -655,22 +654,24 @@ void func_8022C3EC(UnkInst *arg0, UnkNode *arg1) {
 
 void func_8022C2A4(UnkTree *arg0, s32 arg1, s32 arg2, UnkInst *arg3) {
     UnkKeySet *set;
-    UnkKey *key;
+    UnkKey *keys;
+    s32 n;
     UnkTree *tree;
     s32 i;
     s32 j;
 
     func_8022C184(arg3, arg0, arg2);
     set = &arg3->unk30[arg1];
-    for (i = 0; i < set->unk8; i++) {
-        key = &set->unk4[i];
+    n = set->unk8;
+    keys = set->unk4;
+    for (i = 0; i < n; i++) {
         tree = arg0;
-        for (j = 1; j < key->unk4; j++) {
-            tree = tree->unk8[key->unk0[j]];
+        for (j = 1; j < keys[i].unk4; j++) {
+            tree = tree->unk8[keys[i].unk0[j]];
         }
-        tree->unk18[arg2][0] = key->unk8;
-        tree->unk18[arg2][1] = key->unk14;
-        tree->unk18[arg2][2] = key->unk20;
+        tree->unk18[arg2][0] = keys[i].unk8;
+        tree->unk18[arg2][1] = keys[i].unk14;
+        tree->unk18[arg2][2] = keys[i].unk20;
         tree->unk10[arg2] = 1;
     }
 }
@@ -759,21 +760,23 @@ f32 func_8022BE48(UnkCurve *arg0, f32 arg1) {
 
 void func_8022BCC8(UnkInst *arg0, s32 arg1, f32 arg2) {
     UnkKeySet *set;
-    UnkKey *key;
+    UnkKey *keys;
+    s32 n;
     UnkNode *node;
     s32 i;
     s32 j;
 
     set = &arg0->unk30[arg1];
-    for (i = 0; i < set->unk8; i++) {
-        key = &set->unk4[i];
+    n = set->unk8;
+    keys = set->unk4;
+    for (i = 0; i < n; i++) {
         node = arg0->unk28;
-        for (j = 1; j < key->unk4; j++) {
-            node = node->unkC[key->unk0[j]];
+        for (j = 1; j < keys[i].unk4; j++) {
+            node = node->unkC[keys[i].unk0[j]];
         }
-        func_8022BC64(&node->unk14, &key->unk8, &arg0->unk2C[node->unk4].unk4, arg2);
-        func_8022BC64(&node->unk20, &key->unk14, &arg0->unk2C[node->unk4].unk10, arg2);
-        func_8022BC64(&node->unk2C, &key->unk20, &arg0->unk2C[node->unk4].unk1C, arg2);
+        func_8022BC64(&node->unk14, &keys[i].unk8, &arg0->unk2C[node->unk4].unk4, arg2);
+        func_8022BC64(&node->unk20, &keys[i].unk14, &arg0->unk2C[node->unk4].unk10, arg2);
+        func_8022BC64(&node->unk2C, &keys[i].unk20, &arg0->unk2C[node->unk4].unk1C, arg2);
     }
 }
 
