@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 122, eu 122, jp 122
+ * differing words: us 120, eu 120, jp 120
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -3638,14 +3638,11 @@ void func_80247F90(s32 arg0) {
 
 void func_80247D74(s32 arg0, f32 arg1, f32 arg2, s32 arg3, UnkObj *arg4) {
     UnkObj *obj;
-    s32 pad[1];
+    f32 angle;
     f32 a[3];
     f32 b[3];
-    f32 dir;
-    f32 angle;
-    UnkStruct_800AEDF0 *p;
+    Vec3f dir;
 
-    p = &D_800AEDF0[arg0];
     obj = (UnkObj *)func_802443F4(arg0);
     ((Obj88 *)obj)->unk68 = arg1;
     D_802ACA44 = arg2;
@@ -3658,8 +3655,8 @@ void func_80247D74(s32 arg0, f32 arg1, f32 arg2, s32 arg3, UnkObj *arg4) {
             if (a[0] == b[0] && a[2] == b[2]) {
                 angle = -1.0f;
             } else {
-                func_8022FF58(a, b, &dir);
-                angle = (dir + 180.0f) - 360.0f * (dir >= 180.0f);
+                func_8022FF58(a, b, &dir.x);
+                angle = (dir.x + 180.0f) - 360.0f * (dir.x >= 180.0f);
                 obj->unk40->unk20 = (angle + 180.0f) - 360.0f * (angle >= 180.0f);
             }
         } else {
@@ -3668,12 +3665,12 @@ void func_80247D74(s32 arg0, f32 arg1, f32 arg2, s32 arg3, UnkObj *arg4) {
     } else {
         angle = obj->unk40->unk20;
     }
-    p->unkA0 = func_80243F50(angle);
+    D_800AEDF0[arg0].unkA0 = func_80243F50(angle);
     if (arg3 == 1 && arg4 != NULL) {
         func_802444B8(arg0, 0xB);
         func_80244354(arg0, 0xA0C8, 0);
         func_80244BE0(arg0, 1);
-        p->unk2C = 0;
+        D_800AEDF0[arg0].unk2C = 0;
     }
     func_80244354(arg0, 0x22, 1);
 }
