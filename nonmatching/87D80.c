@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 76, eu 76, jp 76
+ * differing words: us 68, eu 68, jp 68
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -20,8 +20,8 @@
  * original's dead stores to it), not in three variables.
  * func_8026E938's tail calls the getters func_8026E8C8 (the map's sign
  * bit, inlined as `lui v0; lb`) and func_8026E8B8.
- * 39 of 43 match. Left: func_8026DCAC 26, func_8026EE18 22,
- * func_8026FC08 20, func_8026F5E8 8.
+ * 40 of 43 match. Left: func_8026DCAC 26, func_8026EE18 22,
+ * func_8026FC08 20.
  */
 #include "common.h"
 
@@ -564,10 +564,13 @@ void func_8026F5E8(s32 arg0, s32 arg1, s32 arg2) {
     sp24 = *func_8023A840() & 6;
     temp_v0 = func_8026D7D8(arg0, arg1, arg2);
     if (temp_v0 & 0x380) {
-        /* fake: x and y appear first, so uopt colours them f2 and f12 */
+        /* fake: x and y appear first, so uopt colours them f2 and f12;
+         * the dead read of pos[1] gives z f16 */
         x = 0.0f;
         y = 0.0f;
         if (x) {
+        }
+        if (pos[1]) {
         }
         if (y) {
         }
