@@ -7,7 +7,7 @@
  * order. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 1888, eu 1888, jp 1888
+ * differing words: us 1820, eu 1820, jp 1820
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file (475 words in the one-file draft, 39
@@ -385,7 +385,7 @@ void func_80273414(s16 *arg0);
 void func_802734BC(u8 *arg0);
 void func_80273544(u8 *arg0);
 s32 func_8027356C(s16 arg0);
-s32 func_802735CC(void);
+s16 func_802735CC(void);
 void *func_8027361C(s16 arg0, f32 arg1, f32 arg2, f32 arg3, s16 arg4);
 s32 func_80273A5C(s32 arg0, s32 arg1, s32 arg2);
 s32 func_80273AD4(s16 arg0, f32 arg1, f32 arg2, f32 arg3);
@@ -498,7 +498,6 @@ void *func_8027361C(s16 arg0, f32 arg1, f32 arg2, f32 arg3, s16 arg4) {
     Ent88 *e;
     Obj8E *obj;
     s32 pad[24];
-    s16 i;
 
     idx = func_802735CC();
     if (idx == -1) {
@@ -556,12 +555,15 @@ void *func_8027361C(s16 arg0, f32 arg1, f32 arg2, f32 arg3, s16 arg4) {
     } else {
         e->unk64 |= 2;
     }
-    for (i = 0; i < 3; i++) {
-        e->unk24[i] = NULL;
+    for (idx = 0; idx < 3; idx++) {
+        e->unk24[idx] = NULL;
     }
-    e->obj->unk58 = e->x = e->xf->x = arg1;
-    e->obj->unk5C = e->y = e->xf->y = arg2;
-    e->obj->unk60 = e->z = e->xf->z = arg3;
+    e->xf->x = arg1;
+    e->x = e->obj->unk58 = e->xf->x;
+    e->xf->y = arg2;
+    e->y = e->obj->unk5C = e->xf->y;
+    e->xf->z = arg3;
+    e->z = e->obj->unk60 = e->xf->z;
     e->obj->unk6C = 1.0f;
     e->unk4C = 0.0f;
     e->unk50 = 0.0f;
@@ -599,9 +601,10 @@ void *func_8027361C(s16 arg0, f32 arg1, f32 arg2, f32 arg3, s16 arg4) {
     e->unk64 &= ~0x40;
     e->unk64 &= ~0x400;
     e->unk64 &= ~0x800;
+    return e;
 }
 
-s32 func_802735CC(void) {
+s16 func_802735CC(void) {
     Ent88 *e;
     s16 i;
 
