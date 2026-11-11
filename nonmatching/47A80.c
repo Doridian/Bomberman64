@@ -3,16 +3,19 @@
  * 0x8022D280-0x8022DB00) that build a model's display list from its joint
  * tree. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 75, eu 75, jp 75
+ * differing words: us 67, eu 67, jp 67
  *
  * fcmp counts a static with the global before it. func_8022DAB0 matches.
  * func_8022D280 + func_8022D414: 4 words, at func_8022D414's start. The
  * original burns one ugen temp (t6) before the first joint load, so idx*3
  * lands in t8 (ours t6), and its call-argument address is
- * addu v0,t0,v1 (ours v1,t0). func_8022D58C + func_8022D980: 71 words, all
- * from case 6 on: the same instructions, with t registers rotated (ugen's
- * free list is in a different state after case 6's GBI stores; reordering
- * the | chains, the stores and D_8029FCC0's store doesn't recover it).
+ * addu v0,t0,v1 (ours v1,t0). func_8022D58C + func_8022D980: 63 words, all
+ * t registers rotated from case 4's branch on (ugen's free list is in a
+ * different state after case 6's GBI stores). The original's ugen loads
+ * D_802A2D50[1] before [0] for the first word and builds the [0] half of
+ * each word first; the form below (g advanced after both stores) is the
+ * closest found. Reordering the | chains, the stores, _SHIFTL forms and
+ * locals for the two elements don't recover it.
  */
 #include "common.h"
 
@@ -164,8 +167,13 @@ void func_8022D58C(Gfx **gp, s32 base, s32 idx) {
         case 6:
             D_8029FCC0 = 1;
             GFX2(g++, 0x06000000, (u32) D_8029FCC8);
-            GFX2(g++, 0xF2000000 | ((D_802A2D50[0] & 0xFFF) << 12) | (D_802A2D50[1] & 0xFFF),
-                 (((D_802A2D50[0] + 0x7C) & 0xFFF) << 12) | ((D_802A2D50[1] + 0x7C) & 0xFFF));
+            {
+                Gfx *_g = g;
+
+                _g->w0 = (((D_802A2D50[0] & 0xFFF) << 12) | 0xF2000000) | (D_802A2D50[1] & 0xFFF);
+                _g->w1 = ((D_802A2D50[1] + 0x7C) & 0xFFF) | (((D_802A2D50[0] + 0x7C) & 0xFFF) << 12);
+                g = _g + 1;
+            }
             break;
         case 8:
             D_8029FCC4 = 1;
