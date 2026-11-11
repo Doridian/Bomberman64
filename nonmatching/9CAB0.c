@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 128, eu 128, jp 128
+ * differing words: us 127, eu 127, jp 127
  */
 #include "common.h"
 
@@ -655,19 +655,6 @@ static s32 func_802863F0(void) {
 static s32 func_802867D4(void) {
     return func_802863F0();
 }
-static s32 func_802863E8(s32 arg0) {
-    s32 t;
-    UnkStruct_800BB340 *task;
-    s32 pad[2];
-
-    t = func_802867D4();
-    if (t != -1) {
-        task = &D_800BB340[t];
-        task->unk0 = t; task->unkC = 0; task->unk4 = arg0; task->unk8 = func_80238A10(func_80285F8C, task, 0, 0, 0xD0); task->unk10 = NULL;
-    }
-    return t;
-}
-
 static void func_802867DC(UnkStruct_800BA900 *arg0) {
     if (arg0->unk0 != 0) {
         func_8022FC90(arg0->unk14.unk0);
@@ -729,6 +716,19 @@ UnkStruct_80288040 *func_802867E4(s32 arg0, f32 arg1, f32 arg2, f32 arg3) {
         }
     }
     return ret;
+}
+
+static s32 func_802863E8(s32 arg0) {
+    s32 t;
+    UnkStruct_800BB340 *task;
+    s32 pad[2];
+
+    t = func_802867D4();
+    if (t != -1) {
+        task = &D_800BB340[t];
+        task->unk0 = t; task->unkC = 0; task->unk4 = arg0; task->unk8 = func_80238A10(func_80285F8C, task, 0, 0, 0xD0); task->unk10 = NULL;
+    }
+    return t;
 }
 
 static void func_80286400(s32 arg4, s32 arg0, s32 arg5, f32 arg1, f32 arg2, f32 arg3) {
