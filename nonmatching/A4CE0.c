@@ -6,12 +6,16 @@
  * is emitted in the original's order and at the original's size. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 6, eu 6, jp 6
+ * differing words: us 0, eu 0, jp 0
  *
- * func_8028A7CC, func_8028A81C and func_8028A87C match; the statics are
- * compared as one run from func_8028A8A4 (6 words). Per function
- * (scratch's pf.py): func_8028BD20 6 (the spawn loop's i and kind swap
- * s2/s3; dead reads of i don't move it), the other 49 exact.
+ * Every function matches (the statics are compared as one run from
+ * func_8028A8A4).
+ * - func_8028BD20's spawn loop: a fake "if (pos == (f32 *) (i * i) ||
+ *   i == 5) {}" at the top of SPAWN1 (n is the loop counter). Without it
+ *   kind (save 15) is coloured before i (10.3) and takes s2. The i * i
+ *   lifts i to 17. The pos use keeps &pos above e, and the extra 5 keeps
+ *   the loop bound above e, against the block the fake adds to the loop
+ *   (each alone leaves e in s4 or s5). as1 deletes the fake's code.
  * - func_8028D094 declares d first: the order of the declarations sets
  *   m's frame slot (112, not 116).
  * - Tied float constants are coloured in the order they first appear in
@@ -106,7 +110,8 @@ extern s32 D_800BC76C;
 extern UnkStruct_800BC770 D_800BC770[16];
 
 /* a debris spawn, inlined everywhere with its own frame area (func_8028A978 is its empty stub) */
-#define SPAWN1(k, x, y, z) { s32 kind; f32 px, py, pz; s32 pad[2]; f32 pos[3]; s32 pad2; func_8028A978(); kind = k; px = x; py = y; pz = z; pos[0] = px; pos[1] = py; pos[2] = pz; func_8028A5C4(func_8028A690(kind), kind, pos, 0, 1); do {} while (0); }
+/* SPAWN1's n is the caller's loop counter, for a fake (see the header) */
+#define SPAWN1(n, k, x, y, z) { s32 kind; f32 px, py, pz; s32 pad[2]; f32 pos[3]; s32 pad2; if (pos == (f32 *) (n * n) || n == 5) {} func_8028A978(); kind = k; px = x; py = y; pz = z; pos[0] = px; pos[1] = py; pos[2] = pz; func_8028A5C4(func_8028A690(kind), kind, pos, 0, 1); do {} while (0); }
 #define SPAWN(k, x, y, z) { s32 kind; f32 px, py, pz; s32 pad[3]; f32 pos[3]; func_8028A978(); kind = k; px = x; py = y; pz = z; pos[0] = px; pos[1] = py; pos[2] = pz; func_8028A5C4(func_8028A690(kind), kind, pos, 0, 1); do {} while (0); }
 
 s32 func_8028A4E0(s32 arg0);
@@ -651,7 +656,7 @@ static void func_8028BD20(UnkStruct_800BC528 *e, f32 speed1, f32 speed2, f32 rat
     func_80231408(m, 0x80000);
     if (e->unk8 == 0) {
         for (i = 0; i < 5; i++) {
-            SPAWN1(e->unkC, m->unk40->unk10, m->unk40->unk14, m->unk40->unk18);
+            SPAWN1(i, e->unkC, m->unk40->unk10, m->unk40->unk14, m->unk40->unk18);
         }
     }
     m->unk40->unk20 = func_8028AB04(dir) + 30.0f;
