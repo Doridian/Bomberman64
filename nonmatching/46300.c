@@ -23,8 +23,16 @@
  * count at the loop's end (count coloured before count * 40).
  *
  * Left:
- * - func_8022C8B8 (84): same size and shape; temporaries numbered
- *   from one lower (the channel's address is in v1 in the original).
+ * - func_8022C8B8 (84): same size and shape; every word is one ugen
+ *   temporary of rotation: the original computes the channel's address
+ *   before the switch into v1 (a uopt register), ours into t6. Here
+ *   `D_802A54FC[D_802A54D4].unk0` is a uixa load while the cases'
+ *   `&D_802A54FC[D_802A54D4]` is an add, so they are not CSE'd. Any
+ *   pointer local before the switch (`chan = &...`, `D + i`) is CSE'd
+ *   into the cases (8 words short); with the cases written through
+ *   (u8 *) it stays one-use and folds (83), and with a dead read it is
+ *   coloured but v0/v1 swapped and an extra store (+2 words). Dead reads
+ *   and `do {} while (0);` after every line of the loop change nothing.
  */
 #include "common.h"
 
