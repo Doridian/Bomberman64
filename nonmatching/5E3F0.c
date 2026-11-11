@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 805, eu 805, jp 804
+ * differing words: us 804, eu 804, jp 803
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -1862,45 +1862,43 @@ void func_8024D5D0(Ctl58 *arg0) {
     s32 dir;
     s32 padN[1];
     s32 tilt;
-    s32 pad[1];
-    f32 angle;
+    s32 pad[2];
     f32 s;
 
-    if (!yaw && !yaw) {}
     if (!arg0->unk0 && !arg0->unk0) {}
     dir = arg0->unk4;
     tilt = arg0->unk8;
     dist = arg0->unk0;
     switch (dir) {
     case 0x0:
-        angle = 180.0f;
+        yaw = 180.0f;
         break;
     case 0x20:
-        angle = 135.0f;
+        yaw = 135.0f;
         break;
     case 0x40:
-        angle = 90.0f;
+        yaw = 90.0f;
         break;
     case 0x60:
-        angle = 45.0f;
+        yaw = 45.0f;
         break;
     case 0x80:
-        angle = 0.0f;
+        yaw = 0.0f;
         break;
     case 0xA0:
-        angle = 315.0f;
+        yaw = 315.0f;
         break;
     case 0xC0:
-        angle = 270.0f;
+        yaw = 270.0f;
         break;
     case 0xE0:
-        angle = 225.0f;
+        yaw = 225.0f;
         break;
     }
     switch (tilt) {
     case 1:
         pitch = 0.0f;
-        angle = 0.0f;
+        yaw = 0.0f;
         break;
     case 2:
         pitch = 45.0f;
@@ -1912,11 +1910,10 @@ void func_8024D5D0(Ctl58 *arg0) {
         pitch = 135.0f;
         break;
     case 5:
-        angle = 0.0f;
+        yaw = 0.0f;
         pitch = 180.0f;
         break;
     }
-    yaw = angle;
     s = func_80234434(yaw);
     x = func_80234434(pitch) * (dist * s);
     y = func_80234408(pitch) * dist;
