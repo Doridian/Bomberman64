@@ -13,24 +13,21 @@
  * function-scope static) and __clearAudioDMA (8026B238's), inlined.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 7, eu 7, jp 7
+ * differing words: us 0, eu 0, jp 0
  *
  * jp's 8026B9CC has no osTvType test (always 60 fields a second).
- * func_8026B9CC, 8026B72C, 8026B79C, 8026B7A8 and 8026B7D4 match
- * (8026B7D4's run
- * includes the static 8026B804, __amDMA).
- * - func_8026B210 (7 words; the statics' run from 8026B210 to 8026B72C):
- *   __amMain's lastInfo, msg and spill are at 0x5C/0x54/0x58, the
- *   original's 0x50/0x54/0x58 (declaration order and the inlined
- *   samplesLeft set them); __clearAudioDMA's iomsg is at sp+0x28, the
- *   original's sp+0x30.
- * - func_8026B9CC matched with the locals declared i, fsize, buffs, err,
- *   fps (fps gets no slot below err), err = 0 first, the peaks zeroed in
- *   one chain, flags first (it uses up ugen's three temps the original's
- *   t-registers show), and osCreateMesgQueue (func_80297D80) void, which
- *   moves amc's reloads from v1 to v0. The chained `D_802AF938 =
- *   D_802AF93C = D_802AF948 = 0` gives the original's address registers
- *   (v1, a2).
+ * Every function matches in all three versions (the object can move to
+ * src/). What fixed the second pass:
+ * - func_8026B9CC: locals declared i, fsize, buffs, err, fps (fps gets no
+ *   slot below err); err = 0 first; the peaks zeroed in one chain, flags
+ *   first (it uses up the three ugen temps the original's t-registers
+ *   show); osCreateMesgQueue (func_80297D80) declared void, which moves
+ *   amc's reloads from v1 to v0. The chained `D_802AF938 = D_802AF93C =
+ *   D_802AF948 = 0` gives the original's address registers (v1, a2).
+ * - the statics' run from func_8026B210: __amMain's locals in the SDK's
+ *   order (done, msg, lastInfo) under an unused `s32 pad`;
+ *   __clearAudioDMA's iomsg declared second; the task's flags set right
+ *   after next.
  */
 #include "common.h"
 
@@ -403,9 +400,9 @@ static void func_8026B228(UnkStruct_8026B238 *info) {
 /* audiomgr.c's __clearAudioDMA, with the peaks */
 static void func_8026B230(void) {
     u32 i;
+    void *iomsg;
     UnkStruct_8026B804 *dmaPtr;
     UnkStruct_8026B804 *nextPtr;
-    void *iomsg;
 
     if (D_802AD680.maxDMAs < D_802AF93C) {
         D_802AD680.maxDMAs = D_802AF93C;
@@ -476,9 +473,9 @@ static s32 func_8026B238(UnkStruct_8026B238 *info, UnkStruct_8026B238 *lastInfo)
     }
     t = &info->task;
     t->next = NULL;
+    t->flags = 2;
     t->msgQ = &D_802AD6A0.audioReplyMsgQ;
     t->msg = &info->msgType;
-    t->flags = 2;
     t->data_ptr = D_802AD6A0.ACMDList[D_802AF948];
     t->data_size = (cmdp - D_802AD6A0.ACMDList[D_802AF948]) * sizeof(UnkStruct_802AD6A0_0);
     t->type = 2;
@@ -501,9 +498,10 @@ static s32 func_8026B238(UnkStruct_8026B238 *info, UnkStruct_8026B238 *lastInfo)
 
 /* audiomgr.c's __amMain */
 static void func_8026B584(void *arg) {
-    UnkStruct_8026B238 *lastInfo;
+    s32 pad; /* an unused slot above done (frame 0x60) */
     s32 done;
     UnkStruct_8026B584 *msg;
+    UnkStruct_8026B238 *lastInfo;
 
     done = 0;
     lastInfo = NULL;
