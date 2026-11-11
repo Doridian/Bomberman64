@@ -9,7 +9,7 @@
  * func_80228500 kept). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 221, eu 221, jp 221
+ * differing words: us 178, eu 178, jp 178
  *
  * The code is the same in every version.
  *
@@ -560,10 +560,11 @@ UnkObj *func_8022A328(UnkModel *arg0, s32 arg1, s32 arg2, u32 arg3, s32 arg4) {
     if (D_802A5474 >= 0xA0) {
         return NULL;
     }
+    p = &D_800A0D00[(u32)D_802A5474];
+    if (p) {}
     while (arg1 >= D_800A0D00[D_802A5478].unk8) {
         D_802A5478 = D_800A0D00[D_802A5478].unk0;
     }
-    p = &D_800A0D00[(u32)D_802A5474];
     p->unk8 = arg1;
     p->unk4 = D_800A0D00[D_802A5478].unk4;
     if (arg1) {}
