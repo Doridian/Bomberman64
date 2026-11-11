@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 830, eu 830, jp 830
+ * differing words: us 824, eu 824, jp 824
  */
 #include "common.h"
 
@@ -2207,8 +2207,6 @@ static s32 func_80282AE8(UnkStruct_80288040 *act) {
 }
 
 static s32 func_80282AE0(UnkStruct_80288040 *act) {
-    UnkStructA_40 *p;
-
     if (act->unk20++ < 3) {
         act->unk0->unk40->unk2C -= 0.12;
     } else if (act->unk20 < 8) {
@@ -2216,8 +2214,7 @@ static s32 func_80282AE0(UnkStruct_80288040 *act) {
     } else if (act->unk20 < 15) {
         act->unk0->unk40->unk2C -= 0.04;
     } else {
-        p = act->unk0->unk40;
-        func_8028A81C(1, p->unk10, p->unk14 + 100.0f, p->unk18, 0);
+        func_8028A81C(1, act->unk0->unk40->unk10, act->unk0->unk40->unk14 + 100.0f, act->unk0->unk40->unk18, 0);
         return 1;
     }
     return 0;
@@ -2235,10 +2232,10 @@ static s32 func_80282AD8(UnkStruct_80288040 *act) {
 }
 
 static s32 func_80282AF0(UnkStruct_800BB340 *arg0, s32 arg1) {
-    Vec3f pos;
     UnkStruct_80288040 *act;
     UnkStructA_40 *p;
     s32 ret;
+    Vec3f pos;
 
     func_80282AD0();
     act = &arg0->unk10->unk14;
