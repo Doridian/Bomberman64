@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1485, eu 1485, jp 1482
+ * differing words: us 1483, eu 1483, jp 1480
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -2004,14 +2004,12 @@ static void func_8023E8FC(f32 *pos) {
         s32 unk0[4];
         f32 unk10[3];
     } s;
-    s32 padB[5];
+    s32 padB[2];
 
     while (TRUE) {
-        x = ((f32 (*)[3]) D_802A0658)[D_802AC660.unkA0][0] +
-            (s32) ((((f32 (*)[3]) D_802A0658)[D_802AC660.unkA0 + 10][0] - ((f32 (*)[3]) D_802A0658)[D_802AC660.unkA0][0]) * (f32) func_8025E63C());
+        x = (s32) ((f32) func_8025E63C() * (((f32 (*)[3]) D_802A0658)[D_802AC660.unkA0 + 10][0] - ((f32 (*)[3]) D_802A0658)[D_802AC660.unkA0][0])) + ((f32 (*)[3]) D_802A0658)[D_802AC660.unkA0][0];
         y = ((f32 (*)[3]) D_802A0658)[D_802AC660.unkA0][1];
-        z = ((f32 (*)[3]) D_802A0658)[D_802AC660.unkA0][2] +
-            (s32) ((((f32 (*)[3]) D_802A0658)[D_802AC660.unkA0 + 10][2] - ((f32 (*)[3]) D_802A0658)[D_802AC660.unkA0][2]) * (f32) func_8025E63C());
+        z = (s32) ((f32) func_8025E63C() * (((f32 (*)[3]) D_802A0658)[D_802AC660.unkA0 + 10][2] - ((f32 (*)[3]) D_802A0658)[D_802AC660.unkA0][2])) + ((f32 (*)[3]) D_802A0658)[D_802AC660.unkA0][2];
         ix = x;
         iz = z;
         a = func_8026D7D8(ix, (s32) y, iz);
