@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4582, eu 4582, jp 4582
+ * differing words: us 4485, eu 4485, jp 4485
  */
 #include "common.h"
 
@@ -328,10 +328,10 @@ static void func_80285A8C();
 void func_80285A94();
 static s32 func_80285F84(UnkStruct_80288040 *arg0);
 static void func_802863E8();
-void func_802863F0();
-static void func_802863F8();
-static void func_802867CC();
-void func_802867D4();
+static s32 func_802863F0(void);
+static s32 func_802863F8(void);
+static s32 func_802867CC(s32 arg0, f32 arg1, f32 arg2, f32 arg3);
+static s32 func_802867D4(void);
 static void func_802867DC(UnkStruct_800BA900 *arg0);
 static UnkStruct_800BB340 *func_802872D8(UnkStruct_800BA900 *arg0);
 static void func_80287690();
@@ -649,10 +649,9 @@ void func_80286E60(void) {
 
 s32 func_80286CA8(s32 arg0, f32 arg1, f32 arg2, f32 arg3) {
     s32 t;
-    s32 slot;
     UnkStruct_800BB340 *task;
 
-    FREETASK_802867D4(t);
+    t = func_802867D4();
     if (t != -1) {
         task = &D_800BB340[t];
         task->unk4 = 1;
@@ -661,19 +660,58 @@ s32 func_80286CA8(s32 arg0, f32 arg1, f32 arg2, f32 arg3) {
         task->unk8 = func_80238A10(func_80285F8C, task, 0, 0, 0xD0);
         task->unk10 = NULL;
     }
-    FREESLOT_802867CC(slot);
+    return func_802867CC(arg0, arg1, arg2, arg3);
+}
+
+static s32 func_802863F8(void) {
+    UnkStruct_800BA900 *s;
+    s32 i;
+
+    s = D_800BA900;
+    for (i = 0; i < 16; i++, s++) {
+        if (s->unk0 == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+static s32 func_802867CC(s32 arg0, f32 arg1, f32 arg2, f32 arg3) {
+    s32 pad;
+    s32 slot;
+
+    slot = func_802863F8();
     if (slot != -1) {
         func_80286400(arg0, arg1, arg2, arg3, slot, 2);
     }
     return slot;
 }
 
-static void func_802867CC() {
+static s32 func_802863F0(void) {
+    UnkStruct_800BB340 *t;
+    s32 i;
+    s32 n;
+
+    n = 0;
+    t = D_800BB340;
+    for (i = 0; i++ < 16; t++) {
+        if (t->unk4 != 0) {
+            n++;
+        }
+    }
+    if (n < D_800BB480) {
+        for (i = 0; i < 16; i++) {
+            if (D_800BB340[i].unk4 == 0) {
+                return i;
+            }
+        }
+    }
+    return -1;
 }
 
-static void func_802867D4() {
+static s32 func_802867D4(void) {
+    return func_802863F0();
 }
-
 static void func_802867DC(UnkStruct_800BA900 *arg0) {
     if (arg0->unk0 != 0) {
         func_8022FC90(arg0->unk14.unk0);
@@ -683,16 +721,14 @@ static void func_802867DC(UnkStruct_800BA900 *arg0) {
 
 UnkStruct_80288040 *func_802867E4(s32 arg0, f32 arg1, f32 arg2, f32 arg3) {
     UnkStruct_80288040 *ret;
-    s32 special;
     s32 slot;
+    s32 special;
     s32 t;
     UnkStruct_800BB340 *task;
 
-    func_802867D4();
-    func_802867CC();
-    special = 0;
     ret = NULL;
     slot = -1;
+    special = 0;
     if ((arg0 == 0) && (D_800BA8E8[arg0].unk0 == 0x19) && (D_800BA8E8[arg0].unk2 == 0x1E)) {
         slot = 13;
         special = 1;
@@ -711,15 +747,12 @@ UnkStruct_80288040 *func_802867E4(s32 arg0, f32 arg1, f32 arg2, f32 arg3) {
             func_80286400(arg0, arg1, arg2, arg3, slot, 2);
         }
     } else {
-        FREESLOT_802867CC(slot);
-        if (slot != -1) {
-            func_80286400(arg0, arg1, arg2, arg3, slot, 2);
-        }
+        slot = func_802867CC(arg0, arg1, arg2, arg3);
     }
     if (slot != -1) {
         if (D_800BB480 + 1 < 16) {
             D_800BB480++;
-            FREETASK_802867D4(t);
+            t = func_802867D4();
             if (t != -1) {
                 task = &D_800BB340[t];
                 task->unk4 = 2;
@@ -749,12 +782,6 @@ UnkStruct_80288040 *func_802867E4(s32 arg0, f32 arg1, f32 arg2, f32 arg3) {
 static void func_802863E8() {
 }
 
-static void func_802863F0() {
-}
-
-static void func_802863F8() {
-}
-
 static void func_80286400(s32 arg0, f32 arg1, f32 arg2, f32 arg3, s32 arg4, s32 arg5) {
     UnkStruct_800BA900 *s;
     UnkStruct_80288040 *a;
@@ -765,8 +792,6 @@ static void func_80286400(s32 arg0, f32 arg1, f32 arg2, f32 arg3, s32 arg4, s32 
         Vec3f o;
     } grid;
 
-    func_802863F8();
-    func_802863F0();
     func_802863E8();
     func_802863E0();
     s = &D_800BA900[arg4];
