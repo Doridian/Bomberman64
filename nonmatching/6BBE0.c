@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 7208, eu 7208, jp 7168
+ * differing words: us 7183, eu 7183, jp 7143
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -4592,25 +4592,24 @@ static s32 func_80252658(f32 *arg0, f32 *arg1) {
 }
 
 static f32 func_80252598(f32 *arg0, f32 *arg1) {
-    f32 temp_fa1;
-    f32 temp_ft4;
-    f32 temp_fv0;
-    f32 temp_fv1;
-    f32 var_fa0;
-    f32 var_ft5;
+    f32 dx;
+    f32 dz;
+    f32 ret;
 
-    var_fa0 = FDIFF(M2C_FIELD(arg0, f32 *, 0), M2C_FIELD(arg1, f32 *, 0));
-    var_ft5 = FDIFF(M2C_FIELD(arg0, f32 *, 8), M2C_FIELD(arg1, f32 *, 8));
-    if (var_ft5 < var_fa0) {
-        if (temp_fv0 < temp_fv1) {
-            return 90.0f;
+    dx = FDIFF(arg0[0], arg1[0]);
+    dz = FDIFF(arg0[2], arg1[2]);
+    if (dz < dx) {
+        if (arg0[0] < arg1[0]) {
+            ret = 90.0f;
+        } else {
+            ret = 270.0f;
         }
-        return 270.0f;
+    } else if (arg0[2] < arg1[2]) {
+        ret = 0.0f;
+    } else {
+        ret = 180.0f;
     }
-    if (temp_fa1 < temp_ft4) {
-        return 0.0f;
-    }
-    return 180.0f;
+    return ret;
 }
 
 static f32 func_80252490(f32 *arg0) {
