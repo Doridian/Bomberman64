@@ -7,7 +7,7 @@
  * "NON_MATCHING drafts"). src/48300.c, before it, is another object:
  * func_80232E60 calls its func_8022DB00 with a jal (text_objects.txt).
  * flags: -O3
- * differing words: us 280, eu 280, jp 280
+ * differing words: us 267, eu 267, jp 267
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does. An 8-byte stub (jr ra; nop) is an inlined
@@ -58,7 +58,7 @@
  * left is case 12/20's four stores before the loop: uopt keeps the ball's
  * address in v0 (a block-local CSE of the four istr) where the original
  * uses lui/%lo for each, with p[0], p[1], p[3] loaded in that order.
- * func_802320A8 (242, the size right): a few opcodes differ (prologue
+ * func_802320A8 (229, the size right): a few opcodes differ (prologue
  * order, spBC[0] loaded before the mode switch for case 2, three
  * mov.s), the rest is
  * register naming: case 1/2's a and b swapped (f22/f24: equal priority,
@@ -72,7 +72,8 @@
  * right, and func_80230914's add.s with a store of y back to o->unk6C
  * before o->unk6C += o->unk70 (both permuter finds). In func_802320A8,
  * case 2 stores sp128[1] last, and case 1's middle term reuses x (one
- * local fewer moves the colouring; also permuter finds).
+ * local fewer moves the colouring; also permuter finds), with e kept
+ * declared and unused: its stack slot puts sp80 at 0x80.
  */
 #include "common.h"
 
@@ -641,6 +642,7 @@ void func_802320A8() {
     f32 spB0[3];
     f32 a;
     f32 b;
+    f32 e;
     f32 d;
     f32 c;
     f32 f;
