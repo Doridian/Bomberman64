@@ -3,10 +3,11 @@
  * code (func_8027A1A0 to func_8027BCE8): the item table read from file
  * 0xDC (func_8027A640), the thread's setup (func_8027A950), an item's
  * creation (func_8027AA74) and the per-player pickups. The C is written
- * last function first, as -O3 emits it. func_8027A640, func_8027A950,
- * func_8027AA74 and func_8027B0BC still differ in register allocation,
- * stack layout and loop forms; func_8027B828 in two registers. Not built
- * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
+ * last function first, as -O3 emits it. Only func_8027A640 still
+ * differs: in its file search loop, uopt gives the offset, the found flag
+ * and the 0x80 end mark a different rotation of v0/a0/a2, and the temps
+ * after it follow. Not built into the ROM (docs/DECOMPILING.md,
+ * "NON_MATCHING drafts").
  * flags: -O3
  * differing words: us 27, eu 27, jp 27
  */
@@ -646,6 +647,10 @@ s16 func_8027AF70(void) {
     return count;
 }
 
+/*
+ * arg4 to arg6 are read as the s16 in their low half, from the stack at
+ * each use (lh), while the callers pass words untruncated (func_8027BA80).
+ */
 UnkStruct_800BB4A8 *func_8027AA74(s16 arg0, f32 arg1, f32 arg2, f32 arg3, s32 arg4, s32 arg5, s32 arg6) {
     s16 model;
     UnkStruct_800BB4A8 *node;
@@ -833,8 +838,8 @@ void func_8027A640(void) {
     s32 j;
     s32 mode;
     struct UnkStruct_80225CC0 *file;
-    s32 d1;
-    s32 d2;
+    s32 val;
+    s32 done;
 
     if (D_802AFE84 != NULL) {
         free(D_802AFE84);
@@ -887,7 +892,7 @@ void func_8027A640(void) {
     for (i = 0; i < 3; i++) {
         sums[i] = 0;
     }
-    d2 = 0;
+    done = FALSE;
     do {
         c = *p++;
         if (c == 0xF0) {
@@ -897,15 +902,15 @@ void func_8027A640(void) {
             p += 3;
         }
         for (i = 0; i < 3; i++) {
-            d1 = *p;
-            D_802AFE88[c][i] = d1;
-            sums[i] += d1;
+            val = *p;
+            D_802AFE88[c][i] = val;
+            sums[i] += val;
             p++;
         }
         if (mode == 1) {
             p += 3;
         }
-    } while (d2 == 0);
+    } while (!done);
     for (i = 0; i < 3; i++) {
         if (sums[i] <= 100) {
             D_802AFE88[9][i] = 100 - sums[i];

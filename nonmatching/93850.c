@@ -1,11 +1,14 @@
 /*
  * NON_MATCHING: main_code's 93850, complete: the list of bonus items at
  * D_800BB4A8 (func_80279050 to func_8027A144, the list's thread). The
- * C is written last function first, as -O3 emits it. func_802791C4 and
- * func_802797BC still differ in register allocation and code order,
- * func_80279DC8 in its frame; func_8027A144 differs only in the padding
- * after it, which moves with the sizes before it. Not built into the
- * ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
+ * C is written last function first, as -O3 emits it. func_802797BC is
+ * one word long (as1 leaves a nop after the func_80243DDC compare where
+ * the original has li a1,32) and differs in the scheduling of cases 2
+ * and 3 (ugen marks the two tables .noalias); func_80279DC8 loads
+ * arg0->unk14 into v0 where the original uses v1, so its ret = 1 moves
+ * and it is one word short; func_8027A144 differs only in the padding
+ * after it. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
+ * drafts").
  * flags: -O3
  * differing words: us 139, eu 139, jp 139
  */
