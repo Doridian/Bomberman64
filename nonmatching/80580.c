@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 147, eu 147, jp 147
+ * differing words: us 139, eu 139, jp 139
  *
  * The object is the same in all three versions. 70 of the 79 original
  * procedures match (stubs included). The IPA statics
@@ -1252,6 +1252,7 @@ static void func_802691A0(void) {
     s32 table;
     u8 bank;
 
+    if (D_802AD22C->revision) {}
     if (D_802AD22C->revision == 0x5331 || D_802AD22C->revision == 0x5332) {
         sd = &D_802AD22C->seqArray[D_802AD244];
         len = sd->len;
