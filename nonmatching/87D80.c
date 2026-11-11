@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1143, eu 1143, jp 1143
+ * differing words: us 1112, eu 1112, jp 1112
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -1496,14 +1496,18 @@ void func_8026D92C(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5, s
 
 s32 func_8026D7D8(s32 arg0, s32 arg1, s32 arg2) {
     s32 var_v1;
-    u16 var_a0;
+    s32 xmax;
+    s32 zmax;
+    s32 var_a0;
 
     var_v1 = 0;
     if (arg1 < 0) {
         arg1 = 0;
         var_v1 = 1;
     }
-    if (((D_800B15D8->unk1 + (D_800B15D8->unk4 * 8)) - 1) < arg0 || ((D_800B15D8->unk3 + (D_800B15D8->unk8 * 8)) - 1) < arg2 || arg0 < 0 || arg2 < 0 || arg1 >= D_800B15D8->unk0) {
+    xmax = D_800B15D8->unk1 + D_800B15D8->unk4 * 8 - 1;
+    zmax = D_800B15D8->unk3 + D_800B15D8->unk8 * 8 - 1;
+    if (xmax < arg0 || zmax < arg2 || arg0 < 0 || arg2 < 0 || arg1 >= D_800B15D8->unk0) {
         var_a0 = D_802AFC58;
     } else {
         var_a0 = D_800B15D8[arg1].unk12[func_8026D5F8(arg0, arg1, arg2)].unk2[func_8026D5C0(arg0, arg1, arg2)];
