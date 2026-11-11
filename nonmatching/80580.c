@@ -8,20 +8,24 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2711, eu 2711, jp 2711
+ * differing words: us 2432, eu 2432, jp 2432
  *
- * The object is the same in all three versions. 36 of the 79 original
- * procedures match (8 of them inlined-static stubs). The IPA statics
+ * The object is the same in all three versions. 61 of the 79 original
+ * procedures match (stubs included). The IPA statics
  * (s-registers used unsaved, or arguments in odd registers) are static
  * here: 80266D8C, 8026706C (num in a1), 80267784, 802679C0, 80267A18,
  * 80268440, 80269144, 802699C8, 80269A8C, 80269AFC, 8026A108, 8026A164.
  * The 8-byte stubs are statics inlined into the function after them:
  * 80267A10 (a sound's free voice), 802679A0-B8 (the script's clamps and
- * fade), 802691A0 (the sequence load), 80267064 (a volume), the
- * recursive setters' bodies 80266154/298/3D8/508. func_80265FBC keeps a
- * dead call so that IDO doesn't inline it. Biggest left: 80267A18 (the
- * script interpreter: s-register choice), 80269AFC, the m2c bodies of
- * 80268440, 8026724C, 8026A164, 80266930, 80266644, 802686B8.
+ * fade), 802691A0 (the sequence load), 80267064 (a volume), 80266928
+ * (a script's reset), 80269A7C/84 (empty), the recursive setters'
+ * stubs 80266154/298/3D8/508 (empty, the setters recurse themselves).
+ * func_80265FBC is a static too (callers keep registers live across
+ * it), inlined only into 80265FF8: a dead `if (0)` store keeps IDO
+ * from inlining it into the others. 8026724C's unused second SndDef
+ * gives the original's frame size. Biggest left: 80267A18 (the script
+ * interpreter: s-register choice), 80269AFC, 8026A164, 802691A8,
+ * 8026A8B4, 80268440, 80266D8C, 8026706C.
  */
 #include "common.h"
 
@@ -406,7 +410,7 @@ s8 func_80265DB0(void);
 void func_80265DD8(s8 arg0);
 void func_80265E7C(s16 arg0);
 void func_80265F1C(u8 arg0);
-s16 func_80265FBC(s8 arg0);
+static s16 func_80265FBC(s8 arg0);
 void func_80265FF8(s8 arg0);
 static void func_802660B4(void);
 void func_80266118(s8 arg0);
@@ -660,7 +664,7 @@ s16 func_8026A754(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     func_80297D80(D_802AD1F8, D_802AD130, 0x32);
     D_802AD210 = arg3;
     D_802AD214 = arg4;
-    func_802983D0(D_802AD120, arg3, arg4);
+    func_802983D0(D_802AD120, D_802AD210, D_802AD214);
     M2C_FIELD(D_802A1278, s32 *, 0x14) = arg2;
     M2C_FIELD(D_802A1254, s8 *, 0x1C) = 6;
     M2C_FIELD(D_802A1254, M2C_UNK **, 0x20) = D_802A12C8;
@@ -680,7 +684,7 @@ s16 func_8026A754(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
         return temp_v0;
     }
     D_802AD218 = 0;
-    func_802983A8(0 & 0xFF);
+    func_802983A8(D_802AD218);
     return 0;
 }
 
@@ -824,20 +828,17 @@ static s16 func_8026A164() {
     return 0;
 }
 
-static s32 func_8026A108(s32 arg0) {
-    SeqFile *temp_v0;
-    s32 var_s1;
+static s32 func_8026A108(s32 size) {
+    SeqFile *p;
 
-    var_s1 = arg0;
-    if (var_s1 & 1) {
-        var_s1 += 1;
+    if (size & 1) {
+        size++;
     }
-    temp_v0 = func_8026B72C(var_s1);
-    D_802AD22C = temp_v0;
-    if (temp_v0 == NULL) {
+    p = D_802AD22C = func_8026B72C(size);
+    if (p == NULL) {
         return 1;
     }
-    func_80269144(&temp_v0->revision, var_s1, D_802A1330);
+    func_80269144(p, size, D_802A1330);
     return 0;
 }
 
@@ -1004,9 +1005,13 @@ static s16 func_80269AFC() {
     return 0;
 }
 
+static void func_80269A7C();
+static void func_80269A84();
 static s32 func_80269A8C(s32 size) {
     SndTable *p;
 
+    func_80269A7C();
+    func_80269A84();
     if (size & 1) {
         size++;
     }
@@ -1022,33 +1027,39 @@ static s32 func_80269A8C(s32 size) {
     return 0;
 }
 
+static void func_80269A84() {
+}
+
+static void func_80269A7C() {
+}
+
 static void func_802699C0() {
 }
 
 static s32 func_802699C8() {
-    SndBankFile *temp_v0;
-    s32 var_s1;
+    SndBankFile *p;
+    s32 size;
 
     func_802699C0();
-    var_s1 = D_802A134C - D_802A1348;
-    if (var_s1 == 0) {
+    size = D_802A134C - D_802A1348;
+    if (size == 0) {
         D_802A1348 = 0;
         return 1;
     }
-    if (var_s1 & 1) {
-        var_s1 += 1;
+    if (size & 1) {
+        size += 1;
     }
-    temp_v0 = func_8026B72C(var_s1);
-    D_802AD648 = temp_v0;
-    if (temp_v0 == NULL) {
+    p = D_802AD648 = func_8026B72C(size);
+    if (p == NULL) {
         return 2;
     }
-    func_80269144(&temp_v0->revision, var_s1, D_802A1348);
-    if (D_802AD648->revision != 0x4231) {
+    func_80269144(p, size, D_802A1348);
+    p = D_802AD648;
+    if (p->revision != 0x4231) {
         D_802A1348 = 0;
         return 1;
     }
-    func_802983E8(D_802AD648, (void *) D_802A1350);
+    func_802983E8(p, (void *) D_802A1350);
     return 0;
 }
 
@@ -1092,8 +1103,13 @@ s32 func_80269840() {
     return 0x640013;
 }
 
+typedef struct SndHeap { u8 *base; u8 *cur; s32 len; } SndHeap;
 s32 func_80269820() {
-    return M2C_FIELD(D_802AD120, s32 *, 8) - (M2C_FIELD(D_802AD120, s32 *, 4) - M2C_FIELD(D_802AD120, s32 *, 0));
+    SndHeap *h = (SndHeap *) D_802AD120;
+    s32 used;
+
+    used = h->cur - h->base;
+    return h->len - used;
 }
 
 s32 func_80269800() {
@@ -1397,35 +1413,26 @@ s16 func_80268BB8() {
 }
 
 void func_80268A40(s16 arg0) {
-    ChlState *var_s1;
-    s32 temp_s0;
-    s32 var_s2;
+    s32 i;
 
     if (D_802AD3C0 != 0) {
         func_80298638(D_802AD220);
         D_802AD238 = 1;
-        var_s1 = D_802AD340;
-        var_s2 = 0;
-        do {
-            temp_s0 = var_s2 & 0xFF;
-            func_80298678(D_802AD220, temp_s0 & 0xFF, M2C_FIELD(var_s1, u8 *, 3));
-            func_802986A8(D_802AD220, temp_s0 & 0xFF, var_s1->fxmix);
-            func_80298698(D_802AD220, temp_s0 & 0xFF, var_s1->vol);
-            func_802986B8(D_802AD220, temp_s0 & 0xFF, var_s1->pan);
-            func_80298688(D_802AD220, temp_s0 & 0xFF, var_s1->prio);
-            var_s2 += 1;
-            var_s1 += 8;
-        } while (var_s2 != 0x10);
+        for (i = 0; i < 16; i++) {
+            func_80298678(D_802AD220, i, D_802AD340[i].prog);
+            func_802986A8(D_802AD220, i, D_802AD340[i].fxmix);
+            func_80298698(D_802AD220, i, D_802AD340[i].vol);
+            func_802986B8(D_802AD220, i, D_802AD340[i].pan);
+            func_80298688(D_802AD220, i, D_802AD340[i].prio);
+        }
         func_802689B4(D_802AD3C0);
         func_80298540(D_802AD228, D_802AD250);
         D_802AD3C0 = 0;
-        if (arg0 != 0) {
-            if (!(D_802AD23C > 0.0f)) {
-                D_802AD23C = -((f32) D_802AD24A / (f32) arg0);
-                D_802AD240 = 0.0f;
-                D_802AD246 = 0;
-                func_80298670(D_802AD220, 0);
-            }
+        if (arg0 != 0 && !(D_802AD23C > 0.0f)) {
+            D_802AD23C = -((f32) D_802AD24A / (f32) arg0);
+            D_802AD240 = 0.0f;
+            D_802AD246 = 0;
+            func_80298670(D_802AD220, 0);
         }
     }
 }
@@ -2502,23 +2509,12 @@ static void func_802660B4(void) {
     }
 }
 
-static s16 func_80265FF8_s(s8 arg0) {
-    s32 v;
-
-    if (arg0 > 0) {
-        v = (arg0 << 8) + 0xFF;
-    } else {
-        v = 0;
-    }
-    return v;
-}
-
 void func_80265FF8(s8 arg0) {
     s32 i;
     Voice *v;
     s32 t;
 
-    D_802AD672 = func_80265FF8_s(arg0);
+    D_802AD672 = func_80265FBC(arg0);
     for (i = 0; i < D_802A12BC; i++) {
         v = &D_802AD654[i];
         if (v->state == 1) {
@@ -2530,11 +2526,11 @@ void func_80265FF8(s8 arg0) {
     }
 }
 
-s16 func_80265FBC(s8 arg0) {
+static s16 func_80265FBC(s8 arg0) {
     s32 v;
 
     if (0) {
-        func_80298710(0);
+        D_802AD218 = 0;
     }
     if (arg0 > 0) {
         v = (arg0 << 8) + 0xFF;
