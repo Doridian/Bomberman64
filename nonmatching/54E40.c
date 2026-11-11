@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 716, eu 716, jp 719
+ * differing words: us 713, eu 713, jp 716
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -1135,8 +1135,9 @@ void func_80241590(s32 arg0, Gfx **gdl) {
         r = (Rect54E40 *) D_802A084C;
         do {
             tf = D_802A0758;
-            gDPLoadTLUT_pal256(gfx++, (u8 *) tf + tf->entries[r->idx + 1].offset);
-            gDPLoadTextureBlock_4b(gfx++, (u8 *) tf + tf->entries[r->idx].offset, G_IM_FMT_CI, 16, 16, 0,
+            e = tf->entries;
+            gDPLoadTLUT_pal256(gfx++, (u8 *) tf + e[r->idx + 1].offset);
+            gDPLoadTextureBlock_4b(gfx++, (u8 *) tf + e[r->idx].offset, G_IM_FMT_CI, 16, 16, 0,
                                    G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMASK, G_TX_NOMASK, G_TX_NOLOD, G_TX_NOLOD);
             gSPTextureRectangleYX(gfx++, r->xl, r->yl, r->xh, r->yh, G_TX_RENDERTILE, 0, 0, 0x400, 0x400);
             i++;
