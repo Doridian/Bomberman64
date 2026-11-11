@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 82, eu 82, jp 82
+ * differing words: us 78, eu 78, jp 78
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -18,7 +18,7 @@
  * D_800B15D8[0].unkN (the latter swaps the multiply's registers).
  * func_8026F5E8 and func_8026E3AC keep their x/y/z in an f32[3] (the
  * original's dead stores to it), not in three variables.
- * 38 of 43 match. Left: func_8026DCAC 26, func_8026EE18 26,
+ * 38 of 43 match. Left: func_8026DCAC 26, func_8026EE18 22,
  * func_8026FC08 20, func_8026F5E8 8, func_8026E938 2 (the map's
  * address in t1 where the original has v0).
  */
@@ -758,9 +758,10 @@ s32 func_8026EE18(f32 arg0) {
 
     layer = 0;
     m = D_800B15D8;
+    iy = (s32) (arg0 * 0.01f);
     h = 0;
+    m = m; /* fake (permuter find): keeps m out of the base CSE */
     while (layer < D_800B15D8->unk0 + 1) {
-        iy = (s32) (arg0 * 0.01f);
         if (iy < h) {
             if (layer > 0) {
                 r = layer - 1;
