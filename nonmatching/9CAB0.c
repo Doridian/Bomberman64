@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 523, eu 523, jp 523
+ * differing words: us 517, eu 517, jp 517
  */
 #include "common.h"
 
@@ -1631,8 +1631,7 @@ static void func_80283FC4() {
 
 static void func_80283FCC(UnkStruct_80288040 *arg0) {
     UnkStructA *p;
-    UnkStructA *q;
-    u8 flags;
+    s32 flags;
 
     func_80283FC4();
     func_80283FBC();
@@ -1645,14 +1644,14 @@ static void func_80283FCC(UnkStruct_80288040 *arg0) {
         func_80283DF0(0, arg0);
     }
     if (D_800BA8E8[arg0->unk84].unk0 == 0x1C) {
-        q = func_8022F550(arg0->unk0, 0xF);
-        if (q == NULL) {
+        p = func_8022F550(arg0->unk0, 0xF);
+        if (p == NULL) {
             if (*(UnkStructA **) arg0->unk0->unk20 != NULL) {
-                q = *(UnkStructA **) arg0->unk0->unk20;
+                p = *(UnkStructA **) arg0->unk0->unk20;
             }
         }
-        if ((q != NULL) && (func_8022F4AC(q, 0x10, arg0->unk0) == 0)) {
-            func_80270C24(q, func_80234248(7) << 5, 3);
+        if ((p != NULL) && (func_8022F4AC(p, 0x10, arg0->unk0) == 0)) {
+            func_80270C24(p, func_80234248(7) << 5, 3);
         }
     }
     p = func_8022F550(arg0->unk0, 0x11);
@@ -1660,14 +1659,14 @@ static void func_80283FCC(UnkStruct_80288040 *arg0) {
         arg0->unk0->unk40->unk10 = arg0->unk0->unk58;
         arg0->unk0->unk40->unk14 = arg0->unk0->unk5C;
         arg0->unk0->unk40->unk18 = arg0->unk0->unk60;
-        flags = arg0->unk7A;
-        if (!(flags & 0xF0) && ((arg0->unk0->unk68 != 0.0f) || (arg0->unk0->unk6C != 0.0f))) {
-            if (((u8) (flags & 0xF)) == 2) {
+        if (!(arg0->unk7A & 0xF0) && ((arg0->unk0->unk68 != 0.0f) || (arg0->unk0->unk6C != 0.0f))) {
+            flags = (u8) (arg0->unk7A & 0xF);
+            if (flags == 2) {
                 if (arg0->unk48 != 0) {
                     func_8028805C(arg0);
                 }
                 arg0->unk40 = 0;
-            } else if (!(p->unk8 & 4) || ((flags & 0xF) == 1) || (p->unk8 & 0x20000) || (arg0->unk30 == 2) || (arg0->unk30 == 3)) {
+            } else if (!(p->unk8 & 4) || (flags == 1) || (p->unk8 & 0x20000) || (arg0->unk30 == 2) || (arg0->unk30 == 3)) {
                 arg0->unk68 = func_802700EC(arg0->unk0, p, arg0->unk1C & 0xF0, arg0->unk2C);
                 func_80282430(arg0, 0xF0, 0x30);
                 func_80231408(arg0->unk0, 0x20400);
