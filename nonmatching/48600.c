@@ -7,7 +7,7 @@
  * "NON_MATCHING drafts"). src/48300.c, before it, is another object:
  * func_80232E60 calls its func_8022DB00 with a jal (text_objects.txt).
  * flags: -O3
- * differing words: us 322, eu 322, jp 322
+ * differing words: us 280, eu 280, jp 280
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does. An 8-byte stub (jr ra; nop) is an inlined
@@ -58,9 +58,9 @@
  * left is case 12/20's four stores before the loop: uopt keeps the ball's
  * address in v0 (a block-local CSE of the four istr) where the original
  * uses lui/%lo for each, with p[0], p[1], p[3] loaded in that order.
- * func_802320A8 (295, the size right): 32 opcodes differ (prologue
- * order, spBC[0] loaded before the mode switch for case 2, case 2's
- * a/b/c computed before the sp128 stores, three mov.s), the rest is
+ * func_802320A8 (242, the size right): a few opcodes differ (prologue
+ * order, spBC[0] loaded before the mode switch for case 2, three
+ * mov.s), the rest is
  * register naming: case 1/2's a and b swapped (f22/f24: equal priority,
  * a has the lower bit), the angle wraps' x one float register up (a
  * separately coloured spE4[1] - 90), obj->unk3C in v0 not v1, and the
@@ -70,7 +70,9 @@
  * source's, but the form of an operand counts: func_8022E0AC's mul.s
  * takes the original's order with (*arg0).unk38 (not arg0->unk38) on the
  * right, and func_80230914's add.s with a store of y back to o->unk6C
- * before o->unk6C += o->unk70 (both permuter finds).
+ * before o->unk6C += o->unk70 (both permuter finds). In func_802320A8,
+ * case 2 stores sp128[1] last, and case 1's middle term reuses x (one
+ * local fewer moves the colouring; also permuter finds).
  */
 #include "common.h"
 
@@ -639,7 +641,6 @@ void func_802320A8() {
     f32 spB0[3];
     f32 a;
     f32 b;
-    f32 e;
     f32 d;
     f32 c;
     f32 f;
@@ -701,10 +702,10 @@ void func_802320A8() {
             b = (spBC[1] - obj->unk40->pos[1]) * func_80234434(spB0[1]) * obj->unk3C->unkC;
             c = (spBC[2] - obj->unk40->pos[2]) * func_80234434(spB0[1]) * obj->unk3C->unkC;
             d = func_80234408(spB0[1]) * ((obj->unk40->pos[0] - obj->unk58[0]) * obj->unk3C->unk10);
-            e = func_80234408(spB0[1]) * ((obj->unk40->pos[1] - obj->unk58[1]) * obj->unk3C->unk10);
+            x = func_80234408(spB0[1]) * ((obj->unk40->pos[1] - obj->unk58[1]) * obj->unk3C->unk10);
             f = func_80234408(spB0[1]) * ((obj->unk40->pos[2] - obj->unk58[2]) * obj->unk3C->unk10);
             sp128[0] = obj->unk40->pos[0] + d + a;
-            sp128[1] = obj->unk40->pos[1] + e + b - h;
+            sp128[1] = obj->unk40->pos[1] + x + b - h;
             sp128[2] = obj->unk40->pos[2] + f + c;
             break;
         case 2:
