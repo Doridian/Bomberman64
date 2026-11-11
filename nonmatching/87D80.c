@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 882, eu 882, jp 882
+ * differing words: us 844, eu 844, jp 844
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -943,26 +943,19 @@ loop_4:
 }
 
 s32 func_8026E8E0(s32 arg0) {
-    u8 *var_v0;
+    u8 *p;
+    s32 r;
 
-    var_v0 = D_802A55F4;
-    if (var_v0 != NULL) {
-loop_1:
-        if (arg0 == M2C_FIELD(var_v0, s32 *, 0x40)) {
-            if (M2C_FIELD(var_v0, s32 *, 8) & 1) {
-                return 1;
+    r = 0;
+    for (p = D_802A55F4; p != NULL; p = M2C_FIELD(p, u8 **, 0x7C)) {
+        if (arg0 == M2C_FIELD(p, s32 *, 0x40)) {
+            if (M2C_FIELD(p, s32 *, 8) & 1) {
+                r = 1;
             }
-            /* Duplicate return node #5. Try simplifying control flow for better match */
-            return 0;
+            break;
         }
-        var_v0 = M2C_FIELD(var_v0, void **, 0x7C);
-        if (var_v0 == NULL) {
-            /* Duplicate return node #5. Try simplifying control flow for better match */
-            return 0;
-        }
-        goto loop_1;
     }
-    return 0;
+    return r;
 }
 
 s32 func_8026E8C8() {
@@ -1132,23 +1125,22 @@ void func_8026E338(f32 arg0, f32 arg1, f32 arg2, f32 *arg3, s32 arg4) {
 }
 
 f32 func_8026E2B0(s32 arg0) {
-    s32 var_v1;
-    u8 *var_a0;
-    u8 temp_v0;
+    s32 i;
+    s32 n;
+    s32 sum;
+    f32 r;
 
     if (arg0 >= 0) {
-        var_v1 = 0;
-        if (arg0 > 0) {
-            var_a0 = D_800B15D8;
-            do {
-                temp_v0 = M2C_FIELD(var_a0, u8 *, 0x10);
-                var_a0 += 0xC34;
-                var_v1 += temp_v0;
-            } while ((u32) var_a0 < (u32) ((arg0 * 0xC34) + &D_800B15D8));
+        sum = 0;
+        n = arg0;
+        for (i = 0; i < n; i++) {
+            sum += func_8026DC74(i);
         }
-        return (f32) var_v1 * 100.0f;
+        r = sum * 100.0f;
+    } else {
+        r = -32700.0f;
     }
-    return -32700.0f;
+    return r;
 }
 
 s32 func_8026E278(s32 arg0) {
