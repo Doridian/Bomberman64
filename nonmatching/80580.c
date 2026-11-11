@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 18, eu 18, jp 18
+ * differing words: us 11, eu 11, jp 11
  *
  * The object is the same in all three versions. 70 of the 79 original
  * procedures match (stubs included). The IPA statics
@@ -979,8 +979,8 @@ static s32 func_80269A84(SndHeader *hdr) {
     SndSound *snd;
     SndWave *wave;
 
-    hdr->rom += D_802A1344;
-    hdr->table += D_802A1344;
+    hdr->rom = (u32) D_802A1344 + hdr->rom;
+    hdr->table = (u32) D_802A1344 + hdr->table;
     size = hdr->len;
     if (size == 0) {
         D_802A1348 = 0;
@@ -1203,7 +1203,6 @@ s16 *func_80269680(u32 arg0) {
 
 void func_802691A8() {
     s16 vol;
-    u8 st;
 
     D_802AD238 = func_80298648(D_802AD220);
     if (D_802AD24C == 1 && D_802AD238 == 0) {
@@ -1219,8 +1218,8 @@ void func_802691A8() {
                 }
                 D_802AD23C = 0.0f;
                 D_802AD3C0 = 0;
-                st = D_802AD24C;
-                if ((st ^ 1) == 0) {
+                vol = D_802AD24C;
+                if ((vol ^ 1) == 0) {
                     D_802AD24C = 0;
                 }
             } else if (D_802AD240 != 0.0f) {
