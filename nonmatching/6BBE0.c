@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 6995, eu 6995, jp 6955
+ * differing words: us 6994, eu 6994, jp 6954
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -4896,7 +4896,7 @@ static void func_802515D8(f32 *arg0) {
     func_80250338(M2C_FIELD(arg0, s32 *, 0xC), (u8 *)arg0 + 0x20);
     cur = (s32 *) ((u8 *)arg0 + 0x38);
     func_8026DCAC(M2C_FIELD(arg0, f32 *, 0x20), M2C_FIELD(arg0, f32 *, 0x24), M2C_FIELD(arg0, f32 *, 0x28), cur, 2);
-    hist = (s32 *) ((u8 *)arg0 + M2C_FIELD(arg0, s32 *, 0x11C) * 0x18 + 0xA4);
+    hist = ((s32 (*)[6]) ((u8 *)arg0 + 0xA4))[M2C_FIELD(arg0, s32 *, 0x11C)];
     if (func_8025156C(M2C_FIELD(arg0, f32 **, 0x18)) != 0) {
         if (cur[0] != hist[0] || cur[1] != hist[1] || cur[2] != hist[2]) {
             M2C_FIELD(arg0, s32 *, 0x120) = 0;
@@ -4905,7 +4905,7 @@ static void func_802515D8(f32 *arg0) {
                 M2C_FIELD(arg0, s32 *, 0x11C) = 0;
                 idx = 0;
             }
-            hist = (s32 *) ((u8 *)arg0 + idx * 0x18 + 0xA4);
+            hist = ((s32 (*)[6]) ((u8 *)arg0 + 0xA4))[idx];
             hist[0] = cur[0];
             hist[1] = cur[1];
             hist[2] = cur[2];
