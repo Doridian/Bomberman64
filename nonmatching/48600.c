@@ -7,7 +7,7 @@
  * "NON_MATCHING drafts"). src/48300.c, before it, is another object:
  * func_80232E60 calls its func_8022DB00 with a jal (text_objects.txt).
  * flags: -O3
- * differing words: us 267, eu 267, jp 267
+ * differing words: us 262, eu 262, jp 262
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does. An 8-byte stub (jr ra; nop) is an inlined
@@ -58,7 +58,7 @@
  * left is case 12/20's four stores before the loop: uopt keeps the ball's
  * address in v0 (a block-local CSE of the four istr) where the original
  * uses lui/%lo for each, with p[0], p[1], p[3] loaded in that order.
- * func_802320A8 (229, the size right): a few opcodes differ (prologue
+ * func_802320A8 (224, the size right): a few opcodes differ (prologue
  * order, spBC[0] loaded before the mode switch for case 2, three
  * mov.s), the rest is
  * register naming: case 1/2's a and b swapped (f22/f24: equal priority,
@@ -752,15 +752,15 @@ void func_802320A8() {
                 obj->unk4C[1] = n;
             }
             obj->unk4C[2] = spF8[2];
-            obj->unk40->pos[0] = sp110[0] + spC8[0];
-            obj->unk40->pos[1] = sp110[1] + spC8[1];
+            obj->unk40->pos[0] = spC8[0] + sp110[0];
+            obj->unk40->pos[1] = spC8[1] + sp110[1];
             if (obj->unk3C->flags & 0x100000) {
                 y = func_8026E938(obj->unk40);
-                if (y != 20000.0f && sp110[1] + spC8[1] <= y) {
+                if (y != 20000.0f && spC8[1] + sp110[1] <= y) {
                     obj->unk40->pos[1] = y;
                 }
             }
-            obj->unk40->pos[2] = sp110[2] + spC8[2];
+            obj->unk40->pos[2] = spC8[2] + sp110[2];
         }
         switch (obj->unk3C->flags & 0xF0000) {
         default:
