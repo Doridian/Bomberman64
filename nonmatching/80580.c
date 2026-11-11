@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 82, eu 82, jp 82
+ * differing words: us 61, eu 61, jp 61
  *
  * The object is the same in all three versions. 70 of the 79 original
  * procedures match (stubs included). The IPA statics
@@ -1537,6 +1537,7 @@ void func_802686B8() {
 
 static void func_80268430(s16 idx, s16 script, s8 type) {
     VoiceScript *s;
+    u16 *t;
 
     if (D_802AD658 != NULL) {
         s = &D_802AD65C[idx];
@@ -1546,7 +1547,8 @@ static void func_80268430(s16 idx, s16 script, s8 type) {
         s->flags = 0;
         s->script = script;
         if (script >= 0) {
-            s->pc = (u8 *) D_802AD658 + (*D_802AD658)[script];
+            t = *D_802AD658;
+            s->pc = (u8 *) D_802AD658 + t[script];
             s->wait = 0;
             s->nchild = 0;
             s->loop = 0;
