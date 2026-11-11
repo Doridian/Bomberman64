@@ -6,7 +6,7 @@
  * boxes, func_8022E884). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1284, eu 1284, jp 1284
+ * differing words: us 1222, eu 1222, jp 1222
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does (the stubs at 0x8022E0A4-0x8022E87C are
@@ -34,7 +34,7 @@
  * which IDO does only for a variable live into the loop; the use in the
  * first switch's default stands in for whatever made it live there, at
  * the cost of its two words; t stays in memory),
- * func_8022FF58 with func_8023017C (68: float colouring),
+ * func_8022FF58 (4),
  * func_8022FC90 (14: the found value belongs in v0), func_80232E60 (12:
  * IDO inlines func_8022DB00 into it, the original doesn't).
  */
@@ -1509,6 +1509,7 @@ void func_8022FF58(f32 *arg0, f32 *arg1, f32 *arg2) {
     f32 dy;
     f32 dx;
     f32 v;
+    f32 u;
     f32 w;
 
     dx = arg1[0] - arg0[0];
@@ -1540,14 +1541,14 @@ void func_8022FF58(f32 *arg0, f32 *arg1, f32 *arg2) {
             }
             arg2[0] = w;
         }
-        v = arg2[1] + 90.0f;
-        if (v >= 360.0f) {
-            arg2[1] = v - 360.0f;
+        u = arg2[1] + 90.0f;
+        if (u >= 360.0f) {
+            arg2[1] = u - 360.0f;
         } else {
-            if (v < 0.0f) {
-                w = v + 360.0f;
+            if (u < 0.0f) {
+                w = u + 360.0f;
             } else {
-                w = v;
+                w = u;
             }
             arg2[1] = w;
         }
