@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2662, eu 2662, jp 2662
+ * differing words: us 2550, eu 2550, jp 2550
  */
 #include "common.h"
 
@@ -1279,7 +1279,6 @@ static s32 func_80284CAC(UnkStruct_80288040 *arg0) {
         if (hit != 0) {
             return 4;
         }
-        return 1;
     }
     return 1;
 }
