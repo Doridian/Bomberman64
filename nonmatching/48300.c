@@ -6,10 +6,11 @@
  * boxes, func_8022E884). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1450, eu 1450, jp 1450
+ * differing words: us 1430, eu 1430, jp 1430
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
- * as the original does (the stubs at 0x8022E874/7C are empty globals).
+ * as the original does (the stubs at 0x8022E0A4-0x8022E87C are
+ * func_8022E884's cases, static and inlined, named for their stubs).
  * 48 of 72 global blocks match. What is understood:
  *   - the function-local statics (D_802A5708-D_802A5770 and
  *     D_802A59D0-D_802A5A0C in func_8022E884, D_802A593C-48 in
@@ -21,10 +22,9 @@
  *     func_80232FF8's register saves into func_802334CC;
  *   - float sums are written (a*b + c*d + e*f) + g, and int and float
  *     constants (90, 0 in compares) are kept apart as the original's are.
- * Biggest left: func_8022E884 (766 words: the frame is 0xC0 against our
- * 0x88; the original spills only two per-case floats and keeps the rest
- * in s0-s4 and fs0-fs3, so its cases are probably inlined static
- * helpers), func_80231D88 with its static func_802320A8 (477: the
+ * Biggest left: func_8022E884 (758 words: the original reaches case 1's
+ * arrays through a2/a3 and the others' with lui/%lo; file-scope statics
+ * keep them in s registers), func_80231D88 with its static func_802320A8 (477: the
  * original promotes a loop variable to fs3 and doesn't hoist 90.0f),
  * func_8022FF58 with func_8023017C (72: colouring, and the argument
  * a3 is set first in the original's calls), func_80231274 (30),
@@ -178,13 +178,9 @@ void func_8022DE00(void);
 void func_8022DE6C(void);
 f32 func_8022DF68(f32 *arg0, f32 *arg1);
 static s32 func_8022DFBC(f32 *arg0, f32 *arg1);
-static void func_8022E0A4();
 static void func_8022E0AC(UnkStructA80 *arg0, f32 *arg1);
-void func_8022E170(void);
 static s32 func_8022E178(f32 *arg0, f32 *arg1);
-static void func_8022E264();
 static void func_8022E26C(UnkStructA80 *arg0, f32 *arg1);
-void func_8022E328(void);
 f32 func_8022E330(f32 *arg0, f32 *arg1);
 void func_8022E364(f32 *arg0, f32 *arg1, f32 *arg2);
 void func_8022E3D4(f32 m[4][4], f32 *v);
@@ -1859,10 +1855,128 @@ static s32 func_8022F3F8(f32 *arg0, f32 *arg1, s32 arg2, s32 arg3) {
     return r;
 }
 
-void func_8022E874(void) {
+static f32 D_802A5708[4];
+static f32 D_802A5720[4];
+static f32 D_802A5738[8];
+static f32 D_802A5760[8];
+static f32 D_802A59D0[4];
+static f32 D_802A59E8[4];
+static f32 D_802A5A00[4];
+
+static s32 func_8022E87C(UnkStructA80 *arg0, UnkStructA80 *arg1) {
+    s32 r;
+    s32 dx;
+    s32 dy;
+    s32 dz;
+
+    func_8022E26C(arg0, D_802A5708);
+    func_8022E26C(arg1, D_802A5720);
+    r = D_802A5708[3] + D_802A5720[3];
+    dx = D_802A5708[0] - D_802A5720[0];
+    dy = D_802A5708[1] - D_802A5720[1];
+    dz = D_802A5708[2] - D_802A5720[2];
+    if (dx * dx + dz * dz + dy * dy < r * r) {
+        return 1;
+    }
+    return 0;
 }
 
-void func_8022E87C(void) {
+static s32 func_8022E874(UnkStructA80 *arg0, UnkStructA80 *arg1) {
+    f32 n;
+    f32 y;
+
+    func_8022E0AC(arg0, D_802A5738);
+    func_8022E0AC(arg1, D_802A5760);
+    if (D_802A5738[4] + D_802A5738[3] + D_802A5760[4] + D_802A5760[3] < func_8022DF68(D_802A5738, D_802A5760)) {
+        return 0;
+    }
+    n = D_802A5738[4] / (D_802A5738[3] * 2.0f);
+    y = D_802A5738[3];
+    D_802A59D0[3] = D_802A5738[3];
+    while (n > 0.0f) {
+        guMtxIdentF((f32 (*)[4]) D_802A57C0);
+        func_8029C8D0((f32 (*)[4]) D_802A57C0, D_802A5738[5], D_802A5738[6], D_802A5738[7]);
+        func_8029CA80((f32 (*)[4]) D_802A57C0, 0.0f, y, 0.0f);
+        D_802A59D0[0] = D_802A59D0[1] = D_802A59D0[2] = 0.0f;
+        func_8022E3D4((f32 (*)[4]) D_802A57C0, D_802A59D0);
+        D_802A59D0[0] += D_802A5738[0];
+        D_802A59D0[1] += D_802A5738[1];
+        D_802A59D0[2] += D_802A5738[2];
+        if (func_8022E4DC(D_802A59D0, D_802A5760) == 1) {
+            return 1;
+        }
+        n -= 1.0f;
+        if (n >= 1.0f) {
+            y += D_802A59D0[3] + D_802A59D0[3];
+        } else {
+            y += (D_802A59D0[3] + D_802A59D0[3]) * n;
+        }
+    }
+    return 0;
+}
+
+static s32 func_8022E328(s32 sa, UnkStructA80 *arg0, UnkStructA80 *arg1) {
+    if (sa == 1) {
+        func_8022E26C(arg0, D_802A5708);
+        func_8022E0AC(arg1, D_802A5738);
+    } else if (sa == 8) {
+        func_8022E0AC(arg0, D_802A5738);
+        func_8022E26C(arg1, D_802A5708);
+    } else {
+        for (;;) {
+        }
+    }
+    return func_8022E178(D_802A5708, D_802A5738);
+}
+
+static s32 func_8022E264(UnkStructA80 *arg0, UnkStructA80 *arg1) {
+    f32 step;
+    f32 t;
+
+    func_8022E0AC(arg0, D_802A5738);
+    func_8022E0AC(arg1, D_802A5760);
+    D_802A59E8[0] = D_802A5738[0];
+    D_802A59E8[1] = D_802A5738[1] + D_802A5738[3];
+    D_802A59E8[3] = D_802A5738[3];
+    D_802A59E8[2] = D_802A5738[2];
+    step = D_802A5738[3] * 2.0f;
+    for (t = 0.0f; t < D_802A5738[4];) {
+        if (func_8022E178(D_802A59E8, D_802A5760) != 0) {
+            return 1;
+        }
+        t += step;
+        if (t + step <= D_802A5738[4]) {
+            D_802A59E8[1] += step;
+        } else {
+            D_802A59E8[1] += D_802A5738[4] - t;
+        }
+    }
+    return 0;
+}
+
+static s32 func_8022E170(UnkStructA80 *arg0, UnkStructA80 *arg1) {
+    f32 step;
+    f32 t;
+
+    func_8022E0AC(arg0, D_802A5738);
+    func_8022E0AC(arg1, D_802A5760);
+    D_802A5A00[0] = D_802A5738[0];
+    D_802A5A00[1] = D_802A5738[1] + D_802A5738[3];
+    D_802A5A00[3] = D_802A5738[3];
+    D_802A5A00[2] = D_802A5738[2];
+    step = D_802A5738[3] * 2.0f;
+    for (t = 0.0f; t < D_802A5738[4];) {
+        if (func_8022DFBC(D_802A5A00, D_802A5760) != 0) {
+            return 1;
+        }
+        t += step;
+        if (t + step <= D_802A5738[4]) {
+            D_802A5A00[1] += step;
+        } else {
+            D_802A5A00[1] += D_802A5738[4] - t;
+        }
+    }
+    return 0;
 }
 
 static s32 func_8022E4DC(f32 *a, f32 *b) {
@@ -1950,18 +2064,10 @@ f32 func_8022E330(f32 *a, f32 *b) {
     return a[2] * b[2] + (a[1] * b[1] + b[0] * a[0]);
 }
 
-void func_8022E328() {
-
-}
-
-static void func_8022E264() {
-}
-
 static void func_8022E26C(UnkStructA80 *arg0, f32 *arg1) {
     f32 h;
     f32 r;
 
-    func_8022E264();
     if (arg0->unk30 & 0x20) {
         h = r = 1.0f;
     } else {
@@ -1998,10 +2104,6 @@ static s32 func_8022E178(f32 *a, f32 *b) {
         return 0;
     }
     return 1;
-}
-
-void func_8022E170() {
-
 }
 
 static void func_8022E0A4() {
@@ -2060,119 +2162,53 @@ f32 func_8022DF68(f32 *arg0, f32 *arg1) {
 }
 
 s32 func_8022E884(UnkStructA80 *arg0, UnkStructA80 *arg1) {
-    static f32 D_802A5708[4];
-    static f32 D_802A5720[4];
-    static f32 D_802A5738[8];
-    static f32 D_802A5760[8];
-    static f32 D_802A59D0[4];
-    static f32 D_802A59E8[4];
-    static f32 D_802A5A00[4];
     s32 sa;
+    s32 sb;
     s32 hit;
     s32 ret;
-    s32 r;
-    s32 dx;
-    s32 dy;
-    s32 dz;
-    f32 n;
-    f32 y;
-    f32 step;
-    f32 t;
 
     sa = arg0->unk30 & ~0x20;
-    switch (sa | (arg1->unk30 & ~0x20)) {
+    sb = arg1->unk30 & ~0x20;
+    switch (sa | sb) {
     case 1:
-        func_8022E26C(arg0, D_802A5708);
-        func_8022E26C(arg1, D_802A5720);
-        r = D_802A5708[3] + D_802A5720[3];
-        dx = D_802A5708[0] - D_802A5720[0];
-        dy = D_802A5708[1] - D_802A5720[1];
-        dz = D_802A5708[2] - D_802A5720[2];
-        if (dx * dx + dz * dz + dy * dy < r * r) {
-            hit = 1;
-        } else {
-            hit = 0;
-        }
+        hit = func_8022E87C(arg0, arg1);
         break;
     case 2:
-        func_8022E0AC(arg0, D_802A5738);
-        func_8022E0AC(arg1, D_802A5760);
-        hit = 0;
-        if (D_802A5738[4] + D_802A5738[3] + D_802A5760[4] + D_802A5760[3] < func_8022DF68(D_802A5738, D_802A5760)) {
-            break;
-        }
-        n = D_802A5738[4] / (D_802A5738[3] * 2.0f);
-        y = D_802A5738[3];
-        D_802A59D0[3] = D_802A5738[3];
-        hit = 0;
-        while (n > 0.0f) {
-            guMtxIdentF((f32 (*)[4]) D_802A57C0);
-            func_8029C8D0((f32 (*)[4]) D_802A57C0, D_802A5738[5], D_802A5738[6], D_802A5738[7]);
-            func_8029CA80((f32 (*)[4]) D_802A57C0, 0.0f, y, 0.0f);
-            D_802A59D0[0] = D_802A59D0[1] = D_802A59D0[2] = 0.0f;
-            func_8022E3D4((f32 (*)[4]) D_802A57C0, D_802A59D0);
-            D_802A59D0[0] += D_802A5738[0];
-            D_802A59D0[1] += D_802A5738[1];
-            D_802A59D0[2] += D_802A5738[2];
-            if (func_8022E4DC(D_802A59D0, D_802A5760) == 1) {
-                hit = 1;
-                break;
-            }
-            n -= 1.0f;
-            if (n >= 1.0f) {
-                y += D_802A59D0[3] + D_802A59D0[3];
-            } else {
-                y += (D_802A59D0[3] + D_802A59D0[3]) * n;
-            }
-        }
+        hit = func_8022E874(arg0, arg1);
         break;
     case 3:
-        switch (sa) {
-        case 1:
-            func_8022E26C(arg0, D_802A5708);
-            func_8022E0AC(arg1, D_802A5738);
-            break;
-        case 2:
-            func_8022E0AC(arg0, D_802A5738);
-            func_8022E26C(arg1, D_802A5708);
-            break;
-        default:
-            for (;;) {
+            switch (sa) {
+            case 1:
+                func_8022E26C(arg0, D_802A5708);
+                func_8022E0AC(arg1, D_802A5738);
+                break;
+            case 2:
+                func_8022E0AC(arg0, D_802A5738);
+                func_8022E26C(arg1, D_802A5708);
+                break;
+            default:
+                for (;;) {
+                }
             }
-        }
         hit = func_8022E4DC(D_802A5708, D_802A5738);
-        func_8022E328();
         break;
     case 9:
-        switch (sa) {
-        case 1:
-            func_8022E26C(arg0, D_802A5708);
-            func_8022E0AC(arg1, D_802A5738);
-            break;
-        case 8:
-            func_8022E0AC(arg0, D_802A5738);
-            func_8022E26C(arg1, D_802A5708);
-            break;
-        default:
-            for (;;) {
-            }
-        }
-        hit = func_8022E178(D_802A5708, D_802A5738);
+        hit = func_8022E328(sa, arg0, arg1);
         break;
     case 5:
-        switch (sa) {
-        case 1:
-            func_8022E26C(arg0, D_802A5708);
-            func_8022E0AC(arg1, D_802A5738);
-            break;
-        case 4:
-            func_8022E0AC(arg0, D_802A5738);
-            func_8022E26C(arg1, D_802A5708);
-            break;
-        default:
-            for (;;) {
+            switch (sa) {
+            case 1:
+                func_8022E26C(arg0, D_802A5708);
+                func_8022E0AC(arg1, D_802A5738);
+                break;
+            case 4:
+                func_8022E0AC(arg0, D_802A5738);
+                func_8022E26C(arg1, D_802A5708);
+                break;
+            default:
+                for (;;) {
+                }
             }
-        }
         if (D_802A5708[1] <= D_802A5738[1]) {
             if (D_802A5708[1] + D_802A5708[3] <= D_802A5738[1]) {
                 hit = 0;
@@ -2190,58 +2226,38 @@ s32 func_8022E884(UnkStructA80 *arg0, UnkStructA80 *arg1) {
         D_802A5790[2] = D_802A5738[2];
         if (D_802A5708[3] + D_802A5738[3] <= func_8022DF68(D_802A5780, D_802A5790)) {
             hit = 0;
-        } else {
-            hit = 1;
+            break;
         }
+        hit = 1;
         break;
     case 17:
-        switch (sa) {
-        case 1:
-            func_8022E26C(arg0, D_802A5708);
-            func_8022E0AC(arg1, D_802A5738);
-            break;
-        case 16:
-            func_8022E0AC(arg0, D_802A5738);
-            func_8022E26C(arg1, D_802A5708);
-            break;
-        default:
-            for (;;) {
+            switch (sa) {
+            case 1:
+                func_8022E26C(arg0, D_802A5708);
+                func_8022E0AC(arg1, D_802A5738);
+                break;
+            case 16:
+                func_8022E0AC(arg0, D_802A5738);
+                func_8022E26C(arg1, D_802A5708);
+                break;
+            default:
+                for (;;) {
+                }
             }
-        }
         hit = func_8022DFBC(D_802A5708, D_802A5738);
         break;
     case 12:
-        func_8022E0AC(arg0, D_802A5738);
-        func_8022E0AC(arg1, D_802A5760);
-        D_802A59E8[0] = D_802A5738[0];
-        D_802A59E8[1] = D_802A5738[1] + D_802A5738[3];
-        D_802A59E8[3] = D_802A5738[3];
-        D_802A59E8[2] = D_802A5738[2];
-        step = D_802A5738[3] * 2.0f;
-        hit = 0;
-        for (t = 0.0f; t < D_802A5738[4];) {
-            if (func_8022E178(D_802A59E8, D_802A5760) != 0) {
-                hit = 1;
-                break;
-            }
-            t += step;
-            if (t + step <= D_802A5738[4]) {
-                D_802A59E8[1] += step;
-            } else {
-                D_802A59E8[1] += D_802A5738[4] - t;
-            }
-        }
+        hit = func_8022E264(arg0, arg1);
         break;
     case 4:
-        func_8022E170();
         func_8022E0AC(arg0, D_802A5738);
         func_8022E0AC(arg1, D_802A5760);
         if (D_802A5738[1] <= D_802A5760[1]) {
-            if (D_802A5738[1] + D_802A5738[4] <= D_802A5760[1]) {
+            if (D_802A5738[1] + D_802A5738[3] <= D_802A5760[1]) {
                 hit = 0;
                 break;
             }
-        } else if (D_802A5760[1] + D_802A5760[4] <= D_802A5738[1]) {
+        } else if (D_802A5760[1] + D_802A5760[4] <= D_802A5738[1] - D_802A5738[3]) {
             hit = 0;
             break;
         }
@@ -2253,31 +2269,12 @@ s32 func_8022E884(UnkStructA80 *arg0, UnkStructA80 *arg1) {
         D_802A5790[2] = D_802A5760[2];
         if (D_802A5738[3] + D_802A5760[3] <= func_8022DF68(D_802A5780, D_802A5790)) {
             hit = 0;
-        } else {
-            hit = 1;
+            break;
         }
+        hit = 1;
         break;
     case 20:
-        func_8022E0AC(arg0, D_802A5738);
-        func_8022E0AC(arg1, D_802A5760);
-        D_802A5A00[0] = D_802A5738[0];
-        D_802A5A00[1] = D_802A5738[1] + D_802A5738[3];
-        D_802A5A00[3] = D_802A5738[3];
-        D_802A5A00[2] = D_802A5738[2];
-        step = D_802A5738[3] * 2.0f;
-        hit = 0;
-        for (t = 0.0f; t < D_802A5738[4];) {
-            if (func_8022DFBC(D_802A5A00, D_802A5760) != 0) {
-                hit = 1;
-                break;
-            }
-            t += step;
-            if (t + step <= D_802A5738[4]) {
-                D_802A5A00[1] += step;
-            } else {
-                D_802A5A00[1] += D_802A5738[4] - t;
-            }
-        }
+        hit = func_8022E170(arg0, arg1);
         break;
     default:
         for (;;) {
