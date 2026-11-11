@@ -6,7 +6,7 @@
  * boxes, func_8022E884). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1323, eu 1323, jp 1323
+ * differing words: us 1291, eu 1291, jp 1291
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does (the stubs at 0x8022E0A4-0x8022E87C are
@@ -23,6 +23,10 @@
  *     into func_802334CC, and the others would get only t6-t9;
  *   - float sums are written (a*b + c*d + e*f) + g, and int and float
  *     constants (90, 0 in compares) are kept apart as the original's are.
+ *   - IDO -O3 gives a static function's parameters registers in the
+ *     order its body first uses them, and its callers set them in the
+ *     source's order: func_8022F3F8's mask is its first parameter (the
+ *     callers set a3 first), though it is used last and so gets a3.
  * Biggest left: func_8022E884 (758 words: the original reaches case 1's
  * arrays through a2/a3 and the others' with lui/%lo; file-scope statics
  * keep them in s registers), func_802320A8 (398: the original keeps n in fs3
@@ -30,8 +34,7 @@
  * which IDO does only for a variable live into the loop; the use in the
  * first switch's default stands in for whatever made it live there, at
  * the cost of its two words; t stays in memory),
- * func_8022FF58 with func_8023017C (72: colouring, and the argument
- * a3 is set first in the original's calls),
+ * func_8022FF58 with func_8023017C (68: float colouring),
  * func_8022FC90 (14: the found value belongs in v0), func_80232E60 (12:
  * IDO inlines func_8022DB00 into it, the original doesn't).
  */
@@ -190,7 +193,7 @@ void func_8022E364(f32 *arg0, f32 *arg1, f32 *arg2);
 void func_8022E3D4(f32 m[4][4], f32 *v);
 static s32 func_8022E4DC(f32 *arg0, f32 *arg1);
 s32 func_8022E884(UnkStructA80 *arg0, UnkStructA80 *arg1);
-static s32 func_8022F3F8(f32 *arg0, f32 *arg1, s32 arg2, s32 arg3);
+static s32 func_8022F3F8(s32 arg0, f32 *arg1, f32 *arg2, s32 arg3);
 f32 *func_8022F4AC(f32 *arg0, s32 arg1, f32 *arg2);
 f32 *func_8022F550(f32 *arg0, s32 arg1);
 static s32 func_8022F5E4(f32 *arg0, u8 *arg1, u8 *arg2);
@@ -490,7 +493,7 @@ s32 func_80232D18(f32 *arg0, s32 arg1) {
         if (o->unk4 >= 0xD0) {
             break;
         }
-        if (func_8022F3F8(arg0, (f32 *) o, 0, arg1) != 0 && func_8022E884(arg0, (f32 *) o) != 0) {
+        if (func_8022F3F8(arg1, arg0, (f32 *) o, 0) != 0 && func_8022E884(arg0, (f32 *) o) != 0) {
             return o->unk8 | ((UnkStructA80 *) arg0)->unk14;
         }
     }
@@ -505,7 +508,7 @@ s32 func_80232C74(f32 *arg0, s32 arg1) {
         if (o->unk4 >= 0xD0) {
             break;
         }
-        if (func_8022F3F8(arg0, (f32 *) o, 1, arg1) != 0 && func_8022E884(arg0, (f32 *) o) != 0) {
+        if (func_8022F3F8(arg1, arg0, (f32 *) o, 1) != 0 && func_8022E884(arg0, (f32 *) o) != 0) {
             return o->unk8 | ((UnkStructA80 *) arg0)->unk14;
         }
     }
@@ -520,7 +523,7 @@ s32 func_80232BD0(f32 *arg0, s32 arg1) {
         if (o->unk4 >= 0xD0) {
             break;
         }
-        if (func_8022F3F8(arg0, (f32 *) o, 2, arg1) != 0 && func_8022E884(arg0, (f32 *) o) != 0) {
+        if (func_8022F3F8(arg1, arg0, (f32 *) o, 2) != 0 && func_8022E884(arg0, (f32 *) o) != 0) {
             return o->unk8 | ((UnkStructA80 *) arg0)->unk14;
         }
     }
@@ -1436,7 +1439,7 @@ static f32 *func_802304C0(s32 arg0, f32 *arg1, s32 arg2) {
         if (D_802A5A14->unk4 >= 0xD0) {
             break;
         }
-        D_802A5A20 = func_8022F3F8(arg1, (f32 *) D_802A5A14, arg2, arg0);
+        D_802A5A20 = func_8022F3F8(arg0, arg1, (f32 *) D_802A5A14, arg2);
         if (D_802A5A20 != 0 && func_8022E884(arg1, (f32 *) D_802A5A14) != 0) {
             func_8022F808((f32 *) D_802A5A14, D_802A5790);
             D_802A5A1C = func_8022DF68(D_802A5780, D_802A5790);
@@ -1482,7 +1485,7 @@ static void func_8023017C(s32 arg0, u8 *arg1, f32 *arg2, s32 arg3) {
         if (D_802A5734->unk4 >= 0xD0) {
             break;
         }
-        D_802A578C = func_8022F3F8(arg2, (f32 *) D_802A5734, arg3, arg0);
+        D_802A578C = func_8022F3F8(arg0, arg2, (f32 *) D_802A5734, arg3);
         if (D_802A578C != 0 && func_8022E884((UnkStructA80 *) arg2, D_802A5734) != 0) {
             func_8022F808((f32 *) D_802A5734, D_802A5780);
             func_8022FF58(D_802A5780, D_802A5790, D_802A57B0);
@@ -1717,7 +1720,7 @@ static f32 *func_8022F844(s32 arg0, f32 *arg1, s32 arg2, f32 *arg3) {
         if (D_802A593C->unk4 >= 0xD0) {
             break;
         }
-        D_802A5948 = func_8022F3F8(arg1, (f32 *) D_802A593C, arg2, arg0);
+        D_802A5948 = func_8022F3F8(arg0, arg1, (f32 *) D_802A593C, arg2);
         if (D_802A5948 != 0) {
             func_8022F808((f32 *) D_802A593C, D_802A5790);
             D_802A5944 = func_8022DF68(D_802A5780, D_802A5790);
@@ -1797,7 +1800,7 @@ f32 *func_8022F550(f32 *arg0, s32 arg1) {
         if (o->unk4 >= 0xD0) {
             break;
         }
-        if (func_8022F3F8(arg0, (f32 *) o, 0, arg1) != 0 && func_8022E884((UnkStructA80 *) arg0, o) != 0) {
+        if (func_8022F3F8(arg1, arg0, (f32 *) o, 0) != 0 && func_8022E884((UnkStructA80 *) arg0, o) != 0) {
             return (f32 *) o;
         }
     }
@@ -1811,7 +1814,7 @@ f32 *func_8022F4AC(f32 *arg0, s32 arg1, f32 *arg2) {
         if (o->unk4 >= 0xD0) {
             break;
         }
-        if (o != (UnkStructA80 *) arg2 && func_8022F3F8(arg0, (f32 *) o, 0, arg1) != 0 &&
+        if (o != (UnkStructA80 *) arg2 && func_8022F3F8(arg1, arg0, (f32 *) o, 0) != 0 &&
             func_8022E884((UnkStructA80 *) arg0, o) != 0) {
             return (f32 *) o;
         }
@@ -1819,29 +1822,29 @@ f32 *func_8022F4AC(f32 *arg0, s32 arg1, f32 *arg2) {
     return NULL;
 }
 
-static s32 func_8022F3F8(f32 *arg0, f32 *arg1, s32 arg2, s32 arg3) {
+static s32 func_8022F3F8(s32 arg0, f32 *arg1, f32 *arg2, s32 arg3) {
     s32 r;
 
-    if (arg0 == arg1) {
+    if (arg1 == arg2) {
         return 0;
     }
-    switch (arg2) {
+    switch (arg3) {
     case 0:
-        if (((UnkStructA80 *) arg1)->unk8 & arg3) {
+        if (((UnkStructA80 *) arg2)->unk8 & arg0) {
             r = 1;
         } else {
             r = 0;
         }
         break;
     case 1:
-        if (arg3 == (((UnkStructA80 *) arg1)->unk8 & arg3)) {
+        if (arg0 == (((UnkStructA80 *) arg2)->unk8 & arg0)) {
             r = 1;
         } else {
             r = 0;
         }
         break;
     case 2:
-        if (arg3 == (((UnkStructA80 *) arg1)->unk8 & 0x3FFFF)) {
+        if (arg0 == (((UnkStructA80 *) arg2)->unk8 & 0x3FFFF)) {
             r = 1;
         } else {
             r = 0;
