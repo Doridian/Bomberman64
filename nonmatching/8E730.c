@@ -5,7 +5,7 @@
  * global, emitted in the original's order. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2014, eu 2014, jp 2014
+ * differing words: us 2004, eu 2004, jp 2004
  *
  * 13 of 47 match. Biggest left: func_802741D8 461, func_8027655C 436,
  * func_80274994 320, func_80276D68 171: m2c's control flow and untyped
@@ -1483,38 +1483,32 @@ void func_80275590(s16 *arg0) {
 }
 
 void func_802752BC(s16 *arg0) {
-    s16 sp64;
-    f32 sp60;
-    f32 sp5C;
-    f32 sp58;
-    s16 *sp48;
-    s16 *sp44;
-    s16 temp_a2;
-    u16 var_s1;
+    s16 id;
+    f32 x;
+    f32 y;
+    f32 z;
+    u16 k;
 
-    sp64 = M2C_FIELD(arg0, s16 *, 0xE);
-    var_s1 = M2C_FIELD(arg0, u16 *, 0x66);
-    func_80275120(M2C_FIELD(arg0, f32 *, 0x40), M2C_FIELD(arg0, f32 *, 0x44), M2C_FIELD(arg0, f32 *, 0x48), &sp60, &sp5C, &sp58);
-    temp_a2 = M2C_FIELD(arg0, s16 *, 0x10);
-    if (temp_a2 & 0x100) {
-        var_s1 = 6;
+    id = ((Ent88 *) arg0)->unkE;
+    k = ((Ent88 *) arg0)->unk66;
+    func_80275120(((Ent88 *) arg0)->x, ((Ent88 *) arg0)->y, ((Ent88 *) arg0)->z, &x, &y, &z);
+    if (((Ent88 *) arg0)->unk10 & 0x100) {
+        k = 6;
     }
-    if (var_s1 == 3) {
-        M2C_FIELD(arg0, void **, 0x24) = func_80277FC4(sp64, 0, temp_a2, 0, 0x14, sp60, sp5C, sp58, (s16) (s32) var_s1, (s32) ((u8 *)arg0 + 0x24));
-        M2C_FIELD(arg0, void **, 0x28) = NULL;
-        M2C_FIELD(arg0, void **, 0x2C) = NULL;
+    if (k == 3) {
+        ((Ent88 *) arg0)->unk24[0] = func_80277FC4(id, 0, ((Ent88 *) arg0)->unk10, 0, 20, x, y, z, k, (s32) &((Ent88 *) arg0)->unk24[0]);
+        ((Ent88 *) arg0)->unk24[1] = NULL;
+        ((Ent88 *) arg0)->unk24[2] = NULL;
     }
-    if (var_s1 == 4) {
-        M2C_FIELD(arg0, void **, 0x24) = func_80277FC4(sp64, 1, M2C_FIELD(arg0, s16 *, 0x10), 0, 0x14, sp60, sp5C, sp58, (s16) (s32) (s16) var_s1, (s32) ((u8 *)arg0 + 0x24));
-        M2C_FIELD(arg0, void **, 0x28) = func_80277FC4(sp64, 7, M2C_FIELD(arg0, s16 *, 0x10), 0, 0x14, sp60, sp5C, sp58, (s16) (s32) (s16) var_s1, (s32) ((u8 *)arg0 + 0x28));
-        M2C_FIELD(arg0, void **, 0x2C) = func_80277FC4(sp64, 8, M2C_FIELD(arg0, s16 *, 0x10), 0, 0x14, sp60, sp5C, sp58, (s16) (s32) (s16) var_s1, (s32) ((u8 *)arg0 + 0x2C));
+    if (k == 4) {
+        ((Ent88 *) arg0)->unk24[0] = func_80277FC4(id, 1, ((Ent88 *) arg0)->unk10, 0, 20, x, y, z, k, (s32) &((Ent88 *) arg0)->unk24[0]);
+        ((Ent88 *) arg0)->unk24[1] = func_80277FC4(id, 7, ((Ent88 *) arg0)->unk10, 0, 20, x, y, z, k, (s32) &((Ent88 *) arg0)->unk24[1]);
+        ((Ent88 *) arg0)->unk24[2] = func_80277FC4(id, 8, ((Ent88 *) arg0)->unk10, 0, 20, x, y, z, k, (s32) &((Ent88 *) arg0)->unk24[2]);
     }
-    if ((s32) var_s1 >= 5) {
-        sp44 = (u8 *)arg0 + 0x2C;
-        sp48 = (u8 *)arg0 + 0x28;
-        M2C_FIELD(arg0, void **, 0x24) = func_80277FC4(sp64, 2, M2C_FIELD(arg0, s16 *, 0x10), 0, 0x14, sp60, sp5C, sp58, (s16) (s32) (s16) var_s1, (s32) ((u8 *)arg0 + 0x24));
-        M2C_FIELD(arg0, void **, 0x28) = func_80277FC4(sp64, 7, M2C_FIELD(arg0, s16 *, 0x10), 0, 0x14, sp60, sp5C, sp58, (s16) (s32) (s16) var_s1, (s32) sp48);
-        M2C_FIELD(arg0, void **, 0x2C) = func_80277FC4(sp64, 4, M2C_FIELD(arg0, s16 *, 0x10), 0, 0x14, sp60, sp5C, sp58, (s16) (s32) (s16) var_s1, (s32) sp44);
+    if (k >= 5) {
+        ((Ent88 *) arg0)->unk24[0] = func_80277FC4(id, 2, ((Ent88 *) arg0)->unk10, 0, 20, x, y, z, k, (s32) &((Ent88 *) arg0)->unk24[0]);
+        ((Ent88 *) arg0)->unk24[1] = func_80277FC4(id, 7, ((Ent88 *) arg0)->unk10, 0, 20, x, y, z, k, (s32) &((Ent88 *) arg0)->unk24[1]);
+        ((Ent88 *) arg0)->unk24[2] = func_80277FC4(id, 4, ((Ent88 *) arg0)->unk10, 0, 20, x, y, z, k, (s32) &((Ent88 *) arg0)->unk24[2]);
     }
 }
 
