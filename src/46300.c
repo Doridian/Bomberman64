@@ -1,30 +1,26 @@
 /*
- * NON_MATCHING: main_code's 46300, complete: an instance's node tree and
- * its animation tracks (key lists and curves, interpolated per node).
- * Every function is in C, written last function first (-O3 emits a
- * file's functions in reverse). 45170 before it reads the model
- * (nonmatching/45170.c), func_8022D1D0 after it is its own object
- * (src/479D0.c, text_objects.txt). Not built into the ROM
- * (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * main_code's 46300, IDO -O3; it matches in us, eu and jp: an
+ * instance's node tree and its animation tracks (key lists and curves,
+ * interpolated per node). Every function is written last function
+ * first (-O3 emits a file's functions in reverse). 45170 before it
+ * reads the model (src/45170.c), func_8022D1D0 after it is its own
+ * object (src/479D0.c, text_objects.txt). Its .data (the vectors
+ * D_8029F890..A8) and .bss (D_802A54D0, then func_8022C8B8's statics
+ * D_802A54D4..D_802A5504) are its own, placed in data_split.txt.
  *
  * The code is the same in every version.
  *
  * func_8022C8B8 keeps its globals (D_802A54D4..D_802A5504) as
  * function-scope statics: only then does a store to one not kill
- * pointer loads, and each access gets its own lui. Its .bss starts with
- * the global D_802A54D0, then those statics; its .data at 0x8029F890.
- * Moving this file to src/ has to check where IDO puts them.
+ * pointer loads, and each access gets its own lui.
  *
  * func_8022BE48 matches with (s32)arg1 held in r (set first, so it is
  * coloured v0 before keys, vals and n) and `ret = (ret = ret) + ...`
  * for the add's operand order; func_8022BB88 with a dead read of the
  * count at the loop's end (count coloured before count * 40).
  *
- * All functions match in every version. func_8022C8B8 needs a dead
- * re-read of the channel's type at the top of case 0x2F (`if
- * (D_802A54FC[D_802A54D4].unk0) {}`): it makes the loop head's address
+ * func_8022C8B8 needs a dead re-read of the channel's type at the top
+ * of case 0x2F (`if (D_802A54FC[D_802A54D4].unk0) {}`): it makes the loop head's address
  * of the channel (a uixa, not the cases' `&D_802A54FC[...]` add) live
  * into that case, so uopt colours it (v1) as the original does, and as1
  * drops the dead load. The same read in the loop head splits the block
@@ -183,10 +179,10 @@ typedef struct {
     /* 0x14 */ UnkTrack *unk14;
 } UnkAnim; /* size 0x18 */
 
-extern Vec3f D_8029F890;
-extern Vec3f D_8029F89C;
-extern Vec3f D_8029F8A8;
-extern s32 D_802A54D0;
+Vec3f D_8029F890 = { 0.0f, 0.0f, 0.0f };
+Vec3f D_8029F89C = { 0.0f, 0.0f, 0.0f };
+Vec3f D_8029F8A8 = { 1.0f, 1.0f, 1.0f };
+s32 D_802A54D0;
 
 void func_8022BB00(UnkTree *arg0);
 void func_8022BB88(UnkAnim *arg0);

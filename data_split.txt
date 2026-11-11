@@ -85,6 +85,10 @@ main_code 45170 0x10 0 0x30
 main_code @us 45170 data=0x8029F880 bss=0x802A54A0
 main_code @eu 45170 data=0x8029F880 bss=0x802A5490
 main_code @jp 45170 data=0x8029EF60 bss=0x802A46D0
+main_code 46300 0x30 0x20 0x40
+main_code @us 46300 data=0x8029F890 rodata=0x802A2D30 bss=0x802A54D0
+main_code @eu 46300 data=0x8029F890 rodata=0x802A2D30 bss=0x802A54C0
+main_code @jp 46300 data=0x8029EF70 rodata=0x802A1F70 bss=0x802A4700
 main_code 4DE50 0x10 0 0
 main_code @us 4DE50 data=0x8029FE30
 main_code @eu 4DE50 data=0x8029FE30

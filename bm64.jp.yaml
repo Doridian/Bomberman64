@@ -335,7 +335,7 @@ segments:
       - [0x41FD0, c]
       - [0x426E0, asm]
       - [0x45170, c]
-      - [0x46300, asm]
+      - [0x46300, c]
       - [0x479D0, c]
       - [0x47A80, asm]
       - [0x48300, c]
@@ -402,7 +402,8 @@ segments:
       - [0xB9480, .data, 40300]
       - [0xB9490, data]
       - [0xB9760, .data, 45170]
-      - [0xB9770, data]
+      - [0xB9770, .data, 46300]
+      - [0xB97A0, data]
       - [0xB9D10, .data, 4DE50]
       - [0xB9D20, .data, 4E030]
       - [0xB9D80, .data, 4ED50]
@@ -433,6 +434,8 @@ segments:
       - [0xBB850, .data, AFBF0]
       - [0xBC6B0, .data, B11F0]
       - [0xBC730, rodata]
+      - [0xBC770, .rodata, 46300]
+      - [0xBC790, rodata]
       - [0xBC850, .rodata, 4E030]
       - [0xBC880, .rodata, 4ED50]
       - [0xBC8C0, .rodata, 530C0]
@@ -466,7 +469,8 @@ segments:
       - {type: .bss, vram: 0x802A4560, name: 412F0}
       - {type: bss, vram: 0x802A4600, name: bss_802A4600}
       - {type: .bss, vram: 0x802A46D0, name: 45170}
-      - {type: bss, vram: 0x802A4700, name: bss_802A4700}
+      - {type: .bss, vram: 0x802A4700, name: 46300}
+      - {type: bss, vram: 0x802A4740, name: bss_802A4740}
       - {type: .bss, vram: 0x802A4C60, name: 4E030}
       - {type: .bss, vram: 0x802A4C80, name: 4ED50}
       - {type: bss, vram: 0x802A4C90, name: bss_802A4C90}

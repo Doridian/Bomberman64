@@ -5,7 +5,7 @@
  * key sets and channels), and the rest free one. Every function is
  * written last function first (-O3 emits a file's functions in
  * reverse). 46300 after it is the node tree and the animation tracks
- * (nonmatching/46300.c). Its .data (D_8029F880) and .bss
+ * (src/46300.c). Its .data (D_8029F880) and .bss
  * (D_802A54A0..AC, and func_8022AF1C's statics D_802A54B0..C8) are its
  * own, placed in data_split.txt.
  *
