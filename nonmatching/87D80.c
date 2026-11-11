@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 269, eu 269, jp 269
+ * differing words: us 195, eu 195, jp 195
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -18,10 +18,9 @@
  * D_800B15D8[0].unkN (the latter swaps the multiply's registers).
  * func_8026F5E8 and func_8026E3AC keep their x/y/z in an f32[3] (the
  * original's dead stores to it), not in three variables.
- * 35 of 43 match. Left: func_8026EAF8 105, func_8026E3AC 74,
- * func_8026DCAC 26, func_8026EE18 26, func_8026FC08 25, func_8026F5E8 8,
- * func_8026E938 3 (one float store's stack slot), func_8026F8B0 2 (one
- * delay slot).
+ * 36 of 43 match. Left: func_8026EAF8 105, func_8026DCAC 26,
+ * func_8026EE18 26, func_8026FC08 25, func_8026F5E8 8, func_8026E938 3
+ * (one float store's stack slot), func_8026F8B0 2 (one delay slot).
  */
 #include "common.h"
 
@@ -1059,22 +1058,23 @@ s32 func_8026E5CC(s32 arg0) {
 
 f32 func_8026E3AC(f32 arg0, f32 arg1, f32 arg2) {
     s32 attr;
+    s32 pad[3];
     Unk8026DCAC sp90;
     f32 pos[3];
     f32 sp78[3];
     f32 s;
-    f32 fx;
-    f32 fy;
+    f32 pad2;
+    f32 y;
     f32 fz;
+    f32 r;
 
     do {
         func_8026DCAC(arg0, arg1, arg2, &sp90, 0);
-        fx = sp90.i[0];
         fz = sp90.i[2];
-        fy = sp90.i[1];
-        pos[0] = fx * 100.0f;
-        pos[1] = func_8026E2B0(fy);
+        pos[0] = (f32) sp90.i[0] * 100.0f;
+        y = func_8026E2B0((f32) sp90.i[1]);
         pos[2] = fz * 100.0f;
+        pos[1] = y;
         attr = func_8026D7D8(sp90.i[0], sp90.i[1], sp90.i[2]);
         if ((attr & 0xF) == 0 && arg1 >= 0.0f) {
             arg1 -= 100.0f;
@@ -1096,11 +1096,13 @@ f32 func_8026E3AC(f32 arg0, f32 arg1, f32 arg2) {
             s = sp78[1];
             break;
         default:
-            return 0.0f;
+            return 0.0;
         }
-        return sp78[2] * s + pos[1];
+        r = pos[1] + sp78[2] * s;
+    } else {
+        r = pos[1] - 1.0f;
     }
-    return pos[1] - 1.0f;
+    return r;
 }
 
 void func_8026E338(f32 arg0, f32 arg1, f32 arg2, f32 *arg3, s32 arg4) {
