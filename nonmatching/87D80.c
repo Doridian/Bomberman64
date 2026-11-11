@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 84, eu 84, jp 84
+ * differing words: us 82, eu 82, jp 82
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -18,10 +18,9 @@
  * D_800B15D8[0].unkN (the latter swaps the multiply's registers).
  * func_8026F5E8 and func_8026E3AC keep their x/y/z in an f32[3] (the
  * original's dead stores to it), not in three variables.
- * 37 of 43 match. Left: func_8026DCAC 26, func_8026EE18 26,
+ * 38 of 43 match. Left: func_8026DCAC 26, func_8026EE18 26,
  * func_8026FC08 20, func_8026F5E8 8, func_8026E938 2 (the map's
- * address in t1 where the original has v0), func_8026F8B0 2 (one
- * delay slot).
+ * address in t1 where the original has v0).
  */
 #include "common.h"
 
@@ -512,9 +511,9 @@ void func_8026F8B0(void) {
             y = func_80234248(D_800B15D8->unk0 - 1) + D_800B15D8->unk2;
             x = func_80234248(D_800B15D8[y].unkE * 8 - 1) + D_800B15D8->unk1;
             z = func_80234248(D_800B15D8[y].unkF * 8 - 1) + D_800B15D8->unk3;
-            a0 = func_8026D7D8(x, y, z);
-            if (!(a0 & 0x70) && !(a0 & 0x60)) {
-#line 20010
+            x1 = func_8026D7D8(x, y, z);
+            if (!(x1 & 0x70) && !(x1 & 0x60)) {
+                n = func_8027DF40(0x20);
                 a0 = 0;
                 a2 = 0;
                 a3 = 0;
@@ -522,9 +521,7 @@ void func_8026F8B0(void) {
                 a5 = 0;
                 a6 = 0;
                 a1 = 0;
-#line 20000
-                switch (func_8027DF40(0x20)) {
-#line 20020
+                switch (n) {
                     case 1:
                         a1 = func_8026D7D8(x, y + 1, z) & 0x70;
                         break;
