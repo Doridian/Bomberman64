@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 7115, eu 7115, jp 7075
+ * differing words: us 7096, eu 7096, jp 7056
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -4416,47 +4416,33 @@ loop_3:
 }
 
 static s32 func_80252AF8(s32 arg0, s32 *arg1, s32 arg2) {
-    s32 sv_a1;
-    s32 sv_a0;
-    s32 sv_a2;
-    s32 temp_a1;
-    s32 temp_s3;
-    s32 temp_s4;
-    s32 var_s0;
-    s32 var_s1;
-    s32 var_s6;
-    u8 *temp_s2;
-    u8 *temp_s7;
+    s32 *d;
+    s32 *side;
+    s32 x;
+    s32 z;
+    s32 i;
+    s32 a;
+    s32 b;
+    s32 c;
 
-    temp_s7 = (arg0 * 8) + D_802A0EF0;
-    var_s0 = M2C_FIELD(temp_s7, s32 *, 0) + M2C_FIELD(arg1, s32 *, 0);
-    var_s6 = 0;
-    var_s1 = M2C_FIELD(temp_s7, s32 *, 4) + M2C_FIELD(arg1, s32 *, 8);
-    if (arg2 > 0) {
-        temp_s2 = (((arg0 + 2) & 7) * 8) + D_802A0EF0;
-loop_2:
-        temp_s3 = func_8026D7D8(M2C_FIELD(temp_s2, s32 *, 0) + var_s0, M2C_FIELD(arg1, s32 *, 4), M2C_FIELD(temp_s2, s32 *, 4) + var_s1);
-        temp_s4 = func_8026D7D8(var_s0, M2C_FIELD(arg1, s32 *, 4), var_s1);
-        temp_a1 = func_8026D7D8(var_s0 - M2C_FIELD(temp_s2, s32 *, 0), M2C_FIELD(arg1, s32 *, 4), var_s1 - M2C_FIELD(temp_s2, s32 *, 4));
-        sv_a0 = temp_s4;
-        sv_a1 = temp_a1;
-        sv_a2 = 0 /* FIXME unset $a2 */;
-        if (func_80251AC8(temp_s4) == 0) {
-            sv_a0 = temp_s3;
-            if ((func_80251AC8(temp_s3) == 0) || (func_80251AC8(sv_a1) == 0)) {
-                goto block_8;
+    d = ((s32 (*)[2]) D_802A0EF0)[arg0];
+    x = arg1[0] + d[0];
+    z = arg1[2] + d[1];
+    for (i = 0; i < arg2; i++) {
+        side = ((s32 (*)[2]) D_802A0EF0)[(arg0 + 2) & 7];
+        a = func_8026D7D8(side[0] + x, arg1[1], side[1] + z);
+        b = func_8026D7D8(x, arg1[1], z);
+        c = func_8026D7D8(x - side[0], arg1[1], z - side[1]);
+        if (func_80251AC8(b) == 0) {
+            if (func_80251AC8(a) == 0 || func_80251AC8(c) == 0) {
+                return 0;
             }
-            var_s6 += 1;
-            var_s0 += M2C_FIELD(temp_s7, s32 *, 0);
-            var_s1 += M2C_FIELD(temp_s7, s32 *, 4);
-            if (var_s6 == arg2) {
-                goto block_8;
-            }
-            goto loop_2;
+        } else {
+            return 1;
         }
-        return 1;
+        x += d[0];
+        z += d[1];
     }
-block_8:
     return 0;
 }
 
