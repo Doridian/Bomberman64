@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 239, eu 239, jp 239
+ * differing words: us 179, eu 179, jp 179
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -339,7 +339,7 @@ s32 func_80271BB8(s32);
 void func_802727D8(s32);
 void func_802733C8(void *);
 s32 func_802741D8(s16);
-s32 func_80274994(s32);
+s32 func_80274994(s16);
 s32 func_80274F64(s32);
 s32 func_80274F8C(s16, f32, f32, f32, s32);
 s32 func_80275C7C(s32, s32, s32);
@@ -2924,16 +2924,14 @@ void func_8024A0DC(s32 arg0) {
     Obj88 *obj;
     s32 pad[7];
     s32 ipos[3];
-    s32 pad2[4];
+    s32 pad2[1];
     s32 id;
     s32 flags;
-    s32 off;
     s16 sid;
 
     id = func_80243DDC();
-    D_802AC980[id] = arg0;
-    off = id * 4;
     obj = (Obj88 *)func_802443F4(id);
+    D_802AC980[id] = arg0;
     switch (arg0) {
     case 0x200:
         if (func_80232D18(obj, 2) != 0) {
@@ -2941,20 +2939,18 @@ void func_8024A0DC(s32 arg0) {
             D_800AEDF0[id].unk4C = 0;
             func_80249810(id, func_8022F550((s32)obj, 2), 2);
         } else {
-            D_800AEDF0[id].unk4C = ((Obj88 *)func_80274F8C(((E88 *)&D_800AEDF0[id])->unk1A, obj->unk40->unk10,
-                                                           obj->unk40->unk14, obj->unk40->unk18, 0))->unk1C;
-            func_80244354(id, 0x200, 1);
+            func_80247928(id, ((Obj88 *)func_80274F8C(((E88 *)&D_800AEDF0[id])->unk1A, obj->unk40->unk10,
+                                                           obj->unk40->unk14, obj->unk40->unk18, 0))->unk1C);
         }
         break;
     case 0x80:
         sid = id;
         if (!func_80270714(sid)) {
             D_800AEDF0[id].unk2C = func_80271540(sid);
-            if (!id && !id) {}
             if (D_800AEDF0[id].unk2C != 0) {
                 func_80249FD4(id, 0);
                 func_80244354(id, 0x90000, 1);
-                *(s32 *)((u8 *)D_802AC918 + off) = 0;
+                D_802AC918[id] = 0;
                 func_802313DC(obj, 0x40000);
             } else {
                 func_8026DCAC(obj->unk40->unk10, obj->unk40->unk14, obj->unk40->unk18, ipos, 2);
@@ -2965,7 +2961,7 @@ void func_8024A0DC(s32 arg0) {
                     }
                 }
                 func_80244354(id, 0x90000, 1);
-                *(s32 *)((u8 *)D_802AC918 + off) = 0;
+                D_802AC918[id] = 0;
                 func_802313DC(obj, 0x40000);
             }
         }
@@ -2977,22 +2973,21 @@ void func_8024A0DC(s32 arg0) {
         }
         break;
     case 0x40000:
-        *(s32 *)((u8 *)D_802AC9C8 + off) = D_800B0DD8[D_802AC960];
+        D_802AC9C8[id] = D_800B0DD8[D_802AC960];
         func_80244354(id, 0x90020, 1);
-        *(s32 *)((u8 *)D_802AC918 + off) = 0;
+        D_802AC918[id] = 0;
         func_802313DC(obj, 0x40000);
         break;
     case 0x100000:
         obj = (Obj88 *)func_802443F4(id);
         obj->unk68 = 40.0f;
         func_80244354(id, 0x90020, 1);
-        *(s32 *)((u8 *)D_802AC918 + off) = 0;
+        D_802AC918[id] = 0;
         func_802313DC(obj, 0x40000);
         break;
     case 0x4000000:
         func_80244354(id, 0x90000, 1);
-        if (!off && !off) {}
-        *(s32 *)((u8 *)D_802AC918 + off) = 0;
+        D_802AC918[id] = 0;
         func_802313DC(obj, 0x40000);
         func_80244354(id, 0x04000020, 1);
         func_802444B8(id, 0x15);
@@ -3024,7 +3019,6 @@ void func_8024A0DC(s32 arg0) {
         if (D_802AC8BC != 0 && D_802AC8BC != 0x20 && D_802AC8BC != 0x40 && D_802AC8BC != 0x60 &&
             D_802AC8BC != 0x80 && D_802AC8BC != 0xA0) {
         if (!flags && !flags) {}
-        if (!obj && !obj) {}
         }
         func_80244354(id, 0x420, 0);
         if (!func_80244BA4(id, 0x02000000)) {
@@ -3034,7 +3028,6 @@ void func_8024A0DC(s32 arg0) {
         obj->unk70 = 1.6333334f;
         break;
     }
-    if (off) {}
 }
 
 void func_80249FD4(s32 arg0, s32 arg1) {
