@@ -5,7 +5,7 @@
  * global, emitted in the original's order. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1711, eu 1711, jp 1711
+ * differing words: us 1613, eu 1613, jp 1613
  *
  * 13 of 47 match. Biggest left: func_802741D8 461, func_8027655C 436,
  * func_80274994 320, func_80276D68 171: m2c's control flow and untyped
@@ -1277,130 +1277,112 @@ void func_80275C08(u8 *arg0, u8 *arg1) {
 }
 
 void func_80275948(s16 *arg0) {
-    f32 sp5C;
-    f32 sp58;
-    f32 sp54;
-    s32 sp28;
-    s16 temp_a0;
-    s16 temp_t1;
-    s16 temp_v0;
-    s16 temp_v1;
-    s16 var_s0;
-    s32 *temp_a0_2;
-    s32 *temp_s0;
-    s32 temp_t8;
-    s32 temp_t9;
-    s32 var_s0_2;
-    s32 var_v1;
+    u16 n;
+    u16 i;
+    f32 x;
+    f32 y;
+    f32 z;
+    u16 snd;
+    s16 f;
+    void *nd;
 
-    func_80270BA4(M2C_FIELD(arg0, void **, 0x1C));
-    temp_v1 = M2C_FIELD(arg0, s16 *, 0x64);
-    if ((s16) (temp_v1 & 0x200) != 0) {
-        M2C_FIELD(arg0, s16 *, 0x64) = (s16) (temp_v1 & 0xFDFF);
-        func_802313DC(M2C_FIELD(arg0, void **, 0x1C), 0x20000);
-        temp_s0 = M2C_FIELD(arg0, s32 **, 0x38);
-        func_80270A80(temp_s0);
-        free(temp_s0);
+    func_80270BA4((u8 *) ((Ent88 *) arg0)->obj);
+    if ((f = ((Ent88 *) arg0)->unk64 & 0x200) != 0) {
+        ((Ent88 *) arg0)->unk64 &= ~0x200;
+        func_802313DC(((Ent88 *) arg0)->obj, 0x20000);
+        nd = ((Ent88 *) arg0)->unk38;
+        func_80270A80(nd);
+        free(nd);
     }
-    temp_t9 = M2C_FIELD(arg0, s16 *, 0x10) & ~0xC02;
-    switch (temp_t9) {                              /* switch 1; irregular */
-    case 0x200:                                     /* switch 1 */
+    switch (((Ent88 *) arg0)->unk10 & ~0xC02) {
+    case 0x200:
         func_802752BC(arg0);
-block_16:
-        var_s0 = 3;
+        n = 3;
         break;
-    case 0x201:                                     /* switch 1 */
-    case 0x204:                                     /* switch 1 */
-    case 0x205:                                     /* switch 1 */
+    case 0x201:
+    case 0x204:
+    case 0x205:
         func_802757E0(arg0);
-        goto block_16;
-    case 0x300:                                     /* switch 1 */
-        func_802756DC(arg0);
-        var_s0 = 2;
+        n = 3;
         break;
-    case 0x301:                                     /* switch 1 */
-    case 0x304:                                     /* switch 1 */
-    case 0x305:                                     /* switch 1 */
+    case 0x300:
+        func_802756DC(arg0);
+        n = 2;
+        break;
+    case 0x301:
+    case 0x304:
+    case 0x305:
         func_80275590(arg0);
-        goto block_16;
-    default:                                        /* switch 1 */
+        n = 3;
+        break;
+    default:
         func_802752BC(arg0);
-        goto block_16;
+        n = 3;
+        break;
     }
-    sp5C = M2C_FIELD(arg0, f32 *, 0x40);
-    sp58 = M2C_FIELD(arg0, f32 *, 0x44);
-    sp54 = M2C_FIELD(arg0, f32 *, 0x48);
+    x = ((Ent88 *) arg0)->x;
+    y = ((Ent88 *) arg0)->y;
+    z = ((Ent88 *) arg0)->z;
     func_80273414(arg0);
-    temp_a0 = M2C_FIELD(arg0, s16 *, 0x10);
-    var_v1 = 0xB;
-    M2C_FIELD(arg0, f32 *, 0x48) = 1e7f;
-    M2C_FIELD(arg0, f32 *, 0x44) = 1e7f;
-    M2C_FIELD(arg0, f32 *, 0x40) = 1e7f;
-    if (temp_a0 & 1) {
-        temp_t1 = M2C_FIELD(arg0, s16 *, 0x66);
-        switch (temp_t1) {                          /* switch 2 */
-        case 3:                                     /* switch 2 */
-            var_v1 = 0xF;
+    snd = 11;
+    ((Ent88 *) arg0)->x = ((Ent88 *) arg0)->y = ((Ent88 *) arg0)->z = 1e7f;
+    if (((Ent88 *) arg0)->unk10 & 1) {
+        switch (((Ent88 *) arg0)->unk66) {
+        case 3:
+            snd = 15;
             break;
-        case 4:                                     /* switch 2 */
-            var_v1 = 0x10;
+        case 4:
+            snd = 16;
             break;
-        case 5:                                     /* switch 2 */
-            var_v1 = 0x11;
+        case 5:
+            snd = 17;
             break;
-        case 6:                                     /* switch 2 */
-            var_v1 = 0x12;
+        case 6:
+            snd = 18;
             break;
-        case 7:                                     /* switch 2 */
-            var_v1 = 0x13;
+        case 7:
+            snd = 19;
             break;
-        case 8:                                     /* switch 2 */
-            var_v1 = 0x14;
+        case 8:
+            snd = 20;
             break;
-        case 9:                                     /* switch 2 */
-            var_v1 = 0x15;
+        case 9:
+            snd = 21;
             break;
         }
-        if (temp_a0 & 0x100) {
-            var_v1 = 0x15;
+        if (((Ent88 *) arg0)->unk10 & 0x100) {
+            snd = 21;
         }
     } else {
-        temp_v0 = M2C_FIELD(arg0, s16 *, 0x66);
-        switch (temp_v0) {                          /* switch 3; irregular */
-        case 3:                                     /* switch 3 */
+        switch (((Ent88 *) arg0)->unk66) {
+        case 3:
             break;
-        case 4:                                     /* switch 3 */
-            var_v1 = 0xC;
+        case 4:
+            snd = 12;
             break;
-        case 5:                                     /* switch 3 */
-            var_v1 = 0xD;
+        case 5:
+            snd = 13;
             break;
         }
-        if (temp_a0 & 0x100) {
-            var_v1 = 0xE;
+        if (((Ent88 *) arg0)->unk10 & 0x100) {
+            snd = 14;
         }
     }
-    func_8026C51C(var_v1, sp5C, sp58, sp54);
-    sp28 = (s32) var_s0;
-loop_39:
-    if (func_802750C0(arg0, (s16) sp28) == 0) {
-        var_s0_2 = 0;
-        if (var_s0 > 0) {
-            do {
-                temp_a0_2 = M2C_FIELD(((u8 *)arg0 + (var_s0_2 * 4)), s32 **, 0x24);
-                if (temp_a0_2 != NULL) {
-                    func_80278D54(temp_a0_2);
-                }
-                temp_t8 = (var_s0_2 + 1) & 0xFFFF;
-                var_s0_2 = temp_t8;
-            } while (temp_t8 < var_s0);
+    func_8026C51C(snd, x, y, z);
+    for (;;) {
+        if (func_802750C0(arg0, n) != 0) {
+            break;
+        }
+        for (i = 0; i < n; i++) {
+            if (((Ent88 *) arg0)->unk24[i] != NULL) {
+                func_80278D54(((Ent88 *) arg0)->unk24[i]);
+            }
         }
         func_80239094();
-        goto loop_39;
     }
     func_802733F8(arg0);
-    M2C_FIELD(arg0, s32 *, 0x20) = 0;
-    func_80238EA8(M2C_FIELD(arg0, s32 *, 4));
+    ((Ent88 *) arg0)->xf = NULL;
+    func_80238EA8(((Ent88 *) arg0)->unk4);
     func_80239094();
 }
 
