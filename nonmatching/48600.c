@@ -1,45 +1,54 @@
 /*
- * NON_MATCHING: main_code's 48300, complete: 92 functions (us
- * 0x8022DB00-0x80233644) around three lists of 0x80-byte objects
+ * NON_MATCHING: main_code's 48600, complete: 86 functions (us
+ * 0x8022DE00-0x80233644) around three lists of 0x80-byte objects
  * (UnkStructA80: D_802A5578, D_802A55F8 and D_802A5678 head them, the 128
  * in D_800A3F00) and their collision shapes (spheres, cylinders and
  * boxes, func_8022E884). Not built into the ROM (docs/DECOMPILING.md,
- * "NON_MATCHING drafts").
+ * "NON_MATCHING drafts"). src/48300.c, before it, is another object:
+ * func_80232E60 calls its func_8022DB00 with a jal (text_objects.txt).
  * flags: -O3
- * differing words: us 1076, eu 1076, jp 1076
+ * differing words: us 1067, eu 1067, jp 1067
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
- * as the original does (the stubs at 0x8022E0A4-0x8022E87C are
- * func_8022E884's cases, static and inlined, named for their stubs;
- * func_80232FF0 is likewise func_80232FF8's D_802A5804 switch: IDO puts
- * an inlined static's stub just below its caller).
- * 48 of 72 global blocks match. What is understood:
+ * as the original does. An 8-byte stub (jr ra; nop) is an inlined
+ * static, at its place in the source: the stubs at 0x8022E0A4-0x8022E87C
+ * are func_8022E884's cases, func_8022FC18 is func_8022FC90's child
+ * search and func_80232FF0 is func_80232FF8's D_802A5804 switch.
+ * 63 of 68 global blocks match. What is understood:
  *   - the function-local statics (D_802A5708-D_802A5770 and
  *     D_802A59D0-D_802A5A0C in func_8022E884, D_802A593C-48 in
  *     func_8022F844, D_802A5960-C8 in func_8022E4DC, D_802A5A14-20 in
  *     func_802304C0, D_802A5560-70 in func_80230604, D_802A57A0-A8 and
  *     D_802A5734/58/8C in func_8023017C) are reached with lui/%lo at
- *     every access, as the original does;
+ *     every access, as the original does; func_8022E884's are its own
+ *     statics, passed to its inlined cases as parameters (so the cases'
+ *     loads fold to lui/%lo too);
  *   - func_80232FF8, func_80232FA8, func_802312AC and func_802320A8
  *     are global: as statics IPA moved func_80232FF8's register saves
  *     into func_802334CC, and the others would get only t6-t9;
  *   - float sums are written (a*b + c*d + e*f) + g, and int and float
- *     constants (90, 0 in compares) are kept apart as the original's are;
+ *     constants (90, 0 in compares, x * 2) are kept apart as the
+ *     original's are;
  *   - a variable keeps one register over all its live ranges, so
  *     func_8022FF58's two angle wraps have a variable each.
  *   - IDO -O3 gives a static function's parameters registers in the
  *     order its body first uses them, and its callers set them in the
  *     source's order: func_8022F3F8's mask is its first parameter (the
  *     callers set a3 first), though it is used last and so gets a3.
- * Biggest left: func_8022E884 (758 words: the original reaches case 1's
- * arrays through a2/a3 and the others' with lui/%lo; file-scope statics
- * keep them in s registers), func_802320A8 (398: the original keeps n in fs3
- * over the whole loop, loaded from its home before it and stored after,
- * which IDO does only for a variable live into the loop; the use in the
- * first switch's default stands in for whatever made it live there, at
- * the cost of its two words; t stays in memory),
- * func_8022FC90 (14: the found value belongs in v0), func_80232E60 (12:
- * IDO inlines func_8022DB00 into it, the original doesn't).
+ *   - each inlined call adds its own frame area (rounded to 8), its
+ *     parameters then its locals in declaration order; func_8022E884's
+ *     frame is the original's 0xC0.
+ * Left: func_8022E884 (657 words, 0x70 bytes short: the original keeps
+ * D_802A5708 in a3 and D_802A5738 in a2 over case 1/8's calls, ours s4
+ * and a3; uopt colours D_802A5738 first and a2 is barred from it in one
+ * block; hit and ret share v1 where the original has v0 and v1);
+ * func_802320A8 (398: the original keeps n in fs3 over the whole loop,
+ * loaded from its home before it and stored after, which IDO does only
+ * for a variable live into the loop; the use in the first switch's
+ * default stands in for whatever made it live there, at the cost of its
+ * two words; t stays in memory); func_802334CC's 9 are the text's size
+ * (its padding); func_8022DF68 (2: load order) and func_80230914 (1: an
+ * add.s's operand order).
  */
 #include "common.h"
 
@@ -131,13 +140,10 @@ void func_802348B4(f32 *, f32 *, f32 *);
 void func_80234900(f32 *, f32 *, f32 *);
 s32 func_80238A10(void *, s32, s32, s32, s32);
 s32 func_80238FDC(void);
-void func_8023903C(s32);
 void func_80239094(void);
 s32 func_802391F0(void);
 void func_80239430(void);
 s32 * func_8023A840(void);
-void func_8026C454(s32, f32, f32, f32);
-s32 func_8026C51C(s32, f32, f32, f32);
 s32 func_8026D7D8(s32, s32, s32);
 u8 func_8026DC74(s32);
 void func_8026DCAC(f32, f32, f32, void *, s32);
@@ -155,7 +161,6 @@ extern f32 D_800A7F00;
 extern s32 D_800A7F04;
 extern Rect40 *D_800A7F08[8];
 extern void *D_800A7F28;
-extern u8 D_8029FD40[];
 // D_802A5560: func_80230604
 extern UnkStructA80 D_802A5578;
 extern void *D_802A55F4;
@@ -179,11 +184,6 @@ extern s32 D_802A5818[];
 extern s32 D_802A5938;
 
 void func_8022DB00(void);
-static void func_8022DB28(void);
-void func_8022DBBC(s32 arg0);
-static void func_8022DBF4(Rect40 **arg0, f32 arg1, f32 arg2, s32 *arg3, s32 arg4);
-static void func_8022DD6C(void);
-void func_8022DDB4(s32 arg0);
 void func_8022DE00(void);
 void func_8022DE6C(void);
 f32 func_8022DF68(f32 *arg0, f32 *arg1);
@@ -2329,77 +2329,3 @@ void func_8022DE00() {
     }
 }
 
-void func_8022DDB4(s32 arg0) {
-    if (!(*func_8023A840() & 2)) {
-        func_80238A10(func_8022DD6C, arg0, 0, 0, 0x150);
-    }
-}
-
-static void func_8022DD6C() {
-    func_8022DBF4(D_800A7F08, 291.0f, 56.0f, func_802391F0(), 0);
-    func_80239430();
-}
-
-static void func_8022DBF4(Rect40 **arg0, f32 arg1, f32 arg2, s32 *arg3, s32 arg4) {
-    Rect40 *r;
-    s32 cur;
-    s32 tgt;
-    s32 n;
-    f32 f;
-
-    r = *arg0;
-    cur = 0;
-    while (TRUE) {
-        n = *arg3 - arg4;
-        if (n < 0) {
-            n = 0;
-        }
-        if (n < 3) {
-            tgt = n * 4;
-        } else {
-            tgt = 8;
-        }
-        if (cur == tgt && n == 0) {
-            break;
-        }
-        if (cur == tgt && n >= 3) {
-            func_8022DBF4(arg0 + 1, arg1, arg2 + 16.0f + 4.0f, arg3, arg4 + 2);
-        }
-        if (cur < tgt) {
-            cur++;
-        } else if (tgt < cur) {
-            cur--;
-        }
-        f = cur;
-        r->x0 = arg1 - f;
-        r->y0 = arg2 - f;
-        r->x1 = f + arg1;
-        r->y1 = f + arg2;
-        func_8023903C(2);
-    }
-}
-
-void func_8022DBBC(s32 arg0) {
-    func_80238A10(func_8022DB28, arg0, 0, 0, 0x150);
-}
-
-static void func_8022DB28() {
-    s32 *args;
-    Rect40 *r;
-    s32 id;
-    s32 n;
-    s32 i;
-
-    args = (s32 *) func_802391F0();
-    r = (Rect40 *) args[0]; id = args[1]; n = args[2];
-    id = func_8026C51C(id, r->x0, r->y0, r->x1);
-    for (i = 0; i < n; i++) {
-        func_8026C454(id, r->x0, r->y0, r->x1);
-        func_80239094();
-    }
-    func_80239430();
-}
-
-void func_8022DB00(void) {
-    func_80297D30(0x18, D_8029FD40);
-}

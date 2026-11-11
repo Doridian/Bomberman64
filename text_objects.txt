@@ -23,6 +23,14 @@ main_code 4E030
 # 0x802A5558 before 48300's at 0x802A5560.
 main_code 48300
 
+# 48600 (-O3, the object lists and their collision shapes) calls
+# func_8022DB00 from func_80232E60 with a jal, which -O3 inlines within
+# one file (the draft does, 8 words off; split, it matches).  48300 is
+# the five functions before it (func_8022DB00 to func_8022DDB4, 0x300
+# bytes), which end on the 16-byte boundary where it starts; none of
+# them calls into 48600.
+main_code 48600
+
 # 9A5F0 (-O3): jp moved two functions to the end of the file (func_8028124C,
 # func_80280DB4), so jp's object starts with them, at its own 0x9A340.
 main_code 9A5F0 jp=9A340
