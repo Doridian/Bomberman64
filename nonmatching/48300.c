@@ -6,7 +6,7 @@
  * boxes, func_8022E884). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3240, eu 3240, jp 3240
+ * differing words: us 3232, eu 3232, jp 3232
  *
  * A first draft: functions in the reverse of the ROM's order, which IDO
  * now emits exactly as the original does (stubs included); a handful by
@@ -174,7 +174,7 @@ static void func_8022E264();
 static void func_8022E26C(UnkStructA80 *arg0, f32 *arg1);
 void func_8022E328(void);
 f32 func_8022E330(f32 *arg0, f32 *arg1);
-void func_8022E364(u8 *arg0, u8 *arg1, f32 *arg2);
+void func_8022E364(f32 *arg0, f32 *arg1, f32 *arg2);
 void func_8022E3D4(f32 m[4][4], f32 *v);
 static s32 func_8022E4DC(f32 *arg0, f32 *arg1);
 s32 func_8022E884(UnkStructA80 *arg0, UnkStructA80 *arg1);
@@ -2156,7 +2156,7 @@ static s32 func_8022E4DC(f32 *a, f32 *b) {
     aq.x = a[0] - q.x;
     aq.y = a[1] - q.y;
     aq.z = a[2] - q.z;
-    func_8022E364((u8 *) &ap.x, (u8 *) &qp.x, &n.x);
+    func_8022E364(&ap.x, &qp.x, &n.x);
     d = sqrtf(n.x * n.x + n.y * n.y + n.z * n.z);
     if (b[3] + a[3] <= d / sqrtf(qp.x * qp.x + qp.y * qp.y + qp.z * qp.z)) {
         return 0;
@@ -2190,14 +2190,14 @@ void func_8022E3D4(f32 m[4][4], f32 *v) {
     D_802A5954 = tz;
 }
 
-void func_8022E364(u8 *arg0, u8 *arg1, f32 *arg2) {
-    M2C_FIELD(arg2, f32 *, 0) = (M2C_FIELD(arg0, f32 *, 4) * M2C_FIELD(arg1, f32 *, 8)) - (M2C_FIELD(arg0, f32 *, 8) * M2C_FIELD(arg1, f32 *, 4));
-    M2C_FIELD(arg2, f32 *, 4) = (f32) ((M2C_FIELD(arg0, f32 *, 8) * M2C_FIELD(arg1, f32 *, 0)) - (M2C_FIELD(arg0, f32 *, 0) * M2C_FIELD(arg1, f32 *, 8)));
-    M2C_FIELD(arg2, f32 *, 8) = (f32) ((M2C_FIELD(arg0, f32 *, 0) * M2C_FIELD(arg1, f32 *, 4)) - (M2C_FIELD(arg0, f32 *, 4) * M2C_FIELD(arg1, f32 *, 0)));
+void func_8022E364(f32 *a, f32 *b, f32 *c) {
+    c[0] = a[1] * b[2] - b[1] * a[2];
+    c[1] = a[2] * b[0] - b[2] * a[0];
+    c[2] = a[0] * b[1] - b[0] * a[1];
 }
 
-f32 func_8022E330(f32 *arg0, f32 *arg1) {
-    return (M2C_FIELD(arg0, f32 *, 0) * M2C_FIELD(arg1, f32 *, 0)) + (M2C_FIELD(arg0, f32 *, 4) * M2C_FIELD(arg1, f32 *, 4)) + (M2C_FIELD(arg0, f32 *, 8) * M2C_FIELD(arg1, f32 *, 8));
+f32 func_8022E330(f32 *a, f32 *b) {
+    return a[0] * b[0] + a[1] * b[1] + b[2] * a[2];
 }
 
 void func_8022E328() {
