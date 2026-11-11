@@ -7,7 +7,7 @@
  * order. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 894, eu 894, jp 894
+ * differing words: us 845, eu 845, jp 845
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file (475 words in the one-file draft, 39
@@ -1017,9 +1017,6 @@ void func_80272494(Obj8E *arg0, Obj8E *arg1, Ctl87 *arg2) {
 }
 
 s16 func_8027241C(s16 arg0) {
-    s16 var_a0;
-
-    var_a0 = arg0;
     switch (arg0) {
     case 0:
         return 4;
@@ -1036,11 +1033,10 @@ s16 func_8027241C(s16 arg0) {
     case 6:
         return 2;
     case 7:
-        var_a0 = 3;
-        /* fallthrough */
-    default:
-        return var_a0;
+        arg0 = 3;
+        break;
     }
+    return arg0;
 }
 
 s32 func_802721D4(Obj8E *arg0, s32 arg1, Ctl87 *arg2) {
@@ -1348,18 +1344,13 @@ s32 func_80271540(s16 arg0) {
 }
 
 void func_802714C4() {
-    s16 var_s0;
-    s32 var_a0;
+    s16 i;
 
     if (D_802AFC74 != 1) {
         D_802AFC74 = 1;
-        var_s0 = 0;
-        var_a0 = 0 << 0x10;
-        do {
-            func_802702EC((s16) (var_a0 >> 0x10));
-            var_s0 += 1;
-            var_a0 = var_s0 << 0x10;
-        } while (var_s0 < 5);
+        for (i = 0; i < 5; i++) {
+            func_802702EC(i);
+        }
         D_802AFDD8 = func_80231274(-1, 0, 0xD0, NULL);
     }
 }
