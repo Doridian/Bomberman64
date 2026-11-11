@@ -7,7 +7,7 @@
  * order. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 575, eu 575, jp 575
+ * differing words: us 553, eu 553, jp 553
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file (475 words in the one-file draft, 39
@@ -1305,6 +1305,7 @@ void *func_802716F8(s16 arg0) {
 }
 
 s32 func_80271540(s16 arg0) {
+    s32 pad[1];
     f32 sp28;
     f32 sp24;
     f32 temp_fv0;
@@ -1500,25 +1501,23 @@ f32 func_80270FC0(u8 *arg0) {
 }
 
 f32 func_80270F44(u8 *arg0) {
-    f32 temp_fv1;
-    f32 temp_fv1_2;
-    f32 var_fv0;
-    u8 *temp_v0;
+    Obj8E *o = (Obj8E *) arg0;
+    f32 m;
+    f32 r;
 
-    if (M2C_FIELD(arg0, s32 *, 0x30) & 0x20) {
-        return M2C_FIELD(arg0, f32 *, 0x34);
+    if (o->unk30 & 0x20) {
+        r = o->unk34;
+    } else {
+        m = o->unk40->sx;
+        if (m < o->unk40->sy) {
+            m = o->unk40->sy;
+        }
+        if (m < o->unk40->sz) {
+            m = o->unk40->sz;
+        }
+        r = o->unk34 * m;
     }
-    temp_v0 = M2C_FIELD(arg0, void **, 0x40);
-    var_fv0 = M2C_FIELD(temp_v0, f32 *, 0x28);
-    temp_fv1 = M2C_FIELD(temp_v0, f32 *, 0x2C);
-    if (var_fv0 < temp_fv1) {
-        var_fv0 = temp_fv1;
-    }
-    temp_fv1_2 = M2C_FIELD(temp_v0, f32 *, 0x30);
-    if (var_fv0 < temp_fv1_2) {
-        var_fv0 = temp_fv1_2;
-    }
-    return M2C_FIELD(arg0, f32 *, 0x34) * var_fv0;
+    return r;
 }
 
 void func_80270EF0(u8 *arg0) {
