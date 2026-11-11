@@ -7,7 +7,7 @@
  * (src/479D0.c, text_objects.txt). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 84, eu 84, jp 84
+ * differing words: us 15, eu 15, jp 15
  *
  * The code is the same in every version.
  *
@@ -23,16 +23,18 @@
  * count at the loop's end (count coloured before count * 40).
  *
  * Left:
- * - func_8022C8B8 (84): same size and shape; every word is one ugen
- *   temporary of rotation: the original computes the channel's address
- *   before the switch into v1 (a uopt register), ours into t6. Here
- *   `D_802A54FC[D_802A54D4].unk0` is a uixa load while the cases'
- *   `&D_802A54FC[D_802A54D4]` is an add, so they are not CSE'd. Any
- *   pointer local before the switch (`chan = &...`, `D + i`) is CSE'd
- *   into the cases (8 words short); with the cases written through
- *   (u8 *) it stays one-use and folds (83), and with a dead read it is
- *   coloured but v0/v1 swapped and an extra store (+2 words). Dead reads
- *   and `do {} while (0);` after every line of the loop change nothing.
+ * - func_8022C8B8 (15): the channel table is stored through chan
+ *   (`chan = arg0->unk34[arg1].unk4; D_802A54FC = chan;`), which puts
+ *   the ugen temporaries after it in step with the original's (84 to
+ *   15). What is left: chan is coloured v1 where the original keeps that
+ *   load in a ugen temporary (t9) and has v1 for the channel's address
+ *   before the switch (ours t5); the temps between are one apart.
+ *   Earlier: `D_802A54FC[D_802A54D4].unk0` is a uixa load while the
+ *   cases' `&D_802A54FC[D_802A54D4]` is an add, so they are not CSE'd.
+ *   Any pointer local before the switch (`chan = &...`, `D + i`) is
+ *   CSE'd into the cases; with the cases written through (u8 *) it
+ *   stays one-use and folds, and with a dead read it is coloured but
+ *   v0/v1 swapped and an extra store.
  */
 #include "common.h"
 
@@ -340,7 +342,8 @@ UnkAnim *func_8022C8B8(UnkInst *arg0, s32 arg1) {
     D_802A5500->unk10 = D_802A54E4;
     D_802A5500->unk14 = malloc(D_802A54E4 * sizeof(UnkTrack));
     D_802A5500->unk8 = arg0->unk34[arg1].unkC;
-    D_802A54FC = arg0->unk34[arg1].unk4;
+    chan = arg0->unk34[arg1].unk4;
+    D_802A54FC = chan;
     D_802A54DC = 0;
     for (D_802A54D4 = 0; D_802A54D4 < D_802A54E4; D_802A54D4++) {
         D_802A5504 = &D_802A5500->unk14[D_802A54D4];
