@@ -1,7 +1,7 @@
 /*
  * NON_MATCHING: main_code's 96540, complete: the controller pak save.
  * flags: -O3
- * differing words: us 256, eu 256, jp 256
+ * differing words: us 144, eu 144, jp 144
  */
 #include "common.h"
 #include "ultralib/PR/os_pfs.h"
@@ -205,9 +205,17 @@ static void func_8027CA14(s32 ch, s32 retried) {
             break;
         case 2:
             if (!retried) {
-                D_802B0118[ch] = func_8027C8A4(ch);
+                s32 c = ch;
+
+                D_802B0118[c] = func_8027C8A4(ch);
                 func_8027CA14(ch, 1);
             }
+            break;
+        case 0:
+            break;
+        case 3:
+            break;
+        case 4:
             break;
         case 6:
             break;
@@ -216,10 +224,11 @@ static void func_8027CA14(s32 ch, s32 retried) {
 
 void func_8027C96C(s32 ch) {
     s32 file;
+    s32 *p = &D_802B0118[ch];
 
-    D_802B0118[ch] = func_8027C900(ch, &file);
-    if (D_802B0118[ch] == 8) {
-        D_802B0118[ch] = func_8027C18C(ch, file, D_802B0128);
+    *p = func_8027C900(ch, &file);
+    if (*p == 8) {
+        *p = func_8027C18C(ch, file, D_802B0128);
     }
 }
 
