@@ -7,7 +7,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4503, eu 4503, jp 4503
+ * differing words: us 4498, eu 4498, jp 4498
  *
  * 33 of 97 match. func_8026D5F8 and func_8026D5C0 (cell and slot of a
  * point) are inlined by func_8026D620/func_8026D7D8, which is what the
@@ -2683,144 +2683,74 @@ void func_8026F5E8(s32 arg0, s32 arg1, s32 arg2) {
 }
 
 s32 func_8026F068(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
-    s32 sp1DC;
-    s32 sp1D8;
-    s32 sp1D4;
-    s32 sp1D0;
-    s32 sp1CC;
-    s32 sp1C8;
-    s32 sp1C4;
-    s32 sp1C0;
-    s32 sp1BC;
-    s32 sp1B0;
-    s32 sp138;
-    s32 sp128;
-    s32 sp110;
-    s32 sp108;
-    s32 spD8;
-    s32 spC8;
-    s32 spB0;
-    s32 spA8;
-    s32 sp7C;
-    s32 sp68;
-    s32 sp50;
-    s32 sp4C;
-    s32 sp28;
-    s32 sp24;
-    s32 sp20;
-    s32 temp_a0;
-    s32 temp_a0_2;
-    s32 temp_a1;
-    s32 temp_a1_2;
-    s32 temp_a2;
-    s32 temp_a2_2;
-    s32 temp_v0;
-    u16 temp_v0_2;
+    s32 ok;
+    s32 a;
+    s32 b;
+    s32 c;
+    s32 d;
+    s32 e;
+    s32 f;
+    s32 g;
+    s32 h;
+    s32 type;
+    s32 ret;
 
-    sp1B0 = 0;
-    sp1DC = 1;
-    temp_v0 = func_8027DF40(arg3);
-    if ((temp_v0 == 2) || (temp_v0 == 3)) {
-        temp_a0 = arg0 - 1;
-        sp28 = temp_a0;
-        temp_a2 = arg2 + 1;
-        sp1D8 = func_8026D7D8(temp_a0, arg1, arg2) & 0x60;
-        sp24 = temp_a2;
-        sp1D4 = func_8026D7D8(temp_a0, arg1, temp_a2) & 0x60;
-        temp_a2_2 = arg2 - 1;
-        sp1D0 = func_8026D7D8(arg0, arg1, temp_a2) & 0x60;
-        sp24 = temp_a2_2;
-        temp_a0_2 = arg0 + 1;
-        sp1CC = func_8026D7D8(arg0, arg1, temp_a2_2) & 0x60;
-        sp20 = temp_a0_2;
-        sp1C8 = func_8026D7D8(temp_a0_2, arg1, temp_a2_2) & 0x60;
-        sp1C4 = func_8026D7D8(temp_a0_2, arg1, arg2) & 0x60;
-        sp1C0 = func_8026D7D8(temp_a0, arg1, arg2) & 0x60;
-        sp1BC = func_8026D7D8(temp_a0, arg1, temp_a2_2) & 0x60;
-        temp_v0_2 = func_8026D7D8(arg0, arg1, temp_a2_2);
-        if ((sp1D8 == arg3) && (sp1D4 == arg3)) {
-            if (sp1D0 != arg3) {
-                goto block_6;
-            }
-            goto block_13;
-        }
-block_6:
-        if ((sp1CC == arg3) && (sp1C8 == arg3)) {
-            if (sp1C4 != arg3) {
-                goto block_10;
-            }
-            goto block_13;
-        }
-block_10:
-        if (sp1C0 == arg3) {
-            if (sp1BC == arg3) {
-                if ((temp_v0_2 & 0x60) == arg3) {
-block_13:
-                    sp1DC = 0;
-                }
-            }
+    ret = 0;
+    ok = 1;
+    type = func_8027DF40(arg3);
+    if (type == 2 || type == 3) {
+        a = func_8026D7D8(arg0 - 1, arg1, arg2) & 0x60;
+        b = func_8026D7D8(arg0 - 1, arg1, arg2 + 1) & 0x60;
+        c = func_8026D7D8(arg0, arg1, arg2 + 1) & 0x60;
+        d = func_8026D7D8(arg0, arg1, arg2 - 1) & 0x60;
+        e = func_8026D7D8(arg0 + 1, arg1, arg2 - 1) & 0x60;
+        f = func_8026D7D8(arg0 + 1, arg1, arg2) & 0x60;
+        g = func_8026D7D8(arg0 - 1, arg1, arg2) & 0x60;
+        h = func_8026D7D8(arg0 - 1, arg1, arg2 - 1) & 0x60;
+        if ((a == arg3 && b == arg3 && c == arg3) || (d == arg3 && e == arg3 && f == arg3) ||
+            (g == arg3 && h == arg3 && (func_8026D7D8(arg0, arg1, arg2 - 1) & 0x60) == arg3)) {
+            ok = 0;
         }
     }
-    if ((temp_v0 == 1) && (arg3 == (func_8026D7D8(arg0, arg1 - 1, arg2) & 0x60))) {
-        sp1DC = 0;
+    if (type == 1 && arg3 == (func_8026D7D8(arg0, arg1 - 1, arg2) & 0x60)) {
+        ok = 0;
     }
-    if (sp1DC != 0) {
-        if ((temp_v0 == 3) && (arg1 != 0) && (arg3 == (func_8026D7D8(arg0, arg1 - 1, arg2) & 0x60))) {
-            sp1DC = 0;
-        }
+    if (ok != 0 && type == 3 && arg1 != 0 && arg3 == (func_8026D7D8(arg0, arg1 - 1, arg2) & 0x60)) {
+        ok = 0;
     }
-    if (sp1DC == 1) {
-        if (func_8027E8EC((s16) arg3, (s16) arg0, (s16) arg1, (s16) arg2) != 0) {
-            sp1B0 = 1;
-            switch (temp_v0) {                        /* irregular */
-            case 0:
-                func_8026D620(arg0, arg1, arg2, func_8026D7D8(arg0, arg1, arg2) | arg3);
-                break;
-            case 1:
-                func_8026D620(arg0, arg1, arg2, func_8026D7D8(arg0, arg1, arg2) | arg3);
-                temp_a1 = arg1 + 1;
-                func_8026D620(arg0, temp_a1, arg2, func_8026D7D8(arg0, temp_a1, arg2) | arg3);
-                break;
-            case 2:
-                sp20 = arg0 + 1;
-                sp24 = arg2 + 1;
-                func_8026D620(arg0, arg1, arg2, func_8026D7D8(arg0, arg1, arg2) | arg3);
-                sp138 = sp20;
-                func_8026D620(sp20, arg1, arg2, func_8026D7D8(sp20, arg1, arg2) | arg3);
-                sp128 = sp24;
-                func_8026D620(arg0, arg1, sp24, func_8026D7D8(arg0, arg1, sp24) | arg3);
-                sp108 = sp20;
-                sp110 = sp24;
-                func_8026D620(sp20, arg1, sp24, func_8026D7D8(sp20, arg1, sp24) | arg3);
-                break;
-            case 3:
-                sp24 = arg2 + 1;
-                sp20 = arg0 + 1;
-                func_8026D620(arg0, arg1, arg2, func_8026D7D8(arg0, arg1, arg2) | arg3);
-                spD8 = sp20;
-                func_8026D620(sp20, arg1, arg2, func_8026D7D8(sp20, arg1, arg2) | arg3);
-                spC8 = sp24;
-                func_8026D620(arg0, arg1, sp24, func_8026D7D8(arg0, arg1, sp24) | arg3);
-                spA8 = sp20;
-                spB0 = sp24;
-                func_8026D620(sp20, arg1, sp24, func_8026D7D8(sp20, arg1, sp24) | arg3);
-                temp_a1_2 = arg1 + 1;
-                sp28 = temp_a1_2;
-                func_8026D620(arg0, temp_a1_2, arg2, func_8026D7D8(arg0, temp_a1_2, arg2) | arg3);
-                sp7C = sp28;
-                func_8026D620(sp20, sp28, arg2, func_8026D7D8(sp20, sp28, arg2) | arg3);
-                sp68 = sp24;
-                func_8026D620(arg0, sp28, sp24, func_8026D7D8(arg0, sp28, sp24) | arg3);
-                sp50 = sp24;
-                sp4C = sp28;
-                func_8026D620(sp20, sp28, sp24, func_8026D7D8(sp20, sp28, sp24) | arg3);
-                break;
+    if (ok == 1) {
+        if (func_8027E8EC(arg3, arg0, arg1, arg2) != 0) {
+            ret = 1;
+            switch (type) {
+                case 0:
+                    func_8026EEF0(arg0, arg1, arg2, arg3, 1);
+                    break;
+                case 1:
+                    func_8026EEF0(arg0, arg1, arg2, arg3, 1);
+                    func_8026EEF0(arg0, arg1 + 1, arg2, arg3, 1);
+                    break;
+                case 2:
+                    func_8026EEF0(arg0, arg1, arg2, arg3, 1);
+                    func_8026EEF0(arg0 + 1, arg1, arg2, arg3, 1);
+                    func_8026EEF0(arg0, arg1, arg2 + 1, arg3, 1);
+                    func_8026EEF0(arg0 + 1, arg1, arg2 + 1, arg3, 1);
+                    break;
+                case 3:
+                    func_8026EEF0(arg0, arg1, arg2, arg3, 1);
+                    func_8026EEF0(arg0 + 1, arg1, arg2, arg3, 1);
+                    func_8026EEF0(arg0, arg1, arg2 + 1, arg3, 1);
+                    func_8026EEF0(arg0 + 1, arg1, arg2 + 1, arg3, 1);
+                    func_8026EEF0(arg0, arg1 + 1, arg2, arg3, 1);
+                    func_8026EEF0(arg0 + 1, arg1 + 1, arg2, arg3, 1);
+                    func_8026EEF0(arg0, arg1 + 1, arg2 + 1, arg3, 1);
+                    func_8026EEF0(arg0 + 1, arg1 + 1, arg2 + 1, arg3, 1);
+                    break;
             }
         } else {
-            func_8026D620(arg0, arg1, arg2, func_8026D7D8(arg0, arg1, arg2) & 0xFF9F);
+            func_8026EEF0(arg0, arg1, arg2, 0x60, 0);
         }
     }
-    return sp1B0;
+    return ret;
 }
 
 void func_8026F02C() {
