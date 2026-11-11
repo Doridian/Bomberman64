@@ -856,7 +856,6 @@ void func_8027A640(void) {
     func_8022616C(D_802AFE80, 1, func_802266DC(file), file);
     p = D_802AFE80;
     D_802AFE84 = p;
-    found = 0;
     x++;
     y++;
     z++;
