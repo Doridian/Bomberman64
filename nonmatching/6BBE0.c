@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 7141, eu 7141, jp 7101
+ * differing words: us 7128, eu 7128, jp 7088
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -820,49 +820,45 @@ void func_8025D008(u8 *arg0) {
 }
 
 void func_8025CEA0() {
-    f32 sp24;
-    f32 var_fv0;
-    f32 var_fv0_2;
-    f32 var_fv1;
-    s32 *temp_v0;
-    u8 *temp_a1;
-    u8 *temp_v0_2;
-    u8 *temp_v1;
-    u8 *temp_v1_2;
+    s32 *player;
+    u8 *obj;
+    f32 sign;
+    f32 off;
+    f32 *pos;
+    f32 *dst;
 
-    temp_v0 = func_802391F0();
-    if (M2C_FIELD(temp_v0, f32 *, 0x74) == 90.0f) {
-        var_fv1 = -1.0f;
+    player = func_802391F0();
+    if (M2C_FIELD(player, f32 *, 0x74) == 90.0f) {
+        sign = -1.0f;
     } else {
-        var_fv1 = 1.0f;
+        sign = 1.0f;
     }
-    if (var_fv1 < 0.0f) {
-        var_fv0 = 400.0f;
+    if (sign < 0.0f) {
+        off = 400.0f;
     } else {
-        var_fv0 = -400.0f;
+        off = -400.0f;
     }
-    temp_v1 = M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x18), void **, 0x40);
-    sp24 = var_fv1;
-    func_8028A81C(8, var_fv0 + M2C_FIELD(temp_v1, f32 *, 0x10), 150.0f, M2C_FIELD(temp_v1, f32 *, 0x18), 0);
-    temp_a1 = func_80231274(-1, 0x03000040, 0x20, NULL);
-    if (var_fv1 < 0.0f) {
-        var_fv0_2 = 400.0f;
+    pos = M2C_FIELD(M2C_FIELD(player, void **, 0x18), f32 **, 0x40);
+    func_8028A81C(8, pos[4] + off, 150.0f, pos[6], 0);
+    obj = func_80231274(-1, 0x03000040, 0x20, NULL);
+    if (sign < 0.0f) {
+        off = 400.0f;
     } else {
-        var_fv0_2 = -400.0f;
+        off = -400.0f;
     }
-    temp_v0_2 = M2C_FIELD(temp_a1, void **, 0x40);
-    temp_v1_2 = M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x18), void **, 0x40);
-    M2C_FIELD(temp_v0_2, f32 *, 0x18) = (f32) M2C_FIELD(temp_v1_2, f32 *, 0x18);
-    M2C_FIELD(temp_v0_2, f32 *, 0x10) = (f32) (var_fv0_2 + M2C_FIELD(temp_v1_2, f32 *, 0x10));
-    M2C_FIELD(temp_v0_2, f32 *, 0x14) = 100.0f;
-    M2C_FIELD(temp_a1, f32 *, 0x6C) = 0.0f;
-    M2C_FIELD(temp_a1, f32 *, 0x70) = 0.0f;
-    M2C_FIELD(temp_a1, f32 *, 0x68) = 0.0f;
-    M2C_FIELD(temp_a1, s32 *, 0x30) = 1;
-    M2C_FIELD(temp_a1, f32 *, 0x34) = 100.0f;
-    func_80232DB4(temp_a1);
+    dst = M2C_FIELD(obj, f32 **, 0x40);
+    pos = M2C_FIELD(M2C_FIELD(player, void **, 0x18), f32 **, 0x40);
+    dst[6] = pos[6];
+    dst[4] = pos[4] + off;
+    dst[5] = 100.0f;
+    M2C_FIELD(obj, f32 *, 0x6C) = 0.0f;
+    M2C_FIELD(obj, f32 *, 0x70) = 0.0f;
+    M2C_FIELD(obj, f32 *, 0x68) = 0.0f;
+    M2C_FIELD(obj, s32 *, 0x30) = 1;
+    M2C_FIELD(obj, f32 *, 0x34) = 100.0f;
+    func_80232DB4(obj);
     func_8023903C(0x1E);
-    func_8022FC90(temp_a1);
+    func_8022FC90(obj);
     func_80239430();
 }
 
