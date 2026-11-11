@@ -9,13 +9,13 @@
  * as the original does (without it, a nop and one word more), and the
  * dead `if (i) {}` after their D_800AEDF0 store keeps the D_800BA8A0
  * load after that store, as in the original (without them, ugen marks
- * the two tables .noalias and as1 moves the load up); func_80279DC8 loads
- * arg0->unk14 into v0 where the original uses v1, so its ret = 1 moves
- * (the dead `if (pos) {}` after arg0->unk3C's store, a fake, keeps it
- * the original's size, which sets func_8027A144's padding right). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
+ * the two tables .noalias and as1 moves the load up). func_8027036C is
+ * declared s32 here, as an implicit declaration would make it (it
+ * returns nothing): with void, func_80279DC8's arg0->unk14 reload took
+ * v0 where the original has v1. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 37, eu 37, jp 37
+ * differing words: us 17, eu 17, jp 17
  */
 #include "common.h"
 
@@ -142,7 +142,7 @@ void func_802502BC(s32);
 void func_8026C660(s32);
 f32 func_8026E8B8(void);
 void func_80270354(s32 *, s32);
-void func_8027036C(s32 *, s32);
+s32 func_8027036C(s32 *, s32);
 s32 func_802712A8(s32 *, s32);
 s32 func_80272024(s16);
 void func_802727D8(s32);
@@ -333,14 +333,10 @@ s32 func_80279DC8(UnkStruct_800BB4A8 *arg0, f32 arg1) {
     if (arg0->unk14->unk6C == 0.0f && arg0->unk14->unk68 == 0.0f) {
         func_8027036C(&arg0->unk54, 1);
         arg0->unk3C = 0.0f;
-        if (pos) {} /* fake: see the header */
     }
     pos = arg0->unk10;
-    if (arg0->unk14->unk58 == pos->unk10) {
-        ret = 1;
-        if (arg0->unk14->unk60 == pos->unk18) {
-            ret = 0;
-        }
+    if (arg0->unk14->unk58 == pos->unk10 && arg0->unk14->unk60 == pos->unk18) {
+        ret = 0;
     } else {
         ret = 1;
     }
