@@ -7,7 +7,7 @@
  * after it, which moves with the sizes before it. Not built into the
  * ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 253, eu 253, jp 253
+ * differing words: us 147, eu 147, jp 147
  */
 #include "common.h"
 
@@ -588,46 +588,50 @@ s32 func_802791C4(s16 arg0) {
                 ret = q * 20 + m * 5 + 3;
             } else {
                 n = arg0 - 9;
+                ret = arg0 - 9;
                 q = n / 6;
                 m = (n - q * 6) / 3;
                 if (m == 1) {
                     m++;
                 }
-                ret = q * 20 + m * 5 + (s16)(n % 6 % 3);
+                ret = ret % 6 % 3;
+                ret = q * 20 + m * 5 + ret;
             }
             ret += 0x2C;
             break;
         case 0x39:
-            n = arg0 - 0x39;
-            if (n >= 6) {
-                n = 0;
+            ret = arg0 - 0x39;
+            if (ret >= 6) {
+                ret = 0;
             }
-            ret = n + 2;
+            ret += 2;
             break;
         case 0x3F:
-            n = arg0 - 0x3F;
-            if (n >= 6) {
-                n = 0;
+            ret = arg0 - 0x3F;
+            if (ret >= 6) {
+                ret = 0;
             }
-            ret = n + 0xD;
+            ret = (u16)ret;
+            ret += 0xD;
             break;
         case 0x45:
-            n = arg0 - 0x45;
-            if (n >= 6) {
-                n = 0;
+            ret = arg0 - 0x45;
+            if (ret >= 6) {
+                ret = 0;
             }
-            ret = n + 0x18;
+            ret = (u16)ret;
+            ret += 0x18;
             break;
         case 0x4B:
-            n = arg0 - 0x4B;
-            if (n >= 6) {
-                n = 0;
+            ret = arg0 - 0x4B;
+            if (ret >= 6) {
+                ret = 0;
             }
-            ret = n + 0x23;
+            ret = (u16)ret;
+            ret += 0x23;
             break;
         default:
             ret = -1;
-            break;
     }
     return ret;
 }
