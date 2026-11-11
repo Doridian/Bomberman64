@@ -5,7 +5,7 @@
  * global, emitted in the original's order. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2143, eu 2143, jp 2143
+ * differing words: us 2074, eu 2074, jp 2074
  *
  * 13 of 47 match. Biggest left: func_802741D8 461, func_8027655C 436,
  * func_80274994 320, func_80276D68 171: m2c's control flow and untyped
@@ -196,7 +196,7 @@ s32 func_8027B5A8(void *);
 s16 func_8027DF40(s32);
 s16 func_8027DF9C(void);
 s32 func_8027E8EC(s16, s16, s16, s16);
-void func_8027F820(void);
+void func_8027F820();
 void func_8027F858(s32, s32);
 s32 func_80286CA8(s32, f32, f32, f32);
 s32 func_802870A8(void);
@@ -1529,7 +1529,7 @@ void func_80275120(f32 arg0, f32 arg1, f32 arg2, f32 *arg3, f32 *arg4, f32 *arg5
 
     func_8026DCAC(arg0, arg1, arg2, &sp28, 0);
     *arg3 = sp28.i[0];
-    if (sp28.f[0] != 0.0f) {
+    if (0.0f != sp28.f[0]) {
         *arg3 += sp28.f[0] / 100.0f;
     }
     if (arg1 < 0.0f) {
@@ -1539,12 +1539,12 @@ void func_80275120(f32 arg0, f32 arg1, f32 arg2, f32 *arg3, f32 *arg4, f32 *arg5
         }
     } else {
         *arg4 = sp28.i[1];
-        if (sp28.f[1] != 0.0f) {
-            *arg4 += sp28.f[1] / (100.0f * (f32) func_8026DC74((s32) *arg4));
+        if (0.0f != sp28.f[1]) {
+            *arg4 += sp28.f[1] / (100.0f * (f32) (s32) func_8026DC74((s32) *arg4));
         }
     }
     *arg5 = sp28.i[2];
-    if (sp28.f[2] != 0.0f) {
+    if (0.0f != sp28.f[2]) {
         *arg5 += sp28.f[2] / 100.0f;
     }
 }
@@ -1564,17 +1564,14 @@ s32 func_802750C0(s16 *arg0, s16 arg1) {
 }
 
 void func_80275034(s16 *arg0) {
-    s32 var_v0;
+    s32 v;
 
-    var_v0 = 0;
-    if (M2C_FIELD(arg0, f32 *, 0x44) <= func_8026E8B8()) {
-        var_v0 = 1;
-    }
-    if (var_v0 != 0) {
-        func_8027F820();
-        func_802313DC(M2C_FIELD(arg0, void **, 0x1C), 0x0103FFFF);
+    v = (((Ent88 *) arg0)->y <= func_8026E8B8()) ? 1 : 0;
+    if (v != 0) {
+        func_8027F820(((Ent88 *) arg0)->obj);
+        func_802313DC(((Ent88 *) arg0)->obj, 0x0103FFFF);
         func_80239094();
-        func_802734BC(M2C_FIELD(arg0, void **, 0x1C));
+        func_802734BC(((Ent88 *) arg0)->obj);
     }
 }
 
