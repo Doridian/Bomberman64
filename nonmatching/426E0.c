@@ -9,7 +9,7 @@
  * func_80228500 kept). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 848, eu 848, jp 848
+ * differing words: us 795, eu 795, jp 795
  *
  * The code is the same in every version.
  *
@@ -39,7 +39,7 @@
  *   with a 0x160 frame (ours 0x140, obj in t4 and spilled); its texture
  *   loop spills obj to 0xB0(sp), keeps 0xBC000000 in t5 with its own
  *   ori 6, and strength-reduces the slot offset.
- * - func_8022A328 (219): mostly registers. The original keeps j in t0
+ * - func_8022A328 (166): mostly registers. The original keeps j in t0
  *   for the two failure exits (ours stores zero and merges them) and
  *   re-materialises the pool base after the free-slot search.
  * - func_8022928C (92, the 3x3 inverse): nine element locals and
@@ -546,7 +546,8 @@ UnkObj *func_8022A328(UnkModel *arg0, s32 arg1, s32 arg2, u32 arg3, s32 arg4) {
         D_802A5474 = i;
         return NULL;
     }
-    if (i >= 0xA0) {
+    if (i < 0xA0) {
+    } else {
         D_802A5478 = j;
         D_802A5474 = i;
         return NULL;
@@ -584,15 +585,15 @@ UnkObj *func_8022A328(UnkModel *arg0, s32 arg1, s32 arg2, u32 arg3, s32 arg4) {
         D_800A0D00[D_802A5474].unk44 = func_8022D1D0(skel, arg0, arg3);
         func_80229F74(&D_800A0D00[D_802A5474], 1);
         func_80229E38(&D_800A0D00[D_802A5474], arg4, 0);
-        p = &D_800A0D00[D_802A5474];
+        p = &D_800A0D00[(u32)D_802A5474];
     }
     if (arg2 == 4) {
         p->unk20 = 0.0f;
         p->unk10 = 0.0f;
         p->unk24 = 0.0f;
         p->unk14 = 0.0f;
-        p->unk28 = p->unk18 = (u32)((u16 *)&arg0->unkC[arg3].unk4)[0];
-        p->unk2C = p->unk1C = (u32)((u16 *)&arg0->unkC[arg3].unk4)[1];
+        p->unk18 = p->unk28 = (u32)((u16 *)&arg0->unkC[arg3].unk4)[0];
+        p->unk1C = p->unk2C = (u32)((u16 *)&arg0->unkC[arg3].unk4)[1];
     } else {
         p->unk10 = 0.0f;
         p->unk14 = 0.0f;
