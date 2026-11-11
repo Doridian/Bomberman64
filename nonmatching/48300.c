@@ -6,7 +6,7 @@
  * boxes, func_8022E884). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1478, eu 1478, jp 1478
+ * differing words: us 1460, eu 1460, jp 1460
  *
  * A first draft: functions in the reverse of the ROM's order, which IDO
  * now emits exactly as the original does (stubs included); a handful by
@@ -1919,15 +1919,11 @@ void func_8022E3D4(f32 m[4][4], f32 *v) {
     static f32 D_802A5954;
     static f32 D_802A5958;
     f32 tx, ty, tz;
-    f32 x, y, z;
 
-    x = v[0];
-    y = v[1];
-    z = v[2];
-    tx = (x * m[0][0] + y * m[1][0] + z * m[2][0]) + m[3][0];
-    ty = (x * m[0][1] + y * m[1][1] + z * m[2][1]) + m[3][1];
-    tz = (x * m[0][2] + y * m[1][2] + z * m[2][2]) + m[3][2];
-    D_802A5958 = (x * m[0][3] + y * m[1][3] + z * m[2][3]) + m[3][3];
+    tx = (v[0] * m[0][0] + v[1] * m[1][0] + v[2] * m[2][0]) + m[3][0];
+    ty = (v[0] * m[0][1] + v[1] * m[1][1] + v[2] * m[2][1]) + m[3][1];
+    tz = (v[0] * m[0][2] + v[1] * m[1][2] + v[2] * m[2][2]) + m[3][2];
+    D_802A5958 = (v[0] * m[0][3] + v[1] * m[1][3] + v[2] * m[2][3]) + m[3][3];
     v[0] = tx * D_802A5958;
     v[1] = ty * D_802A5958;
     v[2] = tz * D_802A5958;
