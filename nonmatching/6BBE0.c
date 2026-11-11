@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 7273, eu 7273, jp 7233
+ * differing words: us 7267, eu 7267, jp 7227
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -3777,18 +3777,18 @@ static void func_802530A8(f32 *arg0) {
         tile2 = func_80252330((s32 *) ((u8 *)arg0 + 0x38), M2C_FIELD(arg0, f32 *, 0x80));
         if (M2C_FIELD(arg0, s32 *, 0) & 0x100) {
             dist = M2C_FIELD(arg0, f32 *, 0x74);
-            side = func_80252658((f32 *) ((u8 *)arg0 + 0x68), (f32 *) ((u8 *)arg0 + 0x20));
+            i = func_80252658((f32 *) ((u8 *)arg0 + 0x68), (f32 *) ((u8 *)arg0 + 0x20));
             if (M2C_FIELD(arg0, f32 *, 0x20) < M2C_FIELD(arg0, f32 *, 0x68)) {
                 wrap = -(M2C_FIELD(arg0, f32 *, 0x20) - M2C_FIELD(arg0, f32 *, 0x68));
             } else {
                 wrap = M2C_FIELD(arg0, f32 *, 0x20) - M2C_FIELD(arg0, f32 *, 0x68);
             }
             if (wrap > 50.0f) {
-                if ((side & 1) && func_80252CD4((u8 *) arg0, 90.0f)) {
+                if ((i & 1) && func_80252CD4((u8 *) arg0, 90.0f)) {
                     M2C_FIELD(arg0, f32 *, 0x74) = 90.0f;
-                } else if (!(side & 1) && func_80252CD4((u8 *) arg0, 270.0f)) {
+                } else if (!(i & 1) && func_80252CD4((u8 *) arg0, 270.0f)) {
                     M2C_FIELD(arg0, f32 *, 0x74) = 270.0f;
-                } else if (side & 2) {
+                } else if (i & 2) {
                     if (func_80252CD4((u8 *) arg0, 0.0f)) {
                         M2C_FIELD(arg0, f32 *, 0x74) = 0.0f;
                     } else {
@@ -3801,11 +3801,11 @@ static void func_802530A8(f32 *arg0) {
                         M2C_FIELD(arg0, f32 *, 0x74) = 0.0f;
                     }
                 }
-            } else if ((side & 2) && func_80252CD4((u8 *) arg0, 0.0f)) {
+            } else if ((i & 2) && func_80252CD4((u8 *) arg0, 0.0f)) {
                 M2C_FIELD(arg0, f32 *, 0x74) = 0.0f;
-            } else if (!(side & 2) && func_80252CD4((u8 *) arg0, 180.0f)) {
+            } else if (!(i & 2) && func_80252CD4((u8 *) arg0, 180.0f)) {
                 M2C_FIELD(arg0, f32 *, 0x74) = 180.0f;
-            } else if (side & 1) {
+            } else if (i & 1) {
                 if (func_80252CD4((u8 *) arg0, 90.0f)) {
                     M2C_FIELD(arg0, f32 *, 0x74) = 90.0f;
                 } else {
