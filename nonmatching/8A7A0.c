@@ -331,7 +331,7 @@ void func_8026ECE8(f32 arg0);
 void func_8026ECF4(void);
 void func_8026EE08(s32 arg0);
 void func_8026EE10(s32 arg0);
-u8 func_8026EE18(f32 arg0);
+s32 func_8026EE18(f32 arg0);
 void func_8026EEF0(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
 u16 func_8026EF50(f32 arg0, f32 arg1, f32 arg2);
 u16 func_8026EFD0(s32 arg0, s32 arg1, s32 arg2);

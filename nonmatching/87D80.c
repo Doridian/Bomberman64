@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 784, eu 784, jp 784
+ * differing words: us 779, eu 779, jp 779
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -330,7 +330,7 @@ void func_8026ECE8(f32 arg0);
 void func_8026ECF4(void);
 void func_8026EE08(s32 arg0);
 void func_8026EE10(s32 arg0);
-u8 func_8026EE18(f32 arg0);
+s32 func_8026EE18(f32 arg0);
 void func_8026EEF0(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
 s32 func_8026EF50(f32 arg0, f32 arg1, f32 arg2);
 s32 func_8026EFD0(s32 arg0, s32 arg1, s32 arg2);
@@ -746,50 +746,38 @@ void func_8026EEF0(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     func_8026D620(arg0, arg1, arg2, v);
 }
 
-u8 func_8026EE18(f32 arg0) {
-    s32 sp4;
-    s32 temp_a3;
-    s32 temp_ft2;
-    s32 var_a0;
-    s32 var_a1;
-    s32 var_v1;
-    s32 var_v1_2;
-    u8 *var_t0;
-    u8 temp_v0;
+s32 func_8026EE18(f32 arg0) {
+    s32 layer;
+    s32 h;
+    s32 iy;
+    UnkStruct_800B15D8 *m;
+    s32 r;
 
-    temp_a3 = D_800B15D8->unk0 + 1;
-    var_a0 = 0;
-    var_a1 = 0;
-    if (temp_a3 > 0) {
-        var_t0 = D_800B15D8;
-        temp_ft2 = (s32) (arg0 * 0.01f);
-loop_2:
-        if (temp_ft2 < var_a0) {
-            var_v1_2 = var_a1;
-            if (var_a1 > 0) {
-                var_v1_2 = var_a1 - 1;
+    h = 0;
+    for (layer = 0; layer < D_800B15D8->unk0 + 1; layer++) {
+        iy = (s32) (arg0 * 0.01f);
+        m = &D_800B15D8[layer];
+        if (iy < h) {
+            if (layer > 0) {
+                r = layer - 1;
+            } else {
+                r = layer;
             }
-            sp4 = var_v1_2;
-        } else if (var_a0 == temp_ft2) {
-            sp4 = var_a1;
-        } else {
-            temp_v0 = M2C_FIELD(var_t0, u8 *, 0x10);
-            var_a1 += 1;
-            var_t0 += 0xC34;
-            var_a0 += temp_v0;
-            if (var_a1 < temp_a3) {
-                goto loop_2;
-            }
+            break;
         }
+        if (h == iy) {
+            r = layer;
+            break;
+        }
+        h += m->unk10;
     }
-    var_v1 = sp4;
-    if (D_800B15D8->unk0 < var_a1) {
-        var_v1 = D_800B15D8->unk0;
+    if (D_800B15D8->unk0 < layer) {
+        r = D_800B15D8->unk0;
     }
     if (arg0 < 0.0f) {
-        var_v1 = -1;
+        r = -1;
     }
-    return (u8) var_v1;
+    return r;
 }
 
 void func_8026EE10(s32 arg0) {
