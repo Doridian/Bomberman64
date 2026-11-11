@@ -9,7 +9,7 @@
  * func_80228500 kept). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 506, eu 506, jp 506
+ * differing words: us 358, eu 358, jp 358
  *
  * The code is the same in every version.
  *
@@ -40,13 +40,21 @@
  *   the other cofactors row-major, then the zeros and 1.0f.
  *
  * Left:
- * - func_802289C0 (the draw loop, 262): obj is in s2 as in the
- *   original once the texture loop reads `unk4[i].unk0` beside a
- *   `&unk4[i]` slot pointer (the i*8 is strength-reduced, and the loop's
- *   pressure keeps obj out of the t registers). The original computes
- *   the slot address once and keeps func_802284F0's obj in memory at
- *   0xB0(sp) (ours colours it); the 0x160 frame comes from an unused
- *   `s32 pad[6]` in func_802284F0 (a guess at the bytes).
+ * - func_802289C0 (the draw loop, 114): obj is in s2 and
+ *   func_802284F0's obj is kept in memory as in the original once its
+ *   texture loop has the original's register pressure: model is
+ *   `unk4[i].unk0` and the then-branch index `unk4[i].unk4` (one slot
+ *   address, the i*8 strength-reduced), the else branch reads
+ *   anim->unk4 into a local, keeps the threshold test in a flag local
+ *   (`done`; the original tests `at` directly, so the pressure may come
+ *   from elsewhere) and writes the segment through a `g = gfx` taken
+ *   first. `anim->unk4 == anim->unk0 - 1` keeps the two unk4 + 1 apart.
+ *   Left: registers in the loop and after it, obj's home at 0xB8 (the
+ *   original's 0xB0; `s32 pad[2]` keeps the 0x160 frame), and the
+ *   D_8029F840 store, which the original puts in func_80228500's jal
+ *   delay slot. The ry ternary's `: 0` (an int) gives the original's
+ *   mtc1 pair; the matrix stack is a frame struct's `mtx[]`, as in
+ *   41FD0.c.
  * - func_8022A328 (158): mostly registers. The original keeps j in t0
  *   for the two failure exits (ours stores zero and merges them) and
  *   re-materialises the pool base after the free-slot search.
@@ -1151,30 +1159,37 @@ static s32 func_802284F8(UnkObj *arg0, UnkGfx **arg1) {
 static void func_802284F0(UnkObj *arg0, UnkGfx **arg1) {
     UnkGfx *gfx;
     s32 i;
-    UnkTexSlot *slot;
+    UnkGfx *g;
     UnkTexAnim *anim;
     UnkModel *model;
-    s32 pad[6];
+    s32 idx;
+    s32 cur;
+    s32 done;
+    s32 pad[2];
 
     gfx = *arg1;
     for (i = 0; i < arg0->unk4C->unk0; i++) {
-        slot = &arg0->unk4C->unk4[i];
         anim = &arg0->unk4C->unk8[i];
         model = arg0->unk4C->unk4[i].unk0;
         if (arg0->unk4C->unk8 == NULL) {
-            gSPSegment(gfx++, i + 3, (u8 *)model + model->unkC[slot->unk4].unk8);
+            idx = arg0->unk4C->unk4[i].unk4;
+            gSPSegment(gfx++, i + 3, (u8 *)model + model->unkC[idx].unk8);
         } else {
-            if (anim->unk8 >= anim->unkC[anim->unk4 * 2 + 1]) {
+            g = gfx;
+            cur = anim->unk4;
+            done = anim->unk8 >= anim->unkC[cur * 2 + 1];
+            if (done) {
                 anim->unk8 = 0;
-                if (anim->unk0 == anim->unk4 + 1) {
+                if (anim->unk4 == anim->unk0 - 1) {
                     anim->unk4 = 0;
                 } else {
-                    anim->unk4 = anim->unk4 + 1;
+                    anim->unk4++;
                 }
             } else {
                 anim->unk8 = anim->unk8 + 1;
             }
-            gSPSegment(gfx++, i + 3, (u8 *)model + model->unkC[anim->unkC[anim->unk4 * 2]].unk8);
+            gfx = g + 1;
+            gSPSegment(g, i + 3, (u8 *)model + model->unkC[anim->unkC[anim->unk4 * 2]].unk8);
         }
     }
     *arg1 = gfx;
