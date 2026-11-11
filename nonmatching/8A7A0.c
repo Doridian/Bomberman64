@@ -7,7 +7,7 @@
  * order. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 72, eu 72, jp 72
+ * differing words: us 68, eu 68, jp 68
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file (475 words in the one-file draft, 39
@@ -16,8 +16,9 @@
  * the tests func_80270384/func_802702BC are inlined by umerge where the
  * original calls them; the callers call them rather than spell them out.
  * 49 of 54 match. Left: func_80270770 35 (flags and ok in v1/a0
- * where the original has a0/a1), func_80271BB8 25 (the s temp's slot
- * at 68, the second unk40 pointer in v1, the tail's schedule),
+ * where the original has a0/a1), func_80271BB8 21 (the second unk40
+ * pointer in v0 where the original has v1, and the tail's &SLOTS[arg0]
+ * reloaded into t registers where the original keeps it in v0),
  * func_80270C24 8 (the flag tests' t registers one higher than the
  * original's), func_8027241C 3, func_80271010 1 (one add.s with its
  * operands swapped).
@@ -1147,9 +1148,11 @@ void func_80271BB8(s16 arg0) {
     Sub8E *t;
     f32 ppos[3];
     f32 opos[3];
+    f32 s;
     Obj8E *obj;
 
-    if (func_80270714(arg0) != 0) {
+    /* func_80270714 spelled out: one inlined parameter fewer, so s fits the original's frame */
+    if ((func_802702BC(arg0) != 0 ? 0 : SLOTS[arg0].unkC) != 0) {
         return;
     }
     pl = func_802443F4(arg0);
@@ -1204,10 +1207,10 @@ void func_80271BB8(s16 arg0) {
         func_80271178(arg0, (s32) obj);
         func_80271010((u8 *) obj, arg0);
         obj->unk40->rot = pl->unk40->rot;
-        dx = func_80234434(pl->unk40->rot);
-        dx = func_80270F44((u8 *) pl) * dx;
-        dz = func_80234408(pl->unk40->rot);
-        dz = func_80270F44((u8 *) pl) * dz;
+        s = func_80234434(pl->unk40->rot);
+        dx = func_80270F44((u8 *) pl) * s;
+        s = func_80234408(pl->unk40->rot);
+        dz = func_80270F44((u8 *) pl) * s;
         if (func_802336E4(dx) != 0) {
             dx = 0.0f;
         }
