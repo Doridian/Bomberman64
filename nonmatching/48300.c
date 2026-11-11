@@ -6,7 +6,7 @@
  * boxes, func_8022E884). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1400, eu 1400, jp 1400
+ * differing words: us 1330, eu 1330, jp 1330
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does (the stubs at 0x8022E0A4-0x8022E87C are
@@ -18,15 +18,18 @@
  *     func_802304C0, D_802A5560-70 in func_80230604, D_802A57A0-A8 and
  *     D_802A5734/58/8C in func_8023017C) are reached with lui/%lo at
  *     every access, as the original does;
- *   - func_80232FF8, func_80232FA8 and func_802312AC are global: as
- *     statics IPA moved func_80232FF8's register saves into
- *     func_802334CC, and func_802312AC would get only t6-t9;
+ *   - func_80232FF8, func_80232FA8, func_802312AC and func_802320A8
+ *     are global: as statics IPA moved func_80232FF8's register saves
+ *     into func_802334CC, and the others would get only t6-t9;
  *   - float sums are written (a*b + c*d + e*f) + g, and int and float
  *     constants (90, 0 in compares) are kept apart as the original's are.
  * Biggest left: func_8022E884 (758 words: the original reaches case 1's
  * arrays through a2/a3 and the others' with lui/%lo; file-scope statics
- * keep them in s registers), func_80231D88 with its static func_802320A8 (477: the
- * original promotes a loop variable to fs3 and doesn't hoist 90.0f),
+ * keep them in s registers), func_802320A8 (398: the original keeps n in fs3
+ * over the whole loop, loaded from its home before it and stored after,
+ * which IDO does only for a variable live into the loop; the use in the
+ * first switch's default stands in for whatever made it live there, at
+ * the cost of its two words; t stays in memory),
  * func_8022FF58 with func_8023017C (72: colouring, and the argument
  * a3 is set first in the original's calls),
  * func_8022FC90 (14: the found value belongs in v0), func_80232E60 (12:
@@ -243,7 +246,7 @@ void func_80231408(u8 *arg0, s32 arg1);
 void func_80231434(UnkStructA80 *arg0);
 void func_80231D60(f32 arg0, f32 arg1, f32 arg2, f32 arg3);
 void func_80231D88(u8 *arg0, u8 *arg1, f32 *arg2, f32 *arg3);
-static void func_802320A8(void);
+void func_802320A8(void);
 void func_80232A34(u8 *arg0, s32 arg1);
 void func_80232AA8(u8 *arg0);
 void func_80232AC8(u8 *arg0, u8 *arg1);
@@ -592,7 +595,7 @@ void func_80232A34(u8 *arg0, s32 arg1) {
     M2C_FIELD(sv_a2, s32 *, 4) = sv_a3;
 }
 
-static void func_802320A8() {
+void func_802320A8() {
     f32 sp134[3];
     f32 sp128[3];
     f32 sp11C[3];
@@ -617,9 +620,9 @@ static void func_802320A8() {
     f32 x;
     f32 y;
     f32 sp80[3];
-    f32 n[1];
+    f32 n;
     f32 v;
-    f32 t;
+    f32 t[1];
 
     obj = (UnkStructA80 *) func_802391F0();
     parent = obj->unk44;
@@ -644,11 +647,11 @@ static void func_802320A8() {
                 sp104[1] = x - 360.0f;
             } else {
                 if (spE4[1] < 90.0f) {
-                    n[0] = x + 360.0f;
+                    n = x + 360.0f;
                 } else {
-                    n[0] = x;
+                    n = x;
                 }
-                sp104[1] = n[0];
+                sp104[1] = n;
             }
             sp104[2] = obj->unk3C->unk4;
             func_8022FEAC(sp104, spBC);
@@ -687,7 +690,7 @@ static void func_802320A8() {
             sp128[2] = obj->unk40->pos[2] + c;
             break;
         default:
-            for (;;) {}
+            for (;;) { obj->unk4C[1] = n; }
         }
         func_8022F808((f32 *) obj, obj->unk58);
         func_8022FF58(sp110, sp128, spD4);
@@ -697,11 +700,11 @@ static void func_802320A8() {
             spF8[1] = x - 360.0f;
         } else {
             if (spD4[1] < 90.0f) {
-                n[0] = x + 360.0f;
+                n = x + 360.0f;
             } else {
-                n[0] = x;
+                n = x;
             }
-            spF8[1] = n[0];
+            spF8[1] = n;
         }
         spF8[2] = obj->unk3C->unk4;
         func_8022FEAC(spF8, spC8);
@@ -712,11 +715,11 @@ static void func_802320A8() {
                 obj->unk4C[1] = x - 360.0f;
             } else {
                 if (x < 0.0f) {
-                    n[0] = x + 360.0f;
+                    n = x + 360.0f;
                 } else {
-                    n[0] = x;
+                    n = x;
                 }
-                obj->unk4C[1] = n[0];
+                obj->unk4C[1] = n;
             }
             obj->unk4C[2] = spF8[2];
             obj->unk40->pos[0] = sp110[0] + spC8[0];
@@ -745,36 +748,36 @@ static void func_802320A8() {
             obj->unk40->rot[1] = obj->unk44->unk40->rot[1];
             v = obj->unk44->unk40->rot[1];
             if (v >= 0.0f && v <= 180.0f) {
-                t = v;
+                t[0] = v;
             } else {
-                t = (360.0f - v) * -1.0f;
+                t[0] = (360.0f - v) * -1.0f;
             }
             if (sp80[0] >= 0.0f && sp80[0] <= 180.0f) {
-                n[0] = sp80[0];
+                n = sp80[0];
             } else {
-                n[0] = (360.0f - sp80[0]) * -1.0f;
+                n = (360.0f - sp80[0]) * -1.0f;
             }
-            x = t - n[0];
+            x = t[0] - n;
             if (x >= 360.0f) {
                 sp80[0] = x - 360.0f;
             } else {
                 if (x < 0.0f) {
-                    n[0] = x + 360.0f;
+                    n = x + 360.0f;
                 } else {
-                    n[0] = x;
+                    n = x;
                 }
-                sp80[0] = n[0];
+                sp80[0] = n;
             }
             x = sp80[1] - 90.0f;
             if (x >= 360.0f) {
                 sp80[1] = x - 360.0f;
             } else {
                 if (sp80[1] < 90.0f) {
-                    n[0] = x + 360.0f;
+                    n = x + 360.0f;
                 } else {
-                    n[0] = x;
+                    n = x;
                 }
-                sp80[1] = n[0];
+                sp80[1] = n;
             }
             func_8022FEAC(sp80, sp134);
             sp134[0] = sp110[0];
@@ -793,16 +796,16 @@ static void func_802320A8() {
             obj->unk40->rot[1] = sp80[0];
             x = sp80[1] - 180.0f;
             if (x >= 360.0f) {
-                n[0] = x - 360.0f;
+                n = x - 360.0f;
             } else {
                 if (sp80[1] < 180.0f) {
-                    t = x + 360.0f;
+                    t[0] = x + 360.0f;
                 } else {
-                    t = x;
+                    t[0] = x;
                 }
-                n[0] = t;
+                n = t[0];
             }
-            obj->unk40->rot[0] = n[0] * -1.0f;
+            obj->unk40->rot[0] = n * -1.0f;
             break;
         }
         func_80239094();
