@@ -7,9 +7,13 @@
  * flags: -O3
  * differing words: us 1583, eu 1583, jp 1583
  *
- * 13 of 47 match. Biggest left: func_802741D8 461, func_8027655C 436,
- * func_80274994 320, func_80276D68 171: m2c's control flow and untyped
- * structs.
+ * 36 of 47 match. Biggest left: func_802741D8 461, func_8027655C 436,
+ * func_80274994 320 (still m2c's control flow and untyped offsets),
+ * func_80275DD8 150 (the ABS chains: the original keeps some ?: temps
+ * on the stack), func_802763DC 73 (cvt'd floats stored to dead stack
+ * homes), func_80276184 60 and func_80275C7C 34 (a flag test wants v0
+ * but the entity pointer holds it); the rest are a few words of
+ * register or stack-slot order.
  */
 #include "common.h"
 
