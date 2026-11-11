@@ -5,7 +5,7 @@
  * global, emitted in the original's order. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1739, eu 1739, jp 1739
+ * differing words: us 1711, eu 1711, jp 1711
  *
  * 13 of 47 match. Biggest left: func_802741D8 461, func_8027655C 436,
  * func_80274994 320, func_80276D68 171: m2c's control flow and untyped
@@ -1212,59 +1212,57 @@ block_88:
 }
 
 void func_80275C7C(s16 arg0, u8 *arg1, s16 arg2) {
-    s16 *temp_a0_2;
-    s16 *temp_v0;
-    s16 temp_a1;
-    s16 temp_v0_2;
-    s16 temp_v1;
-    s16 var_v1;
-    s32 *temp_a0;
-    s32 var_at;
-    s32 var_t9;
-    u8 *temp_a3;
+    s16 f;
+    Ent88 *e;
+    s16 *row;
+    s16 *p;
+    s32 id;
+    s32 cur;
+    s32 i;
+    s32 fl;
+    s32 neg;
+    void *n;
 
-    temp_v0 = func_802703B4(arg1);
-    if ((temp_v0 != NULL) && (temp_v1 = M2C_FIELD(temp_v0, s16 *, 0x64), ((s16) (temp_v1 & 0x10) == 0))) {
-        if ((s16) (temp_v1 & 0x200) != 0) {
-            M2C_FIELD(temp_v0, s16 *, 0x64) = (s16) (temp_v1 & 0xFDFF);
-            func_802313DC(M2C_FIELD(temp_v0, void **, 0x1C), 0x20000);
-            temp_a0 = M2C_FIELD(temp_v0, s32 **, 0x38);
-            func_80270A80(temp_a0);
-            free(temp_a0);
+    e = (Ent88 *) func_802703B4(arg1);
+    if (e == NULL) {
+        return;
+    }
+    fl = e->unk64;
+    if ((f = fl & 0x10) != 0) {
+        return;
+    }
+    if ((f = fl & 0x200) != 0) {
+        e->unk64 = fl & ~0x200;
+        func_802313DC(e->obj, 0x20000);
+        n = e->unk38;
+        func_80270A80(n);
+        free(n);
+    }
+    if (e->unk10 & 0x100) {
+        return;
+    }
+    row = IDS[arg0];
+    neg = -1;
+    id = e->unk0;
+    for (i = 0; i < 8; i = (s16) (i + 1)) {
+        p = &row[i];
+        cur = *p;
+        if (id == cur && arg2 == e->unk74) {
+            return;
         }
-        var_v1 = 0;
-        if (!(M2C_FIELD(temp_v0, s16 *, 0x10) & 0x100)) {
-            temp_a1 = M2C_FIELD(temp_v0, s16 *, 0);
-            temp_a3 = (arg0 * 0x12) + D_802AFC78;
-            var_t9 = 0 * 2;
-loop_6:
-            temp_a0_2 = temp_a3 + var_t9;
-            temp_v0_2 = *temp_a0_2;
-            if ((temp_a1 != temp_v0_2) || (arg2 != M2C_FIELD(temp_v0, s16 *, 0x74))) {
-                var_at = var_v1 < 8;
-                if (temp_a1 != temp_v0_2) {
-                    if (temp_v0_2 == -1) {
-                        *temp_a0_2 = temp_a1;
-                        goto block_12;
-                    }
-                    var_v1 += 1;
-                    var_t9 = var_v1 * 2;
-                    if (var_v1 >= 8) {
-block_12:
-                        var_at = var_v1 < 8;
-                        goto block_13;
-                    }
-                    goto loop_6;
-                }
-block_13:
-                if (var_at != 0) {
-                    M2C_FIELD((temp_a3 + (var_v1 * 2)), s16 *, 2) = -1;
-                    M2C_FIELD(temp_v0, s16 *, 0xE) = arg0;
-                    M2C_FIELD(temp_v0, s16 *, 0x64) = (s16) (M2C_FIELD(temp_v0, s16 *, 0x64) | 4);
-                    M2C_FIELD(temp_v0, s16 *, 0x74) = arg2;
-                }
-            }
+        if (id == cur) {
+            break;
         }
+        if (neg == cur) {
+            *p = id;
+            break;
+        }
+    }
+    if (i < 8) {
+        row[i + 1] = neg;
+        e->unkE = arg0;
+        e->unk64 |= 4;
+        e->unk74 = arg2;
     }
 }
 
