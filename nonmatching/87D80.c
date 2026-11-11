@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2050, eu 2050, jp 2050
+ * differing words: us 1854, eu 1854, jp 1854
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -479,110 +479,79 @@ void func_8026FC08(s32 arg0) {
     }
 }
 
-void func_8026F8B0() {
-    s32 sp5C;
-    s32 sp50;
-    s32 sp4C;
-    s32 sp48;
-    s32 sp44;
-    s32 sp40;
-    s16 temp_v0_3;
-    s32 temp_s0_2;
-    s32 temp_s1;
-    s32 temp_s2_2;
-    s32 temp_s3;
-    s32 temp_s4;
-    s32 temp_s5;
-    s32 temp_t8;
-    s32 temp_v0;
-    s32 var_fp;
-    s32 var_s0_2;
-    s32 var_s7;
-    s32 var_v0;
-    s32 var_v1;
-    u16 temp_v0_2;
-    u8 temp_s2;
-    u8 var_s0;
-    u8 var_s1;
-    u8 *temp_s0;
+void func_8026F8B0(void) {
+    s32 x;
+    s32 j;
+    s32 k;
+    s32 y;
+    s32 z;
+    s32 i;
+    s32 x1;
+    s32 y1;
+    s32 count;
+    s32 n;
+    s32 ok;
+    s32 a1;
+    s32 a0;
+    s32 a6;
+    s32 a5;
+    s32 a4;
+    s32 a3;
+    s32 a2;
 
-    temp_s2 = D_800B15D8->unk0;
-    var_fp = 0;
-    if ((s32) temp_s2 > 0) {
-        var_v1 = D_800B15D8->unk8 * 8;
-        do {
-            var_s1 = D_800B15D8->unk3;
-            if ((s32) var_s1 < var_v1) {
-                var_v0 = D_800B15D8->unk4 * 8;
-                do {
-                    var_s0 = D_800B15D8->unk1;
-                    if ((s32) var_s0 < var_v0) {
-                        do {
-                            func_8026F5E8((s32) var_s0, var_fp, (s32) var_s1);
-                            var_s0 += 1;
-                            temp_t8 = D_800B15D8->unk4 * 8;
-                            var_v0 = temp_t8;
-                        } while ((s32) var_s0 < temp_t8);
-                        var_v1 = D_800B15D8->unk8 * 8;
-                    }
-                    var_s1 += 1;
-                } while ((s32) var_s1 < var_v1);
+    n = D_800B15D8->unk0;
+    for (i = 0; i < n; i++) {
+        for (k = D_800B15D8->unk3; k < D_800B15D8->unk8 * 8; k++) {
+            for (j = D_800B15D8->unk1; j < D_800B15D8->unk4 * 8; j++) {
+                func_8026F5E8(j, i, k);
             }
-            var_fp += 1;
-        } while (var_fp != temp_s2);
-        var_fp = 0;
+        }
     }
-    temp_v0 = func_8027DF9C();
-    if (temp_v0 > 0) {
+    count = func_8027DF9C();
+    for (i = 0; i < count; i++) {
         do {
-loop_11:
-            sp5C = 0;
-            temp_s3 = func_80234248(D_800B15D8->unk0 - 1) + D_800B15D8->unk2;
-            temp_s0 = &D_800B15D8[temp_s3];
-            temp_s4 = func_80234248((M2C_FIELD(temp_s0, u8 *, 0xE) * 8) - 1) + D_800B15D8->unk1;
-            temp_s5 = func_80234248((M2C_FIELD(temp_s0, u8 *, 0xF) * 8) - 1) + D_800B15D8->unk3;
-            temp_v0_2 = func_8026D7D8(temp_s4, temp_s3, temp_s5);
-            if (!(temp_v0_2 & 0x70) && !(temp_v0_2 & 0x60)) {
-                var_s0_2 = 0;
-                sp40 = 0;
-                sp44 = 0;
-                sp48 = 0;
-                sp4C = 0;
-                sp50 = 0;
-                var_s7 = 0;
-                temp_v0_3 = func_8027DF40(0x20);
-                if (temp_v0_3 != 1) {
-                    if (temp_v0_3 != 2) {
-                        temp_s1 = temp_s4 + 1;
-                        if (temp_v0_3 != 3) {
-
-                        } else {
-                            temp_s2_2 = temp_s5 + 1;
-                            var_s7 = func_8026D7D8(temp_s1, temp_s3, temp_s5) & 0x70;
-                            sp50 = func_8026D7D8(temp_s4, temp_s3, temp_s2_2) & 0x70;
-                            temp_s0_2 = temp_s3 + 1;
-                            sp4C = func_8026D7D8(temp_s1, temp_s3, temp_s2_2) & 0x70;
-                            sp48 = func_8026D7D8(temp_s4, temp_s0_2, temp_s5) & 0x70;
-                            sp44 = func_8026D7D8(temp_s1, temp_s0_2, temp_s5) & 0x70;
-                            sp40 = func_8026D7D8(temp_s4, temp_s0_2, temp_s2_2) & 0x70;
-                            var_s0_2 = func_8026D7D8(temp_s1, temp_s0_2, temp_s2_2) & 0x70;
-                        }
-                    } else {
-                        var_s7 = func_8026D7D8(temp_s4 + 1, temp_s3, temp_s5) & 0x70;
-                        sp50 = func_8026D7D8(temp_s4, temp_s3, temp_s5 + 1) & 0x70;
-                    }
-                } else {
-                    var_s7 = func_8026D7D8(temp_s4, temp_s3 + 1, temp_s5) & 0x70;
+            ok = 0;
+            y = func_80234248(D_800B15D8->unk0 - 1) + D_800B15D8->unk2;
+            x = func_80234248(D_800B15D8[y].unkE * 8 - 1) + D_800B15D8->unk1;
+            z = func_80234248(D_800B15D8[y].unkF * 8 - 1) + D_800B15D8->unk3;
+            a0 = func_8026D7D8(x, y, z);
+            if (!(a0 & 0x70) && !(a0 & 0x60)) {
+#line 20010
+                a0 = 0;
+                a2 = 0;
+                a3 = 0;
+                a4 = 0;
+                a5 = 0;
+                a6 = 0;
+                a1 = 0;
+#line 20000
+                switch (func_8027DF40(0x20)) {
+#line 20020
+                    case 1:
+                        a1 = func_8026D7D8(x, y + 1, z) & 0x70;
+                        break;
+                    case 2:
+                        a1 = func_8026D7D8(x + 1, y, z) & 0x70;
+                        a6 = func_8026D7D8(x, y, z + 1) & 0x70;
+                        break;
+                    case 3:
+                        x1 = x + 1;
+                        n = z + 1;
+                        a1 = func_8026D7D8(x1, y, z) & 0x70;
+                        a6 = func_8026D7D8(x, y, n) & 0x70;
+                        y1 = y + 1;
+                        a5 = func_8026D7D8(x1, y, n) & 0x70;
+                        a4 = func_8026D7D8(x, y1, z) & 0x70;
+                        a3 = func_8026D7D8(x1, y1, z) & 0x70;
+                        a2 = func_8026D7D8(x, y1, n) & 0x70;
+                        a0 = func_8026D7D8(x1, y1, n) & 0x70;
+                        break;
                 }
-                if ((var_s7 | sp50 | sp4C | sp48 | sp44 | sp40 | var_s0_2) == 0) {
-                    sp5C = func_8026F068(temp_s4, temp_s3, temp_s5, 0x20);
+                if ((a1 | a6 | a5 | a4 | a3 | a2 | a0) == 0) {
+                    ok = func_8026F068(x, y, z, 0x20);
                 }
             }
-            if (sp5C == 0) {
-                goto loop_11;
-            }
-            var_fp += 1;
-        } while (var_fp < temp_v0);
+        } while (ok == 0);
     }
 }
 
