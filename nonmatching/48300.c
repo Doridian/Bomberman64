@@ -6,7 +6,7 @@
  * boxes, func_8022E884). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1203, eu 1203, jp 1203
+ * differing words: us 1197, eu 1197, jp 1197
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does (the stubs at 0x8022E0A4-0x8022E87C are
@@ -208,7 +208,7 @@ void func_8022FA88(f32 *arg0, s32 arg1, f32 *arg2);
 f32 func_8022FB00(u8 *arg0);
 void func_8022FC0C(s32 arg0);
 void func_8022FC18(void);
-static void func_8022FC20(u8 *arg0, s32 *arg1);
+static void func_8022FC20(s32 *arg0, u8 *arg1);
 static void func_8022FC50(u8 *arg0);
 s32 func_8022FC90(UnkStructA80 *arg0);
 void func_8022FDE8(void);
@@ -454,9 +454,9 @@ void func_80232E60(void) {
         o->unk0 = i;
         func_80230C08((s32 *) o);
     }
-    func_8022FC20((u8 *) D_800A3F00, (s32 *) &D_802A55F8);
+    func_8022FC20((s32 *) &D_802A55F8, (u8 *) D_800A3F00);
     for (i = 0, o = D_800A3F00; i < 0x7E; i++, o++) {
-        func_8022FC20((u8 *) (o + 1), (s32 *) o);
+        func_8022FC20((s32 *) o, (u8 *) (o + 1));
     }
     for (i = 0; i < 0x48; i++) {
         D_802A5818[i] = -1;
@@ -586,9 +586,9 @@ void func_80232A34(u8 *arg0, s32 arg1) {
         } else {
             var_a1 = D_802A56F8;
         }
-        func_8022FC20(sv_a2, var_a1);
+        func_8022FC20(var_a1, sv_a2);
     } else {
-        func_8022FC20(sv_a2, &D_802A5678);
+        func_8022FC20(&D_802A5678, sv_a2);
     }
     M2C_FIELD(sv_a2, s32 *, 4) = sv_a3;
 }
@@ -1253,9 +1253,9 @@ void *func_80230CB4(s32 arg0, s32 arg1, s32 arg2, s32 arg3, u8 *arg4) {
         } else {
             list = D_802A56F8;
         }
-        func_8022FC20((u8 *) obj, list);
+        func_8022FC20(list, (u8 *) obj);
     } else {
-        func_8022FC20((u8 *) obj, (s32 *) &D_802A5678);
+        func_8022FC20((s32 *) &D_802A5678, (u8 *) obj);
     }
     obj->unk8 |= 0x80000000 | arg2;
     obj->unk4 = arg3;
@@ -1596,7 +1596,7 @@ s32 func_8022FC90(UnkStructA80 *arg0) {
     }
     arg0->unk8 = 0;
     func_8022FC50((u8 *) arg0);
-    func_8022FC20((u8 *) arg0, (s32 *) &D_802A55F8);
+    func_8022FC20((s32 *) &D_802A55F8, (u8 *) arg0);
     func_8022A1E8(arg0->unk40);
     func_8026CCBC(arg0->unk28);
     arg0->unk28 = -1;
@@ -1636,15 +1636,15 @@ static void func_8022FC50(u8 *arg0) {
     M2C_FIELD(M2C_FIELD(arg0, void **, 0x78), void **, 0x7C) = NULL;
 }
 
-static void func_8022FC20(u8 *arg0, s32 *arg1) {
+static void func_8022FC20(s32 *arg0, u8 *arg1) {
     u8 *temp_v0;
 
-    M2C_FIELD(arg0, s32 **, 0x78) = arg1;
-    M2C_FIELD(arg0, void **, 0x7C) = (void *) M2C_FIELD(arg1, void **, 0x7C);
-    M2C_FIELD(arg1, void **, 0x7C) = arg0;
-    temp_v0 = M2C_FIELD(arg0, void **, 0x7C);
+    M2C_FIELD(arg1, s32 **, 0x78) = arg0;
+    M2C_FIELD(arg1, void **, 0x7C) = (void *) M2C_FIELD(arg0, void **, 0x7C);
+    M2C_FIELD(arg0, void **, 0x7C) = arg1;
+    temp_v0 = M2C_FIELD(arg1, void **, 0x7C);
     if (temp_v0 != NULL) {
-        M2C_FIELD(temp_v0, void **, 0x78) = arg0;
+        M2C_FIELD(temp_v0, void **, 0x78) = arg1;
     }
 }
 
