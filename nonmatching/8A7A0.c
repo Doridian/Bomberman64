@@ -7,7 +7,7 @@
  * order. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 380, eu 380, jp 380
+ * differing words: us 377, eu 377, jp 377
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file (475 words in the one-file draft, 39
@@ -1141,7 +1141,6 @@ void func_80271BB8(s16 arg0) {
     f32 opos[3];
     f32 s;
     Obj8E *obj;
-    Slot30 *sl;
     Sub8E *t;
 
     if (func_80270714(arg0) != 0) {
@@ -1192,12 +1191,13 @@ void func_80271BB8(s16 arg0) {
         obj->unk40->y = opos[1];
         obj->unk40->z = opos[2];
     } else {
-        sl = &SLOTS[arg0];
-        sl->unk8 = flags;
+        SLOTS[arg0].unk8 = flags;
         func_80231408(obj, 0x10000);
         func_80232AC8((s32) pl, (s32) obj);
         func_80231408(obj, 0x200000);
-        func_80271178(arg0, (s32) obj);
+        if (func_802702BC(arg0) == 0) {
+            SLOTS[arg0].unkC = (s32) obj;
+        }
         func_80271010((u8 *) obj, arg0);
         obj->unk40->rot = pl->unk40->rot;
         s = func_80234434(pl->unk40->rot);
@@ -1210,10 +1210,10 @@ void func_80271BB8(s16 arg0) {
         if (func_802336E4(dz) != 0) {
             dz = 0.0f;
         }
-        obj->unk4C = dx - sl->unk1C;
+        obj->unk4C = dx - SLOTS[arg0].unk1C;
         obj->unk50 = obj->unk40->y - pl->unk40->y;
         obj->unk6C = 1.0f;
-        obj->unk54 = dz - sl->unk24;
+        obj->unk54 = dz - SLOTS[arg0].unk24;
         obj->unk70 = 1.6333334f;
     }
 }
