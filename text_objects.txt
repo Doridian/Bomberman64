@@ -51,21 +51,22 @@ main_code 97610
 # 0x802AD0D0.
 main_code 78F60
 
-# 87D80 is three -O3 objects. IDO -O3 emits a file's functions callees
-# first (roots in reverse source order, every call or address taken an
-# edge), and the asm breaks that only across these two boundaries:
-# 8027361C (87D80) takes the address of func_8027723C (8E730) and is
-# emitted before it; 802752BC..802757E0 and 80275948 (8E730) call
-# func_80277FC4 and func_80278D54 (926A0), 8027783C calls func_80278DBC.
-# Split there, a draft's three files come out in the asm's order exactly.
-# 8E730's .rodata starts on 16 at 0x802A3D20 (jtbl, after 87D80's last
-# float at 0x802A3D1C); 926A0's .rodata after a zero pad word at
-# 0x802A3DEC (0x802A3DF0), its .data at 0x802A14F0 and its .bss at
-# 0x802AFE70, all 16-byte boundaries, and nothing before them uses those.
-main_code 8E730
+# 87D80 is three -O3 objects: 87D80, 8A7A0 (below) and 926A0. IDO -O3
+# emits a file's functions callees first (roots in reverse source
+# order, every call an edge), and 8A7A0's object calls 926A0's
+# (802752BC..802757E0 and 80275948 call func_80277FC4 and func_80278D54,
+# 8027783C calls func_80278DBC), which come after it. 926A0's .rodata
+# starts after a zero pad word at 0x802A3DEC (0x802A3DF0), its .data at
+# 0x802A14F0 and its .bss at 0x802AFE70, all 16-byte boundaries, and
+# nothing before them uses those. 8A7A0 runs on to func_80277E1C: its
+# second half (from func_80273F30) inlines the first half's small
+# helpers (func_802712A8, func_80271448, func_80270384, ...) with no
+# stub left, which IDO does only within one unit, and the two halves
+# as one file, defined in the right order, come out in the asm's order
+# with the asm's .rodata (nonmatching/8A7A0.c).
 main_code 926A0
 
-# 8A7A0 (-O3, func_8026FFA0 to func_80273F0C) is the objects on the
+# 8A7A0 (-O3, func_8026FFA0 to func_80277E1C) is the objects on the
 # stage map; 87D80 before it is the map itself (func_8026D580 to
 # func_8026FF94) and its attribute queries.  func_8026FF94 ends exactly
 # on the 16-byte boundary where func_8026FFA0 starts, and no call goes
