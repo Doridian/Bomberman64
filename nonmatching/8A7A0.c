@@ -7,7 +7,7 @@
  * order. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 1252, eu 1252, jp 1252
+ * differing words: us 1145, eu 1145, jp 1145
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file (475 words in the one-file draft, 39
@@ -108,8 +108,8 @@ typedef struct {
     /* 0x2C */ f32 unk2C;
 } Slot30; /* size 0x30 */
 
-typedef struct {
-    /* 0x00 */ u8 pad0[4];
+typedef struct Ctl87 {
+    /* 0x00 */ struct Ctl87 *next;
     /* 0x04 */ Obj8E *obj;
     /* 0x08 */ Obj8E *unk8;
     /* 0x0C */ Obj8E *unkC;
@@ -1587,128 +1587,80 @@ void func_80270EF0(u8 *arg0) {
 }
 
 void func_80270C24(u8 *arg0, s16 arg1, s32 arg2) {
-    s32 sp34;
-    f32 sp28;
-    f32 sp24;
-    Node87 *var_s0;
-    Node87 *var_v0_3;
-    f32 var_fv0;
-    s32 *temp_v0;
-    s32 temp_t6;
-    s32 temp_v1;
-    s32 var_a0;
-    s32 var_a3;
-    s32 var_v0;
-    s32 var_v0_2;
-    s32 var_v0_4;
-    s32 var_v1;
+    s32 i;
+    Ctl87 *c;
+    s32 ok;
+    f32 r;
+    f32 h;
 
-    var_a3 = 0;
-    var_v1 = 0 << 0x10;
-    do {
-        temp_t6 = var_v1 >> 0x10;
-        if (temp_t6 >= 0) {
-            var_v0 = 1;
-            if (temp_t6 < 5) {
-                var_v0 = 0;
-            }
-        } else {
-            var_v0 = 1;
-        }
-        if (var_v0 != 0) {
-            var_v0_2 = 0;
-        } else {
-            var_v0_2 = *(s32 *)(D_802AFCF4 + (temp_t6 * 0x30));
-        }
-        if ((s32) var_v0_2 == (s32) arg0) {
-            sp34 = var_a3;
+    for (i = 0; i < 5; i++) {
+        if (func_80270714(i) == (s32) arg0) {
             func_80270BA4(arg0);
         }
-        var_a3 += 1;
-        var_v1 = var_a3 << 0x10;
-    } while (var_a3 != 5);
-    var_s0 = D_802AFDE0.next;
-    var_v0_3 = var_s0->next;
-    if (var_v0_3 != NULL) {
-loop_12:
-        if ((s32) arg0 != var_s0->unk4) {
-            var_s0 = var_v0_3;
-            var_v0_3 = var_v0_3->next;
-            if (var_v0_3 != NULL) {
-                goto loop_12;
-            }
+    }
+    for (c = (Ctl87 *) D_802AFDE0.next; c->next != NULL; c = c->next) {
+        if (arg0 == (u8 *) c->obj) {
+            break;
         }
     }
-    if (var_v0_3 != NULL) {
-        func_80270A80((s32 *) var_s0);
-        free(var_s0);
+    if (c->next != NULL) {
+        func_80270A80((s32 *) c);
+        free(c);
     }
-    switch (arg2) {                                 /* irregular */
-    case 0:
-        var_fv0 = 0.0f;
-        sp24 = 0.0f;
-        break;
-    case 1:
-        var_fv0 = 25.0f;
-        sp24 = 8.25f;
-        break;
-    case 2:
-        var_fv0 = 25.0f;
-        sp24 = 11.0f;
-        break;
-    case 3:
-        var_fv0 = 25.0f;
-        sp24 = 14.0f;
-        break;
-    default:
-        var_fv0 = 10.0f;
-        break;
+    switch (arg2) {
+        case 0:
+            r = 0.0f;
+            h = 0.0f;
+            break;
+        case 1:
+            r = 25.0f;
+            h = 8.25f;
+            break;
+        case 2:
+            r = 25.0f;
+            h = 11.0f;
+            break;
+        case 3:
+            r = 25.0f;
+            h = 14.0f;
+            break;
+        default:
+            r = 10.0f;
     }
-    sp28 = var_fv0;
-    temp_v0 = malloc(0x3C);
-    M2C_FIELD(temp_v0, void **, 4) = arg0;
-    sp28 = var_fv0;
-    M2C_FIELD(temp_v0, s16 *, 0x14) = func_8026FFA0(arg1);
-    M2C_FIELD(temp_v0, f32 *, 0x18) = var_fv0;
-    M2C_FIELD(temp_v0, s32 *, 0x20) = 1;
-    M2C_FIELD(temp_v0, s32 *, 0x28) = 0;
-    M2C_FIELD(temp_v0, s16 *, 0x16) = 0;
-    M2C_FIELD(temp_v0, f32 *, 0x1C) = sp24;
-    M2C_FIELD(temp_v0, f32 *, 0x24) = 0.0f;
-    M2C_FIELD(temp_v0, s32 *, 0x30) = 0;
-    M2C_FIELD(temp_v0, f32 *, 0x2C) = 10000.0f;
-    var_a0 = 0;
-    M2C_FIELD(temp_v0, f32 *, 0x34) = (f32) M2C_FIELD(M2C_FIELD(arg0, void **, 0x40), f32 *, 0x10);
-    M2C_FIELD(temp_v0, f32 *, 0x38) = (f32) M2C_FIELD(M2C_FIELD(arg0, void **, 0x40), f32 *, 0x18);
-    temp_v1 = M2C_FIELD(arg0, s32 *, 8);
-    M2C_FIELD(temp_v0, s32 *, 0x10) = temp_v1;
-    if (temp_v1 & 2) {
-        var_v0_4 = func_80270438(arg0, temp_v0);
-        goto block_35;
+    c = malloc(sizeof(Ctl87));
+    c->obj = (Obj8E *) arg0;
+    c->unk14 = func_8026FFA0(arg1);
+    c->unk18 = r;
+    c->unk20 = 1;
+    c->unk28 = 0;
+    c->unk16 = 0;
+    c->unk1C = h;
+    c->unk24 = 0.0f;
+    c->unk30 = 0;
+    c->unk2C = 10000.0f;
+    ok = 0;
+    c->unk34 = ((Obj8E *) arg0)->unk40->x;
+    c->unk38 = ((Obj8E *) arg0)->unk40->z;
+    c->flags = ((Obj8E *) arg0)->unk8;
+    if (c->flags & 2) {
+        ok = func_80270438(arg0, (s32 *) c);
+    } else if (c->flags & 8) {
+        ok = func_8027A1F4(arg0, (s32) c);
+    } else if (c->flags & 4) {
+        ok = func_802870A8(arg0, c);
+    } else if (c->flags & 1) {
+        ok = func_80244F34(arg0, (s32) c);
     }
-    if (temp_v1 & 8) {
-        var_v0_4 = func_8027A1F4(arg0, (s32) temp_v0);
-        goto block_35;
-    }
-    if (temp_v1 & 4) {
-        var_v0_4 = func_802870A8();
-        goto block_35;
-    }
-    if (temp_v1 & 1) {
-        var_v0_4 = func_80244F34(arg0, (s32) temp_v0);
-block_35:
-        var_a0 = var_v0_4;
-    }
-    if (var_a0 != 0) {
-        func_80270080(temp_v0);
+    if (ok != 0) {
+        func_80270080((s32 *) c);
         func_80231408(arg0, 0x20000);
-        M2C_FIELD(arg0, f32 *, 0x68) = (f32) M2C_FIELD(temp_v0, f32 *, 0x18);
-        M2C_FIELD(arg0, f32 *, 0x6C) = 1.0f;
-        M2C_FIELD(temp_v0, void **, 8) = arg0;
-        M2C_FIELD(temp_v0, void **, 0xC) = arg0;
+        ((Obj8E *) arg0)->unk68 = c->unk18;
+        ((Obj8E *) arg0)->unk6C = 1.0f;
+        c->unk8 = (Obj8E *) arg0;
+        c->unkC = (Obj8E *) arg0;
         return;
     }
-    free(temp_v0);
+    free(c);
 }
 
 void func_80270BA4(u8 *arg0) {
