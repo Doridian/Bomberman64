@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 677, eu 677, jp 677
+ * differing words: us 606, eu 606, jp 606
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -4128,7 +4128,8 @@ void func_80246604() {
 void func_80246078() {
     s32 pad0[2];
     s32 used[5];
-    s32 c[4];
+    s32 n;
+    s32 c[3];
     s32 pad1;
     s32 flags[5];
     f32 x[5];
@@ -4143,41 +4144,38 @@ void func_80246078() {
     s32 k;
     s32 m;
     void *q;
-    s32 pad2[21];
+    s32 pad2[12];
 
     c[0] = 0;
-    c[3] = 0;
+    n = 0;
     for (i = 0; i < 4; i++) {
         p = &D_800AEDF0[i];
         if ((p->unk24 == 1 || p->unk24 == 2) && p->unk14 != 0 && !func_80244BA4(i, 0x1000) && !func_80243EF0(i)) {
             if (!j && !j) {}
             obj = p->unk28;
-            x[c[3]] = obj->unk40->unk10;
-            y[c[3]] = obj->unk40->unk14;
-            z[c[3]] = obj->unk40->unk18;
-            used[c[3]] = 0;
-            r[c[3]] = M2C_FIELD(obj->unk40, f32 *, 0x20);
+            x[n] = obj->unk40->unk10;
+            y[n] = obj->unk40->unk14;
+            z[n] = obj->unk40->unk18;
+            r[n] = M2C_FIELD(obj->unk40, f32 *, 0x20);
+            used[n] = 0;
             flags[i] = M2C_FIELD(obj, s32 *, 8);
             func_802313DC(obj, flags[i]);
             func_80231408(obj, 0x01000010);
-            c[3]++;
+            n++;
         }
     }
-    if (!p && !p) {}
     for (i = 0; i < 4; i++) {
         p = &D_800AEDF0[i];
         k = 0;
         if ((p->unk24 == 1 || p->unk24 == 2) && p->unk14 != 0 && !func_80244BA4(i, 0x1000) && !func_80243EF0(i)) {
             do {
-                if (!c[3] && !c[3]) {}
-                j = func_80234248(c[3] - 1);
+                s32 j = func_80234248(n - 1);
                 if (used[j] == 0) {
-                    obj = p->unk28;
-                    if (!obj && !obj) {}
-                    obj->unk40->unk10 = x[j];
-                    obj->unk40->unk14 = y[j];
-                    obj->unk40->unk18 = z[j];
-                    M2C_FIELD(obj->unk40, f32 *, 0x20) = r[j];
+                    UnkObj *o = p->unk28;
+                    o->unk40->unk10 = x[j];
+                    o->unk40->unk14 = y[j];
+                    o->unk40->unk18 = z[j];
+                    M2C_FIELD(o->unk40, f32 *, 0x20) = r[j];
                     if ((q = (void *)p->unk2C) != 0) {
                         func_80231434(q);
                     }
