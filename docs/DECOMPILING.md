@@ -231,7 +231,7 @@ matches, drop the `#ifdef` and the asm.
     home slot and reloads it (`sw $a2, 8($sp)` ... `lwc1`). A function
     taking three floats shows it at once (4DE50's func_80234500, 4ED50's
     func_802346C8).
-  Seen so far: 404C0, 40FB0, 412F0, 41FD0, 4DE50, 4E030 (4DE50's second half:
+  Seen so far: boot_code's 10D0, 13F0 and 14B0 (the scheduler), 404C0, 40FB0, 412F0, 41FD0, 4DE50, 4E030 (4DE50's second half:
   its wrappers call 4DE50's compares with a `jal`, which -O3 would inline
   in one file), 4ED50, 52270 (jp's func_8023876C has no TV-type
   switch: `#if VERSION_JP`), 530C0, 53D70, 78CA0, 78F60, 85A10, 86680,
@@ -1032,7 +1032,8 @@ where the objects' `.data` start if something else comes first
 rest, `data` up to the boundary (the link keeps it before the `.rodata`),
 `rodata` after it and one `bss` block. The cut stops at the first object
 not listed; everything after it stays asm, however much of it is C. The
-ZeroJump stub block has no data and is skipped. Where every object of a
+game's handwritten objects (boot_code's entry and 2630, the ZeroJump
+stub block) have no data and are skipped. Where every object of a
 module is listed, the boundary is the compiler's and layout.py checks the
 sizes add up to the block (and takes the module's bss size from them).
 
@@ -1042,7 +1043,7 @@ Cut so far (the same in us, eu and jp):
 |---|---|---|
 | ovl_09_01 | all: `ovl_09_01_entry`, `120010` (.data 0x30, .rodata 0x50: the handler's jump table, .bss 0x50) | 0x80044990 (the compiler's) |
 | main_code | `main_code_entry`, `40040` (.data 0x30: two tables), `40300` (.data 0x10: the bump pointer) after the RSP code at 0x8029D250-0x8029F570 | not shown yet: none of the three has .rodata |
-| boot_code | `1050` (.data 0x10, .bss 0x400), `10D0` (.bss 0x80), `13F0` (.data 0x10) cut from the module's start, the entry skipped as hasm; `2350` (.data 0x3A0, jp 0x390: the jp table is an entry shorter; .bss 0x8470) placed on its own with `@<version>` lines, since 14B0 (the scheduler, in `nonmatching/`) and 2630 (hasm) come between | not cut yet |
+| boot_code | all of the game's C from the first object after the entry: `1050` (.data 0x10, .bss 0x400), `10D0` (.bss 0x80), `13F0` (.data 0x10), `14B0` (the scheduler: .data 0x20, .rodata 0x130: its assert strings and a jump table, .bss 0x70), `2350` (.data 0x3A0, jp 0x390: the jp table is an entry shorter; .bss 0x8470); the entry and 2630 are hasm and skipped | 0x8001B640 (jp 0x8001B620): 14B0's strings, after the libraries' .data |
 
 The sizes are the same in every version as long as the C is. Where a
 version's C builds to other sizes (`#if VERSION_JP` data: jp's text), a

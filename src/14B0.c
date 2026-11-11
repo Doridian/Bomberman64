@@ -1,50 +1,35 @@
 /*
- * NON_MATCHING: boot_code's 14B0, complete: Hudson's copy of the N64
- * sample scheduler ("sched.c" in its assert strings), written from the
- * asm with ultralib's PR/sched.h types. Hudson's changes: func_80000A88
+ * boot_code's 14B0, IDO -O3; it matches in us, eu and jp: Hudson's copy
+ * of the N64 sample scheduler ("sched.c" in its assert strings), written
+ * with ultralib's PR/sched.h types. Hudson's changes: func_80000A88
  * calls itself again until a pass schedules nothing more, the first
  * swapped frame turns the blanking off (D_80019FB8), and a frame's
  * timing is taken with osGetTime() (D_80019FAC steps 0-4 from a retrace
  * through the RSP and RDP done messages; func_80001698, in ZeroJump's
- * module 1, hands the times out and starts over). Not built into the
- * ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * module 1, hands the times out and starts over).
  *
- * Every function matches in all three versions (pass 2). Pass 1's
- * 227 words in func_8000101C were two behaviour errors, not schedule:
- * the retrace count (D_80019FA0) is only stepped when the timing starts
- * (inside `if (D_80019FAC == 0)`), and the RSP done handler hands a
- * task to func_80000C7C only when it didn't yield. func_80000A88's
- * jump table word was a real .rodata layout difference: strings go to
- * .rodata in parse order, and the original has the dead
- * "sc->curRDPTask == gfx" assert's strings last, after func_80000908's,
- * so the dead call sits in func_800008B0 (defined last) rather than in
- * func_80000A88, which puts the jump table at jtbl_8001B754.
+ * -O3: func_80000908 and func_80000E58 take their arguments in s
+ * registers (IPA statics), and the RSP and RDP done handlers
+ * (func_8000101C_inl1/2), the list append and the yield
+ * (func_80000E58_inl1/2) are inlined statics with their `jr ra` stubs
+ * left. func_80000D44 and func_80000E0C are globals inlined into
+ * func_8000101C as well as emitted.
  *
- * -O3 evidence: func_80000908 and func_80000E58 take their arguments in
- * s registers (IPA statics), func_80000A88 keeps sc in t0, and the
- * handlers of the RSP and RDP done messages (func_8000101C_inl1/2),
- * the list append and the yield (func_80000E58_inl1/2) are inlined
- * statics with their `jr ra` stubs left. func_80000D44 and
- * func_80000E0C are globals inlined into func_8000101C as well as
- * emitted.
- *
- * What fixed the order and the frames:
+ * What fixes the order, the frames and the .rodata:
  * - umerge walks the file backwards; a static with callers waits for
  *   one, and a function's callees come out first (last call first).
  *   func_800008B0 and func_80000A88 are global (the caller spills
  *   a1-a3/t0 around their calls, so no IPA), func_800008B0 defined
  *   last and func_80000A88, func_80000D44 and func_80000E0C before
- *   func_8000101C, so that main's walk emits func_80000908,
- *   func_80000A88, func_80000C7C, the stubs, func_80000D44 and
- *   func_80000E0C between them, as the original has.
+ *   func_8000101C.
  * - func_80000A88's "until nothing changes" is tail recursion: as a
  *   loop, sp and dp leave a1/a2.
  * - func_800008B0's frame (0x28, the local at 0x18) is a 4-word array.
  * - D_80019FB8 is a function-scope static of func_80000C7C (one lui per
- *   access); the unreferenced "sc->curRDPTask == gfx" string is a dead
- *   assert, placed last (above).
+ *   access).
+ * - Strings go to .rodata in parse order: the dead "sc->curRDPTask ==
+ *   gfx" assert sits in func_800008B0 (defined last), so its strings
+ *   come after func_80000908's and the jump table at jtbl_8001B754.
  *
  * Asserts call func_800018A8 (2350's empty stub) with the expression,
  * "sched.c" and the line.

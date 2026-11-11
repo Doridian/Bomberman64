@@ -8,7 +8,8 @@
 #       object on.  The module's data is cut from its start, object by
 #       object, as long as the objects follow each other; the first object
 #       not listed ends the cut and the rest stays one asm block.  The
-#       handwritten ZeroJump stub block has no data and is skipped.
+#       game's handwritten objects (hasm: boot_code's entry and 2630, the
+#       ZeroJump stub block) have no data and are skipped.
 #   <module> @<version> data=<vram> rodata=<vram>
 #       Where the objects' .data starts, when something else comes first
 #       (main_code: RSP code), and where their .rodata starts (the module's
@@ -214,19 +215,22 @@ main_code @eu B6680 rodata=0x802A4750
 main_code @jp B6680 rodata=0x802A3990
 
 # boot_code: the game's objects from the first after the entry (handwritten,
-# no data); the cut stops at 14B0 (the scheduler, not C yet).
+# no data); the cut passes over 2630 (handwritten, hasm) and stops after
+# 2350.  .rodata starts with 14B0's assert strings, after the libraries'
+# .data.
 # 1050: ZeroJump module 0's table and the module table; 10D0: the PI
-# queues; 13F0: module 3's table.
+# queues; 13F0: module 3's table; 14B0 (the scheduler): the frame timing,
+# its .rodata the assert strings and a jump table; 2350: ZeroJump's
+# library tables, the two threads and their stacks, the segment size
+# table; jp's module 0x12 table is one entry short
+boot_code @us rodata=0x8001B640
+boot_code @eu rodata=0x8001B640
+boot_code @jp rodata=0x8001B620
 boot_code 1050 0x10 0 0x400
 boot_code 10D0 0 0 0x80
 boot_code 13F0 0x10 0 0
-# 2350 (after the scheduler): ZeroJump's library tables, the two threads
-# and their stacks, the segment size table; jp's module 0x12 table is one
-# entry short
+boot_code 14B0 0x20 0x130 0x70
 boot_code 2350 0x3A0 0 0x8470
-boot_code @us 2350 data=0x80019FC0 bss=0x8001C4B0
-boot_code @eu 2350 data=0x80019FC0 bss=0x8001C4B0
-boot_code @jp 2350 data=0x80019FB0 bss=0x8001C490
 boot_code @jp 2350 sizes=0x390,0,0x8470
 
 # Library objects after the game's code, placed on their own (where the ROM

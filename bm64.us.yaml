@@ -34,7 +34,7 @@ segments:
       - [0x1050, c]
       - [0x10D0, c]
       - [0x13F0, c]
-      - [0x14B0, asm]
+      - [0x14B0, c]
       - [0x2350, c]
       - [0x2630, hasm]
       - [0x2650, c, libultra/audio/synstartvoiceparam]
@@ -281,7 +281,7 @@ segments:
       - [0x1A9F0, asm]
       - [0x1AB80, .data, 1050]
       - [0x1AB90, .data, 13F0]
-      - [0x1ABA0, data]
+      - [0x1ABA0, .data, 14B0]
       - [0x1ABC0, .data, 2350]
       - [0x1AF60, data]
       - [0x1BCF0, .data, libultra/io/aisetnextbuf]
@@ -289,7 +289,9 @@ segments:
       - [0x1BD50, .data, libultra/os/exceptasm]
       - [0x1BD70, data]
       - [0x1BDF0, .data, libultra/libc/xprintf]
-      - [0x1BE40, rodata]
+      - [0x1BE40, data]
+      - [0x1C240, .rodata, 14B0]
+      - [0x1C370, rodata]
       - [0x1C8C0, .rodata, libultra/audio/sndplayer]
       - [0x1C900, rodata]
       - [0x1C920, .rodata, libultra/os/exceptasm]
@@ -298,9 +300,9 @@ segments:
       - [0x1CB60, .rodata, libultra/libc/xldtob]
       - {type: .bss, vram: 0x8001BFC0, name: 1050}
       - {type: .bss, vram: 0x8001C3C0, name: 10D0}
-      - {type: bss, vram: 0x8001C440}
+      - {type: .bss, vram: 0x8001C440, name: 14B0}
       - {type: .bss, vram: 0x8001C4B0, name: 2350}
-      - {type: bss, vram: 0x80024920, name: bss_80024920}
+      - {type: bss, vram: 0x80024920}
       - {type: .bss, vram: 0x80027130, name: libultra/io/cartrominit}
       - {type: .bss, vram: 0x800271B0, name: libultra/io/leodiskinit}
       - {type: bss, vram: 0x80027230, name: bss_80027230}
