@@ -418,7 +418,8 @@ segments:
       - [0xBC590, .data, AD3D0]
       - [0xBC5A0, .data, AD5B0]
       - [0xBC600, .data, AFBF0]
-      - [0xBD470, rodata]
+      - [0xBD470, .data, B11F0]
+      - [0xBD4F0, rodata]
       - [0xBD610, .rodata, 4E030]
       - [0xBD640, .rodata, 4ED50]
       - [0xBD680, .rodata, 530C0]
@@ -443,7 +444,8 @@ segments:
       - [0xBEDA0, .rodata, AA580]
       - [0xBEE60, .rodata, AD5B0]
       - [0xBEED0, .rodata, AFBF0]
-      - [0xBEF40, rodata]
+      - [0xBEF40, .rodata, B11F0]
+      - [0xBEF50, rodata]
       - [0xBEF60, .rodata, B6680]
       - [0xBEF90, rodata]
       - [0xBF800, rodata, main_code_persist]
@@ -471,7 +473,8 @@ segments:
       - {type: .bss, vram: 0x802B0260, name: A1EA0}
       - {type: .bss, vram: 0x802B0310, name: AD3D0}
       - {type: .bss, vram: 0x802B0320, name: AFBF0}
-      - {type: bss, vram: 0x802B03A0, name: bss_802B03A0}
+      - {type: .bss, vram: 0x802B03A0, name: B11F0}
+      - {type: bss, vram: 0x802B3620, name: bss_802B3620}
   - [0xBFB00, bin, pad_main_code]       # zeros
   - name: ovl_09_01
     type: code

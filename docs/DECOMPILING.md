@@ -203,9 +203,7 @@ where us calls 0x250C/0x250D.
   its wrappers call 4DE50's compares with a `jal`, which -O3 would inline
   in one file), 4ED50, 52270 (jp's func_8023876C has no TV-type
   switch: `#if VERSION_JP`), 530C0, 53D70, 78CA0, 78F60, 85A10, 86680, 96540, 995C0, 9A5F0, 9BFD0, A8DE0, ACA00, AD5B0,
-  AFBF0, B6680 (`-mips2`), ovl_0A_02-05's, ovl_0C_03's, ovl_0E_09's, ovl_12_02's, ovl_12_04's, ovl_17_01's and ovl_17_10's objects are `-O3`, and
-  so is B11F0 (its draft in nonmatching/; src/ still has it GLOBAL_ASM
-  at `-O2`, below); 5E090, 87190, 87730,
+  AFBF0, B11F0, B6680 (`-mips2`), ovl_0A_02-05's, ovl_0C_03's, ovl_0E_09's, ovl_12_02's, ovl_12_04's, ovl_17_01's and ovl_17_10's objects are `-O3`; 5E090, 87190, 87730,
   99F40 and A4860 are `-O2` (no
   inlining between functions that call each other, no cross-call
   registers; A4860's func_8028A318 calls three small functions of its
@@ -224,7 +222,7 @@ where us calls 0x250C/0x250D.
   is `-O3` C. 85A10 (func_8026B72C's
   argument; func_8026B238 uses `s` registers it never saves; now all C
   at `-O3`), B11F0
-  (func_80297564's `move t4, a1`) and A2840 (func_802884D4 reads `f16`
+  (func_80297564's `move t4, a1`; now all C at `-O3`) and A2840 (func_802884D4 reads `f16`
   unset) show it too. Their GLOBAL_ASM functions are the ones `-O2` can't
   give; 87190, 87730, 99F40 and A4860 match their remaining functions at
   `-O2` so far (A4860's func_8028A154 inlines func_8028A08C at `-O3`).
