@@ -1,7 +1,7 @@
 /*
  * NON_MATCHING: main_code's 96540, complete: the controller pak save.
  * flags: -O3
- * differing words: us 400, eu 400, jp 400
+ * differing words: us 351, eu 351, jp 351
  */
 #include "common.h"
 #include "ultralib/PR/os_pfs.h"
@@ -119,17 +119,19 @@ static s32 func_8027C174(u8 *buf);
 static s32 func_8027C17C(u8 *buf);
 static s32 func_8027C184(s32 ch, s32 file, u8 *buf);
 static s32 func_8027C3D4(s32 file, u8 *a, u8 *b);
-static void func_8027C4EC();
+static void func_8027C4EC(s32 a, s32 b);
 static void func_8027C8F8();
 static void func_8027CBC4();
 static void func_8027CBCC();
 
 void func_8027CDA4(OSMesgQueue *mq) {
     s32 i;
+    s32 ch;
 
     D_800BCDE4 = mq;
     for (i = 0; i < 4; i++) {
-        D_802B0118[i] = func_8027C8A4(i);
+        ch = i;
+        D_802B0118[ch] = func_8027C8A4(ch);
     }
 }
 
@@ -228,16 +230,13 @@ s32 func_8027C900(s32 ch, s32 *file) {
     s32 ret;
 
     func_8027C8F8();
-    while (TRUE) {
+    do {
         ret = func_8027C4F4(ch, file);
         if (ret != 2) {
             break;
         }
         ret = func_8027C8A4(ch);
-        if (ret != 1) {
-            break;
-        }
-    }
+    } while (ret == 1);
     return ret;
 }
 
@@ -299,7 +298,7 @@ static void func_8027C560(s32 len, u8 *p) {
     *p = 0xFF - sum;
 }
 
-static void func_8027C4EC() {
+static void func_8027C4EC(s32 a, s32 b) {
 }
 
 s32 func_8027C788(s32 slot, s32 overwrite) {
@@ -314,7 +313,7 @@ s32 func_8027C788(s32 slot, s32 overwrite) {
             ret = 0xD;
         }
     } else {
-        func_8027C4EC();
+        func_8027C4EC(slot, overwrite);
         ret = func_8027BD74(func_80298830(D_802AFF70, COMPANY_CODE, GAME_CODE, D_802A1520, D_802A1530, 0x20, &file), 1);
         if (ret == 8) {
             ret = func_8027C3DC(&file);
@@ -526,14 +525,12 @@ static void func_8027BF30() {
 
 s32 func_8027BEF0(void) {
     u8 pattern = 0;
-    s32 ret;
 
     func_80298868(D_800BCDE4, &pattern);
-    ret = 0;
     if (pattern & 1) {
-        ret = 1;
+        return 1;
     }
-    return ret;
+    return 0;
 }
 
 s32 func_8027BEC0(void) {
@@ -541,8 +538,8 @@ s32 func_8027BEC0(void) {
 }
 
 s32 func_8027BE60(s32 file) {
-    OSPfsState state;
     s32 ret;
+    OSPfsState state;
 
     ret = func_80298850(D_802AFF70, file, &state);
     if (ret == 0) {
@@ -566,31 +563,43 @@ static s32 func_8027BD74(s32 err, s32 mode) {
         case 0:
             switch (mode) {
                 case 0:
-                    return 9;
+                    ret = 9;
+                    break;
                 case 1:
-                    return 8;
+                    ret = 8;
+                    break;
                 case 2:
-                    return 1;
+                    ret = 1;
+                    break;
             }
             break;
         case 2:
-            return 2;
+            ret = 2;
+            break;
         case 3:
-            return 4;
+            ret = 4;
+            break;
         case 4:
-            return 3;
+            ret = 3;
+            break;
         case 10:
-            return 5;
+            ret = 5;
+            break;
         case 11:
-            return 6;
+            ret = 6;
+            break;
         case 5:
-            return 7;
+            ret = 7;
+            break;
         case 6:
-            return 0xC;
+            ret = 0xC;
+            break;
         case 7:
-            return 0xE;
+            ret = 0xE;
+            break;
         case 8:
-            return 0xF;
+            ret = 0xF;
+            break;
         case 9:
             ret = 0xD;
             break;
