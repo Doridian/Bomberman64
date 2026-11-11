@@ -7,7 +7,7 @@
  * order. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 1642, eu 1642, jp 1642
+ * differing words: us 1437, eu 1437, jp 1437
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file (475 words in the one-file draft, 39
@@ -1305,78 +1305,81 @@ void func_80271BB8(s16 arg0) {
 }
 
 void *func_802716F8(s16 arg0) {
+    f32 z;
     f32 dx;
     f32 dz;
     f32 r;
     f32 dist;
-    s32 pad[2];
+    s32 pad[2]; /* the pads place the locals at the original's offsets */
     f32 a[3];
     f32 b[3];
     s32 pad2[2];
     f32 ang;
     s32 pad3;
     f32 pr;
-    s32 pad4[6];
-    Unk8026DCAC info;
+    s32 pad4[4];
     Obj8E *pl;
     Obj8E *obj;
+    Unk8026DCAC info;
     s32 t;
 
     func_802714C4();
+    if (1) {} /* fake: without it arg0 takes a third saved register */
     pl = func_802443F4(arg0);
     obj = (Obj8E *) func_80271540(arg0);
     if (obj != NULL) {
-    func_8026DCAC(obj->unk40->x, obj->unk40->y, obj->unk40->z, &info, 2);
-    a[0] = info.i[0];
-    a[1] = info.i[1];
-    a[2] = info.i[2];
-    t = func_8026D7D8(a[0], a[1], a[2]) & 0xF;
-    if (t == 3 || t == 4 || t == 5 || t == 6) {
-        return obj;
-    }
-    a[1] = 0.0f;
-    a[0] = pl->unk40->x;
-    a[2] = pl->unk40->z;
-    b[1] = 0.0f;
-    b[0] = obj->unk40->x;
-    b[2] = obj->unk40->z;
-    dist = func_8022DF68(a, b);
-    pr = func_80270F44((u8 *) pl);
-    r = (func_80270F44((u8 *) obj) + pr) * 1.2f;
-    if (dist < r) {
-        func_8022FF58(a, b, &ang);
-        dx = func_80234434(ang) * r;
-        dz = func_80234408(ang) * r;
-        OBJ_DD8->unk40->x = pl->unk40->x + dx;
-        OBJ_DD8->unk40->y = obj->unk40->y;
-        OBJ_DD8->unk40->z = pl->unk40->z + dz;
-        OBJ_DD8->unk40->sx = obj->unk40->sx;
-        OBJ_DD8->unk40->sy = obj->unk40->sy;
-        OBJ_DD8->unk40->sz = obj->unk40->sz;
-        OBJ_DD8->unk30 = obj->unk30;
-        OBJ_DD8->unk34 = obj->unk34;
-        OBJ_DD8->unk38 = obj->unk38;
-        if (func_8022F4AC((s32) OBJ_DD8, 0x10, (s32) obj) == 0 && func_802909FC(OBJ_DD8, func_80277378) == 0) {
-            obj->unk40->x = pl->unk40->x + dx;
-            obj->unk40->z = pl->unk40->z + dz;
-        } else {
-            OBJ_DD8->unk40->x = pl->unk40->x - ((pl->unk40->x + dx) - obj->unk40->x);
-            OBJ_DD8->unk40->y = pl->unk40->y;
-            OBJ_DD8->unk40->z = pl->unk40->z - ((pl->unk40->z + dz) - obj->unk40->z);
-            OBJ_DD8->unk40->sx = pl->unk40->sx;
-            OBJ_DD8->unk40->sy = pl->unk40->sy;
-            OBJ_DD8->unk40->sz = pl->unk40->sz;
-            OBJ_DD8->unk30 = pl->unk30;
-            OBJ_DD8->unk34 = pl->unk34;
-            OBJ_DD8->unk38 = pl->unk38;
-            if (func_8022F4AC((s32) OBJ_DD8, 0x10, (s32) pl) == 0 && func_802909FC(OBJ_DD8, func_80277378) == 0) {
-                pl->unk40->x = OBJ_DD8->unk40->x;
-                pl->unk40->z = OBJ_DD8->unk40->z;
+        z = obj->unk40->z;
+        func_8026DCAC(obj->unk40->x, obj->unk40->y, z, &info, 2);
+        a[0] = info.i[0];
+        a[1] = info.i[1];
+        a[2] = info.i[2];
+        t = func_8026D7D8(a[0], a[1], a[2]) & 0xF;
+        if (t == 3 || t == 4 || t == 5 || t == 6) {
+            return obj;
+        }
+        a[0] = pl->unk40->x;
+        a[1] = 0.0f;
+        a[2] = pl->unk40->z;
+        b[0] = obj->unk40->x;
+        b[1] = 0.0f;
+        b[2] = obj->unk40->z;
+        dist = func_8022DF68(a, b);
+        pr = func_80270F44((u8 *) pl);
+        r = (func_80270F44((u8 *) obj) + pr) * 1.2f;
+        if (dist < r) {
+            func_8022FF58(a, b, &ang);
+            dx = func_80234434(ang) * r;
+            dz = func_80234408(ang) * r;
+            OBJ_DD8->unk40->x = pl->unk40->x + dx;
+            OBJ_DD8->unk40->y = obj->unk40->y;
+            OBJ_DD8->unk40->z = pl->unk40->z + dz;
+            OBJ_DD8->unk40->sx = obj->unk40->sx;
+            OBJ_DD8->unk40->sy = obj->unk40->sy;
+            OBJ_DD8->unk40->sz = obj->unk40->sz;
+            OBJ_DD8->unk30 = obj->unk30;
+            OBJ_DD8->unk34 = obj->unk34;
+            OBJ_DD8->unk38 = obj->unk38;
+            if (func_8022F4AC((s32) OBJ_DD8, 0x10, (s32) obj) == 0 && func_802909FC(OBJ_DD8, func_80277378) == 0) {
+                obj->unk40->x = pl->unk40->x + dx;
+                obj->unk40->z = pl->unk40->z + dz;
             } else {
-                obj = NULL;
+                OBJ_DD8->unk40->x = pl->unk40->x - ((pl->unk40->x + dx) - obj->unk40->x);
+                OBJ_DD8->unk40->y = pl->unk40->y;
+                OBJ_DD8->unk40->z = pl->unk40->z - ((pl->unk40->z + dz) - obj->unk40->z);
+                OBJ_DD8->unk40->sx = pl->unk40->sx;
+                OBJ_DD8->unk40->sy = pl->unk40->sy;
+                OBJ_DD8->unk40->sz = pl->unk40->sz;
+                OBJ_DD8->unk30 = pl->unk30;
+                OBJ_DD8->unk34 = pl->unk34;
+                OBJ_DD8->unk38 = pl->unk38;
+                if (func_8022F4AC((s32) OBJ_DD8, 0x10, (s32) pl) == 0 && func_802909FC(OBJ_DD8, func_80277378) == 0) {
+                    pl->unk40->x = OBJ_DD8->unk40->x;
+                    pl->unk40->z = OBJ_DD8->unk40->z;
+                } else {
+                    obj = NULL;
+                }
             }
         }
-    }
     }
     return obj;
 }
