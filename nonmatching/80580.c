@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 61, eu 61, jp 61
+ * differing words: us 51, eu 51, jp 51
  *
  * The object is the same in all three versions. 70 of the 79 original
  * procedures match (stubs included). The IPA statics
@@ -295,7 +295,7 @@ extern void *D_802AD64C; /* ALSndPlayer */
 
 static void *func_80268438(s16 num);
 static void func_80268430(s16 idx, s16 script, s8 type);
-static void func_802699C0();
+static s16 func_802699C0();
 static void func_80266928(s16 idx);
 void *func_8026B72C(s32);
 s32 *func_8026B79C(void);
@@ -869,15 +869,9 @@ static s16 func_80269AFC() {
     s32 rc;
     s32 size;
     s32 rom;
-    s16 total;
     SndHeader *hdr;
     SndSound *snd;
     SndWave *wave;
-    s16 bi;
-    s16 ii;
-    SndBankFile *f;
-    SndBank *bank;
-    SndInst *inst;
 
     D_802AD658 = NULL;
     D_802A12BC = D_802A12B4 + D_802A12B8;
@@ -955,16 +949,7 @@ static s16 func_80269AFC() {
             if (rc != 0) {
                 return rc - 1;
             }
-            total = 0;
-            f = D_802AD648;
-            for (bi = 0; bi < f->bankCount; bi++) {
-                bank = f->bankArray[bi];
-                for (ii = 0; ii < bank->instCount; ii++) {
-                    inst = bank->instArray[ii];
-                    total += inst->soundCount;
-                }
-            }
-            D_802AD650->count = total;
+            D_802AD650->count = func_802699C0();
             break;
     }
     return 0;
@@ -1065,14 +1050,30 @@ static s32 func_80269A7C(SndHeader *hdr) {
     return 0;
 }
 
-static void func_802699C0() {
+static s16 func_802699C0() {
+    s16 total;
+    s16 bi;
+    s16 ii;
+    SndBankFile *f;
+    SndBank *bank;
+    SndInst *inst;
+
+    total = 0;
+    f = D_802AD648;
+    for (bi = 0; bi < f->bankCount; bi++) {
+        bank = f->bankArray[bi];
+        for (ii = 0; ii < bank->instCount; ii++) {
+            inst = bank->instArray[ii];
+            total += inst->soundCount;
+        }
+    }
+    return total;
 }
 
 static s32 func_802699C8() {
     SndBankFile *p;
     s32 size;
 
-    func_802699C0();
     size = D_802A134C - D_802A1348;
     if (size == 0) {
         D_802A1348 = 0;
