@@ -5,7 +5,7 @@
  * global, emitted in the original's order. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 758, eu 758, jp 758
+ * differing words: us 693, eu 693, jp 693
  *
  * 36 of 47 match. Biggest left: func_802741D8 461, func_8027655C 436,
  * func_80274994 320 (still m2c's control flow and untyped offsets),
@@ -927,11 +927,19 @@ s32 func_8027655C(Ent88 *arg0) {
     return 0;
 }
 
+static void func_80271448_inl(f32 arg0, f32 arg1, f32 arg2, f32 *arg3, f32 *arg4, f32 *arg5) {
+    s32 sp20[6];
+
+    func_8026DCAC(arg0, arg1, arg2, sp20, 2);
+    *arg3 = sp20[0];
+    *arg4 = sp20[1];
+    *arg5 = sp20[2];
+}
+
 void func_802763DC(s16 *arg0) {
-    Unk8026DCAC sp30;
-    f32 fx;
-    f32 fy;
-    f32 fz;
+    s32 padT;
+    struct { f32 z, y, x; } v;
+    s32 r;
     s16 f;
     s16 t;
 
@@ -941,12 +949,9 @@ void func_802763DC(s16 *arg0) {
     ((Ent88 *) arg0)->xf->x = ((Ent88 *) arg0)->x;
     ((Ent88 *) arg0)->xf->y = ((Ent88 *) arg0)->y;
     ((Ent88 *) arg0)->xf->z = ((Ent88 *) arg0)->z;
-    func_8026DCAC(((Ent88 *) arg0)->xf->x, ((Ent88 *) arg0)->xf->y, ((Ent88 *) arg0)->xf->z, &sp30, 2);
-    fx = sp30.i[0];
-    fy = sp30.i[1];
-    fz = sp30.i[2];
-    t = func_8026D7D8((s32) fx, (s32) fy, (s32) fz) & 0x1C00;
-    if (t != 0) {
+    func_80271448_inl(((Ent88 *) arg0)->xf->x, ((Ent88 *) arg0)->xf->y, ((Ent88 *) arg0)->xf->z, &v.x, &v.y, &v.z);
+    t = func_8026D7D8((s32) v.x, (s32) v.y, (s32) v.z) & 0x1C00;
+    if (t) {
         func_8027F858(((Ent88 *) arg0)->obj, t >> 10);
     }
     ((Ent88 *) arg0)->x = ((Ent88 *) arg0)->xf->x;
