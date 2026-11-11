@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 161, eu 161, jp 161
+ * differing words: us 149, eu 149, jp 149
  *
  * The object is the same in all three versions. 70 of the 79 original
  * procedures match (stubs included). The IPA statics
@@ -875,6 +875,9 @@ static s16 func_80269AFC() {
     SndWave *wave;
     s16 bi;
     s16 ii;
+    SndBankFile *f;
+    SndBank *bank;
+    SndInst *inst;
 
     D_802AD658 = NULL;
     D_802A12BC = D_802A12B4 + D_802A12B8;
@@ -953,9 +956,12 @@ static s16 func_80269AFC() {
                 return rc - 1;
             }
             total = 0;
-            for (bi = 0; bi < D_802AD648->bankCount; bi++) {
-                for (ii = 0; ii < D_802AD648->bankArray[bi]->instCount; ii++) {
-                    total += D_802AD648->bankArray[bi]->instArray[ii]->soundCount;
+            f = D_802AD648;
+            for (bi = 0; bi < f->bankCount; bi++) {
+                bank = f->bankArray[bi];
+                for (ii = 0; ii < bank->instCount; ii++) {
+                    inst = bank->instArray[ii];
+                    total += inst->soundCount;
                 }
             }
             D_802AD650->count = total;
