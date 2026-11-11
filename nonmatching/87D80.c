@@ -7,7 +7,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3993, eu 3993, jp 3993
+ * differing words: us 3984, eu 3984, jp 3984
  *
  * 33 of 97 match. func_8026D5F8 and func_8026D5C0 (cell and slot of a
  * point) are inlined by func_8026D620/func_8026D7D8, which is what the
@@ -133,6 +133,7 @@ typedef struct {
 } Ctl87;
 
 #define SLOTS ((Slot30 *) D_802AFCE8)
+#define ABSF(x) ((x) < 0.0f ? -(x) : (x))
 
 typedef struct Ent88 {
     /* 0x00 */ s16 unk0;
@@ -378,7 +379,7 @@ s32 func_80272024(s16 arg0);
 void func_802720C8(u8 *arg0);
 s32 func_802721D4(u8 *arg0, s32 arg1, s32 *arg2);
 s16 func_8027241C(s16 arg0);
-void func_80272494(u8 *arg0, u8 *arg1, s32 *arg2);
+void func_80272494(Obj8E *arg0, Obj8E *arg1, Ctl87 *arg2);
 void func_802727D8(Ctl87 *arg0);
 void func_80272FC0(Obj8E *arg0, s16 arg1);
 void func_802731A4(Obj8E *arg0, s16 arg1);
@@ -882,7 +883,7 @@ void func_802727D8(Ctl87 *arg0) {
             if (hit != NULL && obj->unk6C != 1.0f && (hit->unk8 & 0x16)) {
                 if (hit == arg0->unkC) {
                     arg0->unk14 = func_8027241C(arg0->unk14);
-                    func_80272494((u8 *) obj, (u8 *) hit, (s32 *) arg0);
+                    func_80272494(obj, hit, arg0);
                 }
                 if (hit->unk40->y <= obj->unk40->y) {
                     arg0->unkC = hit;
@@ -967,7 +968,7 @@ void func_802727D8(Ctl87 *arg0) {
     }
 }
 
-void func_80272494(u8 *arg0, u8 *arg1, s32 *arg2) {
+void func_80272494(Obj8E *arg0, Obj8E *arg1, Ctl87 *arg2) {
     f32 sp88[3];
     f32 sp7C[3];
     f32 sp70;
@@ -2150,133 +2151,73 @@ void func_8026FF64(s32 arg0) {
 }
 
 void func_8026FC08(s32 arg0) {
-    s32 temp_lo;
-    s32 temp_lo_2;
-    s32 temp_t0;
-    s32 temp_t6_3;
-    s32 temp_t7;
-    s32 temp_t7_2;
-    s32 temp_v0_2;
-    s32 temp_v1;
-    s32 var_s0;
-    s32 var_s0_2;
-    s32 var_s4;
-    s32 var_s5;
-    s32 var_v0;
-    s32 var_v1;
-    u8 *var_fp;
-    u8 *var_fp_2;
-    u8 *var_s3_2;
-    u8 temp_t2;
-    u8 temp_t2_2;
-    u8 temp_t2_3;
-    u8 temp_t3;
-    u8 temp_t5;
-    u8 temp_t6;
-    u8 temp_t6_2;
-    u8 *temp_s3;
-    u8 *temp_s3_2;
-    u8 *temp_v0;
-    u8 *var_s1;
-    u8 *var_s3;
+    u8 *src;
+    u8 *p;
+    UnkStruct_800B15D8 *m;
+    UnkCell_800B15D8 *cell;
+    s32 layers;
+    s32 n;
+    s32 i;
+    s32 j;
+    s32 cnt;
+    s32 v;
 
     D_802AFC50 = arg0;
     D_800B15D8->unk4 = 0;
     D_800B15D8->unk8 = 0;
-    temp_v0 = func_8026CE28(arg0);
-    D_802AFC6C = temp_v0;
+    src = func_8026CE28(arg0);
+    D_802AFC6C = src;
     D_802AFC60 = 0.0f;
     D_802AFC64 = 1.6333334f;
     D_802AFC68 = 0.0f;
-    temp_t6 = M2C_FIELD(temp_v0, u8 *, 0);
-    temp_t7 = temp_t6 & 0xFF;
-    D_800B15D8->unk0 = temp_t6;
-    D_800B15D8->unk1 = (u8) M2C_FIELD(temp_v0, u8 *, 1);
-    D_800B15D8->unk2 = (u8) M2C_FIELD(temp_v0, u8 *, 2);
-    D_800B15D8->unk3 = (u8) M2C_FIELD(temp_v0, u8 *, 3);
-    temp_t2 = M2C_FIELD(temp_v0, u8 *, 4);
-    D_800B15D8->unkC = temp_t2;
-    var_s3 = temp_v0 + 5;
-    var_fp = D_800B15D8;
-    var_s5 = 0;
-    D_802AFC5C = (f32) -(temp_t2 & 0x7F) * 100.0f;
-    if (temp_t7 > 0) {
-        do {
-            temp_t6_2 = M2C_FIELD(var_s3, u8 *, 0);
-            temp_s3 = var_s3 + 2;
-            M2C_FIELD(var_fp, u8 *, 0xE) = temp_t6_2;
-            M2C_FIELD(var_fp, u8 *, 0xF) = (u8) M2C_FIELD(temp_s3, u8 *, -1);
-            temp_v0_2 = (temp_t6_2 & 0xFF) + ((s32) (D_800B15D8->unk1 + 7) >> 3);
-            if (D_800B15D8->unk4 < temp_v0_2) {
-                D_800B15D8->unk4 = temp_v0_2;
-            }
-            temp_v1 = M2C_FIELD(var_fp, u8 *, 0xF) + ((s32) (D_800B15D8->unk3 + 7) >> 3);
-            if (D_800B15D8->unk8 < temp_v1) {
-                D_800B15D8->unk8 = temp_v1;
-            }
-            temp_lo = M2C_FIELD(var_fp, u8 *, 0xF) * M2C_FIELD(var_fp, u8 *, 0xE);
-            var_s5 += 1;
-            var_fp += 0xC34;
-            M2C_FIELD(var_fp, u8 *, -0xC24) = (u8) M2C_FIELD(var_s3, u8 *, 2);
-            var_s3 = temp_s3 + 1 + (temp_lo * 0x82);
-        } while (var_s5 != temp_t7);
-        var_s5 = 0;
+    layers = D_800B15D8->unk0 = src[0];
+    D_800B15D8->unk1 = src[1];
+    D_800B15D8->unk2 = src[2];
+    D_800B15D8->unk3 = src[3];
+    D_800B15D8->unkC = src[4];
+    p = src + 5;
+    m = D_800B15D8;
+    D_802AFC5C = -(src[4] & 0x7F) * 100.0f;
+    for (n = 0; n < layers; n++) {
+        m->unkE = *p++;
+        m->unkF = *p++;
+        v = m->unkE + ((D_800B15D8->unk1 + 7) >> 3);
+        if (D_800B15D8->unk4 < v) {
+            D_800B15D8->unk4 = v;
+        }
+        v = m->unkF + ((D_800B15D8->unk3 + 7) >> 3);
+        if (D_800B15D8->unk8 < v) {
+            D_800B15D8->unk8 = v;
+        }
+        cnt = m->unkF * m->unkE;
+        m->unk10 = *p++;
+        p += cnt * sizeof(UnkCell_800B15D8);
+        m++;
     }
-    var_s3_2 = temp_v0 + 5;
-    if (temp_t7 > 0) {
-        var_fp_2 = D_800B15D8;
-        do {
-            temp_t2_2 = *var_s3_2;
-            temp_s3_2 = var_s3_2 + 2;
-            M2C_FIELD(var_fp_2, u8 *, 0xE) = temp_t2_2;
-            temp_t3 = M2C_FIELD(temp_s3_2, u8 *, -1);
-            temp_lo_2 = (temp_t3 & 0xFF) * (temp_t2_2 & 0xFF);
-            M2C_FIELD(var_fp_2, u8 *, 0xF) = temp_t3;
-            var_s4 = 0;
-            temp_t6_3 = D_800B15D8->unk8 * 8;
-            var_v1 = temp_t6_3;
-            if (temp_t6_3 > 0) {
-                var_v0 = D_800B15D8->unk4 * 8;
-                do {
-                    var_s0 = 0;
-                    if (var_v0 > 0) {
-                        do {
-                            func_8026D620(var_s0, D_800B15D8->unk2 + var_s5, var_s4, 0x2010U);
-                            var_s0 += 1;
-                            temp_t0 = D_800B15D8->unk4 * 8;
-                            var_v0 = temp_t0;
-                        } while (var_s0 < temp_t0);
-                        var_v1 = D_800B15D8->unk8 * 8;
-                    }
-                    var_s4 += 1;
-                } while (var_s4 < var_v1);
-                var_s4 = 0;
+    p = src + 5;
+    m = D_800B15D8;
+    for (n = 0; n < layers; n++) {
+        m->unkE = *p++;
+        m->unkF = *p++;
+        cnt = m->unkF * m->unkE;
+        for (i = 0; i < D_800B15D8->unk8 * 8; i++) {
+            for (j = 0; j < D_800B15D8->unk4 * 8; j++) {
+                func_8026D620(j, D_800B15D8->unk2 + n, i, 0x2010);
             }
-            var_s3_2 = temp_s3_2 + 1;
-            if (temp_lo_2 > 0) {
-                var_s1 = &D_800B15D8[var_s5];
-                do {
-                    temp_t2_3 = *var_s3_2;
-                    var_s3_2 += 2;
-                    M2C_FIELD(var_s1, u8 *, 0x12) = temp_t2_3;
-                    var_s0_2 = 0;
-                    M2C_FIELD(var_s1, u8 *, 0x13) = (u8) M2C_FIELD(var_s3_2, u8 *, -1);
-loop_20:
-                    temp_t5 = M2C_FIELD(var_s3_2, u8 *, 1);
-                    temp_t7_2 = M2C_FIELD(var_s3_2, u8 *, 0) << 8;
-                    var_s3_2 += 2;
-                    func_8026D620((M2C_FIELD(var_s1, u8 *, 0x12) * 8) + D_800B15D8->unk1 + (var_s0_2 % 8), D_800B15D8->unk2 + var_s5, (M2C_FIELD(var_s1, u8 *, 0x13) * 8) + D_800B15D8->unk3 + (var_s0_2 >> 3), temp_t5 + temp_t7_2);
-                    var_s0_2 += 1;
-                    if (var_s0_2 != 0x40) {
-                        goto loop_20;
-                    }
-                    var_s4 += 1;
-                    var_s1 += 0x82;
-                } while (var_s4 != temp_lo_2);
+        }
+        p++;
+        cell = D_800B15D8[n].unk12;
+        for (i = 0; i < cnt; i++) {
+            cell->unk0 = *p++;
+            cell->unk1 = *p++;
+            for (j = 0; j < 64; j++) {
+                func_8026D620(cell->unk0 * 8 + D_800B15D8->unk1 + j % 8, D_800B15D8->unk2 + n,
+                              cell->unk1 * 8 + D_800B15D8->unk3 + (j >> 3), p[1] + (p[0] << 8));
+                p += 2;
             }
-            var_s5 += 1;
-            var_fp_2 += 0xC34;
-        } while (var_s5 != temp_t7);
+            cell++;
+        }
+        m++;
     }
 }
 
