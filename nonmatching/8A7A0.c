@@ -7,7 +7,7 @@
  * order. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 553, eu 553, jp 553
+ * differing words: us 510, eu 510, jp 510
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file (475 words in the one-file draft, 39
@@ -1454,31 +1454,31 @@ void func_80271178(s16 arg0, s32 arg1) {
 }
 
 void func_80271010(u8 *arg0, s16 arg1) {
-    f32 sp34;
-    f32 sp30;
-    f32 sp24;
-    u8 *temp_v0;
-    u8 *temp_v0_2;
+    f32 dx;
+    f32 dz;
+    Slot30 *sl;
+    Obj8E *pl;
+    f32 s;
 
-    temp_v0 = func_802443F4((s32) arg1);
-    sp24 = func_80234434(M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x20));
-    sp34 = func_80270F44(arg0) * sp24;
-    sp24 = func_80234408(M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x20));
-    sp30 = func_80270F44(arg0) * sp24;
-    if (func_802336E4(sp34) != 0) {
-        sp34 = 0.0f;
+    pl = func_802443F4(arg1);
+    s = func_80234434(pl->unk40->rot);
+    dx = func_80270F44(arg0) * s;
+    s = func_80234408(pl->unk40->rot);
+    dz = func_80270F44(arg0) * s;
+    if (func_802336E4(dx) != 0) {
+        dx = 0.0f;
     }
-    if (func_802336E4(sp30) != 0) {
-        sp30 = 0.0f;
+    if (func_802336E4(dz) != 0) {
+        dz = 0.0f;
     }
-    temp_v0_2 = (arg1 * 0x30) + D_802AFCE8;
-    M2C_FIELD(temp_v0_2, s16 *, 0x10) = 0x14;
-    M2C_FIELD(temp_v0_2, s16 *, 0) = arg1;
-    M2C_FIELD(temp_v0_2, f32 *, 0x1C) = (f32) ((M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x10) + sp34) - M2C_FIELD(M2C_FIELD(arg0, void **, 0x40), f32 *, 0x10));
-    M2C_FIELD(temp_v0_2, f32 *, 0x20) = 0.0f;
-    M2C_FIELD(temp_v0_2, f32 *, 0x28) = 0.0f;
-    M2C_FIELD(temp_v0_2, f32 *, 0x24) = (f32) ((M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x18) + sp30) - M2C_FIELD(M2C_FIELD(arg0, void **, 0x40), f32 *, 0x18));
-    M2C_FIELD(temp_v0_2, f32 *, 0x2C) = (f32) ((func_80270FC0(temp_v0) + M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x14)) - M2C_FIELD(M2C_FIELD(arg0, void **, 0x40), f32 *, 0x14));
+    sl = &SLOTS[arg1];
+    sl->unk10 = 0x14;
+    sl->unk0 = arg1;
+    sl->unk1C = (pl->unk40->x + dx) - ((Obj8E *) arg0)->unk40->x;
+    sl->unk20 = 0.0; /* doubles: the 0.0f of dz isn't reused */
+    sl->unk28 = 0.0;
+    sl->unk24 = (pl->unk40->z + dz) - ((Obj8E *) arg0)->unk40->z;
+    sl->unk2C = (func_80270FC0((u8 *) pl) + pl->unk40->y) - ((Obj8E *) arg0)->unk40->y;
 }
 
 f32 func_80270FC0(u8 *arg0) {
