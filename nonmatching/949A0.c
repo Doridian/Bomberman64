@@ -8,7 +8,7 @@
  * stack layout and loop forms; func_8027B828 in two registers. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 30, eu 30, jp 30
+ * differing words: us 27, eu 27, jp 27
  */
 #include "common.h"
 
@@ -855,6 +855,7 @@ void func_8027A640(void) {
     x++;
     y++;
     z++;
+    found = 0;
     do {
         if (x == p[0] && y == p[1] && z == p[2]) {
             found = 1;
