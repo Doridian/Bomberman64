@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1680, eu 1680, jp 1680
+ * differing words: us 1660, eu 1660, jp 1660
  *
  * The object is the same in all three versions. 66 of the 79 original
  * procedures match (stubs included). The IPA statics
@@ -1605,10 +1605,12 @@ static void func_80267A18(s16 idx) {
             pc = s->pc;
             v = &D_802AD654[idx];
             while (s->wait == 0) {
-                u32 op = pc[0] - 0x80;
+                u32 op = pc[0];
                 s->wait = (pc[1] << 8) + pc[2];
                 pc += 3;
-                switch (op) {
+                if (op == 0x105) {}
+                if (op == ~2) {}
+                switch (op - 0x80) {
                     case 3:
                         num = (pc[0] << 8) + pc[1];
                         pc += 2;
@@ -1627,20 +1629,24 @@ static void func_80267A18(s16 idx) {
                             }
                         }
                         break;
-                    case 4:
-                        if (s->loop == 1) {
-                            s->loop = 0;
+                    case 4: {
+                        u8 *lp = &s->loop;
+                        if (*lp == 1) {
+                            *lp = 0;
                             pc += 3;
-                        } else if (s->loop != 0) {
-                            s->loop--;
-                            pc += (s16) ((pc[1] << 8) + pc[2]) - 3;
+                            break;
+                        }
+                        if (*lp != 0) {
+                            (*lp)--;
                         } else if (pc[0] == 0) {
                             pc += 3;
+                            break;
                         } else {
-                            s->loop = pc[0];
-                            pc += (s16) ((pc[1] << 8) + pc[2]) - 3;
+                            *lp = pc[0];
                         }
+                        pc += (s16) ((pc[1] << 8) + pc[2]) - 3;
                         break;
+                    }
                     case 5:
                         pc += (s16) ((pc[0] << 8) + pc[1]) - 3;
                         break;
@@ -1719,6 +1725,7 @@ static void func_80267A18(s16 idx) {
                         s->wait = 1;
                         break;
                 }
+                if (idx) {}
             }
             f = 0.0f;
             s->wait--;
@@ -1769,9 +1776,21 @@ static void func_80267A18(s16 idx) {
             if (s->flags & 0x100) {
                 while (s->nchild > 0) {
                     s->nchild--;
-                    ch = s->child[s->nchild];
-                    if (idx == D_802AD65C[ch].parent) {
-                        VOICE_STOP(ch);
+                    num = s->child[s->nchild];
+                    if (idx == D_802AD65C[num].parent) {
+                        v = &D_802AD654[num];
+                        if (v->state == 1) {
+                            if (v->flags & 0x1000) {
+                                v->flags &= ~0x1000;
+                            } else {
+                                func_802986F0(D_802AD64C, v->sndId);
+                                func_80298710(D_802AD64C);
+                                v->flags |= 0x2000;
+                            }
+                            v->unk1F = 0;
+                            D_802AD65C[num].script = -1;
+                            D_802AD65C[num].flags = 0;
+                        }
                     }
                 }
                 v = &D_802AD654[idx];
