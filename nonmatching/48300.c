@@ -6,7 +6,7 @@
  * boxes, func_8022E884). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2017, eu 2017, jp 2017
+ * differing words: us 1939, eu 1939, jp 1939
  *
  * A first draft: functions in the reverse of the ROM's order, which IDO
  * now emits exactly as the original does (stubs included); a handful by
@@ -1230,74 +1230,64 @@ void func_80230E6C(s32 arg0, s32 arg1) {
 }
 
 void *func_80230CB4(s32 arg0, s32 arg1, s32 arg2, s32 arg3, u8 *arg4) {
-    void *sv_a3;
-    s32 *sv_a2;
-    s32 *sv_a0;
-    s32 *temp_v0_2;
-    s32 *var_a1_2;
-    s32 var_a1;
-    u8 *temp_v0;
-    u8 *var_v0;
+    UnkStructA80 *obj;
+    Shape *shape;
+    UnkStructA80 *p;
+    s32 *list;
+    u8 *res;
+    s32 kind;
 
     if (D_802A56FC >= 0x80) {
         return NULL;
     }
-    temp_v0 = func_8026CE28(arg0);
-    if (temp_v0 == NULL) {
-loop_3:
-        goto loop_3;
+    res = func_8026CE28(arg0);
+    if (res == NULL) {
+        for (;;) {}
     }
     if (arg2 & 0x100000) {
-        var_a1 = 0x51;
+        kind = 0x51;
+    } else if (arg2 & 0x80000) {
+        kind = 0x60;
     } else {
-        var_a1 = 0x40;
-        if (arg2 & 0x80000) {
-            var_a1 = 0x60;
-        }
+        kind = 0x40;
     }
     if (arg1 == -1) {
-        var_v0 = func_8022A6C4(temp_v0, var_a1);
+        shape = func_8022A6C4(res, kind);
     } else {
-        var_v0 = func_8022A328(temp_v0, var_a1, 2, arg1, 0);
+        shape = func_8022A328(res, kind, 2, arg1, 0);
     }
-    if (var_v0 == NULL) {
-loop_12:
-        goto loop_12;
+    if (shape == NULL) {
+        for (;;) {}
     }
     if (D_802A5674 == NULL) {
-loop_14:
-        goto loop_14;
+        for (;;) {}
     }
-    sv_a0 = D_802A5674;
-    sv_a2 = D_802A5674;
-    sv_a3 = var_v0;
-    func_8022FC50(D_802A5674);
-    sv_a0 = sv_a2;
-    func_80230C08(sv_a2);
+    obj = (UnkStructA80 *) D_802A5674;
+    func_8022FC50((u8 *) obj);
+    func_80230C08((s32 *) obj);
     if (arg3 < 0xD0) {
-        sv_a0 = (s32 *) arg3;
-        temp_v0_2 = func_80230B98(arg3);
-        if (temp_v0_2 != NULL) {
-            var_a1_2 = M2C_FIELD(temp_v0_2, s32 **, 0x78);
+        p = (UnkStructA80 *) func_80230B98(arg3);
+        if (p != NULL) {
+            list = (s32 *) p->unk78;
         } else {
-            var_a1_2 = D_802A56F8;
+            list = D_802A56F8;
         }
-        func_8022FC20(sv_a2, var_a1_2);
+        func_8022FC20((u8 *) obj, list);
     } else {
-        func_8022FC20(sv_a2, &D_802A5678);
+        func_8022FC20((u8 *) obj, (s32 *) &D_802A5678);
     }
-    M2C_FIELD(sv_a2, s32 *, 8) = (s32) (M2C_FIELD(sv_a2, s32 *, 8) | 0x80000000 | arg2);
-    M2C_FIELD(sv_a2, s32 *, 4) = arg3;
-    M2C_FIELD(sv_a2, void **, 0x40) = sv_a3;
-    M2C_FIELD(sv_a2, s32 *, 0x28) = arg0;
-    M2C_FIELD(sv_a3, s32 *, 0xC) = (s32) (M2C_FIELD(sv_a3, s32 *, 0xC) | 0x61);
-    M2C_FIELD(M2C_FIELD(sv_a2, void **, 0x40), s16 *, 0x36) = 0xFF;
-    M2C_FIELD(sv_a2, void **, 0x44) = arg4;
-    if ((s32) arg4 != (s32) NULL) {
-        M2C_FIELD(arg4, s32 *, 0x48) = (s32) (M2C_FIELD(arg4, s32 *, 0x48) + 1);
+    obj->unk8 |= 0x80000000 | arg2;
+    obj->unk4 = arg3;
+    obj->unk28 = arg0;
+    obj->unk40 = shape;
+    shape->unkC |= 0x61;
+    obj->unk40->unk36 = 0xFF;
+    obj->unk44 = (UnkStructA80 *) arg4;
+    if (arg4 != NULL) {
+        ((UnkStructA80 *) arg4)->unk48++;
     }
-    D_802A56FC += 1;
-    return sv_a2;
+    D_802A56FC++;
+    return obj;
 }
 
 static void func_80230C08(s32 *arg0) {
