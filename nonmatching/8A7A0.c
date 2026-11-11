@@ -7,7 +7,7 @@
  * order. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 42, eu 42, jp 42
+ * differing words: us 41, eu 41, jp 41
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file (475 words in the one-file draft, 39
@@ -15,11 +15,10 @@
  * The entity flag helpers func_80270354/func_8027036C/func_802712A8 and
  * the tests func_80270384/func_802702BC are inlined by umerge where the
  * original calls them; the callers call them rather than spell them out.
- * 50 of 54 match. Left: func_80270770 35 (flags and ok in v1/a0
+ * 51 of 54 match. Left: func_80270770 35 (flags and ok in v1/a0
  * where the original has a0/a1), func_80271BB8 4 (the second unk40
  * pointer in v0 where the original has v1), func_80270C24 2 (the first
- * flag test in a3 where the original has t3), func_80271010 1 (one
- * add.s with its operands swapped).
+ * flag test in a3 where the original has t3).
  */
 #include "common.h"
 
@@ -1478,8 +1477,7 @@ void func_80271010(u8 *arg0, s16 arg1) {
     sl->unk24 = (dz + pl->unk40->z) - ((Obj8E *) arg0)->unk40->z;
     sl->unk20 = 0.0; /* doubles: the 0.0f of dz isn't reused */
     sl->unk28 = 0.0;
-    dx = func_80270FC0((u8 *) pl); /* reusing dx (a permuter find) */
-    sl->unk2C = (dx + pl->unk40->y) - ((Obj8E *) arg0)->unk40->y;
+    sl->unk2C = (pl->unk40->y + func_80270FC0((u8 *) pl)) - ((Obj8E *) arg0)->unk40->y;
 }
 
 f32 func_80270FC0(u8 *arg0) {
