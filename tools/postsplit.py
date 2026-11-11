@@ -12,6 +12,12 @@ of address survive splat as plain numbers:
   can't put a label there, so it writes an absolute `D_X = 0xX;` into
   undefined_syms_auto.txt.  Those inside a module move to
   module_syms_auto.txt as `D_X = <nearest label below> + off;`.
+- a reference into the middle of a C object's own data (its `.data`,
+  `.rodata` or `.bss` subsegment): splat leaves the name undefined, since
+  the C defines the section.  Unless the C defines that name itself, it
+  becomes `D_X = <the object's first symbol> + off;` in
+  module_syms_auto.txt (80580 takes the address of a field of 85A10's
+  D_802AD680).
 - a data word holding such an address (`.word 0x8029F8C0`, or the same
   four bytes as a .float or a .byte run): spimdisasm only symbolizes words
   that point at a label.  They are rewritten as
@@ -271,6 +277,87 @@ def fix_syms(mods, version, report):
     return len(moved) - done
 
 
+CSECTS = (".data", ".rodata", ".bss")
+REF = re.compile(r"(?:%(?:hi|lo)\(|\.word\s+)(D_[0-9A-F]{8})\b")
+
+
+def c_sections(version):
+    """[(type, object, vram, end)] of the C objects' own data subsegments."""
+    cfg = yaml.safe_load((ROOT / f"bm64.{version}.yaml").read_text())
+    segs = cfg["segments"]
+    starts = [s["start"] if isinstance(s, dict) else s[0] for s in segs]
+    out = []
+    for s, end in zip(segs, starts[1:]):
+        if not (isinstance(s, dict) and s.get("type") == "code"):
+            continue
+        subs = []
+        for sub in s.get("subsegments", []):
+            if isinstance(sub, dict):
+                subs.append((sub["type"], sub.get("name"), sub["vram"]))
+            else:
+                subs.append((sub[1], sub[2] if len(sub) > 2 else None,
+                             s["vram"] + sub[0] - s["start"]))
+        mod_end = s["vram"] + end - s["start"] + s.get("bss_size", 0)
+        for k, (t, name, v) in enumerate(subs):
+            if t in CSECTS and name:
+                nxt = subs[k + 1][2] if k + 1 < len(subs) else mod_end
+                out.append((t, name, v, nxt))
+    return out
+
+
+def c_names(obj):
+    """The `D_<address>` names a C object's source mentions, or None."""
+    path = ROOT / "src" / f"{obj}.c"
+    if not path.exists():
+        path = next((ROOT / "src").rglob(f"{obj}.c"), None)
+    if path is None:
+        return None
+    return set(re.findall(r"\bD_[0-9A-F]{8}\b", path.read_text()))
+
+
+def fix_c_interior(version, files, report):
+    """Names the asm uses inside a C object's data that nothing defines."""
+    defined = set()
+    for path in files:
+        for line in path.read_text().splitlines():
+            m = LABEL.match(line)
+            if m:
+                defined.add(m.group(1))
+    autos = [ROOT / "undefined_syms_auto.txt", ROOT / "module_syms_auto.txt"]
+    for f in autos:
+        if f.exists():
+            defined |= {line.split(" = ")[0] for line in f.read_text().splitlines() if " = " in line}
+    refs = set()
+    for path in files:
+        refs |= set(REF.findall(path.read_text()))
+    here = c_sections(version)
+    us = {(t, name): v for t, name, v, _ in c_sections("us")}
+    new = []
+    for name in sorted(refs - defined):
+        v = int(name[2:], 16)
+        for t, obj, start, end in here:
+            if not start <= v < end:
+                continue
+            names = c_names(obj)
+            us_start = us.get((t, obj))
+            if names is None and next((ROOT / "src").rglob(f"{obj}.s"), None):
+                pass  # handwritten asm defines its own labels
+            elif names is None or us_start is None:
+                report.append(f"{name}: in {obj}'s {t}, but no C source or us section")
+            elif f"D_{us_start + v - start:X}" in names:
+                pass  # the C defines it
+            elif f"D_{us_start:X}" not in names:
+                report.append(f"{name}: in {obj}'s {t}, which has no D_{us_start:X}")
+            else:
+                new.append(f"{name} = D_{start:X} + 0x{v - start:X};")
+            break
+    if new:
+        out = ROOT / "module_syms_auto.txt"
+        old = out.read_text().splitlines() if out.exists() else []
+        out.write_text("".join(f"{line}\n" for line in old + new))
+    return len(new)
+
+
 def main():
     version = sys.argv[1]
     mods = modules(version)
@@ -279,6 +366,7 @@ def main():
     report = []
     words = fix_words(mods, files, report)
     syms = fix_syms(mods, version, report)
+    syms += fix_c_interior(version, files, report)
     for r in report:
         print(r)
     print(f"postsplit: {words} data words and {syms} symbols made relative; "

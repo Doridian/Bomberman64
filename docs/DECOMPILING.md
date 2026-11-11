@@ -191,9 +191,11 @@ where us calls 0x250C/0x250D.
   Seen so far: 404C0, 40FB0, 412F0, 41FD0, 4DE50, 4E030 (4DE50's second half:
   its wrappers call 4DE50's compares with a `jal`, which -O3 would inline
   in one file), 4ED50, 52270 (jp's func_8023876C has no TV-type
-  switch: `#if VERSION_JP`), 530C0, 53D70, 78CA0, 78F60, 86680, 995C0, 9A5F0, 9BFD0, A8DE0, ACA00, AD5B0,
-  AFBF0, B6680 (`-mips2`), ovl_0A_02-05's, ovl_0C_03's, ovl_0E_09's, ovl_12_02's, ovl_12_04's, ovl_17_01's and ovl_17_10's objects are `-O3`; 5E090, 87190, 87730,
-  99F40, A4860 and B11F0 are `-O2` (no
+  switch: `#if VERSION_JP`), 530C0, 53D70, 78CA0, 78F60, 85A10, 86680, 995C0, 9A5F0, 9BFD0, A8DE0, ACA00, AD5B0,
+  AFBF0, B6680 (`-mips2`), ovl_0A_02-05's, ovl_0C_03's, ovl_0E_09's, ovl_12_02's, ovl_12_04's, ovl_17_01's and ovl_17_10's objects are `-O3`, and
+  so is B11F0 (its draft in nonmatching/; src/ still has it GLOBAL_ASM
+  at `-O2`, below); 5E090, 87190, 87730,
+  99F40 and A4860 are `-O2` (no
   inlining between functions that call each other, no cross-call
   registers; A4860's func_8028A318 calls three small functions of its
   own file and inlines none); 54BE0 (one function) builds the same at
@@ -209,7 +211,8 @@ where us calls 0x250C/0x250D.
   matches only at `-O3` (with an unused local ahead of its `entry` struct
   for the frame), and the whole of 404C0, written last function first,
   is `-O3` C. 85A10 (func_8026B72C's
-  argument; func_8026B238 uses `s` registers it never saves), B11F0
+  argument; func_8026B238 uses `s` registers it never saves; now all C
+  at `-O3`), B11F0
   (func_80297564's `move t4, a1`) and A2840 (func_802884D4 reads `f16`
   unset) show it too. Their GLOBAL_ASM functions are the ones `-O2` can't
   give; 87190, 87730, 99F40 and A4860 match their remaining functions at
@@ -864,9 +867,10 @@ where us calls 0x250C/0x250D.
 eu and jp build from the same C. Each version's config comes from its own
 ROM; the C files, the flags and the names are us's. So far every C
 object matches all three unchanged (eu's and jp's differences lie
-elsewhere: docs/LAYOUT.md, "EU" and "JP"), except `85A10`, whose
-`func_8026B9CC` (jp's differs) is still GLOBAL_ASM: a changed function
-keeps us's name, so one GLOBAL_ASM line serves every version.
+elsewhere: docs/LAYOUT.md, "EU" and "JP"), except `52270` and `85A10`,
+whose jp `func_8023876C` and `func_8026B9CC` have no TV-type test
+(`#if VERSION_JP`). A changed function keeps us's name, so while it is
+GLOBAL_ASM one line serves every version.
 
 - **Objects.** Outside us a text object is named for the us image offset
   of the same code (`tools/layout.py` through `vermap.<v>.txt`): `5E090`
@@ -921,8 +925,8 @@ What a decompiler has to do for jp (and eu):
    step; `PERMUTER=1` compiles the file as is. The `.d` file still comes
    from the original source. A changed function keeps us's name in jp (the
    map), so it needs no `#if` while it is GLOBAL_ASM: each version's
-   extract fills the same `.s` with its own code (`src/85A10.c`'s
-   `func_8026B9CC`). The `#if`s are for a `.s` only one version has (a
+   extract fills the same `.s` with its own code (`func_8026B9CC` did,
+   before `src/85A10.c` was C). The `#if`s are for a `.s` only one version has (a
    `_jp` function), and for a function written as C in one version while
    the other stays GLOBAL_ASM.
 5. Data: `data_split.txt` takes `@jp` placement lines like `@us`/`@eu`
@@ -1080,3 +1084,9 @@ Build the object once (the link fails, the `.o` is there), run `--place`
 for each version with `--ref build/us/src/<object>.c.o`, add the lines,
 regenerate the configs and extract again. `--place` finds an object named
 by its image offset (`995C0`) as well as a named one.
+Asm that points into the middle of a C object's data (80580 passes
+`&D_802AD680.maxDMAs`, 85A10's, as `D_802AD684`) gets no definition from
+splat, which leaves the section to the C: `tools/postsplit.py` defines it
+as `D_802AD684 = D_802AD680 + 0x4;` in module_syms_auto.txt, unless the C
+names it itself. The object's first variable must be named for the
+section's start (us's address).
