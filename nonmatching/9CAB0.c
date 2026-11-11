@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 771, eu 771, jp 771
+ * differing words: us 628, eu 628, jp 628
  */
 #include "common.h"
 
@@ -320,7 +320,7 @@ void func_8028555C();
 static void func_80285564();
 static void func_80285650();
 static void func_80285A6C();
-static void func_80285A74();
+static UnkStruct_800BA900 *func_80285A74();
 static void func_80285A7C(UnkStruct_80288040 *a_, s32 i_);
 static void func_80285A84(UnkStruct_80288040 *a_);
 static void func_80285A8C(UnkStruct_80288040 *a_, s32 i_);
@@ -904,7 +904,56 @@ static void func_80285F8C(void) {
 static void func_80285A6C() {
 }
 
-static void func_80285A74() {
+static UnkStruct_800BA900 *func_80285A74() {
+    s32 pada[1];
+    Vec3f pos;
+    s32 padb[18];
+    UnkStruct_800BA900 *s;
+    UnkStructA_40 *p;
+    s32 i;
+    f32 c;
+
+    s = D_800BA900;
+    func_80250338(func_80243DDC(), &pos);
+    for (i = 0; i < 16; i++, s++) {
+        if (s->unk0 == 2) {
+            if (s->unk4 == 0) {
+                p = s->unk14.unk0->unk40;
+                if (pos.x < p->unk10) {
+                    c = pos.x + 1100.0f;
+                    if (((c - 50.0f) < p->unk10) && (p->unk10 < (c + 50.0f)) && ((pos.z - 1100.0f) < p->unk18) && (p->unk18 < (pos.z + 1100.0f))) {
+                        return s;
+                    }
+                } else {
+                    c = pos.x - 1100.0f;
+                    if (((c - 50.0f) < p->unk10) && (p->unk10 < (c + 50.0f)) && ((pos.z - 1100.0f) < p->unk18) && (p->unk18 < (pos.z + 1100.0f))) {
+                        return s;
+                    }
+                }
+                if (pos.z < p->unk18) {
+                    c = pos.z + 1100.0f;
+                    if (((c - 50.0f) < p->unk18) && (p->unk18 < (c + 50.0f)) && ((pos.x - 1100.0f) < p->unk10) && (p->unk10 < (pos.x + 1100.0f))) {
+                        return s;
+                    }
+                } else {
+                    c = pos.z - 1100.0f;
+                    if (((c - 50.0f) < p->unk18) && (p->unk18 < (c + 50.0f)) && ((pos.x - 1100.0f) < p->unk10) && (p->unk10 < (pos.x + 1100.0f))) {
+                        return s;
+                    }
+                }
+            } else {
+                p = s->unk14.unk0->unk40;
+                if ((pos.x < (p->unk10 - 1100.0f)) || ((p->unk10 + 1100.0f) < pos.x) ||
+                    (pos.z < (p->unk18 - 1100.0f)) || ((p->unk18 + 1100.0f) < pos.z)) {
+                    s->unk4--;
+                    if (s->unk4 <= 0) {
+                        s->unk4 = 0;
+                    }
+                }
+            }
+        }
+    }
+    return NULL;
 }
 
 static void func_80285A8C(UnkStruct_80288040 *a_, s32 i_) {
@@ -951,56 +1000,10 @@ static void func_80285A84(UnkStruct_80288040 *a_) {
 }
 
 static void func_80285A9C(UnkStruct_800BB340 *arg0) {
-    Vec3f pos;
-    UnkStruct_800BA900 *s;
     UnkStruct_800BA900 *r;
-    UnkStructA_40 *p;
-    s32 i;
-    f32 c;
 
     func_80285A6C();
-    func_80285A74();
-    func_80250338(func_80243DDC(), &pos);
-    s = D_800BA900;
-    r = NULL;
-    for (i = 0; i < 16; i++, s++) {
-        if (s->unk0 == 2) {
-            if (s->unk4 == 0) {
-                p = s->unk14.unk0->unk40;
-                if (pos.x < p->unk10) {
-                    c = pos.x + 1100.0f;
-                    if (((c - 50.0f) < p->unk10) && (p->unk10 < (c + 50.0f)) && ((pos.z - 1100.0f) < p->unk18) && (p->unk18 < (pos.z + 1100.0f))) {
-                        r = s; break;
-                    }
-                } else {
-                    c = pos.x - 1100.0f;
-                    if (((c - 50.0f) < p->unk10) && (p->unk10 < (c + 50.0f)) && ((pos.z - 1100.0f) < p->unk18) && (p->unk18 < (pos.z + 1100.0f))) {
-                        r = s; break;
-                    }
-                }
-                if (pos.z < p->unk18) {
-                    c = pos.z + 1100.0f;
-                    if (((c - 50.0f) < p->unk18) && (p->unk18 < (c + 50.0f)) && ((pos.x - 1100.0f) < p->unk10) && (p->unk10 < (pos.x + 1100.0f))) {
-                        r = s; break;
-                    }
-                } else {
-                    c = pos.z - 1100.0f;
-                    if (((c - 50.0f) < p->unk18) && (p->unk18 < (c + 50.0f)) && ((pos.x - 1100.0f) < p->unk10) && (p->unk10 < (pos.x + 1100.0f))) {
-                        r = s; break;
-                    }
-                }
-            } else {
-                p = s->unk14.unk0->unk40;
-                if ((pos.x < (p->unk10 - 1100.0f)) || ((p->unk10 + 1100.0f) < pos.x) ||
-                    (pos.z < (p->unk18 - 1100.0f)) || ((p->unk18 + 1100.0f) < pos.z)) {
-                    s->unk4--;
-                    if (s->unk4 <= 0) {
-                        s->unk4 = 0;
-                    }
-                }
-            }
-        }
-    }
+    r = func_80285A74();
     if (r != NULL) {
         func_80285A7C(&r->unk14, r->unk14.unk84);
         r->unk14.unk0->unk40->unk28 = 1.0f;
