@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1754, eu 1754, jp 1754
+ * differing words: us 1679, eu 1679, jp 1679
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -562,6 +562,9 @@ void func_8026F5E8(s32 arg0, s32 arg1, s32 arg2) {
     s32 sp28;
     s32 sp24;
     f32 pos[3];
+    f32 x;
+    f32 y;
+    f32 z;
 
     sp28 = D_802AC5D0 & 4;
     sp24 = *func_8023A840() & 6;
@@ -570,44 +573,47 @@ void func_8026F5E8(s32 arg0, s32 arg1, s32 arg2) {
         pos[0] = arg0 * 100.0f;
         pos[1] = func_8026E2B0((f32) arg1);
         pos[2] = arg2 * 100.0f;
+        x = pos[0];
+        y = pos[1];
+        z = pos[2];
         switch (temp_v0 & 0x380) {
         case 0x80:
             func_802511EC(0, arg0, arg1, arg2);
             break;
         case 0x100:
             if (sp28 == 0 && sp24 == 0) {
-                func_80286CA8(0, pos[0], pos[1], pos[2]);
+                func_80286CA8(0, x, y, z);
             } else {
                 func_802511EC(1, arg0, arg1, arg2);
             }
             break;
         case 0x180:
             if (sp28 == 0 && sp24 == 0) {
-                func_80286CA8(1, pos[0], pos[1], pos[2]);
+                func_80286CA8(1, x, y, z);
             } else {
                 func_802511EC(2, arg0, arg1, arg2);
             }
             break;
         case 0x200:
             if (sp28 == 0 && sp24 == 0) {
-                func_80286CA8(2, pos[0], pos[1], pos[2]);
+                func_80286CA8(2, x, y, z);
             } else {
                 func_802511EC(3, arg0, arg1, arg2);
             }
             break;
         case 0x280:
             if (sp28 == 0 && sp24 == 0) {
-                func_80286CA8(3, pos[0], pos[1], pos[2]);
+                func_80286CA8(3, x, y, z);
             }
             break;
         case 0x300:
             if (sp28 == 0 && sp24 == 0) {
-                func_80286CA8(4, pos[0], pos[1], pos[2]);
+                func_80286CA8(4, x, y, z);
             }
             break;
         case 0x380:
             if (sp28 == 0 && sp24 == 0) {
-                func_80286CA8(5, pos[0], pos[1], pos[2]);
+                func_80286CA8(5, x, y, z);
             }
             break;
         }
