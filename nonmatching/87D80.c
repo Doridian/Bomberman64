@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 436, eu 436, jp 436
+ * differing words: us 418, eu 418, jp 418
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -16,8 +16,10 @@
  * D_800B15D8[0].unkN (the latter swaps the multiply's registers).
  * func_8026F5E8 and func_8026E3AC keep their x/y/z in an f32[3] (the
  * original's dead stores to it), not in three variables.
- * 26 of 43 match. Biggest left: func_8026EAF8 105, func_8026E938 96,
- * func_8026DA2C 90, func_8026E3AC 74, func_8026D6C0 69.
+ * 32 of 43 match. Left: func_8026EAF8 105, func_8026E3AC 74,
+ * func_8026D6C0 69, func_8026D7D8 48, func_8026D620 32, func_8026DCAC 26,
+ * func_8026EE18 26, func_8026FC08 25, func_8026F5E8 8, func_8026E938 3
+ * (saved-register order), func_8026F8B0 2 (one delay slot).
  */
 #include "common.h"
 
@@ -923,6 +925,8 @@ f32 func_8026E938(u8 *arg0) {
         } else {
             r = D_802AFC5C;
         }
+        if (z) { /* fake: keeps z live (permuter find) */
+        }
     }
     return r;
 }
@@ -1349,8 +1353,8 @@ void func_8026DA2C(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) {
     if (size[0] < arg3) {
         arg3 = size[0];
     }
-    i = arg2;
     if (arg4 < arg2) {
+        i = arg2;
         arg2 = arg4;
         arg4 = i;
     }
