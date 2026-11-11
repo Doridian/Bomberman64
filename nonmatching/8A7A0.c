@@ -7,7 +7,7 @@
  * order. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 45, eu 45, jp 45
+ * differing words: us 42, eu 42, jp 42
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file (475 words in the one-file draft, 39
@@ -15,11 +15,11 @@
  * The entity flag helpers func_80270354/func_8027036C/func_802712A8 and
  * the tests func_80270384/func_802702BC are inlined by umerge where the
  * original calls them; the callers call them rather than spell them out.
- * 49 of 54 match. Left: func_80270770 35 (flags and ok in v1/a0
+ * 50 of 54 match. Left: func_80270770 35 (flags and ok in v1/a0
  * where the original has a0/a1), func_80271BB8 4 (the second unk40
- * pointer in v0 where the original has v1), func_8027241C 3,
- * func_80270C24 2 (the first flag test in a3 where the original has
- * t3), func_80271010 1 (one add.s with its operands swapped).
+ * pointer in v0 where the original has v1), func_80270C24 2 (the first
+ * flag test in a3 where the original has t3), func_80271010 1 (one
+ * add.s with its operands swapped).
  */
 #include "common.h"
 
@@ -1012,19 +1012,26 @@ void func_80272494(Obj8E *arg0, Obj8E *arg1, Ctl87 *arg2) {
 s16 func_8027241C(s16 arg0) {
     switch (arg0) {
     case 0:
-        return 4;
+        arg0 = 4;
+        break;
     case 1:
-        return 5;
+        arg0 = 5;
+        break;
     case 2:
-        return 6;
+        arg0 = 6;
+        break;
     case 3:
-        return 7;
+        arg0 = 7;
+        break;
     case 4:
-        return 0;
+        arg0 = 0;
+        break;
     case 5:
-        return 1;
+        arg0 = 1;
+        break;
     case 6:
-        return 2;
+        arg0 = 2;
+        break;
     case 7:
         arg0 = 3;
         break;
