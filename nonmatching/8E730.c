@@ -5,7 +5,7 @@
  * global, emitted in the original's order. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1583, eu 1583, jp 1583
+ * differing words: us 1216, eu 1216, jp 1216
  *
  * 36 of 47 match. Biggest left: func_802741D8 461, func_8027655C 436,
  * func_80274994 320 (still m2c's control flow and untyped offsets),
@@ -260,7 +260,7 @@ f32 func_8026E938(u8 *arg0);
 void *func_802700EC(u8 *arg0, u8 *arg1, s16 arg2, f32 arg3);
 void func_802702EC(s16 arg0);
 s16 *func_802703B4(u8 *arg0);
-f32 func_802704F8(f32 arg0);
+s32 func_802704F8(f32 arg0);
 void func_80270A80(void *arg0);
 void func_80270BA4(u8 *arg0);
 f32 func_80270F44(u8 *arg0);
@@ -1645,144 +1645,114 @@ block_8:
 
 void func_802741D8(s16 arg0) {
     s32 spD4;
-    f32 spD0;
-    f32 spCC;
-    f32 spC8;
-    f32 spC4;
-    f32 spC0;
-    f32 spBC;
+    struct { f32 z, y, x; } base;
+    struct { f32 z, y, x; } cur;
+    Ent88 *e;
+    Obj8E *obj;
+    Obj8E *o;
+    s32 pad[3];
     f32 spA0;
+    s32 pad1[13];
     s32 sp60[3];
+    s32 padA[6];
     f32 sp3C[3];
-    f32 temp_ft1;
-    f32 temp_ft3;
-    f32 temp_ft5;
-    f32 temp_fv1;
-    s32 temp_t9;
-    s32 temp_v0_3;
-    s32 var_v0;
-    s32 var_v0_2;
-    s32 var_v0_4;
-    u8 *temp_v0;
-    u8 *temp_v0_2;
-    u8 *temp_v0_4;
-    u8 *temp_v0_5;
-    u8 *temp_v1;
-    u8 *var_v0_3;
+    Slot30 *slot;
+    s32 padC[1];
 
     func_802714C4();
-    var_v0 = 1;
-    if ((arg0 >= 0) && (arg0 < 5)) {
-        var_v0 = 0;
+    if (((arg0 >= 0 && arg0 < 5) ? 0 : 1) ? 0 : SLOTS[arg0].unkC) {
+        return;
     }
-    if (var_v0 != 0) {
-        var_v0_2 = 0;
-    } else {
-        var_v0_2 = *(s32 *)(D_802AFCF4 + (arg0 * 0x30));
+    obj = func_802443F4(arg0);
+    { f32 z = obj->unk40->z;
+    func_8026DCAC(obj->unk40->x, obj->unk40->y, z, sp60, 2); }
+    cur.x = base.x = sp60[0];
+    cur.y = base.y = sp60[1];
+    cur.z = base.z = sp60[2];
+    func_802740AC((s16) func_802704F8(obj->unk40->rot), 1.0f, 0.0f, &cur.x, &cur.z);
+    if (func_80273A5C((s32) cur.x, (s32) cur.y, (s32) cur.z) == 0) {
+        return;
     }
-    if (var_v0_2 == 0) {
-        temp_v0 = func_802443F4((s32) arg0);
-        temp_v1 = M2C_FIELD(temp_v0, void **, 0x40);
-        func_8026DCAC(M2C_FIELD(temp_v1, f32 *, 0x10), M2C_FIELD(temp_v1, f32 *, 0x14), M2C_FIELD(temp_v1, f32 *, 0x18), sp60, 2);
-        temp_ft1 = (f32) sp60[0];
-        temp_ft3 = (f32) sp60[1];
-        spD0 = temp_ft1;
-        spC4 = temp_ft1;
-        temp_ft5 = (f32) sp60[2];
-        spCC = temp_ft3;
-        spC0 = temp_ft3;
-        spC8 = temp_ft5;
-        spBC = temp_ft5;
-        func_802740AC(M2C_BITWISE(s16, func_802704F8(M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x20))), 1.0f, 0.0f, &spC4, &spBC);
-        if (func_80273A5C((s32) spC4, (s32) spC0, (s32) spBC) != 0) {
-            spC4 = spD0;
-            spC0 = spCC;
-            spBC = spC8;
-            func_802740AC(M2C_BITWISE(s16, func_802704F8(M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x20))), 0.0f, 1.0f, &spC4, &spBC);
-            if (func_80273A5C((s32) spC4, (s32) spC0, (s32) spBC) != 0) {
-                func_802740AC(M2C_BITWISE(s16, func_802704F8(M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x20))), 1.0f, 1.0f, &spD0, &spC8);
-                spD4 = func_8026D7D8((s32) spD0, (s32) spCC, (s32) spC8);
-                func_8026E338(spD0, spCC, spC8, sp3C, 0);
-                spC4 = sp3C[0];
-                spC0 = sp3C[1];
-                spBC = sp3C[2];
-                spD0 = func_80234434(M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x20)) * 100.0f;
-                spCC = func_80234408(M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x20)) * 100.0f;
-                if (func_802336E4(spD0) != 0) {
-                    spD0 = 0.0f;
-                }
-                if (func_802336E4(spCC) != 0) {
-                    spCC = 0.0f;
-                }
-                M2C_FIELD(M2C_FIELD(D_802AFDD8, void **, 0x40), f32 *, 0x10) = (f32) (M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x10) + spD0);
-                M2C_FIELD(M2C_FIELD(D_802AFDD8, void **, 0x40), f32 *, 0x14) = (f32) (M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x14) + 100.0f);
-                M2C_FIELD(M2C_FIELD(D_802AFDD8, void **, 0x40), f32 *, 0x18) = (f32) (M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x18) + spCC);
-                temp_t9 = spD4 & 0xF;
-                if ((temp_t9 != 3) && (temp_t9 != 4) && (temp_t9 != 5) && (temp_t9 != 6)) {
-                    spC0 = M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x14);
-                    var_v0_3 = M2C_FIELD(temp_v0, void **, 0x40);
-                    goto block_21;
-                }
-                spC0 = func_8026E938(M2C_FIELD(D_802AFDD8, void **, 0x40));
-                var_v0_3 = M2C_FIELD(temp_v0, void **, 0x40);
-                temp_fv1 = M2C_FIELD(var_v0_3, f32 *, 0x14);
-                if (!((func_80270FC0(temp_v0) + temp_fv1) <= spC0)) {
-                    if (spC0 < temp_fv1) {
-                        spC0 = temp_fv1;
-                        var_v0_3 = M2C_FIELD(temp_v0, void **, 0x40);
-                    }
-block_21:
-                    temp_v0_2 = func_80273F30(*(s16 *)(D_800AEE0A + (arg0 * 0xC8)), M2C_FIELD(var_v0_3, f32 *, 0x10) + spD0, spC0, M2C_FIELD(var_v0_3, f32 *, 0x18) + spCC, (s16) (s32) arg0);
-                    if (temp_v0_2 != NULL) {
-                        if (func_80232D18(M2C_FIELD(temp_v0_2, void **, 0x1C), 0x10) != 0) {
-                            func_802734BC(M2C_FIELD(temp_v0_2, void **, 0x1C));
-                        } else {
-                            temp_v0_3 = func_80271540(arg0);
-                            if (temp_v0_3 != 0) {
-                                if (func_802716F8(arg0) != NULL) {
-                                    if (func_8027130C((void *) temp_v0_3) != 0) {
-                                        temp_v0_4 = (arg0 * 0x30) + D_802AFCE8;
-                                        M2C_FIELD(temp_v0_4, s32 *, 8) = (s32) M2C_FIELD(temp_v0_3, s32 *, 8);
-                                        func_80231408((void *) temp_v0_3, 0x10000);
-                                        func_80232AC8((s32) temp_v0, temp_v0_3);
-                                        func_80231408((void *) temp_v0_3, 0x200000);
-                                        if (arg0 >= 0) {
-                                            var_v0_4 = 1;
-                                            if (arg0 < 5) {
-                                                var_v0_4 = 0;
-                                            }
-                                        } else {
-                                            var_v0_4 = 1;
-                                        }
-                                        if (var_v0_4 == 0) {
-                                        }
-                                        func_80271010((void *) temp_v0_3, arg0);
-                                        M2C_FIELD(M2C_FIELD(temp_v0_3, void **, 0x40), f32 *, 0x20) = (f32) M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x20);
-                                        spA0 = func_80234434(M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x20));
-                                        spD0 = func_80270F44(temp_v0) * spA0;
-                                        spA0 = func_80234408(M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x20));
-                                        spCC = func_80270F44(temp_v0) * spA0;
-                                        if (func_802336E4(spD0) != 0) {
-                                            spD0 = 0.0f;
-                                        }
-                                        if (func_802336E4(spCC) != 0) {
-                                            spCC = 0.0f;
-                                        }
-                                        temp_v0_5 = M2C_FIELD(temp_v0_3, void **, 0x40);
-                                        M2C_FIELD(temp_v0_3, f32 *, 0x4C) = (f32) (spD0 - M2C_FIELD(temp_v0_4, f32 *, 0x1C));
-                                        M2C_FIELD(temp_v0_3, f32 *, 0x50) = (f32) (M2C_FIELD(temp_v0_5, f32 *, 0x14) - M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x14));
-                                        M2C_FIELD(temp_v0_3, f32 *, 0x6C) = 1.0f;
-                                        M2C_FIELD(temp_v0_3, f32 *, 0x54) = (f32) (spCC - M2C_FIELD(temp_v0_4, f32 *, 0x24));
-                                        M2C_FIELD(temp_v0_3, f32 *, 0x70) = 1.6333334f;
-                                        M2C_FIELD(temp_v0_5, f32 *, 0x20) = (f32) M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x40), f32 *, 0x20);
-                                    }
-                                }
-                            } else {
-                                func_802734BC(M2C_FIELD(temp_v0_2, void **, 0x1C));
-                            }
+    cur.x = base.x;
+    cur.y = base.y;
+    cur.z = base.z;
+    func_802740AC((s16) func_802704F8(obj->unk40->rot), 0.0f, 1.0f, &cur.x, &cur.z);
+    if (func_80273A5C((s32) cur.x, (s32) cur.y, (s32) cur.z) == 0) {
+        return;
+    }
+    func_802740AC((s16) func_802704F8(obj->unk40->rot), 1.0f, 1.0f, &base.x, &base.z);
+    spD4 = func_8026D7D8((s32) base.x, (s32) base.y, (s32) base.z);
+    func_8026E338(base.x, base.y, base.z, sp3C, 0);
+    cur.x = sp3C[0];
+    cur.y = sp3C[1];
+    cur.z = sp3C[2];
+    base.x = func_80234434(obj->unk40->rot) * 100.0f;
+    base.y = func_80234408(obj->unk40->rot) * 100.0f;
+    if (func_802336E4(base.x)) {
+        base.x = 0.0f;
+    }
+    if (func_802336E4(base.y)) {
+        base.y = 0.0f;
+    }
+    OBJ_DD8->unk40->x = obj->unk40->x + base.x;
+    OBJ_DD8->unk40->y = obj->unk40->y + 100.0f;
+    OBJ_DD8->unk40->z = obj->unk40->z + base.y;
+    switch (spD4 & 0xF) {
+    case 3:
+    case 4:
+    case 5:
+    case 6:
+        cur.y = func_8026E938(OBJ_DD8->unk40);
+        if (func_80270FC0(obj) + obj->unk40->y <= cur.y) {
+            return;
+        }
+        if (cur.y < obj->unk40->y) {
+            cur.y = obj->unk40->y;
+        }
+        break;
+    default:
+        cur.y = obj->unk40->y;
+        break;
+    }
+    e = func_80273F30(*(s16 *)(D_800AEE0A + arg0 * 0xC8), obj->unk40->x + base.x, cur.y, obj->unk40->z + base.y, arg0);
+    if (e != NULL) {
+        if (func_80232D18(e->obj, 0x10)) {
+            func_802734BC(e->obj);
+        } else {
+            o = (Obj8E *) func_80271540(arg0);
+            if (o != NULL) {
+                if (func_802716F8(arg0) != NULL) {
+                    if (func_8027130C(o)) {
+                        slot = &SLOTS[arg0];
+                        slot->unk8 = o->unk8;
+                        func_80231408(o, 0x10000);
+                        func_80232AC8(obj, o);
+                        func_80231408(o, 0x200000);
+                        if (!((arg0 >= 0 && arg0 < 5) ? 0 : 1)) {
+                            slot->unkC = (s32) o;
                         }
+                        func_80271010(o, arg0);
+                        o->unk40->rot = obj->unk40->rot;
+                        spA0 = func_80234434(obj->unk40->rot);
+                        base.x = func_80270F44(obj) * spA0;
+                        spA0 = func_80234408(obj->unk40->rot);
+                        base.y = func_80270F44(obj) * spA0;
+                        if (func_802336E4(base.x)) {
+                            base.x = 0.0f;
+                        }
+                        if (func_802336E4(base.y)) {
+                            base.y = 0.0f;
+                        }
+                        o->unk4C = base.x - slot->unk1C;
+                        o->unk50 = o->unk40->y - obj->unk40->y;
+                        o->unk6C = 1.0f;
+                        o->unk54 = base.y - slot->unk24;
+                        o->unk70 = 1.6333334f;
+                        o->unk40->rot = obj->unk40->rot;
                     }
                 }
+            } else {
+                func_802734BC(e->obj);
             }
         }
     }
