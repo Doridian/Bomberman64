@@ -10,7 +10,7 @@
  * emission order; m2c's bodies with the -O3 fixes (byte arithmetic on
  * typed pointers, flag words as s32, address-taken vectors as arrays,
  * the register-passed float arguments of the statics restored), some
- * by hand. 29 of 80 match in jp.
+ * by hand. 70 of 80 match apart from relocations in every version.
  *
  * Pass 4 fixed draft errors in func_802553D4: the D_800AEDF0 player
  * records read as s32 fields (m2c read them as u8 at D_800AEExx +
@@ -24,23 +24,39 @@
  * gave each register family (loop counters, float temps) many names,
  * and uopt hoisted all their constant initialisations together, so they
  * took every callee-saved register before the object pointer; merging
- * the families gives the pointer fp. The frame is still 568 bytes (the
- * original's is 352): too many locals, each one a slot. It is about
- * 0x3A8 bytes too long, which misaligns its whole block, so local fixes
- * there don't show in the count yet (merging every m2c family by type
- * and register, spE4 as a 32-byte struct copy of D_802A0FA0 and the
- * declarations in the original's frame order give frame 400 and 233
- * words too many, but no better count).
+ * the families gives the pointer fp. The frame is 584 bytes (the
+ * original's is 352): IDO gives every declared local a slot, but only
+ * about 45 lines differ by an sp offset alone, so the frame is not
+ * where the words are. Its size is +13 words in us and exact in jp,
+ * but the drift moves along it (from -7 to +80 words): the original
+ * keeps 360.0f in f30 for the whole function and puts the W360 inner
+ * ?: results in stack temporaries (spA0, spAC, spC4: m2c's names are
+ * those slots), where ours gives the ?: results f30. Its count is
+ * positional, so a local fix there can move it by hundreds of words
+ * either way. Two fixes that are right but lowered only one version: the
+ * three "turn" blocks share their `F7C = 60.0f` tail (a goto to it saves
+ * 4 words each; us -79, jp +150), and before the func_8026E8B8 call jp
+ * and us test `fld <= f` as a 0/1 value (`t = a <= b; if (t)`) and
+ * load the object after the call (jp -79, us +96). Both need the f30
+ * question solved first.
  *
  * func_802530A8 (about 1500) has its exact size (0x1BE8) and frame
  * (136): its 24 declared words in the original's slot order, the
  * func_8022FA88 wrappers taking the distance pointer (&sp6C) as a
  * second argument, and an else/goto shape that keeps umerge from
  * inlining the small static wrappers (a `break` shape is small enough
- * that it inlines them; check the jal list). What is left is
- * allocation: dir isn't coloured (the original keeps it in s6), range
- * is a PRE temp (the original stores `range = v` to sp78), and the
- * object arrives in t2, not t1.
+ * that it inlines them; check the jal list). Of its own words 26 still
+ * differ: dir and the arguments of two calls ($5 set before $4 in the
+ * original), one float temp in f22 for f0 and a store scheduled
+ * differently.
+ *
+ * The other procedures that differ: func_80251EE0 (ret should live in
+ * $2; the forms that do it change the size), func_80252174 (n in $3
+ * across an IPA call), func_802515D8 (the new history pointer is kept
+ * in $5 and not folded into the stores), and the argument order of
+ * func_80251C48 calls (func_80255224, func_8025D544, func_80252174,
+ * func_8025C840, func_802529A4): the original sets $5 first and $4 in
+ * the delay slot, and nothing in the source moved it yet.
  *
  * What moved the count: exact sizes first (one block per original
  * global, so a short static misaligns everything after it; for
@@ -52,6 +68,19 @@
  * keep a mul.s, `x = c ? 1 : 0` for `b; li v0,1`, K&R prototypes for
  * callees given arguments, and m2c's goto loops as for(;;) with an
  * else-if chain and break to the return block.
+ *
+ * Pass 5: commutative operands in the original's order (`x + d[0]`),
+ * pointer assignments in the order that gives the original's
+ * registers, a single `ret` for a float return with if/else, declaration
+ * order and real or pad locals for the frame slots, nested ifs for
+ * comma conditions, `f8 = f4; f4 = K;` for the state swaps (m2c's
+ * temp_tN made a variable), loads into locals before the stores when
+ * the original loads both first, `x = off; x += pos[4];` for the
+ * operand order of an add, u16 fields for 0x8000 stores (ori, not
+ * addiu), index loops for m2c's pointer walks to an end address (IDO
+ * strength-reduces them, and unrolls a constant count by 4), lw for an
+ * s32 table m2c read as u8, and one access path for repeated loads
+ * through arg0->0x98.
  *
  * jp lacks one height test in func_802553D4 (VERSION_JP); eu is us.
  */
