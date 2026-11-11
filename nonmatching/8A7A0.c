@@ -7,7 +7,7 @@
  * order. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 759, eu 759, jp 759
+ * differing words: us 682, eu 682, jp 682
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file (475 words in the one-file draft, 39
@@ -208,7 +208,7 @@ void * func_80231274(s32, s32, s32, void *);
 void func_802313DC(void *, s32);
 void func_80231408(void *, s32);
 void func_80231434(void *);
-void func_80232A34(s32);
+void func_80232A34(u8 *arg0, s32 arg1);
 s32 func_80232AA8(s32);
 s32 func_80232AC8(s32, s32);
 s32 func_80232D18(void *, s32);
@@ -1359,43 +1359,39 @@ void func_80271448(f32 arg0, f32 arg1, f32 arg2, f32 *arg3, f32 *arg4, f32 *arg5
 }
 
 s32 func_8027130C(u8 *arg0) {
-    s16 *temp_v0;
-    s16 temp_v1;
-    s16 var_v0;
-    s32 *temp_a0;
+    s32 pad[10]; /* the frame is 0x50 */
+    Ent88 *e;
+    void *p;
 
-    temp_v0 = func_802703B4(arg0);
-    if (temp_v0 == NULL) {
+    e = (Ent88 *) func_802703B4(arg0);
+    if (e == NULL) {
         return 0;
     }
-    temp_v1 = M2C_FIELD(temp_v0, s16 *, 0x64);
-    if ((s16) (temp_v1 & 0x80) != 0) {
+    if (func_802712A8(&e->unk64, 0x80)) {
         return 0;
     }
-    var_v0 = temp_v1 & 0x200;
-    if ((s16) (temp_v1 & 0x10) != 0) {
+    if (func_802712A8(&e->unk64, 0x10)) {
         func_80270BA4(arg0);
-        var_v0 = M2C_FIELD(temp_v0, s16 *, 0x64) & 0x200;
     }
-    if (var_v0 != 0) {
-        M2C_FIELD(temp_v0, s16 *, 0x64) = (s16) (M2C_FIELD(temp_v0, s16 *, 0x64) & 0xFDFF);
-        func_802313DC(M2C_FIELD(temp_v0, void **, 0x1C), 0x20000);
-        temp_a0 = M2C_FIELD(temp_v0, s32 **, 0x38);
-        func_80270A80(temp_a0);
-        free(temp_a0);
+    if (func_802712A8(&e->unk64, 0x200)) {
+        func_8027036C(&e->unk64, 0x200);
+        func_802313DC(e->obj, 0x20000);
+        p = e->unk38;
+        func_80270A80(p);
+        free(p);
     }
-    func_802712C4(temp_v0);
-    M2C_FIELD(M2C_FIELD(temp_v0, void **, 0x1C), f32 *, 0x6C) = 1.0f;
-    M2C_FIELD(temp_v0, s16 *, 0x64) = (s16) (M2C_FIELD(temp_v0, s16 *, 0x64) | 0x10);
-    M2C_FIELD(temp_v0, s16 *, 0x64) = (s16) (M2C_FIELD(temp_v0, s16 *, 0x64) & 0xF7FF);
-    M2C_FIELD(temp_v0, f32 *, 0x50) = 0.0f;
-    M2C_FIELD(temp_v0, s16 *, 0x64) = (s16) (M2C_FIELD(temp_v0, s16 *, 0x64) & 0xFFFD);
-    if (M2C_FIELD(temp_v0, s16 *, 0x10) & 0x400) {
-        M2C_FIELD(temp_v0, s16 *, 0x68) = 0x3C;
+    func_802712C4((s16 *) e);
+    e->obj->unk6C = 1.0f;
+    func_80270354(&e->unk64, 0x10);
+    func_8027036C(&e->unk64, 0x800);
+    e->unk50 = 0.0f;
+    func_8027036C(&e->unk64, 2);
+    if (e->unk10 & 0x400) {
+        e->unk68 = 0x3C;
     } else {
-        M2C_FIELD(temp_v0, s16 *, 0x68) = 0x96;
+        e->unk68 = 0x96;
     }
-    M2C_FIELD(temp_v0, f32 *, 0x80) = 1.0f;
+    e->unk80 = 1.0; /* a double, so the 1.0f above isn't reused */
     func_802313DC(arg0, 0x20000);
     return 1;
 }
@@ -1809,30 +1805,24 @@ s16 func_802704F8(f32 arg0) {
 }
 
 s32 func_80270438(u8 *arg0, s32 *arg1) {
-    s16 *sp1C;
-    s16 *temp_v0;
-    s16 *var_v1;
+    Ent88 *e;
 
-    temp_v0 = func_802703B4(arg0);
-    var_v1 = temp_v0;
-    if (M2C_FIELD(temp_v0, s16 *, 0x10) & 0x100) {
-        sp1C = temp_v0;
-        func_80232A34(M2C_FIELD(temp_v0, s32 *, 0x1C));
-        var_v1 = sp1C;
+    e = (Ent88 *) func_802703B4(arg0);
+    if (e->unk10 & 0x100) {
+        func_80232A34((u8 *) e->obj, 0x90);
     }
-    M2C_FIELD(var_v1, s16 *, 0x64) = (s16) (M2C_FIELD(var_v1, s16 *, 0x64) & 0xFFEF);
-    M2C_FIELD(var_v1, s32 *, 0x30) = (s32) M2C_FIELD(var_v1, s32 *, 0x1C);
-    M2C_FIELD(var_v1, s16 *, 0x64) = (s16) (M2C_FIELD(var_v1, s16 *, 0x64) | 0x200);
-    sp1C = var_v1;
+    func_8027036C(&e->unk64, 0x10);
+    func_80270354(&e->unk64, 0x200);
+    e->unk30 = e->obj;
     func_80231408(arg0, 0x20000);
-    M2C_FIELD(var_v1, s32 **, 0x38) = arg1;
-    if (!(M2C_FIELD(var_v1, s16 *, 0x10) & 2)) {
-        M2C_FIELD(var_v1, s16 *, 0x64) = (s16) (M2C_FIELD(var_v1, s16 *, 0x64) | 2);
+    e->unk38 = arg1;
+    if (!(e->unk10 & 2)) {
+        func_80270354(&e->unk64, 2);
     }
-    if (M2C_FIELD(var_v1, s16 *, 0x10) & 0x400) {
-        M2C_FIELD(var_v1, s16 *, 0x68) = 0x3C;
+    if (e->unk10 & 0x400) {
+        e->unk68 = 0x3C;
     } else {
-        M2C_FIELD(var_v1, s16 *, 0x68) = 0x96;
+        e->unk68 = 0x96;
     }
     return 1;
 }
