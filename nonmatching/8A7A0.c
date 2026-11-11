@@ -12,8 +12,13 @@
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file (475 words in the one-file draft, 39
  * here). The prelude (types, externs, prototypes) is 87D80.c's.
- * 20 of 54 match. Biggest left: func_8027361C 246, func_802716F8 205,
- * func_80272494 185, func_80271BB8 179, func_80270C24 171.
+ * The entity flag helpers func_80270354/func_8027036C/func_802712A8 and
+ * the tests func_80270384/func_802702BC are inlined by umerge where the
+ * original calls them; the callers call them rather than spell them out.
+ * 49 of 54 match. Left: func_80270770 143, func_80271BB8 92 (the
+ * original also inlines func_80271178, and its frame is 8 bytes
+ * smaller than ours with that), func_80270C24 64, func_80271010 10,
+ * func_8027241C 3.
  */
 #include "common.h"
 
