@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 304, eu 304, jp 307
+ * differing words: us 224, eu 224, jp 227
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -1113,15 +1113,12 @@ void func_80241BB0(s32 arg0, Gfx **gdl) {
 }
 
 void func_80241590(s32 arg0, Gfx **gdl) {
-    s32 pad[46];
     Gfx *gfx;
     TexFile *tf;
     Rect54E40 *r;
     TexEntry *e;
     s32 *digit;
-    s32 *count;
     s32 n;
-    s32 *xs;
     s32 x;
     s32 i;
     s32 j;
@@ -1150,15 +1147,15 @@ void func_80241590(s32 arg0, Gfx **gdl) {
     }
     n = 0;
     tf = D_802A075C;
-    count = D_802A08D8; xs = D_802A0838; do {
-        x = *xs;
+    for (i = 0; i < 5; i++) {
+        x = D_802A0838[i];
         j = 0;
-        if (*count > 0) {
+        if (D_802A08D8[i] > 0) {
             digit = &D_802AC770[n];
             e = tf->entries;
             do {
                 n++;
-                if (count >= (s32 *) D_802A08E4 || D_802AC660.unk2C > 0) {
+                if (i >= 3 || D_802AC660.unk2C > 0) {
                     gDPLoadTLUT_pal16(gfx++, 0, (u8 *) tf + e[1].offset);
                 } else {
                     gDPLoadTLUT_pal16(gfx++, 0, (u8 *) tf + e[25].offset);
@@ -1168,16 +1165,12 @@ void func_80241590(s32 arg0, Gfx **gdl) {
                 gSPTextureRectangle(gfx++, x << 2, 22 << 2, (x + 10) << 2, 40 << 2, G_TX_RENDERTILE, 0, 0, 0x400, 0x400);
                 j++;
                 x += 10;
-            } while (j < *count);
+            } while (j < D_802A08D8[i]);
         }
-        count++; xs++;
-    } while (count != (s32 *) D_802A08EC);
+    }
     gDPSetTexturePersp(gfx++, G_TP_PERSP);
     gDPSetTextureLUT(gfx++, G_TT_NONE);
     *gdl = gfx;
-    if (0) {
-        func_80241590(0, (Gfx **) &xs);
-    }
 }
 
 void func_80241550() {
