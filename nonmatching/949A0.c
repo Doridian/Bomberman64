@@ -3,10 +3,8 @@
  * code (func_8027A1A0 to func_8027BCE8): the item table read from file
  * 0xDC (func_8027A640), the thread's setup (func_8027A950), an item's
  * creation (func_8027AA74) and the per-player pickups. The C is written
- * last function first, as -O3 emits it. Only func_8027A640 still
- * differs: in its file search loop, uopt gives the offset, the found flag
- * and the 0x80 end mark a different rotation of v0/a0/a2, and the temps
- * after it follow. Not built into the ROM (docs/DECOMPILING.md,
+ * last function first, as -O3 emits it. Every function matches in us,
+ * eu and jp; it is not built into the ROM yet (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
  * differing words: us 0, eu 0, jp 0
