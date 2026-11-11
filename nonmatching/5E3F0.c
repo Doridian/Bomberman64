@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 144, eu 144, jp 144
+ * differing words: us 128, eu 128, jp 128
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -1075,7 +1075,7 @@ void func_8024E088(s32 arg0) {
     u16 sp124;
     s32 sp120;
     s32 sp11C;
-    s32 pad118;
+    Obj88 *sp118;
     s32 sp114;
     s32 sp110;
     s32 pad10C;
@@ -1088,7 +1088,8 @@ void func_8024E088(s32 arg0) {
     s32 spD8[3];
     f32 spD4;
     f32 spD0;
-    s32 padC4[3];
+    f32 spCC;
+    s32 padC4[2];
     f32 spC0;
     f32 spB4[3];
     s32 padAC[2];
@@ -1579,14 +1580,17 @@ void func_8024E088(s32 arg0) {
                 if (r != NULL && r->unk44 == NULL && !func_80244BA4(arg0, 1) && obj->unk6C == 0.0f) {
                     func_802497D8(arg0);
                 }
-                r = (Obj88 *)func_8022F4AC((s32)obj, 0x1E00, EN->unk4C);
-                if (r != NULL) {
-                    func_80249648(arg0, (UnkObj *)r, r->unk8);
+                sp118 = (Obj88 *)func_8022F4AC((s32)obj, 0x1E00, EN->unk4C);
+                if (sp118 != NULL) {
+                    func_80249648(arg0, (UnkObj *)sp118, sp118->unk8);
                 }
                 func_8024891C(arg0);
                 sp74 = (Obj88 *)func_8022F4AC((s32)obj, 0x10, EN->unk4C);
-                if (func_80243EB4(arg0, 0x2000) && sp74 == (Obj88 *)func_802443F4(EN->unkA8)) {
-                    sp74 = NULL;
+                if (func_80243EB4(arg0, 0x2000)) {
+                    sp6C = (Obj88 *)func_802443F4(EN->unkA8);
+                    if (sp74 == sp6C) {
+                        sp74 = NULL;
+                    }
                 }
                 if (sp74 != NULL) {
                     D_802ACF68[arg0][0] = obj->unk40->unk10 - obj->unk58;
@@ -1600,14 +1604,14 @@ void func_8024E088(s32 arg0) {
                     }
                     if (obj->unk6C > 0.0f && obj->unk44 == NULL && sp74->unk40->unk14 < obj->unk40->unk14) {
                         if (func_80244BA4(arg0, 2)) {
-                            spD0 = EN->unkC + 180.0f;
-                            if (spD0 >= 360.0f) {
-                                spD0 -= 360.0f;
+                            spCC = EN->unkC + 180.0f;
+                            if (spCC >= 360.0f) {
+                                spCC -= 360.0f;
                             }
                         } else {
-                            spD0 = EN->unkC;
+                            spCC = EN->unkC;
                         }
-                        EN->unk40 = func_802700EC((s32)obj, (s32)sp74, func_80243F50(spD0), 0x41000000);
+                        EN->unk40 = func_802700EC((s32)obj, (s32)sp74, func_80243F50(spCC), 0x41000000);
                         func_80244354(arg0, 0x2100, 0);
                         if (func_80244BA4(arg0, 0x80) || func_80244BA4(arg0, 0x40)) {
                             func_80244C30(arg0, 1);
