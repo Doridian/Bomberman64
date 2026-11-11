@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 310, eu 310, jp 310
+ * differing words: us 298, eu 298, jp 298
  *
  * The object is the same in all three versions. 70 of the 79 original
  * procedures match (stubs included). The IPA statics
@@ -379,7 +379,7 @@ extern s32 D_802AD210;
 extern s32 D_802AD214;
 extern u8 D_802AD218;
 extern s32 D_802AD234;
-extern s32 D_802AD238;
+extern u32 D_802AD238;
 extern f32 D_802AD23C;
 extern f32 D_802AD240;
 extern s16 D_802AD244;
