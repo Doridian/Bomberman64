@@ -7,7 +7,7 @@
  * order. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 68, eu 68, jp 68
+ * differing words: us 62, eu 62, jp 62
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file (475 words in the one-file draft, 39
@@ -19,9 +19,9 @@
  * where the original has a0/a1), func_80271BB8 21 (the second unk40
  * pointer in v0 where the original has v1, and the tail's &SLOTS[arg0]
  * reloaded into t registers where the original keeps it in v0),
- * func_80270C24 8 (the flag tests' t registers one higher than the
- * original's), func_8027241C 3, func_80271010 1 (one add.s with its
- * operands swapped).
+ * func_8027241C 3, func_80270C24 2 (the first flag test in a3 where
+ * the original has t3), func_80271010 1 (one add.s with its operands
+ * swapped).
  */
 #include "common.h"
 
@@ -1585,7 +1585,8 @@ next:
     c->unk34 = ((Obj8E *) arg0)->unk40->x;
     c->unk38 = ((Obj8E *) arg0)->unk40->z;
     c->flags = ((Obj8E *) arg0)->unk8;
-    if (c->flags & 2) {
+    i = c->flags & 2; /* fake (permuter find): the flag tests' t registers */
+    if (i) {
         ok = func_80270438(arg0, (s32 *) c);
     } else if (c->flags & 8) {
         ok = func_8027A1F4(arg0, (s32) c);
