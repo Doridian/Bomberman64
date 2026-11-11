@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 90, eu 90, jp 90
+ * differing words: us 85, eu 85, jp 85
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -19,7 +19,7 @@
  * func_8026F5E8 and func_8026E3AC keep their x/y/z in an f32[3] (the
  * original's dead stores to it), not in three variables.
  * 37 of 43 match. Left: func_8026DCAC 26, func_8026EE18 26,
- * func_8026FC08 25, func_8026F5E8 8, func_8026E938 3 (one float
+ * func_8026FC08 20, func_8026F5E8 8, func_8026E938 3 (one float
  * store's stack slot), func_8026F8B0 2 (one delay slot).
  */
 #include "common.h"
@@ -421,6 +421,7 @@ void func_8026FC08(s32 arg0) {
     s32 j;
     s32 cnt;
     s32 v;
+    f32 f;
 
     D_802AFC50 = arg0;
     D_800B15D8->unk4 = 0;
@@ -436,7 +437,8 @@ void func_8026FC08(s32 arg0) {
     D_800B15D8->unk2 = *p++;
     D_800B15D8->unk3 = *p++;
     D_800B15D8->unkC = *p++;
-    D_802AFC5C = -((u8) D_800B15D8->unkC & 0x7F) * 100.0f;
+    f = -((u8) D_800B15D8->unkC & 0x7F) * 100.0f;
+    D_802AFC5C = f;
     for (n = 0; n < layers; n++) {
         D_800B15D8[n].unkE = *p++;
         D_800B15D8[n].unkF = *p++;
