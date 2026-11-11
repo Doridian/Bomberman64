@@ -8,18 +8,20 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 418, eu 418, jp 418
+ * differing words: us 269, eu 269, jp 269
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
- * register copies show. The map reads as D_800B15D8->unkN, not
+ * register copies show; func_8026D5F8 keeps its result in a local
+ * (`r = ...; return r;`), which gives the inlined copies their extra
+ * register. The map reads as D_800B15D8->unkN, not
  * D_800B15D8[0].unkN (the latter swaps the multiply's registers).
  * func_8026F5E8 and func_8026E3AC keep their x/y/z in an f32[3] (the
  * original's dead stores to it), not in three variables.
- * 32 of 43 match. Left: func_8026EAF8 105, func_8026E3AC 74,
- * func_8026D6C0 69, func_8026D7D8 48, func_8026D620 32, func_8026DCAC 26,
- * func_8026EE18 26, func_8026FC08 25, func_8026F5E8 8, func_8026E938 3 (one
- * float store's stack slot), func_8026F8B0 2 (one delay slot).
+ * 35 of 43 match. Left: func_8026EAF8 105, func_8026E3AC 74,
+ * func_8026DCAC 26, func_8026EE18 26, func_8026FC08 25, func_8026F5E8 8,
+ * func_8026E938 3 (one float store's stack slot), func_8026F8B0 2 (one
+ * delay slot).
  */
 #include "common.h"
 
@@ -1399,6 +1401,8 @@ s32 func_8026D7D8(s32 arg0, s32 arg1, s32 arg2) {
     s32 xmax;
     s32 zmax;
     s32 var_a0;
+    s32 cell;
+    s32 slot;
 
     var_v1 = 0;
     if (arg1 < 0) {
@@ -1410,7 +1414,9 @@ s32 func_8026D7D8(s32 arg0, s32 arg1, s32 arg2) {
     if (xmax < arg0 || zmax < arg2 || arg0 < 0 || arg2 < 0 || arg1 >= D_800B15D8->unk0) {
         var_a0 = D_802AFC58;
     } else {
-        var_a0 = D_800B15D8[arg1].unk12[func_8026D5F8(arg0, arg1, arg2)].unk2[func_8026D5C0(arg0, arg1, arg2)];
+        cell = func_8026D5F8(arg0, arg1, arg2);
+        slot = func_8026D5C0(arg0, arg1, arg2);
+        var_a0 = D_800B15D8[arg1].unk12[cell].unk2[slot];
     }
     if (var_v1 == 1 && (var_a0 & 0xF)) {
         var_a0 = 0xF;
@@ -1442,7 +1448,9 @@ void func_8026D620(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
 }
 
 s32 func_8026D5F8(s32 arg0, s32 arg1, s32 arg2) {
-    return ((arg2 >> 3) * D_800B15D8->unk4) + (arg0 >> 3);
+    s32 r;
+    r = ((arg2 >> 3) * D_800B15D8->unk4) + (arg0 >> 3);
+    return r;
 }
 
 s32 func_8026D5C0(s32 arg0, s32 arg1, s32 arg2) {
