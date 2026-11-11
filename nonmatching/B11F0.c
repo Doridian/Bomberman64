@@ -2,11 +2,15 @@
  * NON_MATCHING: main_code's B11F0, complete first draft.
  * flags: -O3
  * (-O3: func_80297564 keeps its argument in t4, func_80296C10 in t0.)
- * differing words: us 5, eu 5, jp 5
+ * differing words: us 0, eu 0, jp 0
  *
- * 24 of 25 functions match. Left: func_80296B3C (5, t1 for a2: the
- * original's a2 piece of arg0 stops at func_8022946C's call, the store
- * after it reloads arg0 from its home). func_80297114 matched once its
+ * All 25 functions match. func_80296B3C matched once func_8022946C got
+ * its real two parameters (426E0's definition takes two): the draft's
+ * extra `arg0` argument was one more use of arg0 in the call's block, so
+ * uopt kept arg0's a2 piece past the call. With one use fewer it splits
+ * the piece at the call and the store reloads arg0 into a ugen temporary,
+ * and the store written ahead of `D_802B03A8++` numbers it t1.
+ * func_80297114 matched once its
  * entry pointer came from the getter func_80296BEC (inlined: its
  * parameter is a variable, coloured v1); func_80296C10's frame once
  * `start` was declared last; func_80296D4C with `dst` set right after the
@@ -27,7 +31,7 @@
 
 void func_80226E40(s32);
 u16 *func_80226E4C(s32);
-void func_8022946C(void *, s32, void *);
+void func_8022946C(void *, s32);
 void func_8023903C(s32);
 void func_8023AA78(s32);
 void func_8023AE6C(s32, s32, s32);
@@ -451,9 +455,9 @@ s32 func_80296B3C(UnkStruct_802B03C0 *arg0) {
     if ((arg0->unkC = func_8026D4B0(func_80297564, 0)) != NULL) {
         for (i = 0; D_802B03B0[i] != NULL; i++) {
         }
-        func_8022946C(arg0->unkC, 0x44 - i, arg0);
-        D_802B03A8++;
+        func_8022946C(arg0->unkC, 0x44 - i);
         D_802B03B0[i] = arg0;
+        D_802B03A8++;
         return 1;
     }
     return 0;
