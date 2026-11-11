@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2268, eu 2268, jp 2268
+ * differing words: us 1989, eu 1989, jp 1989
  */
 #include "common.h"
 
@@ -325,7 +325,7 @@ static void func_80285A7C(UnkStruct_80288040 *a_, s32 i_);
 static void func_80285A84(UnkStruct_80288040 *a_);
 static void func_80285A8C(UnkStruct_80288040 *a_, s32 i_);
 static void func_80285A94(UnkStruct_80288040 *a_);
-static s32 func_80285F84(UnkStruct_80288040 *arg0);
+static void func_80285F84(void);
 static s32 func_802863E8(s32 arg0);
 static s32 func_802863F0(void);
 static s32 func_802863F8(void);
@@ -792,27 +792,16 @@ void func_802863B0(Vec3f *arg0) {
     func_802829AC(2, arg0);
 }
 
-static s32 func_80285F84(UnkStruct_80288040 *arg0) {
-    Vec3f pos;
-
-    if ((D_800BA8E8[arg0->unk84].unk0 == 0x19) || (D_800BA8E8[arg0->unk84].unk0 == 0x1C)) {
-        return 0;
-    }
-    func_80250338(func_80243DDC(), &pos);
-    if (((pos.x < arg0->unk0->unk40->unk10) && ((pos.x + 1300.0f) < arg0->unk0->unk40->unk10)) ||
-        ((arg0->unk0->unk40->unk10 < pos.x) && (arg0->unk0->unk40->unk10 < (pos.x - 1300.0f))) ||
-        ((pos.z < arg0->unk0->unk40->unk18) && ((pos.z + 1300.0f) < arg0->unk0->unk40->unk18)) ||
-        ((arg0->unk0->unk40->unk18 < pos.z) && (arg0->unk0->unk40->unk18 < (pos.z - 1300.0f)))) {
-        return 1;
-    }
-    return 0;
+static void func_80285F84(void) {
 }
 
 static void func_80285F8C(void) {
     UnkStruct_800BB340 *task;
     UnkStruct_80288040 *a;
     Vec3f pos;
+    s32 far;
 
+    func_80285F84();
     task = func_802391F0();
     for (;;) {
         switch (task->unkC) {
@@ -821,7 +810,20 @@ static void func_80285F8C(void) {
             break;
         case 1:
             a = &task->unk10->unk14;
-            if (func_80285F84(a)) {
+            if ((D_800BA8E8[a->unk84].unk0 == 0x19) || (D_800BA8E8[a->unk84].unk0 == 0x1C)) {
+                far = 0;
+            } else {
+                func_80250338(func_80243DDC(), &pos);
+                if (((pos.x < a->unk0->unk40->unk10) && ((pos.x + 1300.0f) < a->unk0->unk40->unk10)) ||
+                    ((a->unk0->unk40->unk10 < pos.x) && (a->unk0->unk40->unk10 < (pos.x - 1300.0f))) ||
+                    ((pos.z < a->unk0->unk40->unk18) && ((pos.z + 1300.0f) < a->unk0->unk40->unk18)) ||
+                    ((a->unk0->unk40->unk18 < pos.z) && (a->unk0->unk40->unk18 < (pos.z - 1300.0f)))) {
+                    far = 1;
+                } else {
+                    far = 0;
+                }
+            }
+            if (far) {
                 func_80282598(task, 0);
             } else {
                 task->unkC = func_80284FD4(a);
