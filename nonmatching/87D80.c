@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 779, eu 779, jp 779
+ * differing words: us 767, eu 767, jp 767
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -747,16 +747,17 @@ void func_8026EEF0(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
 }
 
 s32 func_8026EE18(f32 arg0) {
+    s32 r;
     s32 layer;
     s32 h;
     s32 iy;
     UnkStruct_800B15D8 *m;
-    s32 r;
 
+    layer = 0;
+    m = D_800B15D8;
     h = 0;
-    for (layer = 0; layer < D_800B15D8->unk0 + 1; layer++) {
+    while (layer < D_800B15D8->unk0 + 1) {
         iy = (s32) (arg0 * 0.01f);
-        m = &D_800B15D8[layer];
         if (iy < h) {
             if (layer > 0) {
                 r = layer - 1;
@@ -770,6 +771,8 @@ s32 func_8026EE18(f32 arg0) {
             break;
         }
         h += m->unk10;
+        layer++;
+        m++;
     }
     if (D_800B15D8->unk0 < layer) {
         r = D_800B15D8->unk0;
