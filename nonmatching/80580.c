@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 892, eu 892, jp 892
+ * differing words: us 866, eu 866, jp 866
  *
  * The object is the same in all three versions. 66 of the 79 original
  * procedures match (stubs included). The IPA statics
@@ -2056,9 +2056,9 @@ static void func_8026706C(s16 num, SndDef *def) {
     u8 k;
     void *snd;
 
+    e = &D_802AD650->entries[num];
     def->vol = 0x7FFF;
     def->pan = 0x40;
-    e = &D_802AD650->entries[num];
     def->prio = e->unk3;
     def->pitch = (f32) e->unk6 / (f32) D_802A1288;
     def->script = -1;
@@ -2103,10 +2103,12 @@ static void func_8026706C(s16 num, SndDef *def) {
 }
 
 static s32 func_80267064(s8 vol) {
-    s32 v = 0;
+    s32 v;
 
     if (vol > 0) {
         v = (vol << 8) + 0xFF;
+    } else {
+        v = 0;
     }
     return v;
 }
@@ -2152,7 +2154,8 @@ static s16 func_80266D8C(u8 prio, s32 arg1) {
         }
     }
     if (arg1 == 0) {
-        if ((D_802A1368 = (v->unk1C = D_802A1368) + 1) == 0) {
+        v->unk1C = D_802A1368++;
+        if (D_802A1368 == 0) {
             min = 0xFF;
             for (oldest = 0; oldest < D_802A12B4; oldest++) {
                 v = &D_802AD654[oldest];
@@ -2160,15 +2163,14 @@ static s16 func_80266D8C(u8 prio, s32 arg1) {
                     min = v->unk1C;
                 }
             }
-            oldest = 0;
             min = 0x100 - min;
             if (min != 0) {
                 D_802A1368 = min;
-                for (; oldest < D_802A12B4; oldest++) {
+                for (oldest = 0; oldest < D_802A12B4; oldest++) {
                     D_802AD654[oldest].unk1C += min;
                 }
             } else {
-                for (; oldest < D_802A12B4; oldest++) {
+                for (oldest = 0; oldest < D_802A12B4; oldest++) {
                     v = &D_802AD654[oldest];
                     switch (v->unk1C) {
                         case 0:
@@ -2179,7 +2181,6 @@ static s16 func_80266D8C(u8 prio, s32 arg1) {
                             break;
                         default:
                             v->unk1C = 2;
-                            break;
                     }
                 }
                 D_802A1368 = D_802A12B4 + 1;
