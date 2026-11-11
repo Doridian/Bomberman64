@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 436, eu 436, jp 439
+ * differing words: us 427, eu 427, jp 430
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -1719,7 +1719,6 @@ void func_8023F26C() {
 
     D_802A0B94 = 1;
     id = *(s32 *) func_802391F0();
-    if (!k) {}
     func_80247C50(id);
     if ((D_802AC5D0 & 4) || ((D_802AC5D0 & 8) && (id != 0))) {
         mode = (&D_802AC858)[id];
@@ -2096,7 +2095,7 @@ void func_8023E1D8() {
             func_8028A428(D_802AC5E8 * 20 + D_802AC5EC * 5 + i + 0x2C);
         }
     }
-    for (i = 0; i < 0x2C; i++) {
+    for (i = 0; i != 0x2C; i++) {
         if (((s32 *) D_800BE830)[i / 8] & (1 << (i % 8))) {
             func_8028A3D0(i);
         } else {
@@ -2112,7 +2111,10 @@ void func_8023E1D8() {
         func_8023AE6C(0x20, 0x11, 0);
     } else {
         func_8023903C(0xB4);
-        func_8023AB4C(D_802A0AB8, 1);
+        sel = 1;
+        for (i = 0; i < sel; i++) {
+            func_80280DB4(D_802A0AB8[i].handle);
+        }
         func_8023903C(2);
         func_8023B450(D_802AC610.unk18, buf, 2);
         func_8023B318(D_802A0ACC, 4);
@@ -2181,7 +2183,10 @@ void func_8023E1D8() {
             func_8023903C(0x3C);
             func_8023AE6C(0x20, 0x11, 0);
         }
-        func_8023AB4C(D_802A0ACC, 4);
+        keys = 4;
+        for (i = 0; i < keys; i++) {
+            func_80280DB4(D_802A0ACC[i].handle);
+        }
         func_80280DB4(h1);
         func_80280DB4(h2);
     }
