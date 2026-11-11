@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 7003, eu 7003, jp 6963
+ * differing words: us 7001, eu 7001, jp 6961
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -4736,27 +4736,14 @@ static void *func_80251D10(f32 *arg0, f32 *arg1) {
 }
 
 static void *func_80251C88(s32 arg0) {
-    u8 *var_v1;
+    s32 i;
 
-    var_v1 = D_8008E658;
-loop_1:
-    if (arg0 == M2C_FIELD(var_v1, s32 *, 0x14)) {
-        return var_v1;
+    for (i = 0; i < 48; i++) {
+        if (arg0 == M2C_FIELD(D_8008E658 + i * 0x48, s32 *, 0x14)) {
+            return D_8008E658 + i * 0x48;
+        }
     }
-    if (arg0 == M2C_FIELD(var_v1, s32 *, 0x5C)) {
-        return var_v1 + 0x48;
-    }
-    if (arg0 == M2C_FIELD(var_v1, s32 *, 0xA4)) {
-        return var_v1 + 0x90;
-    }
-    if (arg0 == M2C_FIELD(var_v1, s32 *, 0xEC)) {
-        return var_v1 + 0xD8;
-    }
-    var_v1 += 0x120;
-    if ((s32) var_v1 == (s32) D_8008F3D8) {
-        return NULL;
-    }
-    goto loop_1;
+    return NULL;
 }
 
 static f32 func_80251C48(f32 *arg0, f32 *arg1) {
