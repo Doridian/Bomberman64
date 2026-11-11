@@ -24,21 +24,29 @@
  * gave each register family (loop counters, float temps) many names,
  * and uopt hoisted all their constant initialisations together, so they
  * took every callee-saved register before the object pointer; merging
- * the families gives the pointer fp. The frame is 584 bytes (the
- * original's is 352): IDO gives every declared local a slot, but only
- * about 45 lines differ by an sp offset alone, so the frame is not
- * where the words are. Its size is +13 words in us and exact in jp,
- * but the drift moves along it (from -7 to +80 words): the original
+ * the families gives the pointer fp. Its size is -14 words in us, and
+ * the drift moves along it (from -24 to +3 words): the original
  * keeps 360.0f in f30 for the whole function and puts the W360 inner
  * ?: results in stack temporaries (spA0, spAC, spC4: m2c's names are
  * those slots), where ours gives the ?: results f30. Its count is
  * positional, so a local fix there can move it by hundreds of words
- * either way. Two fixes that are right but lowered only one version: the
- * three "turn" blocks share their `F7C = 60.0f` tail (a goto to it saves
- * 4 words each; us -79, jp +150), and before the func_8026E8B8 call jp
- * and us test `fld <= f` as a 0/1 value (`t = a <= b; if (t)`) and
- * load the object after the call (jp -79, us +96). Both need the f30
- * question solved first.
+ * either way. The three "turn" blocks share their `F7C = 60.0f` tail
+ * in the original; the second one has the goto now, and giving the
+ * other two theirs raises us (by 1000 for the first). Before the
+ * func_8026E8B8 call, the object should be loaded after the call (jp
+ * -19, us +1014). These need the f30 question solved first.
+ *
+ * Pass 6 gave func_802553D4 the original's frame (352, the front end's
+ * part 208 bytes, the uopt spill words at 0x88/0x8C). The front end
+ * puts the declared locals top-down in declaration order, then its own
+ * temporaries: one per kind live at once (int and pointer share, float,
+ * double), reused from statement to statement. A call inside another
+ * call's arguments needs one, a ?: value needs one, and W360 inside an
+ * argument needs two floats; the original has a double and two words.
+ * So the register-only locals were merged (same code, sp offsets aside)
+ * down to 48 words, and the declarations are ordered so sp150, sp148,
+ * sp134, sp12C, sp118, sp10C, sp108 and spE4 land on their slots. In
+ * jp the original keeps var_s5 in memory at 0x140.
  *
  * func_802530A8 (about 1500) has its exact size (0x1BE8) and frame
  * (136): its 24 declared words in the original's slot order, the
@@ -1165,7 +1173,7 @@ static void func_802553D4() {
     s32 *var_fp;
     s32 *sp148;
     UnkStruct_800AEDF0 *temp_v0_41;
-    f32 temp_fs1;
+    s32 var_s5;
     f32 temp_fs1_3;
     struct { f32 *obj; s32 dir; } sp134;
     f32 temp_fs2;
@@ -1179,6 +1187,7 @@ static void func_802553D4() {
     u8 *sp108;
     f32 var_fs3;
     Pt2x4 spE4;
+    f32 temp_fs1;
     s32 temp_a1_5;
     s32 temp_s2;
     s32 temp_v0_2;
@@ -1187,7 +1196,6 @@ static void func_802553D4() {
     s32 var_s2;
     s32 var_s3;
     s32 var_s4;
-    s32 var_s5;
     u32 var_v0;
     u32 var_v0_2;
     u8 *temp_a0_3;
