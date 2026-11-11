@@ -7,7 +7,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4690, eu 4690, jp 4690
+ * differing words: us 4503, eu 4503, jp 4503
  *
  * 33 of 97 match. func_8026D5F8 and func_8026D5C0 (cell and slot of a
  * point) are inlined by func_8026D620/func_8026D7D8, which is what the
@@ -132,6 +132,63 @@ typedef struct {
 } Ctl87;
 
 #define SLOTS ((Slot30 *) D_802AFCE8)
+
+typedef struct Ent88 {
+    /* 0x00 */ s16 unk0;
+    /* 0x02 */ u8 pad2[2];
+    /* 0x04 */ s32 unk4;
+    /* 0x08 */ s32 unk8;
+    /* 0x0C */ s16 unkC;
+    /* 0x0E */ s16 unkE;
+    /* 0x10 */ s16 unk10;
+    /* 0x12 */ u8 pad12[2];
+    /* 0x14 */ struct Ent88 *next;
+    /* 0x18 */ struct Ent88 *prev;
+    /* 0x1C */ Obj8E *obj;
+    /* 0x20 */ Sub8E *xf;
+    /* 0x24 */ void *unk24[3];
+    /* 0x30 */ Obj8E *unk30;
+    /* 0x34 */ u8 pad34[4];
+    /* 0x38 */ void *unk38;
+    /* 0x3C */ s16 unk3C;
+    /* 0x3E */ u8 pad3E[2];
+    /* 0x40 */ f32 x;
+    /* 0x44 */ f32 y;
+    /* 0x48 */ f32 z;
+    /* 0x4C */ u8 pad4C[4];
+    /* 0x50 */ f32 unk50;
+    /* 0x54 */ u8 pad54[8];
+    /* 0x5C */ s16 unk5C;
+    /* 0x5E */ s16 unk5E;
+    /* 0x60 */ s16 unk60;
+    /* 0x62 */ s16 unk62;
+    /* 0x64 */ s16 unk64;
+    /* 0x66 */ s16 unk66;
+    /* 0x68 */ s16 unk68;
+    /* 0x6A */ u8 pad6A[0x74 - 0x6A];
+    /* 0x74 */ s16 unk74;
+    /* 0x76 */ u8 pad76[2];
+    /* 0x78 */ f32 unk78;
+    /* 0x7C */ f32 unk7C;
+    /* 0x80 */ f32 unk80;
+    /* 0x84 */ f32 unk84;
+} Ent88; /* size 0x88 */
+
+typedef struct {
+    /* 0x00 */ u8 pad0[0x18];
+    /* 0x18 */ s32 unk18;
+    /* 0x1C */ s16 unk1C;
+    /* 0x1E */ s16 unk1E;
+    /* 0x20 */ s32 unk20;
+    /* 0x24 */ u8 pad24[4];
+    /* 0x28 */ s32 unk28;
+    /* 0x2C */ u8 pad2C[0xC8 - 0x2C];
+} Player87; /* size 0xC8 */
+
+#define ENT_HEAD (*(Ent88 **) &D_8008F44C)
+#define PLAYERS ((Player87 *) D_800AEDF0)
+#define OBJ_DD8 (*(Obj8E **) &D_802AFDD8)
+#define VEC_E60 ((f32 *) D_802AFE60)
 
 extern Node87 D_802AFDE0;
 extern Node87 D_802AFE58;
@@ -387,79 +444,59 @@ void func_80273E2C(s16 arg0) {
 }
 
 s32 func_80273AD4(s16 arg0, f32 arg1, f32 arg2, f32 arg3) {
-    s32 sp30[3];
-    u8 *sp24;
-    f32 temp_fa0;
-    f32 temp_fv0;
-    f32 temp_fv0_2;
-    f32 temp_fv1;
-    s16 *var_a0;
-    s16 *var_v1;
-    s16 var_a1;
-    s32 var_v0;
-    u8 *temp_t1;
-    u8 *temp_v0;
+    Player87 *pl;
+    Ent88 *e;
+    f32 v[3];
+    s32 pb[7];
+    Unk8026DCAC info;
+    Ent88 *n;
+    s16 cnt;
+    s32 live;
 
     func_802714C4();
-    func_8026DCAC(arg1, arg2, arg3, sp30, 2);
-    temp_fv0 = (f32) sp30[0];
-    temp_fv1 = (f32) sp30[1];
-    temp_fa0 = (f32) sp30[2];
-    if (func_80273A5C((s32) temp_fv0, (s32) temp_fv1, (s32) temp_fa0) == 0) {
+    func_8026DCAC(arg1, arg2, arg3, &info, 2);
+    v[2] = info.i[0];
+    v[1] = info.i[1];
+    v[0] = info.i[2];
+    if (func_80273A5C(v[2], v[1], v[0]) == 0) {
         return 0;
     }
-    var_v1 = D_8008F44C;
-    var_a0 = M2C_FIELD(var_v1, s16 **, 0x14);
-    temp_t1 = (arg0 * 0xC8) + D_800AEDF0;
-    var_a1 = M2C_FIELD(temp_t1, s16 *, 0x1E);
-    if (var_a0 != NULL) {
-        do {
-            var_v0 = 0;
-            if (M2C_FIELD(var_v1, f32 *, 0x40) != 1e7f) {
-                var_v0 = 1;
-            }
-            if ((var_v0 != 0) && (M2C_FIELD(var_v1, s32 *, 0x20) != 0)) {
-                var_v1 = var_a0;
-                if (arg0 == M2C_FIELD(var_v1, s16 *, 0xE)) {
-                    var_a1 -= 1;
-                    goto block_10;
-                }
-            } else {
-block_10:
-                var_v1 = var_a0;
-            }
-            var_a0 = M2C_FIELD(var_a0, s16 **, 0x14);
-        } while (var_a0 != NULL);
+    e = ENT_HEAD;
+    n = e->next;
+    pl = &PLAYERS[arg0];
+    cnt = pl->unk1E;
+    while (n != NULL) {
+        live = (e->x != 1e7f) ? 1 : 0;
+        if (live && e->xf != NULL && arg0 == e->unkE) {
+            cnt--;
+        }
+        e = n;
+        n = n->next;
     }
-    if (var_a1 <= 0) {
+    if (cnt <= 0) {
         return 0;
     }
-    M2C_FIELD(D_802AFDD8, f32 *, 0x58) = arg1;
-    M2C_FIELD(M2C_FIELD(D_802AFDD8, void **, 0x40), f32 *, 0x10) = (f32) M2C_FIELD(D_802AFDD8, f32 *, 0x58);
-    M2C_FIELD(D_802AFDD8, f32 *, 0x5C) = arg2;
-    M2C_FIELD(M2C_FIELD(D_802AFDD8, void **, 0x40), f32 *, 0x14) = (f32) M2C_FIELD(D_802AFDD8, f32 *, 0x5C);
-    M2C_FIELD(D_802AFDD8, f32 *, 0x60) = arg3;
-    M2C_FIELD(M2C_FIELD(D_802AFDD8, void **, 0x40), f32 *, 0x18) = (f32) M2C_FIELD(D_802AFDD8, f32 *, 0x60);
-    M2C_FIELD(M2C_FIELD(D_802AFDD8, void **, 0x40), f32 *, 0x30) = 1.0f;
-    temp_v0 = M2C_FIELD(D_802AFDD8, void **, 0x40);
-    temp_fv0_2 = M2C_FIELD(temp_v0, f32 *, 0x30);
-    M2C_FIELD(temp_v0, f32 *, 0x2C) = temp_fv0_2;
-    M2C_FIELD(M2C_FIELD(D_802AFDD8, void **, 0x40), f32 *, 0x28) = temp_fv0_2;
-    M2C_FIELD(D_802AFDD8, s32 *, 0x30) = 1;
-    M2C_FIELD(D_802AFDD8, f32 *, 0x34) = 40.0f;
-    M2C_FIELD(D_802AFDD8, f32 *, 0x38) = 40.0f;
-    sp24 = temp_t1;
-    if (func_8022F4AC((s32) D_802AFDD8, 0x10, M2C_FIELD(temp_t1, s32 *, 0x28)) != 0) {
+    OBJ_DD8->unk58 = arg1;
+    OBJ_DD8->unk40->x = OBJ_DD8->unk58;
+    OBJ_DD8->unk5C = arg2;
+    OBJ_DD8->unk40->y = OBJ_DD8->unk5C;
+    OBJ_DD8->unk60 = arg3;
+    OBJ_DD8->unk40->z = OBJ_DD8->unk60;
+    OBJ_DD8->unk40->sz = 1.0f;
+    OBJ_DD8->unk40->sx = OBJ_DD8->unk40->sy = OBJ_DD8->unk40->sz;
+    OBJ_DD8->unk30 = 1;
+    OBJ_DD8->unk34 = 40.0f;
+    OBJ_DD8->unk38 = 40.0f;
+    if (func_8022F4AC((s32) OBJ_DD8, 0x10, pl->unk28) != 0) {
         return 0;
     }
-    sp24 = temp_t1;
-    if (func_802909FC(D_802AFDD8, func_80277378) != 0) {
-        if (func_8022F4AC((s32) D_802AFDD8, 0x10, M2C_FIELD(temp_t1, s32 *, 0x28)) != 0) {
+    if (func_802909FC(OBJ_DD8, func_80277378) != 0) {
+        if (func_8022F4AC((s32) OBJ_DD8, 0x10, pl->unk28) != 0) {
             return 0;
         }
-        M2C_FIELD(D_802AFE60, f32 *, 0) = (f32) M2C_FIELD(M2C_FIELD(D_802AFDD8, void **, 0x40), f32 *, 0x10);
-        M2C_FIELD(D_802AFE60, f32 *, 4) = (f32) M2C_FIELD(M2C_FIELD(D_802AFDD8, void **, 0x40), f32 *, 0x14);
-        M2C_FIELD(D_802AFE60, f32 *, 8) = (f32) M2C_FIELD(M2C_FIELD(D_802AFDD8, void **, 0x40), f32 *, 0x18);
+        VEC_E60[0] = OBJ_DD8->unk40->x;
+        VEC_E60[1] = OBJ_DD8->unk40->y;
+        VEC_E60[2] = OBJ_DD8->unk40->z;
         return 2;
     }
     return 1;
