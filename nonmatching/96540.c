@@ -9,11 +9,19 @@
  * callers) and leave their 8-byte stubs. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 5, eu 5, jp 5
+ * differing words: us 2, eu 2, jp 2
  *
- * 13 of 15 functions match. func_8027BF38: `move v1,a0` is scheduled
- * one slot earlier in the name-copy loop (2 words). func_8027C900:
- * `sw ra` goes ahead of the two hoisted loop constants (3 words).
+ * 14 of 15 functions match. func_8027BF38: `move v1,a0` is scheduled
+ * one slot earlier in the name-copy loop (2 words): uopt emits the
+ * preheader's dst copy before the src address (the original has the
+ * reverse), and as1 keeps that order. Hand-edited asm with the two
+ * swapped, or either given its own .loc, matches. A named pointer for
+ * the dst gives the right order but is strength-reduced with the i
+ * loop's pointer (+4, not the a0 = dir + i * 28 CSE). Tried without
+ * effect: #line/split for headers, dead reads everywhere, expression
+ * spellings of the copy, temporaries.
+ * func_8027C900 matches with `do {` on the header's line: the hoisted
+ * loop constants then carry the prologue's .loc and go ahead of `sw ra`.
  * The empty stubs' parameters (func_8027C4EC's two, func_8027CBC4's
  * 20-byte buffer) are guesses that give the original's frames.
  * Versions: the game code ('NBME'/'NBMP'/'NBMJ') and company code (jp
@@ -254,11 +262,9 @@ void func_8027C96C(s32 ch) {
 static void func_8027C8F8() {
 }
 
-s32 func_8027C900(s32 ch, s32 *file) {
-    s32 ret;
-
-    func_8027C8F8();
-    do {
+/* The loop's opening line is the header's, so the hoisted constants share
+ * the prologue's .loc and are scheduled ahead of `sw ra`. */
+s32 func_8027C900(s32 ch, s32 *file) { s32 ret; func_8027C8F8(); do {
         ret = func_8027C4F4(ch, file);
         if (ret != 2) {
             break;
