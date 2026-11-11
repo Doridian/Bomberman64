@@ -7,7 +7,7 @@
  * "NON_MATCHING drafts"). src/48300.c, before it, is another object:
  * func_80232E60 calls its func_8022DB00 with a jal (text_objects.txt).
  * flags: -O3
- * differing words: us 525, eu 525, jp 525
+ * differing words: us 413, eu 413, jp 413
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does. An 8-byte stub (jr ra; nop) is an inlined
@@ -627,7 +627,7 @@ void func_802320A8() {
     f32 sp80[3];
     f32 n;
     f32 v;
-    f32 t[1];
+    volatile f32 t;
 
     obj = (UnkStructA80 *) func_802391F0();
     parent = obj->unk44;
@@ -753,16 +753,17 @@ void func_802320A8() {
             obj->unk40->rot[1] = obj->unk44->unk40->rot[1];
             v = obj->unk44->unk40->rot[1];
             if (v >= 0.0f && v <= 180.0f) {
-                t[0] = v;
+                t = v;
             } else {
-                t[0] = (360.0f - v) * -1.0f;
+                t = (360.0f - v) * -1.0f;
             }
+            x = t;
             if (sp80[0] >= 0.0f && sp80[0] <= 180.0f) {
                 n = sp80[0];
             } else {
                 n = (360.0f - sp80[0]) * -1.0f;
             }
-            x = t[0] - n;
+            x = x - n;
             if (x >= 360.0f) {
                 sp80[0] = x - 360.0f;
             } else {
@@ -804,11 +805,11 @@ void func_802320A8() {
                 n = x - 360.0f;
             } else {
                 if (sp80[1] < 180.0f) {
-                    t[0] = x + 360.0f;
+                    t = x + 360.0f;
                 } else {
-                    t[0] = x;
+                    t = x;
                 }
-                n = t[0];
+                n = t;
             }
             obj->unk40->rot[0] = n * -1.0f;
             break;
