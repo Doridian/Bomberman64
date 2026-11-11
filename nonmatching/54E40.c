@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 338, eu 338, jp 341
+ * differing words: us 334, eu 334, jp 337
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -1129,8 +1129,7 @@ void func_80241590(s32 arg0, Gfx **gdl) {
     gDPSetTextureLUT(gfx++, G_TT_RGBA16);
     j = 0;
     if (D_802AC7C8 > 0) {
-        r = (Rect54E40 *) D_802A084C;
-        do {
+        r = (Rect54E40 *) D_802A084C; do {
             tf = D_802A0758;
             e = tf->entries;
             gDPLoadTLUT_pal256(gfx++, (u8 *) tf + e[r->idx + 1].offset);
