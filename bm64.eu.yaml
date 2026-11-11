@@ -325,6 +325,7 @@ segments:
       - [0x41FD0, c]
       - [0x426E0, asm]
       - [0x45170, asm]
+      - [0x46300, asm]
       - [0x479D0, c]
       - [0x47A80, asm]
       - [0x48300, asm]

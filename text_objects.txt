@@ -104,6 +104,20 @@ main_code A8DE0
 # .bss at 0x802A54A0, each where 45170's references start.
 main_code 45170
 
+# 46300 (-O3) is the node tree and the animation tracks (func_8022BB00
+# to func_8022D15C); 45170 before it reads a model file into a skeleton
+# (func_8022A970 to func_8022AF1C) and builds an instance's nodes from
+# it.  No call crosses between them, and func_8022AF1C ends exactly on
+# the 16-byte boundary where func_8022BB00 starts.  The data agree: the
+# first half's .bss is D_802A54A0..D_802A54C8 padded to 0x802A54D0 (the
+# word at 0x802A54CC is never referenced), the second's starts with the
+# global D_802A54D0 and then func_8022C8B8's statics; the first's .data
+# (D_8029F880) is padded to 0x8029F890, where the second's vectors
+# start.  In one file IDO would lay func_8022C8B8's function-scope
+# statics (it comes first in the source) out before func_8022AF1C's,
+# which is not the original's order.
+main_code 46300
+
 # 479D0 (-O3) is func_8022D1D0 alone, which builds a skeleton instance.
 # It calls func_8022D15C (nine words copied from three .data vectors)
 # and func_8022AEDC (two calls) with a jal, each once and outside any

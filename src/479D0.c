@@ -2,7 +2,7 @@
 
 /*
  * -O3. func_8022D1D0 alone: it builds a skeleton instance from a model's
- * chunk. The rest of the skeleton code is 45170 (nonmatching/45170.c has
+ * chunk. The rest of the skeleton code is 45170 and 46300 (nonmatching/ has
  * the structures in full); only the fields used here are named.
  */
 
