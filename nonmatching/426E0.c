@@ -9,7 +9,7 @@
  * func_80228500 kept). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 620, eu 620, jp 620
+ * differing words: us 524, eu 524, jp 524
  *
  * The code is the same in every version.
  *
@@ -40,7 +40,7 @@
  *   the other cofactors row-major, then the zeros and 1.0f.
  *
  * Left:
- * - func_802289C0 (the draw loop, 376): obj is in s2 as in the
+ * - func_802289C0 (the draw loop, 280): obj is in s2 as in the
  *   original once the texture loop reads `unk4[i].unk0` beside a
  *   `&unk4[i]` slot pointer (the i*8 is strength-reduced, and the loop's
  *   pressure keeps obj out of the t registers). The original computes
@@ -1117,7 +1117,7 @@ static s32 func_802284F8(UnkObj *arg0, UnkGfx **arg1) {
     D_802A5368++;
     func_8029CA80(mf, arg0->unk10, arg0->unk14, arg0->unk18);
     rx = arg0->unk1C;
-    ry = ((arg0->unkC & 0x2000) ? D_802A5468 : 0.0f) + arg0->unk20;
+    ry = ((arg0->unkC & 0x2000) ? D_802A5468 : 0) + arg0->unk20;
     rz = arg0->unk24;
     if (rx != 0.0f || ry != 0.0f || rz != 0.0f) {
         if (arg0->unkC & 0x10000) {
