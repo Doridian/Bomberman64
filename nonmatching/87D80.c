@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1105, eu 1105, jp 1105
+ * differing words: us 1016, eu 1016, jp 1016
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -413,9 +413,8 @@ void func_8026FF64(s32 arg0) {
 void func_8026FC08(s32 arg0) {
     u8 *src;
     u8 *p;
-    UnkStruct_800B15D8 *m;
-    s32 layers;
     s32 n;
+    s32 layers;
     s32 i;
     s32 j;
     s32 cnt;
@@ -428,36 +427,34 @@ void func_8026FC08(s32 arg0) {
     D_802AFC60 = 0.0f;
     D_802AFC64 = 1.6333334f;
     D_802AFC68 = 0.0f;
-    p = src;
-    layers = D_800B15D8->unk0 = *p++;
+    p = D_802AFC6C;
+    D_800B15D8->unk0 = *p++;
+    layers = D_800B15D8->unk0;
     D_800B15D8->unk1 = *p++;
     D_800B15D8->unk2 = *p++;
     D_800B15D8->unk3 = *p++;
     D_800B15D8->unkC = v = *p++;
-    m = D_800B15D8;
     D_802AFC5C = -(v & 0x7F) * 100.0f;
     for (n = 0; n < layers; n++) {
-        m->unkE = *p++;
-        m->unkF = *p++;
-        v = m->unkE + ((D_800B15D8->unk1 + 7) >> 3);
+        D_800B15D8[n].unkE = *p++;
+        D_800B15D8[n].unkF = *p++;
+        v = D_800B15D8[n].unkE + ((D_800B15D8->unk1 + 7) >> 3);
         if (D_800B15D8->unk4 < v) {
             D_800B15D8->unk4 = v;
         }
-        v = m->unkF + ((D_800B15D8->unk3 + 7) >> 3);
+        v = D_800B15D8[n].unkF + ((D_800B15D8->unk3 + 7) >> 3);
         if (D_800B15D8->unk8 < v) {
             D_800B15D8->unk8 = v;
         }
-        cnt = m->unkF * m->unkE;
-        m->unk10 = *p++;
+        cnt = D_800B15D8[n].unkF * D_800B15D8[n].unkE;
+        D_800B15D8[n].unk10 = *p++;
         p += cnt * sizeof(UnkCell_800B15D8);
-        m++;
     }
-    p = (u8 *) D_802AFC6C + 5;
-    m = D_800B15D8;
+    p = src + 5;
     for (n = 0; n < layers; n++) {
-        m->unkE = *p++;
-        m->unkF = *p++;
-        cnt = m->unkF * m->unkE;
+        D_800B15D8[n].unkE = *p++;
+        D_800B15D8[n].unkF = *p++;
+        cnt = D_800B15D8[n].unkF * D_800B15D8[n].unkE;
         for (i = 0; i < D_800B15D8->unk8 * 8; i++) {
             for (j = 0; j < D_800B15D8->unk4 * 8; j++) {
                 func_8026D620(j, D_800B15D8->unk2 + n, i, 0x2010);
@@ -468,12 +465,10 @@ void func_8026FC08(s32 arg0) {
             D_800B15D8[n].unk12[i].unk0 = *p++;
             D_800B15D8[n].unk12[i].unk1 = *p++;
             for (j = 0; j < 64; j++) {
-                func_8026D620(D_800B15D8[n].unk12[i].unk0 * 8 + D_800B15D8->unk1 + j % 8, D_800B15D8->unk2 + n,
-                              D_800B15D8[n].unk12[i].unk1 * 8 + D_800B15D8->unk3 + (j >> 3), p[1] + (p[0] << 8));
                 p += 2;
+                func_8026D620(D_800B15D8[n].unk12[i].unk0 * 8 + D_800B15D8->unk1 + j % 8, D_800B15D8->unk2 + n, D_800B15D8[n].unk12[i].unk1 * 8 + D_800B15D8->unk3 + (j >> 3), (p[-2] << 8) + p[-1]);
             }
         }
-        m++;
     }
 }
 
