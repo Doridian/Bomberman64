@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 149, eu 149, jp 149
+ * differing words: us 147, eu 147, jp 147
  *
  * The object is the same in all three versions. 70 of the 79 original
  * procedures match (stubs included). The IPA statics
@@ -906,8 +906,8 @@ static s16 func_80269AFC() {
         v->unk14 = D_802AD672;
         v->unk18 = v->unk19 = D_802AD674;
         v->unk1E = D_802AD675;
-        v->unk1F = 0;
         v->unk10 = v->unk12 = D_802AD670;
+        v->unk1F = 0;
     }
     D_802AD660 = 0;
     if (func_80269A8C(4) != 0) {
