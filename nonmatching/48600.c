@@ -7,7 +7,7 @@
  * "NON_MATCHING drafts"). src/48300.c, before it, is another object:
  * func_80232E60 calls its func_8022DB00 with a jal (text_objects.txt).
  * flags: -O3
- * differing words: us 335, eu 335, jp 335
+ * differing words: us 333, eu 333, jp 333
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does. An 8-byte stub (jr ra; nop) is an inlined
@@ -66,11 +66,11 @@
  * separately coloured spE4[1] - 90), obj->unk3C in v0 not v1, and the
  * obj+0x58 slot at 0x60 not 0x68. The default case's store keeps n
  * live into the loop (the original loads it into fs3 before the loop).
- * func_8022DF68 (2: a mul.s's operand order in func_8022E0AC; writing
- * the operands the other way round changes nothing). In func_80230914 the
- * same add.s order came right with a store of y back to o->unk6C before
- * o->unk6C += o->unk70 (a permuter find): uopt's operand order for a
- * commutative op depends on whether an operand is a variable or a load.
+ * uopt puts a commutative op's operands in its own order, not the
+ * source's, but the form of an operand counts: func_8022E0AC's mul.s
+ * takes the original's order with (*arg0).unk38 (not arg0->unk38) on the
+ * right, and func_80230914's add.s with a store of y back to o->unk6C
+ * before o->unk6C += o->unk70 (both permuter finds).
  */
 #include "common.h"
 
@@ -2147,7 +2147,7 @@ static void func_8022E0AC(UnkStructA80 *arg0, f32 *arg1) {
     arg1[6] = arg0->unk40->rot[1];
     arg1[7] = arg0->unk40->rot[2];
     arg1[3] = arg0->unk34 * r;
-    arg1[4] = arg0->unk38 * arg0->unk40->scale[1];
+    arg1[4] = arg0->unk40->scale[1] * (*arg0).unk38;
 }
 
 static s32 func_8022E0A4(f32 *p, f32 *r) {
