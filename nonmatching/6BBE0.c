@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 5274, eu 5274, jp 6381
+ * differing words: us 4731, eu 4731, jp 6380
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -2860,7 +2860,7 @@ loop_658:
                             M2C_FIELD(M2C_FIELD(temp_v0_6, void **, 0x40), f32 *, 0x2C) = (f32) (((f32) var_s2 * 50.0f) / 160.0f);
                             M2C_FIELD(M2C_FIELD(temp_v0_6, void **, 0x40), f32 *, 0x1C) = 90.0f;
                             M2C_FIELD(M2C_FIELD(temp_v0_6, void **, 0x40), f32 *, 0x20) = W360(M2C_FIELD(M2C_FIELD(M2C_FIELD(var_fp, f32 **, 0x18), void **, 0x40), f32 *, 0x20) + 180.0f);
-                            M2C_FIELD(temp_v0_6, f32 *, 0x6C) = 0.0f;
+                            M2C_FIELD(temp_v0_6, f32 *, 0x6C) = 0;
                             M2C_FIELD(temp_v0_6, f32 *, 0x70) = 0.0f;
                             M2C_FIELD(temp_v0_6, f32 *, 0x68) = 0.0f;
                             M2C_FIELD(temp_v0_6, s32 *, 0x30) = 2;
