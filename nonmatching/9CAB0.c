@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1752, eu 1752, jp 1752
+ * differing words: us 1717, eu 1717, jp 1717
  */
 #include "common.h"
 
@@ -802,8 +802,11 @@ static void func_80285F84(void) {
 
 static void func_80285F8C(void) {
     UnkStruct_800BB340 *task;
+    Vec3f pos2;
     UnkStruct_80288040 *a;
+    s32 pad[3];
     Vec3f pos;
+    UnkStruct_80288040 *a2;
     s32 far;
 
     func_80285F84();
@@ -864,10 +867,11 @@ static void func_80285F8C(void) {
             func_80282F44(task, 2);
             break;
         case 3:
-            pos.x = task->unk10->unk14.unk0->unk40->unk10;
-            pos.y = task->unk10->unk14.unk0->unk40->unk14;
-            pos.z = task->unk10->unk14.unk0->unk40->unk18;
-            func_802829AC(3, &pos);
+            a2 = &task->unk10->unk14;
+            pos2.x = a2->unk0->unk40->unk10;
+            pos2.y = a2->unk0->unk40->unk14;
+            pos2.z = a2->unk0->unk40->unk18;
+            func_802829AC(3, &pos2);
             func_80282598(task, 1);
             break;
         }
