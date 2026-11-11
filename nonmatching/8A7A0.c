@@ -7,7 +7,7 @@
  * order. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 794, eu 794, jp 794
+ * differing words: us 759, eu 759, jp 759
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file (475 words in the one-file draft, 39
@@ -670,27 +670,25 @@ void func_802734BC(u8 *arg0) {
 }
 
 void func_80273414(s16 *arg0) {
-    s16 temp_v1;
-    s32 *temp_a0;
-    s32 temp_a0_2;
+    Ent88 *e = (Ent88 *) arg0;
+    s32 pad[4];
+    void *p;
 
-    func_80270BA4(M2C_FIELD(arg0, void **, 0x1C));
-    temp_v1 = M2C_FIELD(arg0, s16 *, 0x64);
-    if ((s16) (temp_v1 & 0x200) != 0) {
-        M2C_FIELD(arg0, s16 *, 0x64) = (s16) (temp_v1 & 0xFDFF);
-        func_802313DC(M2C_FIELD(arg0, void **, 0x1C), 0x20000);
-        temp_a0 = M2C_FIELD(arg0, s32 **, 0x38);
-        func_80270A80(temp_a0);
-        free(temp_a0);
+    func_80270BA4(e->obj);
+    if (func_802712A8(&e->unk64, 0x200)) {
+        func_8027036C(&e->unk64, 0x200);
+        func_802313DC(e->obj, 0x20000);
+        p = e->unk38;
+        func_80270A80(p);
+        free(p);
     }
-    temp_a0_2 = M2C_FIELD(arg0, s32 *, 8);
-    if (temp_a0_2 != -1) {
-        func_8028A4E0(temp_a0_2);
-        M2C_FIELD(arg0, s32 *, 8) = -1;
+    if (e->unk8 != -1) {
+        func_8028A4E0(e->unk8);
+        e->unk8 = -1;
     }
-    M2C_FIELD(arg0, s16 *, 0x74) = 9;
+    e->unk74 = 9;
     func_802711C8(arg0);
-    func_8022FC90(M2C_FIELD(arg0, void **, 0x1C));
+    func_8022FC90(e->obj);
 }
 
 void func_802733F8(s16 *arg0) {
@@ -1351,12 +1349,13 @@ void func_802714C4() {
 }
 
 void func_80271448(f32 arg0, f32 arg1, f32 arg2, f32 *arg3, f32 *arg4, f32 *arg5) {
-    s32 sp20[3];
+    s32 pad[3];
+    s32 a[3];
 
-    func_8026DCAC(arg0, arg1, arg2, sp20, 2);
-    *arg3 = (f32) sp20[0];
-    *arg4 = (f32) sp20[1];
-    *arg5 = (f32) sp20[2];
+    func_8026DCAC(arg0, arg1, arg2, a, 2);
+    *arg3 = a[0];
+    *arg4 = a[1];
+    *arg5 = a[2];
 }
 
 s32 func_8027130C(u8 *arg0) {
@@ -1402,13 +1401,12 @@ s32 func_8027130C(u8 *arg0) {
 }
 
 void func_802712C4(s16 *arg0) {
-    s16 temp_v1;
+    Ent88 *e = (Ent88 *) arg0;
 
-    temp_v1 = M2C_FIELD(arg0, s16 *, 0x64);
-    if ((s16) (temp_v1 & 4) != 0) {
-        M2C_FIELD(arg0, s16 *, 0x74) = 9;
-        M2C_FIELD(arg0, s16 *, 0x64) = (s16) (temp_v1 & 0xFFFB);
-        M2C_FIELD(arg0, s32 *, 0x30) = (s32) M2C_FIELD(arg0, s32 *, 0x1C);
+    if (func_802712A8(&e->unk64, 4)) {
+        e->unk74 = 9;
+        func_8027036C(&e->unk64, 4);
+        e->unk30 = e->obj;
         func_802711C8(arg0);
     }
 }
