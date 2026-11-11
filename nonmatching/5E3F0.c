@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1166, eu 1166, jp 1165
+ * differing words: us 1086, eu 1086, jp 1085
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -3903,8 +3903,7 @@ void func_80246F00(s32 arg0, s32 arg1) {
                         func_802313DC(*D_802ACF58, flags);
                         func_80231408(*D_802ACF58, 0x10);
                         hit = func_80232D18(*D_802ACF58, 0x10);
-                        obj = *D_802ACF58;
-                        r = func_8026DF74(obj->unk40->unk10, obj->unk40->unk14, obj->unk40->unk18);
+                        r = func_8026DF74((*D_802ACF58)->unk40->unk10, (*D_802ACF58)->unk40->unk14, (*D_802ACF58)->unk40->unk18);
                         if (hit) {
                             M2C_FIELD(*D_802ACF58, s32 *, 0x10) = 0;
                             M2C_FIELD(*D_802ACF58, s32 *, 0x14) = 0;
@@ -3940,6 +3939,7 @@ void func_80246F00(s32 arg0, s32 arg1) {
                 obj = *D_802ACF58;
                 func_8022F808(obj, (f32 *)obj->unk58);
             }
+            if (obj) {} /* fake: keeps the success path's obj in s0 */
             break;
         }
         func_80245FA0(arg0, arg1);
