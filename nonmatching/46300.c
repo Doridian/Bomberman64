@@ -7,7 +7,7 @@
  * (src/479D0.c, text_objects.txt). Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 15, eu 15, jp 15
+ * differing words: us 0, eu 0, jp 0
  *
  * The code is the same in every version.
  *
@@ -22,19 +22,13 @@
  * for the add's operand order; func_8022BB88 with a dead read of the
  * count at the loop's end (count coloured before count * 40).
  *
- * Left:
- * - func_8022C8B8 (15): the channel table is stored through chan
- *   (`chan = arg0->unk34[arg1].unk4; D_802A54FC = chan;`), which puts
- *   the ugen temporaries after it in step with the original's (84 to
- *   15). What is left: chan is coloured v1 where the original keeps that
- *   load in a ugen temporary (t9) and has v1 for the channel's address
- *   before the switch (ours t5); the temps between are one apart.
- *   Earlier: `D_802A54FC[D_802A54D4].unk0` is a uixa load while the
- *   cases' `&D_802A54FC[D_802A54D4]` is an add, so they are not CSE'd.
- *   Any pointer local before the switch (`chan = &...`, `D + i`) is
- *   CSE'd into the cases; with the cases written through (u8 *) it
- *   stays one-use and folds, and with a dead read it is coloured but
- *   v0/v1 swapped and an extra store.
+ * All functions match in every version. func_8022C8B8 needs a dead
+ * re-read of the channel's type at the top of case 0x2F (`if
+ * (D_802A54FC[D_802A54D4].unk0) {}`): it makes the loop head's address
+ * of the channel (a uixa, not the cases' `&D_802A54FC[...]` add) live
+ * into that case, so uopt colours it (v1) as the original does, and as1
+ * drops the dead load. The same read in the loop head splits the block
+ * and moves D_802A54EC's load out of the loop (+1 word).
  */
 #include "common.h"
 
@@ -342,8 +336,7 @@ UnkAnim *func_8022C8B8(UnkInst *arg0, s32 arg1) {
     D_802A5500->unk10 = D_802A54E4;
     D_802A5500->unk14 = malloc(D_802A54E4 * sizeof(UnkTrack));
     D_802A5500->unk8 = arg0->unk34[arg1].unkC;
-    chan = arg0->unk34[arg1].unk4;
-    D_802A54FC = chan;
+    D_802A54FC = arg0->unk34[arg1].unk4;
     D_802A54DC = 0;
     for (D_802A54D4 = 0; D_802A54D4 < D_802A54E4; D_802A54D4++) {
         D_802A5504 = &D_802A5500->unk14[D_802A54D4];
@@ -351,6 +344,8 @@ UnkAnim *func_8022C8B8(UnkInst *arg0, s32 arg1) {
         D_802A5504->unk4 = t = D_802A54FC[D_802A54D4].unk0;
         switch (t) {
             case 0x2F:
+                if (D_802A54FC[D_802A54D4].unk0) { /* fake: see the header */
+                }
                 k = (UnkChanKeys *)&D_802A54FC[D_802A54D4].unk4;
                 D_802A54E8 = k->unk4;
                 D_802A5504->unk10 = D_802A54F8 = malloc(D_802A54E8 * 4);
