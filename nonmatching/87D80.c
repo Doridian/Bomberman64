@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1679, eu 1679, jp 1679
+ * differing words: us 1547, eu 1547, jp 1547
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -1179,22 +1179,22 @@ s32 func_8026E278(s32 arg0) {
 void func_8026DFB8(f32 arg0, f32 arg1, f32 arg2, f32 *arg3) {
     Unk8026DCAC spA8;
     s32 count;
-    f32 base;
     f32 scale;
-    f32 lo;
-    f32 hi;
     f32 temp_fa1;
     f32 temp_fv0;
     f32 temp_fv1;
     f32 var_fa0_2;
     s32 temp_a0;
+    s32 ix;
+    s32 iz;
+    s32 dx;
+    s32 dz;
     s32 temp_v0;
     s32 kind;
-    s32 dz;
-    s32 dx;
-    s32 iz;
-    s32 ix;
     s32 nz;
+    f32 base;
+    f32 lo;
+    f32 hi;
     s32 nx;
     s32 pz;
     s32 px;
@@ -1207,24 +1207,29 @@ void func_8026DFB8(f32 arg0, f32 arg1, f32 arg2, f32 *arg3) {
     pz = 0;
     nx = 0;
     px = 0;
-    if ((kind == 3) || (kind == 4)) {
-        scale = 100.0f;
-        dx = 0;
-        dz = 1;
-        ix = 0;
-        iz = 1;
-        base = spA8.f[2];
-    } else if ((kind == 5) || (kind == 6)) {
-        scale = 100.0f;
-        dx = 1;
-        dz = 0;
-        ix = 1;
-        iz = 0;
-        base = spA8.f[0];
-    } else {
-        hi = 0.0f;
-        kind = 0;
-        lo = 0.0f;
+    switch (kind) {
+        case 3:
+        case 4:
+            scale = 100.0f;
+            dx = 0;
+            dz = 1;
+            ix = 0;
+            iz = 1;
+            base = spA8.f[2];
+            break;
+        case 5:
+        case 6:
+            scale = 100.0f;
+            dx = 1;
+            dz = 0;
+            ix = 1;
+            iz = 0;
+            base = spA8.f[0];
+            break;
+        default:
+            lo = hi = 0.0f;
+            kind = 0;
+            break;
     }
     if (kind != 0) {
         do {
@@ -1248,10 +1253,11 @@ void func_8026DFB8(f32 arg0, f32 arg1, f32 arg2, f32 *arg3) {
     }
     arg3[0] = lo;
     arg3[1] = hi;
+    temp_v0 = D_800B15D8[spA8.i[1]].unk10;
     if (count == 0) {
         var_fa0_2 = 0.0f;
     } else {
-        temp_fv0 = (f32) D_800B15D8[spA8.i[1]].unk10 * 100.0f;
+        temp_fv0 = (f32) temp_v0 * 100.0f;
         temp_fv1 = (f32) count;
         temp_fa1 = temp_fv0 / (temp_fv1 * scale);
         var_fa0_2 = temp_fa1;
