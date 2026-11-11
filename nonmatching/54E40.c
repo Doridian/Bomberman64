@@ -798,15 +798,15 @@ void func_80242DA8() {
         }
         if (D_802AC758 > 0) {
             for (i = 0; i < 4; i++) {
-                if ((func_80243EF0(i) == 0) && ((M2C_FIELD(D_800AEDF0 + i * 0xC8, s32 *, 0x24) == 1) ||
-                                                (M2C_FIELD(D_800AEDF0 + i * 0xC8, s32 *, 0x24) == 2))) {
+                if ((func_80243EF0(i) == 0) && ((PLAYERS[i].unk24 == 1) ||
+                                                (PLAYERS[i].unk24 == 2))) {
                     break;
                 }
             }
             D_802AC850 = 1;
             func_8023903C(0x1E);
-            if ((func_80243EF0(i) == 0) && ((M2C_FIELD(D_800AEDF0 + i * 0xC8, s32 *, 0x24) == 1) ||
-                                            (M2C_FIELD(D_800AEDF0 + i * 0xC8, s32 *, 0x24) == 2))) {
+            if ((func_80243EF0(i) == 0) && ((PLAYERS[i].unk24 == 1) ||
+                                            (PLAYERS[i].unk24 == 2))) {
                 func_8024585C(i);
                 func_80247C50(i);
                 func_802452E8(1);
@@ -1077,7 +1077,7 @@ void func_80241BB0(s32 arg0, Gfx **gdl) {
             do {
                 if (!tf) {}
                 i++;
-                if (j < 3 || *(s32 *) (D_800AEBBC + j * 0xC8) != 0) {
+                if (j < 3 || PLAYERS[j - 3].unk24 != 0) {
                     e = tf->entries;
                     if (j >= 3 || D_802AC660.unk2C > 0) {
                         gDPLoadTLUT_pal16(gfx++, 0, (u8 *) tf + e[1].offset);
@@ -2590,13 +2590,13 @@ static s32 func_8023D0F8() {
         for (i = 0, p = D_802AC660.unk4; p < D_802AC660.unk4 + 4; i++, p++) {
             v = *p;
             if (v == 0) {
-                M2C_FIELD(D_800AEDF0 + i * 0xC8, s32 *, 0x24) = 0;
+                PLAYERS[i].unk24 = 0;
             } else {
                 D_802AC758++;
                 if (v == 1) {
-                    M2C_FIELD(D_800AEDF0 + i * 0xC8, s32 *, 0x24) = 1;
+                    PLAYERS[i].unk24 = 1;
                 } else {
-                    M2C_FIELD(D_800AEDF0 + i * 0xC8, s32 *, 0x24) = 2;
+                    PLAYERS[i].unk24 = 2;
                 }
             }
         }
@@ -2872,7 +2872,7 @@ static void func_8023C170() {
     func_8026C660(0x1E7);
     func_8026C93C(0x2E);
     for (i = 0; i < 4; i++) {
-        if ((M2C_FIELD(D_800AEDF0 + i * 0xC8, s32 *, 0x24) != 3) && (M2C_FIELD(D_800AEDF0 + i * 0xC8, s32 *, 0x24) != 0)) {
+        if ((PLAYERS[i].unk24 != 3) && (PLAYERS[i].unk24 != 0)) {
             func_8024585C(i);
             func_80247C50(i);
             func_802452E8(1);
@@ -3246,7 +3246,7 @@ static s32 func_8023AB90(void) {
     }
     id = func_80243DDC();
     obj = func_802443F4(id);
-    if ((M2C_FIELD(D_800AEDF0 + id * 0xC8, s32 *, 0x24) == 3) || (M2C_FIELD(obj, f32 *, 0x68) != 0.0f) ||
+    if ((PLAYERS[id].unk24 == 3) || (M2C_FIELD(obj, f32 *, 0x68) != 0.0f) ||
         (M2C_FIELD(obj, f32 *, 0x6C) != 0.0f) || (func_80244BA4(id, 0x20) != 0)) {
         return 0;
     }
