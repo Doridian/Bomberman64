@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 224, eu 224, jp 227
+ * differing words: us 171, eu 171, jp 174
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -1022,68 +1022,50 @@ void func_80242268() {
 }
 
 void func_80241BB0(s32 arg0, Gfx **gdl) {
-    s32 pad[46];
+    s32 pad[1];
     Gfx *gfx;
     TexFile *tf;
     Rect54E40 *r;
-    Player54E40 *pl;
     TexEntry *e;
-    s32 *count;
-    s32 *xs;
     s32 i;
     s32 j;
-    s32 k;
     s32 n;
     s32 x;
 
     if (D_802AC660.unk28 < 6) {
         func_8023CD1C();
     }
-    r = D_802A07D4;
-    do {} while (0);
-    pl = PLAYERS;
-    i = 0;
-    k = 0;
-    do {
-        if (pl->unk24 == 3 || func_80243EF0(i) != 0) {
-            r[1].idx = k + 8;
+    for (i = 0; i < 4; i++) {
+        if (PLAYERS[i].unk24 == 3 || func_80243EF0(i) != 0) {
+            D_802A07D4[i + 1].idx = i * 2 + 8;
         } else {
-            r[1].idx = k;
+            D_802A07D4[i + 1].idx = i * 2;
         }
-        i++;
-        pl++;
-        r++;
-        k += 2;
-    } while (i < 4);
+    }
     gfx = *gdl;
     gDPSetRenderMode(gfx++, 0x553048, 0);
     gDPSetCombine(gfx++, 0xFFFFFF, 0xFFFCF279);
     gSPTexture(gfx++, 0x8000, 0x8000, 0, G_TX_RENDERTILE, 1);
     gDPSetTexturePersp(gfx++, G_TP_NONE);
-    i = 0;
     gDPSetTextureLUT(gfx++, G_TT_RGBA16);
-    do {
+    for (i = 0; i < 5; i++) {
         tf = D_802A0758;
         e = tf->entries;
-        if (!e) {}
         if (i == 0 || PLAYERS[i - 1].unk24 != 0) {
             r = &D_802A07D4[i];
-            if (!r) {}
             gDPLoadTLUT_pal256(gfx++, (u8 *) tf + e[r->idx + 1].offset);
             gDPLoadTextureBlock_4b(gfx++, (u8 *) tf + e[r->idx].offset, G_IM_FMT_CI, 16, 16, 0,
                                    G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMASK, G_TX_NOMASK, G_TX_NOLOD, G_TX_NOLOD);
             gSPTextureRectangleYX(gfx++, r->xl, r->yl, r->xh, r->yh, G_TX_RENDERTILE, 0, 0, 0x400, 0x400);
         }
-        i++;
-    } while (i != 5);
+    }
     n = 0;
     tf = D_802A075C;
-    count = D_802A07B8; xs = D_802A079C; j = 0; do {
-        x = *xs;
+    j = 0; do {
+        x = D_802A079C[j];
         i = 0;
-        if (*count > 0) {
+        if (D_802A07B8[j] > 0) {
             do {
-                if (!tf) {}
                 i++;
                 if (j < 3 || PLAYERS[j - 3].unk24 != 0) {
                     e = tf->entries;
@@ -1098,18 +1080,13 @@ void func_80241BB0(s32 arg0, Gfx **gdl) {
                 }
                 x += 10;
                 n++;
-            } while (i < *count);
+            } while (i < D_802A07B8[j]);
         }
         j++;
-        xs++;
-        count++;
     } while (j != 7);
     gDPSetTexturePersp(gfx++, G_TP_PERSP);
     gDPSetTextureLUT(gfx++, G_TT_NONE);
     *gdl = gfx;
-    if (0) {
-        func_80241590(0, (Gfx **) &xs);
-    }
 }
 
 void func_80241590(s32 arg0, Gfx **gdl) {
