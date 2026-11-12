@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 121, eu 121, jp 124
+ * differing words: us 108, eu 108, jp 111
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -918,7 +918,6 @@ static void func_80242994() {
 void func_80242270(s32 arg0, Gfx **gdl) {
     Gfx *gfx;
     TexFile *tf;
-    Rect54E40 *r;
     TexEntry *e;
     s32 *digit;
     s32 n;
@@ -966,14 +965,13 @@ void func_80242270(s32 arg0, Gfx **gdl) {
     gSPTexture(gfx++, 0x8000, 0x8000, 0, G_TX_RENDERTILE, 1);
     gDPSetTexturePersp(gfx++, G_TP_NONE);
     gDPSetTextureLUT(gfx++, G_TT_RGBA16);
-    r = D_802A0774;
-    do {
+    for (j = 0; j < 2; j++) {
         tf = D_802A0758;
-        gDPLoadTLUT_pal256(gfx++, (u8 *) tf + tf->entries[r->idx + 1].offset);
-        gDPLoadTextureBlock_4b(gfx++, (u8 *) tf + tf->entries[r->idx].offset, G_IM_FMT_CI, 16, 16, 0,
+        gDPLoadTLUT_pal256(gfx++, (u8 *) tf + tf->entries[D_802A0774[j].idx + 1].offset);
+        gDPLoadTextureBlock_4b(gfx++, (u8 *) tf + tf->entries[D_802A0774[j].idx].offset, G_IM_FMT_CI, 16, 16, 0,
                                G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMASK, G_TX_NOMASK, G_TX_NOLOD, G_TX_NOLOD);
-        gSPTextureRectangleYX(gfx++, r->xl, r->yl, r->xh, r->yh, G_TX_RENDERTILE, 0, 0, 0x400, 0x400); r++;
-    } while (r != (Rect54E40 *) D_802A079C);
+        gSPTextureRectangle(gfx++, D_802A0774[j].xl, D_802A0774[j].yl, D_802A0774[j].xh, D_802A0774[j].yh, G_TX_RENDERTILE, 0, 0, 0x400, 0x400);
+    }
     n = 0;
     tf = D_802A075C;
     for (i = 0; i < 2; i++) {
