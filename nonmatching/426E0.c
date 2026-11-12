@@ -9,7 +9,7 @@
  * func_80228500 kept). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 150, eu 150, jp 150
+ * differing words: us 147, eu 147, jp 147
  *
  * The code is the same in every version.
  *
@@ -82,9 +82,16 @@
  *   own; `if (!arg1) {}` first and `if (!arg0) {}` after the loop keep
  *   the arguments' registers busy, so dl takes a3, first t0 and i t1 as
  *   in the original. The loop bound 2 is left in a1 (a0 in the
- *   original). func_80229448 (4): the empty loop survives only
- *   as `i * 4 != 16` (a plain `i < 4` is deleted); the original has
- *   the counter in v0 and 16 in v1, ours the other way round.
+ *   original). func_80229448 (1): the empty loop survives only
+ *   as `i * 4 != 16` (a plain `i < 4` is deleted, the multiply is what
+ *   uopt strength-reduces after its dead-loop pass). A local counter
+ *   takes v0 in the entry block and pushes the IV to v1; a third
+ *   parameter as the counter can't use v0/v1 there (uopt forbids them
+ *   to a parameter in the entry block), so the IV gets v0 and 16 v1.
+ *   Left: bne's operand order. uopt swaps `==`/`!=` operands unless
+ *   the left one is a variable at input, so the original compared a
+ *   variable that copy propagation later turned into the IV; every
+ *   such form tried (a j = i * 4 local, split blocks) colours j first.
  */
 #include "common.h"
 
@@ -438,7 +445,7 @@ void func_802289C0(UnkObj *arg0, UnkGfx **arg1);
 void func_802290CC(void);
 void func_80229280(s32 arg0);
 void func_8022928C(f32 arg0[4][4], f32 arg1[4][4]);
-void func_80229448(s32 arg0, s32 arg1);
+void func_80229448(s32 arg0, s32 arg1, s32 arg2);
 void func_8022946C(UnkObj *arg0, s32 arg1);
 void func_80229560(UnkObj *arg0);
 void func_802295F4(UnkObj *arg0, s32 *arg1, s32 arg2);
@@ -949,9 +956,8 @@ void func_8022946C(UnkObj *arg0, s32 arg1) {
     D_800A0D00[p->unk4].unk0 = idx;
 }
 
-void func_80229448(s32 arg0, s32 arg1) {
-    s32 i;
-    for (i = 0; i * 4 != 16; i++) {
+void func_80229448(s32 arg0, s32 arg1, s32 arg2) {
+    for (arg2 = 0; arg2 * 4 != 16; arg2++) {
     }
 }
 
