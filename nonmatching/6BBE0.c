@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2813, eu 2813, jp 6122
+ * differing words: us 2672, eu 2672, jp 5910
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -1309,7 +1309,7 @@ block_46:
             } else {
                 func_80254F20((f32 *) var_fp);
                 if (func_80243D2C(M2C_FIELD(var_fp, s32 *, 0xC)) > 0) {
-                    if (!(M2C_FIELD(var_fp, s32 *, 0) & 3)) {
+                    if (!(M2C_FIELD(var_fp, u32 *, 0) & 3)) {
                         if ((func_80243D2C(M2C_FIELD(var_fp, s32 *, 0xC)) <= 0) || (func_80245408(M2C_FIELD(var_fp, s32 *, 0xC)) != 0)) {
                             M2C_FIELD(var_fp, s32 *, 0) &= ~3;
                             M2C_FIELD(var_fp, s32 *, 0) |= 1;
