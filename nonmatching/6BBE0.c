@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 113, eu 113, jp 113
+ * differing words: us 106, eu 106, jp 106
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -913,7 +913,7 @@ void func_8025CEA0() {
         off = -400.0f;
     }
     pos = M2C_FIELD(M2C_FIELD(player, void **, 0x18), f32 **, 0x40);
-    func_8028A81C(8, pos[4] + off, 150.0f, pos[6], 0);
+    func_8028A81C(8, off + pos[4], 150.0f, pos[6], 0);
     obj = func_80231274(-1, 0x03000040, 0x20, NULL);
     if (sign < 0.0f) {
         off = 400.0f;
@@ -1113,21 +1113,15 @@ loop_1:
 }
 
 void func_8025C590(s32 arg0) {
-    UnkStruct_800AEDF0 *sp18;
-    UnkObj *var_a0;
     UnkStruct_800AEDF0 *temp_v0;
 
     temp_v0 = &D_800AEDF0[arg0];
     if (temp_v0->unk24 != 0) {
-        var_a0 = temp_v0->unk28;
-        if (var_a0 != NULL) {
-            if (M2C_FIELD(var_a0, s32 *, 8) & 0x20000) {
-                sp18 = temp_v0;
+        if (temp_v0->unk28 != NULL) {
+            if (M2C_FIELD(temp_v0->unk28, s32 *, 8) & 0x20000) {
                 func_80271F74(temp_v0->unk40);
-                var_a0 = temp_v0->unk28;
             }
-            sp18 = temp_v0;
-            func_8022FC90(var_a0);
+            func_8022FC90(temp_v0->unk28);
             temp_v0->unk28 = NULL;
             temp_v0->unkC = 0.0f;
         }
@@ -4513,7 +4507,6 @@ static void *func_80251B08(s32 arg2, s32 *arg0, s32 arg1) {
     s32 x;
     s32 z;
     s32 r;
-    s32 *d;
 
     x = arg0[0];
     z = arg0[2];
@@ -4526,9 +4519,8 @@ static void *func_80251B08(s32 arg2, s32 *arg0, s32 arg1) {
         if (r != 0) {
             return (void *) r;
         }
-        d = (s32 *) (D_802A0EF0 + arg1 * 8);
-        x += d[0];
-        z += d[1];
+        x += ((s32 (*)[2]) D_802A0EF0)[arg1][0];
+        z += ((s32 (*)[2]) D_802A0EF0)[arg1][1];
     }
 }
 
@@ -4568,10 +4560,10 @@ static s32 func_802519B4(f32 arg0) {
 }
 
 static f32 func_80251994(f32 *arg0, f32 *arg1) {
-    f32 sp1C;
+    f32 sp1C[3];
 
-    func_8022FF58(arg0, arg1, &sp1C);
-    return sp1C;
+    func_8022FF58(arg0, arg1, sp1C);
+    return sp1C[0];
 }
 
 static void *func_80251974(f32 *arg0, f32 *arg1) {
