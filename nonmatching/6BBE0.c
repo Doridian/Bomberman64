@@ -107,6 +107,26 @@
  * countdown that wants its result in f16 (every form tried moves
  * sp12C's colour to f14), and two store orders.
  *
+ * Pass 10 (202 to 123): spC4 gone (its uses written as the expressions,
+ * the statement now `fp->74 = fp->18->40->20 = W360(fp->74 + 180)`),
+ * the six +1/60 stores as one assignment chain in the original's store
+ * order; in func_802530A8 the turn block's stores in the original's
+ * order, the f22 value through `limit`, and a real draft error: after
+ * func_8025156C the 0x7C store of D_802ACFB4 belongs to the whole else,
+ * not to the `== 0` branch only. Left in func_802553D4: the W360
+ * temporaries' slots. With temp_v0_2 merged into var_s4 and the five
+ * rand() values through a declared f64 (code otherwise unchanged) the
+ * slots are right relative to fp, but the frame is 16 bytes short: the
+ * original's front end had 16 bytes of temporaries below A's that no
+ * instruction touches (sp 144..159). Their source (dead code? a
+ * statement with more simultaneous temps?) isn't found; inlined
+ * statics are ruled out (IDO inlines nothing into a caller this big).
+ * Also left: the countdown's f16 (sp12C as one variable across the
+ * loop shifts f16/f14 for the whole function), 0x4D30's f14, the
+ * case-2 store order at 0x6750 and `li a0,2` at 0x6CE4; in
+ * func_802530A8, func_80251EE0's result register and func_80252174's
+ * s1/v1 and div.s registers.
+ *
  * jp lacks one height test in func_802553D4 (VERSION_JP); eu is us.
  */
 #include "common.h"
