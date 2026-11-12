@@ -7,7 +7,7 @@
  * "NON_MATCHING drafts"). src/48300.c, before it, is another object:
  * func_80232E60 calls its func_8022DB00 with a jal (text_objects.txt).
  * flags: -O3
- * differing words: us 58, eu 58, jp 58
+ * differing words: us 49, eu 49, jp 49
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does. An 8-byte stub (jr ra; nop) is an inlined
@@ -58,7 +58,7 @@
  * left is case 12/20's four stores before the loop: uopt keeps the ball's
  * address in v0 (a block-local CSE of the four istr) where the original
  * uses lui/%lo for each, with p[0], p[1], p[3] loaded in that order.
- * func_802320A8 (20, the size right): what's left is obj+0x58's slot
+ * func_802320A8 (11, the size right): what's left is obj+0x58's slot
  * (0x64, not 0x68), the default's delay slot, which holds the store to
  * t (the original has a nop), and colouring in the 0x20000 case. ugen
  * hands out f4..f18 least recently freed first (frees at a value's last
@@ -95,7 +95,8 @@
  *     x = b - n), which the original keeps in f16 against our f22, and
  *     x = sp80[1]; x = x - 90.0f is two statements: both move the
  *     colouring. Pass 7's b = sp80[0] (n = b) was right only for the
- *     wrong temporary queue; with the queue right, n = sp80[0].
+ *     wrong temporary queue; with the queue right, n = sp80[0]. The
+ *     0x30000 case's angle is c, not x (x there took f2 for sp80[1]'s f0).
  * uopt puts a commutative op's operands in its own order, not the
  * source's, but the form of an operand counts: func_8022E0AC's mul.s
  * takes the original's order with (*arg0).unk38 (not arg0->unk38) on the
@@ -854,14 +855,14 @@ void func_802320A8() {
             func_8022F808((f32 *) obj, sp134);
             func_8022FF58(sp134, sp110, sp80);
             obj->unk40->rot[1] = sp80[0];
-            x = sp80[1] - 180.0f;
-            if (x >= 360.0f) {
-                n = x - 360.0f;
+            c = sp80[1] - 180.0f;
+            if (c >= 360.0f) {
+                n = c - 360.0f;
             } else {
                 if (sp80[1] < 180.0f) {
-                    t = x + 360.0f;
+                    t = c + 360.0f;
                 } else {
-                    t = x;
+                    t = c;
                 }
                 n = t;
             }
