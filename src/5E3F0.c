@@ -1,15 +1,11 @@
 /*
- * NON_MATCHING: main_code's 5E3F0, complete: 155 functions (us
- * 0x80243BF0-0x802513D8) around a table of five 0xC8-byte entries,
- * D_800AEDF0[5] (an object in unk28, flag words in unk10 and unk68), the
- * current entry in D_802AC894. Not built into the ROM
- * (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * main_code's 5E3F0 (-O3): 155 functions (us 0x80243BF0-0x802513D8)
+ * around a table of five 0xC8-byte entries, D_800AEDF0[5] (an object in
+ * unk28, flag words in unk10 and unk68), the current entry in D_802AC894.
  *
- * A first draft: functions in the reverse of the ROM's order (IDO -O3
- * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
- * m2c's, with the fixes the -O3 build needs. The object is -O3: its
+ * Functions are in the reverse of the ROM's order (IDO -O3 emits last
+ * to first); 0x80243BF0-0x802457D8 by hand, most of the rest m2c's,
+ * with the fixes the -O3 build needs. The object is -O3: its
  * small getters and flag tests are inlined into every caller and still
  * emitted, and the inlined copies are what give the original its
  * registers:
@@ -41,8 +37,7 @@
  * that, `hit` gets no saved register, so it lives in its home and only
  * its tests share a0, as in the original.
  * The large m2c functions (8024891C, 8024D8C4, 802444B8, 8024A0DC) are
- * still m2c's shape. 802506B8's fill loop of the
- * ten 255-entry tables isn't unrolled in the original (this one is).
+ * still m2c's shape.
  * func_80244354 is never inlined in the original: a dead
  * `if (0) { func_80237664(); }` in it keeps it out of line here too.
  * D_802ACEC8 is `s32 [][3]`; 802455A8/802456FC/802457D8 pass its row to
@@ -76,6 +71,10 @@
  * internal pads; split after func_80244354 (the only out-of-line
  * function, 16-aligned end), the rest no longer inlines the getters
  * before it.
+ * .data (0x190) is defined below and placed in data_split.txt with the
+ * .rodata (0x870: 540 words, 403 of them jump-table entries). The .bss
+ * (D_802AC890..) stays extern: 87D80, 8A7A0 and 6BBE0 use some of it, and
+ * IDO would make these uninitialised globals common.
  */
 #include "common.h"
 
@@ -394,16 +393,6 @@ extern s32 D_800B11D8[];
 extern s32 D_800B15D4[];
 extern u8 D_800B15D8;
 extern s32 D_802A01B0;
-extern s32 D_802A0D88[];
-extern s32 D_802A0D94[];
-extern s32 D_802A0DA4[];
-extern s32 D_802A0DB4[];
-extern s32 D_802A0DC8[];
-extern s32 D_802A0DE8[];
-extern s32 D_802A0E08[];
-extern s32 D_802A0E18[];
-extern s32 D_802A0E38[];
-extern u8 D_802A0E58[];
 extern s32 D_802AC5D0;
 extern s32 D_802AC890;
 extern s32 D_802AC894;
@@ -622,6 +611,33 @@ void func_802512F8(void);
 void func_80251368(s32 arg0);
 s32 func_802513BC(void);
 void func_802513CC(void);
+
+/* .data (0x190, from the 16-byte boundary after 5E090's table D_802A0D50
+ * and its pad to 6BBE0's D_802A0EF0): ten floats nothing references, the
+ * id lists and angle tables the functions copy into locals, and the table
+ * of functions handed to func_80297D30. */
+f32 D_802A0D60[10] = {
+    6.0f, 12.0f, 18.0f, 24.0f, 30.0f, -8.0f, -16.0f, -24.0f, -32.0f, -40.0f,
+};
+s32 D_802A0D88[3] = { 0x1A2, 0x1A3, -1 };
+s32 D_802A0D94[4] = { 0x190, 0x191, 0x192, -1 };
+s32 D_802A0DA4[4] = { 0x18D, 0x18E, 0x18F, -1 };
+s32 D_802A0DB4[5] = { 0x193, 0x194, 0x195, 0x1F, -1 };
+s32 D_802A0DC8[8] = { 0x00, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0, 0xE0 };
+f32 D_802A0DE8[8] = { 180.0f, 135.0f, 90.0f, 45.0f, 0.0f, 315.0f, 270.0f, 225.0f };
+s32 D_802A0E08[4] = { 0, 0x200, 0x400, 0x800 };
+s32 D_802A0E18[8] = { 0x00, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0, 0xE0 };
+f32 D_802A0E38[8] = { 180.0f, 135.0f, 90.0f, 45.0f, 0.0f, 315.0f, 270.0f, 225.0f };
+void *D_802A0E58[] = {
+    func_80245CDC, func_802512C0, func_8024557C, func_802457D8, func_802456FC,
+    func_802455A8, func_80243DDC, func_80250338, func_802452E8, func_80245F74,
+    func_8024A824, func_802506B8, func_802511C4, func_80250E2C, func_802450DC,
+    func_80250DC8, func_80245DFC, func_802511EC, func_802443F4, func_80245280,
+    func_80243F50, func_802443A0, func_80244308, func_802442F8, func_8024585C,
+    func_802442D0, func_802442A8, func_80243F2C, func_802444B8, func_8025068C,
+    func_80243DEC, func_80243E60, func_802510C8, func_80243D7C, func_80243D54,
+    func_80243D2C, func_80243D20, func_802441AC,
+};
 
 void func_802513CC() {
     D_802AC890 = 0;

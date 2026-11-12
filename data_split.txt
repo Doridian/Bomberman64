@@ -125,6 +125,10 @@ main_code @jp 54E40 sizes=0,0x110,0x30
 main_code @us 54E40 rodata=0x802A2F00 bss=0x802AC7A0
 main_code @eu 54E40 rodata=0x802A2F00 bss=0x802AC790
 main_code @jp 54E40 rodata=0x802A2140 bss=0x802AB9D0
+main_code 5E3F0 0x190 0x870 0
+main_code @us 5E3F0 data=0x802A0D60 rodata=0x802A3020
+main_code @eu 5E3F0 data=0x802A0D60 rodata=0x802A3010
+main_code @jp 5E3F0 data=0x802A03C0 rodata=0x802A2250
 main_code 78CA0 0 0x10 0xF0
 main_code @us 78CA0 rodata=0x802A3A10 bss=0x802ACFE0
 main_code @eu 78CA0 rodata=0x802A3A00 bss=0x802ACFD0
