@@ -46,7 +46,9 @@
  * So the register-only locals were merged (same code, sp offsets aside)
  * down to 48 words, and the declarations are ordered so sp150, sp148,
  * sp134, sp12C, sp118, sp10C, sp108 and spE4 land on their slots. In
- * jp the original keeps var_s5 in memory at 0x140.
+ * jp the original keeps var_s5 in memory at 0x140: jp's source has no
+ * `var_s5 = 0;` before the 0x237 sound, so it is read uninitialised
+ * there (`#if !VERSION_JP` around the store).
  *
  * func_802530A8 (about 1500) has its exact size (0x1BE8) and frame
  * (136): its 24 declared words in the original's slot order, the
@@ -89,6 +91,21 @@
  * strength-reduces them, and unrolls a constant count by 4), lw for an
  * s32 table m2c read as u8, and one access path for repeated loads
  * through arg0->0x98.
+ *
+ * Pass 9 (us 4714 to 202): m2c's pointer temporaries written as the
+ * expressions they hold (temp_a0_3 gone everywhere at once: one site
+ * alone is worse), sp148[fp->C + 5] for the per-player word (index
+ * then base) and the side index in var_s3, the D_802A1008 loop
+ * indexing the global, m2c's goto shapes as `||`/`&&` conditions,
+ * `--fp->90 == 0`, temp_fs4 as its own variable (it took f24), and
+ * var_s2's 0 just before its loop. Left: the W360 inner temporaries
+ * (the original's spA0/spAC/spC4 slots, 160/172/196, ours
+ * 144/156/168; the front end shares slot 196 with the
+ * `spC4 = W360(fp->74 + 180)` statement, so the original's frame has
+ * fewer temporaries above it), a t-register rotation at the
+ * D_802A0F3C read (index computed before the base), sp12C's 1.0f
+ * countdown that wants its result in f16 (every form tried moves
+ * sp12C's colour to f14), and two store orders.
  *
  * jp lacks one height test in func_802553D4 (VERSION_JP); eu is us.
  */
