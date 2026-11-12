@@ -45,23 +45,20 @@ void func_8028A0E4(void) {
 }
 
 #ifdef NON_MATCHING
-/* 15 differing words (us 15, eu 15, jp 15): the original drops i and
-   ends the copy on the source pointer (D_802A1C2C + 9), and keeps the
-   destination in another register; taking it before the calls (the
-   permuter's) brought 19 down to 15 */
+/* 14 differing words (us 14, eu 14, jp 14): the original keeps the
+   destination's base in a register (sb t6,0(v0), the next in a0 = v0+1),
+   where the constant &D_8008E570.unk18[12] is folded into each store;
+   only a base from a call gives that shape (it costs a jal) */
 void func_8028A154(void) {
     s32 i;
     u8 *dst;
-    u8 *src;
 
-    src = (u8 *)&D_8008E570.unk18[12];
     func_8028A0E4();
     func_8028A0B4();
     func_8028A08C();
-    dst = src;
-    src = D_802A1C2C;
+    dst = (u8 *)&D_8008E570.unk18[12];
     for (i = 0; i < 9; i++) {
-        *dst++ = *src++;
+        *dst++ = D_802A1C2C[i];
     }
 }
 #else
