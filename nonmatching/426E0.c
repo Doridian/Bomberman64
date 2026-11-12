@@ -9,7 +9,7 @@
  * func_80228500 kept). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 124, eu 124, jp 124
+ * differing words: us 47, eu 47, jp 47
  *
  * The code is the same in every version.
  *
@@ -43,27 +43,30 @@
  *   the other cofactors row-major, then the zeros and 1.0f.
  *
  * Left:
- * - func_802289C0 (the draw loop, 89): obj is in s2 and
+ * - func_802289C0 (the draw loop, 12): obj is in s2 and
  *   func_802284F0's obj is kept in memory as in the original. In its
  *   texture loop, model is `unk4[i].unk0` and the then-branch index
- *   `unk4[i].unk4` (one slot address, the i*8 strength-reduced). The
- *   anim pointer is taken inside the else branch, after `g = gfx` (as1
- *   hoists it into the bnez delay slot): taken before the if, it
+ *   `unk4[i].unk4` (one slot address, the i*8 strength-reduced). An
+ *   animation's frames are 8-byte pairs (UnkTexFrame: picture,
+ *   duration), indexed with one sll by 3, not an s32 array at cur * 2.
+ *   The anim pointer is taken inside the else branch, after `g = gfx`
+ *   (as1 hoists it into the bnez delay slot): taken before the if, it
  *   interferes with the unk4C reload in the loop's first block, and
  *   the reload can't share v0 with it as in the original. The else
  *   branch reads anim->unk4 into `cur` and tests the threshold
  *   directly (slt at). `anim->unk4 == anim->unk0 - 1` keeps the two
- *   unk4 + 1 apart. An unused `pad` there and an `s32 pad[2]` in
- *   func_802284F8 give the 0x160 frame and put that obj's home at
- *   0xB0. Left: gfx is in a1 where the original has t1 and leaves a1
- *   unused through the loop (some range there that as1 deleted, as it
- *   deletes our `cur` copy?); cur takes v1, so g goes to t1 (v1 in the
- *   original); the t-register rotation after the loop; and the
- *   D_8029F840 store, which the original puts in func_80228500's jal
- *   delay slot (cc -S shows ugen emitting it after the argument setup
- *   there; ours emits it before). The ry ternary's `: 0` (an int) gives
- *   the original's mtc1 pair; the matrix stack is a frame struct's
- *   `mtx[]`, as in 41FD0.c.
+ *   unk4 + 1 apart. The unkC & 2 call goes through a function-pointer
+ *   local loaded after the D_802A5470 store (jalr v0, not t9). An
+ *   unused `pad` there and an `s32 pad[2]` in func_802284F8 give the
+ *   0x160 frame and put that obj's home at 0xB0. Left: gfx is in a1
+ *   where the original has t1 and leaves a1 unused through the loop
+ *   (some range there that as1 deleted?); g takes t1 (v1 in the
+ *   original), and with it the threshold load moves above the unk8
+ *   load; and the D_8029F840 store, which the original puts in
+ *   func_80228500's jal delay slot (cc -S shows ugen emitting it after
+ *   the argument setup there; ours emits it before). The ry ternary's
+ *   `: 0` (an int) gives the original's mtc1 pair; the matrix stack is
+ *   a frame struct's `mtx[]`, as in 41FD0.c.
  * - func_8022A328 (32): the free slot and the list position are
  *   function-scope statics (D_802A5474, D_802A5478: no other function
  *   uses them), which uopt keeps in registers and stores back at each
@@ -262,8 +265,13 @@ typedef struct {
 typedef struct {
     /* 0x00 */ s32 unk0;
     /* 0x04 */ s32 unk4;
+} UnkTexFrame; /* size 8 */
+
+typedef struct {
+    /* 0x00 */ s32 unk0;
+    /* 0x04 */ s32 unk4;
     /* 0x08 */ s32 unk8;
-    /* 0x0C */ s32 *unkC;
+    /* 0x0C */ UnkTexFrame *unkC;
 } UnkTexAnim; /* size 0x10 */
 
 typedef struct {
@@ -916,7 +924,7 @@ void func_802295F4(UnkObj *arg0, s32 *arg1, s32 arg2) {
 
     t = arg0->unk4C;
     t->unk8[arg2].unk0 = *arg1;
-    t->unk8[arg2].unkC = arg1 + 1;
+    t->unk8[arg2].unkC = (UnkTexFrame *)(arg1 + 1);
     t->unk8[arg2].unk4 = 0;
     t->unk8[arg2].unk8 = 0;
 }
@@ -1185,7 +1193,7 @@ static void func_802284F0(UnkObj *arg0, UnkGfx **arg1) {
             g = gfx;
             anim = &arg0->unk4C->unk8[i];
             cur = anim->unk4;
-            if (anim->unk8 >= anim->unkC[cur * 2 + 1]) {
+            if (anim->unk8 >= anim->unkC[cur].unk4) {
                 anim->unk8 = 0;
                 if (anim->unk4 == anim->unk0 - 1) {
                     anim->unk4 = 0;
@@ -1196,7 +1204,7 @@ static void func_802284F0(UnkObj *arg0, UnkGfx **arg1) {
                 anim->unk8 = anim->unk8 + 1;
             }
             gfx = g + 1;
-            gSPSegment(g, i + 3, (u8 *)model + model->unkC[anim->unkC[anim->unk4 * 2]].unk8);
+            gSPSegment(g, i + 3, (u8 *)model + model->unkC[anim->unkC[anim->unk4].unk0].unk8);
         }
     }
     *arg1 = gfx;
@@ -1250,6 +1258,7 @@ void func_802289C0(UnkObj *arg0, UnkGfx **arg1) {
     UnkGfx *gfx;
     s32 pad;
     s32 pushed;
+    void (*fn)(UnkObj *, UnkGfx **);
 
     if (arg0->unkC & 1) {
         return;
@@ -1268,7 +1277,8 @@ void func_802289C0(UnkObj *arg0, UnkGfx **arg1) {
     }
     if (arg0->unkC & 2) {
         D_802A5470 = -1;
-        ((void (*)(UnkObj *, UnkGfx **))arg0->unk3C)(arg0, &gfx);
+        fn = (void (*)(UnkObj *, UnkGfx **))arg0->unk3C;
+        fn(arg0, &gfx);
     } else if ((arg0->unkC & 4) && (arg0->unkC & 8)) {
         if (D_8029F84C == 0 || (arg0->unkC & 0x100)) {
             func_8022827C(arg0);
