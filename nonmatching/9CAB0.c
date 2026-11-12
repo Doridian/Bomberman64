@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 19, eu 19, jp 19
+ * differing words: us 17, eu 17, jp 17
  */
 #include "common.h"
 
@@ -1111,7 +1111,9 @@ static s32 func_8028556C(s32 arg0) {
     func_80285564();
     func_8028555C();
     func_80285554();
+#line 1116 /* fake: the load needs a later line than the 0x2000 test (as1 order) */
     p = D_800BB484;
+#line 1115
     if ((arg0 & 0x2000) ||
         (!(p->unk24 & 0x20) && ((arg0 & 0xF) == 0xF)) ||
         (!(p->unk24 & 0x10) && (arg0 & 0x60)) ||
