@@ -16,7 +16,7 @@
  * "NON_MATCHING drafts"). The prelude (types, externs, prototypes) is
  * 87D80.c's.
  * flags: -O3
- * differing words: us 79, eu 79, jp 79
+ * differing words: us 72, eu 72, jp 72
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file, and 8E730 calls 926A0 (src/926A0.c,
@@ -24,11 +24,13 @@
  * (if (0) func_802731A4(0, 0)): without it umerge inlines it into
  * func_8027655C (296 more words). The #line directives keep each
  * part's own line numbers (and .loc), as in the two drafts this
- * was. 97 of 101 match. Left: func_80270770 35 (flags and ok in v1/a0
+ * was. 98 of 101 match. Left: func_80270770 35 (flags and ok in v1/a0
  * where the original has a0/a1), func_802741D8 17 (slot kept in a0,
  * the 6C store's schedule), func_80277B54 17 (the list-init tail
- * stores in ugen order), func_802763DC 7 (an and-result in v1 where
- * the original has t0), func_80275120 3 (c.eq.s operand order).
+ * stores in ugen order), func_80275120 3 (c.eq.s operand order).
+ * func_802763DC masks in a second statement (`t = f(...); t &= 0x1C00;`)
+ * as func_802720C8 does: the and is then a ugen temporary (t0), not a
+ * uopt-coloured expression (v1).
  * func_8027655C tests the 4 flag with the getter in the condition,
  * `if (func_802712A8(&arg0->unk64, 4) || f8)`, after the if/else: uopt
  * moves the test's load and and into the three branch tails, with the
@@ -1295,8 +1297,9 @@ void func_802763DC(s16 *arg0) {
     ((Ent88 *) arg0)->xf->y = ((Ent88 *) arg0)->y;
     ((Ent88 *) arg0)->xf->z = ((Ent88 *) arg0)->z;
     func_80271448(((Ent88 *) arg0)->xf->x, ((Ent88 *) arg0)->xf->y, ((Ent88 *) arg0)->xf->z, &v.x, &v.y, &v.z);
-    t = func_8026D7D8((s32) v.x, (s32) v.y, (s32) v.z) & 0x1C00;
-    if (t) {
+    t = func_8026D7D8((s32) v.x, (s32) v.y, (s32) v.z);
+    t &= 0x1C00;
+    if (t != 0) {
         func_8027F858(((Ent88 *) arg0)->obj, t >> 10);
     }
     ((Ent88 *) arg0)->x = ((Ent88 *) arg0)->xf->x;
