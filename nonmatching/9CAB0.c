@@ -2305,7 +2305,6 @@ static s32 func_802829A4() {
 
 static s32 func_802829AC(Vec3f *arg1, s32 arg0) {
     s32 ret = 0;
-    UnkStruct_8023A840 *p;
     s32 kind;
 
     if ((arg0 == 2) || (arg0 == 3) || (arg0 == 5) || (arg0 == 4)) {
