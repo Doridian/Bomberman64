@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 534, eu 534, jp 5700
+ * differing words: us 533, eu 533, jp 5700
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -3201,18 +3201,16 @@ block_873:
                                                     if ((M2C_FIELD(var_fp, s32 *, 4) == 1) && (func_80254DC8(2, ((u8 *)var_fp + 0x20), 300.0f) >= 3)) {
                                                         var_s3 = 0xA;
                                                         var_s2 = 0;
-                                                        var_s0 = D_802A1008;
                                                         do {
                                                             sp10C[1] = 0.0f;
-                                                            sp10C[0] = M2C_FIELD(var_s0, f32 *, 0);
-                                                            sp10C[2] = M2C_FIELD(var_s0, f32 *, 8);
+                                                            sp10C[0] = ((f32 *)D_802A1008)[var_s2 * 3];
+                                                            sp10C[2] = ((f32 *)D_802A1008)[var_s2 * 3 + 2];
                                                             temp_v0_2 = func_80254DC8(2, sp10C, 300.0f);
                                                             if (temp_v0_2 < var_s3) {
                                                                 var_s3 = temp_v0_2;
                                                                 sp150 = var_s2;
                                                             }
                                                             var_s2 += 1;
-                                                            var_s0 += 0xC;
                                                         } while (var_s2 != 4);
                                                         M2C_FIELD(var_fp, f32 *, 0x74) = func_80251994((f32 *) ((u8 *)var_fp + 0x20), (sp150 * 0xC) + D_802A1008);
                                                     }
