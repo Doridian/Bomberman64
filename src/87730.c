@@ -63,11 +63,6 @@ void func_8026CF90(void) {
     }
 }
 
-#ifdef NON_MATCHING
-/* 15 differing words (us 15, eu 15, jp 15): &D_802AFC44 is in s3 where
-   the original has s2 (and the next saved register shifts); the fake read
-   of D_802A13E0 before the count is the permuter's, which brought 166
-   words (a 64-byte frame against 72) down to these 15 */
 void func_8026CFF4(s32 arg0, s32 arg1, s32 arg2) {
     s32 i;
 
@@ -106,10 +101,10 @@ void func_8026CFF4(s32 arg0, s32 arg1, s32 arg2) {
                 func_80239094();
             }
         }
-        if (D_802A13E0 == NULL) {
-        }
         if (--arg1 == 0) {
             break;
+        }
+        if (D_802A13E0 == NULL || D_802AFC44 == NULL) {
         }
         for (i = 0; i < 48; i++) {
             if (D_802AFC40 != 0) {
@@ -130,9 +125,6 @@ void func_8026CFF4(s32 arg0, s32 arg1, s32 arg2) {
     func_8023A864(1);
     func_80243698(0);
 }
-#else
-#pragma GLOBAL_ASM("asm/nonmatchings/87730/func_8026CFF4.s")
-#endif
 
 void func_8026D2A4(s32 arg0, s32 arg1) {
     func_8026CFF4(arg0, arg1, 0);
