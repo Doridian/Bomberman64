@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 41, eu 41, jp 41
+ * differing words: us 21, eu 21, jp 21
  */
 #include "common.h"
 
@@ -254,7 +254,7 @@ s32 func_80285658(UnkStruct_800BA900 *arg0, UnkStruct_800BB340 *arg1);
 static void func_80285A9C(UnkStruct_800BB340 *arg0);
 static void func_80285F8C(void);
 void func_802863B0(Vec3f *arg0);
-static void func_802863E0();
+static s32 func_802863E0();
 void func_80286400(s32 arg4, s32 arg0, s32 arg5, f32 arg1, f32 arg2, f32 arg3);
 UnkStruct_80288040 *func_802867E4(s32 arg0, f32 arg1, f32 arg2, f32 arg3);
 s32 func_80286CA8(s32 arg0, f32 arg1, f32 arg2, f32 arg3);
@@ -661,6 +661,10 @@ static void func_802867DC(UnkStruct_800BA900 *arg0) {
     }
 }
 
+static s32 func_802863E0() {
+    return 0;
+}
+
 UnkStruct_80288040 *func_802867E4(s32 arg0, f32 arg1, f32 arg2, f32 arg3) {
     UnkStruct_80288040 *ret;
     s32 slot;
@@ -669,8 +673,7 @@ UnkStruct_80288040 *func_802867E4(s32 arg0, f32 arg1, f32 arg2, f32 arg3) {
     UnkStruct_800BB340 *task;
     s32 pad[2];
 
-    func_802863E0();
-    special = 0;
+    special = func_802863E0();
     ret = NULL;
     slot = -1;
     if (0) { D_800BC520 = (s32) &slot; }
@@ -810,8 +813,6 @@ static void func_80286400(s32 arg4, s32 arg0, s32 arg5, f32 arg1, f32 arg2, f32 
     func_80285A84(a);
 }
 
-static void func_802863E0() {
-}
 
 void func_802863B0(Vec3f *arg0) {
     func_802829AC(arg0, 2);
