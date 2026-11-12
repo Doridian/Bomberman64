@@ -85,6 +85,16 @@
  *   fcmp counts a static with the function before it, so func_8023D0F8's
  *   player loop (index form, `pl = &PLAYERS[i]`, the type read twice
  *   rather than through a local) was counted under func_8023CD1C.
+ * - Left (6 words, all spill slots; uopt gives coloured expressions
+ *   slots greedily in bit order): func_80242270's &D_802A0764[i] IV gets
+ *   the second slot (sp+48) because `e = tf->entries` (tf+12, which
+ *   overlaps it) has the lower bit. A dead `if (D_802A0764[i]) {}` just
+ *   before the outer loop (i not yet set) matches, but no real source
+ *   found: x before e fixes the slot and swaps e/x's t2/t3. In
+ *   func_8023E1D8 the third handle loop takes sp+76 rather than 72:
+ *   all three loops as func_8023AB4C calls give the original's slots
+ *   but 24 bytes more frame (each inlined area is 12, 8-aligned), and
+ *   buf must stay at sp+164.
  */
 #include "common.h"
 
