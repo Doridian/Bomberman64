@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 21, eu 21, jp 21
+ * differing words: us 14, eu 14, jp 14
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -64,6 +64,10 @@
  * 8024C04C calls func_802443F4 and drops the result: the inlined
  * copy emits nothing, but its R2 store and its return value's range
  * take v0 and v1 in the entry block, so the entry pointer gets a1 there.
+ * In 8024C334 the unused func_80243D54 call in the first branch does
+ * the same for the first flag: its R2 store makes the flag's own R2
+ * store dead (a store to R2 that reaches a call keeps a range), so the
+ * flag gets v0.
  * One object: no jal goes forward, there's no nop padding between
  * functions, and .rodata and .data run in function order with no
  * internal pads; split after func_80244354 (the only out-of-line
@@ -2302,11 +2306,12 @@ s32 func_8024C4EC(UnkObj *obj, s32 arg1) {
 }
 
 void func_8024C334(s32 arg0, s32 arg1, u16 arg2, f32 *arg3) {
-    s32 pad[2];
+    s32 pad[6];
     UnkStruct_800AEDF0 *e = &D_800AEDF0[arg0];
-    s32 obj = func_802443F4(arg0);
+    s32 obj = e->unk28;
 
     if (!func_80244BA4(arg0, 2)) {
+        func_80243D54(arg0);
         if (!((UnkObj *)obj)->unk40 && !((UnkObj *)obj)->unk40) {} /* fake: keeps unk28 loaded (t0) */
         if (!(e->unk38 & 0x1000)) {
             func_802444B8(arg0, 8);
@@ -2322,7 +2327,6 @@ void func_8024C334(s32 arg0, s32 arg1, u16 arg2, f32 *arg3) {
             D_802AC900[arg0]--;
         }
     }
-    if (!e->unk28 && !e->unk28) {}
     if (D_802AC8D0[arg0] == 0 || D_802AC900[arg0] == 0) {
         func_80247A54(arg0, arg1, 30, 1);
     }
