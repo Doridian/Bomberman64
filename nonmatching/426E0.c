@@ -64,8 +64,15 @@
  *   so g takes t1 (v1 in the original); and the D_8029F840 store, which
  *   the original puts in func_80228500's jal delay slot (cc -S shows
  *   ugen emitting it after the argument setup there; ours emits it
- *   before). The ry ternary's `: 0` (an int) gives the original's mtc1
- *   pair; the matrix stack is a frame struct's `mtx[]`, as in 41FD0.c.
+ *   before). The original's join block does `addiu t1,t1,8` (gfx + 1,
+ *   not g + 1), and passing gfx by value (`gfx = func_802284F0(arg0,
+ *   gfx)`, returned) puts it in t1 with the original's priority; both
+ *   are worse for now (29 and 17 words), because cur still takes v1
+ *   and pushes model, count and g one register on. The original
+ *   needs cur (or the anim->unk4 load) in a1, which is what as1
+ *   leaves unused. The ry ternary's `: 0` (an int) gives the
+ *   original's mtc1 pair; the matrix stack is a frame struct's
+ *   `mtx[]`, as in 41FD0.c.
  * - func_8022A328 (30): the free slot and the list position are
  *   function-scope statics (D_802A5474, D_802A5478: no other function
  *   uses them), which uopt keeps in registers and stores back at each
@@ -91,7 +98,10 @@
  *   own; `if (!arg1) {}` first and `if (!arg0) {}` after the loop keep
  *   the arguments' registers busy, so dl takes a3, first t0 and i t1 as
  *   in the original. The loop bound 2 is left in a1 (a0 in the
- *   original). func_80229448 (1): the empty loop survives only
+ *   original: arg0 dead in the loop but live where dl is set). w
+ *   as arg1 again (after the loop) gives the original's a1 for it and
+ *   frees a0 for the bound, but a dead read of arg0 before the loop
+ *   splits the block and moves i to v0 (7 at best). func_80229448 (1): the empty loop survives only
  *   as `i * 4 != 16` (a plain `i < 4` is deleted, the multiply is what
  *   uopt strength-reduces after its dead-loop pass). A local counter
  *   takes v0 in the entry block and pushes the IV to v1; a third
