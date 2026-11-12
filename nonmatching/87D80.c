@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 17, eu 17, jp 17
+ * differing words: us 0, eu 0, jp 0
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -28,9 +28,12 @@
  * In func_8026DCAC uopt hoists iy out of the loop; a dead
  * `if (iy && iy) {}` adds two loop uses, so iy outranks the layer
  * pointer (tie, lower bit) and takes a0 as in the original.
- * 42 of 43 match. Left: func_8026FC08 17 (the inner loop's schedule
- * around j % 8). Its `src = p = D_802AFC6C = ...`
- * chain puts &D_802AFC6C in v1, as the original does.
+ * All 43 match. In func_8026FC08 the `src = p = D_802AFC6C = ...`
+ * chain puts &D_802AFC6C in v1, as the original does. Its inner loop
+ * computes the three coordinates into x, y and z before `p += 2` and
+ * passes `(p[-2] << 8) + p[-1]` (uopt reverses the sum, so the source
+ * has the shift first): ugen then emits the cell's two loads last, and
+ * as1 schedules them, j % 8 and the increment as the original does.
  */
 #include "common.h"
 
@@ -432,6 +435,9 @@ void func_8026FC08(s32 arg0) {
     s32 cnt;
     s32 v;
     f32 f;
+    s32 x;
+    s32 y;
+    s32 z;
 
     D_802AFC50 = arg0;
     D_800B15D8->unk4 = 0;
@@ -478,8 +484,11 @@ void func_8026FC08(s32 arg0) {
             D_800B15D8[n].unk12[i].unk0 = *p++;
             D_800B15D8[n].unk12[i].unk1 = *p++;
             for (j = 0; j < 64; j++) {
+                x = D_800B15D8[n].unk12[i].unk0 * 8 + D_800B15D8->unk1 + j % 8;
+                y = D_800B15D8->unk2 + n;
+                z = D_800B15D8[n].unk12[i].unk1 * 8 + D_800B15D8->unk3 + (j >> 3);
                 p += 2;
-                func_8026D620(D_800B15D8[n].unk12[i].unk0 * 8 + D_800B15D8->unk1 + j % 8, D_800B15D8->unk2 + n, D_800B15D8[n].unk12[i].unk1 * 8 + D_800B15D8->unk3 + (j >> 3), p[-1] + (p[-2] << 8));
+                func_8026D620(x, y, z, (p[-2] << 8) + p[-1]);
             }
         }
     }
