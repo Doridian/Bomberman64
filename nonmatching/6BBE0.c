@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 770, eu 770, jp 5701
+ * differing words: us 647, eu 647, jp 5700
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -2614,9 +2614,8 @@ loop_565:
                         func_802452E8(1);
                         func_8024585C(0);
                         spC4 = func_80251994((f32 *) ((u8 *)var_fp + 0x20), (f32 *) ((u8 *)var_fp + 0x2C));
-                        temp_fv0 = (f32) func_802519B4(spC4) * 45.0f;
-                        sp12C = temp_fv0;
-                        M2C_FIELD(M2C_FIELD(M2C_FIELD(var_fp, f32 **, 0x18), void **, 0x40), f32 *, 0x20) = temp_fv0;
+                        sp12C = (f32) func_802519B4(spC4) * 45.0f;
+                        M2C_FIELD(M2C_FIELD(M2C_FIELD(var_fp, f32 **, 0x18), void **, 0x40), f32 *, 0x20) = sp12C;
                         M2C_FIELD(var_fp, f32 *, 0x74) = (f32) M2C_FIELD(M2C_FIELD(M2C_FIELD(var_fp, f32 **, 0x18), void **, 0x40), f32 *, 0x20);
                         func_8025500C(0x2AA, M2C_FIELD(var_fp, u8 **, 0x18));
                         func_80229E38(M2C_FIELD(M2C_FIELD(var_fp, f32 **, 0x18), void **, 0x40), 0x17, 0);
@@ -2796,8 +2795,9 @@ loop_658:
                             func_80239094();
                             func_8024368C((s32) func_8025D008);
                             temp_s1 = func_80231274(-1, 0x40, 0x20, NULL);
+                            temp_fv0 = M2C_FIELD(M2C_FIELD(M2C_FIELD(var_fp, f32 **, 0x18), void **, 0x40), f32 *, 0x14) + 80.0f;
                             temp_v0_6 = M2C_FIELD(temp_s1, void **, 0x40);
-                            M2C_FIELD(temp_v0_6, f32 *, 0x14) = (f32) (M2C_FIELD(M2C_FIELD(M2C_FIELD(var_fp, f32 **, 0x18), void **, 0x40), f32 *, 0x14) + 80.0f);
+                            M2C_FIELD(temp_v0_6, f32 *, 0x14) = temp_fv0;
                             M2C_FIELD(temp_v0_6, f32 *, 0x10) = temp_fs3;
                             M2C_FIELD(temp_v0_6, f32 *, 0x18) = temp_fs2;
                             M2C_FIELD(M2C_FIELD(temp_s1, void **, 0x40), f32 *, 0x2C) = (f32) (((f32) var_s2 * 50.0f) / 160.0f);
