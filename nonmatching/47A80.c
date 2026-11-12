@@ -3,19 +3,21 @@
  * 0x8022D280-0x8022DB00) that build a model's display list from its joint
  * tree. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 67, eu 67, jp 67
+ * differing words: us 28, eu 28, jp 28
  *
  * fcmp counts a static with the global before it. func_8022DAB0 matches.
  * func_8022D280 + func_8022D414: 4 words, at func_8022D414's start. The
  * original burns one ugen temp (t6) before the first joint load, so idx*3
  * lands in t8 (ours t6), and its call-argument address is
- * addu v0,t0,v1 (ours v1,t0). func_8022D58C + func_8022D980: 63 words, all
- * t registers rotated from case 4's branch on (ugen's free list is in a
- * different state after case 6's GBI stores). The original's ugen loads
- * D_802A2D50[1] before [0] for the first word and builds the [0] half of
- * each word first; the form below (g advanced after both stores) is the
- * closest found. Reordering the | chains, the stores, _SHIFTL forms and
- * locals for the two elements don't recover it.
+ * addu v0,t0,v1 (ours v1,t0). func_8022D58C + func_8022D980: 24 words,
+ * all in case 6's SetTileSize. The (u16) casts on the w1 terms are real:
+ * ugen gives each an `and 0xFFFF` (one more temp) that as1 deletes before
+ * the `and 0xFFF`, and with them ugen's temp queue leaves case 6 in the
+ * original's state, so everything after it matches. Still different: the
+ * original's ugen allocates g + 1 (t4) right after loading g and the
+ * D_802A2D50[1] load (t5) before [0] (t6), and frees g + 1's register
+ * only after the w0 store (a FIFO model of ugen's temps,
+ * scratch/47A80/p2/fifo8.py, finds no other order).
  */
 #include "common.h"
 
@@ -170,8 +172,8 @@ void func_8022D58C(Gfx **gp, s32 base, s32 idx) {
             {
                 Gfx *_g = g;
 
-                _g->w0 = (((D_802A2D50[0] & 0xFFF) << 12) | 0xF2000000) | (D_802A2D50[1] & 0xFFF);
-                _g->w1 = ((D_802A2D50[1] + 0x7C) & 0xFFF) | (((D_802A2D50[0] + 0x7C) & 0xFFF) << 12);
+                _g->w0 = (0xF2000000 | ((D_802A2D50[0] & 0xFFF) << 12)) | (D_802A2D50[1] & 0xFFF);
+                _g->w1 = (((u16) (D_802A2D50[0] + 0x7C) & 0xFFF) << 12) | ((u16) (D_802A2D50[1] + 0x7C) & 0xFFF);
                 g = _g + 1;
             }
             break;
