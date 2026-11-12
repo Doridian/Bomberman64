@@ -16,7 +16,7 @@
  * "NON_MATCHING drafts"). The prelude (types, externs, prototypes) is
  * 87D80.c's.
  * flags: -O3
- * differing words: us 50, eu 50, jp 50
+ * differing words: us 15, eu 15, jp 15
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file, and 8E730 calls 926A0 (src/926A0.c,
@@ -24,13 +24,18 @@
  * (if (0) func_802731A4(0, 0)): without it umerge inlines it into
  * func_8027655C (296 more words). The #line directives keep each
  * part's own line numbers (and .loc), as in the two drafts this
- * was. 100 of 101 match. Left: func_80270770 35 (flags and ok in v1/a0
- * where the original has a0/a1), func_80277B54 15 (the list-init tail: the
- * original keeps ENT_4C0 and &D_802AFE1C in ugen temporaries t0/t1, set
- * at first use, and -1/&D_802AFDE0 in a1/a0; ours colours all four;
+ * was. 100 of 101 match. Left: func_80277B54 15 (the list-init tail:
+ * the original keeps ENT_4C0 and &D_802AFE1C in ugen temporaries t0/t1,
+ * set at first use, and -1/&D_802AFDE0 in a1/a0; ours colours all four;
  * ENTS[0].xf = -1 as an int store moves that -1 into the loop's a1; a
  * dead `if (i) {}` after ENT_4C0's stores keeps i in v0 there, so the
- * rest is set at first use). func_80275120 holds sp28.f[0] and [2] in arg0 for their tests
+ * rest is set at first use).
+ * func_80270770 stores the flags with a second read of the slot
+ * (`flags = SLOTS[arg0].unk8; c->flags = SLOTS[arg0].unk8;`, where
+ * func_80270C24 stores its local): flags then goes to a0 and ok to a1 as
+ * in the original (with `c->flags = flags` they were v1/a0), and unk2C
+ * is stored before unk30, as in func_80270C24.
+ * func_80275120 holds sp28.f[0] and [2] in arg0 for their tests
  * (`arg0 = sp28.f[0]; if (arg0 != 0.0f)`): uopt keeps a variable as the
  * compare's first operand, where `0.0f != x` and `x != 0.0f` both put
  * the constant first (c.eq.s $f0,$f8). The same in the middle test
@@ -3243,13 +3248,13 @@ next:
     c->unk28 = 0;
     c->unk16 = 0;
     c->unk24 = 0.0f;
-    c->unk30 = 0;
     c->unk2C = 10000.0f;
+    c->unk30 = 0;
     ok = 0;
     c->unk34 = obj->unk40->x;
     c->unk38 = obj->unk40->z;
     flags = SLOTS[arg0].unk8;
-    c->flags = flags;
+    c->flags = SLOTS[arg0].unk8;
     if (flags & 2) {
         ok = func_80270438((u8 *) obj, (s32 *) c);
     } else if (flags & 8) {
