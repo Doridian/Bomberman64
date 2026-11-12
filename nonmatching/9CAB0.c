@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 17, eu 17, jp 17
+ * differing words: us 12, eu 12, jp 12
  */
 #include "common.h"
 
@@ -285,7 +285,7 @@ UnkStruct_802B0260 *func_80287DC0(s32 arg0);
 void func_80287FD4(void);
 void func_80282338();
 static void func_80282590();
-void func_802829A4();
+static s32 func_802829A4();
 static s32 func_80282AD8(UnkStruct_80288040 *act);
 static s32 func_80282AE0(UnkStruct_80288040 *act);
 static s32 func_80282AE8(UnkStruct_80288040 *act);
@@ -2295,7 +2295,12 @@ static s32 func_80282AF0(UnkStruct_800BB340 *arg0, s32 arg1) {
 static void func_80282AD0() {
 }
 
-static void func_802829A4() {
+
+static s32 func_802829A4() {
+    UnkStruct_8023A840 *p;
+
+    p = func_8023A840();
+    return D_802A1AF0[p->unk4][p->unk8];
 }
 
 static s32 func_802829AC(Vec3f *arg1, s32 arg0) {
@@ -2303,7 +2308,6 @@ static s32 func_802829AC(Vec3f *arg1, s32 arg0) {
     UnkStruct_8023A840 *p;
     s32 kind;
 
-    func_802829A4();
     if ((arg0 == 2) || (arg0 == 3) || (arg0 == 5) || (arg0 == 4)) {
         if (D_800BC520 < 99) {
             D_800BC520++;
@@ -2312,8 +2316,7 @@ static s32 func_802829AC(Vec3f *arg1, s32 arg0) {
                 case 30:
                 case 60:
                 case 90:
-                    p = func_8023A840();
-                    kind = D_802A1AF0[p->unk4][p->unk8];
+                    kind = func_802829A4();
                     if (kind != -1) {
                         ret = 1;
                         func_8027B7C4(kind, arg1->x, arg1->y, arg1->z);
