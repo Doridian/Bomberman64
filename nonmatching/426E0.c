@@ -9,7 +9,7 @@
  * func_80228500 kept). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 11, eu 11, jp 11
+ * differing words: us 7, eu 7, jp 7
  *
  * The code is the same in every version.
  *
@@ -43,7 +43,7 @@
  *   the other cofactors row-major, then the zeros and 1.0f.
  *
  * Left:
- * - func_802289C0 (the draw loop, 8): obj is in s2 and func_802284F0's
+ * - func_802289C0 (the draw loop, 4): obj is in s2 and func_802284F0's
  *   obj is kept in memory as in the original. In its texture loop, model
  *   is `unk4[i].unk0` and the then-branch index `unk4[i].unk4` (one slot
  *   address, the i*8 strength-reduced). An animation's frames are 8-byte
@@ -66,16 +66,17 @@
  *   the D_8029F840 store goes into func_80228500's jal delay slot as in
  *   the original. func_80228500 takes (obj, &gfx), so the IPA argument
  *   moves come out a1, then t0.
- *   Left: gfx is in a1 where the original has t1 and leaves a1 unused
- *   through the loop (some range there that as1 deleted?); cur takes v1,
- *   so g takes t1 (v1 in the original). The original's join block does
- *   `addiu t1,t1,8` (gfx + 1,
- *   not g + 1), and passing gfx by value (`gfx = func_802284F0(arg0,
- *   gfx)`, returned) puts it in t1 with the original's priority; both
- *   are worse for now (29 and 17 words), because cur still takes v1
- *   and pushes model, count and g one register on. The original
- *   needs cur (or the anim->unk4 load) in a1, which is what as1
- *   leaves unused. The ry ternary's `: 0` (an int) gives the
+ *   The else branch copies gfx into g first and advances gfx itself
+ *   (`gfx++` before the segment through g: the original's `addiu
+ *   t1,t1,8`), and `if (g && g && g) {}` after the segment raises g's
+ *   priority to cur's (save 20 at n = 3), so g is coloured first, takes
+ *   v1 and pushes cur, which is coloured but never used (its uses are
+ *   the anim->unk4 load's register), out of v1; gfx then takes t1.
+ *   Left (4): the anim->unk4 load is in a1 and cur's unused register is
+ *   a0, the other way round in the original: the load (save 20) must be
+ *   coloured before cur (save 20, lower bit). One more use of the load
+ *   (a dead read of anim->unk4) puts it ahead of g as well (v1).
+ *   The ry ternary's `: 0` (an int) gives the
  *   original's mtc1 pair; the matrix stack is a frame struct's
  *   `mtx[]`, as in 41FD0.c.
  * - func_8022A328 (matches): the free slot and the list position are
@@ -1199,8 +1200,9 @@ static void func_802284F0(UnkObj *arg0, UnkGfx **arg1) {
             } else {
                 anim->unk8 = count + 1;
             }
-            gfx = g + 1;
+            gfx++;
             gSPSegment(g, i + 3, (u8 *)model + model->unkC[anim->unkC[anim->unk4].unk0].unk8);
+            if (g && g && g) {}
         }
     }
     *arg1 = gfx;
