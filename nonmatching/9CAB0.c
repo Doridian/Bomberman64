@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 51, eu 51, jp 51
+ * differing words: us 49, eu 49, jp 49
  */
 #include "common.h"
 
@@ -594,6 +594,7 @@ void func_80286E60(void) {
 }
 
 s32 func_80286CA8(s32 arg0, f32 arg1, f32 arg2, f32 arg3) {
+    s32 pad[2]; /* fake: 8 bytes of frame above t, as in func_802863E8 */
     s32 t;
     UnkStruct_800BB340 *task;
 
@@ -607,13 +608,10 @@ s32 func_80286CA8(s32 arg0, f32 arg1, f32 arg2, f32 arg3) {
 }
 
 static s32 func_802863F8(void) {
-    s32 pad[1];
-    UnkStruct_800BA900 *s;
     s32 i;
 
-    s = D_800BA900;
-    for (i = 0; i < 16; i++, s++) {
-        if (s->unk0 == 0) {
+    for (i = 0; i < 16; i++) {
+        if (D_800BA900[i].unk0 == 0) {
             return i;
         }
     }
@@ -719,9 +717,11 @@ UnkStruct_80288040 *func_802867E4(s32 arg0, f32 arg1, f32 arg2, f32 arg3) {
 }
 
 static s32 func_802863E8(s32 arg0) {
+    s32 pad[2]; /* fake: frame above t */
     s32 t;
     UnkStruct_800BB340 *task;
-    s32 pad[2];
+    s32 pad2[2]; /* fake: frame below task (func_802867E4's first inlined
+                  * func_802867DC is really 8 bytes higher, its others not) */
 
     t = func_802867D4();
     if (t != -1) {
