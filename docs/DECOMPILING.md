@@ -231,7 +231,7 @@ matches, drop the `#ifdef` and the asm.
     home slot and reloads it (`sw $a2, 8($sp)` ... `lwc1`). A function
     taking three floats shows it at once (4DE50's func_80234500, 4ED50's
     func_802346C8).
-  Seen so far: boot_code's 10D0, 13F0 and 14B0 (the scheduler), 404C0, 40FB0, 412F0, 41FD0, 46300, 4DE50, 4E030 (4DE50's second half:
+  Seen so far: boot_code's 10D0, 13F0 and 14B0 (the scheduler), 404C0, 40FB0, 412F0, 41FD0, 426E0, 46300, 4DE50, 4E030 (4DE50's second half:
   its wrappers call 4DE50's compares with a `jal`, which -O3 would inline
   in one file), 4ED50, 52270 (jp's func_8023876C has no TV-type
   switch: `#if VERSION_JP`), 530C0, 53D70, 78CA0, 78F60, 80580, 85A10, 86680,
@@ -1133,7 +1133,9 @@ constants (995C0, 54BE0, 87D80: `.rodata` only), or whose `.data`/`.bss` is all
 their own (53D70, 530C0, 412F0, AFBF0: all three sections, jp's .data
 its own size; 80580: .data and .rodata, since a function's `static`
 counter puts its .data in the C; 46300: all three, since
-func_8022C8B8's `static`s put its .bss in the C); everything else they
+func_8022C8B8's `static`s put its .bss in the C; 426E0: .rodata and
+.bss, since func_8022A328's and func_8022A6C4's `static`s do the same,
+its .data staying asm); everything else they
 use stays `extern`.
 Build the object once (the link fails, the `.o` is there), run `--place`
 for each version with `--ref build/us/src/<object>.c.o`, add the lines,

@@ -1,17 +1,22 @@
 /*
- * NON_MATCHING: main_code's 426E0, complete: the object pool D_800A0D00
- * (0xA0 objects linked by priority), its draw loop (matrices, render
- * modes, texture segments and scrolls, fog), the per-object animation and
- * texture slots, and object creation from a model file. Every function
- * is in C, in reverse ROM order (IDO -O3 emits them in ROM order; the
- * statics func_802280EC, func_802284F0, func_802284F8, func_802289B8 and
+ * main_code's 426E0 (-O3): the object pool D_800A0D00 (0xA0 objects
+ * linked by priority), its draw loop (matrices, render modes, texture
+ * segments and scrolls, fog), the per-object animation and texture
+ * slots, and object creation from a model file. The functions are in
+ * reverse ROM order (IDO -O3 emits them in ROM order; the statics
+ * func_802280EC, func_802284F0, func_802284F8, func_802289B8 and
  * func_8022A850 inlined, with their stubs; func_8022827C and
  * func_80228500 kept), except func_802289B8, defined after its caller
- * (below). It matches in every version (.text, and the .rodata's 0.001f
- * and pad); it stays here until it is moved to src/ with its data.
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * (below), and func_8022A328, defined before its caller func_8022A6C4
+ * (the emission is the same either way, but IDO lays the .bss out in
+ * the order it first sees each variable, and func_8022A328's statics
+ * D_802A5474/78 come before func_8022A6C4's D_802A547C..8C).
+ *
+ * Data: the statics put the .bss in the C, so the file defines all of
+ * it (0x40: D_802A5460..70, the statics, and D_802A5490, defined after
+ * them, above its first user func_802290CC, then the pad to 16). Its
+ * .rodata is the 0.001f at D_802A2D20 and pad. Both are placed in
+ * data_split.txt; its .data (up to D_8029F858's table) stays asm, extern.
  *
  * The code is the same in every version.
  *
@@ -450,11 +455,11 @@ typedef struct {
 } UnkFrame; /* size 0x27000 */
 
 extern UnkFrame *D_802A538C;
-extern s32 D_802A5460;
-extern s32 D_802A5464;
-extern f32 D_802A5468;
-extern f32 D_802A546C;
-extern s32 D_802A5470;
+s32 D_802A5460;
+s32 D_802A5464;
+f32 D_802A5468;
+f32 D_802A546C;
+s32 D_802A5470;
 extern s32 D_802A5490;
 extern s32 D_802AC5C8;
 
@@ -541,51 +546,6 @@ void func_8022A858(void) {
     }
 }
 
-void *func_8022A6C4(void *arg0, s32 arg1) {
-    static UnkModel *D_802A547C;
-    static UnkChunk *D_802A5480;
-    static u32 D_802A5484;
-    static u32 D_802A5488;
-    static s32 D_802A548C;
-    s32 kind;
-
-    if (arg0) {}
-    D_802A548C = 0;
-    D_802A5488 = 0;
-    kind = -1;
-    if (arg0 != (void *)-1) {
-        D_802A547C = arg0;
-        D_802A5480 = D_802A547C->unkC;
-        for (D_802A5484 = 0; D_802A5484 < D_802A547C->unk4; D_802A5484++) {
-            if (D_802A5480[D_802A5484].unk0 < 0x10) {
-                D_802A5488 = D_802A5484;
-                kind = 2;
-                break;
-            }
-        }
-        for (D_802A5484 = 0; D_802A5484 < D_802A547C->unk4; D_802A5484++) {
-            if (D_802A5480[D_802A5484].unk0 == 1) {
-                D_802A5488 = D_802A5484;
-                kind = 2;
-                break;
-            }
-        }
-        for (D_802A5484 = 0; D_802A5484 < D_802A547C->unk4; D_802A5484++) {
-            if (D_802A5480[D_802A5484].unk0 == 3) {
-                kind = 3;
-                break;
-            }
-        }
-        if (kind == -1) {
-            if (D_802A5480->unk0 >= 0x10) {
-                kind = 4;
-            }
-        }
-    }
-    D_8029F850 = kind;
-    return func_8022A328(arg0, arg1, kind | 0, D_802A5488, 0);
-}
-
 UnkObj *func_8022A328(UnkModel *arg0, s32 arg1, s32 arg2, u32 arg3, s32 arg4) {
     static s32 D_802A5474;
     static s32 D_802A5478;
@@ -660,6 +620,51 @@ UnkObj *func_8022A328(UnkModel *arg0, s32 arg1, s32 arg2, u32 arg3, s32 arg4) {
     D_800A0D00[D_802A5474].unk4C = NULL;
     D_802A5460++;
     return &D_800A0D00[D_802A5474];
+}
+
+void *func_8022A6C4(void *arg0, s32 arg1) {
+    static UnkModel *D_802A547C;
+    static UnkChunk *D_802A5480;
+    static u32 D_802A5484;
+    static u32 D_802A5488;
+    static s32 D_802A548C;
+    s32 kind;
+
+    if (arg0) {}
+    D_802A548C = 0;
+    D_802A5488 = 0;
+    kind = -1;
+    if (arg0 != (void *)-1) {
+        D_802A547C = arg0;
+        D_802A5480 = D_802A547C->unkC;
+        for (D_802A5484 = 0; D_802A5484 < D_802A547C->unk4; D_802A5484++) {
+            if (D_802A5480[D_802A5484].unk0 < 0x10) {
+                D_802A5488 = D_802A5484;
+                kind = 2;
+                break;
+            }
+        }
+        for (D_802A5484 = 0; D_802A5484 < D_802A547C->unk4; D_802A5484++) {
+            if (D_802A5480[D_802A5484].unk0 == 1) {
+                D_802A5488 = D_802A5484;
+                kind = 2;
+                break;
+            }
+        }
+        for (D_802A5484 = 0; D_802A5484 < D_802A547C->unk4; D_802A5484++) {
+            if (D_802A5480[D_802A5484].unk0 == 3) {
+                kind = 3;
+                break;
+            }
+        }
+        if (kind == -1) {
+            if (D_802A5480->unk0 >= 0x10) {
+                kind = 4;
+            }
+        }
+    }
+    D_8029F850 = kind;
+    return func_8022A328(arg0, arg1, kind | 0, D_802A5488, 0);
 }
 
 void func_8022A1E8(void *arg0) {
@@ -1027,6 +1032,8 @@ void func_8022928C(f32 arg0[4][4], f32 arg1[4][4]) {
 void func_80229280(s32 arg0) {
     D_8029F84C = arg0;
 }
+
+s32 D_802A5490;
 
 void func_802290CC(void) {
     s32 i;

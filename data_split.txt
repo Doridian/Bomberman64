@@ -81,6 +81,10 @@ main_code 412F0 0 0 0xA0
 main_code @us 412F0 bss=0x802A5330
 main_code @eu 412F0 bss=0x802A5320
 main_code @jp 412F0 bss=0x802A4560
+main_code 426E0 0 0x10 0x40
+main_code @us 426E0 rodata=0x802A2D20 bss=0x802A5460
+main_code @eu 426E0 rodata=0x802A2D20 bss=0x802A5450
+main_code @jp 426E0 rodata=0x802A1F60 bss=0x802A4690
 main_code 45170 0x10 0 0x30
 main_code @us 45170 data=0x8029F880 bss=0x802A54A0
 main_code @eu 45170 data=0x8029F880 bss=0x802A5490
