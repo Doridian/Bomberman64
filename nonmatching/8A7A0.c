@@ -16,7 +16,7 @@
  * "NON_MATCHING drafts"). The prelude (types, externs, prototypes) is
  * 87D80.c's.
  * flags: -O3
- * differing words: us 8, eu 8, jp 8
+ * differing words: us 0, eu 0, jp 0
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file, and 8E730 calls 926A0 (src/926A0.c,
@@ -24,16 +24,15 @@
  * (if (0) func_802731A4(0, 0)): without it umerge inlines it into
  * func_8027655C (296 more words). The #line directives keep each
  * part's own line numbers (and .loc), as in the two drafts this
- * was. 100 of 101 match. Left: func_80277B54 8 (the list-init tail's
- * schedule: &D_802AFDE0 (a0) and -1 (a1) are set at the top of the
- * block, where the original sets -1 after ENT_4C0's lui and
- * &D_802AFDE0 after ENTS[0]'s three stores). Its registers match: the
- * new list nodes are written through a pointer read back from the link
- * just stored (`e = ENTS[0].next; e->next = NULL; ...`, `n =
- * D_802AFDE0.next`). uopt forwards the stored address, and a forwarded
- * use doesn't count for the address constant's colouring, so ENT_4C0
- * and &D_802AFE1C have one use each, are not coloured, and ugen keeps
- * each in the temporary it loads it into (t0, t1), as the original does.
+ * was. All 101 match in us, eu and jp, and the .rodata (jump tables
+ * included) is the original's in all three.
+ * func_80277B54's tail writes the new list nodes through a pointer read
+ * back from the link just stored (`e = ENTS[0].next; e->next = NULL;
+ * ...`, `n = D_802AFDE0.next`). uopt forwards the stored address, and a
+ * forwarded use doesn't count for the address constant's colouring, so
+ * ENT_4C0 and &D_802AFE1C have one use each, are not coloured, and ugen
+ * keeps each in the temporary it loads it into (t0, t1), as the
+ * original does (as1 drops the reloads).
  * func_80270770 stores the flags with a second read of the slot
  * (`flags = SLOTS[arg0].unk8; c->flags = SLOTS[arg0].unk8;`, where
  * func_80270C24 stores its local): the load, used twice, becomes a uopt
@@ -64,10 +63,17 @@
  * getter's result in a0 as in the original (a variable f4 set in each
  * branch put it in v0). The two getter calls fewer free 16 bytes of
  * frame above the DCAC buffer: pad[20] takes them back.
- * func_80277B54's tail is under an in-body `#line 2 "tail.c"`: its
- * .file ends the as1 block, so the epilogue stays unscheduled as in
- * the original. The in-body #line emits a .file only because tail.c
- * also holds a function definition (func_80277CC0 is defined under it).
+ * func_80277B54's last loop and tail are under an in-body
+ * `#line 1 "tail.c"`, switched back to 8E730.c before the closing
+ * brace: that .file ends the as1 block, so the epilogue stays
+ * unscheduled as in the original. The switch goes before the loop, not
+ * after it: the tail's coloured constants (&D_802AFDE0 in a0, -1 in a1)
+ * are set at the tail block's head with the loop's last .loc, which as1
+ * then reads as tail.c line 3, below the tail's own lines, and orders
+ * them as the original does (with the .file between the loop and the
+ * tail they sat in an as1 block of their own, ahead of the tail). The
+ * in-body #line emits a .file only because tail.c also holds a function
+ * definition (func_80277CC0 is defined under it).
  * func_80276D68 matches with a dead `if (f) {}` in its first else
  * (it puts the 0x20 flag in the original's register) and a second
  * local `g` for the 0x80 test's load.
@@ -808,10 +814,10 @@ void func_80277B54() {
     for (i = 0, e = ENTS; i < 22; i++, e++) {
         e->xf = NULL;
     }
+#line 1 "tail.c"
     for (i = 0; i < 6; i++) {
         IDS[i][0] = -1;
     }
-#line 2 "tail.c"
     ENTS[0].next = ENT_4C0;
     e = ENTS[0].next;
     ENTS[0].prev = NULL;
