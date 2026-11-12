@@ -61,12 +61,8 @@
  * differently.
  *
  * The other procedures that differ: func_80251EE0 (ret should live in
- * $2; the forms that do it change the size), func_80252174 (n in $3
- * across an IPA call), func_802515D8 (the new history pointer is kept
- * in $5 and not folded into the stores), and the argument order of
- * func_80251C48 calls (func_80255224, func_8025D544, func_80252174,
- * func_8025C840, func_802529A4): the original sets $5 first and $4 in
- * the delay slot, and nothing in the source moved it yet.
+ * $2; the forms that do it change the size), func_80252174 (see pass
+ * 11) and func_8025CEA0 (one add.s operand order).
  *
  * What moved the count: exact sizes first (one block per original
  * global, so a short static misaligns everything after it; for
@@ -126,6 +122,25 @@
  * case-2 store order at 0x6750 and `li a0,2` at 0x6CE4; in
  * func_802530A8, func_80251EE0's result register and func_80252174's
  * s1/v1 and div.s registers.
+ *
+ * Pass 11 (123 to 82): func_802515D8 re-reads the history index after
+ * the wrap (no idx local); func_80251994's out vector is f32[3];
+ * func_80251B08 indexes D_802A0EF0 directly; func_8025C590 reads
+ * temp_v0->unk28 without m2c's copies. In func_802553D4: case 2's
+ * stores in the order 7C, 68, 70, |= 0x100, 8 = 4, 4 = 0, 94++ (as1
+ * then schedules the loads like the original); 90.0f (not int 90) in
+ * the first W360 term; `sp12C -= 1.0f` at all three countdowns once the
+ * two `->28 = ->2C = ->30` copies are assignment chains (temp_fv0 then
+ * keeps the original's priority, so f2); W360(sp12C - 90.0f) is the
+ * same code as m2c's W360M90. func_8025216C, the 8-byte stub before
+ * func_80252174, is a static inlined into it: it computes the dead
+ * `n` (that is why the original keeps n in $3 with nothing reading it),
+ * and its area takes 8 of the frame (pad[8] -> pad[6], sp34 after the
+ * two pointers). Left: func_802553D4's W360 slots (16 bytes, as
+ * above), `li a0,2` at 0x6CE4 (ugen emits $4 before $5 there; swapping
+ * the two in the .s gives the original, no source form found), one
+ * float temp (f10 for f8) in func_80252174, func_80251EE0's ret, and
+ * func_8025CEA0's add.s operand order.
  *
  * jp lacks one height test in func_802553D4 (VERSION_JP); eu is us.
  */
