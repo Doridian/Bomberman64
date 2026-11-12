@@ -83,7 +83,7 @@ main_code 78F60
 # helpers (func_802712A8, func_80271448, func_80270384, ...) with no
 # stub left, which IDO does only within one unit, and the two halves
 # as one file, defined in the right order, come out in the asm's order
-# with the asm's .rodata (nonmatching/8A7A0.c).
+# with the asm's .rodata (src/8A7A0.c).
 main_code 926A0
 
 # 8A7A0 (-O3, func_8026FFA0 to func_80277E1C) is the objects on the

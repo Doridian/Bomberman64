@@ -1,6 +1,6 @@
 /*
  * main_code's 926A0, IDO -O3; it matches in us, eu and jp (14 functions,
- * func_80277EA0..func_80278FD8, split from 8E730 by IDO's emission order,
+ * func_80277EA0..func_80278FD8, split from 8A7A0 by IDO's emission order,
  * text_objects.txt). Its .data (D_802A14F0) and .bss (D_802AFE70) are its
  * own, placed in data_split.txt.
  *

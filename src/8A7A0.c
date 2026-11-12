@@ -1,31 +1,30 @@
 /*
- * NON_MATCHING: main_code's 8A7A0, complete (101 functions,
+ * main_code's 8A7A0, IDO -O3; it matches in us, eu and jp (101 functions,
  * func_8026FFA0..func_80277E1C): the objects on the stage map (the
  * 0x30-byte slots D_802AFCE8, the object D_802AFDD8, the lists
- * D_802AFDE0/D_802AFE58) and the players' use of them. One -O3 file:
- * the asm's 8A7A0 and 8E730 are one IDO unit. 8E730 inlines 8A7A0's
- * small helpers (func_802712A8, func_80271448, func_80270384, ...) with
- * no stub left, which only one file does (an inlined static leaves a
- * jr ra stub, a global its body), and with the functions defined in
- * this order (8A7A0's func_80273F0C..func_8027361C, then 8E730's, then
- * 8A7A0's func_802735CC..func_8026FFA0) IDO emits them in the asm's
+ * D_802AFDE0/D_802AFE58) and the players' use of them. One -O3 file,
+ * in two halves that were drafted apart: 8A7A0 (func_8026FFA0 to
+ * func_80273F0C) and "8E730" (func_80273F30 on, the name its #line
+ * directives keep). The second inlines the first's small helpers
+ * (func_802712A8, func_80271448, func_80270384, ...) with no stub left,
+ * which only one file does (an inlined static leaves a jr ra stub, a
+ * global its body), and with the functions defined in this order (the
+ * first half's func_80273F0C..func_8027361C, then the second's, then
+ * the first's func_802735CC..func_8026FFA0) IDO emits them in the asm's
  * order exactly and the .rodata comes out byte for byte: 8027361C and
  * 80273AD4, emitted before func_8027723C whose address 8027361C takes,
  * are reached only from func_80273F30's calls. A first draft from m2c;
- * every function global. Not built into the ROM (docs/DECOMPILING.md,
- * "NON_MATCHING drafts"). The prelude (types, externs, prototypes) is
+ * every function global. The prelude (types, externs, prototypes) is
  * 87D80.c's.
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
- * would inline within one file, and 8E730 calls 926A0 (src/926A0.c,
- * its own file, emitted after). func_802733C8 keeps a dead call
+ * would inline within one file, and the second half calls 926A0
+ * (src/926A0.c, its own file, emitted after). func_802733C8 keeps a dead call
  * (if (0) func_802731A4(0, 0)): without it umerge inlines it into
  * func_8027655C (296 more words). The #line directives keep each
  * part's own line numbers (and .loc), as in the two drafts this
- * was. All 101 match in us, eu and jp, and the .rodata (jump tables
- * included) is the original's in all three.
+ * was. The .rodata (jump tables included) is the original's in all
+ * three versions.
  * func_80277B54's tail writes the new list nodes through a pointer read
  * back from the link just stored (`e = ENTS[0].next; e->next = NULL;
  * ...`, `n = D_802AFDE0.next`). uopt forwards the stored address, and a

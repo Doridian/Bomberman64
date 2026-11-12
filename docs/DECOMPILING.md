@@ -222,10 +222,10 @@ matches, drop the `#ifdef` and the asm.
     the asm that splits off by padding or order: it leaves no stub (an
     inlined static leaves its `jr ra` stub, an inlined global its body,
     and either adds its 8-byte frame area to the caller, so a macro
-    doesn't stand in). 8A7A0 is such a case: its second half (8E730 in
-    the asm before) inlines the first half's helpers without stubs, and
-    as one file defined in three runs (nonmatching/8A7A0.c's header) it
-    comes out in the asm's order with the asm's `.rodata`.
+    doesn't stand in). 8A7A0 is such a case: its second half (from
+    func_80273F30) inlines the first half's helpers without stubs, and
+    as one file defined in three runs (src/8A7A0.c's header) it comes
+    out in the asm's order with the asm's `.rodata`.
   - moves a float argument that arrives in an integer register straight
     to a float register (`mtc1 $a2, $f16`), where `-O2` stores it to its
     home slot and reloads it (`sw $a2, 8($sp)` ... `lwc1`). A function
@@ -235,7 +235,7 @@ matches, drop the `#ifdef` and the asm.
   its wrappers call 4DE50's compares with a `jal`, which -O3 would inline
   in one file), 4ED50, 52270 (jp's func_8023876C has no TV-type
   switch: `#if VERSION_JP`), 530C0, 53D70, 78CA0, 78F60, 80580, 85A10, 86680,
-  87D80, 93850 and 949A0 (949A0 split off 93850 at 0x8027A1A0, text_objects.txt
+  87D80, 8A7A0, 93850 and 949A0 (949A0 split off 93850 at 0x8027A1A0, text_objects.txt
   has why), 96540, 97610, 995C0, 9A5F0, 9BFD0, A8DE0, ACA00, AD5B0,
   AFBF0, B11F0, B6680 (`-mips2`), ovl_0A_02-05's, ovl_0C_03's, ovl_0E_09's, ovl_12_02's, ovl_12_04's, ovl_17_01's and ovl_17_10's objects are `-O3`; 5E090, 87190, 87730,
   99F40 and A4860 are `-O2` (no
@@ -1129,7 +1129,7 @@ before a placed `.data` becomes `data`, since the link puts every .data
 before every .rodata). libultra's objects use this where their code needs
 the data in the same file (docs/LIBULTRA.md, "Data"). So do the game's
 objects after main_code's cut that have jump tables, strings or
-constants (995C0, 54BE0, 87D80: `.rodata` only), or whose `.data`/`.bss` is all
+constants (995C0, 54BE0, 87D80, 8A7A0: `.rodata` only), or whose `.data`/`.bss` is all
 their own (53D70, 530C0, 412F0, AFBF0: all three sections, jp's .data
 its own size; 80580: .data and .rodata, since a function's `static`
 counter puts its .data in the C; 46300: all three, since

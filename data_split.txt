@@ -149,6 +149,10 @@ main_code 87D80 0 0xE0 0
 main_code @us 87D80 rodata=0x802A3B60
 main_code @eu 87D80 rodata=0x802A3B50
 main_code @jp 87D80 rodata=0x802A2D90
+main_code 8A7A0 0 0x1B0 0
+main_code @us 8A7A0 rodata=0x802A3C40
+main_code @eu 8A7A0 rodata=0x802A3C30
+main_code @jp 8A7A0 rodata=0x802A2E70
 main_code 926A0 0x10 0xC0 0x10
 main_code @us 926A0 data=0x802A14F0 rodata=0x802A3DF0 bss=0x802AFE70
 main_code @eu 926A0 data=0x802A14F0 rodata=0x802A3DE0 bss=0x802AFE60

@@ -3,7 +3,7 @@
  * func_8026D580..func_8026FF94): the stage map D_800B15D8 (layers of
  * 0x82-byte cells of 64 attribute halfwords) and its attribute queries
  * (func_8026D7D8, func_8026DCAC, func_8026E3AC). The objects on it are
- * the next object, 8A7A0 (nonmatching/8A7A0.c, text_objects.txt).
+ * the next object, 8A7A0 (src/8A7A0.c, text_objects.txt).
  * Every function is global, in the original's order.
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
