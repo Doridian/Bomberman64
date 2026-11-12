@@ -16,7 +16,7 @@
  * "NON_MATCHING drafts"). The prelude (types, externs, prototypes) is
  * 87D80.c's.
  * flags: -O3
- * differing words: us 15, eu 15, jp 15
+ * differing words: us 8, eu 8, jp 8
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file, and 8E730 calls 926A0 (src/926A0.c,
@@ -24,12 +24,16 @@
  * (if (0) func_802731A4(0, 0)): without it umerge inlines it into
  * func_8027655C (296 more words). The #line directives keep each
  * part's own line numbers (and .loc), as in the two drafts this
- * was. 100 of 101 match. Left: func_80277B54 15 (the list-init tail:
- * the original keeps ENT_4C0 and &D_802AFE1C in ugen temporaries t0/t1,
- * set at first use, and -1/&D_802AFDE0 in a1/a0; ours colours all four;
- * ENTS[0].xf = -1 as an int store moves that -1 into the loop's a1; a
- * dead `if (i) {}` after ENT_4C0's stores keeps i in v0 there, so the
- * rest is set at first use).
+ * was. 100 of 101 match. Left: func_80277B54 8 (the list-init tail's
+ * schedule: &D_802AFDE0 (a0) and -1 (a1) are set at the top of the
+ * block, where the original sets -1 after ENT_4C0's lui and
+ * &D_802AFDE0 after ENTS[0]'s three stores). Its registers match: the
+ * new list nodes are written through a pointer read back from the link
+ * just stored (`e = ENTS[0].next; e->next = NULL; ...`, `n =
+ * D_802AFDE0.next`). uopt forwards the stored address, and a forwarded
+ * use doesn't count for the address constant's colouring, so ENT_4C0
+ * and &D_802AFE1C have one use each, are not coloured, and ugen keeps
+ * each in the temporary it loads it into (t0, t1), as the original does.
  * func_80270770 stores the flags with a second read of the slot
  * (`flags = SLOTS[arg0].unk8; c->flags = SLOTS[arg0].unk8;`, where
  * func_80270C24 stores its local): the load, used twice, becomes a uopt
@@ -786,6 +790,7 @@ s16 func_80277CC0(u8 *arg0) {
 void func_80277B54() {
     s16 i;
     Ent88 *e;
+    Node87 *n;
 
     func_80297D30(0x27, D_802A14B8);
     D_802AFC70 = 0;
@@ -808,16 +813,17 @@ void func_80277B54() {
     }
 #line 2 "tail.c"
     ENTS[0].next = ENT_4C0;
+    e = ENTS[0].next;
     ENTS[0].prev = NULL;
-    *(s32 *) &ENTS[0].xf = -1;
-    ENT_4C0->next = NULL;
-    ENT_4C0->prev = ENTS;
-    ENT_4C0->xf = (Sub8E *) -1;
-    if (i) {}
+    ENTS[0].xf = (Sub8E *) -1;
+    e->next = NULL;
+    e->prev = ENTS;
+    e->xf = (Sub8E *) -1;
     D_802AFDE0.next = &D_802AFE1C;
+    n = D_802AFDE0.next;
     D_802AFDE0.unk4 = 0;
-    D_802AFE1C.next = NULL;
-    D_802AFE1C.unk4 = 0;
+    n->next = NULL;
+    n->unk4 = 0;
 #line 449 "8E730.c"
 }
 
