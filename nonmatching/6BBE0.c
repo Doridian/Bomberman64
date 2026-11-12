@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 124, eu 124, jp 124
+ * differing words: us 123, eu 123, jp 123
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -3590,30 +3590,32 @@ static void func_802530A8(f32 *arg0) {
                 } else {
                     M2C_FIELD(arg0, f32 *, 0x7C) = 0.0f;
                 }
-            } else if (func_8025156C(M2C_FIELD(arg0, f32 **, 0x18)) == 0) {
-                if (func_80251A24(0x3FFFF, (f32 *) ((u8 *)arg0 + 0x20), M2C_FIELD(arg0, f32 *, 0x74)) != 0) {
-                    angle = M2C_FIELD(arg0, f32 *, 0x74) + 180.0f;
-                    if (angle >= 360.0f) {
-                        M2C_FIELD(arg0, f32 *, 0x74) = angle - 360.0f;
-                    } else {
-                        if (angle < 0.0f) {
-                            wrap = angle + 360.0f;
+            } else {
+                if (func_8025156C(M2C_FIELD(arg0, f32 **, 0x18)) == 0) {
+                    if (func_80251A24(0x3FFFF, (f32 *) ((u8 *)arg0 + 0x20), M2C_FIELD(arg0, f32 *, 0x74)) != 0) {
+                        angle = M2C_FIELD(arg0, f32 *, 0x74) + 180.0f;
+                        if (angle >= 360.0f) {
+                            M2C_FIELD(arg0, f32 *, 0x74) = angle - 360.0f;
                         } else {
-                            wrap = angle;
+                            if (angle < 0.0f) {
+                                wrap = angle + 360.0f;
+                            } else {
+                                wrap = angle;
+                            }
+                            M2C_FIELD(arg0, f32 *, 0x74) = wrap;
                         }
-                        M2C_FIELD(arg0, f32 *, 0x74) = wrap;
-                    }
-                } else {
-                    angle = M2C_FIELD(arg0, f32 *, 0x74) + 90.0f;
-                    if (angle >= 360.0f) {
-                        M2C_FIELD(arg0, f32 *, 0x74) = angle - 360.0f;
                     } else {
-                        if (angle < 0.0f) {
-                            wrap = angle + 360.0f;
+                        angle = M2C_FIELD(arg0, f32 *, 0x74) + 90.0f;
+                        if (angle >= 360.0f) {
+                            M2C_FIELD(arg0, f32 *, 0x74) = angle - 360.0f;
                         } else {
-                            wrap = angle;
+                            if (angle < 0.0f) {
+                                wrap = angle + 360.0f;
+                            } else {
+                                wrap = angle;
+                            }
+                            M2C_FIELD(arg0, f32 *, 0x74) = wrap;
                         }
-                        M2C_FIELD(arg0, f32 *, 0x74) = wrap;
                     }
                 }
                 M2C_FIELD(arg0, f32 *, 0x7C) = (f32) D_802ACFB4;
