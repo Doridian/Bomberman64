@@ -126,10 +126,6 @@ void func_8027FC08(void) {
     D_802B01F0 = 0;
 }
 
-#ifdef NON_MATCHING
-/* 13 differing words (us 13, eu 13, jp 13): the temporaries of the
-   unrolled inner loop (the original reuses t7 for every shift); the fake
-   data++/data-- (the permuter's) makes the size right */
 s32 func_8027FC78(s32 arg0) {
     u8 *data;
     s32 i;
@@ -142,17 +138,16 @@ s32 func_8027FC78(s32 arg0) {
     data = func_8026CE28(arg0);
     D_800B5F20[D_802B01F0].unk4 = data;
     if (data != NULL) {
-        data++; /* fake (the permuter's) */
-        data--;
-        D_800B5F20[D_802B01F0].unk8 = data[5];
-        D_800B5F20[D_802B01F0].unkC = data[6];
+        data += 5;
+        D_800B5F20[D_802B01F0].unk8 = *data++;
+        D_800B5F20[D_802B01F0].unkC = *data++;
         n = D_800B5F20[D_802B01F0].unk8 * D_800B5F20[D_802B01F0].unkC;
-        data += 8;
+        data++;
         for (i = 0; i < n; i++) {
             D_800B5F20[D_802B01F0].unk10[i].unk0 = *data++;
             D_800B5F20[D_802B01F0].unk10[i].unk1 = *data++;
             for (j = 0; j < 64; j++) {
-                v = (data[0] << 8) + data[1];
+                v = (s16)(data[0] << 8) + data[1];
                 D_800B5F20[D_802B01F0].unk10[i].unk2[j] = v;
                 data += 2;
             }
@@ -164,6 +159,3 @@ s32 func_8027FC78(s32 arg0) {
     }
     return ret;
 }
-#else
-#pragma GLOBAL_ASM("asm/nonmatchings/99F40/func_8027FC78.s")
-#endif

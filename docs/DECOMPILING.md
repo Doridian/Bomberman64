@@ -265,8 +265,8 @@ matches, drop the `#ifdef` and the asm.
   `s32` there: with `void`, func_8027DFAC counts its first loop in `v0`
   instead of `v1`, so the original most likely called it undeclared).
   87730's func_8026CFF4 and 99F40's func_8027FC78 build the same at
-  either level and give no evidence either way; they stay `-O2` with their
-  C under `#ifdef NON_MATCHING`, as does A4860's func_8028A154.
+  either level and give no evidence either way; they stay `-O2` and match
+  there. A4860's func_8028A154 keeps its C under `#ifdef NON_MATCHING`.
   78CA0 (func_8025E5EC keeps `&D_802ACFE0` in `a3` across a `jal` to
   its own file's func_8025E4A0), 7D840 (func_802639E4 passes
   func_80263040 arguments in `t1`-`t4`) and 96540 (func_8027C5E0 keeps
