@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 58, eu 58, jp 71
+ * differing words: us 56, eu 56, jp 69
  *
  * The pages are a table (D_ovl0B_04_800499B8: texts, handler, cursor
  * table, set-up) that func_ovl0B_04_80043ADC runs in turn; pages 1-4 are
@@ -83,20 +83,19 @@
  *   `move s2,t0` (a split; no form found that splits it), and the counter
  *   D_ovl0B_04_8004A1A0, a function-scope static, is promoted to $t0 where
  *   the original reloads it into $v1.
- * - 80045214 26/26: 80045214's `ok` reloaded to $t8 (the original: $v0);
- *   80045540's frame (40 vs 24: the dead reads of c in its else branch,
- *   where c isn't set, spill it) and rub-out registers (the original loads
- *   the cursor to $s1 with a $v1 copy and tests `i != 7` directly; ours
- *   compares p with &D_ovl0B_04_8004A290[7]), unk3 stored through $s0
- *   (the original by its own lui). 80045540's rub-out as written here
- *   (i/p with the dead reads of c, "iiDD") scores well partly by
- *   coincidence: its `lui t6` for &D_ovl0B_04_8004A290[7] happens to take
- *   the ugen temp the original's code uses up some other way, and the c
- *   spill (`lbu s1,31(sp)`) stands where the original has unk3's
- *   `lui at`. The original's form is probably scratch/0B_04/wW/rubout_DD.c
- *   (no i, no p, no dead reads: tests on D_ovl0B_04_8004A490.unk0, one
- *   `unk0--`), exact in the block but for the `li a2,7` order and the
- *   ugen temps being one behind from there on (170 words as a whole).
+ * - 80045214 21/21: 80045214's `ok` reloaded to $t8 (the original: $v0),
+ *   and 80045540's rub-out. Its unk3 store goes through a copy of item
+ *   (`x = item; ... unk3 = x`): copy propagation makes uopt fold the store
+ *   into a direct one with its own `lui at`, as in the original, where a
+ *   plain `unk3 = item` goes through the $s0 base. The original's rub-out
+ *   is the flat test `(unk0 == 7 && c == 0) || (unk0 != 7 && unk0 > 0)`
+ *   on the global with one `unk0--` (scratch/0B_04/wW/rubout_DD.c): with
+ *   the x store that is exact but for the cursor and the base swapping
+ *   $s0/$s1. The cursor's load is one uopt range over the rub-out and the
+ *   else arm (priority 2.5, -zdbug:5) and the base's is 2.4; the plain
+ *   store's use gives the base 2.6, which is why it was right with it.
+ *   Written here as i = unk0 with a nested if (5 words in the rub-out,
+ *   the else arm exact), which takes the rub-out's load out of the range.
  * - 80043ADC 0/0 (matches; w5): us's loop is `if (A168 != 0xFF) { p3 =
  *   &tbl[3]; if (!p3) {} do { ... } while (A168 != 0xFF); }` with p4 =
  *   &tbl[4] set at the top and one more dead read of p3 after the else
@@ -1503,22 +1502,22 @@ static void func_ovl0B_04_80045850(void) {
  * (items 0x31 and 0x32) ends the name. */
 static void func_ovl0B_04_80045540(u8 item, u16 buttons, u8 *ret) {
     s32 i;
-    u8 *p;
     u8 c;
+    u8 x;
 
     if (buttons & 2) {
         i = D_ovl0B_04_8004A490.unk0;
-        p = D_ovl0B_04_8004A290[i];
-        c = p[0] ^ 0; /* fake (permuter): without it the object is 335 words */
+        c = D_ovl0B_04_8004A290[i][0];
         D_ovl0B_04_8004A490.unk1 = 0;
-        p[0] = 0;
-        /* The test reads the cursor again rather than i (the same value):
-         * found by the permuter, 80045214's run 26 to 23 words. */
-        if ((D_ovl0B_04_8004A490.unk0 == 7 && c == 0) || (D_ovl0B_04_8004A490.unk0 != 7 && D_ovl0B_04_8004A490.unk0 > 0)) {
-            D_ovl0B_04_8004A490.unk0 = D_ovl0B_04_8004A490.unk0 - 1;
+        D_ovl0B_04_8004A290[i][0] = 0;
+        if (i == 7) {
+            if (c == 0) {
+                D_ovl0B_04_8004A490.unk0 = i - 1;
+            }
+        } else if (D_ovl0B_04_8004A490.unk0 > 0) {
+            D_ovl0B_04_8004A490.unk0 = i - 1;
         }
         func_ovl0B_04_80044210();
-        if (!c) {}
         func_ovl0B_04_80044154();
         func_ovl0B_04_800487D0(2);
     } else {
@@ -1531,18 +1530,16 @@ static void func_ovl0B_04_80045540(u8 item, u16 buttons, u8 *ret) {
                 func_ovl0B_04_80045538();
                 func_ovl0B_04_80045530();
             } else {
+                x = item;
                 D_ovl0B_04_8004A490.unk1 = func_ovl0B_04_8004426C(D_ovl0B_04_8004A490.unk2, item);
-                if (!c) {} /* c isn't set in this branch: dead reads that only move registers */
-                D_ovl0B_04_8004A490.unk3 = item;
+                D_ovl0B_04_8004A490.unk3 = x;
                 func_ovl0B_04_80044210();
                 D_ovl0B_04_8004A290[D_ovl0B_04_8004A490.unk0][0] = D_ovl0B_04_8004A490.unk1;
                 D_ovl0B_04_8004A490.unk0++;
-                if (!c) {}
                 D_ovl0B_04_8004A290[D_ovl0B_04_8004A490.unk0][0] = 0;
                 func_ovl0B_04_800487D0(1);
                 if (D_ovl0B_04_8004A490.unk0 == 8) {
                     D_ovl0B_04_8004A490.unk0--;
-                    if (!i) {}
                     D_ovl0B_04_8004A490.unk1 = 0;
                     func_ovl0B_04_800441C4();
                     func_ovl0B_04_800485F8(D_ovl0B_04_8004A490.unk3);
