@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 226, eu 226, jp 1983
+ * differing words: us 220, eu 220, jp 1977
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -2635,9 +2635,8 @@ loop_565:
                         M2C_FIELD(M2C_FIELD(temp_s1, void **, 0x40), f32 *, 0x28) = temp_fv0;
                         func_80255064(M2C_FIELD(var_s0, u8 **, 0x40), M2C_FIELD(M2C_FIELD(var_fp, f32 **, 0x18), void **, 0x40), (func_80234434(W360M90(sp12C)) * 55.0f) + (func_80234434(W360(sp12C)) * 10.0f), 50.0f, (func_80234408(W360M90(sp12C)) * 55.0f) + (func_80234408(W360(sp12C)) * 10.0f));
                         M2C_FIELD(M2C_FIELD(var_s0, void **, 0x40), f32 *, 0x30) = 1.0f;
-                        temp_a0_3 = M2C_FIELD(var_s0, void **, 0x40);
-                        temp_fv0 = M2C_FIELD(temp_a0_3, f32 *, 0x30);
-                        M2C_FIELD(temp_a0_3, f32 *, 0x2C) = temp_fv0;
+                        temp_fv0 = M2C_FIELD(M2C_FIELD(var_s0, void **, 0x40), f32 *, 0x30);
+                        M2C_FIELD(M2C_FIELD(var_s0, void **, 0x40), f32 *, 0x2C) = temp_fv0;
                         M2C_FIELD(M2C_FIELD(var_s0, void **, 0x40), f32 *, 0x28) = temp_fv0;
                         M2C_FIELD(M2C_FIELD(temp_s1, void **, 0x40), s16 *, 0x36) = 0xC8;
                         M2C_FIELD(M2C_FIELD(var_s0, void **, 0x40), s16 *, 0x36) = 0xC8;
