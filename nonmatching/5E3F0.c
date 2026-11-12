@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 106, eu 106, jp 106
+ * differing words: us 25, eu 25, jp 25
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -35,10 +35,13 @@
  * addresses), func_80243EF0 inlined for case 8's test. Its call of
  * func_80246D74 passes the s16 index unextended, so func_80246D74 has
  * only a `()` prototype; it copies its argument into a local first
- * (`move s0,a0`, then `sll/sra` for func_80270770's s16).
- * Left: register and scheduling differences nearly everywhere else, and
- * the large m2c functions (8024891C, 8024D8C4, 802444B8,
- * 8024A0DC) are still m2c's shape. 802506B8's fill loop of the
+ * (`move s0,a0`, then `sll/sra` for func_80270770's s16). In case 4,
+ * obj takes s0 because each `obj = *D_802ACF58` web whose call it is
+ * passed to is still live after it (a dead `!obj->unk40` read); with
+ * that, `hit` gets no saved register, so it lives in its home and only
+ * its tests share a0, as in the original.
+ * The large m2c functions (8024891C, 8024D8C4, 802444B8, 8024A0DC) are
+ * still m2c's shape. 802506B8's fill loop of the
  * ten 255-entry tables isn't unrolled in the original (this one is).
  * func_80244354 is never inlined in the original: a dead
  * `if (0) { func_80237664(); }` in it keeps it out of line here too.
@@ -56,7 +59,7 @@
  * pointer variable or an `id = arg0` copy costs 8 bytes of frame or
  * moves a spill slot (8024BC20, 80244E04, 80246C3C, 80249648). An
  * empty `do {} while (0);` splits a block and changes uopt's choices
- * (80246F00, 8024B444, 8024C334, 8024878C, 80244FF8). 80247D74 still
+ * (8024B444, 8024C334, 8024878C, 80244FF8). 80247D74 still
  * spills the entry pointer to sp+0x18 where the original uses sp+0x1C.
  * One object: no jal goes forward, there's no nop padding between
  * functions, and .rodata and .data run in function order with no
@@ -2301,7 +2304,7 @@ void func_8024C334(s32 arg0, s32 arg1, u16 arg2, f32 *arg3) {
     s32 obj = func_802443F4(arg0);
 
     if (!func_80244BA4(arg0, 2)) {
-        if (!((UnkObj *)obj)->unk40 && !((UnkObj *)obj)->unk40) {}
+        if (!((UnkObj *)obj)->unk40 && !((UnkObj *)obj)->unk40) {} /* fake: keeps unk28 loaded (t0) */
         if (!(e->unk38 & 0x1000)) {
             func_802444B8(arg0, 8);
             e->unk38 |= 0x1000;
@@ -3911,7 +3914,7 @@ void func_80246F00(s32 arg0, s32 arg1) {
                                 func_80231408(obj, flags | 0x80000);
                                 obj = *D_802ACF58;
                                 func_8022F808(obj, (f32 *)obj->unk58);
-                                do {} while (0); /* fake: splits the block */
+                                if (!obj->unk40 && !obj->unk40) {} /* fake: obj crosses the call, so it takes s0 */
                                 func_8026C660(0x1EA);
                                 break;
                             }
@@ -3935,8 +3938,9 @@ void func_80246F00(s32 arg0, s32 arg1) {
                 func_802313DC(*D_802ACF58, 0x01000000);
                 obj = *D_802ACF58;
                 func_8022F808(obj, (f32 *)obj->unk58);
+                if (!obj->unk40 && !obj->unk40) {} /* fake: likewise */
             }
-            if (obj) {} /* fake: keeps the success path's obj in s0 */
+            if (*D_802ACF58) {} /* fake */
             break;
         }
         func_80245FA0(arg0, arg1);
