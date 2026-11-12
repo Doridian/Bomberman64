@@ -5,7 +5,7 @@
  * current entry in D_802AC894. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3, eu 3, jp 3
+ * differing words: us 0, eu 0, jp 0
  *
  * A first draft: functions in the reverse of the ROM's order (IDO -O3
  * emits last to first); 0x80243BF0-0x802457D8 by hand, most of the rest
@@ -59,15 +59,18 @@
  * pointer variable or an `id = arg0` copy costs 8 bytes of frame or
  * moves a spill slot (8024BC20, 80244E04, 80246C3C, 80249648). An
  * empty `do {} while (0);` splits a block and changes uopt's choices
- * (8024B444, 8024C334, 8024878C, 80244FF8). 80247D74 still
- * spills the entry pointer to sp+0x18 where the original uses sp+0x1C.
+ * (8024B444, 8024878C, 80244FF8).
  * 8024C04C calls func_802443F4 and drops the result: the inlined
  * copy emits nothing, but its R2 store and its return value's range
  * take v0 and v1 in the entry block, so the entry pointer gets a1 there.
  * In 8024C334 the unused func_80243D54 call in the first branch does
  * the same for the first flag: its R2 store makes the flag's own R2
  * store dead (a store to R2 that reaches a call keeps a range), so the
- * flag gets v0.
+ * flag gets v0. Its unk28 is loaded straight into obj (t0, kept by a
+ * dead read); a getter there would end the entry block before the
+ * first flag's unk10 load, which must share it with the parameters.
+ * 80246078's third loop has the same unused func_80243D54 call after
+ * its test, so the inlined func_80243EF0's result gets v0 there.
  * One object: no jal goes forward, there's no nop padding between
  * functions, and .rodata and .data run in function order with no
  * internal pads; split after func_80244354 (the only out-of-line
@@ -4134,7 +4137,6 @@ void func_80246078() {
     s32 k;
     s32 m;
     void *q;
-    s32 pad2[1];
 
     c[0] = 0;
     n = 0;
@@ -4183,7 +4185,7 @@ void func_80246078() {
     for (i = 0; i < 4; i++) {
         p = &D_800AEDF0[i];
         if ((p->unk24 == 1 || p->unk24 == 2) && p->unk14 != 0 && !func_80244BA4(i, 0x1000) && !func_80243EF0(i)) {
-            do {} while (0);
+            func_80243D54(i);
             if (func_80232D18(p->unk28, 0x10) != 0) {
                 c[0]++;
             }
