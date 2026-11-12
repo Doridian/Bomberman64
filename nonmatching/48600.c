@@ -7,7 +7,7 @@
  * "NON_MATCHING drafts"). src/48300.c, before it, is another object:
  * func_80232E60 calls its func_8022DB00 with a jal (text_objects.txt).
  * flags: -O3
- * differing words: us 144, eu 144, jp 144
+ * differing words: us 135, eu 135, jp 135
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does. An 8-byte stub (jr ra; nop) is an inlined
@@ -58,11 +58,23 @@
  * left is case 12/20's four stores before the loop: uopt keeps the ball's
  * address in v0 (a block-local CSE of the four istr) where the original
  * uses lui/%lo for each, with p[0], p[1], p[3] loaded in that order.
- * func_802320A8 (106, the size right): what's left is register naming:
- * ugen's float temporaries from case 1 on have f16 and f18 the other way
- * round, a and b swap f22/f24, the first wrap keeps 90.0 in f2 (not
- * f12), obj+0x58's slot is 0x64 not 0x68, and the default's delay slot
- * holds the store to t (the original has a nop). What is understood:
+ * func_802320A8 (97, the size right): what's left is ugen's float
+ * temporaries from the no-gp branch on, obj+0x58's slot (0x64, not 0x68)
+ * and the default's delay slot, which holds the store to t (the original
+ * has a nop). ugen hands out f4..f18 least recently freed first (frees at
+ * a value's last read, in operand order; the queue carries on through
+ * labels and calls). The no-gp branch's and the join's allocations force
+ * the queue at case 1 to be [16 18 4 6 8 10]; the original's registers
+ * from case 1 on need [4 6 8 10 18 16]: f16 (the branch's unk4) and f18
+ * (its sub) freed after the join's statement, or two invisible temps
+ * allocated there and freed in reverse. With that queue the rest
+ * renames to the original but for about 40 words (scratch/48600/p9
+ * qsim.py). No source for it was found (pass 9's NOTES.txt lists what
+ * was tried). The draft instead rotates the queue by two in the first
+ * wrap: x = spE4[1] + (n * sp110[2]) with if ((s32) x * 0) {} as its
+ * only use keeps two temporaries that as1 then deletes as dead code, so
+ * case 1 and 2 start right and the no-gp branch is two off. What is
+ * understood:
  *   - the default case is an endless loop storing n to the volatile t:
  *     a read of n there keeps it live through the outer loop (the
  *     original loads it into fs3 before the loop and stores it after),
@@ -76,9 +88,11 @@
  *   - the wraps are written out (spE4[1] - 90.0f each time) with no
  *     shared x: one variable keeps one register over all its live
  *     ranges, so x in all three forced mov.s copies.
- *   - goto dl; dl: in the no-gp branch splits its block: ugen hands out
- *     float temporaries least recently freed first, and the split moves
- *     case 1's first one to f4, as in the original (a permuter find).
+ *   - spE4[1] is promoted (loaded once into f2 for both compares of the
+ *     first wrap) because the no-gp branch's zero stores share a block
+ *     with obj->unk3C->unk4's load: uopt leaves blocks with an indirect
+ *     access out of a memory variable's live range, so the store isn't
+ *     in it. Pass 7's goto dl; dl: split them apart and lost it.
  *   - in the 0x20000 case, sp80[0] goes through b (b = sp80[0] after the
  *     copy from spD4, n = b in the wrap) and x = sp80[1]; x = x - 90.0f
  *     is two statements: both move the colouring (permuter finds).
@@ -696,7 +710,7 @@ void func_802320A8() {
                 } else {
                     n = (spE4[1] - 90.0f);
                 }
-                sp104[1] = n;
+                sp104[1] = n; x = spE4[1] + (n * sp110[2]); if ((s32) x * 0) {}
             }
             sp104[2] = obj->unk3C->unk4;
             func_8022FEAC(sp104, spBC);
@@ -708,8 +722,6 @@ void func_802320A8() {
             spE4[1] = 0.0f;
             spE4[2] = 0.0f;
             spBC[0] = sp110[0];
-            goto dl;
-        dl:
             spBC[1] = sp110[1] - obj->unk3C->unk4;
             spBC[2] = sp110[2];
         }
