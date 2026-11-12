@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 799, eu 799, jp 5702
+ * differing words: us 794, eu 794, jp 5702
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -2164,10 +2164,10 @@ block_358:
                                         M2C_FIELD(var_fp, s32 *, 0) |= 0x100;
                                         M2C_FIELD(var_fp, f32 *, 0x68) = 2350.0f;
                                         M2C_FIELD(var_fp, f32 *, 0x70) = 2100.0f;
-                                        M2C_FIELD(var_fp, u32 *, 0x94) = 0x28U;
                                         M2C_FIELD(var_fp, f32 *, 0x78) = (f32) M2C_FIELD(var_fp, f32 *, 0x74);
                                         M2C_FIELD(var_fp, s32 *, 8) = M2C_FIELD(var_fp, s32 *, 4);
                                         M2C_FIELD(var_fp, s32 *, 4) = 0;
+                                        M2C_FIELD(var_fp, u32 *, 0x94) = 0x28U;
                                     } else {
                                         M2C_FIELD(var_fp, s32 *, 0) &= ~0x100;
                                         goto block_401;
