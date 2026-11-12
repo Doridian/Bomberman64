@@ -9,7 +9,7 @@
  * func_80228500 kept). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 43, eu 43, jp 43
+ * differing words: us 17, eu 17, jp 17
  *
  * The code is the same in every version.
  *
@@ -73,27 +73,23 @@
  *   leaves unused. The ry ternary's `: 0` (an int) gives the
  *   original's mtc1 pair; the matrix stack is a frame struct's
  *   `mtx[]`, as in 41FD0.c.
- * - func_8022A328 (30): the free slot and the list position are
+ * - func_8022A328 (4): the free slot and the list position are
  *   function-scope statics (D_802A5474, D_802A5478: no other function
  *   uses them), which uopt keeps in registers and stores back at each
  *   exit. `if (arg1) {}` after their initialisation ends the entry
  *   block, so the first slot test is a direct load and the pool base is
  *   loaded in the loop's preheader and again after it, as in the
- *   original. The new slot's unk8 store goes through the slot
- *   expression again (`(&D_800A0D00[(u32)D_802A5474])->unk8`), the
+ *   original. There is no pointer local: every access is
+ *   `D_800A0D00[D_802A5474].f`, so the slot's address is one expression
+ *   that uopt hoists above the position loop and rebuilds after the
+ *   calls itself (with shifts, not a multu by the coloured 80). The
  *   chunk address is a local with a dead read (`c = &arg0->unkC[arg3];
  *   if (c) {}`, which keeps the +12 in a register) taken before the
  *   float zeros, and the else branch's stores are integer 0 and 1 (so
  *   the 0.0f of the other branch is a separate constant). The tail
- *   stores unk34 first, then the D_802A5460 increment, unk4C and
- *   unk36, which gives the original's D_802AC5C8 load first (t5).
- *   Left (30): p's index is a multu where the original shifts into a
- *   temp (a u32 local index gives the shifts but colours the product,
- *   82), the arg2 == 4 block's schedule (mtc1 before the stack loads),
- *   and the tail's schedule: with unk34, unk36, the increment and unk4C
- *   in that order the temporaries are the original's (t6 for -1, t8
- *   and t7 for the increment), but as1 keeps the D_802A5460 load below
- *   the stores to p, where the original hoists it above them.
+ *   stores unk34, unk36, unk4C, then the D_802A5460 increment.
+ *   Left (4): the arg2 == 4 block's schedule (mtc1 before the stack
+ *   loads).
  * - func_80229C10 (2): `if (!chunks) {}` keeps model+12 a value of its
  *   own; `if (!arg1) {}` first and `if (!arg0) {}` after the loop keep
  *   the arguments' registers busy, so dl takes a3, first t0 and i t1 as
@@ -585,10 +581,8 @@ void *func_8022A6C4(void *arg0, s32 arg1) {
 UnkObj *func_8022A328(UnkModel *arg0, s32 arg1, s32 arg2, u32 arg3, s32 arg4) {
     static s32 D_802A5474;
     static s32 D_802A5478;
-    UnkObj *p;
     UnkSkel *skel;
     UnkChunk *c;
-    f32 f;
 
     D_802A5474 = 2;
     D_802A5478 = 0;
@@ -604,66 +598,62 @@ UnkObj *func_8022A328(UnkModel *arg0, s32 arg1, s32 arg2, u32 arg3, s32 arg4) {
     if (D_802A5474 >= 0xA0) {
         return NULL;
     }
-    p = &D_800A0D00[(u32)D_802A5474];
-    if (p) {}
     while (arg1 >= D_800A0D00[D_802A5478].unk8) {
         D_802A5478 = D_800A0D00[D_802A5478].unk0;
     }
-    (&D_800A0D00[(u32)D_802A5474])->unk8 = arg1;
-    p->unk4 = D_800A0D00[D_802A5478].unk4;
-    if (arg1) {}
+    D_800A0D00[D_802A5474].unk8 = arg1;
+    D_800A0D00[D_802A5474].unk4 = D_800A0D00[D_802A5478].unk4;
     D_800A0D00[D_802A5478].unk4 = D_802A5474;
-    p->unk0 = D_802A5478;
-    D_800A0D00[p->unk4].unk0 = D_802A5474;
+    D_800A0D00[D_802A5474].unk0 = D_802A5478;
+    D_800A0D00[D_800A0D00[D_802A5474].unk4].unk0 = D_802A5474;
     if (arg2 == 0) {
-        p->unkC = 0x800;
+        D_800A0D00[D_802A5474].unkC = 0x800;
     } else if (arg2 == 1) {
-        p->unkC = 2;
+        D_800A0D00[D_802A5474].unkC = 2;
     } else if (arg2 == 2) {
-        p->unkC = 4;
+        D_800A0D00[D_802A5474].unkC = 4;
     } else if (arg2 == 3) {
-        p->unkC = 0xC;
+        D_800A0D00[D_802A5474].unkC = 0xC;
     } else if (arg2 == 4) {
-        p->unkC = 0x10;
+        D_800A0D00[D_802A5474].unkC = 0x10;
     }
-    p->unk40 = NULL;
-    p->unk44 = NULL;
-    p->unk48 = NULL;
-    p->unk3C = arg0;
-    p->unk38 = arg3;
-    if ((p->unkC & 4) && (p->unkC & 8)) {
+    D_800A0D00[D_802A5474].unk40 = NULL;
+    D_800A0D00[D_802A5474].unk44 = NULL;
+    D_800A0D00[D_802A5474].unk48 = NULL;
+    D_800A0D00[D_802A5474].unk3C = arg0;
+    D_800A0D00[D_802A5474].unk38 = arg3;
+    if ((D_800A0D00[D_802A5474].unkC & 4) && (D_800A0D00[D_802A5474].unkC & 8)) {
         skel = func_8022AF1C(arg0);
         D_800A0D00[D_802A5474].unk40 = skel;
         D_800A0D00[D_802A5474].unk44 = func_8022D1D0(skel, arg0, arg3);
         func_80229F74(&D_800A0D00[D_802A5474], 1);
         func_80229E38(&D_800A0D00[D_802A5474], arg4, 0);
-        p = &D_800A0D00[(u32)D_802A5474];
     }
     if (arg2 == 4) {
         c = &arg0->unkC[arg3];
         if (c) {}
-        p->unk20 = 0.0f;
-        p->unk10 = 0.0f;
-        p->unk24 = 0.0f;
-        p->unk14 = 0.0f;
-        p->unk18 = p->unk28 = (u32)((u16 *)&c->unk4)[0];
-        p->unk1C = p->unk2C = (u32)((u16 *)&c->unk4)[1];
+        D_800A0D00[D_802A5474].unk20 = 0.0f;
+        D_800A0D00[D_802A5474].unk10 = 0.0f;
+        D_800A0D00[D_802A5474].unk24 = 0.0f;
+        D_800A0D00[D_802A5474].unk14 = 0.0f;
+        D_800A0D00[D_802A5474].unk18 = D_800A0D00[D_802A5474].unk28 = (u32)((u16 *)&c->unk4)[0];
+        D_800A0D00[D_802A5474].unk1C = D_800A0D00[D_802A5474].unk2C = (u32)((u16 *)&c->unk4)[1];
     } else {
-        p->unk10 = 0;
-        p->unk14 = 0;
-        p->unk18 = 0;
-        p->unk1C = 0;
-        p->unk20 = 0;
-        p->unk24 = 0;
-        p->unk28 = 1;
-        p->unk2C = 1;
-        p->unk30 = 1;
+        D_800A0D00[D_802A5474].unk10 = 0;
+        D_800A0D00[D_802A5474].unk14 = 0;
+        D_800A0D00[D_802A5474].unk18 = 0;
+        D_800A0D00[D_802A5474].unk1C = 0;
+        D_800A0D00[D_802A5474].unk20 = 0;
+        D_800A0D00[D_802A5474].unk24 = 0;
+        D_800A0D00[D_802A5474].unk28 = 1;
+        D_800A0D00[D_802A5474].unk2C = 1;
+        D_800A0D00[D_802A5474].unk30 = 1;
     }
-    p->unk34 = D_802AC5C8;
+    D_800A0D00[D_802A5474].unk34 = D_802AC5C8;
+    D_800A0D00[D_802A5474].unk36 = -1;
+    D_800A0D00[D_802A5474].unk4C = NULL;
     D_802A5460++;
-    p->unk4C = NULL;
-    p->unk36 = -1;
-    return p;
+    return &D_800A0D00[D_802A5474];
 }
 
 void func_8022A1E8(void *arg0) {
