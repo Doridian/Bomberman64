@@ -7,7 +7,7 @@
  * "NON_MATCHING drafts"). src/48300.c, before it, is another object:
  * func_80232E60 calls its func_8022DB00 with a jal (text_objects.txt).
  * flags: -O3
- * differing words: us 164, eu 164, jp 164
+ * differing words: us 160, eu 160, jp 160
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does. An 8-byte stub (jr ra; nop) is an inlined
@@ -58,7 +58,7 @@
  * left is case 12/20's four stores before the loop: uopt keeps the ball's
  * address in v0 (a block-local CSE of the four istr) where the original
  * uses lui/%lo for each, with p[0], p[1], p[3] loaded in that order.
- * func_802320A8 (126, the size right): what's left is register naming:
+ * func_802320A8 (122, the size right): what's left is register naming:
  * ugen's float temporaries from case 1 on have f16 and f18 the other way
  * round, a and b swap f22/f24, the first wrap keeps 90.0 in f2 (not
  * f12), obj+0x58's slot is 0x64 not 0x68, and the default's delay slot
@@ -811,7 +811,8 @@ void func_802320A8() {
                 }
                 sp80[0] = n;
             }
-            x = sp80[1] - 90.0f;
+            x = sp80[1];
+            x = x - 90.0f;
             if (x >= 360.0f) {
                 y = obj->unk3C->unkC;
                 sp80[1] = x - 360.0f;
