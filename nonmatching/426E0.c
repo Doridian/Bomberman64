@@ -9,7 +9,7 @@
  * func_80228500 kept). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 45, eu 45, jp 45
+ * differing words: us 43, eu 43, jp 43
  *
  * The code is the same in every version.
  *
@@ -66,7 +66,7 @@
  *   ugen emitting it after the argument setup there; ours emits it
  *   before). The ry ternary's `: 0` (an int) gives the original's mtc1
  *   pair; the matrix stack is a frame struct's `mtx[]`, as in 41FD0.c.
- * - func_8022A328 (32): the free slot and the list position are
+ * - func_8022A328 (30): the free slot and the list position are
  *   function-scope statics (D_802A5474, D_802A5478: no other function
  *   uses them), which uopt keeps in registers and stores back at each
  *   exit. `if (arg1) {}` after their initialisation ends the entry
@@ -77,12 +77,16 @@
  *   chunk address is a local with a dead read (`c = &arg0->unkC[arg3];
  *   if (c) {}`, which keeps the +12 in a register) taken before the
  *   float zeros, and the else branch's stores are integer 0 and 1 (so
- *   the 0.0f of the other branch is a separate constant). Left (32):
- *   p's index is a multu where the original shifts into a temp (a u32
- *   local index gives the shifts but colours the product, 82), the
- *   arg2 == 4 block's schedule (mtc1 before the stack loads), and the
- *   tail, where the original loads D_802AC5C8 into a coloured register
- *   first and stores unk34 last.
+ *   the 0.0f of the other branch is a separate constant). The tail
+ *   stores unk34 first, then the D_802A5460 increment, unk4C and
+ *   unk36, which gives the original's D_802AC5C8 load first (t5).
+ *   Left (30): p's index is a multu where the original shifts into a
+ *   temp (a u32 local index gives the shifts but colours the product,
+ *   82), the arg2 == 4 block's schedule (mtc1 before the stack loads),
+ *   and the tail's schedule: with unk34, unk36, the increment and unk4C
+ *   in that order the temporaries are the original's (t6 for -1, t8
+ *   and t7 for the increment), but as1 keeps the D_802A5460 load below
+ *   the stores to p, where the original hoists it above them.
  * - func_80229C10 (2): `if (!chunks) {}` keeps model+12 a value of its
  *   own; `if (!arg1) {}` first and `if (!arg0) {}` after the loop keep
  *   the arguments' registers busy, so dl takes a3, first t0 and i t1 as
@@ -645,10 +649,10 @@ UnkObj *func_8022A328(UnkModel *arg0, s32 arg1, s32 arg2, u32 arg3, s32 arg4) {
         p->unk2C = 1;
         p->unk30 = 1;
     }
-    p->unk36 = -1;
-    p->unk4C = NULL;
-    D_802A5460++;
     p->unk34 = D_802AC5C8;
+    D_802A5460++;
+    p->unk4C = NULL;
+    p->unk36 = -1;
     return p;
 }
 
