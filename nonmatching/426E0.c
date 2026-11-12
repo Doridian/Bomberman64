@@ -9,7 +9,7 @@
  * func_80228500 kept). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 7, eu 7, jp 7
+ * differing words: us 3, eu 3, jp 3
  *
  * The code is the same in every version.
  *
@@ -43,7 +43,7 @@
  *   the other cofactors row-major, then the zeros and 1.0f.
  *
  * Left:
- * - func_802289C0 (the draw loop, 4): obj is in s2 and func_802284F0's
+ * - func_802289C0 (the draw loop, matches): obj is in s2 and func_802284F0's
  *   obj is kept in memory as in the original. In its texture loop, model
  *   is `unk4[i].unk0` and the then-branch index `unk4[i].unk4` (one slot
  *   address, the i*8 strength-reduced). An animation's frames are 8-byte
@@ -68,14 +68,16 @@
  *   moves come out a1, then t0.
  *   The else branch copies gfx into g first and advances gfx itself
  *   (`gfx++` before the segment through g: the original's `addiu
- *   t1,t1,8`), and `if (g && g && g) {}` after the segment raises g's
- *   priority to cur's (save 20 at n = 3), so g is coloured first, takes
- *   v1 and pushes cur, which is coloured but never used (its uses are
- *   the anim->unk4 load's register), out of v1; gfx then takes t1.
- *   Left (4): the anim->unk4 load is in a1 and cur's unused register is
- *   a0, the other way round in the original: the load (save 20) must be
- *   coloured before cur (save 20, lower bit). One more use of the load
- *   (a dead read of anim->unk4) puts it ahead of g as well (v1).
+ *   t1,t1,8`). The rest is colouring order, set with dead reads
+ *   (uopt's priority is uses * 10 / blocks in a loop; ties go to the
+ *   lower bit, and a variable's bit comes before its initialiser's): g
+ *   (v1) must be coloured before the anim->unk4 load (a0), and that
+ *   before cur (a1, coloured but never used: its uses are the load's
+ *   register), so gfx takes t1. `if (anim->unk4) {}` in the threshold
+ *   arm gives the load a fifth use (save 25 > cur's 20); a sum of five
+ *   g and one model in one dead test after the segment (no `&&`, which
+ *   adds blocks) puts g at 26.7, above the load, and model back above
+ *   count (the new block in the threshold arm lowered it).
  *   The ry ternary's `: 0` (an int) gives the
  *   original's mtc1 pair; the matrix stack is a frame struct's
  *   `mtx[]`, as in 41FD0.c.
@@ -1192,6 +1194,7 @@ static void func_802284F0(UnkObj *arg0, UnkGfx **arg1) {
             count = anim->unk8;
             if (count >= anim->unkC[cur].unk4) {
                 anim->unk8 = 0;
+                if (anim->unk4) {}
                 if (anim->unk4 == anim->unk0 - 1) {
                     anim->unk4 = 0;
                 } else {
@@ -1202,7 +1205,7 @@ static void func_802284F0(UnkObj *arg0, UnkGfx **arg1) {
             }
             gfx++;
             gSPSegment(g, i + 3, (u8 *)model + model->unkC[anim->unkC[anim->unk4].unk0].unk8);
-            if (g && g && g) {}
+            if ((s32)g + (s32)g + (s32)g + (s32)g + (s32)g + (s32)model) {}
         }
     }
     *arg1 = gfx;
