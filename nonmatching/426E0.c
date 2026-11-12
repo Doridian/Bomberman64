@@ -3,13 +3,15 @@
  * (0xA0 objects linked by priority), its draw loop (matrices, render
  * modes, texture segments and scrolls, fog), the per-object animation and
  * texture slots, and object creation from a model file. Every function
- * is in C, in the original's order (callees first; the statics
- * func_802280EC, func_802284F0, func_802284F8, func_802289B8 and
+ * is in C, in reverse ROM order (IDO -O3 emits them in ROM order; the
+ * statics func_802280EC, func_802284F0, func_802284F8, func_802289B8 and
  * func_8022A850 inlined, with their stubs; func_8022827C and
- * func_80228500 kept). Not built into the ROM (docs/DECOMPILING.md,
- * "NON_MATCHING drafts").
+ * func_80228500 kept), except func_802289B8, defined after its caller
+ * (below). It matches in every version (.text, and the .rodata's 0.001f
+ * and pad); it stays here until it is moved to src/ with its data.
+ * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2, eu 2, jp 2
+ * differing words: us 0, eu 0, jp 0
  *
  * The code is the same in every version.
  *
@@ -41,9 +43,7 @@
  *   the determinant scalars (uncoloured: stored and reloaded), `det =
  *   1.0f / det`, an early return on zero, and the stores column 0, then
  *   the other cofactors row-major, then the zeros and 1.0f.
- *
- * Left:
- * - func_802289C0 (the draw loop, matches): obj is in s2 and func_802284F0's
+ * - func_802289C0 (the draw loop): obj is in s2 and func_802284F0's
  *   obj is kept in memory as in the original. In its texture loop, model
  *   is `unk4[i].unk0` and the then-branch index `unk4[i].unk4` (one slot
  *   address, the i*8 strength-reduced). An animation's frames are 8-byte
@@ -81,7 +81,7 @@
  *   The ry ternary's `: 0` (an int) gives the
  *   original's mtc1 pair; the matrix stack is a frame struct's
  *   `mtx[]`, as in 41FD0.c.
- * - func_8022A328 (matches): the free slot and the list position are
+ * - func_8022A328: the free slot and the list position are
  *   function-scope statics (D_802A5474, D_802A5478: no other function
  *   uses them), which uopt keeps in registers and stores back at each
  *   exit. `if (arg1) {}` after their initialisation ends the entry
@@ -97,15 +97,17 @@
  *   in a register); the else branch's stores are integer 0 and 1 (so
  *   the 0.0f of the other branch is a separate constant). The tail
  *   stores unk34, unk36, unk4C, then the D_802A5460 increment.
- * - func_80229C10 (2): `if (!chunks) {}` keeps model+12 a value of its
- *   own; `if (!arg1) {}` first and `if (!arg0) {}` after the loop keep
- *   the arguments' registers busy, so dl takes a3, first t0 and i t1 as
- *   in the original. The loop bound 2 is left in a1 (a0 in the
- *   original: arg0 dead in the loop but live where dl is set). w
- *   as arg1 again (after the loop) gives the original's a1 for it and
- *   frees a0 for the bound, but a dead read of arg0 before the loop
- *   splits the block and moves i to v0 (7 at best).
- * - func_80229448 (matches): the empty loop survives only as `i * 4 !=
+ * - func_80229C10: `if (!chunks) {}` keeps model+12 a value of its
+ *   own; `if (!arg1) {}` first and `if (!arg2) {}` keep the arguments'
+ *   registers busy. The colouring is block-grained: dl, first and i
+ *   must share a block with arg0 and chunks (so they avoid a0 and v0),
+ *   and the loop's constants 2 and 4 must not (they take a0 and v0).
+ *   So `i = 0;` is a statement of its own, before `if (!arg0) {}` (which
+ *   ends that block) and an init-less `for (; i != 2; i++)`, all on one
+ *   line: on separate lines `move t1,zero` is scheduled first (as1 orders
+ *   by .loc line; the original's comes after the li of 2). w is arg1
+ *   again (after the loop), which gives it a1.
+ * - func_80229448: the empty loop survives only as `i * 4 !=
  *   16` (a plain `i < 4` is deleted, the multiply is what uopt
  *   strength-reduces after its dead-loop pass). A local counter takes
  *   v0 in the entry block and pushes the IV to v1; a third parameter as
@@ -812,7 +814,6 @@ u32 func_80229C10(UnkObj *arg0, s32 arg1, UnkVtx **arg2) {
     UnkChunk *chunks;
     UnkGfx *dl;
     u32 first;
-    u32 w;
     s32 i;
 
     if (!arg1) {}
@@ -822,16 +823,15 @@ u32 func_80229C10(UnkObj *arg0, s32 arg1, UnkVtx **arg2) {
     if (!chunks) {}
     dl = (UnkGfx *)((u8 *)model + chunks[arg1].unk8);
     first = dl->w1;
-    for (i = 0; i < 2; i++) {
+    i = 0; if (!arg0) {} for (; i != 2; i++) {
         while (*(u8 *)dl != 4) {
             dl++;
         }
         dl++;
     }
-    w = dl[-1].w1;
-    if (!arg0) {}
-    *arg2 = (UnkVtx *)((w & 0xFFFFFF) + (u32)model);
-    return (first - w) >> 4;
+    arg1 = dl[-1].w1;
+    *arg2 = (UnkVtx *)((arg1 & 0xFFFFFF) + (u32)model);
+    return (first - arg1) >> 4;
 }
 
 void func_80229BF4(s32 arg0) {
