@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 233, eu 233, jp 1983
+ * differing words: us 229, eu 229, jp 1983
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -3170,10 +3170,9 @@ block_873:
                                                         M2C_FIELD(M2C_FIELD(temp_s1, void **, 0x40), f32 *, 0x14) = 0.0f;
                                                         M2C_FIELD(M2C_FIELD(temp_s1, void **, 0x40), f32 *, 0x18) = 1600.0f;
                                                         func_8027F858((s32) temp_s1, 5);
-                                                        temp_a0_3 = M2C_FIELD(temp_s1, void **, 0x40);
-                                                        if ((FDIFF(M2C_FIELD(temp_a0_3, f32 *, 0x10), 2400.0f) >= 6.0f) || (FDIFF(M2C_FIELD(temp_a0_3, f32 *, 0x18), 1600.0f) >= 6.0f)) {
-                                                            if (M2C_FIELD(temp_a0_3, f32 *, 0x10) != 2400.0f) {
-                                                                if (M2C_FIELD(temp_a0_3, f32 *, 0x10) > 2400.0f) {
+                                                        if ((FDIFF(M2C_FIELD(M2C_FIELD(temp_s1, void **, 0x40), f32 *, 0x10), 2400.0f) >= 6.0f) || (FDIFF(M2C_FIELD(M2C_FIELD(temp_s1, void **, 0x40), f32 *, 0x18), 1600.0f) >= 6.0f)) {
+                                                            if (M2C_FIELD(M2C_FIELD(temp_s1, void **, 0x40), f32 *, 0x10) != 2400.0f) {
+                                                                if (M2C_FIELD(M2C_FIELD(temp_s1, void **, 0x40), f32 *, 0x10) > 2400.0f) {
                                                                     var_s3 = 6;
                                                                 } else {
                                                                     var_s3 = 2;
@@ -3181,8 +3180,8 @@ block_873:
                                                             } else {
                                                                 var_s3 = 0;
                                                             }
-                                                            if (M2C_FIELD(temp_a0_3, f32 *, 0x18) != 1600.0f) {
-                                                                if (M2C_FIELD(temp_a0_3, f32 *, 0x18) > 1600.0f) {
+                                                            if (M2C_FIELD(M2C_FIELD(temp_s1, void **, 0x40), f32 *, 0x18) != 1600.0f) {
+                                                                if (M2C_FIELD(M2C_FIELD(temp_s1, void **, 0x40), f32 *, 0x18) > 1600.0f) {
                                                                     if (var_s3 == 0) {
                                                                         var_s3 = 4;
                                                                     } else {
