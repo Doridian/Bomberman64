@@ -4,15 +4,16 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2, eu 2, jp 2
+ * differing words: us 0, eu 0, jp 0
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
- * match in us. It is one object: the only callee emitted after its
- * caller is func_8024364C (called by func_8023F26C), and the IPA statics
- * (func_8023AB54, B2AC, B318, B450 take arguments in s2/fs0/t0, called by
- * func_8023FD08; func_8023E8FC in s4, called by func_80242FB4) tie
- * 0x8023AB54-0x80242FB4 together, so no 16-aligned cut is possible.
+ * matched in us then (all 72 do now, in us, eu and jp). It is one
+ * object: the only callee emitted after its caller is func_8024364C
+ * (called by func_8023F26C), and the IPA statics (func_8023AB54,
+ * B2AC, B318, B450 take arguments in s2/fs0/t0, called by func_8023FD08;
+ * func_8023E8FC in s4, called by func_80242FB4) tie 0x8023AB54-0x80242FB4
+ * together, so no 16-aligned cut is possible.
  *
  * The emission order is the original's. IDO -O3 emits the global
  * functions in reverse source order, each after its callees (depth
@@ -65,13 +66,20 @@
  *   func_8023AC38's dead call to func_8023AB90 keeps the order once
  *   func_8023AB54 is inlined.
  * - func_8023E1D8's three handle loops (sltu against the end, pointer
- *   spilled across the call) are one inlined static, func_8023AB4C,
- *   indexing `items[i]` (an index used in an address gets SR+LFTR; a
- *   `p++` form keeps a counter); its timer is the loop counter i, and
- *   func_8027EFA8 returns a u16 (the `move v1,v0` copy into keys). The
- *   first written-out site uses a block-local `TextItem *items` and a
- *   count in sel, which puts its spill at 72 as in the original; the
- *   same block at the second site costs 8 bytes of frame.
+ *   spilled across the call) index `items[i]` (an index used in an
+ *   address gets SR+LFTR; a `p++` form keeps a counter). The first is
+ *   func_8023AB4C inlined; the other two are written out through one
+ *   function-scope `TextItem *items`, so their IVs come from copy
+ *   propagation, with bits after the loop-end test's, and take the second
+ *   spill slot (sp+72) as in the original (`D_802A0ACC[i]` names the IV
+ *   first: sp+76). The third loop counts with j: with i, the while loop's
+ *   timer, uopt's LFTR builds the end as base + keys*20 at run time (an
+ *   add chain and an overflow trap). func_8027EFA8 returns a u16 (the
+ *   `move v1,v0` copy into keys). `cur = func_8026CE28(0x130);` on its own
+ *   line saves the nested call's cfe temporary, the word j needs: the
+ *   frame is h1, h2, buf, the locals, then the inlined areas (each one's
+ *   parameters 8-aligned, its locals below), and an inlined
+ *   func_8023AB4C as the last area could never give the original's frame.
  * - func_8023FD08 keeps its message handles in a plain array h[3] and a
  *   count nh (not a struct: `t.h[t.n]` folds the member offset into the
  *   index), with `nh = 0; h[nh++] = ...` for the first one: nh stays
@@ -94,10 +102,6 @@
  *   `x = D_802A0764[i]` names x before its address, so either e comes
  *   first (slot sp+48) or x does (t2/t3 swapped); pos is copy-propagated
  *   and only orders the address.
- * - Left (2 words, a spill slot): in func_8023E1D8 the third handle loop
- *   takes sp+76 rather than 72: all three loops as func_8023AB4C calls
- *   give the original's slots but 24 bytes more frame (each inlined area
- *   is 12, 8-aligned), and buf must stay at sp+164.
  */
 #include "common.h"
 
@@ -2051,10 +2055,12 @@ void func_8023E1D8() {
     s32 h2;
     u8 buf[28];
     s32 i;
+    s32 j;
     s32 k;
     s32 sel;
     s32 keys;
     u8 *cur;
+    TextItem *items;
 
     for (i = 0; i < 5; i++) {
         if ((&D_800BE818)[i] != 0) {
@@ -2079,12 +2085,10 @@ void func_8023E1D8() {
         func_8023AE6C(0x20, 0x11, 0);
     } else {
         func_8023903C(0xB4);
-        {
-            TextItem *items = D_802A0AB8;
-            sel = 1;
-            for (i = 0; i < sel; i++) {
-                func_80280DB4(items[i].handle);
-            }
+        items = D_802A0AB8;
+        sel = 1;
+        for (i = 0; i < sel; i++) {
+            func_80280DB4(items[i].handle);
         }
         func_8023903C(2);
         func_8023B450(D_802AC610.unk18, buf, 2);
@@ -2092,7 +2096,8 @@ void func_8023E1D8() {
         h1 = func_802811F0(buf, 0xBEU, 0xA0U, 0.6f, 0.6f, 2U);
         func_8023B450(9, buf, 1);
         h2 = func_802811F0(buf, 0xD6U, 0x50U, 0.8f, 0.8f, 2U);
-        cur = func_8022A6C4(func_8026CE28(0x130), 0x40);
+        cur = func_8026CE28(0x130);
+        cur = func_8022A6C4(cur, 0x40);
         M2C_FIELD(cur, f32 *, 0x10) = 123.0f;
         M2C_FIELD(cur, f32 *, 0x14) = 108.0f;
         M2C_FIELD(cur, f32 *, 0x18) = 137.0f;
@@ -2156,9 +2161,10 @@ void func_8023E1D8() {
             func_8023903C(0x3C);
             func_8023AE6C(0x20, 0x11, 0);
         }
+        items = D_802A0ACC;
         keys = 4;
-        for (i = 0; i < keys; i++) {
-            func_80280DB4(D_802A0ACC[i].handle);
+        for (j = 0; j < keys; j++) {
+            func_80280DB4(items[j].handle);
         }
         func_80280DB4(h1);
         func_80280DB4(h2);
