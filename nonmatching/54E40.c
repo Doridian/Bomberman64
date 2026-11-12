@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 6, eu 6, jp 6
+ * differing words: us 2, eu 2, jp 2
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -85,16 +85,19 @@
  *   fcmp counts a static with the function before it, so func_8023D0F8's
  *   player loop (index form, `pl = &PLAYERS[i]`, the type read twice
  *   rather than through a local) was counted under func_8023CD1C.
- * - Left (6 words, all spill slots; uopt gives coloured expressions
- *   slots greedily in bit order): func_80242270's &D_802A0764[i] IV gets
- *   the second slot (sp+48) because `e = tf->entries` (tf+12, which
- *   overlaps it) has the lower bit. A dead `if (D_802A0764[i]) {}` just
- *   before the outer loop (i not yet set) matches, but no real source
- *   found: x before e fixes the slot and swaps e/x's t2/t3. In
- *   func_8023E1D8 the third handle loop takes sp+76 rather than 72:
- *   all three loops as func_8023AB4C calls give the original's slots
- *   but 24 bytes more frame (each inlined area is 12, 8-aligned), and
- *   buf must stay at sp+164.
+ * - func_80242270's counters take the x position through a pointer
+ *   (`pos = &D_802A0764[i]; ... e = tf->entries; x = *pos;`). uopt gives
+ *   coloured expressions spill slots greedily in bit order, and ties in
+ *   colouring priority go to the lower bit: the &D_802A0764[i] IV (never
+ *   given a register) must come before tf+12 (e) to get the first slot
+ *   (sp+52), and e before x to get t2 before x's t3. A plain
+ *   `x = D_802A0764[i]` names x before its address, so either e comes
+ *   first (slot sp+48) or x does (t2/t3 swapped); pos is copy-propagated
+ *   and only orders the address.
+ * - Left (2 words, a spill slot): in func_8023E1D8 the third handle loop
+ *   takes sp+76 rather than 72: all three loops as func_8023AB4C calls
+ *   give the original's slots but 24 bytes more frame (each inlined area
+ *   is 12, 8-aligned), and buf must stay at sp+164.
  */
 #include "common.h"
 
@@ -951,6 +954,7 @@ void func_80242270(s32 arg0, Gfx **gdl) {
     s32 *digit;
     s32 n;
     s32 x;
+    s32 *pos;
     s32 i;
     s32 j;
     s32 v;
@@ -1004,9 +1008,10 @@ void func_80242270(s32 arg0, Gfx **gdl) {
     n = 0;
     tf = D_802A075C;
     for (i = 0; i < 2; i++) {
+        pos = &D_802A0764[i];
         j = 0;
         e = tf->entries;
-        x = D_802A0764[i];
+        x = *pos;
         if (D_802A076C[i] > 0) {
             digit = &D_802AC770[n];
             do {
