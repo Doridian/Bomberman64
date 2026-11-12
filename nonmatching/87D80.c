@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 27, eu 27, jp 27
+ * differing words: us 24, eu 24, jp 24
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -26,7 +26,9 @@
  * address in every pass, so uopt strength-reduces it as the original
  * does (a single use at the loop's end keeps a multu).
  * 41 of 43 match. Left: func_8026DCAC 7 (iy and the layer pointer
- * swap a0/a1: the pointer is coloured first), func_8026FC08 20.
+ * swap a0/a1: the pointer is coloured first), func_8026FC08 17 (the
+ * inner loop's schedule around j % 8). Its `src = p = D_802AFC6C = ...`
+ * chain puts &D_802AFC6C in v1, as the original does.
  */
 #include "common.h"
 
@@ -432,11 +434,10 @@ void func_8026FC08(s32 arg0) {
     D_802AFC50 = arg0;
     D_800B15D8->unk4 = 0;
     D_800B15D8->unk8 = 0;
-    src = D_802AFC6C = func_8026CE28(arg0);
+    src = p = D_802AFC6C = func_8026CE28(arg0);
     D_802AFC60 = 0.0f;
     D_802AFC64 = 1.6333334f;
     D_802AFC68 = 0.0f;
-    p = D_802AFC6C;
     D_800B15D8->unk0 = *p++;
     layers = D_800B15D8->unk0;
     D_800B15D8->unk1 = *p++;
