@@ -16,7 +16,7 @@
  * "NON_MATCHING drafts"). The prelude (types, externs, prototypes) is
  * 87D80.c's.
  * flags: -O3
- * differing words: us 72, eu 72, jp 72
+ * differing words: us 70, eu 70, jp 70
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file, and 8E730 calls 926A0 (src/926A0.c,
@@ -27,7 +27,12 @@
  * was. 98 of 101 match. Left: func_80270770 35 (flags and ok in v1/a0
  * where the original has a0/a1), func_802741D8 17 (slot kept in a0,
  * the 6C store's schedule), func_80277B54 17 (the list-init tail
- * stores in ugen order), func_80275120 3 (c.eq.s operand order).
+ * stores in ugen order), func_80275120 1 (the middle c.eq.s operand
+ * order). func_80275120 holds sp28.f[0] and [2] in arg0 for their tests
+ * (`arg0 = sp28.f[0]; if (arg0 != 0.0f)`): uopt keeps a variable as the
+ * compare's first operand, where `0.0f != x` and `x != 0.0f` both put
+ * the constant first (c.eq.s $f0,$f8). The same in the middle test
+ * colours arg0 to $f12 (its value is not reused after the call).
  * func_802763DC masks in a second statement (`t = f(...); t &= 0x1C00;`)
  * as func_802720C8 does: the and is then a ugen temporary (t0), not a
  * uopt-coloured expression (v1).
@@ -1772,7 +1777,8 @@ void func_80275120(f32 arg0, f32 arg1, f32 arg2, f32 *arg3, f32 *arg4, f32 *arg5
 
     func_8026DCAC(arg0, arg1, arg2, &sp28, 0);
     *arg3 = sp28.i[0];
-    if (0.0f != sp28.f[0]) {
+    arg0 = sp28.f[0];
+    if (arg0 != 0.0f) {
         *arg3 += sp28.f[0] / 100.0f;
     }
     if (arg1 < 0.0f) {
@@ -1787,7 +1793,8 @@ void func_80275120(f32 arg0, f32 arg1, f32 arg2, f32 *arg3, f32 *arg4, f32 *arg5
         }
     }
     *arg5 = sp28.i[2];
-    if (0.0f != sp28.f[2]) {
+    arg0 = sp28.f[2];
+    if (arg0 != 0.0f) {
         *arg5 += sp28.f[2] / 100.0f;
     }
 }
