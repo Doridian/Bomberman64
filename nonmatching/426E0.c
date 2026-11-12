@@ -9,7 +9,7 @@
  * func_80228500 kept). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 147, eu 147, jp 147
+ * differing words: us 124, eu 124, jp 124
  *
  * The code is the same in every version.
  *
@@ -43,24 +43,27 @@
  *   the other cofactors row-major, then the zeros and 1.0f.
  *
  * Left:
- * - func_802289C0 (the draw loop, 112): obj is in s2 and
- *   func_802284F0's obj is kept in memory as in the original once its
- *   texture loop has the original's register pressure: model is
- *   `unk4[i].unk0` and the then-branch index `unk4[i].unk4` (one slot
- *   address, the i*8 strength-reduced), the else branch reads
- *   anim->unk4 into a local, keeps the threshold test in a flag local
- *   (`done`; the original tests `at` directly, so the pressure may come
- *   from elsewhere) and writes the segment through a `g = gfx` taken
- *   first. `anim->unk4 == anim->unk0 - 1` keeps the two unk4 + 1 apart.
- *   An unused `s32 pad[2]` in func_802284F8 gives the 0x160 frame and
- *   puts that obj's home at 0xB0. Left: registers in the loop and after
- *   it, and the D_8029F840 store, which the original puts in func_80228500's jal
+ * - func_802289C0 (the draw loop, 89): obj is in s2 and
+ *   func_802284F0's obj is kept in memory as in the original. In its
+ *   texture loop, model is `unk4[i].unk0` and the then-branch index
+ *   `unk4[i].unk4` (one slot address, the i*8 strength-reduced). The
+ *   anim pointer is taken inside the else branch, after `g = gfx` (as1
+ *   hoists it into the bnez delay slot): taken before the if, it
+ *   interferes with the unk4C reload in the loop's first block, and
+ *   the reload can't share v0 with it as in the original. The else
+ *   branch reads anim->unk4 into `cur` and tests the threshold
+ *   directly (slt at). `anim->unk4 == anim->unk0 - 1` keeps the two
+ *   unk4 + 1 apart. An unused `pad` there and an `s32 pad[2]` in
+ *   func_802284F8 give the 0x160 frame and put that obj's home at
+ *   0xB0. Left: gfx is in a1 where the original has t1 and leaves a1
+ *   unused through the loop (some range there that as1 deleted, as it
+ *   deletes our `cur` copy?); cur takes v1, so g goes to t1 (v1 in the
+ *   original); the t-register rotation after the loop; and the
+ *   D_8029F840 store, which the original puts in func_80228500's jal
  *   delay slot (cc -S shows ugen emitting it after the argument setup
- *   there; ours emits it before). Without `done`, a dead read of the
- *   texture pointer keeps obj in memory with the original's slt at, but
- *   the rest of the loop's registers move (142). The ry ternary's `: 0` (an int) gives the original's
- *   mtc1 pair; the matrix stack is a frame struct's `mtx[]`, as in
- *   41FD0.c.
+ *   there; ours emits it before). The ry ternary's `: 0` (an int) gives
+ *   the original's mtc1 pair; the matrix stack is a frame struct's
+ *   `mtx[]`, as in 41FD0.c.
  * - func_8022A328 (32): the free slot and the list position are
  *   function-scope statics (D_802A5474, D_802A5478: no other function
  *   uses them), which uopt keeps in registers and stores back at each
@@ -1170,20 +1173,19 @@ static void func_802284F0(UnkObj *arg0, UnkGfx **arg1) {
     UnkModel *model;
     s32 idx;
     s32 cur;
-    s32 done;
+    s32 pad;
 
     gfx = *arg1;
     for (i = 0; i < arg0->unk4C->unk0; i++) {
-        anim = &arg0->unk4C->unk8[i];
         model = arg0->unk4C->unk4[i].unk0;
         if (arg0->unk4C->unk8 == NULL) {
             idx = arg0->unk4C->unk4[i].unk4;
             gSPSegment(gfx++, i + 3, (u8 *)model + model->unkC[idx].unk8);
         } else {
             g = gfx;
+            anim = &arg0->unk4C->unk8[i];
             cur = anim->unk4;
-            done = anim->unk8 >= anim->unkC[cur * 2 + 1];
-            if (done) {
+            if (anim->unk8 >= anim->unkC[cur * 2 + 1]) {
                 anim->unk8 = 0;
                 if (anim->unk4 == anim->unk0 - 1) {
                     anim->unk4 = 0;
