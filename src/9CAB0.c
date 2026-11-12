@@ -1,10 +1,14 @@
 /*
- * NON_MATCHING: main_code's 9CAB0, complete: the objects in D_800BA900's
- * sixteen slots, each driven by a task in D_800BB340. Every function is
- * emitted in the original's order, with the original's stubs. Not built
- * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * main_code's 9CAB0 (-O3): the objects in D_800BA900's sixteen slots,
+ * each driven by a task in D_800BB340. Every function is emitted in the
+ * original's order, with the original's stubs. func_80282454 is global
+ * (A2840 calls it); the code is the same either way.
+ *
+ * Data: its .data (0xA0: an unreferenced word, the function table
+ * D_802A1AB4, the table D_802A1AF0) and .rodata (0x300, 151 of its 192
+ * words jump-table entries) are its own and placed in data_split.txt. It
+ * has no .bss: D_800BA8E8, D_800BA900, D_800BB340.. are outside
+ * main_code, and D_802A1B50.., D_802B0260.. are A1EA0's.
  */
 #include "common.h"
 
@@ -201,8 +205,6 @@ f32 sinf(f32);
 extern u8 D_800BA90C[];
 extern u8 D_800BB488[20];
 extern s32 D_800BC520;
-extern u8 D_802A1AB4[];
-extern s32 D_802A1AF0[][4];
 extern s32 D_802A1B50;
 extern u8 D_802A1B54[];
 extern UnkStruct_802B0260 D_802B0260[2];
@@ -216,7 +218,7 @@ static void func_802822E0(UnkStruct_800BB340 *arg0);
 static void func_80282340(UnkStruct_800BA900 *arg0);
 static void func_80282428();
 void func_80282430();
-static void func_80282454(UnkStruct_80288040 *arg0);
+void func_80282454(UnkStruct_80288040 *arg0);
 static s32 func_802824B4(UnkStruct_80288040 *arg0);
 s32 func_80282524(UnkStruct_80288040 *arg1);
 static void func_80282588();
@@ -335,6 +337,20 @@ static void func_802867DC(UnkStruct_800BA900 *arg0);
 static UnkStruct_800BB340 *func_802872D8(UnkStruct_800BA900 *arg0);
 static void func_80287690();
 void func_80287698();
+
+/* .data (0xA0, from the boundary after 9BFD0's table): a word nothing
+ * references, the table of the object functions handed to func_80297D30,
+ * then func_802829A4's table, indexed by func_8023A840()'s unk4 and unk8. */
+u8 D_802A1AB0[4] = { 0 };
+void *D_802A1AB4[] = {
+    func_80287008, func_80286CA8, func_802867E4, func_80286E60, func_802822B0,
+    func_802875B0, func_80287440, func_802872E0, func_802871D0, func_80287150,
+    func_802870A8, func_802863B0, func_80282934, func_8028275C, func_80282978,
+};
+s32 D_802A1AF0[][4] = {
+    { 0x2D, -1, 0x2E, -1 }, { 0x2F, -1, 0x30, -1 }, { 0x31, -1, 0x32, -1 },
+    { 0x33, -1, 0x34, -1 }, { 0x35, -1, 0x36, -1 }, { 0x37, -1, 0x38, -1 },
+};
 
 #define DEC_80284CA4(a_) ((--(a_)->unk6D == 0) ? 1 : 0)
 
@@ -2491,7 +2507,7 @@ static s32 func_802824B4(UnkStruct_80288040 *arg0) {
     return ret;
 }
 
-static void func_80282454(UnkStruct_80288040 *arg0) {
+void func_80282454(UnkStruct_80288040 *arg0) {
     func_80229E38(arg0->unk0->unk40, 0, 0);
     arg0->unk0->unk40->unk48->unk4->unk4 = 0.0f;
     func_80282430(arg0, 0xF, 0);

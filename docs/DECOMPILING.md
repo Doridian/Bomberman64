@@ -236,7 +236,7 @@ matches, drop the `#ifdef` and the asm.
   in one file), 4ED50, 52270 (jp's func_8023876C has no TV-type
   switch: `#if VERSION_JP`), 530C0, 53D70, 78CA0, 78F60, 80580, 85A10, 86680,
   87D80, 8A7A0, 93850 and 949A0 (949A0 split off 93850 at 0x8027A1A0, text_objects.txt
-  has why), 96540, 97610, 995C0, 9A5F0, 9BFD0, A8DE0, ACA00, AD5B0,
+  has why), 96540, 97610, 995C0, 9A5F0, 9BFD0, 9CAB0, A8DE0, ACA00, AD5B0,
   AFBF0, B11F0, B6680 (`-mips2`), ovl_0A_02-05's, ovl_0C_03's, ovl_0E_09's, ovl_12_02's, ovl_12_04's, ovl_17_01's and ovl_17_10's objects are `-O3`; 5E090, 87190, 87730,
   99F40 and A4860 are `-O2` (no
   inlining between functions that call each other, no cross-call
@@ -1132,7 +1132,8 @@ objects after main_code's cut that have jump tables, strings or
 constants (995C0, 54BE0, 87D80, 8A7A0: `.rodata` only), or whose `.data`/`.bss` is all
 their own (53D70, 530C0, 412F0, AFBF0: all three sections, jp's .data
 its own size; 80580: .data and .rodata, since a function's `static`
-counter puts its .data in the C; 46300: all three, since
+counter puts its .data in the C; 9CAB0: .data and .rodata, its .bss
+outside main_code; 46300: all three, since
 func_8022C8B8's `static`s put its .bss in the C; 426E0: .rodata and
 .bss, since func_8022A328's and func_8022A6C4's `static`s do the same,
 its .data staying asm); everything else they

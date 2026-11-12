@@ -186,6 +186,10 @@ main_code @jp 9A5F0 sizes=0x40,0,0
 main_code @us 9A5F0 data=0x802A1630 bss=0x802B0220
 main_code @eu 9A5F0 data=0x802A1630 bss=0x802B0210
 main_code @jp 9A5F0 data=0x802A0C90
+main_code 9CAB0 0xA0 0x300 0
+main_code @us 9CAB0 data=0x802A1AB0 rodata=0x802A4050
+main_code @eu 9CAB0 data=0x802A1AB0 rodata=0x802A4040
+main_code @jp 9CAB0 data=0x802A0D00 rodata=0x802A3280
 main_code A1EA0 0x20 0 0xB0
 main_code @us A1EA0 data=0x802A1B50 bss=0x802B0260
 main_code @eu A1EA0 data=0x802A1B50 bss=0x802B0250
