@@ -9,7 +9,7 @@
  * func_80228500 kept). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 13, eu 13, jp 13
+ * differing words: us 11, eu 11, jp 11
  *
  * The code is the same in every version.
  *
@@ -43,7 +43,7 @@
  *   the other cofactors row-major, then the zeros and 1.0f.
  *
  * Left:
- * - func_802289C0 (the draw loop, 10): obj is in s2 and func_802284F0's
+ * - func_802289C0 (the draw loop, 8): obj is in s2 and func_802284F0's
  *   obj is kept in memory as in the original. In its texture loop, model
  *   is `unk4[i].unk0` and the then-branch index `unk4[i].unk4` (one slot
  *   address, the i*8 strength-reduced). An animation's frames are 8-byte
@@ -59,12 +59,17 @@
  *   The unkC & 2 call goes through a function-pointer local loaded after
  *   the D_802A5470 store (jalr v0, not t9). An `s32 pad[2]` in
  *   func_802284F8 gives the 0x160 frame and puts that obj's home at 0xB0.
+ *   func_802289B8 is defined after func_802289C0: IDO -O3 emits the
+ *   procedures in its own order (the stub stays before the caller), but
+ *   an inlined static keeps its definition's .loc lines, and as1 orders
+ *   a block partly by line. With the inlined lines above the call's,
+ *   the D_8029F840 store goes into func_80228500's jal delay slot as in
+ *   the original. func_80228500 takes (obj, &gfx), so the IPA argument
+ *   moves come out a1, then t0.
  *   Left: gfx is in a1 where the original has t1 and leaves a1 unused
  *   through the loop (some range there that as1 deleted?); cur takes v1,
- *   so g takes t1 (v1 in the original); and the D_8029F840 store, which
- *   the original puts in func_80228500's jal delay slot (cc -S shows
- *   ugen emitting it after the argument setup there; ours emits it
- *   before). The original's join block does `addiu t1,t1,8` (gfx + 1,
+ *   so g takes t1 (v1 in the original). The original's join block does
+ *   `addiu t1,t1,8` (gfx + 1,
  *   not g + 1), and passing gfx by value (`gfx = func_802284F0(arg0,
  *   gfx)`, returned) puts it in t1 with the original's priority; both
  *   are worse for now (29 and 17 words), because cur still takes v1
@@ -458,7 +463,7 @@ s32 func_802280F4(UnkObj *arg0, s32 arg1);
 static void func_8022827C(UnkObj *arg0);
 static void func_802284F0(UnkObj *arg0, UnkGfx **arg1);
 static s32 func_802284F8(UnkObj *arg0, UnkGfx **arg1);
-static void func_80228500(UnkGfx **arg0, UnkObj *arg1);
+static void func_80228500(UnkObj *arg0, UnkGfx **arg1);
 static s32 func_802289B8(UnkObj *arg0);
 void func_802289C0(UnkObj *arg0, UnkGfx **arg1);
 void func_802290CC(void);
@@ -1053,49 +1058,39 @@ void func_802290CC(void) {
     }
 }
 
-static s32 func_802289B8(UnkObj *arg0) {
-    s32 i;
 
-    for (i = 0; i < 5; i++) {
-        if (arg0 == D_80098C18[i].unk4) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-static void func_80228500(UnkGfx **arg0, UnkObj *arg1) {
+static void func_80228500(UnkObj *arg0, UnkGfx **arg1) {
     UnkGfx *gfx;
 
-    gfx = *arg0;
-    if (D_802A5490 != arg1->unk34 || (arg1->unkC & 2)) {
+    gfx = *arg1;
+    if (D_802A5490 != arg0->unk34 || (arg0->unkC & 2)) {
         D_802A5470 = -1;
         D_8029F848 = -1;
     }
-    D_802A5490 = arg1->unk34;
-    if (arg1->unkC & 0x8000) {
+    D_802A5490 = arg0->unk34;
+    if (arg0->unkC & 0x8000) {
         gW(gfx++, 0xB900031D, 0x507BD8);
         D_802A5470 = 4;
-        gW(gfx++, 0xFB000000, (arg1->unk36 & 0xFF) | ~0xFF);
-    } else if ((arg1->unkC & 0x80) && (arg1->unkC & 0x1000)) {
+        gW(gfx++, 0xFB000000, (arg0->unk36 & 0xFF) | ~0xFF);
+    } else if ((arg0->unkC & 0x80) && (arg0->unkC & 0x1000)) {
         if (D_802A5470 != 5) {
             gW(gfx++, 0xB900031D, 0x055079F8);
-            gW(gfx++, 0xF8000000, arg1->unk36 & 0xFF);
+            gW(gfx++, 0xF8000000, arg0->unk36 & 0xFF);
             D_802A5470 = 5;
         }
-    } else if ((arg1->unkC & 0x80) && arg1->unk36 != -1) {
+    } else if ((arg0->unkC & 0x80) && arg0->unk36 != -1) {
         gW(gfx++, 0xB900031D, 0x055079D8);
         D_802A5470 = 2;
-        gW(gfx++, 0xF8000000, (arg1->unk36 & 0xFF) | ~0xFF);
-    } else if (arg1->unkC & 0x80) {
+        gW(gfx++, 0xF8000000, (arg0->unk36 & 0xFF) | ~0xFF);
+    } else if (arg0->unkC & 0x80) {
         if (D_802A5470 != 1) {
             gW(gfx++, 0xB900031D, 0x5049D8);
             D_802A5470 = 1;
         }
-    } else if (arg1->unkC & 0x40000) {
+    } else if (arg0->unkC & 0x40000) {
         if (D_802A5470 != 6) {
             gW(gfx++, 0xB900031D, 0x5010F8);
-            gW(gfx++, 0xFB000000, arg1->unk36 & 0xFF);
+            gW(gfx++, 0xFB000000, arg0->unk36 & 0xFF);
             gW(gfx++, 0xB9000002, 3);
             D_802A5470 = 6;
         }
@@ -1120,7 +1115,7 @@ static void func_80228500(UnkGfx **arg0, UnkObj *arg1) {
     if (D_802A5470 != 3 && D_802A5470 != 6) {
         gW(gfx++, 0xB9000002, 0);
     }
-    if (arg1->unkC & 0x200) {
+    if (arg0->unkC & 0x200) {
         if (D_8029F848 != 1) {
             gW(gfx++, 0xBA000C02, 0);
             D_8029F848 = 1;
@@ -1129,7 +1124,7 @@ static void func_80228500(UnkGfx **arg0, UnkObj *arg1) {
         gW(gfx++, 0xBA000C02, 0x2000);
         D_8029F848 = 0;
     }
-    *arg0 = gfx;
+    *arg1 = gfx;
 }
 
 static s32 func_802284F8(UnkObj *arg0, UnkGfx **arg1) {
@@ -1269,7 +1264,7 @@ void func_802289C0(UnkObj *arg0, UnkGfx **arg1) {
     }
     gfx = *arg1;
     D_8029F840 = func_802289B8(arg0);
-    func_80228500(&gfx, arg0);
+    func_80228500(arg0, &gfx);
     if (!(arg0->unkC & 0x10)) {
         pushed = func_802284F8(arg0, &gfx);
     }
@@ -1309,6 +1304,17 @@ void func_802289C0(UnkObj *arg0, UnkGfx **arg1) {
         }
     }
     *arg1 = gfx;
+}
+
+static s32 func_802289B8(UnkObj *arg0) {
+    s32 i;
+
+    for (i = 0; i < 5; i++) {
+        if (arg0 == D_80098C18[i].unk4) {
+            return i;
+        }
+    }
+    return -1;
 }
 
 static s32 func_802280EC(void) {
