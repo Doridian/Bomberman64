@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 24, eu 24, jp 24
+ * differing words: us 6, eu 6, jp 6
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -80,6 +80,11 @@
  *   store. It has no pointer local: `D_802AC7F8[i]` everywhere makes
  *   every address a uopt temp, all spilled at sp+76 as in the original;
  *   pad1/pad2 keep the frame.
+ * - func_8023CD1C is static (not inlined: four callers): ugen then takes
+ *   its temporaries from t6-t9 only, which gives the else arm's rotation.
+ *   fcmp counts a static with the function before it, so func_8023D0F8's
+ *   player loop (index form, `pl = &PLAYERS[i]`, the type read twice
+ *   rather than through a local) was counted under func_8023CD1C.
  */
 #include "common.h"
 
@@ -526,7 +531,7 @@ void func_8023C374(void);
 static void func_8023CC4C(void);
 static void func_8023CA94(void);
 void func_8023CC54(s32 arg0);
-void func_8023CD1C(void);
+static void func_8023CD1C(void);
 static void func_8023D0F0(void);
 static void func_8023CECC(void);
 static void func_8023D840(void);
@@ -2434,8 +2439,8 @@ static s32 func_8023D0F8() {
     f32 yaw;
     s32 k;
     s32 skip;
-    s32 v;
-    s32 *p;
+    Player54E40 *pl;
+    s32 pad;
 
     if (0) {
         func_8023D0F0();
@@ -2551,16 +2556,16 @@ static s32 func_8023D0F8() {
         D_802AC610.unk8 = 0;
         D_802AC610.unkC = D_802AC5D4 - 0x90;
         D_802AC5D0 |= 4;
-        for (i = 0, p = &PLAYERS[0].unk24; i < 4; i++, p += 0xC8 / 4) {
-            v = D_802AC660.unk4[i];
-            if (v == 0) {
-                *p = 0;
+        for (i = 0; i < 4; i++) {
+            pl = &PLAYERS[i];
+            if (D_802AC660.unk4[i] == 0) {
+                pl->unk24 = 0;
             } else {
                 D_802AC758++;
-                if (v == 1) {
-                    *p = 1;
+                if (D_802AC660.unk4[i] == 1) {
+                    pl->unk24 = 1;
                 } else {
-                    *p = 2;
+                    pl->unk24 = 2;
                 }
             }
         }
@@ -2626,7 +2631,7 @@ static void func_8023CECC() {
     M2C_FIELD(D_802A0760, s32 *, 0xC) |= 0x210;
 }
 
-void func_8023CD1C() {
+static void func_8023CD1C() {
     s32 n;
     s32 i;
     s32 v;
@@ -2657,10 +2662,7 @@ void func_8023CD1C() {
             d /= 10;
         }
     } else {
-#line 2644
-        D_802AC770[n++] = 0x16;
-#line 2658
-        D_802AC770[n++] = 0x14;
+        D_802AC770[n++] = 0x16; D_802AC770[n++] = 0x14;
         D_802AC770[n++] = 0x16;
         D_802AC770[n++] = 0x16;
     }
