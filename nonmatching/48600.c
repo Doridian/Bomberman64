@@ -47,7 +47,7 @@
  *     D_802A59D0 + 6 (+ 12): a different symbol+offset keeps the
  *     in-loop la (rebuilt in s0 every pass) apart from the stores' base.
  *   - func_802320A8's t is a volatile scalar: the original stores it in
- *     both arms and reloads it after the join (then x = t; x = x - n).
+ *     both arms and reloads it after the join (then b = t; x = b - n).
  * Left: func_8022E884 (38 words). IDO lays .bss out in ugen's .lcomm
  * order (a 256-bucket hash on cfe's symbol number; within a bucket
  * function-local statics come first), and fcmp resolves a static by its
