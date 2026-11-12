@@ -16,7 +16,7 @@
  * "NON_MATCHING drafts"). The prelude (types, externs, prototypes) is
  * 87D80.c's.
  * flags: -O3
- * differing words: us 89, eu 89, jp 89
+ * differing words: us 87, eu 87, jp 87
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file, and 8E730 calls 926A0 (src/926A0.c,
@@ -24,14 +24,16 @@
  * (if (0) func_802731A4(0, 0)): without it umerge inlines it into
  * func_8027655C (296 more words). The #line directives keep each
  * part's own line numbers (and .loc), as in the two drafts this
- * was. 95 of 101 match. Left: func_80270770 35 (flags and ok in v1/a0
+ * was. 96 of 101 match. Left: func_80270770 35 (flags and ok in v1/a0
  * where the original has a0/a1), func_802741D8 17 (slot kept in a0,
  * the 6C store's schedule), func_80277B54 17 (the list-init tail
  * stores in ugen order), func_802763DC 9 and func_8027655C 6
  * (an and-result's register), func_80275120 3 (c.eq.s operand order),
- * func_80277AF8 2,
- * and the two stubs (frame8_8027655C, tail_80277B54) that set
- * func_8027655C's frame and func_80277B54's .loc.
+ * and the stub frame8_8027655C that sets func_8027655C's frame.
+ * func_80277B54's tail is under an in-body `#line 2 "tail.c"`: its
+ * .file ends the as1 block, so the epilogue stays unscheduled as in
+ * the original. The in-body #line emits a .file only because tail.c
+ * also holds a function definition (func_80277CC0 is defined under it).
  * func_80276D68 matches with a dead `if (f) {}` in its first else
  * (it puts the 0x20 flag in the original's register) and a second
  * local `g` for the 0x80 test's load.
@@ -745,29 +747,11 @@ void *func_80277CE0() {
     return D_8008F438;
 }
 
+#line 1 "tail.c"
 s16 func_80277CC0(u8 *arg0) {
     return M2C_FIELD(func_802703B4(arg0), s16 *, 0xE);
 }
 
-/*
- * The original's func_80277B54 ends in a block as1 left unscheduled
- * (lw ra, addiu sp, jr ra, nop): its last statements come from another
- * file's code, whose .file directive ends the block. Here a K&R static
- * (no frame) defined under a #line of another file stands for it.
- */
-#line 1 "tail.c"
-static void tail_80277B54() {
-    ENTS[0].next = ENT_4C0;
-    ENTS[0].prev = NULL;
-    ENTS[0].xf = (Sub8E *) -1;
-    ENT_4C0->next = NULL;
-    ENT_4C0->prev = ENTS;
-    ENT_4C0->xf = (Sub8E *) -1;
-    D_802AFDE0.next = &D_802AFE1C;
-    D_802AFDE0.unk4 = 0;
-    D_802AFE1C.next = NULL;
-    D_802AFE1C.unk4 = 0;
-}
 #line 425 "8E730.c"
 
 void func_80277B54() {
@@ -793,7 +777,18 @@ void func_80277B54() {
     for (i = 0; i < 6; i++) {
         IDS[i][0] = -1;
     }
-    tail_80277B54();
+#line 2 "tail.c"
+    ENTS[0].next = ENT_4C0;
+    ENTS[0].prev = NULL;
+    ENTS[0].xf = (Sub8E *) -1;
+    ENT_4C0->next = NULL;
+    ENT_4C0->prev = ENTS;
+    ENT_4C0->xf = (Sub8E *) -1;
+    D_802AFDE0.next = &D_802AFE1C;
+    D_802AFDE0.unk4 = 0;
+    D_802AFE1C.next = NULL;
+    D_802AFE1C.unk4 = 0;
+#line 449 "8E730.c"
 }
 
 void func_80277AF8(s16 arg0, s16 arg1) {
