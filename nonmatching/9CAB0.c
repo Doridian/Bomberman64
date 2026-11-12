@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 77, eu 77, jp 77
+ * differing words: us 51, eu 51, jp 51
  */
 #include "common.h"
 
@@ -1013,12 +1013,14 @@ static void func_80285A9C(UnkStruct_800BB340 *arg0) {
         a->unk0->unk40->unk2C = 1.0f;
         a->unk0->unk40->unk30 = 1.0f;
         func_80285A84(a);
-        /* fake: the original's ra at 28 needs a 5-argument call, and its
-         * s-registers a constant 2 live across the calls, both from code uopt
-         * deletes only after the frame and the colouring are done */
+        /* fake: the original's ra at 28 needs a 5-argument call, its
+         * s-registers a constant 2 live across the calls, and a in s4 a call
+         * passing a to a static that takes its argument in s4 (IPA), all
+         * from code uopt deletes only after the frame and colouring are done */
         if ((s32) r * 0) {
             r->unk0 = 2;
             func_80238A10(0, 0, 0, 0, 0);
+            func_80283FCC(a);
         }
         func_80285658(r, arg0);
     }
