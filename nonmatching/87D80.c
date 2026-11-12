@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 24, eu 24, jp 24
+ * differing words: us 17, eu 17, jp 17
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -25,9 +25,11 @@
  * dead `&D_800B15D8[layer] == NULL` test in the loop head puts the
  * address in every pass, so uopt strength-reduces it as the original
  * does (a single use at the loop's end keeps a multu).
- * 41 of 43 match. Left: func_8026DCAC 7 (iy and the layer pointer
- * swap a0/a1: the pointer is coloured first), func_8026FC08 17 (the
- * inner loop's schedule around j % 8). Its `src = p = D_802AFC6C = ...`
+ * In func_8026DCAC uopt hoists iy out of the loop; a dead
+ * `if (iy && iy) {}` adds two loop uses, so iy outranks the layer
+ * pointer (tie, lower bit) and takes a0 as in the original.
+ * 42 of 43 match. Left: func_8026FC08 17 (the inner loop's schedule
+ * around j % 8). Its `src = p = D_802AFC6C = ...`
  * chain puts &D_802AFC6C in v1, as the original does.
  */
 #include "common.h"
@@ -1264,6 +1266,9 @@ void func_8026DCAC(f32 arg0, f32 arg1, f32 arg2, void *arg3, s32 arg4) {
     h = 0;
     for (layer = 0; layer < D_800B15D8->unk0 + 1; layer++) {
         iy = (s32) (arg1 * 0.01f);
+        if (iy && iy) { /* fake: two loop uses of iy (hoisted out of the
+                         * loop) raise it over the layer pointer */
+        }
         if (&D_800B15D8[layer] == NULL) {
         }
         if (iy < h) {
