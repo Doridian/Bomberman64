@@ -16,7 +16,7 @@
  * "NON_MATCHING drafts"). The prelude (types, externs, prototypes) is
  * 87D80.c's.
  * flags: -O3
- * differing words: us 51, eu 51, jp 51
+ * differing words: us 50, eu 50, jp 50
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file, and 8E730 calls 926A0 (src/926A0.c,
@@ -24,18 +24,19 @@
  * (if (0) func_802731A4(0, 0)): without it umerge inlines it into
  * func_8027655C (296 more words). The #line directives keep each
  * part's own line numbers (and .loc), as in the two drafts this
- * was. 99 of 101 match. Left: func_80270770 35 (flags and ok in v1/a0
+ * was. 100 of 101 match. Left: func_80270770 35 (flags and ok in v1/a0
  * where the original has a0/a1), func_80277B54 15 (the list-init tail: the
  * original keeps ENT_4C0 and &D_802AFE1C in ugen temporaries t0/t1, set
  * at first use, and -1/&D_802AFDE0 in a1/a0; ours colours all four;
  * ENTS[0].xf = -1 as an int store moves that -1 into the loop's a1; a
  * dead `if (i) {}` after ENT_4C0's stores keeps i in v0 there, so the
- * rest is set at first use), func_80275120 1 (the middle c.eq.s operand
- * order). func_80275120 holds sp28.f[0] and [2] in arg0 for their tests
+ * rest is set at first use). func_80275120 holds sp28.f[0] and [2] in arg0 for their tests
  * (`arg0 = sp28.f[0]; if (arg0 != 0.0f)`): uopt keeps a variable as the
  * compare's first operand, where `0.0f != x` and `x != 0.0f` both put
  * the constant first (c.eq.s $f0,$f8). The same in the middle test
- * colours arg0 to $f12 (its value is not reused after the call).
+ * alone colours arg0 (its value is not reused after the call): a dead
+ * `if ((s32) arg0 * 0) {}` between the load and the test, deleted only
+ * after colouring, is the second use that keeps it a ugen temporary.
  * func_802741D8's tail reads slot (the address &SLOTS[arg0], homed at
  * 0x24) into a0: a dead `if (slot) {}` in the tail gives that block a
  * third use, so when uopt splits the address's live range the piece
@@ -1799,7 +1800,10 @@ void func_80275120(f32 arg0, f32 arg1, f32 arg2, f32 *arg3, f32 *arg4, f32 *arg5
         }
     } else {
         *arg4 = sp28.i[1];
-        if (0.0f != sp28.f[1]) {
+        arg0 = sp28.f[1];
+        if ((s32) arg0 * 0) { /* fake: a second use keeps the load a ugen temporary */
+        }
+        if (arg0 != 0.0f) {
             *arg4 += sp28.f[1] / (100.0f * (f32) (s32) func_8026DC74((s32) *arg4));
         }
     }
