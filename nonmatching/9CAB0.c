@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 49, eu 49, jp 49
+ * differing words: us 47, eu 47, jp 47
  */
 #include "common.h"
 
@@ -701,6 +701,11 @@ UnkStruct_80288040 *func_802867E4(s32 arg0, f32 arg1, f32 arg2, f32 arg3) {
             if (t != -1) {
                 if (func_80285658(&D_800BA900[slot], &D_800BB340[t]) == 0) {
                     func_802867DC(&D_800BA900[slot]);
+                    /* fake: the original has 8 bytes of frame (an inlined
+                     * call's area) here; uopt deletes the call itself */
+                    if (slot * 0) {
+                        func_802867DC(&D_800BA900[slot]);
+                    }
                     func_802822E0(&D_800BB340[t]);
                 } else {
                     ret = &D_800BA900[slot].unk14;
@@ -720,8 +725,6 @@ static s32 func_802863E8(s32 arg0) {
     s32 pad[2]; /* fake: frame above t */
     s32 t;
     UnkStruct_800BB340 *task;
-    s32 pad2[2]; /* fake: frame below task (func_802867E4's first inlined
-                  * func_802867DC is really 8 bytes higher, its others not) */
 
     t = func_802867D4();
     if (t != -1) {
