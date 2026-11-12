@@ -9,7 +9,7 @@
  * func_80228500 kept). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 47, eu 47, jp 47
+ * differing words: us 45, eu 45, jp 45
  *
  * The code is the same in every version.
  *
@@ -43,30 +43,29 @@
  *   the other cofactors row-major, then the zeros and 1.0f.
  *
  * Left:
- * - func_802289C0 (the draw loop, 12): obj is in s2 and
- *   func_802284F0's obj is kept in memory as in the original. In its
- *   texture loop, model is `unk4[i].unk0` and the then-branch index
- *   `unk4[i].unk4` (one slot address, the i*8 strength-reduced). An
- *   animation's frames are 8-byte pairs (UnkTexFrame: picture,
- *   duration), indexed with one sll by 3, not an s32 array at cur * 2.
- *   The anim pointer is taken inside the else branch, after `g = gfx`
- *   (as1 hoists it into the bnez delay slot): taken before the if, it
- *   interferes with the unk4C reload in the loop's first block, and
- *   the reload can't share v0 with it as in the original. The else
- *   branch reads anim->unk4 into `cur` and tests the threshold
- *   directly (slt at). `anim->unk4 == anim->unk0 - 1` keeps the two
- *   unk4 + 1 apart. The unkC & 2 call goes through a function-pointer
- *   local loaded after the D_802A5470 store (jalr v0, not t9). An
- *   unused `pad` there and an `s32 pad[2]` in func_802284F8 give the
- *   0x160 frame and put that obj's home at 0xB0. Left: gfx is in a1
- *   where the original has t1 and leaves a1 unused through the loop
- *   (some range there that as1 deleted?); g takes t1 (v1 in the
- *   original), and with it the threshold load moves above the unk8
- *   load; and the D_8029F840 store, which the original puts in
- *   func_80228500's jal delay slot (cc -S shows ugen emitting it after
- *   the argument setup there; ours emits it before). The ry ternary's
- *   `: 0` (an int) gives the original's mtc1 pair; the matrix stack is
- *   a frame struct's `mtx[]`, as in 41FD0.c.
+ * - func_802289C0 (the draw loop, 10): obj is in s2 and func_802284F0's
+ *   obj is kept in memory as in the original. In its texture loop, model
+ *   is `unk4[i].unk0` and the then-branch index `unk4[i].unk4` (one slot
+ *   address, the i*8 strength-reduced). An animation's frames are 8-byte
+ *   pairs (UnkTexFrame: picture, duration), indexed with one sll by 3,
+ *   not an s32 array at cur * 2. The anim pointer is taken inside the
+ *   else branch, after `g = gfx` (as1 hoists it into the bnez delay
+ *   slot): taken before the if, it interferes with the unk4C reload in
+ *   the loop's first block, and the reload can't share v0 with it as in
+ *   the original. The else branch reads anim->unk4 into `cur` and the
+ *   frame counter into `count` (the unk8 load before the threshold's,
+ *   and `count + 1` stored back), and tests the threshold directly (slt
+ *   at). `anim->unk4 == anim->unk0 - 1` keeps the two unk4 + 1 apart.
+ *   The unkC & 2 call goes through a function-pointer local loaded after
+ *   the D_802A5470 store (jalr v0, not t9). An `s32 pad[2]` in
+ *   func_802284F8 gives the 0x160 frame and puts that obj's home at 0xB0.
+ *   Left: gfx is in a1 where the original has t1 and leaves a1 unused
+ *   through the loop (some range there that as1 deleted?); cur takes v1,
+ *   so g takes t1 (v1 in the original); and the D_8029F840 store, which
+ *   the original puts in func_80228500's jal delay slot (cc -S shows
+ *   ugen emitting it after the argument setup there; ours emits it
+ *   before). The ry ternary's `: 0` (an int) gives the original's mtc1
+ *   pair; the matrix stack is a frame struct's `mtx[]`, as in 41FD0.c.
  * - func_8022A328 (32): the free slot and the list position are
  *   function-scope statics (D_802A5474, D_802A5478: no other function
  *   uses them), which uopt keeps in registers and stores back at each
@@ -1181,7 +1180,7 @@ static void func_802284F0(UnkObj *arg0, UnkGfx **arg1) {
     UnkModel *model;
     s32 idx;
     s32 cur;
-    s32 pad;
+    s32 count;
 
     gfx = *arg1;
     for (i = 0; i < arg0->unk4C->unk0; i++) {
@@ -1193,7 +1192,8 @@ static void func_802284F0(UnkObj *arg0, UnkGfx **arg1) {
             g = gfx;
             anim = &arg0->unk4C->unk8[i];
             cur = anim->unk4;
-            if (anim->unk8 >= anim->unkC[cur].unk4) {
+            count = anim->unk8;
+            if (count >= anim->unkC[cur].unk4) {
                 anim->unk8 = 0;
                 if (anim->unk4 == anim->unk0 - 1) {
                     anim->unk4 = 0;
@@ -1201,7 +1201,7 @@ static void func_802284F0(UnkObj *arg0, UnkGfx **arg1) {
                     anim->unk4++;
                 }
             } else {
-                anim->unk8 = anim->unk8 + 1;
+                anim->unk8 = count + 1;
             }
             gfx = g + 1;
             gSPSegment(g, i + 3, (u8 *)model + model->unkC[anim->unkC[anim->unk4].unk0].unk8);
