@@ -6,7 +6,7 @@
  * floats). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 14, eu 14, jp 3
+ * differing words: us 13, eu 13, jp 2
  * jp's code differences are drafted (`#if VERSION_JP`), its .data is not:
  * its five own strings are only declared, and its text tables and
  * positions are us's.
@@ -93,8 +93,9 @@
  *   loop is a lever, not the original), 80045794's frame (40 vs 32).
  *   80045794 tests `(u16)i & 0x8000` on 8004518C's result (flagged: a
  *   lever; the cast's dropped `andi 0xFFFF` takes the temporary the
- *   original's t-registers are one off by; a u16 `i` or a u16 return type
- *   is worse).
+ *   original's t-registers are one off by; a u16 `i` is worse). 8004518C
+ *   returns u16 (ovlpass): with s32 its return reused the loop test's
+ *   zero-extended copy ($v1) where the original returns `pressed` from $s6.
  * - 8004616C (800464C0-80047030; jp 80046170): (COPY_FILE's frame is
  *   right since wAA) us ERASE a word short (the original rematerialises
  *   &D_8004992C in $fp after the loop: a split of its live range there;
@@ -220,7 +221,8 @@
  *   rematerialises &D_8004992C in $fp (one word short, so 800478D4's 15
  *   are its shift); COPY_FILE's `li s8,1` / `sw t9,96(sp)` order;
  *   COPY_ASK's sub/slot in a0/s7 swapped; 800465E0's `sw a0,4(sp)`;
- *   t-register rotations in 80046634/80046F14; 8004518C returns v1.
+ *   t-register rotations in 80046634/80046F14; 8004518C returns v1 (fixed
+ *   in ovlpass: a u16 return).
  *
  * wAD (us/eu 131 -> 95, jp 86):
  * - us ERASE's tail: ERASE_FILE reads D_8004992C through its neighbour
@@ -594,7 +596,7 @@ static s32 func_ovl0B_06_80045054(void);
 static void func_ovl0B_06_800450F8(void);
 static s32 func_ovl0B_06_80045100(s32 arg0);
 static void func_ovl0B_06_80045184(void);
-static s32 func_ovl0B_06_8004518C(void);
+static u16 func_ovl0B_06_8004518C(void);
 static void func_ovl0B_06_80045340(u8 *save, s32 arg0);
 static s32 func_ovl0B_06_80045794(s32 arg0, s32 mode, s32 arg2);
 static void func_ovl0B_06_800459D0(s32 y, s32 x);
@@ -2153,7 +2155,7 @@ static void func_ovl0B_06_80045340(u8 *save, s32 arg0) {
 
 
 /* @8004518C */
-static s32 func_ovl0B_06_8004518C(void) {
+static u16 func_ovl0B_06_8004518C(void) {
     s32 held;
     u16 pressed;
     s32 a;
