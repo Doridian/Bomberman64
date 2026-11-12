@@ -7,7 +7,7 @@
  * "NON_MATCHING drafts"). src/48300.c, before it, is another object:
  * func_80232E60 calls its func_8022DB00 with a jal (text_objects.txt).
  * flags: -O3
- * differing words: us 78, eu 78, jp 78
+ * differing words: us 58, eu 58, jp 58
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does. An 8-byte stub (jr ra; nop) is an inlined
@@ -58,7 +58,7 @@
  * left is case 12/20's four stores before the loop: uopt keeps the ball's
  * address in v0 (a block-local CSE of the four istr) where the original
  * uses lui/%lo for each, with p[0], p[1], p[3] loaded in that order.
- * func_802320A8 (40, the size right): what's left is obj+0x58's slot
+ * func_802320A8 (20, the size right): what's left is obj+0x58's slot
  * (0x64, not 0x68), the default's delay slot, which holds the store to
  * t (the original has a nop), and colouring in the 0x20000 case. ugen
  * hands out f4..f18 least recently freed first (frees at a value's last
@@ -91,9 +91,11 @@
  *     with obj->unk3C->unk4's load: uopt leaves blocks with an indirect
  *     access out of a memory variable's live range, so the store isn't
  *     in it. Pass 7's goto dl; dl: split them apart and lost it.
- *   - in the 0x20000 case, sp80[0] goes through b (b = sp80[0] after the
- *     copy from spD4, n = b in the wrap) and x = sp80[1]; x = x - 90.0f
- *     is two statements: both move the colouring (permuter finds).
+ *   - in the 0x20000 case, t's reload goes through b (b = t; then
+ *     x = b - n), which the original keeps in f16 against our f22, and
+ *     x = sp80[1]; x = x - 90.0f is two statements: both move the
+ *     colouring. Pass 7's b = sp80[0] (n = b) was right only for the
+ *     wrong temporary queue; with the queue right, n = sp80[0].
  * uopt puts a commutative op's operands in its own order, not the
  * source's, but the form of an operand counts: func_8022E0AC's mul.s
  * takes the original's order with (*arg0).unk38 (not arg0->unk38) on the
@@ -799,7 +801,6 @@ void func_802320A8() {
         case 0x20000:
             sp80[0] = spD4[0];
             sp80[1] = spD4[1];
-            b = sp80[0];
             sp80[2] = spD4[2];
             obj->unk40->rot[1] = obj->unk44->unk40->rot[1];
             v = obj->unk44->unk40->rot[1];
@@ -808,13 +809,13 @@ void func_802320A8() {
             } else {
                 t = (360.0f - v) * -1.0f;
             }
-            x = t;
+            b = t;
             if (sp80[0] >= 0.0f && sp80[0] <= 180.0f) {
-                n = b;
+                n = sp80[0];
             } else {
                 n = (360.0f - sp80[0]) * -1.0f;
             }
-            x = x - n;
+            x = b - n;
             if (x >= 360.0f) {
                 sp80[0] = x - 360.0f;
             } else {
