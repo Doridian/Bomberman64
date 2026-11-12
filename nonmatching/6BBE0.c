@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 438, eu 438, jp 5663
+ * differing words: us 438, eu 438, jp 1989
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -1173,11 +1173,7 @@ static void func_802553D4() {
     s32 *var_fp;
     s32 *sp148;
     UnkStruct_800AEDF0 *temp_v0_41;
-#if VERSION_JP
-    volatile s32 var_s5;
-#else
     s32 var_s5;
-#endif
     f32 temp_fs1_3;
     struct { f32 *obj; s32 dir; } sp134;
     f32 temp_fs2;
@@ -1696,7 +1692,9 @@ loop_148:
                         M2C_FIELD(var_fp, s32 *, 0x90) = (s32) (temp_v1 - 1);
                     }
                     if (!(M2C_FIELD(var_fp, s32 *, 0) & 3)) {
+#if !VERSION_JP
                         var_s5 = 0;
+#endif
                         var_s4 = 0;
                         func_8025500C(0x237, M2C_FIELD(var_fp, u8 **, 0x18));
                         spC4 = func_80251994((f32 *) ((u8 *)var_fp + 0x20), (f32 *) ((u8 *)var_fp + 0x2C));
