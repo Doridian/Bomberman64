@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 647, eu 647, jp 5700
+ * differing words: us 642, eu 642, jp 5700
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -1166,7 +1166,7 @@ s32 func_80251D30(f32 *arg0, s32 arg1, s32 arg2, s32 arg3) {
 }
 
 static void func_802553D4() {
-    s32 idx;
+    f32 temp_fs4;
     f32 spC4;
     u8 *var_s0;
     s32 sp150;
@@ -2916,7 +2916,7 @@ block_740:
             break;
         default:                                    /* switch 1 */
             if (M2C_FIELD(M2C_FIELD(var_fp, f32 **, 0x18), f32 *, 0x6C) == 0.0f) {
-                temp_fs3 = func_80251C48((f32 *) ((u8 *)var_fp + 0x20), (f32 *) ((u8 *)var_fp + 0x2C));
+                temp_fs4 = func_80251C48((f32 *) ((u8 *)var_fp + 0x20), (f32 *) ((u8 *)var_fp + 0x2C));
                 temp_fs1_3 = func_80251994((f32 *) ((u8 *)var_fp + 0x20), (f32 *) ((u8 *)var_fp + 0x2C));
                 if (func_80243EB4(M2C_FIELD(var_fp, s32 *, 0xC), 0x2000) != 0) {
                     func_80252D14((f32 *) var_fp);
@@ -2963,7 +2963,7 @@ block_740:
                                     M2C_FIELD(var_fp, s32 *, 4) = 4;
                                     break;
                                 }
-                            } else if ((func_80251BDC((f32 *) ((u8 *)var_fp + 0x20), (f32 *) ((u8 *)var_fp + 0x2C)) != -1) && (temp_fs3 < 150.0f)) {
+                            } else if ((func_80251BDC((f32 *) ((u8 *)var_fp + 0x20), (f32 *) ((u8 *)var_fp + 0x2C)) != -1) && (temp_fs4 < 150.0f)) {
                                 temp_fv0 = (f32) ((s32) (temp_fs1_3 / 45.0f) * 0x2D);
                                 M2C_FIELD(M2C_FIELD(M2C_FIELD(var_fp, f32 **, 0x18), void **, 0x40), f32 *, 0x20) = temp_fv0;
                                 M2C_FIELD(var_fp, f32 *, 0x74) = temp_fv0;
@@ -3034,7 +3034,7 @@ block_788:
 block_809:
                                         if ((temp_v1 == 1) && (var_s4 != 0)) {
 block_811:
-                                            if (temp_fs3 <= 300.0f) {
+                                            if (temp_fs4 <= 300.0f) {
                                                 M2C_FIELD(var_fp, s32 *, 0) |= 0x100;
                                                 M2C_FIELD(var_fp, u32 *, 0x94) = (u32) (M2C_FIELD(var_fp, u32 *, 0x94) + 1);
                                                 M2C_FIELD(var_fp, f32 *, 0x7C) = 60.0f;
@@ -3063,8 +3063,8 @@ block_813:
 block_818:
                                         if ((temp_v1 == 1) && (var_s4 != 0)) {
 block_820:
-                                            if (temp_fs3 <= 400.0f) {
-                                                if (temp_fs3 <= 100.0f) {
+                                            if (temp_fs4 <= 400.0f) {
+                                                if (temp_fs4 <= 100.0f) {
                                                     temp_fv0 = M2C_FIELD(var_fp, f32 *, 0x74);
                                                     M2C_FIELD(var_fp, f32 *, 0x74) = temp_fs1_3;
                                                     M2C_FIELD(var_fp, f32 *, 0x80) = temp_fv0;
@@ -3149,7 +3149,7 @@ block_824:
 block_849:
                                             if ((temp_v1 == 1) && (var_s4 != 0)) {
 block_851:
-                                                if (temp_fs3 <= 300.0f) {
+                                                if (temp_fs4 <= 300.0f) {
                                                     M2C_FIELD(var_fp, u32 *, 0x94) = 1U;
                                                     M2C_FIELD(var_fp, s32 *, 0x90) = 0x14;
                                                 } else {
@@ -3160,7 +3160,7 @@ block_853:
                                                 M2C_FIELD(var_fp, u32 *, 0x94) = 0U;
                                             }
                                         }
-                                        if ((temp_fs3 < 120.0f) && (M2C_FIELD(var_fp, s32 *, 4) != 5)) {
+                                        if ((temp_fs4 < 120.0f) && (M2C_FIELD(var_fp, s32 *, 4) != 5)) {
                                             M2C_FIELD(M2C_FIELD(M2C_FIELD(var_fp, f32 **, 0x18), void **, 0x40), f32 *, 0x20) = temp_fs1_3;
                                             M2C_FIELD(var_fp, f32 *, 0x74) = (f32) M2C_FIELD(M2C_FIELD(M2C_FIELD(var_fp, f32 **, 0x18), void **, 0x40), f32 *, 0x20);
                                             func_80251E5C((f32 *) var_fp);
