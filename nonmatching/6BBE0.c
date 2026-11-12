@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 136, eu 136, jp 136
+ * differing words: us 127, eu 127, jp 127
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -3883,11 +3883,11 @@ static void func_802530A8(f32 *arg0) {
                 M2C_FIELD(arg0, s32 *, 4) = (s32) M2C_FIELD(arg0, s32 *, 8);
             } else if (func_80252724(arg0) != 0) {
                 angle = func_80252490(arg0);
-                M2C_FIELD(arg0, s32 *, 0) &= ~3;
                 M2C_FIELD(arg0, f32 *, 0x74) = angle;
                 M2C_FIELD(arg0, s32 *, 0x88) = 0x14;
-                M2C_FIELD(arg0, s32 *, 0) |= 0;
                 M2C_FIELD(arg0, f32 *, 0x7C) = 60.0f;
+                M2C_FIELD(arg0, s32 *, 0) &= ~3;
+                M2C_FIELD(arg0, s32 *, 0) |= 0;
             }
             break;
         case 8:
