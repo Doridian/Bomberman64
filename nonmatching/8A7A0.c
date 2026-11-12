@@ -32,9 +32,11 @@
  * rest is set at first use).
  * func_80270770 stores the flags with a second read of the slot
  * (`flags = SLOTS[arg0].unk8; c->flags = SLOTS[arg0].unk8;`, where
- * func_80270C24 stores its local): flags then goes to a0 and ok to a1 as
- * in the original (with `c->flags = flags` they were v1/a0), and unk2C
- * is stored before unk30, as in func_80270C24.
+ * func_80270C24 stores its local): the load, used twice, becomes a uopt
+ * expression range that is coloured first (v1, with no instruction left
+ * in it), so flags goes to a0 and ok to a1 as in the original (with
+ * `c->flags = flags` they were v1/a0). unk2C is stored before unk30, as
+ * in func_80270C24.
  * func_80275120 holds sp28.f[0] and [2] in arg0 for their tests
  * (`arg0 = sp28.f[0]; if (arg0 != 0.0f)`): uopt keeps a variable as the
  * compare's first operand, where `0.0f != x` and `x != 0.0f` both put
