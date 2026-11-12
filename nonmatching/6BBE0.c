@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 549, eu 549, jp 5700
+ * differing words: us 534, eu 534, jp 5700
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -2983,9 +2983,9 @@ block_768:
                                 }
                             } else {
                                 var_s4 = 0;
-                                if ((M2C_FIELD(sp148, s32 *, 0) == 1) && (func_80234248(0x3E8) < 0x1F4) && (temp_v0_6 = func_8022FA88(M2C_FIELD(var_fp, f32 **, 0x18), 4, &sp12C), (temp_v0_6 != NULL)) && (temp_v1 = (1 - M2C_FIELD(&sp148[M2C_FIELD(var_fp, s32 *, 0xC)], s32 *, 0x90)) * 4, (*(s32 *)(D_802AC760 + temp_v1) != 0)) && (temp_v0_6 == (u8 *) **(void ***)(D_802AC820 + temp_v1)) && (sp12C < 800.0f)) {
+                                if ((M2C_FIELD(sp148, s32 *, 0) == 1) && (func_80234248(0x3E8) < 0x1F4) && (temp_s1 = func_8022FA88(M2C_FIELD(var_fp, f32 **, 0x18), 4, &sp12C), (temp_s1 != NULL)) && (temp_v1 = (1 - M2C_FIELD(&sp148[M2C_FIELD(var_fp, s32 *, 0xC)], s32 *, 0x90)) * 4, (*(s32 *)(D_802AC760 + temp_v1) != 0)) && (temp_s1 == (u8 *) **(void ***)(D_802AC820 + temp_v1)) && (sp12C < 800.0f)) {
                                     if ((sp12C < 500.0f) && (M2C_FIELD(var_fp, s32 *, 4) != 5) && (M2C_FIELD(var_fp, u32 *, 0x94) == 0)) {
-                                        func_8022F808(temp_v0_6, (f32 *) ((u8 *)var_fp + 0x2C));
+                                        func_8022F808(temp_s1, (f32 *) ((u8 *)var_fp + 0x2C));
                                         temp_fv0 = (f32) func_802519B4(func_80251994((f32 *) ((u8 *)var_fp + 0x20), (f32 *) ((u8 *)var_fp + 0x2C))) * 45.0f;
                                         M2C_FIELD(M2C_FIELD(M2C_FIELD(var_fp, f32 **, 0x18), void **, 0x40), f32 *, 0x20) = temp_fv0;
                                         M2C_FIELD(var_fp, f32 *, 0x74) = temp_fv0;
@@ -2998,7 +2998,7 @@ block_768:
                                         M2C_FIELD(var_fp, s32 *, 4) = 5;
                                         M2C_FIELD(var_fp, f32 *, 0x7C) = 60.0f;
                                     } else {
-                                        func_8022F808(temp_v0_6, (f32 *) ((u8 *)var_fp + 0x2C));
+                                        func_8022F808(temp_s1, (f32 *) ((u8 *)var_fp + 0x2C));
                                         var_s4 = 1;
                                         goto block_788;
                                     }
@@ -3014,9 +3014,7 @@ block_788:
                                     }
                                     switch (M2C_FIELD(var_fp, u32 *, 0x94)) { /* switch 3 */
                                     case 1:         /* switch 3 */
-                                        temp_v1 = M2C_FIELD(var_fp, s32 *, 0x90) - 1;
-                                        M2C_FIELD(var_fp, s32 *, 0x90) = temp_v1;
-                                        if (temp_v1 == 0) {
+                                        if (--M2C_FIELD(var_fp, s32 *, 0x90) == 0) {
                                             M2C_FIELD(var_fp, u32 *, 0x94) = (u32) (M2C_FIELD(var_fp, u32 *, 0x94) + 1);
                                         }
                                         break;
@@ -3086,9 +3084,7 @@ block_824:
                                         }
                                         break;
                                     case 4:         /* switch 3 */
-                                        temp_v1 = M2C_FIELD(var_fp, s32 *, 0x90) - 1;
-                                        M2C_FIELD(var_fp, s32 *, 0x90) = temp_v1;
-                                        if (temp_v1 == 0) {
+                                        if (--M2C_FIELD(var_fp, s32 *, 0x90) == 0) {
                                             M2C_FIELD(var_fp, u32 *, 0x94) = (u32) (M2C_FIELD(var_fp, u32 *, 0x94) + 1);
                                         }
                                         break;
