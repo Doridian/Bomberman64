@@ -9,7 +9,7 @@
  * func_80228500 kept). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 17, eu 17, jp 17
+ * differing words: us 13, eu 13, jp 13
  *
  * The code is the same in every version.
  *
@@ -73,7 +73,7 @@
  *   leaves unused. The ry ternary's `: 0` (an int) gives the
  *   original's mtc1 pair; the matrix stack is a frame struct's
  *   `mtx[]`, as in 41FD0.c.
- * - func_8022A328 (4): the free slot and the list position are
+ * - func_8022A328 (matches): the free slot and the list position are
  *   function-scope statics (D_802A5474, D_802A5478: no other function
  *   uses them), which uopt keeps in registers and stores back at each
  *   exit. `if (arg1) {}` after their initialisation ends the entry
@@ -82,14 +82,13 @@
  *   original. There is no pointer local: every access is
  *   `D_800A0D00[D_802A5474].f`, so the slot's address is one expression
  *   that uopt hoists above the position loop and rebuilds after the
- *   calls itself (with shifts, not a multu by the coloured 80). The
- *   chunk address is a local with a dead read (`c = &arg0->unkC[arg3];
- *   if (c) {}`, which keeps the +12 in a register) taken before the
- *   float zeros, and the else branch's stores are integer 0 and 1 (so
+ *   calls itself (with shifts, not a multu by the coloured 80). In the
+ *   arg2 == 4 arm the zeros are two chained pairs (unk10/unk20, then
+ *   unk14/unk24) with the chunk address between them, a local with a
+ *   dead read (`c = &arg0->unkC[arg3]; if (c) {}`, which keeps the +12
+ *   in a register); the else branch's stores are integer 0 and 1 (so
  *   the 0.0f of the other branch is a separate constant). The tail
  *   stores unk34, unk36, unk4C, then the D_802A5460 increment.
- *   Left (4): the arg2 == 4 block's schedule (mtc1 before the stack
- *   loads).
  * - func_80229C10 (2): `if (!chunks) {}` keeps model+12 a value of its
  *   own; `if (!arg1) {}` first and `if (!arg0) {}` after the loop keep
  *   the arguments' registers busy, so dl takes a3, first t0 and i t1 as
@@ -630,12 +629,10 @@ UnkObj *func_8022A328(UnkModel *arg0, s32 arg1, s32 arg2, u32 arg3, s32 arg4) {
         func_80229E38(&D_800A0D00[D_802A5474], arg4, 0);
     }
     if (arg2 == 4) {
+        D_800A0D00[D_802A5474].unk10 = D_800A0D00[D_802A5474].unk20 = 0.0f;
         c = &arg0->unkC[arg3];
         if (c) {}
-        D_800A0D00[D_802A5474].unk20 = 0.0f;
-        D_800A0D00[D_802A5474].unk10 = 0.0f;
-        D_800A0D00[D_802A5474].unk24 = 0.0f;
-        D_800A0D00[D_802A5474].unk14 = 0.0f;
+        D_800A0D00[D_802A5474].unk14 = D_800A0D00[D_802A5474].unk24 = 0.0f;
         D_800A0D00[D_802A5474].unk18 = D_800A0D00[D_802A5474].unk28 = (u32)((u16 *)&c->unk4)[0];
         D_800A0D00[D_802A5474].unk1C = D_800A0D00[D_802A5474].unk2C = (u32)((u16 *)&c->unk4)[1];
     } else {
