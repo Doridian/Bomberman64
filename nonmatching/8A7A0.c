@@ -16,7 +16,7 @@
  * "NON_MATCHING drafts"). The prelude (types, externs, prototypes) is
  * 87D80.c's.
  * flags: -O3
- * differing words: us 87, eu 87, jp 87
+ * differing words: us 79, eu 79, jp 79
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file, and 8E730 calls 926A0 (src/926A0.c,
@@ -24,12 +24,17 @@
  * (if (0) func_802731A4(0, 0)): without it umerge inlines it into
  * func_8027655C (296 more words). The #line directives keep each
  * part's own line numbers (and .loc), as in the two drafts this
- * was. 96 of 101 match. Left: func_80270770 35 (flags and ok in v1/a0
+ * was. 97 of 101 match. Left: func_80270770 35 (flags and ok in v1/a0
  * where the original has a0/a1), func_802741D8 17 (slot kept in a0,
  * the 6C store's schedule), func_80277B54 17 (the list-init tail
- * stores in ugen order), func_802763DC 9 and func_8027655C 6
- * (an and-result's register), func_80275120 3 (c.eq.s operand order),
- * and the stub frame8_8027655C that sets func_8027655C's frame.
+ * stores in ugen order), func_802763DC 7 (an and-result in v1 where
+ * the original has t0), func_80275120 3 (c.eq.s operand order).
+ * func_8027655C tests the 4 flag with the getter in the condition,
+ * `if (func_802712A8(&arg0->unk64, 4) || f8)`, after the if/else: uopt
+ * moves the test's load and and into the three branch tails, with the
+ * getter's result in a0 as in the original (a variable f4 set in each
+ * branch put it in v0). The two getter calls fewer free 16 bytes of
+ * frame above the DCAC buffer: pad[20] takes them back.
  * func_80277B54's tail is under an in-body `#line 2 "tail.c"`: its
  * .file ends the as1 block, so the epilogue stays unscheduled as in
  * the original. The in-body #line emits a .file only because tail.c
@@ -486,7 +491,6 @@ void func_80277E1C(void);
 void *func_80277FC4(s16 arg0, s16 arg1, s16 arg2, s16 arg3, s32 arg4, f32 arg5, f32 arg6, f32 arg7, s16 arg8, s32 arg9);
 void func_80278D54(s32 *arg0);
 void func_80278DBC(void);
-static void frame8_8027655C(void);
 
 #line 401 "8A7A0.c"
 void func_80273F0C() {
@@ -1153,11 +1157,10 @@ s32 func_8027655C(Ent88 *arg0) {
     struct { f32 z, y, x; } v;
     f32 sp158;
     void *sp154;
-    s32 pad[16];
+    s32 pad[20];
     s16 fl;
-    s32 f4;
     s32 f8;
-    s32 padB[1];
+    s32 padB[2];
 
     if (D_802A14B4 == 1) {
         return 0;
@@ -1216,19 +1219,16 @@ s32 func_8027655C(Ent88 *arg0) {
             && func_8023369C(arg0->xf->z, arg0->obj->unk60, 1.0f) && func_802712A8(&arg0->unk64, 4)) {
             func_802712C4((s16 *) arg0);
         }
-        f4 = func_802712A8(&arg0->unk64, 4);
     } else if (fl) {
         func_802733C8((u8 *) arg0->obj);
-        f4 = func_802712A8(&arg0->unk64, 4);
     } else {
         func_802727D8(arg0->unk38);
-        f4 = func_802712A8(&arg0->unk64, 4);
     }
     arg0->x = arg0->xf->x;
     arg0->y = arg0->xf->y;
     arg0->z = arg0->xf->z;
     f8 = func_802712A8(&arg0->unk64, 8);
-    if (f4 || f8) {
+    if (func_802712A8(&arg0->unk64, 4) || f8) {
         func_802714C4();
         OBJ_DD8->unk40->x = OBJ_DD8->unk58 = arg0->x;
         OBJ_DD8->unk40->y = OBJ_DD8->unk5C = arg0->y;
@@ -1274,23 +1274,12 @@ s32 func_8027655C(Ent88 *arg0) {
         return 1;
     }
     func_80271448(arg0->x, arg0->y, arg0->z, &v.x, &v.y, &v.z);
-    frame8_8027655C();
     if ((func_8026D7D8((s32) v.x, (s32) v.y, (s32) v.z) & 0xF) == 9) {
         func_80275948((s16 *) arg0);
     }
     func_80275034((s16 *) arg0);
     return 0;
 }
-
-/*
- * Stands for 8 bytes the original's func_8027655C frame has below the
- * inlined func_80271448's buffer (its origin is not known): an inlined
- * (void) static called after it adds an 8-byte area there.
- */
-static void frame8_8027655C(void) {
-}
-
-
 
 void func_802763DC(s16 *arg0) {
     s32 padT;
