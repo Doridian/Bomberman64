@@ -1,14 +1,21 @@
 /*
- * NON_MATCHING: main_code's 54E40, complete: 72 functions (us
- * 0x8023A640-0x80243888): tasks spawned through func_80238A10 and
- * func_8022A328, and the display lists of three digit counters. Not
- * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * main_code's 54E40 (-O3): 72 functions (us 0x8023A640-0x80243888):
+ * tasks spawned through func_80238A10 and func_8022A328, and the display
+ * lists of three digit counters.
  *
- * A first draft: m2c's functions in the reverse of the ROM's order (IDO
- * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
- * matched in us then (all 72 do now, in us, eu and jp). It is one
+ * Data (us addresses): its .rodata is its own and placed in
+ * data_split.txt. Its .data (0x802A01B0-0x802A0D50, between 53D70's and
+ * 5E090's D_802A0D50: the strings, text items and tables) and its .bss
+ * (0x802AC5D0-0x802AC880, the 16-byte boundaries after D_802AC5C0..CC,
+ * which 54BE0 sets, and before 5E090's D_802AC880) are its own too, but
+ * the C reaches most of them through m2c's overlapping structs and
+ * arrays (D_802AC610, D_802AC660, D_802AC770), so they stay extern
+ * (asm), except D_802AC7A0[10], D_802AC7C8 and D_802AC7CC: those are
+ * defined here (0x802AC7A0-0x802AC7D0, no padding) and that .bss is
+ * placed in data_split.txt.
+ *
+ * Written from m2c's functions in the reverse of the ROM's order (IDO
+ * -O3 emits last to first), with the fixes the -O3 build needs. It is one
  * object: the only callee emitted after its caller is func_8024364C
  * (called by func_8023F26C), and the IPA statics (func_8023AB54,
  * B2AC, B318, B450 take arguments in s2/fs0/t0, called by func_8023FD08;
@@ -49,9 +56,9 @@
  * - func_8023C170 (IPA static, s0-s2 unsaved) uses one counter for both
  *   its loops; with two, its register use moved func_8023DB0C's
  *   s-registers.
- * - D_802AC7A0[10] is defined here (the rest of the bss is still
- *   extern): func_8023A640's two peeled stores share a `lui` only when
- *   as1 knows the array.
+ * - D_802AC7A0[10] is defined here: func_8023A640's two peeled stores
+ *   share a `lui` only when as1 knows the array. (splat's D_802AC7A4 and
+ *   D_802AC7A8 are its elements 1 and 2-9.)
  * - func_8023A734 tests the row index (`arg1 == 0/2/3`), not the row
  *   pointer: uopt still compares the pointer, but with fresh addresses
  *   kept apart from the loads' base (D_802A0BA8 is s32[][11]).
@@ -491,10 +498,8 @@ extern s32 D_802AC770[10];
 extern u8 D_802AC780[];
 extern s32 D_802AC798;
 s32 D_802AC7A0[10];
-extern s32 D_802AC7A4;
-extern u8 D_802AC7A8[];
-extern s32 D_802AC7C8;
-extern s32 D_802AC7CC;
+s32 D_802AC7C8;
+s32 D_802AC7CC;
 extern void *D_802AC7D0;
 extern void *D_802AC7D4;
 extern s32 D_802AC7D8;

@@ -347,7 +347,7 @@ segments:
       - [0x530C0, c]
       - [0x53D70, c]
       - [0x54BE0, c]
-      - [0x54E40, asm]
+      - [0x54E40, c]
       - [0x5E090, c]
       - [0x5E3F0, asm]
       - [0x6BBE0, asm]
@@ -443,7 +443,8 @@ segments:
       - [0xBD680, .rodata, 530C0]
       - [0xBD6E0, .rodata, 53D70]
       - [0xBD6F0, .rodata, 54BE0]
-      - [0xBD700, rodata]
+      - [0xBD700, .rodata, 54E40]
+      - [0xBD810, rodata]
       - [0xBE200, .rodata, 78CA0]
       - [0xBE210, .rodata, 78F60]
       - [0xBE230, .rodata, 7C4D0]
@@ -479,6 +480,8 @@ segments:
       - {type: .bss, vram: 0x802A5A20, name: 4E030}
       - {type: .bss, vram: 0x802A5A40, name: 4ED50}
       - {type: bss, vram: 0x802A5A50, name: bss_802A5A50}
+      - {type: .bss, vram: 0x802AC790, name: 54E40}
+      - {type: bss, vram: 0x802AC7C0, name: bss_802AC7C0}
       - {type: .bss, vram: 0x802ACFD0, name: 78CA0}
       - {type: .bss, vram: 0x802AD0C0, name: 7D840}
       - {type: bss, vram: 0x802AD0D0, name: bss_802AD0D0}

@@ -77,6 +77,8 @@ main_code 40300 0x10 0 0
 # until the cut reaches them (unless all of an object's .data is its own:
 # 53D70's local pattern and its function table).  412F0 defines its .bss:
 # with the variables extern, as1 gives two stores into it a `lui` each.
+# So does 54E40 for D_802AC7A0[10] (and the two words after it, which end
+# that run on a 16-byte boundary); the rest of its .bss stays asm.
 main_code 412F0 0 0 0xA0
 main_code @us 412F0 bss=0x802A5330
 main_code @eu 412F0 bss=0x802A5320
@@ -117,6 +119,12 @@ main_code 54BE0 0 0x10 0
 main_code @us 54BE0 rodata=0x802A2EF0
 main_code @eu 54BE0 rodata=0x802A2EF0
 main_code @jp 54BE0 rodata=0x802A2130
+main_code 54E40 0 0x120 0x30
+main_code @eu 54E40 sizes=0,0x110,0x30
+main_code @jp 54E40 sizes=0,0x110,0x30
+main_code @us 54E40 rodata=0x802A2F00 bss=0x802AC7A0
+main_code @eu 54E40 rodata=0x802A2F00 bss=0x802AC790
+main_code @jp 54E40 rodata=0x802A2140 bss=0x802AB9D0
 main_code 78CA0 0 0x10 0xF0
 main_code @us 78CA0 rodata=0x802A3A10 bss=0x802ACFE0
 main_code @eu 78CA0 rodata=0x802A3A00 bss=0x802ACFD0
