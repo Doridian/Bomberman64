@@ -3,13 +3,14 @@
  * 0x8022D280-0x8022DB00) that build a model's display list from its joint
  * tree. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 28, eu 28, jp 28
+ * differing words: us 24, eu 24, jp 24
  *
- * fcmp counts a static with the global before it. func_8022DAB0 matches.
- * func_8022D280 + func_8022D414: 4 words, at func_8022D414's start. The
- * original burns one ugen temp (t6) before the first joint load, so idx*3
- * lands in t8 (ours t6), and its call-argument address is
- * addu v0,t0,v1 (ours v1,t0). func_8022D58C + func_8022D980: 24 words,
+ * fcmp counts a static with the global before it. func_8022DAB0 and
+ * func_8022D280 + func_8022D414 match. In func_8022D414 the call's joint
+ * address is `idx * 48 + bj` (the multiply first, so ugen evaluates it
+ * first and gives it t8, and the add is t0,v1), while j is
+ * `&((Joint *)bj)[idx]`; with bj a variable uopt doesn't reassociate the
+ * sum. func_8022D58C + func_8022D980: 24 words,
  * all in case 6's SetTileSize. The (u16) casts on the w1 terms are real:
  * ugen gives each an `and 0xFFFF` (one more temp) that as1 deletes before
  * the `and 0xFFF`, and with them ugen's temp queue leaves case 6 in the
@@ -199,15 +200,16 @@ void func_8022D58C(Gfx **gp, s32 base, s32 idx) {
 }
 
 static void func_8022D414(Gfx **gp, s32 base, s32 joints, s32 idx) {
-    s32 pad1;
+    s32 bj;
     Gfx *g;
     Joint *j;
     s32 pushed;
 
     pushed = 0;
     g = *gp;
-    func_8022D280(&g, ((Joint *)(base + joints))[idx].trans, ((Joint *)(base + joints))[idx].rot, &pushed);
-    j = &((Joint *)(base + joints))[idx];
+    bj = base + joints;
+    func_8022D280(&g, ((Joint *)(idx * 48 + bj))->trans, ((Joint *)(idx * 48 + bj))->rot, &pushed);
+    j = &((Joint *)bj)[idx];
     if (j->mesh >= 0) {
         func_8022D58C(&g, base, j->mesh);
     }
