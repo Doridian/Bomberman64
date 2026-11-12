@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 86, eu 86, jp 86
+ * differing words: us 84, eu 84, jp 84
  */
 #include "common.h"
 
@@ -905,7 +905,7 @@ static void func_80285A6C() {
 static UnkStruct_800BA900 *func_80285A74() {
     s32 pada[1];
     Vec3f pos;
-    s32 padb[17];
+    s32 padb[15];
     UnkStruct_800BA900 *s;
     UnkStructA_40 *p;
     s32 i;
@@ -1005,6 +1005,11 @@ static void func_80285A9C(UnkStruct_800BB340 *arg0) {
 
     func_80285A6C();
     r = func_80285A74();
+    /* fake: the original's ra at 28 needs a 5-argument call that uopt
+     * deletes after the frame is laid out */
+    if ((s32) r * 0) {
+        func_80238A10(0, 0, 0, 0, 0);
+    }
     if (r != NULL) {
         a = &r->unk14;
         func_80285A7C(a, &D_800BA8E8[a->unk84]);
