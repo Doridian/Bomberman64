@@ -9,7 +9,7 @@
  * func_80228500 kept). Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3, eu 3, jp 3
+ * differing words: us 2, eu 2, jp 2
  *
  * The code is the same in every version.
  *
@@ -104,16 +104,15 @@
  *   original: arg0 dead in the loop but live where dl is set). w
  *   as arg1 again (after the loop) gives the original's a1 for it and
  *   frees a0 for the bound, but a dead read of arg0 before the loop
- *   splits the block and moves i to v0 (7 at best). func_80229448 (1): the empty loop survives only
- *   as `i * 4 != 16` (a plain `i < 4` is deleted, the multiply is what
- *   uopt strength-reduces after its dead-loop pass). A local counter
- *   takes v0 in the entry block and pushes the IV to v1; a third
- *   parameter as the counter can't use v0/v1 there (uopt forbids them
- *   to a parameter in the entry block), so the IV gets v0 and 16 v1.
- *   Left: bne's operand order. uopt swaps `==`/`!=` operands unless
- *   the left one is a variable at input, so the original compared a
- *   variable that copy propagation later turned into the IV; every
- *   such form tried (a j = i * 4 local, split blocks) colours j first.
+ *   splits the block and moves i to v0 (7 at best).
+ * - func_80229448 (matches): the empty loop survives only as `i * 4 !=
+ *   16` (a plain `i < 4` is deleted, the multiply is what uopt
+ *   strength-reduces after its dead-loop pass). A local counter takes
+ *   v0 in the entry block and pushes the IV to v1; a third parameter as
+ *   the counter can't use v0/v1 there (uopt forbids them to a parameter
+ *   in the entry block), so the IV gets v0 and 16 v1. The 16 assigned
+ *   to a local inside the test (`!= (n = 16)`) gives bne the original's
+ *   operand order (IV first).
  */
 #include "common.h"
 
@@ -976,7 +975,9 @@ void func_8022946C(UnkObj *arg0, s32 arg1) {
 }
 
 void func_80229448(s32 arg0, s32 arg1, s32 arg2) {
-    for (arg2 = 0; arg2 * 4 != 16; arg2++) {
+    s32 n;
+
+    for (arg2 = 0; arg2 * 4 != (n = 16); arg2++) {
     }
 }
 
