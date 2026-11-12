@@ -8,7 +8,7 @@
  * original's order. Not built into the ROM (docs/DECOMPILING.md,
  * "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 50, eu 50, jp 50
+ * differing words: us 27, eu 27, jp 27
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -20,8 +20,13 @@
  * original's dead stores to it), not in three variables.
  * func_8026E938's tail calls the getters func_8026E8C8 (the map's sign
  * bit, inlined as `lui v0; lb`) and func_8026E8B8.
- * 40 of 43 match. Left: func_8026DCAC 8, func_8026EE18 22,
- * func_8026FC08 20.
+ * func_8026DCAC and func_8026EE18 add the layer heights through the
+ * getter func_8026DC74 (its inlined result is the original's v0); a
+ * dead `&D_800B15D8[layer] == NULL` test in the loop head puts the
+ * address in every pass, so uopt strength-reduces it as the original
+ * does (a single use at the loop's end keeps a multu).
+ * 41 of 43 match. Left: func_8026DCAC 7 (iy and the layer pointer
+ * swap a0/a1: the pointer is coloured first), func_8026FC08 20.
  */
 #include "common.h"
 
@@ -758,14 +763,13 @@ s32 func_8026EE18(f32 arg0) {
     s32 layer;
     s32 h;
     s32 iy;
-    UnkStruct_800B15D8 *m;
 
-    layer = 0;
-    m = D_800B15D8;
     iy = (s32) (arg0 * 0.01f);
     h = 0;
-    m = m; /* fake (permuter find): keeps m out of the base CSE */
-    while (layer < D_800B15D8->unk0 + 1) {
+    for (layer = 0; layer < D_800B15D8->unk0 + 1; layer++) {
+        if (&D_800B15D8[layer] == NULL) { /* fake: puts &D_800B15D8[layer] in the
+                                            * loop head, so it is strength-reduced */
+        }
         if (iy < h) {
             if (layer > 0) {
                 r = layer - 1;
@@ -778,9 +782,7 @@ s32 func_8026EE18(f32 arg0) {
             r = layer;
             break;
         }
-        h += m->unk10;
-        layer++;
-        m++;
+        h += func_8026DC74(layer);
     }
     if (D_800B15D8->unk0 < layer) {
         r = D_800B15D8->unk0;
@@ -1248,7 +1250,6 @@ void func_8026DCAC(f32 arg0, f32 arg1, f32 arg2, void *arg3, s32 arg4) {
     s32 h;
     s32 layer;
     s32 ry;
-    UnkStruct_800B15D8 *m;
 
     ry = 0;
     ((Unk8026DCAC *) arg3)->i[0] = (s32) (arg0 * 0.01f);
@@ -1262,7 +1263,8 @@ void func_8026DCAC(f32 arg0, f32 arg1, f32 arg2, void *arg3, s32 arg4) {
     h = 0;
     for (layer = 0; layer < D_800B15D8->unk0 + 1; layer++) {
         iy = (s32) (arg1 * 0.01f);
-        m = &D_800B15D8[layer];
+        if (&D_800B15D8[layer] == NULL) {
+        }
         if (iy < h) {
             if (layer > 0) {
                 /* fake: h is dead after the break; this keeps the
@@ -1280,15 +1282,15 @@ void func_8026DCAC(f32 arg0, f32 arg1, f32 arg2, void *arg3, s32 arg4) {
             break;
         }
         ry = h;
-        h += m->unk10;
-    }
-    if (h) { /* fake: keeps h live past the loop, in v1 */
+        h += func_8026DC74(layer);
     }
     if (D_800B15D8->unk0 < layer) {
         ((Unk8026DCAC *) arg3)->i[1] = D_800B15D8->unk0;
     }
     if (arg1 < 0.0f) {
         ((Unk8026DCAC *) arg3)->i[1] = -1;
+        if (layer) { /* fake: keeps layer in a2 */
+        }
     }
     ix = ((Unk8026DCAC *) arg3)->i[0];
     ((Unk8026DCAC *) arg3)->f[0] = arg0 - (f32) ix * 100.0f;
