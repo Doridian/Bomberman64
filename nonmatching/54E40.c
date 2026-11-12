@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 84, eu 84, jp 84
+ * differing words: us 24, eu 24, jp 24
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -72,6 +72,14 @@
  *   first written-out site uses a block-local `TextItem *items` and a
  *   count in sel, which puts its spill at 72 as in the original; the
  *   same block at the second site costs 8 bytes of frame.
+ * - func_8023FD08 keeps its message handles in a plain array h[3] and a
+ *   count nh (not a struct: `t.h[t.n]` folds the member offset into the
+ *   index), with `nh = 0; h[nh++] = ...` for the first one: nh stays
+ *   unaliased (the end loop's `bne`, the third store's address hoisted
+ *   to the join by PRE) but isn't constant-propagated into the second
+ *   store. It has no pointer local: `D_802AC7F8[i]` everywhere makes
+ *   every address a uopt temp, all spilled at sp+76 as in the original;
+ *   pad1/pad2 keep the frame.
  */
 #include "common.h"
 
@@ -1273,10 +1281,8 @@ void func_80240F34() {
 }
 
 void func_8023FD08() {
-    struct {
-        s32 n;
-        s32 h[3];
-    } t;
+    s32 h[3];
+    s32 nh;
     s32 i;
     s32 j;
     s32 k;
@@ -1285,7 +1291,7 @@ void func_8023FD08() {
     u8 *obj;
     s32 msg;
     void *model;
-    s32 *h;
+    s32 pad1;
     u8 buf[12];
     UnkStruct_8023FD08 *o;
     f32 y4;
@@ -1293,7 +1299,7 @@ void func_8023FD08() {
     f32 y2;
     f32 y1;
     f32 dx;
-    UnkStruct_8023FD08 **p;
+    s32 pad2;
 
     D_802AC5D0 |= 0x90;
     func_80270770(0, 1);
@@ -1429,16 +1435,14 @@ void func_8023FD08() {
         y1 = 180.0f;
     }
     func_8023B450(D_802AC610.unk28, buf, 8);
-    t.h[0] = func_802811F0(buf, X_FD08_1, (u32) y1, 0.6f, 0.8f, 3); t.n = 1;
+    nh = 0;
+    h[nh++] = func_802811F0(buf, X_FD08_1, (u32) y1, 0.6f, 0.8f, 3);
     func_8023903C(0x1E);
     model = func_8026CE28(0x19);
-    i = 0;
-    if (D_802AC80C > 0) {
-        p = D_802AC7F8;
-        do {
+    for (i = 0; i < D_802AC80C; i++) {
         func_8026C660(0x1E8);
         o = func_8022A6C4(model, 0x40);
-        *p = o;
+        D_802AC7F8[i] = o;
         o->unkC |= 0x100;
         o->unk34 = D_802AC5CC;
         o->unk10 = i * dx + 6.55f;
@@ -1448,45 +1452,39 @@ void func_8023FD08() {
         o->unk2C = 0.03f;
         o->unk30 = 0.03f;
         if (i != 0) {
-            o->unk48->unk4->unk4 = p[-1]->unk48->unk4->unk4;
+            o->unk48->unk4->unk4 = D_802AC7F8[i - 1]->unk48->unk4->unk4;
         }
         func_8023903C(0x1E);
-        i++;
-        p++;
-        } while (i < D_802AC80C);
     }
     if (!(D_802AC5D0 & 0x28)) {
         func_8023B450(func_80287680(), buf, 2);
-        t.h[t.n] = func_802811F0(buf, X_FD08_2, 0x5A, 0.8f, 0.8f, 2);
-        t.n++;
+        h[nh++] = func_802811F0(buf, X_FD08_2, 0x5A, 0.8f, 0.8f, 2);
         if ((D_800BE824 == 0) && (func_8028A36C((D_802AC5E8 * 0x14) + (D_802AC5EC * 5) + 0x2F) != 0)) {
-            p = &D_802AC7F8[i];
             func_8026C660(0x1E8);
             o = func_8022A6C4(model, 0x40);
-            *p = o;
-            o->unk14 = 1.6f;
+            D_802AC7F8[i] = o;
             o->unkC |= 0x100;
-            o->unk34 = D_802AC5CC; o->unk10 = 18.0f;
+            o->unk34 = D_802AC5CC;
+            o->unk10 = 18.0f;
+            o->unk14 = 1.6f;
             o->unk18 = 930.0f;
             o->unk30 = 0.03f;
             o->unk2C = 0.03f;
             o->unk28 = 0.03f;
             if (i != 0) {
-                o->unk48->unk4->unk4 = p[-1]->unk48->unk4->unk4;
+                o->unk48->unk4->unk4 = D_802AC7F8[i - 1]->unk48->unk4->unk4;
             }
-            i++; D_802AC80C++;
+            i++;
+            D_802AC80C++;
         }
     }
-    p = (UnkStruct_8023FD08 **) &t.h[t.n];
     func_8023903C(0x1E);
     func_8023B450(D_802AC610.unk30, buf, 8);
-    *(s32 *) p = func_802811F0(buf, X_FD08_3, (u32) y2, 0.6f, 0.8f, 2);
-    t.n++;
+    h[nh++] = func_802811F0(buf, X_FD08_3, (u32) y2, 0.6f, 0.8f, 2);
     if (D_802AC610.unk28 >= D_802AC610.unk30) {
-        p = &D_802AC7F8[i];
         func_8026C660(0x1E8);
         o = func_8022A6C4(model, 0x40);
-        *p = o;
+        D_802AC7F8[i] = o;
         o->unkC |= 0x100;
         o->unk34 = D_802AC5CC;
         o->unk10 = 18.0f;
@@ -1495,8 +1493,8 @@ void func_8023FD08() {
         o->unk30 = 0.03f;
         o->unk2C = 0.03f;
         o->unk28 = 0.03f;
-        if (p != D_802AC7F8) {
-            o->unk48->unk4->unk4 = p[-1]->unk48->unk4->unk4;
+        if (D_802AC7F8 != &D_802AC7F8[i]) {
+            o->unk48->unk4->unk4 = D_802AC7F8[i - 1]->unk48->unk4->unk4;
         }
         D_802AC80C++;
     }
@@ -1525,8 +1523,7 @@ void func_8023FD08() {
         func_8022A1E8(D_802AC7F8[i]);
     }
     func_8026CCBC(0x19);
-    h = t.h;
-    for (i = 0; i != t.n; i++) {
+    for (i = 0; i < nh; i++) {
         func_80280DB4(h[i]);
     }
     func_8023903C(2);
