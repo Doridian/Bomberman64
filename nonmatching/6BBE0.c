@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 533, eu 533, jp 5700
+ * differing words: us 527, eu 527, jp 5700
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -2522,8 +2522,7 @@ loop_484:
                         func_80238A10(func_8025CDAC, (s32) var_fp, 0, 0, 0x130);
                         func_802268F4(0x21);
                     }
-                    temp_v0_41 = &D_800AEDF0[M2C_FIELD(var_fp, s32 *, 0xC)];
-                    if ((temp_v0_41->unk14 == -1) && (M2C_FIELD(M2C_FIELD(M2C_FIELD(var_fp, f32 **, 0x18), void **, 0x40), f32 *, 0x14) >= 0.0f)) {
+                    if ((D_800AEDF0[M2C_FIELD(var_fp, s32 *, 0xC)].unk14 == -1) && (M2C_FIELD(M2C_FIELD(M2C_FIELD(var_fp, f32 **, 0x18), void **, 0x40), f32 *, 0x14) >= 0.0f)) {
                         func_80247C50(M2C_FIELD(var_fp, s32 *, 0xC));
                         func_802313DC(M2C_FIELD(var_fp, f32 **, 0x18), 0x40000);
                         D_802ACFBC = 1;
@@ -2548,7 +2547,7 @@ loop_484:
                         func_8024585C(1);
                         func_802452E8(0);
                         func_8024585C(0);
-                    } else if ((temp_v0_41->unk24 == 3) || (((M2C_FIELD(sp108, s32 *, 0x10) == 0) ? 0 : -2) == (temp_v0_41->unk14 + 7)) || (M2C_FIELD(M2C_FIELD(M2C_FIELD(var_fp, f32 **, 0x18), void **, 0x40), f32 *, 0x14) < 0.0f)) {
+                    } else if ((D_800AEDF0[M2C_FIELD(var_fp, s32 *, 0xC)].unk24 == 3) || (((M2C_FIELD(sp108, s32 *, 0x10) == 0) ? 0 : -2) == (D_800AEDF0[M2C_FIELD(var_fp, s32 *, 0xC)].unk14 + 7)) || (M2C_FIELD(M2C_FIELD(M2C_FIELD(var_fp, f32 **, 0x18), void **, 0x40), f32 *, 0x14) < 0.0f)) {
                         D_802AC5D0 |= 0x10;
                         func_80247C50(0);
                         func_80270770(0, 1);
@@ -2560,13 +2559,12 @@ loop_484:
                         }
                         func_802268F4(0x20);
                     } else {
-                        if (((M2C_FIELD(sp108, s32 *, 0x10) == 0) ? 0 : -2) == (temp_v0_41->unk14 + 6)) {
+                        if (((M2C_FIELD(sp108, s32 *, 0x10) == 0) ? 0 : -2) == (D_800AEDF0[M2C_FIELD(var_fp, s32 *, 0xC)].unk14 + 6)) {
                             func_8026C660(0x1C8);
                         }
                         func_8023903C(0x3C);
                     }
-                    temp_v0_41 = &D_800AEDF0[M2C_FIELD(var_fp, s32 *, 0xC)];
-                    temp_v0_41->unk14 -= 1;
+                    D_800AEDF0[M2C_FIELD(var_fp, s32 *, 0xC)].unk14 -= 1;
                 }
                     if (func_80254E20((f32 *) var_fp, 1, 0x21) == 0) {
                         var_s3 = func_80234248(0x64);
