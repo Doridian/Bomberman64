@@ -1,14 +1,10 @@
 /*
- * NON_MATCHING: main_code's 87D80, complete (43 functions,
+ * main_code's 87D80, IDO -O3; it matches in us, eu and jp (43 functions,
  * func_8026D580..func_8026FF94): the stage map D_800B15D8 (layers of
  * 0x82-byte cells of 64 attribute halfwords) and its attribute queries
  * (func_8026D7D8, func_8026DCAC, func_8026E3AC). The objects on it are
  * the next object, 8A7A0 (nonmatching/8A7A0.c, text_objects.txt).
- * A first draft from m2c; every function global, emitted in the
- * original's order. Not built into the ROM (docs/DECOMPILING.md,
- * "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * Every function is global, in the original's order.
  *
  * func_8026D5F8 and func_8026D5C0 (cell and slot of a point) are
  * inlined by func_8026D620/func_8026D7D8, which is what the original's
@@ -28,7 +24,7 @@
  * In func_8026DCAC uopt hoists iy out of the loop; a dead
  * `if (iy && iy) {}` adds two loop uses, so iy outranks the layer
  * pointer (tie, lower bit) and takes a0 as in the original.
- * All 43 match. In func_8026FC08 the `src = p = D_802AFC6C = ...`
+ * In func_8026FC08 the `src = p = D_802AFC6C = ...`
  * chain puts &D_802AFC6C in v1, as the original does. Its inner loop
  * computes the three coordinates into x, y and z before `p += 2` and
  * passes `(p[-2] << 8) + p[-1]` (uopt reverses the sum, so the source
