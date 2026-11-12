@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2, eu 2, jp 2
+ * differing words: us 0, eu 0, jp 0
  */
 #include "common.h"
 
@@ -310,7 +310,7 @@ static s32 func_80284254(UnkStruct_80288040 *arg0);
 static void func_802847DC();
 static void func_802848D8();
 void func_802848E0();
-static void func_80284B20();
+static s32 func_80284B20(UnkStruct_80288040 *arg0);
 void func_80284B28();
 static void func_80284C9C();
 static s32 func_80284CA4(UnkStruct_80288040 *a_);
@@ -1141,12 +1141,7 @@ static s32 func_80284FCC(UnkStruct_80288040 *arg0) {
 }
 
 static s32 func_80284FD4(UnkStruct_80288040 *arg0) {
-    u8 ret;
     s32 r;
-    s32 st;
-    f32 target;
-    f32 step;
-    f32 diff;
 
     if (func_80284FCC(arg0)) {
         return 3;
@@ -1156,6 +1151,96 @@ static s32 func_80284FD4(UnkStruct_80288040 *arg0) {
         return r;
     }
     func_80284B30(arg0);
+    r = func_80284B20(arg0);
+    if (r != 1) {
+        return r;
+    }
+    return 1;
+}
+
+static void func_80284C9C() {
+}
+
+static s32 func_80284CAC(UnkStruct_80288040 *arg0) {
+    s32 hit;
+
+    func_80284C9C();
+    if (arg0->unk78 == 0) {
+        if (arg0->unk0->unk10 & 0x40) {
+            if (DEC_80284CA4(arg0)) {
+                return 2;
+            }
+            if ((arg0->unk0->unk10 & 0x2000) && DEC_80284CA4(arg0)) {
+                return 2;
+            }
+            if ((arg0->unk0->unk10 & 0x4000) && func_80284CA4(arg0)) {
+                return 2;
+            }
+            if (D_800BA8E8[arg0->unk84].unk0 == 0x19) {
+                func_8026C51C(0x1EB, arg0->unk0->unk40->unk10, arg0->unk0->unk40->unk14, arg0->unk0->unk40->unk18);
+                func_8028A81C(0x16, arg0->unk0->unk40->unk10, arg0->unk0->unk40->unk14 + 140.0f, arg0->unk0->unk40->unk18, 0);
+                func_8028A81C(0x11, arg0->unk0->unk40->unk10, arg0->unk0->unk40->unk14 + 140.0f, arg0->unk0->unk40->unk18, 0);
+            } else {
+                func_8026C51C(0x167, arg0->unk0->unk40->unk10, arg0->unk0->unk40->unk14, arg0->unk0->unk40->unk18);
+            }
+            if (arg0->unk48 != 0) {
+                func_8028805C(arg0);
+            }
+            arg0->unk40 = 0;
+            if (((u8) (arg0->unk7A & 0xF)) == 1) {
+                if (arg0->unk79 != -1) {
+                    func_8028A4E0(arg0->unk79);
+                    arg0->unk79 = -1;
+                }
+            }
+            func_80282430(arg0, 0xF, 3);
+            arg0->unk78 = 1;
+            arg0->unk6E = 60;
+            func_80231408(arg0->unk0, 0x40000);
+            return 1;
+        }
+        hit = 0;
+        if ((arg0->unk0->unk10 & 0x2000) && (arg0->unk0->unk10 & 0x400)) {
+            switch (arg0->unk6C & 0xF) {
+            case 0:
+                hit = 1;
+                break;
+            case 1:
+                func_8028304C(arg0, 0);
+                break;
+            }
+        } else if ((arg0->unk0->unk10 & 2) && (arg0->unk0->unk10 & 0x400)) {
+            func_8028304C(arg0, 1);
+        } else if ((arg0->unk0->unk10 & 0x20000) || !(arg0->unk0->unk10 & 4)) {
+            if (arg0->unk0->unk10 & 0x200) {
+                func_8028304C(arg0, 0);
+            } else if (arg0->unk0->unk10 & 0x400) {
+                func_8028304C(arg0, 1);
+            } else if (arg0->unk0->unk10 & 0x800) {
+                func_8028304C(arg0, 2);
+            }
+        }
+        if (hit != 0) {
+            return 4;
+        }
+    }
+    return 1;
+}
+
+static s32 func_80284CA4(UnkStruct_80288040 *a_) {
+    if (--a_->unk6D == 0) {
+        return 1;
+    }
+    return 0;
+}
+
+static s32 func_80284B20(UnkStruct_80288040 *arg0) {
+    s32 ret;
+    s32 st;
+    f32 target;
+    f32 step;
+    f32 diff;
+
     ret = 1;
     switch ((u8) (arg0->unk7A & 0xF0)) {
     case 0x00:
@@ -1265,91 +1350,7 @@ static s32 func_80284FD4(UnkStruct_80288040 *arg0) {
         func_802727D8(arg0->unk68);
         break;
     }
-    r = ret;
-    if (1 != r) {
-        return r;
-    }
-    return 1;
-}
-
-static void func_80284C9C() {
-}
-
-
-static s32 func_80284CAC(UnkStruct_80288040 *arg0) {
-    s32 hit;
-
-    func_80284C9C();
-    if (arg0->unk78 == 0) {
-        if (arg0->unk0->unk10 & 0x40) {
-            if (DEC_80284CA4(arg0)) {
-                return 2;
-            }
-            if ((arg0->unk0->unk10 & 0x2000) && DEC_80284CA4(arg0)) {
-                return 2;
-            }
-            if ((arg0->unk0->unk10 & 0x4000) && func_80284CA4(arg0)) {
-                return 2;
-            }
-            if (D_800BA8E8[arg0->unk84].unk0 == 0x19) {
-                func_8026C51C(0x1EB, arg0->unk0->unk40->unk10, arg0->unk0->unk40->unk14, arg0->unk0->unk40->unk18);
-                func_8028A81C(0x16, arg0->unk0->unk40->unk10, arg0->unk0->unk40->unk14 + 140.0f, arg0->unk0->unk40->unk18, 0);
-                func_8028A81C(0x11, arg0->unk0->unk40->unk10, arg0->unk0->unk40->unk14 + 140.0f, arg0->unk0->unk40->unk18, 0);
-            } else {
-                func_8026C51C(0x167, arg0->unk0->unk40->unk10, arg0->unk0->unk40->unk14, arg0->unk0->unk40->unk18);
-            }
-            if (arg0->unk48 != 0) {
-                func_8028805C(arg0);
-            }
-            arg0->unk40 = 0;
-            if (((u8) (arg0->unk7A & 0xF)) == 1) {
-                if (arg0->unk79 != -1) {
-                    func_8028A4E0(arg0->unk79);
-                    arg0->unk79 = -1;
-                }
-            }
-            func_80282430(arg0, 0xF, 3);
-            arg0->unk78 = 1;
-            arg0->unk6E = 60;
-            func_80231408(arg0->unk0, 0x40000);
-            return 1;
-        }
-        hit = 0;
-        if ((arg0->unk0->unk10 & 0x2000) && (arg0->unk0->unk10 & 0x400)) {
-            switch (arg0->unk6C & 0xF) {
-            case 0:
-                hit = 1;
-                break;
-            case 1:
-                func_8028304C(arg0, 0);
-                break;
-            }
-        } else if ((arg0->unk0->unk10 & 2) && (arg0->unk0->unk10 & 0x400)) {
-            func_8028304C(arg0, 1);
-        } else if ((arg0->unk0->unk10 & 0x20000) || !(arg0->unk0->unk10 & 4)) {
-            if (arg0->unk0->unk10 & 0x200) {
-                func_8028304C(arg0, 0);
-            } else if (arg0->unk0->unk10 & 0x400) {
-                func_8028304C(arg0, 1);
-            } else if (arg0->unk0->unk10 & 0x800) {
-                func_8028304C(arg0, 2);
-            }
-        }
-        if (hit != 0) {
-            return 4;
-        }
-    }
-    return 1;
-}
-
-static s32 func_80284CA4(UnkStruct_80288040 *a_) {
-    if (--a_->unk6D == 0) {
-        return 1;
-    }
-    return 0;
-}
-
-static void func_80284B20() {
+    return ret;
 }
 
 static void func_80284B28() {
@@ -1360,7 +1361,6 @@ static void func_80284B30(UnkStruct_80288040 *arg0) {
     UnkStructA_40_48_4 *p;
 
     func_80284B28();
-    func_80284B20();
     step = 0.0f;
     switch ((u8) (arg0->unk7A & 0xF)) {
     case 3:
