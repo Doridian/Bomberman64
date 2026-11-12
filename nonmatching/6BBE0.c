@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 778, eu 778, jp 5701
+ * differing words: us 770, eu 770, jp 5701
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -2711,9 +2711,8 @@ loop_565:
                             do {
                                 M2C_FIELD(M2C_FIELD(M2C_FIELD(M2C_FIELD(M2C_FIELD(var_fp, f32 **, 0x18), void **, 0x40), void **, 0x48), void **, 4), f32 *, 4) = sp12C;
                                 func_80239094();
-                                temp_fv0 = sp12C - 1.0f;
-                                sp12C = temp_fv0;
-                            } while (temp_fv0 >= 1.0f);
+                                sp12C -= 1.0f;
+                            } while (sp12C >= 1.0f);
                         }
                         func_8023903C(2);
                         func_8024585C(1);
@@ -2779,9 +2778,8 @@ loop_658:
                                 do {
                                     M2C_FIELD(M2C_FIELD(M2C_FIELD(M2C_FIELD(M2C_FIELD(var_fp, f32 **, 0x18), void **, 0x40), void **, 0x48), void **, 4), f32 *, 4) = sp12C;
                                     func_80239094();
-                                    temp_fv0 = sp12C - 1.0f;
-                                    sp12C = temp_fv0;
-                                } while (temp_fv0 >= 1.0f);
+                                    sp12C -= 1.0f;
+                                } while (sp12C >= 1.0f);
                             }
                             if (M2C_FIELD(var_fp, f32 *, 0x74) + 180.0f >= 360.0f) {
                                 spC4 = M2C_FIELD(var_fp, f32 *, 0x74) + 180.0f - 360.0f;
