@@ -16,7 +16,7 @@
  * "NON_MATCHING drafts"). The prelude (types, externs, prototypes) is
  * 87D80.c's.
  * flags: -O3
- * differing words: us 70, eu 70, jp 70
+ * differing words: us 69, eu 69, jp 69
  *
  * func_802727D8 calls func_8026E8B8 (87D80) with a jal, which IDO
  * would inline within one file, and 8E730 calls 926A0 (src/926A0.c,
@@ -26,8 +26,10 @@
  * part's own line numbers (and .loc), as in the two drafts this
  * was. 98 of 101 match. Left: func_80270770 35 (flags and ok in v1/a0
  * where the original has a0/a1), func_802741D8 17 (slot kept in a0,
- * the 6C store's schedule), func_80277B54 17 (the list-init tail
- * stores in ugen order), func_80275120 1 (the middle c.eq.s operand
+ * the 6C store's schedule), func_80277B54 16 (the list-init tail:
+ * the original keeps ENT_4C0 and &D_802AFE1C in ugen temporaries t0/t1,
+ * set at first use, and -1/&D_802AFDE0 in a1/a0; ours colours all four;
+ * ENTS[0].xf = -1 as an int store moves that -1 into the loop's a1), func_80275120 1 (the middle c.eq.s operand
  * order). func_80275120 holds sp28.f[0] and [2] in arg0 for their tests
  * (`arg0 = sp28.f[0]; if (arg0 != 0.0f)`): uopt keeps a variable as the
  * compare's first operand, where `0.0f != x` and `x != 0.0f` both put
@@ -791,7 +793,7 @@ void func_80277B54() {
 #line 2 "tail.c"
     ENTS[0].next = ENT_4C0;
     ENTS[0].prev = NULL;
-    ENTS[0].xf = (Sub8E *) -1;
+    *(s32 *) &ENTS[0].xf = -1;
     ENT_4C0->next = NULL;
     ENT_4C0->prev = ENTS;
     ENT_4C0->xf = (Sub8E *) -1;
