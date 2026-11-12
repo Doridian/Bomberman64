@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1457, eu 1457, jp 5748
+ * differing words: us 921, eu 921, jp 5746
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -1402,8 +1402,8 @@ block_46:
                         temp_v0_6 = M2C_FIELD(M2C_FIELD(var_fp, void **, 0x1C), void **, 0x40);
                         temp_fv0 = FDIFF(M2C_FIELD(var_s0, f32 *, 0x10), M2C_FIELD(temp_v0_6, f32 *, 0x10));
                         if (temp_fv0 <= 100.0f) {
-                            temp_fv0 = FDIFF(M2C_FIELD(var_s0, f32 *, 0x18), M2C_FIELD(temp_v0_6, f32 *, 0x18));
-                            if ((temp_fv0 <= 100.0f) && (func_80245408(M2C_FIELD(var_fp, s32 *, 0xC)) == 0)) {
+                            spC4 = FDIFF(M2C_FIELD(var_s0, f32 *, 0x18), M2C_FIELD(temp_v0_6, f32 *, 0x18));
+                            if ((spC4 <= 100.0f) && (func_80245408(M2C_FIELD(var_fp, s32 *, 0xC)) == 0)) {
                                 temp_fv0 = (f32) ((s32) func_80251994((f32 *) ((u8 *)var_fp + 0x2C), (f32 *) ((u8 *)var_fp + 0x20)) / 45) * 45.0f;
                                 M2C_FIELD(M2C_FIELD(M2C_FIELD(var_fp, f32 **, 0x18), void **, 0x40), f32 *, 0x20) = temp_fv0;
                                 temp_v1 = M2C_FIELD(var_fp, s32 *, 0);
@@ -1440,8 +1440,8 @@ block_101:
                                 var_s0 = M2C_FIELD(M2C_FIELD(var_fp, f32 **, 0x18), void **, 0x40);
                                 temp_fv0 = FDIFF(M2C_FIELD(var_s0, f32 *, 0x10), M2C_FIELD(var_fp, f32 *, 0x68));
                                 if (temp_fv0 < 100.0f) {
-                                    temp_fv0 = FDIFF(M2C_FIELD(var_s0, f32 *, 0x18), M2C_FIELD(var_fp, f32 *, 0x70));
-                                    if (temp_fv0 < 100.0f) {
+                                    spC4 = FDIFF(M2C_FIELD(var_s0, f32 *, 0x18), M2C_FIELD(var_fp, f32 *, 0x70));
+                                    if (spC4 < 100.0f) {
                                         M2C_FIELD(var_fp, s32 *, 4) = (s32) M2C_FIELD(var_fp, s32 *, 8);
                                         M2C_FIELD(var_fp, s32 *, 0) = temp_v1 & ~0x100;
                                     }
@@ -1787,12 +1787,10 @@ loop_148:
                                     var_s3 = 0;
                                     sp12C = 0;
                                     do {
-                                        temp_fv0 = ((f32 (*)[2]) D_802A0F3C)[D_802ACFC8][0];
                                         var_s0 = M2C_FIELD(M2C_FIELD(var_fp, f32 **, 0x18), void **, 0x40);
-                                        M2C_FIELD(var_s0, f32 *, 0x10) -= temp_fv0;
-                                        temp_fv0 = M2C_FIELD((D_802A0F3C + (D_802ACFC8 * 8)), f32 *, 4);
+                                        M2C_FIELD(var_s0, f32 *, 0x10) -= ((f32 (*)[2]) D_802A0F3C)[D_802ACFC8][0];
                                         var_s0 = M2C_FIELD(M2C_FIELD(var_fp, f32 **, 0x18), void **, 0x40);
-                                        M2C_FIELD(var_s0, f32 *, 0x18) -= temp_fv0;
+                                        M2C_FIELD(var_s0, f32 *, 0x18) -= M2C_FIELD((D_802A0F3C + (D_802ACFC8 * 8)), f32 *, 4);
                                         M2C_FIELD(M2C_FIELD(M2C_FIELD(var_fp, f32 **, 0x18), void **, 0x40), f32 *, 0x14) = (f32) (func_80234434(sp12C) * 20.0f);
                                         sp12C += 6.0f;
                                         func_80239094();
@@ -1855,9 +1853,9 @@ loop_148:
                                     if (func_80251BDC((f32 *) ((u8 *)var_fp + 0x20), (f32 *) ((u8 *)var_fp + 0x2C)) == -1) {
                                         temp_v0_2 = func_80252658((f32 *) ((u8 *)var_fp + 0x20), (f32 *) ((u8 *)var_fp + 0x2C));
                                         temp_v1 = temp_v0_2 & 1;
-                                        temp_fv0 = FDIFF(M2C_FIELD(var_fp, f32 *, 0x20), M2C_FIELD(var_fp, f32 *, 0x2C));
-                                        spC4 = FDIFF(M2C_FIELD(var_fp, f32 *, 0x28), M2C_FIELD(var_fp, f32 *, 0x34));
-                                        if (spC4 < temp_fv0) {
+                                        temp_fs3 = FDIFF(M2C_FIELD(var_fp, f32 *, 0x20), M2C_FIELD(var_fp, f32 *, 0x2C));
+                                        temp_fs2 = FDIFF(M2C_FIELD(var_fp, f32 *, 0x28), M2C_FIELD(var_fp, f32 *, 0x34));
+                                        if (temp_fs2 < temp_fs3) {
                                             temp_v1 = temp_v0_2 & 2;
                                             if (((temp_v1 != 0) && (M2C_FIELD(M2C_FIELD(M2C_FIELD(var_fp, void **, 0x1C), void **, 0x40), f32 *, 0x20) == 180.0f)) || ((temp_v1 == 0) && (M2C_FIELD(M2C_FIELD(M2C_FIELD(var_fp, void **, 0x1C), void **, 0x40), f32 *, 0x20) == 0.0f))) {
                                                 if ((temp_v0_2 & 1) != 0) {
@@ -2266,9 +2264,9 @@ block_421:
                                     if (func_80251BDC((f32 *) ((u8 *)var_fp + 0x20), (f32 *) ((u8 *)var_fp + 0x2C)) == -1) {
                                         temp_v0_2 = func_80252658((f32 *) ((u8 *)var_fp + 0x20), (f32 *) ((u8 *)var_fp + 0x2C));
                                         temp_v1 = temp_v0_2 & 1;
-                                        temp_fv0 = FDIFF(M2C_FIELD(var_fp, f32 *, 0x20), M2C_FIELD(var_fp, f32 *, 0x2C));
-                                        spC4 = FDIFF(M2C_FIELD(var_fp, f32 *, 0x28), M2C_FIELD(var_fp, f32 *, 0x34));
-                                        if (spC4 < temp_fv0) {
+                                        temp_fs3 = FDIFF(M2C_FIELD(var_fp, f32 *, 0x20), M2C_FIELD(var_fp, f32 *, 0x2C));
+                                        temp_fs2 = FDIFF(M2C_FIELD(var_fp, f32 *, 0x28), M2C_FIELD(var_fp, f32 *, 0x34));
+                                        if (temp_fs2 < temp_fs3) {
                                             temp_v1 = temp_v0_2 & 2;
                                             if (((temp_v1 != 0) && (M2C_FIELD(M2C_FIELD(M2C_FIELD(var_fp, void **, 0x1C), void **, 0x40), f32 *, 0x20) == 180.0f)) || ((temp_v1 == 0) && (M2C_FIELD(M2C_FIELD(M2C_FIELD(var_fp, void **, 0x1C), void **, 0x40), f32 *, 0x20) == 0.0f))) {
                                                 if ((temp_v0_2 & 1) != 0) {
@@ -2891,9 +2889,9 @@ block_697:
                         if (func_80251BDC((f32 *) ((u8 *)var_fp + 0x20), (f32 *) ((u8 *)var_fp + 0x2C)) == -1) {
                             temp_v0_2 = func_80252658((f32 *) ((u8 *)var_fp + 0x20), (f32 *) ((u8 *)var_fp + 0x2C));
                             temp_v1 = temp_v0_2 & 1;
-                            temp_fv0 = FDIFF(M2C_FIELD(var_fp, f32 *, 0x20), M2C_FIELD(var_fp, f32 *, 0x2C));
-                            spC4 = FDIFF(M2C_FIELD(var_fp, f32 *, 0x28), M2C_FIELD(var_fp, f32 *, 0x34));
-                            if (spC4 < temp_fv0) {
+                            temp_fs3 = FDIFF(M2C_FIELD(var_fp, f32 *, 0x20), M2C_FIELD(var_fp, f32 *, 0x2C));
+                            temp_fs2 = FDIFF(M2C_FIELD(var_fp, f32 *, 0x28), M2C_FIELD(var_fp, f32 *, 0x34));
+                            if (temp_fs2 < temp_fs3) {
                                 temp_v1 = temp_v0_2 & 2;
                                 if (((temp_v1 != 0) && (M2C_FIELD(M2C_FIELD(M2C_FIELD(var_fp, void **, 0x1C), void **, 0x40), f32 *, 0x20) == 180.0f)) || ((temp_v1 == 0) && (M2C_FIELD(M2C_FIELD(M2C_FIELD(var_fp, void **, 0x1C), void **, 0x40), f32 *, 0x20) == 0.0f))) {
                                     if ((temp_v0_2 & 1) != 0) {
