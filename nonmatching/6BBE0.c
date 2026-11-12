@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 435, eu 435, jp 1986
+ * differing words: us 237, eu 237, jp 1986
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -2942,7 +2942,7 @@ block_740:
                             if (M2C_FIELD(M2C_FIELD(var_fp, f32 **, 0x18), s32 *, 0x44) != 0) {
                                 if (func_80244BA4(D_800AEDF0[M2C_FIELD(var_fp, s32 *, 0xC)].unkA4, 0x1000) != 0) {
                                     func_80252D14((f32 *) var_fp);
-                                } else if ((M2C_FIELD(&sp148[M2C_FIELD(var_fp, s32 *, 0xC)], s32 *, 0x14) == 2) || (M2C_FIELD(sp148, s32 *, 0x30) < 0x1E)) {
+                                } else if ((sp148[M2C_FIELD(var_fp, s32 *, 0xC) + 5] == 2) || (M2C_FIELD(sp148, s32 *, 0x30) < 0x1E)) {
                                     temp_s1 = func_80254E00(M2C_FIELD(var_fp, f32 **, 0x18), &sp12C);
                                     if ((temp_s1 != NULL) && (M2C_FIELD(temp_s1, s32 *, 0x44) == 0)) {
                                         func_8022F808(temp_s1, sp10C);
@@ -2980,7 +2980,7 @@ block_768:
                                 }
                             } else {
                                 var_s4 = 0;
-                                if ((M2C_FIELD(sp148, s32 *, 0) == 1) && (func_80234248(0x3E8) < 0x1F4) && (temp_s1 = func_8022FA88(M2C_FIELD(var_fp, f32 **, 0x18), 4, &sp12C), (temp_s1 != NULL)) && (temp_v1 = (1 - M2C_FIELD(&sp148[M2C_FIELD(var_fp, s32 *, 0xC)], s32 *, 0x90)) * 4, (*(s32 *)(D_802AC760 + temp_v1) != 0)) && (temp_s1 == (u8 *) **(void ***)(D_802AC820 + temp_v1)) && (sp12C < 800.0f)) {
+                                if ((M2C_FIELD(sp148, s32 *, 0) == 1) && (func_80234248(0x3E8) < 0x1F4) && (temp_s1 = func_8022FA88(M2C_FIELD(var_fp, f32 **, 0x18), 4, &sp12C), (temp_s1 != NULL)) && (var_s3 = 1 - sp148[M2C_FIELD(var_fp, s32 *, 0xC) + 0x24], (((s32 *)D_802AC760)[var_s3] != 0)) && (temp_s1 == (u8 *) *((void ***)D_802AC820)[var_s3]) && (sp12C < 800.0f)) {
                                     if ((sp12C < 500.0f) && (M2C_FIELD(var_fp, s32 *, 4) != 5) && (M2C_FIELD(var_fp, u32 *, 0x94) == 0)) {
                                         func_8022F808(temp_s1, (f32 *) ((u8 *)var_fp + 0x2C));
                                         temp_fv0 = (f32) func_802519B4(func_80251994((f32 *) ((u8 *)var_fp + 0x20), (f32 *) ((u8 *)var_fp + 0x2C))) * 45.0f;
@@ -3096,7 +3096,7 @@ block_788:
                                             }
                                         }
                                     } else {
-                                        if ((M2C_FIELD(&sp148[M2C_FIELD(var_fp, s32 *, 0xC)], s32 *, 0x14) > 0) && (func_80234248(0x64) >= 0x33)) {
+                                        if ((sp148[M2C_FIELD(var_fp, s32 *, 0xC) + 5] > 0) && (func_80234248(0x64) >= 0x33)) {
                                             if ((((M2C_FIELD(sp148, s32 *, 0) == 0) && (func_80244BA4(M2C_FIELD(var_fp, s32 *, 0x10), 0x1000) != 0)) || ((M2C_FIELD(sp148, s32 *, 0) == 1) && (var_s4 != 0))) && (temp_fs4 <= 300.0f)) {
                                                 M2C_FIELD(var_fp, u32 *, 0x94) = 1U;
                                                 M2C_FIELD(var_fp, s32 *, 0x90) = 0x14;
@@ -3217,7 +3217,7 @@ block_873:
                                                             }
                                                         }
                                                     }
-                                                    if ((M2C_FIELD(&sp148[M2C_FIELD(var_fp, s32 *, 0xC)], s32 *, 0x14) > 0) && (func_8025E63C() > 0.949999988079071) && (func_80244BA4(M2C_FIELD(var_fp, s32 *, 0xC), 0x8000) != 0) && (func_802703B4(D_800AEDF0[M2C_FIELD(var_fp, s32 *, 0xC)].unk2C) != 0)) {
+                                                    if ((sp148[M2C_FIELD(var_fp, s32 *, 0xC) + 5] > 0) && (func_8025E63C() > 0.949999988079071) && (func_80244BA4(M2C_FIELD(var_fp, s32 *, 0xC), 0x8000) != 0) && (func_802703B4(D_800AEDF0[M2C_FIELD(var_fp, s32 *, 0xC)].unk2C) != 0)) {
                                                         func_80254C90((f32 *) var_fp);
                                                     }
                                                     if (M2C_FIELD(var_fp, s32 *, 4) == 0) {
