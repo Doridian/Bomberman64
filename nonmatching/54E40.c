@@ -4,7 +4,7 @@
  * func_8022A328, and the display lists of three digit counters. Not
  * built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 102, eu 102, jp 105
+ * differing words: us 102, eu 102, jp 102
  *
  * A first draft: m2c's functions in the reverse of the ROM's order (IDO
  * -O3 emits last to first), with the fixes the -O3 build needs; 26 of 72
@@ -571,6 +571,9 @@ void func_80243824(s32 arg0);
 #define X_01D8 0x70
 #define X_01E0 0x83
 #define X_B7C0 0xA0U
+#define X_FD08_1 0xAA
+#define X_FD08_2 0xDA
+#define X_FD08_3 0x8C
 extern u8 D_8029FB00_jp[];
 extern u8 D_8029FB10_jp[];
 #else
@@ -579,6 +582,9 @@ extern u8 D_8029FB10_jp[];
 #define X_01D8 func_8023B2AC(D_802A01D8, 0.8f)
 #define X_01E0 func_8023B2AC(D_802A01E0, 0.8f)
 #define X_B7C0 0xB4U
+#define X_FD08_1 0xBE
+#define X_FD08_2 0xE2
+#define X_FD08_3 0xA0
 #endif
 
 /* eu runs at 50 frames a second: its second, its per-frame step of the
@@ -1423,7 +1429,7 @@ void func_8023FD08() {
         y1 = 180.0f;
     }
     func_8023B450(D_802AC610.unk28, buf, 8);
-    t.h[0] = func_802811F0(buf, 0xBE, (u32) y1, 0.6f, 0.8f, 3); t.n = 1;
+    t.h[0] = func_802811F0(buf, X_FD08_1, (u32) y1, 0.6f, 0.8f, 3); t.n = 1;
     func_8023903C(0x1E);
     model = func_8026CE28(0x19);
     i = 0;
@@ -1451,7 +1457,7 @@ void func_8023FD08() {
     }
     if (!(D_802AC5D0 & 0x28)) {
         func_8023B450(func_80287680(), buf, 2);
-        t.h[t.n] = func_802811F0(buf, 0xE2, 0x5A, 0.8f, 0.8f, 2);
+        t.h[t.n] = func_802811F0(buf, X_FD08_2, 0x5A, 0.8f, 0.8f, 2);
         t.n++;
         if ((D_800BE824 == 0) && (func_8028A36C((D_802AC5E8 * 0x14) + (D_802AC5EC * 5) + 0x2F) != 0)) {
             p = &D_802AC7F8[i];
@@ -1474,7 +1480,7 @@ void func_8023FD08() {
     p = (UnkStruct_8023FD08 **) &t.h[t.n];
     func_8023903C(0x1E);
     func_8023B450(D_802AC610.unk30, buf, 8);
-    *(s32 *) p = func_802811F0(buf, 0xA0, (u32) y2, 0.6f, 0.8f, 2);
+    *(s32 *) p = func_802811F0(buf, X_FD08_3, (u32) y2, 0.6f, 0.8f, 2);
     t.n++;
     if (D_802AC610.unk28 >= D_802AC610.unk30) {
         p = &D_802AC7F8[i];
