@@ -7,7 +7,7 @@
  * "NON_MATCHING drafts"). src/48300.c, before it, is another object:
  * func_80232E60 calls its func_8022DB00 with a jal (text_objects.txt).
  * flags: -O3
- * differing words: us 160, eu 160, jp 160
+ * differing words: us 144, eu 144, jp 144
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does. An 8-byte stub (jr ra; nop) is an inlined
@@ -58,7 +58,7 @@
  * left is case 12/20's four stores before the loop: uopt keeps the ball's
  * address in v0 (a block-local CSE of the four istr) where the original
  * uses lui/%lo for each, with p[0], p[1], p[3] loaded in that order.
- * func_802320A8 (122, the size right): what's left is register naming:
+ * func_802320A8 (106, the size right): what's left is register naming:
  * ugen's float temporaries from case 1 on have f16 and f18 the other way
  * round, a and b swap f22/f24, the first wrap keeps 90.0 in f2 (not
  * f12), obj+0x58's slot is 0x64 not 0x68, and the default's delay slot
@@ -79,6 +79,9 @@
  *   - goto dl; dl: in the no-gp branch splits its block: ugen hands out
  *     float temporaries least recently freed first, and the split moves
  *     case 1's first one to f4, as in the original (a permuter find).
+ *   - in the 0x20000 case, sp80[0] goes through b (b = sp80[0] after the
+ *     copy from spD4, n = b in the wrap) and x = sp80[1]; x = x - 90.0f
+ *     is two statements: both move the colouring (permuter finds).
  * uopt puts a commutative op's operands in its own order, not the
  * source's, but the form of an operand counts: func_8022E0AC's mul.s
  * takes the original's order with (*arg0).unk38 (not arg0->unk38) on the
@@ -786,6 +789,7 @@ void func_802320A8() {
         case 0x20000:
             sp80[0] = spD4[0];
             sp80[1] = spD4[1];
+            b = sp80[0];
             sp80[2] = spD4[2];
             obj->unk40->rot[1] = obj->unk44->unk40->rot[1];
             v = obj->unk44->unk40->rot[1];
@@ -796,7 +800,7 @@ void func_802320A8() {
             }
             x = t;
             if (sp80[0] >= 0.0f && sp80[0] <= 180.0f) {
-                n = sp80[0];
+                n = b;
             } else {
                 n = (360.0f - sp80[0]) * -1.0f;
             }
