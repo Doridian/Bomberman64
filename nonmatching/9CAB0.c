@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 12, eu 12, jp 12
+ * differing words: us 2, eu 2, jp 2
  */
 #include "common.h"
 
@@ -322,9 +322,9 @@ static void func_80285650();
 static void func_80285A6C();
 static UnkStruct_800BA900 *func_80285A74();
 static void func_80285A7C(UnkStruct_80288040 *a_, UnkStruct_800BA8E8 *e_);
-static void func_80285A84(UnkStruct_80288040 *a_);
+static void func_80285A84(UnkStruct_80288040 *a_, Vec3f *p, s32 mk);
 static void func_80285A8C(UnkStruct_80288040 *a_, UnkStruct_800BA8E8 *e_);
-static void func_80285A94(UnkStruct_80288040 *a_);
+static void func_80285A94(UnkStruct_80288040 *a_, Vec3f *p, s32 mk);
 static void func_80285F84(void);
 static s32 func_802863E8(s32 arg0);
 static s32 func_802863F0(void);
@@ -739,14 +739,6 @@ static s32 func_802863E8(s32 arg0) {
 static void func_80286400(s32 arg4, s32 arg0, s32 arg5, f32 arg1, f32 arg2, f32 arg3) {
     UnkStruct_800BA900 *s;
     UnkStruct_80288040 *a;
-    UnkStructA *m;
-    u16 size;
-    Vec3f *p;
-    struct {
-        s32 g[3];
-        Vec3f o;
-    } grid;
-    s32 pad[5]; /* fake: the original's frame is 24 bytes bigger */
 
     s = &D_800BA900[arg4];
     func_80282340(s);
@@ -760,57 +752,7 @@ static void func_80286400(s32 arg4, s32 arg0, s32 arg5, f32 arg1, f32 arg2, f32 
     func_80285A7C(&s->unk14, &D_800BA8E8[arg0]);
     a = &s->unk14;
     s->unk0 = 2;
-    p = &s->unk8;
-    if (p) {}
-    func_8026DCAC(p->x, p->y, p->z, &grid, 0);
-    a->unk4 = grid.g[0];
-    a->unk8 = grid.g[1];
-    a->unkC = grid.g[2];
-    a->unk10 = grid.g[0];
-    a->unk14 = grid.g[1];
-    a->unk18 = grid.g[2];
-    if (p) {}
-    switch (a->unk44) {
-    case 0:
-    case 1:
-    case 2:
-    case 3:
-        size = 0x60;
-        break;
-    case 4:
-        size = 0x50;
-        break;
-    case 5:
-        size = 0x40;
-        break;
-    case 6:
-        size = 0x30;
-        break;
-    case 7:
-        size = 0x20;
-        break;
-    case 8:
-        size = 0xC0;
-        break;
-    default:
-        size = 0xC0;
-        break;
-    }
-    if (p) {}
-    m = func_80230CB4(D_800BA8E8[a->unk84].unk2, -1, 0, size, NULL);
-    m->unk40->unk10 = p->x - grid.o.x;
-    m->unk40->unk14 = p->y - grid.o.y;
-    m->unk40->unk18 = p->z - grid.o.z;
-    m->unk58 = m->unk40->unk10;
-    m->unk5C = m->unk40->unk14;
-    m->unk60 = m->unk40->unk18;
-    m->unk34 = a->unk70 * 10.0f;
-    m->unk38 = a->unk74 * 10.0f;
-    a->unk0 = m;
-    func_802847E4(a, 0);
-    func_80231408(func_802311E8(m), 0x2100000);
-    func_80283DF0(a, 1);
-    func_80285A84(a);
+    func_80285A84(a, &s->unk8, 1);
 }
 
 
@@ -906,10 +848,8 @@ static void func_80285A6C() {
 }
 
 static UnkStruct_800BA900 *func_80285A74() {
-    s32 pada[1];
-    Vec3f pos;
-    s32 padb[15];
     UnkStruct_800BA900 *s;
+    Vec3f pos;
     UnkStructA_40 *p;
     s32 i;
     f32 c;
@@ -984,7 +924,72 @@ static void func_80285A8C(UnkStruct_80288040 *a_, UnkStruct_800BA8E8 *e_) {
     (a_)->unk7E = D_800BB488[19];
 }
 
-static void func_80285A94(UnkStruct_80288040 *a_) {
+/* func_80286400 calls this with mk = 1 (its model and grid position);
+ * func_80285A9C's call passes 0, so its copy is only the frame area. With
+ * this code here grid sits in this inlined area, below func_80285A7C's,
+ * which is where the original has it, without a stub of its own. */
+static void func_80285A94(UnkStruct_80288040 *a_, Vec3f *p, s32 mk) {
+    struct {
+        s32 g[3];
+        Vec3f o;
+    } grid;
+    UnkStructA *m;
+    u16 size;
+    UnkStruct_80288040 *a;
+    s32 kind;
+    UnkStructA_40 *o;
+
+    a = a_;
+    if (mk) {
+        func_8026DCAC(p->x, p->y, p->z, &grid, 0);
+        a->unk4 = grid.g[0];
+        a->unk8 = grid.g[1];
+        a->unkC = grid.g[2];
+        a->unk10 = grid.g[0];
+        a->unk14 = grid.g[1];
+        a->unk18 = grid.g[2];
+        switch (a->unk44) {
+        case 0:
+        case 1:
+        case 2:
+        case 3:
+            size = 0x60;
+            break;
+        case 4:
+            size = 0x50;
+            break;
+        case 5:
+            size = 0x40;
+            break;
+        case 6:
+            size = 0x30;
+            break;
+        case 7:
+            size = 0x20;
+            break;
+        case 8:
+            size = 0xC0;
+            break;
+        default:
+            size = 0xC0;
+            break;
+        }
+        kind = D_800BA8E8[a->unk84].unk2;
+        m = func_80230CB4(kind, -1, 0, size, NULL);
+        m->unk40->unk10 = p->x - grid.o.x;
+        m->unk40->unk14 = p->y - grid.o.y;
+        m->unk40->unk18 = p->z - grid.o.z;
+        o = m->unk40;
+        m->unk58 = o->unk10;
+        m->unk5C = o->unk14;
+        m->unk60 = o->unk18;
+        m->unk34 = a->unk70 * 10.0f;
+        m->unk38 = a->unk74 * 10.0f;
+        a->unk0 = m;
+        func_802847E4(a, 0);
+        func_80231408(func_802311E8(m), 0x2100000);
+        func_80283DF0(a, 1);
+    }
     if (func_8023A840()->unk10 == 0) {
         (a_)->unk2C *= 0.5f;
         if ((a_)->unk6D >= 2) {
@@ -998,8 +1003,8 @@ static void func_80285A7C(UnkStruct_80288040 *a_, UnkStruct_800BA8E8 *e_) {
     func_80285A8C(a_, e_);
 }
 
-static void func_80285A84(UnkStruct_80288040 *a_) {
-    func_80285A94(a_);
+static void func_80285A84(UnkStruct_80288040 *a_, Vec3f *p, s32 mk) {
+    func_80285A94(a_, p, mk);
 }
 
 static void func_80285A9C(UnkStruct_800BB340 *arg0) {
@@ -1015,7 +1020,7 @@ static void func_80285A9C(UnkStruct_800BB340 *arg0) {
         a->unk0->unk40->unk28 = 1.0f;
         a->unk0->unk40->unk2C = 1.0f;
         a->unk0->unk40->unk30 = 1.0f;
-        func_80285A84(a);
+        func_80285A84(a, NULL, 0);
         /* fake: the original's ra at 28 needs a 5-argument call, its
          * s-registers a constant 2 live across the calls, and a in s4 a call
          * passing a to a static that takes its argument in s4 (IPA), all
