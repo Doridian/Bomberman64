@@ -4,7 +4,7 @@
  * emitted in the original's order, with the original's stubs. Not built
  * into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 21, eu 21, jp 21
+ * differing words: us 19, eu 19, jp 19
  */
 #include "common.h"
 
@@ -313,7 +313,7 @@ void func_802848E0();
 static void func_80284B20();
 void func_80284B28();
 static void func_80284C9C();
-void func_80284CA4();
+static s32 func_80284CA4(UnkStruct_80288040 *a_);
 static s32 func_80284FCC(UnkStruct_80288040 *arg0);
 static void func_80285554();
 void func_8028555C();
@@ -1268,13 +1268,10 @@ static s32 func_80284FD4(UnkStruct_80288040 *arg0) {
 static void func_80284C9C() {
 }
 
-static void func_80284CA4() {
-}
 
 static s32 func_80284CAC(UnkStruct_80288040 *arg0) {
     s32 hit;
 
-    func_80284CA4();
     func_80284C9C();
     if (arg0->unk78 == 0) {
         if (arg0->unk0->unk10 & 0x40) {
@@ -1284,7 +1281,7 @@ static s32 func_80284CAC(UnkStruct_80288040 *arg0) {
             if ((arg0->unk0->unk10 & 0x2000) && DEC_80284CA4(arg0)) {
                 return 2;
             }
-            if ((arg0->unk0->unk10 & 0x4000) && DEC_80284CA4(arg0)) {
+            if ((arg0->unk0->unk10 & 0x4000) && func_80284CA4(arg0)) {
                 return 2;
             }
             if (D_800BA8E8[arg0->unk84].unk0 == 0x19) {
@@ -1336,6 +1333,13 @@ static s32 func_80284CAC(UnkStruct_80288040 *arg0) {
         }
     }
     return 1;
+}
+
+static s32 func_80284CA4(UnkStruct_80288040 *a_) {
+    if (--a_->unk6D == 0) {
+        return 1;
+    }
+    return 0;
 }
 
 static void func_80284B20() {
