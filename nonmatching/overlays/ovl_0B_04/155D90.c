@@ -57,9 +57,9 @@
  *   spacing shows); H1's final free is an inlined FreeEntry(e, i) (the 8
  *   bytes below the second FreeEntries that the end-pointer spill's place
  *   needs); case 12 calls 800487E8 directly (no H12), which keeps the stub
- *   count; H5a's i is at the original's 132 (p2: H5a K&R with a pad after
- *   i, frame-tuned). H5b: the slots are plain names except
- *   &D_ovl0B_04_8004A17C's copy load (a volatile cast, fake: plain, uopt's
+ *   count; H5a's i is at the original's 132 (H5a K&R, frame-tuned; p4: no
+ *   pad, H1 (void), four dead calls in H4). H5b: the slots are plain
+ *   names except &D_ovl0B_04_8004A17C's copy load (a volatile cast, fake: plain, uopt's
  *   PRE keeps the pointer from the copy to the second test along its skip
  *   edge, which lowers &A17C's uses until &A180 takes $s0); the first test
  *   has its own variable and x is read once before its first assignment
@@ -2406,12 +2406,11 @@ static void func_ovl0B_04_80043640(f32 d) {
 
 /* The handler's cases (inlined). */
 /* fake: the dead calls in H4 only add uopt basic blocks: 80043110 needs
- * 76-79 of them (zdbug count) for the original's registers (uopt's
- * first-use cost of a saved register is blocks/4). More than six here, or
- * any in 80043110/H1, stop umerge inlining H5. */
+ * enough of them (zdbug count) for the original's registers (uopt's
+ * first-use cost of a saved register is blocks/4; p4: four suffice since
+ * FreeEntry). More than six here, or any in 80043110/H1, stop umerge
+ * inlining H5. */
 static void func_ovl0B_04_H4(void) {
-    if (0) { func_ovl0B_04_80048290(); }
-    if (0) { func_ovl0B_04_80048290(); }
     if (0) { func_ovl0B_04_80048290(); }
     if (0) { func_ovl0B_04_80048290(); }
     if (0) { func_ovl0B_04_80048290(); }
@@ -2422,11 +2421,10 @@ static void func_ovl0B_04_H4(void) {
     D_ovl0B_04_8004A060[12].unk0->unk36 = 90;
 }
 
-/* K&R with a pad after i (p2, frame-tuned): i's home 8 higher, at the
- * original's 132 (a (void) static's area puts 8 bytes before i). */
+/* fake: K&R (frame-tuned): i's home at the original's 132 (a (void)
+ * static's area puts 8 bytes before i). */
 static void func_ovl0B_04_H5a() {
     s32 i;
-    s32 pad;
 
     D_ovl0B_04_8004A164 = func_ovl0B_04_80047DD8(0x49, 0);
     D_ovl0B_04_8004A164->unk10 = -110.0f;
@@ -2518,7 +2516,7 @@ static void func_ovl0B_04_FreeEntry(Entry *e, s32 i) {
     func_ovl0B_04_80047DE0(e[i].unk0);
 }
 
-static void func_ovl0B_04_H1() {
+static void func_ovl0B_04_H1(void) {
     func_ovl0B_04_800485A0(0);
     func_ovl0B_04_80048250(D_ovl0B_04_8004A4A0);
     func_ovl0B_04_80047E78(D_ovl0B_04_8004A170);
