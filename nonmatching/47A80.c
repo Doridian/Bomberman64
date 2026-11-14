@@ -3,15 +3,17 @@
  * 0x8022D280-0x8022DB00) that build a model's display list from its joint
  * tree. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 24, eu 24, jp 24
+ * differing words: us 23, eu 23, jp 23
  *
  * fcmp counts a static with the global before it. func_8022DAB0 and
  * func_8022D280 + func_8022D414 match. In func_8022D414 the call's joint
  * address is `idx * 48 + bj` (the multiply first, so ugen evaluates it
  * first and gives it t8, and the add is t0,v1), while j is
  * `&((Joint *)bj)[idx]`; with bj a variable uopt doesn't reassociate the
- * sum. func_8022D58C + func_8022D980: 24 words,
- * all in case 6's SetTileSize. The (u16) casts on the w1 terms are real:
+ * sum. func_8022D58C + func_8022D980: 23 words,
+ * all in case 6's SetTileSize. Case 6's first packet has its w1 store a
+ * line below the rest (as1 orders a block partly by .loc line): that
+ * puts its `addiu a0` between the two stores as in the original. The (u16) casts on the w1 terms are real:
  * ugen gives each an `and 0xFFFF` (one more temp) that as1 deletes before
  * the `and 0xFFF`, and with them ugen's temp queue leaves case 6 in the
  * original's state, so everything after it matches. Still different: the
@@ -169,10 +171,10 @@ void func_8022D58C(Gfx **gp, s32 base, s32 idx) {
             break;
         case 6:
             D_8029FCC0 = 1;
-            GFX2(g++, 0x06000000, (u32) D_8029FCC8);
+            { Gfx *_g = g++; _g->w0 = 0x06000000; /* GFX2 with w1 a line down (as1's order) */
+            _g->w1 = (u32) D_8029FCC8; }
             {
                 Gfx *_g = g;
-
                 _g->w0 = (0xF2000000 | ((D_802A2D50[0] & 0xFFF) << 12)) | (D_802A2D50[1] & 0xFFF);
                 _g->w1 = (((u16) (D_802A2D50[0] + 0x7C) & 0xFFF) << 12) | ((u16) (D_802A2D50[1] + 0x7C) & 0xFFF);
                 g = _g + 1;
