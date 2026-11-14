@@ -249,6 +249,19 @@ main_code B6680 0 0x30 0
 main_code @us B6680 rodata=0x802A4760
 main_code @eu B6680 rodata=0x802A4750
 main_code @jp B6680 rodata=0x802A3990
+# main_code's gu and libm objects (libultra, -O3): their constants
+main_code libultra/gu/perspective 0 0x10 0
+main_code @us libultra/gu/perspective rodata=0x802A4750
+main_code @eu libultra/gu/perspective rodata=0x802A4740
+main_code @jp libultra/gu/perspective rodata=0x802A3980
+main_code libultra/gu/sinf 0 0x50 0
+main_code @us libultra/gu/sinf rodata=0x802A4790
+main_code @eu libultra/gu/sinf rodata=0x802A4780
+main_code @jp libultra/gu/sinf rodata=0x802A39C0
+main_code libultra/gu/cosf 0 0x50 0
+main_code @us libultra/gu/cosf rodata=0x802A47E0
+main_code @eu libultra/gu/cosf rodata=0x802A47D0
+main_code @jp libultra/gu/cosf rodata=0x802A3A10
 
 # boot_code: the game's objects from the first after the entry (handwritten,
 # no data); the cut passes over 2630 (handwritten, hasm) and stops after

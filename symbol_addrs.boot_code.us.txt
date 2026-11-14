@@ -40,7 +40,7 @@ sprintf = 0x800035D4; // type:func segment:boot_code lib=exact
 osVirtualToPhysical = 0x80003630; // type:func segment:boot_code lib=exact
 osJamMesg = 0x800036B0; // type:func segment:boot_code lib=exact
 osStopThread = 0x80003800; // type:func segment:boot_code lib=exact
-osDestroyThread = 0x800038C0; // type:func segment:boot_code lib=ref
+osDestroyThread = 0x800038C0; // type:func segment:boot_code lib=exact
 osGetThreadPri = 0x800039C0; // type:func segment:boot_code lib=exact
 osGetThreadId = 0x800039E0; // type:func segment:boot_code lib=exact
 osSetTime = 0x80003A00; // type:func segment:boot_code lib=exact

@@ -57,7 +57,7 @@ typedef struct {
 void *func_80227678(s32);
 void guPerspective(UnkStruct_802A53D8 *, u16 *, f32, f32, f32, f32, f32);
 void guLookAt(UnkStruct_802A53D8 *, f32, f32, f32, f32, f32, f32, f32, f32, f32);
-void func_8029BB38(void *, UnkStruct_802A53D8 *);
+void guMtxL2F(void *, UnkStruct_802A53D8 *);
 
 extern UnkStruct_800BD5B0 D_800BD5B0[4];
 extern s32 D_8029F7E0;
@@ -109,7 +109,7 @@ void func_80227D50(UnkStruct_800BD5B0 *arg0, u32 x, u32 y, u32 w, u32 h) {
 void func_80227CD0(UnkStruct_800BD5B0 *arg0, f32 xEye, f32 yEye, f32 zEye, f32 xAt, f32 yAt, f32 zAt, f32 xUp,
                    f32 yUp, f32 zUp) {
     guLookAt(&arg0->unk18, xEye, yEye, zEye, xAt, yAt, zAt, xUp, yUp, zUp);
-    func_8029BB38(D_802A5418, &arg0->unk18);
+    guMtxL2F(D_802A5418, &arg0->unk18);
 }
 
 void func_80227C9C(UnkStruct_800BD5B0 *arg0, s32 arg1) {

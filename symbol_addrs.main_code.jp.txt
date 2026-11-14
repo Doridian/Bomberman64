@@ -4,6 +4,7 @@ guLookAt = 0x8029AFE8; // type:func segment:main_code lib=exact
 guMtxF2L = 0x8029B060; // type:func segment:main_code lib=exact
 guMtxIdentF = 0x8029B160; // type:func segment:main_code lib=exact
 guMtxIdent = 0x8029B1E8; // type:func segment:main_code lib=exact
+guMtxL2F = 0x8029B218; // type:func segment:main_code lib=exact
 guPerspectiveF = 0x8029B2D0; // type:func segment:main_code lib=ref
 guPerspective = 0x8029B500; // type:func segment:main_code lib=exact
 guMtxXFMF = 0x8029C3E0; // type:func segment:main_code lib=exact
