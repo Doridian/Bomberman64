@@ -136,6 +136,10 @@ main_code 5E3F0 0x190 0x870 0
 main_code @us 5E3F0 data=0x802A0D60 rodata=0x802A3020
 main_code @eu 5E3F0 data=0x802A0D60 rodata=0x802A3010
 main_code @jp 5E3F0 data=0x802A03C0 rodata=0x802A2250
+main_code 6BBE0 0x2C0 0x180 0x30
+main_code @us 6BBE0 data=0x802A0EF0 rodata=0x802A3890 bss=0x802ACFB0
+main_code @eu 6BBE0 data=0x802A0EF0 rodata=0x802A3880 bss=0x802ACFA0
+main_code @jp 6BBE0 data=0x802A0550 rodata=0x802A2AC0 bss=0x802AC1E0
 main_code 78CA0 0 0x10 0xF0
 main_code @us 78CA0 rodata=0x802A3A10 bss=0x802ACFE0
 main_code @eu 78CA0 rodata=0x802A3A00 bss=0x802ACFD0
