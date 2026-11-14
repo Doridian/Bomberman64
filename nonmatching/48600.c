@@ -7,14 +7,14 @@
  * "NON_MATCHING drafts"). src/48300.c, before it, is another object:
  * func_80232E60 calls its func_8022DB00 with a jal (text_objects.txt).
  * flags: -O3
- * differing words: us 21, eu 21, jp 21
+ * differing words: us 11, eu 11, jp 11
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does. An 8-byte stub (jr ra; nop) is an inlined
  * static, at its place in the source: the stubs at 0x8022E0A4-0x8022E87C
  * are func_8022E884's cases, func_8022FC18 is func_8022FC90's child
  * search and func_80232FF0 is func_80232FF8's D_802A5804 switch.
- * 63 of 68 global blocks match. What is understood:
+ * 67 of 68 global blocks match. What is understood:
  *   - the function-local statics (D_802A5708-D_802A5770 and
  *     D_802A59D0-D_802A5A0C in func_8022E884, D_802A593C-48 in
  *     func_8022F844, D_802A5960-C8 in func_8022E4DC, D_802A5A14-20 in
@@ -43,36 +43,28 @@
  *     case 5's y test, E874 case 2's and E87C case 1's helper (the stubs
  *     come out in a post-order walk from E884, callees in reverse call
  *     order). Case 4's y test uses a[4] (the height) on both sides.
- *   - the case 12/20 loops pass their ball to the test as
- *     D_802A59D0 + 6 (+ 12): a different symbol+offset keeps the
- *     in-loop la (rebuilt in s0 every pass) apart from the stores' base.
- *   - case 12/20 pass their ball through out, set at the case head (an
- *     earlier block than the inlined body): the helper's r is then
- *     copy-propagated and its stores are direct lui/%lo, while p, bound
- *     in the call's own block, keeps its loads on a2. Bound at the call
- *     site, r's address was a block-local CSE of the four stores (v0).
- *     out takes the word the old ret (a copy of hit) had.
- *   - the helpers hold p[3] in step before doubling it: out's stores go
- *     through a pointer uopt can't tell from p, so they kill the p[3]
- *     load and a plain p[3] is reloaded after each store.
+ *   - case 12/20's ball (D_802A59E8, D_802A5A00) is a function-scope
+ *     static struct of its helper (Ball): uopt sees its fields as plain
+ *     variables (isvar S), so the stores and the loop's y updates are
+ *     direct lui/%lo sharing one lui at, they kill none of p's loads
+ *     (p[3] is a CSE in f2 for the add, the store and the doubling into
+ *     step, f22), and &ball for the test is rebuilt in s0 every pass.
+ *     A file-scope struct or array, or a pointer parameter, puts the
+ *     ball's address in a register or kills the p[3] load. y is
+ *     p[3] + p[1]: uopt keeps that order, which loads p[1] first.
+ *     func_8022E0A4 is defined above func_8022E170 so that its static's
+ *     cfe symbol number comes before func_8022E3D4's statics (.bss
+ *     order, below); moving the static helper moves no code.
  *   - func_802320A8's t is a volatile scalar: the original stores it in
  *     both arms and reloads it after the join (then b = t; x = b - n).
- * Left: func_8022E884 (10 words). IDO lays .bss out in ugen's .lcomm
- * order (a 256-bucket hash on cfe's symbol number; within a bucket
- * function-local statics come first), and fcmp resolves a static by its
- * name, so only sym+k accesses depend on our layout. D_802A59D0-
- * D_802A5A00 are f32[5] statics defined after func_8022E4DC (moved up
- * above the stubs, which moves no code), so they follow its Vec3fs as in
- * the original; D_802A5708-D_802A5760 are extern (see there). The code
- * left is p[3]'s register in case 12/20 (f22, step's, where the original
- * loads it into f2 and multiplies into f22) and the p[1]/p[3] load order
- * (5 words a case). The frame rules out a third local in the helpers
- * (case 20's t is at sp+0x54 as in the original only with four words in
- * case 12's area); r[3] = p[3] held in r[3] gives f2/f22 but uopt stores
- * r[3] at the block's end, after step's li.s (the original has it before,
- * 2 words longer); separate scalar statics give f2/f22 too but as1 can't
- * share their lui (scratch/48600/p11/NOTES.txt).
- * func_802320A8 (11, the size right): what's left is obj+0x58's slot
+ * .bss: IDO lays it out in ugen's .lcomm order (a 256-bucket hash on
+ * cfe's symbol number; within a bucket function-local statics come
+ * first), and fcmp resolves a static by its name, so only sym+k
+ * accesses depend on our layout. D_802A59D0 is an f32[5] static defined
+ * after func_8022E4DC (moved up above the stubs, which moves no code),
+ * so it and the two balls follow its Vec3fs as in the original;
+ * D_802A5708-D_802A5760 are extern (see there).
+ * Left: func_802320A8 (11, the size right): what's left is obj+0x58's slot
  * (0x64, not 0x68), the default's delay slot, which holds the store to
  * t (the original has a nop), and colouring in the 0x20000 case. ugen
  * hands out f4..f18 least recently freed first (frees at a value's last
@@ -128,6 +120,16 @@ typedef s32 M2C_UNK;
 typedef s8 M2C_UNK8;
 typedef s16 M2C_UNK16;
 typedef s32 M2C_UNK32;
+
+/* A test cylinder in func_8022E884's cases 12 and 20 (centre, radius,
+ * height). */
+typedef struct {
+    f32 x;
+    f32 y;
+    f32 z;
+    f32 r;
+    f32 h;
+} Ball;
 
 /* A collision shape's placement. */
 typedef struct {
@@ -258,7 +260,7 @@ void func_8022DE00(void);
 void func_8022DE6C(void);
 f32 func_8022DF68(f32 *arg0, f32 *arg1);
 static s32 func_8022DFBC(f32 *arg0, f32 *arg1);
-static s32 func_8022E0A4(f32 *arg0, f32 *arg1);
+static s32 func_8022E0A4(f32 *arg0);
 static void func_8022E0AC(UnkStructA80 *arg0, f32 *arg1);
 static s32 func_8022E178(f32 *arg0, f32 *arg1);
 static void func_8022E26C(UnkStructA80 *arg0, f32 *arg1);
@@ -1988,8 +1990,6 @@ static s32 func_8022E4DC(f32 *a, f32 *b) {
 }
 
 static f32 D_802A59D0[5];
-static f32 D_802A59E8[5];
-static f32 D_802A5A00[5];
 
 static s32 func_8022E87C(void) {
     s32 r;
@@ -2064,25 +2064,49 @@ static s32 func_8022E328(f32 *a, f32 *b) {
     return 1;
 }
 
-static s32 func_8022E264(f32 *p, f32 *r) {
+static s32 func_8022E264(f32 *p) {
+    static Ball D_802A59E8;
     f32 t;
     f32 step;
 
-    r[0] = p[0];
-    step = p[3];
-    r[1] = p[1] + step;
-    r[2] = p[2];
-    r[3] = step;
-    step = step * 2;
+    D_802A59E8.x = p[0];
+    D_802A59E8.y = p[3] + p[1];
+    D_802A59E8.z = p[2];
+    D_802A59E8.r = p[3];
+    step = p[3] * 2;
     for (t = 0.0f; t < p[4];) {
-        if (func_8022E178((D_802A59D0 + 6), D_802A5760) != 0) {
+        if (func_8022E178((f32 *) &D_802A59E8, D_802A5760) != 0) {
             return 1;
         }
         t += step;
         if (t + step <= p[4]) {
-            r[1] += step;
+            D_802A59E8.y += step;
         } else {
-            r[1] += p[4] - t;
+            D_802A59E8.y += p[4] - t;
+        }
+    }
+    return 0;
+}
+
+static s32 func_8022E0A4(f32 *p) {
+    static Ball D_802A5A00;
+    f32 t;
+    f32 step;
+
+    D_802A5A00.x = p[0];
+    D_802A5A00.y = p[3] + p[1];
+    D_802A5A00.z = p[2];
+    D_802A5A00.r = p[3];
+    step = p[3] * 2;
+    for (t = 0.0f; t < p[4];) {
+        if (func_8022DFBC((f32 *) &D_802A5A00, D_802A5760) != 0) {
+            return 1;
+        }
+        t += step;
+        if (t + step <= p[4]) {
+            D_802A5A00.y += step;
+        } else {
+            D_802A5A00.y += p[4] - t;
         }
     }
     return 0;
@@ -2198,30 +2222,6 @@ static void func_8022E0AC(UnkStructA80 *arg0, f32 *arg1) {
     arg1[4] = arg0->unk40->scale[1] * (*arg0).unk38;
 }
 
-static s32 func_8022E0A4(f32 *p, f32 *r) {
-    f32 t;
-    f32 step;
-
-    r[0] = p[0];
-    step = p[3];
-    r[1] = p[1] + step;
-    r[2] = p[2];
-    r[3] = step;
-    step = step * 2;
-    for (t = 0.0f; t < p[4];) {
-        if (func_8022DFBC((D_802A59D0 + 12), D_802A5760) != 0) {
-            return 1;
-        }
-        t += step;
-        if (t + step <= p[4]) {
-            r[1] += step;
-        } else {
-            r[1] += p[4] - t;
-        }
-    }
-    return 0;
-}
-
 static s32 func_8022DFBC(f32 *a, f32 *b) {
     s32 r;
     f32 d;
@@ -2260,7 +2260,6 @@ s32 func_8022E884(UnkStructA80 *arg0, UnkStructA80 *arg1) {
     s32 sa;
     s32 sb;
     s32 hit;
-    f32 *out;
 
     sa = arg0->unk30 & ~0x20;
     sb = arg1->unk30 & ~0x20;
@@ -2340,10 +2339,9 @@ s32 func_8022E884(UnkStructA80 *arg0, UnkStructA80 *arg1) {
         hit = func_8022DFBC(D_802A5708, D_802A5738);
         break;
     case 12:
-        out = D_802A59E8;
         func_8022E0AC(arg0, D_802A5738);
         func_8022E0AC(arg1, D_802A5760);
-        hit = func_8022E264(D_802A5738, out);
+        hit = func_8022E264(D_802A5738);
         break;
     case 4:
         func_8022E0AC(arg0, D_802A5738);
@@ -2351,10 +2349,9 @@ s32 func_8022E884(UnkStructA80 *arg0, UnkStructA80 *arg1) {
         hit = func_8022E170(D_802A5738, D_802A5760);
         break;
     case 20:
-        out = D_802A5A00;
         func_8022E0AC(arg0, D_802A5738);
         func_8022E0AC(arg1, D_802A5760);
-        hit = func_8022E0A4(D_802A5738, out);
+        hit = func_8022E0A4(D_802A5738);
         break;
     default:
         for (;;) {
