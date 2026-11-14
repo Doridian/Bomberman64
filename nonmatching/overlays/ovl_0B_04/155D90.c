@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 35, eu 35, jp 48
+ * differing words: us 27, eu 27, jp 40
  *
  * The pages are a table (D_ovl0B_04_800499B8: texts, handler, cursor
  * table, set-up) that func_ovl0B_04_80043ADC runs in turn; pages 1-4 are
@@ -124,7 +124,16 @@
  *   if/do shape puts p3's load at its own statement in the preheader, and
  *   writing that statement on the `if` line gives both preheader la's one
  *   .loc, so as1 orders them lui s7, lui fp, addiu fp, addiu s7 (TRICK).
- * - 80044BE8 8/16 (the MakeEntries homes 8 bytes high),
+ * - 80044BE8 0/8 (p2; was 8/16, the MakeEntries homes high): the K&R
+ *   stubs 800445BC, 80044624 and 8004461C were called from 80044BE8's dead
+ *   list at its end, and any inlined call after the second MakeEntries
+ *   costs its 4 bytes of alignment below it (the front end's frame then
+ *   ends 4 below the original's). They are called from the statics they
+ *   stand before instead: 800445C4 calls 800445BC, 8004462C calls 80044624
+ *   then 8004461C (first statements; the emission order is unchanged), and
+ *   80044BE8 has `s32 pad[3]` (jp [1]) after its locals (frame-tuned).
+ *   jp left (8): `changed` in v0 for the original's v1, and the inlined
+ *   800441C4's &D_ovl0B_04_8004A490 in a0 for a1.
  *   80043F24 0/0 (matches; 80044394: `n - 1` in its own m with a dead read, TRICK,
  *   gives the original's addiu v0,v1,-1; its header line numbered after
  *   the body's (`#line`, TRICK) lets as1 put the `sw ra` in the first
@@ -957,11 +966,7 @@ static void func_ovl0B_04_800444E0(void) {
 static void func_ovl0B_04_800445BC() {
 }
 
-#if VERSION_JP
 static void func_ovl0B_04_8004461C() {
-#else
-static void func_ovl0B_04_8004461C(void) {
-#endif
 }
 
 static void func_ovl0B_04_80044624() {
@@ -1659,6 +1664,11 @@ u8 func_ovl0B_04_80044BE8(u8 arg0, u16 arg1) {
     Obj *a;
     Obj *b;
     s32 i;
+#if VERSION_JP
+    s32 pad[1]; /* frame-tuned (p2) */
+#else
+    s32 pad[3]; /* frame-tuned (p2) */
+#endif
 
     if ((arg1 & 0x20) || (arg1 & 0x40)) {
         func_ovl0B_04_800438FC(0, D_ovl0B_04_8004A2A8[D_ovl0B_04_8004A174], &D_ovl0B_04_8004922C[D_ovl0B_04_8004A174]);
@@ -1736,10 +1746,7 @@ u8 func_ovl0B_04_80044BE8(u8 arg0, u16 arg1) {
     if (0) {
         func_ovl0B_04_8004471C(0, 0);
         func_ovl0B_04_800447DC(0, 0);
-        func_ovl0B_04_80044624();
-        func_ovl0B_04_8004461C();
         func_ovl0B_04_800445C4();
-        func_ovl0B_04_800445BC();
         func_ovl0B_04_8004456C();
     }
     return ret;
@@ -1916,6 +1923,8 @@ static s8 func_ovl0B_04_8004471C(u8 set, u8 c) {
 
 static s8 func_ovl0B_04_8004462C(u8 set, u8 c) {
     s8 r = 0;
+    func_ovl0B_04_80044624();
+    func_ovl0B_04_8004461C();
 
     switch (set) {
         default:
@@ -1948,6 +1957,7 @@ static s8 func_ovl0B_04_8004462C(u8 set, u8 c) {
 
 /* No marks: the mark texts back at their places. */
 static void func_ovl0B_04_800445C4(void) {
+    func_ovl0B_04_800445BC();
     D_ovl0B_04_8004A060[8].unk0->unk18 = D_ovl0B_04_8004A060[8].unk4;
     D_ovl0B_04_8004A060[8].unk0->unk1C = D_ovl0B_04_8004A060[8].unk8;
     D_ovl0B_04_8004A060[9].unk0->unk18 = D_ovl0B_04_8004A060[9].unk4;
