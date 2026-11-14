@@ -2,36 +2,30 @@
  * NON_MATCHING: ovl_17_07's game object, complete: every function and its data.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 17, eu 17, jp 17
+ * differing words: us 3, eu 3, jp 3
  *
  * What still differs in us (words):
- * - func_ovl17_07_8004376C (17): (1) the `cur - arg1` arm loads arg1 into
- *   $f12 (uopt's) where the original has the temporaries $f4/$f6 and
- *   360.0f in $f12 (in the first arm and the `diff >= 360` test, not the
- *   second arm: a uopt register for 360.0f over the first arm's end
- *   block?); (2) the fake `obj++; obj--;` leaves `addiu s6,s6,0` in the
- *   arm's `b` delay slot (the original has 360's `lui` there); (3) the
- *   zero the arms set is in $f2, copied to t, where the original keeps it
- *   in $f26 (with z only dead-used in the loop it gets $f26 but the 1/6
- *   then gets $f26 and z $f24, or the 10 and &D_ovl17_07_800457C0 swap
- *   s4/s5). Hand-edited ugen output says the original's first arm ends
- *   in a dead computation into a temporary, which as1 drops (`addu
- *   $15,$22,116` alone there gives the original's `bc1f`/`b`/`lui`
- *   shape). Tried for (1)/(2): dead int and float ternaries (their
- *   branch stays), dead tests of diff or 360.0f there, expression
- *   statements and dead stores (uopt drops them), `if (obj + 1) {}`, a
- *   reload of obj, `arg0++; arg0--;`, a switch, swapped arms, arg1
- *   through a pointer, int/double 360s.
- *   Also tried (2026-11-03): `*(f32 *)&arg1` at every use instead of the
- *   dead `&arg1` call (the same 17 words; a volatile one, a pointer
- *   local or a K&R definition are worse); dead-load or dead-address
- *   fakes (`if (!(obj + 1) && !(obj + 1)) {}`, `!obj->unk40`, a global)
- *   in place of `obj++; obj--;` (obj and the 60 lose s6/s7: 140+ words);
- *   t or z set in the arms with the loop's fakes dropped (140+); the
- *   permuter for 40 minutes (no better score). Every fake here holds up
- *   the others: dropping any one costs 140 to 190 words.
+ * - func_ovl17_07_8004376C (3): the zero the arms of the `diff >= 360`
+ *   test set is in $f2 (z, a uopt register), copied to t, where the
+ *   original keeps it in $f26 (with z only dead-used in the loop it gets
+ *   $f26 but the 1/6 then gets $f26 and z $f24, or the 10 and
+ *   &D_ovl17_07_800457C0 swap s4/s5).
  *
  * How the rest came to match:
+ * - The arms' 360-wraps (2026-11-13): the original colours 360.0f in
+ *   $f12 over the first arm's inner if, the arm's (empty) join block and
+ *   the `diff >= 360` test, and loads arg1 into a temporary in each arm.
+ *   A dead `obj += (s32) (cur + 360.0f + 360.0f) * 0;` at the end of the
+ *   first arm does all of that: uopt folds the `* 0` only after register
+ *   allocation, so the two uses lift 360.0f's priority above 0, cur's use
+ *   keeps $f0 taken there (360.0f goes to $f12), and the arm's join stays
+ *   a block of its own with nothing left in it (the original's
+ *   `bc1f`/`b`/`lui`). The second arm's 360 is an int literal, a
+ *   constant of its own that stays a temporary ($f8). Re-reading cur in
+ *   the first arm and a dead `x = obj->unk40->unk8;` in the second are
+ *   indirect loads, which keep uopt from colouring arg1's loads there
+ *   (each arm loads it into $f4/$f6). These replace the earlier
+ *   `obj++; obj--;` fake, which left an `addiu s6,s6,0`.
  * - The original sets a zero in both arms of the `diff >= 360` test and
  *   copies it to t's f20 after: z is 0.0f in one arm and an int 0 in the
  *   other (identical constants fold, and the test with them), and a dead
@@ -39,9 +33,6 @@
  *   (frame 0x60). The `z = 0;` in the loop and the empty do-while after
  *   the abs (from the permuter) put the 10 in s5 and
  *   &D_ovl17_07_800457C0 in s4, and the 1/6 in $f24.
- * - `obj++; obj--;` at the end of the first arm keeps the inner if's join
- *   a block of its own (the original's `bc1f` to a `b`), and puts obj in
- *   s6 and the 60 in s7.
  * - y is set in each arm of the 0x401 test (the original's delay slot).
  * - The dead `if (!obj->unk40->unk20 && !obj->unk40->unk20) {}` in z's
  *   else arm survives uopt as two loads into temporaries, which as1
@@ -361,16 +352,20 @@ void func_ovl17_07_8004376C(s32 arg0, f32 arg1) {
     obj = D_ovl17_07_80045680.unk0;
     cur = obj->unk40->unk20;
     if (arg0 != 0xC0) {
+        cur = obj->unk40->unk20; /* fake: an indirect load, so arg1 isn't coloured here */
         diff = cur - arg1;
         if (cur < arg1) {
             diff = 360.0f + diff;
         }
-        obj++; /* fake: keeps this arm's join a block of its own */
-        obj--;
+        /* fake: uopt folds the `* 0` only after colouring, so cur and 360.0f count as
+         * used here (360.0f coloured $f12, cur keeping $f0) and the arm keeps a join
+         * block of its own with no code left in it */
+        obj += (s32) (cur + 360.0f + 360.0f) * 0;
     } else {
+        x = obj->unk40->unk8; /* fake: as in the first arm, for arg1 */
         diff = arg1 - cur;
         if (arg1 < cur) {
-            diff = 360.0f + diff;
+            diff = 360 + diff; /* an int 360: a constant of its own, left uncoloured */
         }
     }
     if (diff >= 360.0f) {
