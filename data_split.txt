@@ -627,6 +627,10 @@ ovl_17_05 2AF2B0 0x80 0x50 0x40
 ovl_17_06 ovl_17_06_entry 0 0 0
 ovl_17_06 2B1100 0x180 0x50 0x90
 
+# ovl_17_07: all C (-O3), ovl_17_01 with a turning model
+ovl_17_07 ovl_17_07_entry 0 0 0
+ovl_17_07 2B3940 0xB0 0x50 0x50
+
 # ovl_17_08: all C (-O3), ovl_17_01 with a swaying camera
 ovl_17_08 ovl_17_08_entry 0 0 0
 ovl_17_08 2B60C0 0x180 0x70 0xB0

@@ -1,11 +1,6 @@
 /*
- * NON_MATCHING: ovl_17_07's game object, complete: every function and its data.
- * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
- *
- * Every function matches in all three versions; the draft is ready to
- * move to src/.
+ * ovl_17_07's game object, IDO -O3; it matches in us, eu and jp. Its
+ * data: .data 0xB0, .rodata 0x50, .bss 0x50, the same in every version.
  *
  * func_ovl17_07_8004376C needs fakes (each marked in the code):
  * - The arms' 360-wraps (2026-11-13): the original colours 360.0f in
