@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 42, eu 42, jp 42
+ * differing words: us 40, eu 40, jp 40
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -60,9 +60,8 @@
  * original), one float temp in f22 for f0 and a store scheduled
  * differently.
  *
- * The other procedures that differ: func_80251EE0 (one word, pass 13),
- * func_80252174 (see pass 11) and func_8025CEA0 (one add.s operand
- * order).
+ * The other procedures that differ: func_80251EE0 (one word, pass 13)
+ * and func_8025CEA0 (one add.s operand order).
  *
  * What moved the count: exact sizes first (one block per original
  * global, so a short static misaligns everything after it; for
@@ -150,6 +149,15 @@
  * an inlined static's `return f() != 0` gives (`if (g(arg0)) {...}`
  * matches exactly), but g's stub then lands just before func_80251EE0,
  * where the original has none.
+ *
+ * Pass 13 (42 to 40): func_80252174's 60.0f in f8 came from ugen's FP
+ * temporary queue (f4..f10, least recently freed first): it needs three
+ * more allocate/free turns after the trunc.w.s. func_8025216C returns a
+ * float, `return n * 0.5f;` (mtc1, cvt.s.w, li.s, mul.s into f0), which
+ * the caller ignores; as1 deletes the dead code but the turns stay.
+ * `return n;` as f32 is one turn, `n * 2.0f` becomes an add.s. And the
+ * three `+ 0.3` doubles (m2c's 0.3000000117579475) are the literal 0.3:
+ * the .rodata now matches in every version.
  *
  * jp lacks one height test in func_802553D4 (VERSION_JP); eu is us.
  */
@@ -430,7 +438,7 @@ s32 func_80251D30(f32 *arg0, s32 arg1, s32 arg2, s32 arg3);
 static void func_80251E5C(f32 *arg0);
 static s32 func_80251EE0(f32 *arg0);
 static void func_80252048(f32 *arg0);
-static s32 func_8025216C(f32 d);
+static f32 func_8025216C(f32 d);
 void func_80254FA0(void);
 static void func_80252174(f32 *arg0);
 static s32 func_80252330(s32 *arg0, f32 arg1);
@@ -1176,7 +1184,7 @@ s32 func_80255224(f32 *arg0, f32 *arg1, s32 arg2) {
     return best;
 }
 
-static s32 func_8025216C(f32 d) {
+static f32 func_8025216C(f32 d) {
     s32 n;
 
     if (d <= 500.0f) {
@@ -1188,7 +1196,7 @@ static s32 func_8025216C(f32 d) {
     } else {
         n = 5;
     }
-    return n;
+    return n * 0.5f;
 }
 
 void func_80254FA0(void) {
@@ -1600,9 +1608,9 @@ loop_148:
                                     M2C_FIELD(var_fp, s32 *, 0x88) = 0;
                                     break;
                                 }
-                                M2C_FIELD((M2C_FIELD(temp_s1, void **, 0x40)), f32 *, 0x28) = (f32) ((f64) M2C_FIELD((M2C_FIELD(temp_s1, void **, 0x40)), f32 *, 0x28) + 0.3000000117579475);
-                                M2C_FIELD((M2C_FIELD(temp_s1, void **, 0x40)), f32 *, 0x2C) = (f32) ((f64) M2C_FIELD((M2C_FIELD(temp_s1, void **, 0x40)), f32 *, 0x2C) + 0.3000000117579475);
-                                M2C_FIELD((M2C_FIELD(temp_s1, void **, 0x40)), f32 *, 0x30) = (f32) ((f64) M2C_FIELD((M2C_FIELD(temp_s1, void **, 0x40)), f32 *, 0x30) + 0.3000000117579475);
+                                M2C_FIELD((M2C_FIELD(temp_s1, void **, 0x40)), f32 *, 0x28) = (f32) ((f64) M2C_FIELD((M2C_FIELD(temp_s1, void **, 0x40)), f32 *, 0x28) + 0.3);
+                                M2C_FIELD((M2C_FIELD(temp_s1, void **, 0x40)), f32 *, 0x2C) = (f32) ((f64) M2C_FIELD((M2C_FIELD(temp_s1, void **, 0x40)), f32 *, 0x2C) + 0.3);
+                                M2C_FIELD((M2C_FIELD(temp_s1, void **, 0x40)), f32 *, 0x30) = (f32) ((f64) M2C_FIELD((M2C_FIELD(temp_s1, void **, 0x40)), f32 *, 0x30) + 0.3);
                                 func_80232DB4(temp_s1);
                                 if (func_80244BA4(M2C_FIELD(var_fp, s32 *, 0x10), 0x1000) != 0) {
                                     M2C_FIELD(temp_s1, s32 *, 8) = (s32) (M2C_FIELD(temp_s1, s32 *, 8) & ~0x200);
