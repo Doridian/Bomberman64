@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4, eu 4, jp 17
+ * differing words: us 4, eu 4, jp 14
  *
  * The pages are a table (D_ovl0B_04_800499B8: texts, handler, cursor
  * table, set-up) that func_ovl0B_04_80043ADC runs in turn; pages 1-4 are
@@ -123,7 +123,7 @@
  *   if/do shape puts p3's load at its own statement in the preheader, and
  *   writing that statement on the `if` line gives both preheader la's one
  *   .loc, so as1 orders them lui s7, lui fp, addiu fp, addiu s7 (fake).
- * - 80044BE8 0/8 (p2; was 8/16, the MakeEntries homes high): the K&R
+ * - 80044BE8 0/5 (p2; was 8/16, the MakeEntries homes high): the K&R
  *   stubs 800445BC, 80044624 and 8004461C were called from 80044BE8's dead
  *   list at its end, and any inlined call after the second MakeEntries
  *   costs its 4 bytes of alignment below it (the front end's frame then
@@ -131,8 +131,13 @@
  *   stand before instead: 800445C4 calls 800445BC, 8004462C calls 80044624
  *   then 8004461C (first statements; the emission order is unchanged), and
  *   80044BE8 has `s32 pad[3]` (jp [1]) after its locals (frame-tuned).
- *   jp left (8): `changed` in v0 for the original's v1, and the inlined
- *   800441C4's &D_ovl0B_04_8004A490 in a0 for a1.
+ *   jp's `changed` (p4): uopt treats $v0 as a variable (R2) and the
+ *   function's blocks as one loop, so any read of a call's result makes
+ *   R2 live through the changed test and `changed` takes $v1. us/eu read
+ *   80048668's results in case 1; jp has no such read, so the dead
+ *   `i = func_ovl0B_04_800487D0(1)` (fake) stands for it. jp left (5): the
+ *   inlined 800441C4's &D_ovl0B_04_8004A490 in a0 for a1 (a jp-only body
+ *   rewrite, locals, a `Cursor *`, dead reads of arg0 in case 1: nothing).
  *   80043F24 0/0 (matches; 80044394: `n - 1` in its own m with a dead read, fake,
  *   gives the original's addiu v0,v1,-1; its header line numbered after
  *   the body's (`#line`, fake) lets as1 put the `sw ra` in the first
@@ -1687,7 +1692,10 @@ u8 func_ovl0B_04_80044BE8(u8 arg0, u16 arg1) {
             func_ovl0B_04_80043FA4(&ret, 0xFF, 0, 2);
         }
     } else if (arg1 & 1) {
-        func_ovl0B_04_800487D0(1);
+        /* fake: a read of the call's result (dead; in us case 1's 80048668 results
+         * do it): $v0 is then the return value's in the changed test above, which
+         * takes $v1 as in the original (jp; no change in us/eu) */
+        i = func_ovl0B_04_800487D0(1);
         switch (arg0) {
             case 1:
                 func_ovl0B_04_80044BE0();
