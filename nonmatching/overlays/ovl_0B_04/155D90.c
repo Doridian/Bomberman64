@@ -47,7 +47,11 @@
  * #defined to it) and 80043F24's two words are A3EC/A3F0 (us's A3F0/A3F4),
  * found by fcmp's relocation check. jp's .data and the rest of its .bss
  * are still us's (nonmatching.py doesn't compare them; jp's strings and
- * the rest of its .bss layout, e.g. no A40C, are to do).
+ * the rest of its .bss layout, e.g. no A40C, are to do). p5: us/eu .data
+ * and .rodata match word for word (A1A4/A1A8/A1AC are defined after
+ * 800447DC, so its static A1A0 comes first); their .bss is still short:
+ * A3B0 is 13 words in the original (7 unused after page 9's 6) and A4A0
+ * 4, so A3E4.. sit 0x1C low and the section is 0x200 of 0x220.
  *
  * What still differs (words us/jp; the comparison counts a global with
  * the statics after it, so a static of the wrong size costs the rest of
@@ -824,9 +828,9 @@ s32 D_ovl0B_04_8004A190 = 0;
 s32 D_ovl0B_04_8004A194 = 0;
 s32 D_ovl0B_04_8004A198 = 0;
 s32 D_ovl0B_04_8004A19C = 0;
-s32 D_ovl0B_04_8004A1A4 = 0;
-s32 D_ovl0B_04_8004A1A8 = 0;
-s32 D_ovl0B_04_8004A1AC[14] = { 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 1, 1 };
+extern s32 D_ovl0B_04_8004A1A4; /* defined after 800447DC, whose static is A1A0 */
+extern s32 D_ovl0B_04_8004A1A8;
+extern s32 D_ovl0B_04_8004A1AC[14];
 
 static void func_ovl0B_04_80043050(Entry *e, Desc *d);
 static void func_ovl0B_04_80043010(s32 n, Entry *e, s32 x);
@@ -1787,7 +1791,7 @@ static s32 func_ovl0B_04_80044714(u8 set, u8 c) {
 }
 
 static void func_ovl0B_04_800447DC(u16 buttons, u8 *ret) {
-    static s32 D_ovl0B_04_8004A1A0 = 0; /* function-scope: its .data place to check */
+    static s32 D_ovl0B_04_8004A1A0 = 0; /* function-scope; A1A4.. are defined after this function */
     u8 set;
     u8 idx;
     u8 c;
@@ -1896,7 +1900,7 @@ static void func_ovl0B_04_800447DC(u16 buttons, u8 *ret) {
         D_ovl0B_04_8004A1A0 = 0;
     }
     func_ovl0B_04_80048640(D_ovl0B_04_8004A468[5], D_ovl0B_04_80048A70, 5);
-}
+} s32 D_ovl0B_04_8004A1A4 = 0; s32 D_ovl0B_04_8004A1A8 = 0; s32 D_ovl0B_04_8004A1AC[14] = { 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 1, 1 };
 
 static s8 func_ovl0B_04_8004471C(u8 set, u8 c) {
     s8 r = 0;
