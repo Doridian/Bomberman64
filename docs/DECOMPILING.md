@@ -238,7 +238,7 @@ matches, drop the `#ifdef` and the asm.
   switch: `#if VERSION_JP`), 530C0, 53D70, 54E40, 5E3F0, 6BBE0, 78CA0, 78F60, 80580, 85A10, 86680,
   87D80, 8A7A0, 93850 and 949A0 (949A0 split off 93850 at 0x8027A1A0, text_objects.txt
   has why), 96540, 97610, 995C0, 9A5F0, 9BFD0, 9CAB0, A8DE0, ACA00, AD5B0,
-  AFBF0, B11F0, B6680 (`-mips2`), ovl_0A_02-05's, ovl_0C_03's, ovl_0E_09's, ovl_12_02's, ovl_12_04's, ovl_17_01's, ovl_17_07's and ovl_17_10's objects are `-O3`; 5E090, 87190, 87730,
+  AFBF0, B11F0, B6680 (`-mips2`), ovl_0A_02-05's, ovl_0B_06's, ovl_0C_03's, ovl_0E_09's, ovl_12_02's, ovl_12_04's, ovl_17_01's, ovl_17_07's and ovl_17_10's objects are `-O3`; 5E090, 87190, 87730,
   99F40 and A4860 are `-O2` (no
   inlining between functions that call each other, no cross-call
   registers; A4860's func_8028A318 calls three small functions of its

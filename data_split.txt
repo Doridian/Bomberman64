@@ -441,6 +441,11 @@ ovl_0B_05 ovl_0B_05_entry 0 0 0
 ovl_0B_05 15D020 0x140 0xE0 0xA0
 ovl_0B_05 @jp 15D020 sizes=0x110,0xE0,0xA0
 
+# ovl_0B_06: all C (-O3), the save-slot menus; jp has its own strings
+ovl_0B_06 ovl_0B_06_entry 0 0 0
+ovl_0B_06 1607E0 0x1040 0x100 0xF0
+ovl_0B_06 @jp 1607E0 sizes=0xF00,0x100,0xF0
+
 # ovl_0B_07: all C (-O3), the battle results; jp has its own strings
 ovl_0B_07 ovl_0B_07_entry 0 0 0
 ovl_0B_07 167D70 0x1E0 0xC0 0x150

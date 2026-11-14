@@ -1,15 +1,15 @@
 /*
- * NON_MATCHING: ovl_0B_06's game object (the save-slot menus: three slots
- * with their numbers and trophies, copy and erase, the controller pak's
- * notes), complete: every function and its data (.data 0x1040 and .bss 0xF0
- * as the original; .rodata is the "%03d" format, three jump tables and the
- * floats). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
- * drafts").
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
- * jp's code and data differences are `#if VERSION_JP` (jp's .data 0xF00:
- * its own strings, one array per label, and its tables' text pointers,
+ * ovl_0B_06's game object (the save-slot menus: three slots with their
+ * numbers and trophies, copy and erase, the controller pak's notes), IDO
+ * -O3; it matches in us, eu and jp. Its data: .data 0x1040 (jp 0xF00),
+ * .rodata 0x100 (the "%03d" format, three jump tables and the floats),
+ * .bss 0xF0.
+ * jp's code and data differences are `#if VERSION_JP` (jp's .data: its
+ * own strings, one array per label, and its tables' text pointers,
  * positions and scales; LEVEL_SX is the level labels' x scale).
+ *
+ * The notes below are the matching's history, kept for the fakes (each
+ * one flagged in the code) and the levers they name.
  *
  * A first draft from m2c, with every function rewritten by hand. Most of
  * the callees are statics that take arguments in the callers' registers:

@@ -769,11 +769,12 @@ segments:
     symbol_name_format: ovl0B_06_$VRAM
     dir: overlays/ovl_0B_06
     subsegments:
-      - [0x1607D0, asm, ovl_0B_06_entry]
-      - [0x1607E0, asm]
+      - [0x1607D0, c, ovl_0B_06_entry]
+      - [0x1607E0, c]
       - [0x1655E0, hasm, ovl_0B_06_zerojmp]
-      - [0x166C20, rodata]
-      - {type: bss, vram: 0x8004A590}
+      - [0x166C20, .data, 1607E0]
+      - [0x167C60, .rodata, 1607E0]
+      - {type: .bss, vram: 0x8004A590, name: 1607E0}
   - name: ovl_0B_07
     type: code
     start: 0x167D60
