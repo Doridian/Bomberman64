@@ -46,18 +46,32 @@
  *   - the case 12/20 loops pass their ball to the test as
  *     D_802A59D0 + 6 (+ 12): a different symbol+offset keeps the
  *     in-loop la (rebuilt in s0 every pass) apart from the stores' base.
+ *   - case 12/20 pass their ball through out, set at the case head (an
+ *     earlier block than the inlined body): the helper's r is then
+ *     copy-propagated and its stores are direct lui/%lo, while p, bound
+ *     in the call's own block, keeps its loads on a2. Bound at the call
+ *     site, r's address was a block-local CSE of the four stores (v0).
+ *     out takes the word the old ret (a copy of hit) had.
+ *   - the helpers hold p[3] in step before doubling it: out's stores go
+ *     through a pointer uopt can't tell from p, so they kill the p[3]
+ *     load and a plain p[3] is reloaded after each store.
  *   - func_802320A8's t is a volatile scalar: the original stores it in
  *     both arms and reloads it after the join (then b = t; x = b - n).
- * Left: func_8022E884 (38 words). IDO lays .bss out in ugen's .lcomm
+ * Left: func_8022E884 (10 words). IDO lays .bss out in ugen's .lcomm
  * order (a 256-bucket hash on cfe's symbol number; within a bucket
  * function-local statics come first), and fcmp resolves a static by its
  * name, so only sym+k accesses depend on our layout. D_802A59D0-
  * D_802A5A00 are f32[5] statics defined after func_8022E4DC (moved up
  * above the stubs, which moves no code), so they follow its Vec3fs as in
  * the original; D_802A5708-D_802A5760 are extern (see there). The code
- * left is case 12/20's four stores before the loop: uopt keeps the ball's
- * address in v0 (a block-local CSE of the four istr) where the original
- * uses lui/%lo for each, with p[0], p[1], p[3] loaded in that order.
+ * left is p[3]'s register in case 12/20 (f22, step's, where the original
+ * loads it into f2 and multiplies into f22) and the p[1]/p[3] load order
+ * (5 words a case). The frame rules out a third local in the helpers
+ * (case 20's t is at sp+0x54 as in the original only with four words in
+ * case 12's area); r[3] = p[3] held in r[3] gives f2/f22 but uopt stores
+ * r[3] at the block's end, after step's li.s (the original has it before,
+ * 2 words longer); separate scalar statics give f2/f22 too but as1 can't
+ * share their lui (scratch/48600/p11/NOTES.txt).
  * func_802320A8 (11, the size right): what's left is obj+0x58's slot
  * (0x64, not 0x68), the default's delay slot, which holds the store to
  * t (the original has a nop), and colouring in the 0x20000 case. ugen
