@@ -3,24 +3,18 @@
  * 0x8022D280-0x8022DB00) that build a model's display list from its joint
  * tree. Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 23, eu 23, jp 23
+ * differing words: us 0, eu 0, jp 0
  *
- * fcmp counts a static with the global before it. func_8022DAB0 and
- * func_8022D280 + func_8022D414 match. In func_8022D414 the call's joint
+ * fcmp counts a static with the global before it. All five functions
+ * match in us, eu and jp. In func_8022D414 the call's joint
  * address is `idx * 48 + bj` (the multiply first, so ugen evaluates it
  * first and gives it t8, and the add is t0,v1), while j is
  * `&((Joint *)bj)[idx]`; with bj a variable uopt doesn't reassociate the
- * sum. func_8022D58C + func_8022D980: 23 words,
- * all in case 6's SetTileSize. Case 6's first packet has its w1 store a
- * line below the rest (as1 orders a block partly by .loc line): that
- * puts its `addiu a0` between the two stores as in the original. The (u16) casts on the w1 terms are real:
- * ugen gives each an `and 0xFFFF` (one more temp) that as1 deletes before
- * the `and 0xFFF`, and with them ugen's temp queue leaves case 6 in the
- * original's state, so everything after it matches. Still different: the
- * original's ugen allocates g + 1 (t4) right after loading g and the
- * D_802A2D50[1] load (t5) before [0] (t6), and frees g + 1's register
- * only after the w0 store (a FIFO model of ugen's temps,
- * scratch/47A80/p2/fifo8.py, finds no other order).
+ * sum. func_8022D58C's case 6 is gbi.h's gDPSetHilite1Tile on a Hilite
+ * (D_802A2D50, int fields), expanded exactly as the SDK does: its
+ * `& 0xfff` arguments get a second `& 0xfff` from _SHIFTL, and the
+ * redundant `and`s (each one ugen temp, deleted by as1) are what put
+ * ugen's temps in the original's registers.
  */
 #include "common.h"
 
@@ -33,7 +27,31 @@ typedef struct {
 } Gfx;
 
 #define GFX2(pkt, a, b) { Gfx *_g = (Gfx *) (pkt); _g->w0 = (a); _g->w1 = (b); }
-#define GFX2R(pkt, a, b) { Gfx *_g = (Gfx *) (pkt); _g->w1 = (b); _g->w0 = (a); }
+
+/* gbi.h's Hilite and gDPSetHilite1Tile (through gDPSetTileSize and
+ * gDPLoadTileGeneric, mbi.h's _SHIFTL), on this file's Gfx */
+typedef struct {
+    int x1, y1, x2, y2;
+} Hilite_t;
+
+typedef union {
+    Hilite_t h;
+    long int force_structure_alignment[4];
+} Hilite;
+
+#define _SHIFTL(v, s, w) \
+    ((unsigned int) (((unsigned int)(v) & ((0x01 << (w)) - 1)) << (s)))
+#define gDPLoadTileGeneric(pkt, c, tile, uls, ult, lrs, lrt) \
+{ \
+    Gfx *_g = (Gfx *)(pkt); \
+    _g->w0 = _SHIFTL(c, 24, 8) | _SHIFTL(uls, 12, 12) | _SHIFTL(ult, 0, 12); \
+    _g->w1 = _SHIFTL(tile, 24, 3) | _SHIFTL(lrs, 12, 12) | _SHIFTL(lrt, 0, 12); \
+}
+#define gDPSetTileSize(pkt, t, uls, ult, lrs, lrt) \
+    gDPLoadTileGeneric(pkt, 0xF2, t, uls, ult, lrs, lrt)
+#define gDPSetHilite1Tile(pkt, tile, hilite, width, height) \
+    gDPSetTileSize(pkt, tile, (hilite)->h.x1 & 0xfff, (hilite)->h.y1 & 0xfff, \
+        ((((width)-1)*4)+(hilite)->h.x1) & 0xfff, ((((height)-1)*4)+(hilite)->h.y1) & 0xfff)
 
 typedef struct {
     /* 0x00 */ s32 type;
@@ -84,7 +102,7 @@ extern s32 D_8029F840;
 extern s32 D_8029FCC0;
 extern s32 D_8029FCC4;
 extern Gfx D_8029FCC8[];
-extern s32 D_802A2D50[];
+extern Hilite D_802A2D50;
 extern s32 D_802A5368;
 extern u8 (*D_802A538C)[0x40];
 extern f32 D_802A5418[4][4];
@@ -171,14 +189,8 @@ void func_8022D58C(Gfx **gp, s32 base, s32 idx) {
             break;
         case 6:
             D_8029FCC0 = 1;
-            { Gfx *_g = g++; _g->w0 = 0x06000000; /* GFX2 with w1 a line down (as1's order) */
-            _g->w1 = (u32) D_8029FCC8; }
-            {
-                Gfx *_g = g;
-                _g->w0 = (0xF2000000 | ((D_802A2D50[0] & 0xFFF) << 12)) | (D_802A2D50[1] & 0xFFF);
-                _g->w1 = (((u16) (D_802A2D50[0] + 0x7C) & 0xFFF) << 12) | ((u16) (D_802A2D50[1] + 0x7C) & 0xFFF);
-                g = _g + 1;
-            }
+            GFX2(g++, 0x06000000, (u32) D_8029FCC8);
+            gDPSetHilite1Tile(g++, 0, &D_802A2D50, 32, 32);
             break;
         case 8:
             D_8029FCC4 = 1;
