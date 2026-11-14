@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 54, eu 54, jp 67
+ * differing words: us 52, eu 52, jp 65
  *
  * The pages are a table (D_ovl0B_04_800499B8: texts, handler, cursor
  * table, set-up) that func_ovl0B_04_80043ADC runs in turn; pages 1-4 are
@@ -51,12 +51,14 @@
  * What still differs (words us/jp; the comparison counts a global with
  * the statics after it, so a static of the wrong size costs the rest of
  * its run):
- * - 80043110 17/17: H5b's slot tests read *ptr as the original does, and
+ * - 80043110 15/15: H5b's slot tests read *ptr as the original does, and
  *   its accesses are spelled so &D_ovl0B_04_8004A17C sits in $s0 as in the
  *   original ((&A17C)[-1], (&A178)[1], (&A16C)[1]; found by trying every
  *   neighbour form of each access). H5a's i is at the original's 132 (p2:
- *   H5a K&R with a pad after i, frame-tuned). Left: the FreeEntries n's
- *   (76/60 vs 80/64: the original's FreeEntries homes sit 20 and 36 bytes
+ *   H5a K&R with a pad after i, frame-tuned), and so is the first
+ *   FreeEntries n (p2: FreeEntries (n, e, x) with x unused, H12 and H1 K&R,
+ *   all frame-tuned). Left: the second FreeEntries n
+ *   (56 vs 64; before p2 76/60 vs 80/64: the original's FreeEntries homes sit 20 and 36 bytes
  *   above the end-pointer spill at 44, ours 16 and 32, so it has 8 more
  *   bytes of frame below the second FreeEntries, or two more uopt spill
  *   slots; nothing H1 can declare or call lands there, and any added call
@@ -823,7 +825,7 @@ s32 D_ovl0B_04_8004A1A8 = 0;
 s32 D_ovl0B_04_8004A1AC[14] = { 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 1, 1 };
 
 static void func_ovl0B_04_80043050(Entry *e, Desc *d);
-static void func_ovl0B_04_80043010(Entry *e, s32 n);
+static void func_ovl0B_04_80043010(s32 n, Entry *e, s32 x);
 static void func_ovl0B_04_800438FC(u32 mode, s32 id, Item *it);
 static void func_ovl0B_04_80043A24(s32 n, s32 *ids, Item *items);
 #if !VERSION_JP
@@ -985,8 +987,8 @@ static void func_ovl0B_04_80045530(void) {
     for (i = 0; i < 5; i++) {
         func_ovl0B_04_80047DE0(D_ovl0B_04_8004A060[i].unk0);
     }
-    func_ovl0B_04_80043010(&D_ovl0B_04_8004A060[5], 3);
-    func_ovl0B_04_80043010(&D_ovl0B_04_8004A060[8], 2);
+    func_ovl0B_04_80043010(3, &D_ovl0B_04_8004A060[5], 0);
+    func_ovl0B_04_80043010(2, &D_ovl0B_04_8004A060[8], 0);
 }
 
 static void func_ovl0B_04_80045538(void) {
@@ -1038,7 +1040,9 @@ static void func_ovl0B_04_MakeEntries(s32 n, Entry *e, Desc *d) {
     }
 }
 
-static void func_ovl0B_04_80043010(Entry *e, s32 n) {
+/* (n, e, x), x unused (p2, frame-tuned with H12/H1 K&R): 80043110's first
+ * FreeEntries n home at the original's 80. */
+static void func_ovl0B_04_80043010(s32 n, Entry *e, s32 x) {
     s32 i;
     s32 pad0; /* frame-tuned: one slot in each inlined copy (80043110's FreeEntries homes) */
 
@@ -1057,7 +1061,7 @@ static void func_ovl0B_04_SetText(s32 id, u8 *str, s32 col, f32 scale) {
  * open), in two halves of five. */
 u8 func_ovl0B_04_800471F4(u8 arg0, u16 arg1) {
     u8 ret = 1;
-    s32 pad[4]; /* frame-tuned (FreeEntries' second pad moved here) */
+    s32 pad[1]; /* frame-tuned (with FreeEntries' (n, e, x), p2) */
 
     func_ovl0B_04_80046734(arg0, arg1);
     if (arg1 & 1) {
@@ -1074,8 +1078,8 @@ u8 func_ovl0B_04_800471F4(u8 arg0, u16 arg1) {
     } else if (arg1 & 2) {
         func_ovl0B_04_800487D0(2);
         func_ovl0B_04_80043FA4(&ret, 0, 5, 0);
-        func_ovl0B_04_80043010(&D_ovl0B_04_8004A060[10], 1);
-        func_ovl0B_04_80043010(&D_ovl0B_04_8004A060[11], 1);
+        func_ovl0B_04_80043010(1, &D_ovl0B_04_8004A060[10], 0);
+        func_ovl0B_04_80043010(1, &D_ovl0B_04_8004A060[11], 0);
     }
     return ret;
 }
@@ -1089,7 +1093,7 @@ void func_ovl0B_04_8004716C(Obj *arg0) {
 
 u8 func_ovl0B_04_80046FA8(u8 arg0, u16 arg1) {
     u8 ret = 1;
-    s32 pad[4]; /* frame-tuned (FreeEntries' second pad moved here) */
+    s32 pad[1]; /* frame-tuned (with FreeEntries' (n, e, x), p2) */
 
     func_ovl0B_04_80046734(arg0, arg1);
     if (arg1 & 1) {
@@ -1106,8 +1110,8 @@ u8 func_ovl0B_04_80046FA8(u8 arg0, u16 arg1) {
     } else if (arg1 & 2) {
         func_ovl0B_04_800487D0(2);
         func_ovl0B_04_80043FA4(&ret, 0, 4, 0);
-        func_ovl0B_04_80043010(&D_ovl0B_04_8004A060[10], 1);
-        func_ovl0B_04_80043010(&D_ovl0B_04_8004A060[11], 1);
+        func_ovl0B_04_80043010(1, &D_ovl0B_04_8004A060[10], 0);
+        func_ovl0B_04_80043010(1, &D_ovl0B_04_8004A060[11], 0);
     }
     return ret;
 }
@@ -1121,7 +1125,7 @@ void func_ovl0B_04_80046F20(Obj *arg0) {
 
 u8 func_ovl0B_04_80046D74(u8 arg0, u16 arg1) {
     u8 ret = 1;
-    s32 pad[4]; /* frame-tuned (FreeEntries' second pad moved here) */
+    s32 pad[1]; /* frame-tuned (with FreeEntries' (n, e, x), p2) */
 
     func_ovl0B_04_80046734(arg0, arg1);
     if (arg1 & 1) {
@@ -1137,8 +1141,8 @@ u8 func_ovl0B_04_80046D74(u8 arg0, u16 arg1) {
     } else if (arg1 & 2) {
         func_ovl0B_04_800487D0(2);
         func_ovl0B_04_80043FA4(&ret, 0, 3, 0);
-        func_ovl0B_04_80043010(&D_ovl0B_04_8004A060[10], 1);
-        func_ovl0B_04_80043010(&D_ovl0B_04_8004A060[11], 1);
+        func_ovl0B_04_80043010(1, &D_ovl0B_04_8004A060[10], 0);
+        func_ovl0B_04_80043010(1, &D_ovl0B_04_8004A060[11], 0);
     }
     return ret;
 }
@@ -1152,7 +1156,7 @@ void func_ovl0B_04_80046CEC(Obj *arg0) {
 
 u8 func_ovl0B_04_80046B28(u8 arg0, u16 arg1) {
     u8 ret = 1;
-    s32 pad[4]; /* frame-tuned (FreeEntries' second pad moved here) */
+    s32 pad[1]; /* frame-tuned (with FreeEntries' (n, e, x), p2) */
 
     func_ovl0B_04_80046734(arg0, arg1);
     if (arg1 & 1) {
@@ -1169,8 +1173,8 @@ u8 func_ovl0B_04_80046B28(u8 arg0, u16 arg1) {
     } else if (arg1 & 2) {
         func_ovl0B_04_800487D0(2);
         func_ovl0B_04_80043FA4(&ret, 0, 2, 0);
-        func_ovl0B_04_80043010(&D_ovl0B_04_8004A060[10], 1);
-        func_ovl0B_04_80043010(&D_ovl0B_04_8004A060[11], 1);
+        func_ovl0B_04_80043010(1, &D_ovl0B_04_8004A060[10], 0);
+        func_ovl0B_04_80043010(1, &D_ovl0B_04_8004A060[11], 0);
     }
     return ret;
 }
@@ -2498,17 +2502,17 @@ static void func_ovl0B_04_H5(void) {
     func_ovl0B_04_H5d();
 }
 
-static void func_ovl0B_04_H12(void) {
+static void func_ovl0B_04_H12() {
     func_ovl0B_04_800487E8();
 }
 
-static void func_ovl0B_04_H1(void) {
+static void func_ovl0B_04_H1() {
     func_ovl0B_04_800485A0(0);
     func_ovl0B_04_80048250(D_ovl0B_04_8004A4A0);
     func_ovl0B_04_80047E78(D_ovl0B_04_8004A170);
     func_ovl0B_04_80047DE0(D_ovl0B_04_8004A164);
-    func_ovl0B_04_80043010(D_ovl0B_04_80049D40, 20);
-    func_ovl0B_04_80043010(D_ovl0B_04_80049ED0, 20);
+    func_ovl0B_04_80043010(20, D_ovl0B_04_80049D40, 0);
+    func_ovl0B_04_80043010(20, D_ovl0B_04_80049ED0, 0);
     func_ovl0B_04_80047DE0(D_ovl0B_04_8004A060[12].unk0);
 }
 
