@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 52, eu 52, jp 65
+ * differing words: us 36, eu 36, jp 49
  *
  * The pages are a table (D_ovl0B_04_800499B8: texts, handler, cursor
  * table, set-up) that func_ovl0B_04_80043ADC runs in turn; pages 1-4 are
@@ -90,7 +90,7 @@
  *   `move s2,t0` (a split; no form found that splits it), and the counter
  *   D_ovl0B_04_8004A1A0, a function-scope static, is promoted to $t0 where
  *   the original reloads it into $v1.
- * - 80045214 21/21: 80045214's `ok` reloaded to $t8 (the original: $v0),
+ * - 80045214 5/5: 80045214's `ok` reloaded to $t8 (the original: $v0, 3),
  *   and 80045540's rub-out. Its unk3 store goes through a copy of item
  *   (`x = item; ... unk3 = x`): copy propagation makes uopt fold the store
  *   into a direct one with its own `lui at`, as in the original, where a
@@ -101,8 +101,12 @@
  *   $s0/$s1. The cursor's load is one uopt range over the rub-out and the
  *   else arm (priority 2.5, -zdbug:5) and the base's is 2.4; the plain
  *   store's use gives the base 2.6, which is why it was right with it.
- *   Written here as i = unk0 with a nested if (5 words in the rub-out,
- *   the else arm exact), which takes the rub-out's load out of the range.
+ *   p2: the flat test is back, with a dead `if (unk1) {}` first in its
+ *   arm (one more use of the base, which then takes s0) and c read as
+ *   `A290[unk0][0] ^ 0` (TRICK: the `^ 0` uses up the ugen temporary the
+ *   original's t-registers are one ahead by from there on, and puts the
+ *   `li a2,7` after c's load). Left: c is that temporary (t6) where the
+ *   original colours it a0 (2 words); dead reads of c don't move it.
  * - 80043ADC 0/0 (matches; w5): us's loop is `if (A168 != 0xFF) { p3 =
  *   &tbl[3]; if (!p3) {} do { ... } while (A168 != 0xFF); }` with p4 =
  *   &tbl[4] set at the top and one more dead read of p3 after the else
@@ -1510,21 +1514,18 @@ static void func_ovl0B_04_80045850(void) {
 /* Pages 1-4: B rubs a character out, A writes the one under the cursor or
  * (items 0x31 and 0x32) ends the name. */
 static void func_ovl0B_04_80045540(u8 item, u16 buttons, u8 *ret) {
-    s32 i;
     u8 c;
     u8 x;
 
     if (buttons & 2) {
-        i = D_ovl0B_04_8004A490.unk0;
-        c = D_ovl0B_04_8004A290[i][0];
+        /* TRICK (p2): `^ 0` uses up one ugen temporary (the original's
+         * t-registers from here on), the dead read gives the base its s0. */
+        c = (D_ovl0B_04_8004A290[D_ovl0B_04_8004A490.unk0][0] ^ 0);
         D_ovl0B_04_8004A490.unk1 = 0;
-        D_ovl0B_04_8004A290[i][0] = 0;
-        if (i == 7) {
-            if (c == 0) {
-                D_ovl0B_04_8004A490.unk0 = i - 1;
-            }
-        } else if (D_ovl0B_04_8004A490.unk0 > 0) {
-            D_ovl0B_04_8004A490.unk0 = i - 1;
+        D_ovl0B_04_8004A290[D_ovl0B_04_8004A490.unk0][0] = 0;
+        if ((D_ovl0B_04_8004A490.unk0 == 7 && c == 0) || (D_ovl0B_04_8004A490.unk0 != 7 && D_ovl0B_04_8004A490.unk0 > 0)) {
+            if (D_ovl0B_04_8004A490.unk1) {}
+            D_ovl0B_04_8004A490.unk0--;
         }
         func_ovl0B_04_80044210();
         func_ovl0B_04_80044154();
