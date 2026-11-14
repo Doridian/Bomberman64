@@ -287,7 +287,7 @@ extern u8 D_802A1450[];
 extern s16 D_802A14B4;
 extern u8 D_802A14B8[];
 extern s16 D_802A14F0;
-extern void *D_802A55F4;
+extern u8 D_802A5578[];
 extern s32 D_802AC5D0;
 extern s32 D_802AC89C;
 extern s32 D_802AC8A0;
@@ -948,7 +948,7 @@ s32 func_8026E8E0(s32 arg0) {
     s32 r;
 
     r = 0;
-    for (p = D_802A55F4; p != NULL; p = M2C_FIELD(p, u8 **, 0x7C)) {
+    for (p = M2C_FIELD(D_802A5578, u8 **, 0x7C); p != NULL; p = M2C_FIELD(p, u8 **, 0x7C)) {
         if (arg0 == M2C_FIELD(p, s32 *, 0x40)) {
             if (M2C_FIELD(p, s32 *, 8) & 1) {
                 r = 1;

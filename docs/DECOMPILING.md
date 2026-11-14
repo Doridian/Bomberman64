@@ -231,7 +231,7 @@ matches, drop the `#ifdef` and the asm.
     home slot and reloads it (`sw $a2, 8($sp)` ... `lwc1`). A function
     taking three floats shows it at once (4DE50's func_80234500, 4ED50's
     func_802346C8).
-  Seen so far: boot_code's 10D0, 13F0 and 14B0 (the scheduler), 404C0, 40FB0, 412F0, 41FD0, 426E0, 46300, 4DE50, 4E030 (4DE50's second half:
+  Seen so far: boot_code's 10D0, 13F0 and 14B0 (the scheduler), 404C0, 40FB0, 412F0, 41FD0, 426E0, 46300, 48600, 4DE50, 4E030 (4DE50's second half:
   its wrappers call 4DE50's compares with a `jal`, which -O3 would inline
   in one file), 4ED50, 52270 (jp's func_8023876C has no TV-type
   switch: `#if VERSION_JP`), 530C0, 53D70, 54E40, 5E3F0, 78CA0, 78F60, 80580, 85A10, 86680,
@@ -1086,7 +1086,11 @@ What mattered:
   shifts every later cut, and the sha1 catches it.
 - IDO lays `.data` out in definition order, `.bss` in the order it first
   sees each variable (defined or used; an extern doesn't count), so the
-  `.bss` definitions go before the first function. Unreferenced bytes
+  `.bss` definitions go before the first function. That is the order of
+  cfe's symbol numbers, which holds within 256 of them: past that, ugen
+  emits the `.bss` by a 256-bucket hash on the number (function-local
+  statics first in a bucket), so a big file's statics interleave with
+  its globals (48600.c's header has the rules). Unreferenced bytes
   between variables are `u8 D_<address>[n]` arrays (120010.c has two),
   except where IDO aligns: it puts a 16-byte `.bss` array 8-aligned, so
   4E030's gap between an `s32` and its pointer array is its own doing.
@@ -1140,8 +1144,10 @@ func_8022C8B8's `static`s put its .bss in the C; 426E0: .rodata and
 .bss, since func_8022A328's and func_8022A6C4's `static`s do the same,
 its .data staying asm; 54E40: .rodata and part of its .bss,
 D_802AC7A0[10] and the two words after it, defined so as1 knows the
-array, the rest of its .bss and its .data staying asm); everything else they
-use stays `extern`.
+array, the rest of its .bss and its .data staying asm; 48600: .rodata
+and all of its .bss, 0x4D0 of globals and function-local statics that IDO
+interleaves, laid out by where the functions are defined: its header has
+how IDO orders a .bss); everything else they use stays `extern`.
 Build the object once (the link fails, the `.o` is there), run `--place`
 for each version with `--ref build/us/src/<object>.c.o`, add the lines,
 regenerate the configs and extract again. `--place` finds an object named

@@ -1,13 +1,10 @@
 /*
- * NON_MATCHING: main_code's 48600, complete: 86 functions (us
- * 0x8022DE00-0x80233644) around three lists of 0x80-byte objects
- * (UnkStructA80: D_802A5578, D_802A55F8 and D_802A5678 head them, the 128
- * in D_800A3F00) and their collision shapes (spheres, cylinders and
- * boxes, func_8022E884). Not built into the ROM (docs/DECOMPILING.md,
- * "NON_MATCHING drafts"). src/48300.c, before it, is another object:
- * func_80232E60 calls its func_8022DB00 with a jal (text_objects.txt).
- * flags: -O3
- * differing words: us 0, eu 0, jp 0
+ * main_code's 48600: 86 functions (us 0x8022DE00-0x80233644) around three
+ * lists of 0x80-byte objects (UnkStructA80: D_802A5578, D_802A55F8 and
+ * D_802A5678 head them, the 128 in D_800A3F00) and their collision shapes
+ * (spheres, cylinders and boxes, func_8022E884). -O3. src/48300.c, before
+ * it, is another object: func_80232E60 calls its func_8022DB00 with a jal
+ * (text_objects.txt).
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does. An 8-byte stub (jr ra; nop) is an inlined
@@ -15,14 +12,17 @@
  * are func_8022E884's cases, func_8022FC18 is func_8022FC90's child
  * search and func_80232FF0 is func_80232FF8's D_802A5804 switch.
  * Every function matches. What is understood:
- *   - the function-local statics (D_802A5708-D_802A5770 and
- *     D_802A59D0-D_802A5A0C in func_8022E884, D_802A593C-48 in
- *     func_8022F844, D_802A5960-C8 in func_8022E4DC, D_802A5A14-20 in
- *     func_802304C0, D_802A5560-70 in func_80230604, D_802A57A0-A8 and
- *     D_802A5734/58/8C in func_8023017C) are reached with lui/%lo at
- *     every access, as the original does; func_8022E884's are its own
- *     statics, passed to its inlined cases as parameters (so the cases'
- *     loads fold to lui/%lo too);
+ *   - the function-local statics (D_802A593C-48 in func_8022F844,
+ *     D_802A594C-58 in func_8022E3D4, D_802A5960-C8 in func_8022E4DC,
+ *     D_802A5A14-20 in func_802304C0, D_802A5560-70 in func_80230604,
+ *     D_802A57A0-A8 and D_802A5734/58/8C in func_8023017C, the balls
+ *     below) are reached with lui/%lo at every access, as the original
+ *     does; as file-scope statics every one of those functions changes.
+ *     D_802A5568 and D_802A57A0 are Vec3fs (their address is passed to
+ *     func_8022FF58/func_8022FEAC); func_8022E884's shapes D_802A5708,
+ *     D_802A5720, D_802A5738, D_802A5760 and D_802A59D0 are passed to its
+ *     inlined cases as parameters (so the cases' loads fold to lui/%lo
+ *     too);
  *   - func_80232FF8, func_80232FA8, func_802312AC and func_802320A8
  *     are global: as statics IPA moved func_80232FF8's register saves
  *     into func_802334CC, and the others would get only t6-t9;
@@ -52,20 +52,32 @@
  *     A file-scope struct or array, or a pointer parameter, puts the
  *     ball's address in a register or kills the p[3] load. y is
  *     p[3] + p[1]: uopt keeps that order, which loads p[1] first.
- *     func_8022E0A4 is defined above func_8022E170 so that its static's
- *     cfe symbol number comes before func_8022E3D4's statics (.bss
- *     order, below); moving the static helper moves no code.
- * .bss: IDO lays it out in ugen's .lcomm order (a 256-bucket hash on
- * cfe's symbol number; within a bucket function-local statics come
- * first), and fcmp resolves a static by its name, so only sym+k
- * accesses depend on our layout. D_802A59D0 is an f32[5] static defined
- * after func_8022E4DC (moved up above the stubs, which moves no code),
- * so it and the two balls follow its Vec3fs as in the original;
- * D_802A5708-D_802A5760 are extern (see there).
- * The .text matches in all three versions, and so does the .rodata
- * (floats and jtbl_802A2D64, word by word); there is no .data. The .bss
- * is the open part: the statics above are laid out in hash order and
- * the rest are extern, so the object's .bss isn't the original's yet.
+ * .bss (0x4D0, D_802A5560-D_802A5A24) is all this file's, and where the
+ * functions are defined is what lays it out. IDO's ugen gives every
+ * global and static a cfe symbol number and emits them by a 256-bucket
+ * hash on it: buckets in order, within one the function-local statics
+ * first, then the globals by number. cfe numbers, in source order, every
+ * variable and function defined (a function two, three if its list is
+ * `(void)`), every static function's prototype, and every extern or
+ * other function at its first use; a static nothing uses gets a number
+ * but no space, and so does a label. Locals, typedefs, unused prototypes
+ * and unused externs don't. Here: the globals, in address order, are
+ * numbers 3-23 (t = 3, the file's first); func_80230604's statics are
+ * t-1 and t mod 256, one full lap later (258 and 259); func_8023017C's
+ * go to t+8, t+9, t+11 and t+12, among the globals (the fake static
+ * there takes t+10, since both D_802A5760 and D_802A5780 lie between
+ * D_802A5758 and D_802A578C); func_8022F844's, func_8022E3D4's and
+ * func_8022E4DC's follow D_802A5938 in that lap; D_802A59D0, the balls
+ * and func_802304C0's sit in the first lap (numbers 70-80), after all
+ * of them. IDO -O3 doesn't emit the functions in source order: most of
+ * those the file calls can be defined elsewhere without changing a byte
+ * of .text or .rodata (each move here was checked; func_8022F808,
+ * func_8022FF58 and func_8022FC90, say, can't go just anywhere, and
+ * func_8022E884 has to stay the last before func_8022DE6C). So
+ * D_802A59D0, func_8022E264, func_8022E0A4 and func_802304C0 are defined
+ * after func_802334CC, and func_80230604, func_8023017C, func_8022F844,
+ * func_8022E3D4 and func_8022E4DC near the end, with func_8022E87C/874
+ * and func_8022E328/170/364 between the first three to space them.
  * func_802320A8 (2026-11-13, pass 13), what is understood:
  *   - the angle conversion to -180..180 is a ternary, and in the 0x20000
  *     case it is evaluated as the left operand of the subtraction:
@@ -240,27 +252,30 @@ extern f32 D_800A7F00;
 extern s32 D_800A7F04;
 extern Rect40 *D_800A7F08[8];
 extern void *D_800A7F28;
-// D_802A5560: func_80230604
-extern UnkStructA80 D_802A5578;
-extern void *D_802A55F4;
-extern UnkStructA80 D_802A55F8;
-extern s32 *D_802A5674;
-extern UnkStructA80 D_802A5678;
-extern s32 *D_802A56F4;
-extern s32 *D_802A56F8;
-extern s32 D_802A56FC;
-extern s32 D_802A5700;
-extern f32 D_802A5780[3];
-extern f32 D_802A5790[3];
-extern f32 D_802A57B0[3];
-extern f32 D_802A57BC;
-extern f32 D_802A57C0[4];
-extern s32 D_802A5800;
-extern s32 D_802A5804;
-extern f32 D_802A5808[3];
-extern f32 D_802A5814;
-extern s32 D_802A5818[];
-extern s32 D_802A5938;
+
+/* The .bss: func_80230604's statics, then these in address order (the
+ * header has how the other statics fall among them). */
+UnkStructA80 D_802A5578;
+UnkStructA80 D_802A55F8;
+UnkStructA80 D_802A5678;
+s32 *D_802A56F8;
+s32 D_802A56FC;
+s32 D_802A5700;
+f32 D_802A5708[5];
+f32 D_802A5720[5];
+f32 D_802A5738[8];
+f32 D_802A5760[8];
+f32 D_802A5780[3];
+f32 D_802A5790[3];
+f32 D_802A57B0[3];
+f32 D_802A57BC;
+f32 D_802A57C0[16];
+s32 D_802A5800;
+s32 D_802A5804;
+f32 D_802A5808[3];
+f32 D_802A5814;
+s32 D_802A5818[72];
+s32 D_802A5938;
 
 void func_8022DB00(void);
 void func_8022DE00(void);
@@ -268,6 +283,11 @@ void func_8022DE6C(void);
 f32 func_8022DF68(f32 *arg0, f32 *arg1);
 static s32 func_8022DFBC(f32 *arg0, f32 *arg1);
 static s32 func_8022E0A4(f32 *arg0);
+static s32 func_8022E170(f32 *a, f32 *b);
+static s32 func_8022E264(f32 *p);
+static s32 func_8022E328(f32 *a, f32 *b);
+static s32 func_8022E874(f32 *p, f32 *r);
+static s32 func_8022E87C(void);
 static void func_8022E0AC(UnkStructA80 *arg0, f32 *arg1);
 static s32 func_8022E178(f32 *arg0, f32 *arg1);
 static void func_8022E26C(UnkStructA80 *arg0, f32 *arg1);
@@ -403,6 +423,87 @@ void func_802334CC(void) {
         D_802A5800++;
         func_80239094();
     }
+}
+
+/* func_8022E884's fifth shape; this and the three functions after it are
+ * here for their cfe numbers (the header's .bss). */
+static f32 D_802A59D0[5];
+
+static s32 func_8022E264(f32 *p) {
+    static Ball D_802A59E8;
+    f32 t;
+    f32 step;
+
+    D_802A59E8.x = p[0];
+    D_802A59E8.y = p[3] + p[1];
+    D_802A59E8.z = p[2];
+    D_802A59E8.r = p[3];
+    step = p[3] * 2;
+    for (t = 0.0f; t < p[4];) {
+        if (func_8022E178((f32 *) &D_802A59E8, D_802A5760) != 0) {
+            return 1;
+        }
+        t += step;
+        if (t + step <= p[4]) {
+            D_802A59E8.y += step;
+        } else {
+            D_802A59E8.y += p[4] - t;
+        }
+    }
+    return 0;
+}
+
+static s32 func_8022E0A4(f32 *p) {
+    static Ball D_802A5A00;
+    f32 t;
+    f32 step;
+
+    D_802A5A00.x = p[0];
+    D_802A5A00.y = p[3] + p[1];
+    D_802A5A00.z = p[2];
+    D_802A5A00.r = p[3];
+    step = p[3] * 2;
+    for (t = 0.0f; t < p[4];) {
+        if (func_8022DFBC((f32 *) &D_802A5A00, D_802A5760) != 0) {
+            return 1;
+        }
+        t += step;
+        if (t + step <= p[4]) {
+            D_802A5A00.y += step;
+        } else {
+            D_802A5A00.y += p[4] - t;
+        }
+    }
+    return 0;
+}
+
+
+static f32 *func_802304C0(s32 arg0, f32 *arg1, s32 arg2) {
+    static UnkStructA80 *D_802A5A14;
+    static UnkStructA80 *D_802A5A18;
+    static f32 D_802A5A1C;
+    static s32 D_802A5A20;
+
+    D_802A5A14 = D_802A5578.unk7C;
+    arg0 &= 0x3FFFF;
+    D_802A57BC = 32767.0f;
+    D_802A5A18 = NULL;
+    func_8022F808(arg1, D_802A5780);
+    for (; D_802A5A14 != NULL; D_802A5A14 = D_802A5A14->unk7C) {
+        if (D_802A5A14->unk4 >= 0xD0) {
+            break;
+        }
+        D_802A5A20 = func_8022F3F8(arg0, arg1, (f32 *) D_802A5A14, arg2);
+        if (D_802A5A20 != 0 && func_8022E884(arg1, (f32 *) D_802A5A14) != 0) {
+            func_8022F808((f32 *) D_802A5A14, D_802A5790);
+            D_802A5A1C = func_8022DF68(D_802A5780, D_802A5790);
+            if (D_802A5A1C < D_802A57BC) {
+                D_802A5A18 = D_802A5A14;
+                D_802A57BC = D_802A5A1C;
+            }
+        }
+    }
+    return (f32 *) D_802A5A18;
 }
 
 static void func_80232FF0(UnkStructA80 *arg0) {
@@ -557,7 +658,7 @@ void func_80232DB4(f32 *arg0) {
     UnkStructA80 *a = (UnkStructA80 *) arg0;
     UnkStructA80 *o;
 
-    for (o = D_802A55F4; o != NULL; o = o->unk7C) {
+    for (o = D_802A5578.unk7C; o != NULL; o = o->unk7C) {
         if (o->unk4 >= 0xD0) {
             break;
         }
@@ -570,7 +671,7 @@ void func_80232DB4(f32 *arg0) {
 s32 func_80232D18(f32 *arg0, s32 arg1) {
     UnkStructA80 *o;
 
-    for (o = D_802A55F4; o != NULL; o = o->unk7C) {
+    for (o = D_802A5578.unk7C; o != NULL; o = o->unk7C) {
         if (o->unk4 >= 0xD0) {
             break;
         }
@@ -585,7 +686,7 @@ s32 func_80232C74(f32 *arg0, s32 arg1) {
     UnkStructA80 *o;
 
     arg1 &= 0x3FFFF;
-    for (o = D_802A55F4; o != NULL; o = o->unk7C) {
+    for (o = D_802A5578.unk7C; o != NULL; o = o->unk7C) {
         if (o->unk4 >= 0xD0) {
             break;
         }
@@ -600,7 +701,7 @@ s32 func_80232BD0(f32 *arg0, s32 arg1) {
     UnkStructA80 *o;
 
     arg1 &= 0x3FFFF;
-    for (o = D_802A55F4; o != NULL; o = o->unk7C) {
+    for (o = D_802A5578.unk7C; o != NULL; o = o->unk7C) {
         if (o->unk4 >= 0xD0) {
             break;
         }
@@ -1301,10 +1402,10 @@ void *func_80230CB4(s32 arg0, s32 arg1, s32 arg2, s32 arg3, u8 *arg4) {
     if (shape == NULL) {
         for (;;) {}
     }
-    if (D_802A5674 == NULL) {
+    if (D_802A55F8.unk7C == NULL) {
         for (;;) {}
     }
-    obj = (UnkStructA80 *) D_802A5674;
+    obj = (UnkStructA80 *) D_802A55F8.unk7C;
     func_8022FC50((u8 *) obj);
     func_80230C08((s32 *) obj);
     if (arg3 < 0xD0) {
@@ -1382,7 +1483,7 @@ static s32 *func_80230B98(s32 arg0) {
         }
         return NULL;
     }
-    return D_802A56F4;
+    return (s32 *) D_802A5678.unk7C;
 }
 
 void func_80230AA0(UnkStructA80 *arg0, s32 arg1, s32 arg2, s32 arg3) {
@@ -1464,51 +1565,6 @@ void func_802306B0(f32 *arg0, s32 arg1, f32 *arg2) {
     func_80230604(arg0, arg1, arg2, 2);
 }
 
-static void func_80230604(f32 *arg0, s32 arg1, f32 *arg2, s32 arg3) {
-    static f32 *D_802A5560;
-    static f32 D_802A5568;
-    static f32 D_802A556C;
-    static f32 D_802A5570;
-
-    D_802A5560 = func_802304C0(arg1, arg0, arg3);
-    if (D_802A5560 != NULL) {
-        func_8022F808(D_802A5560, D_802A5780);
-        func_8022F808(arg0, D_802A5790);
-        func_8022FF58(D_802A5780, D_802A5790, &D_802A5568);
-        D_802A556C = 0.0f;
-        D_802A5570 = (M2C_FIELD(arg0, f32 *, 0x34) + M2C_FIELD(D_802A5560, f32 *, 0x34)) - D_802A5570;
-        func_8022FEAC(&D_802A5568, arg2);
-    }
-}
-
-static f32 *func_802304C0(s32 arg0, f32 *arg1, s32 arg2) {
-    static UnkStructA80 *D_802A5A14;
-    static UnkStructA80 *D_802A5A18;
-    static f32 D_802A5A1C;
-    static s32 D_802A5A20;
-
-    D_802A5A14 = D_802A55F4;
-    arg0 &= 0x3FFFF;
-    D_802A57BC = 32767.0f;
-    D_802A5A18 = NULL;
-    func_8022F808(arg1, D_802A5780);
-    for (; D_802A5A14 != NULL; D_802A5A14 = D_802A5A14->unk7C) {
-        if (D_802A5A14->unk4 >= 0xD0) {
-            break;
-        }
-        D_802A5A20 = func_8022F3F8(arg0, arg1, (f32 *) D_802A5A14, arg2);
-        if (D_802A5A20 != 0 && func_8022E884(arg1, (f32 *) D_802A5A14) != 0) {
-            func_8022F808((f32 *) D_802A5A14, D_802A5790);
-            D_802A5A1C = func_8022DF68(D_802A5780, D_802A5790);
-            if (D_802A5A1C < D_802A57BC) {
-                D_802A5A18 = D_802A5A14;
-                D_802A57BC = D_802A5A1C;
-            }
-        }
-    }
-    return (f32 *) D_802A5A18;
-}
-
 void func_80230440(f32 *arg0, s32 arg1, u8 *arg2) {
     func_8023017C(arg1, arg2, arg0, 0);
 }
@@ -1519,46 +1575,6 @@ void func_802303C0(f32 *arg0, s32 arg1, u8 *arg2) {
 
 void func_80230340(f32 *arg0, s32 arg1, u8 *arg2) {
     func_8023017C(arg1, arg2, arg0, 2);
-}
-
-static void func_8023017C(s32 arg0, u8 *arg1, f32 *arg2, s32 arg3) {
-    static UnkStructA80 *D_802A5734;
-    static s32 D_802A5758;
-    static s32 D_802A578C;
-    static f32 D_802A57A0;
-    static f32 D_802A57A4;
-    static f32 D_802A57A8;
-    f32 *out = (f32 *) arg1;
-    f32 n;
-
-    arg0 &= 0x3FFFF;
-    D_802A5734 = D_802A55F4;
-    out[0] = 0.0f;
-    out[1] = 0.0f;
-    out[2] = 0.0f;
-    D_802A5758 = 0;
-    func_8022F808(arg2, D_802A5790);
-    for (; D_802A5734 != NULL; D_802A5734 = D_802A5734->unk7C) {
-        if (D_802A5734->unk4 >= 0xD0) {
-            break;
-        }
-        D_802A578C = func_8022F3F8(arg0, arg2, (f32 *) D_802A5734, arg3);
-        if (D_802A578C != 0 && func_8022E884((UnkStructA80 *) arg2, D_802A5734) != 0) {
-            func_8022F808((f32 *) D_802A5734, D_802A5780);
-            func_8022FF58(D_802A5780, D_802A5790, D_802A57B0);
-            D_802A57B0[1] = 0.0f;
-            D_802A57B0[2] = (D_802A5734->unk34 + ((UnkStructA80 *) arg2)->unk34) - D_802A57B0[2];
-            func_8022FEAC(D_802A57B0, &D_802A57A0);
-            out[0] += D_802A57A0;
-            out[2] += D_802A57A8;
-            D_802A5758++;
-        }
-    }
-    if (D_802A5758 != 0) {
-        n = D_802A5758;
-        out[0] /= n;
-        out[2] /= n;
-    }
 }
 
 void func_8022FF58(f32 *arg0, f32 *arg1, f32 *arg2) {
@@ -1752,38 +1768,6 @@ void func_8022F998(f32 *arg0, s32 arg1, f32 *arg2) {
     func_8022F844(arg1, arg0, 2, arg2);
 }
 
-static f32 *func_8022F844(s32 arg0, f32 *arg1, s32 arg2, f32 *arg3) {
-    static UnkStructA80 *D_802A593C;
-    static UnkStructA80 *D_802A5940;
-    static f32 D_802A5944;
-    static s32 D_802A5948;
-
-    arg0 &= 0x3FFFF;
-    D_802A593C = D_802A55F4;
-    D_802A57BC = 32767.0f;
-    D_802A5940 = NULL;
-    func_8022F808(arg1, D_802A5780);
-    for (; D_802A593C != NULL; D_802A593C = D_802A593C->unk7C) {
-        if (D_802A593C->unk4 >= 0xD0) {
-            break;
-        }
-        D_802A5948 = func_8022F3F8(arg0, arg1, (f32 *) D_802A593C, arg2);
-        if (D_802A5948 != 0) {
-            func_8022F808((f32 *) D_802A593C, D_802A5790);
-            D_802A5944 = func_8022DF68(D_802A5780, D_802A5790);
-            if (D_802A5944 < D_802A57BC) {
-                D_802A5940 = D_802A593C;
-                D_802A57BC = D_802A5944;
-            }
-        }
-    }
-    *arg3 = D_802A57BC;
-    if (*arg3 == 32767.0f) {
-        D_802A5940 = NULL;
-    }
-    return (f32 *) D_802A5940;
-}
-
 void func_8022F808(f32 *arg0, f32 *arg1) {
     M2C_FIELD(arg1, f32 *, 0) = M2C_FIELD(M2C_FIELD(arg0, void **, 0x40), f32 *, 0x10);
     arg1[1] = M2C_FIELD(M2C_FIELD(arg0, void **, 0x40), f32 *, 0x14);
@@ -1794,7 +1778,7 @@ s32 func_8022F77C(s32 arg0, s32 arg1, s32 arg2) {
     UnkStructA80 *o;
 
     arg0 &= 0x3FFFF;
-    for (o = D_802A55F4; o != NULL; o = o->unk7C) {
+    for (o = D_802A5578.unk7C; o != NULL; o = o->unk7C) {
         if (o->unk4 >= 0xD0) {
             break;
         }
@@ -1810,7 +1794,7 @@ s32 func_8022F698(s32 arg0, f32 *arg1, f32 *arg2, f32 **arg3, s32 arg4) {
     s32 var_t1;
     s32 var_v0;
 
-    var_t0 = D_802A55F4;
+    var_t0 = D_802A5578.unk7C;
     arg0 &= 0x3FFFF;
     var_t1 = 0;
     if (var_t0 != NULL && arg4 > 0) {
@@ -1843,7 +1827,7 @@ static s32 func_8022F5E4(f32 *arg0, u8 *arg1, u8 *arg2) {
 f32 *func_8022F550(f32 *arg0, s32 arg1) {
     UnkStructA80 *o;
 
-    for (o = D_802A55F4; o != NULL; o = o->unk7C) {
+    for (o = D_802A5578.unk7C; o != NULL; o = o->unk7C) {
         if (o->unk4 >= 0xD0) {
             break;
         }
@@ -1857,7 +1841,7 @@ f32 *func_8022F550(f32 *arg0, s32 arg1) {
 f32 *func_8022F4AC(f32 *arg0, s32 arg1, f32 *arg2) {
     UnkStructA80 *o;
 
-    for (o = D_802A55F4; o != NULL; o = o->unk7C) {
+    for (o = D_802A5578.unk7C; o != NULL; o = o->unk7C) {
         if (o->unk4 >= 0xD0) {
             break;
         }
@@ -1904,16 +1888,264 @@ static s32 func_8022F3F8(s32 arg0, f32 *arg1, f32 *arg2, s32 arg3) {
     return r;
 }
 
-/*
- * Module bss (f32[5], f32[5], f32[8], f32[8]); extern, not static, until the
- * whole 0x802A5560-0x802A5A24 can be defined in the original's order: as
- * statics they can't sit 0x258 before func_8022E4DC's Vec3fs, so every
- * sym+k access would land wrong. Static or extern gives the same code.
- */
-extern f32 D_802A5708[];
-extern f32 D_802A5720[];
-extern f32 D_802A5738[];
-extern f32 D_802A5760[];
+
+static void func_8022E0AC(UnkStructA80 *arg0, f32 *arg1) {
+    f32 r;
+
+    r = arg0->unk40->scale[0];
+    if (r < arg0->unk40->scale[2]) {
+        r = arg0->unk40->scale[2];
+    }
+    arg1[0] = arg0->unk40->pos[0];
+    arg1[1] = arg0->unk40->pos[1];
+    arg1[2] = arg0->unk40->pos[2];
+    arg1[5] = arg0->unk40->rot[0];
+    arg1[6] = arg0->unk40->rot[1];
+    arg1[7] = arg0->unk40->rot[2];
+    arg1[3] = arg0->unk34 * r;
+    /* fake: (*arg0).unk38 rather than arg0->unk38 only flips the mul.s operand order. */
+    arg1[4] = arg0->unk40->scale[1] * (*arg0).unk38;
+}
+
+static s32 func_8022DFBC(f32 *a, f32 *b) {
+    s32 r;
+    f32 d;
+
+    if (a[2] <= b[2]) {
+        if (a[2] + a[3] <= b[2]) {
+            return 0;
+        }
+    } else if (b[2] + b[4] <= a[2] - a[3]) {
+        return 0;
+    }
+    D_802A5780[0] = a[0];
+    D_802A5780[1] = a[1];
+    D_802A5780[2] = 0.0f;
+    D_802A5790[0] = b[0];
+    D_802A5790[1] = b[1];
+    D_802A5790[2] = 0.0f;
+    if (a[3] + b[3] <= func_8022DF68(D_802A5780, D_802A5790)) {
+        return 0;
+    }
+    return 1;
+}
+
+f32 func_8022DF68(f32 *arg0, f32 *arg1) {
+    f32 temp_fa1;
+    f32 temp_fv0;
+    f32 temp_fv1;
+
+    temp_fv0 = M2C_FIELD(arg1, f32 *, 0) - M2C_FIELD(arg0, f32 *, 0);
+    temp_fv1 = arg1[1] - arg0[1];
+    temp_fa1 = arg1[2] - arg0[2];
+    return ((sqrtf((temp_fv0 * temp_fv0) + (temp_fv1 * temp_fv1) + (temp_fa1 * temp_fa1))));
+}
+
+/* From here to func_8022E4DC: placed, and spaced by the inlined helpers
+ * between them, for their statics' cfe numbers (the header's .bss). */
+static void func_80230604(f32 *arg0, s32 arg1, f32 *arg2, s32 arg3) {
+    static f32 *D_802A5560;
+    static Vec3f D_802A5568;
+
+    D_802A5560 = func_802304C0(arg1, arg0, arg3);
+    if (D_802A5560 != NULL) {
+        func_8022F808(D_802A5560, D_802A5780);
+        func_8022F808(arg0, D_802A5790);
+        func_8022FF58(D_802A5780, D_802A5790, &D_802A5568.x);
+        D_802A5568.y = 0.0f;
+        D_802A5568.z = (M2C_FIELD(arg0, f32 *, 0x34) + M2C_FIELD(D_802A5560, f32 *, 0x34)) - D_802A5568.z;
+        func_8022FEAC(&D_802A5568.x, arg2);
+    }
+}
+
+static s32 func_8022E87C(void) {
+    s32 r;
+    s32 dx;
+    s32 dy;
+    s32 dz;
+
+    r = D_802A5720[3] + D_802A5708[3];
+    r *= r;
+    dx = D_802A5708[0] - D_802A5720[0];
+    dx *= dx;
+    dy = D_802A5708[1] - D_802A5720[1];
+    dy *= dy;
+    dz = D_802A5708[2] - D_802A5720[2];
+    dz *= dz;
+    if (dx + dz + dy >= r) {
+        return 0;
+    }
+    return 1;
+}
+
+static s32 func_8022E874(f32 *p, f32 *r) {
+    f32 n;
+    f32 y;
+
+    if (p[4] + p[3] + D_802A5760[4] + D_802A5760[3] < func_8022DF68(p, D_802A5760)) {
+        return 0;
+    }
+    n = p[4] / (p[3] * 2);
+    y = p[3];
+    r[3] = p[3];
+    while (n > 0.0f) {
+        guMtxIdentF((f32 (*)[4]) D_802A57C0);
+        func_8029C8D0((f32 (*)[4]) D_802A57C0, p[5], p[6], p[7]);
+        func_8029CA80((f32 (*)[4]) D_802A57C0, 0.0f, y, 0.0f);
+        r[0] = r[1] = r[2] = 0.0f;
+        func_8022E3D4((f32 (*)[4]) D_802A57C0, r);
+        r[0] += p[0];
+        r[1] += p[1];
+        r[2] += p[2];
+        if (func_8022E4DC(r, D_802A5760) == 1) {
+            return 1;
+        }
+        if (n - 1.0f >= 1.0f) {
+            n -= 1.0f;
+            y += r[3] + r[3];
+        } else {
+            n -= 1.0f;
+            y += (r[3] + r[3]) * n;
+        }
+    }
+    return 0;
+}
+
+static void func_8023017C(s32 arg0, u8 *arg1, f32 *arg2, s32 arg3) {
+    static UnkStructA80 *D_802A5734;
+    static s32 D_802A5758;
+    static s32 unused; /* fake: takes a cfe number, no space (see the header) */
+    static s32 D_802A578C;
+    static Vec3f D_802A57A0;
+    f32 *out = (f32 *) arg1;
+    f32 n;
+
+    arg0 &= 0x3FFFF;
+    D_802A5734 = D_802A5578.unk7C;
+    out[0] = 0.0f;
+    out[1] = 0.0f;
+    out[2] = 0.0f;
+    D_802A5758 = 0;
+    func_8022F808(arg2, D_802A5790);
+    for (; D_802A5734 != NULL; D_802A5734 = D_802A5734->unk7C) {
+        if (D_802A5734->unk4 >= 0xD0) {
+            break;
+        }
+        D_802A578C = func_8022F3F8(arg0, arg2, (f32 *) D_802A5734, arg3);
+        if (D_802A578C != 0 && func_8022E884((UnkStructA80 *) arg2, D_802A5734) != 0) {
+            func_8022F808((f32 *) D_802A5734, D_802A5780);
+            func_8022FF58(D_802A5780, D_802A5790, D_802A57B0);
+            D_802A57B0[1] = 0.0f;
+            D_802A57B0[2] = (D_802A5734->unk34 + ((UnkStructA80 *) arg2)->unk34) - D_802A57B0[2];
+            func_8022FEAC(D_802A57B0, &D_802A57A0.x);
+            out[0] += D_802A57A0.x;
+            out[2] += D_802A57A0.z;
+            D_802A5758++;
+        }
+    }
+    if (D_802A5758 != 0) {
+        n = D_802A5758;
+        out[0] /= n;
+        out[2] /= n;
+    }
+}
+
+static s32 func_8022E328(f32 *a, f32 *b) {
+    if (a[1] <= b[1]) {
+        if (a[1] + a[3] <= b[1]) {
+            return 0;
+        }
+    } else if (b[1] + b[4] <= a[1] - a[3]) {
+        return 0;
+    }
+    D_802A5780[0] = a[0];
+    D_802A5780[1] = 0.0f;
+    D_802A5780[2] = a[2];
+    D_802A5790[0] = b[0];
+    D_802A5790[1] = 0.0f;
+    D_802A5790[2] = b[2];
+    if (a[3] + b[3] <= func_8022DF68(D_802A5780, D_802A5790)) {
+        return 0;
+    }
+    return 1;
+}
+
+static s32 func_8022E170(f32 *a, f32 *b) {
+    if (a[1] <= b[1]) {
+        if (a[1] + a[4] <= b[1]) {
+            return 0;
+        }
+    } else if (b[1] + b[4] <= a[1]) {
+        return 0;
+    }
+    D_802A5780[0] = a[0];
+    D_802A5780[1] = 0.0f;
+    D_802A5780[2] = a[2];
+    D_802A5790[0] = b[0];
+    D_802A5790[1] = 0.0f;
+    D_802A5790[2] = b[2];
+    if (a[3] + b[3] <= func_8022DF68(D_802A5780, D_802A5790)) {
+        return 0;
+    }
+    return 1;
+}
+
+void func_8022E364(f32 *a, f32 *b, f32 *c) {
+    c[0] = a[1] * b[2] - b[1] * a[2];
+    c[1] = a[2] * b[0] - b[2] * a[0];
+    c[2] = a[0] * b[1] - b[0] * a[1];
+}
+
+static f32 *func_8022F844(s32 arg0, f32 *arg1, s32 arg2, f32 *arg3) {
+    static UnkStructA80 *D_802A593C;
+    static UnkStructA80 *D_802A5940;
+    static f32 D_802A5944;
+    static s32 D_802A5948;
+
+    arg0 &= 0x3FFFF;
+    D_802A593C = D_802A5578.unk7C;
+    D_802A57BC = 32767.0f;
+    D_802A5940 = NULL;
+    func_8022F808(arg1, D_802A5780);
+    for (; D_802A593C != NULL; D_802A593C = D_802A593C->unk7C) {
+        if (D_802A593C->unk4 >= 0xD0) {
+            break;
+        }
+        D_802A5948 = func_8022F3F8(arg0, arg1, (f32 *) D_802A593C, arg2);
+        if (D_802A5948 != 0) {
+            func_8022F808((f32 *) D_802A593C, D_802A5790);
+            D_802A5944 = func_8022DF68(D_802A5780, D_802A5790);
+            if (D_802A5944 < D_802A57BC) {
+                D_802A5940 = D_802A593C;
+                D_802A57BC = D_802A5944;
+            }
+        }
+    }
+    *arg3 = D_802A57BC;
+    if (*arg3 == 32767.0f) {
+        D_802A5940 = NULL;
+    }
+    return (f32 *) D_802A5940;
+}
+
+void func_8022E3D4(f32 m[4][4], f32 *v) {
+    static f32 D_802A594C;
+    static f32 D_802A5950;
+    static f32 D_802A5954;
+    static f32 D_802A5958;
+    f32 tx, ty, tz;
+
+    tx = (v[0] * m[0][0] + v[1] * m[1][0] + v[2] * m[2][0]) + m[3][0];
+    ty = (v[0] * m[0][1] + v[1] * m[1][1] + v[2] * m[2][1]) + m[3][1];
+    tz = (v[0] * m[0][2] + v[1] * m[1][2] + v[2] * m[2][2]) + m[3][2];
+    D_802A5958 = (v[0] * m[0][3] + v[1] * m[1][3] + v[2] * m[2][3]) + m[3][3];
+    v[0] = tx * D_802A5958;
+    v[1] = ty * D_802A5958;
+    v[2] = tz * D_802A5958;
+    D_802A594C = tx;
+    D_802A5950 = ty;
+    D_802A5954 = tz;
+}
 
 static s32 func_8022E4DC(f32 *a, f32 *b) {
     static Vec3f p;
@@ -1971,175 +2203,6 @@ static s32 func_8022E4DC(f32 *a, f32 *b) {
     return 1;
 }
 
-static f32 D_802A59D0[5];
-
-static s32 func_8022E87C(void) {
-    s32 r;
-    s32 dx;
-    s32 dy;
-    s32 dz;
-
-    r = D_802A5720[3] + D_802A5708[3];
-    r *= r;
-    dx = D_802A5708[0] - D_802A5720[0];
-    dx *= dx;
-    dy = D_802A5708[1] - D_802A5720[1];
-    dy *= dy;
-    dz = D_802A5708[2] - D_802A5720[2];
-    dz *= dz;
-    if (dx + dz + dy >= r) {
-        return 0;
-    }
-    return 1;
-}
-
-static s32 func_8022E874(f32 *p, f32 *r) {
-    f32 n;
-    f32 y;
-
-    if (p[4] + p[3] + D_802A5760[4] + D_802A5760[3] < func_8022DF68(p, D_802A5760)) {
-        return 0;
-    }
-    n = p[4] / (p[3] * 2);
-    y = p[3];
-    r[3] = p[3];
-    while (n > 0.0f) {
-        guMtxIdentF((f32 (*)[4]) D_802A57C0);
-        func_8029C8D0((f32 (*)[4]) D_802A57C0, p[5], p[6], p[7]);
-        func_8029CA80((f32 (*)[4]) D_802A57C0, 0.0f, y, 0.0f);
-        r[0] = r[1] = r[2] = 0.0f;
-        func_8022E3D4((f32 (*)[4]) D_802A57C0, r);
-        r[0] += p[0];
-        r[1] += p[1];
-        r[2] += p[2];
-        if (func_8022E4DC(r, D_802A5760) == 1) {
-            return 1;
-        }
-        if (n - 1.0f >= 1.0f) {
-            n -= 1.0f;
-            y += r[3] + r[3];
-        } else {
-            n -= 1.0f;
-            y += (r[3] + r[3]) * n;
-        }
-    }
-    return 0;
-}
-
-static s32 func_8022E328(f32 *a, f32 *b) {
-    if (a[1] <= b[1]) {
-        if (a[1] + a[3] <= b[1]) {
-            return 0;
-        }
-    } else if (b[1] + b[4] <= a[1] - a[3]) {
-        return 0;
-    }
-    D_802A5780[0] = a[0];
-    D_802A5780[1] = 0.0f;
-    D_802A5780[2] = a[2];
-    D_802A5790[0] = b[0];
-    D_802A5790[1] = 0.0f;
-    D_802A5790[2] = b[2];
-    if (a[3] + b[3] <= func_8022DF68(D_802A5780, D_802A5790)) {
-        return 0;
-    }
-    return 1;
-}
-
-static s32 func_8022E264(f32 *p) {
-    static Ball D_802A59E8;
-    f32 t;
-    f32 step;
-
-    D_802A59E8.x = p[0];
-    D_802A59E8.y = p[3] + p[1];
-    D_802A59E8.z = p[2];
-    D_802A59E8.r = p[3];
-    step = p[3] * 2;
-    for (t = 0.0f; t < p[4];) {
-        if (func_8022E178((f32 *) &D_802A59E8, D_802A5760) != 0) {
-            return 1;
-        }
-        t += step;
-        if (t + step <= p[4]) {
-            D_802A59E8.y += step;
-        } else {
-            D_802A59E8.y += p[4] - t;
-        }
-    }
-    return 0;
-}
-
-static s32 func_8022E0A4(f32 *p) {
-    static Ball D_802A5A00;
-    f32 t;
-    f32 step;
-
-    D_802A5A00.x = p[0];
-    D_802A5A00.y = p[3] + p[1];
-    D_802A5A00.z = p[2];
-    D_802A5A00.r = p[3];
-    step = p[3] * 2;
-    for (t = 0.0f; t < p[4];) {
-        if (func_8022DFBC((f32 *) &D_802A5A00, D_802A5760) != 0) {
-            return 1;
-        }
-        t += step;
-        if (t + step <= p[4]) {
-            D_802A5A00.y += step;
-        } else {
-            D_802A5A00.y += p[4] - t;
-        }
-    }
-    return 0;
-}
-
-static s32 func_8022E170(f32 *a, f32 *b) {
-    if (a[1] <= b[1]) {
-        if (a[1] + a[4] <= b[1]) {
-            return 0;
-        }
-    } else if (b[1] + b[4] <= a[1]) {
-        return 0;
-    }
-    D_802A5780[0] = a[0];
-    D_802A5780[1] = 0.0f;
-    D_802A5780[2] = a[2];
-    D_802A5790[0] = b[0];
-    D_802A5790[1] = 0.0f;
-    D_802A5790[2] = b[2];
-    if (a[3] + b[3] <= func_8022DF68(D_802A5780, D_802A5790)) {
-        return 0;
-    }
-    return 1;
-}
-
-
-void func_8022E3D4(f32 m[4][4], f32 *v) {
-    static f32 D_802A594C;
-    static f32 D_802A5950;
-    static f32 D_802A5954;
-    static f32 D_802A5958;
-    f32 tx, ty, tz;
-
-    tx = (v[0] * m[0][0] + v[1] * m[1][0] + v[2] * m[2][0]) + m[3][0];
-    ty = (v[0] * m[0][1] + v[1] * m[1][1] + v[2] * m[2][1]) + m[3][1];
-    tz = (v[0] * m[0][2] + v[1] * m[1][2] + v[2] * m[2][2]) + m[3][2];
-    D_802A5958 = (v[0] * m[0][3] + v[1] * m[1][3] + v[2] * m[2][3]) + m[3][3];
-    v[0] = tx * D_802A5958;
-    v[1] = ty * D_802A5958;
-    v[2] = tz * D_802A5958;
-    D_802A594C = tx;
-    D_802A5950 = ty;
-    D_802A5954 = tz;
-}
-
-void func_8022E364(f32 *a, f32 *b, f32 *c) {
-    c[0] = a[1] * b[2] - b[1] * a[2];
-    c[1] = a[2] * b[0] - b[2] * a[0];
-    c[2] = a[0] * b[1] - b[0] * a[1];
-}
-
 f32 func_8022E330(f32 *a, f32 *b) {
     return a[2] * b[2] + (a[1] * b[1] + b[0] * a[0]);
 }
@@ -2184,59 +2247,6 @@ static s32 func_8022E178(f32 *a, f32 *b) {
         return 0;
     }
     return 1;
-}
-
-
-static void func_8022E0AC(UnkStructA80 *arg0, f32 *arg1) {
-    f32 r;
-
-    r = arg0->unk40->scale[0];
-    if (r < arg0->unk40->scale[2]) {
-        r = arg0->unk40->scale[2];
-    }
-    arg1[0] = arg0->unk40->pos[0];
-    arg1[1] = arg0->unk40->pos[1];
-    arg1[2] = arg0->unk40->pos[2];
-    arg1[5] = arg0->unk40->rot[0];
-    arg1[6] = arg0->unk40->rot[1];
-    arg1[7] = arg0->unk40->rot[2];
-    arg1[3] = arg0->unk34 * r;
-    /* fake: (*arg0).unk38 rather than arg0->unk38 only flips the mul.s operand order. */
-    arg1[4] = arg0->unk40->scale[1] * (*arg0).unk38;
-}
-
-static s32 func_8022DFBC(f32 *a, f32 *b) {
-    s32 r;
-    f32 d;
-
-    if (a[2] <= b[2]) {
-        if (a[2] + a[3] <= b[2]) {
-            return 0;
-        }
-    } else if (b[2] + b[4] <= a[2] - a[3]) {
-        return 0;
-    }
-    D_802A5780[0] = a[0];
-    D_802A5780[1] = a[1];
-    D_802A5780[2] = 0.0f;
-    D_802A5790[0] = b[0];
-    D_802A5790[1] = b[1];
-    D_802A5790[2] = 0.0f;
-    if (a[3] + b[3] <= func_8022DF68(D_802A5780, D_802A5790)) {
-        return 0;
-    }
-    return 1;
-}
-
-f32 func_8022DF68(f32 *arg0, f32 *arg1) {
-    f32 temp_fa1;
-    f32 temp_fv0;
-    f32 temp_fv1;
-
-    temp_fv0 = M2C_FIELD(arg1, f32 *, 0) - M2C_FIELD(arg0, f32 *, 0);
-    temp_fv1 = arg1[1] - arg0[1];
-    temp_fa1 = arg1[2] - arg0[2];
-    return ((sqrtf((temp_fv0 * temp_fv0) + (temp_fv1 * temp_fv1) + (temp_fa1 * temp_fa1))));
 }
 
 s32 func_8022E884(UnkStructA80 *arg0, UnkStructA80 *arg1) {

@@ -95,6 +95,13 @@ main_code 46300 0x30 0x20 0x40
 main_code @us 46300 data=0x8029F890 rodata=0x802A2D30 bss=0x802A54D0
 main_code @eu 46300 data=0x8029F890 rodata=0x802A2D30 bss=0x802A54C0
 main_code @jp 46300 data=0x8029EF70 rodata=0x802A1F70 bss=0x802A4700
+# 48600 owns its .rodata and all of its .bss (D_802A5560..D_802A5A24, the
+# list heads, its shapes and func_80230604's and the other functions'
+# statics): IDO lays the statics out among the globals, so all of it is C.
+main_code 48600 0 0xB0 0x4D0
+main_code @us 48600 rodata=0x802A2D60 bss=0x802A5560
+main_code @eu 48600 rodata=0x802A2D60 bss=0x802A5550
+main_code @jp 48600 rodata=0x802A1FA0 bss=0x802A4790
 main_code 4DE50 0x10 0 0
 main_code @us 4DE50 data=0x8029FE30
 main_code @eu 4DE50 data=0x8029FE30

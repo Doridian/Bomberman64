@@ -19,13 +19,13 @@ main_code 4E030
 # ends where 48300's begins, on 16-byte boundaries each: .data with a
 # display list at 0x8029FCC8 whose end is followed by 8 zero bytes before
 # 48300's function table at 0x8029FD40, .rodata (four words at
-# 0x802A2D50) just before 48300's first float at 0x802A2D60, .bss up to
-# 0x802A5558 before 48300's at 0x802A5560.
+# 0x802A2D50) just before 48600's first float at 0x802A2D60, .bss up to
+# 0x802A5558 before 48600's at 0x802A5560 (48300 has neither).
 main_code 48300
 
 # 48600 (-O3, the object lists and their collision shapes) calls
 # func_8022DB00 from func_80232E60 with a jal, which -O3 inlines within
-# one file (the draft does, 8 words off; split, it matches).  48300 is
+# one file (a draft of both was 8 words off; split, it matches).  48300 is
 # the five functions before it (func_8022DB00 to func_8022DDB4, 0x300
 # bytes), which end on the 16-byte boundary where it starts; none of
 # them calls into 48600.

@@ -336,7 +336,6 @@ extern u8 D_802A1450[];
 extern s16 D_802A14B4;
 extern u8 D_802A14B8[];
 extern s16 D_802A14F0;
-extern void *D_802A55F4;
 extern s32 D_802AC5D0;
 extern s32 D_802AC89C;
 extern s32 D_802AC8A0;

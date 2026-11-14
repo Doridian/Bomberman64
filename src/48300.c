@@ -3,7 +3,7 @@
 /*
  * -O3, so written last function first. Five functions (us
  * 0x8022DB00-0x8022DE00): func_8022DB00 and two tasks that draw screen
- * rectangles. 48600 (nonmatching/48600.c) is a separate object:
+ * rectangles. 48600 (src/48600.c) is a separate object:
  * func_80232E60 calls func_8022DB00 with a jal, where one -O3 file inlines
  * it (text_objects.txt).
  */
