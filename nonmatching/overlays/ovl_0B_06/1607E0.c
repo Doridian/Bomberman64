@@ -6,7 +6,7 @@
  * floats). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 13, eu 13, jp 2
+ * differing words: us 5, eu 5, jp 2
  * jp's code differences are drafted (`#if VERSION_JP`), its .data is not:
  * its five own strings are only declared, and its text tables and
  * positions are us's.
@@ -71,7 +71,7 @@
  *
  * What still differs in us (words; each with the statics after it up to
  * the next global, so a function the wrong size shifts the rest):
- * - 80043220 8 (jp 0): one lbu in 80043480 scheduled too late.
+ * - 80043220 0 (p2; was 8: one lbu in 80043480 scheduled too late).
  * - 80043C48 12 (jp 76): case 2's `sw v0,D_8004A668` is scheduled before
  *   the jal (the original has it in the delay slot), and the six 80043040
  *   calls set their 0.0f ($fs0) one instruction early. jp's frame is 408
@@ -352,6 +352,15 @@
  * parameter: all no change or worse). 8004616C's/80046170's (us 5, jp 2)
  * include the return in v1 instead of v0 (`move v0,s6`): dead reads,
  * casts and other loop shapes don't move it.
+ *
+ * ovl0B p2 (us/eu 13 -> 5):
+ * - 80043220 matches: the ovlx .s experiment used as1 -pic1. With the
+ *   build's as0/as1 (-O3 -Olimit 5000) the ugen order is right as it was;
+ *   what the original has is `.noalias $17,$sp` (the label pointer known
+ *   not to point into the stack), so as1 lifts the unk14 lbu above the
+ *   float argument's swc1. uopt emits it once the three digit stores in
+ *   80043480 go through `D_ovl0B_06_800499F0[i].unk0[k]` rather than
+ *   the `label` local (which only jp's 80043404 call still uses).
  */
 #include "common.h"
 
@@ -2881,9 +2890,9 @@ static void func_ovl0B_06_80043480(s32 arg0) {
                     buf[1] = 0xF;
                 }
             }
-            label->unk0[1] = buf[0];
-            label->unk0[2] = buf[1];
-            label->unk0[3] = buf[2];
+            D_ovl0B_06_800499F0[i].unk0[1] = buf[0];
+            D_ovl0B_06_800499F0[i].unk0[2] = buf[1];
+            D_ovl0B_06_800499F0[i].unk0[3] = buf[2];
 #if VERSION_JP
             func_ovl0B_06_80043404(label);
 #else
