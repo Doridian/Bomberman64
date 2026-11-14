@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 82, eu 82, jp 82
+ * differing words: us 42, eu 42, jp 42
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -60,9 +60,9 @@
  * original), one float temp in f22 for f0 and a store scheduled
  * differently.
  *
- * The other procedures that differ: func_80251EE0 (ret should live in
- * $2; the forms that do it change the size), func_80252174 (see pass
- * 11) and func_8025CEA0 (one add.s operand order).
+ * The other procedures that differ: func_80251EE0 (one word, pass 13),
+ * func_80252174 (see pass 11) and func_8025CEA0 (one add.s operand
+ * order).
  *
  * What moved the count: exact sizes first (one block per original
  * global, so a short static misaligns everything after it; for
@@ -141,6 +141,15 @@
  * the two in the .s gives the original, no source form found), one
  * float temp (f10 for f8) in func_80252174, func_80251EE0's ret, and
  * func_8025CEA0's add.s operand order.
+ *
+ * Pass 13 (82 to 42): func_80251EE0's false path returns no value
+ * (`if (ret == 0) return;`, then `return f() != 0;`). With no R2 store
+ * on that path ret stays a ugen temporary (t6) and the size and every
+ * register are the original's; only the delay slot differs (nop for
+ * `move v0,t6`). That move is an R2 store before the branch, which only
+ * an inlined static's `return f() != 0` gives (`if (g(arg0)) {...}`
+ * matches exactly), but g's stub then lands just before func_80251EE0,
+ * where the original has none.
  *
  * jp lacks one height test in func_802553D4 (VERSION_JP); eu is us.
  */
@@ -4458,16 +4467,16 @@ static s32 func_80251EE0(f32 *arg0) {
         r = x - 0.5f;
     }
     ret = func_8023369C((f32) (((s32) r / 100) * 100), x, 31.0f) != 0;
-    if (ret == 1) {
-        x = M2C_FIELD(arg0, f32 *, 8);
-        if (x >= 0.0f) {
-            r = x + 0.5f;
-        } else {
-            r = x - 0.5f;
-        }
-        ret = func_8023369C((f32) (((s32) r / 100) * 100), x, 31.0f) != 0;
+    if (ret == 0) {
+        return;
     }
-    return ret;
+    x = M2C_FIELD(arg0, f32 *, 8);
+    if (x >= 0.0f) {
+        r = x + 0.5f;
+    } else {
+        r = x - 0.5f;
+    }
+    return func_8023369C((f32) (((s32) r / 100) * 100), x, 31.0f) != 0;
 }
 
 static void func_80251E5C(f32 *arg0) {
