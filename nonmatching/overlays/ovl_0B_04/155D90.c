@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 7, eu 7, jp 20
+ * differing words: us 4, eu 4, jp 17
  *
  * The pages are a table (D_ovl0B_04_800499B8: texts, handler, cursor
  * table, set-up) that func_ovl0B_04_80043ADC runs in turn; pages 1-4 are
@@ -76,20 +76,19 @@
  *   after the jal, as the original has it (any C with the -1 outside the
  *   if hoists it to an s-register instead). 800438FC's cases set d before col
  *   for the original's schedule.
- * - 800444E8 3/3: 800447DC's registers. 80044714 returns s32 (s8 made a
+ * - 800444E8 0/0 (matches; p4). 80044714 returns s32 (s8 made a
  *   sll/sra pair whose temp put the ugen temps one ahead, and gave d1 $s3
  *   and n $s2). d1's first test is a plain `if (d1)`, every later one and
- *   d2/d3's `!= 0` (p4): the int-promoted value is its own uopt expression,
+ *   d2/d3's `!= 0`: the int-promoted value is its own uopt expression,
  *   which takes $s2 from the first chain on while d1 stays in $t0 (the
  *   original's `move s2,t0`; cvt(d2)/cvt(d3) are its `move v1,s4`/`move
  *   v0,s5`). That also gives the frame (24) without p2's dead reads and
  *   `do {} while (0)`. The counter D_ovl0B_04_8004A1A0 (function-scope
- *   static) is tested `n <= A1A0`: with the original's `n < A1A0 + 1`
- *   uopt promotes the counter to a register (it is loaded once and only
- *   A1A0 + 1 is kept, in $v1, in the original); left: the compare's
- *   operands (3 words). The unk1 test is written `c != X` for the beq's
- *   operand order; unk1 is stored through the neighbour,
- *   (&D_ovl0B_04_8004A480)[1][1] (fake), for the original's own lui.
+ *   static) is incremented before its test (`A1A0++; if (n < A1A0)`):
+ *   uopt keeps it in $v1 and stores it back per path, as the original. The
+ *   unk1 test is written `c != X` for the beq's operand order; unk1 is
+ *   stored through the neighbour, (&D_ovl0B_04_8004A480)[1][1] (fake), for
+ *   the original's own lui.
  * - 80045214 4/4: 80045214's `ok` reloaded to $t8 (the original: $v0, 3),
  *   and 80045540's rub-out. Its unk3 store goes through a copy of item
  *   (`x = item; ... unk3 = x`): copy propagation makes uopt fold the store
@@ -1837,29 +1836,27 @@ static void func_ovl0B_04_800447DC(u16 buttons, u8 *ret) {
             }
             if (buttons & 0x1E00) {
                 func_ovl0B_04_800487D0(0);
-                if (n <= D_ovl0B_04_8004A1A0) {
+                D_ovl0B_04_8004A1A0++;
+                if (n < D_ovl0B_04_8004A1A0) {
                     D_ovl0B_04_8004A1A0 = 0;
-                } else {
-                    D_ovl0B_04_8004A1A0++;
-                    if (D_ovl0B_04_8004A1A0 == 1) {
-                        if (d1 != 0) {
-                            c += d1;
-                        } else if (d2 != 0) {
-                            c += d2;
-                        } else if (d3 != 0) {
-                            c += d3;
-                        } else {
-                            D_ovl0B_04_8004A1A0 = 0;
-                        }
+                } else if (D_ovl0B_04_8004A1A0 == 1) {
+                    if (d1 != 0) {
+                        c += d1;
                     } else if (d2 != 0) {
                         c += d2;
                     } else if (d3 != 0) {
                         c += d3;
-                    } else if (d1 != 0) {
-                        c += d1;
                     } else {
                         D_ovl0B_04_8004A1A0 = 0;
                     }
+                } else if (d2 != 0) {
+                    c += d2;
+                } else if (d3 != 0) {
+                    c += d3;
+                } else if (d1 != 0) {
+                    c += d1;
+                } else {
+                    D_ovl0B_04_8004A1A0 = 0;
                 }
                 if (c != D_ovl0B_04_8004A490.unk1) {
                     (&D_ovl0B_04_8004A480)[1][1] = c; /* fake: through the neighbour, for its own lui */
