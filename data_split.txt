@@ -364,6 +364,46 @@ boot_code libultra/libc/xlitob 0x30 0 0
 boot_code @us libultra/libc/xlitob data=0x8001B610
 boot_code @eu libultra/libc/xlitob data=0x8001B610
 boot_code @jp libultra/libc/xlitob data=0x8001B5F0
+boot_code libultra/audio/synthesizer 0 0x10 0
+boot_code @us libultra/audio/synthesizer rodata=0x8001B800
+boot_code @eu libultra/audio/synthesizer rodata=0x8001B800
+boot_code @jp libultra/audio/synthesizer rodata=0x8001B7E0
+boot_code libultra/audio/seq 0 0x10 0
+boot_code @us libultra/audio/seq rodata=0x8001B810
+boot_code @eu libultra/audio/seq rodata=0x8001B810
+boot_code @jp libultra/audio/seq rodata=0x8001B7F0
+boot_code libultra/audio/cseq 0 0x10 0
+boot_code @us libultra/audio/cseq rodata=0x8001B820
+boot_code @eu libultra/audio/cseq rodata=0x8001B820
+boot_code @jp libultra/audio/cseq rodata=0x8001B800
+boot_code libultra/audio/cents2ratio 0 0x10 0
+boot_code @us libultra/audio/cents2ratio rodata=0x8001B830
+boot_code @eu libultra/audio/cents2ratio rodata=0x8001B830
+boot_code @jp libultra/audio/cents2ratio rodata=0x8001B810
+boot_code libultra/audio/seqplayer 0 0x240 0
+boot_code @us libultra/audio/seqplayer rodata=0x8001B840
+boot_code @eu libultra/audio/seqplayer rodata=0x8001B840
+boot_code @jp libultra/audio/seqplayer rodata=0x8001B820
+boot_code libultra/audio/csplayer 0 0x240 0
+boot_code @us libultra/audio/csplayer rodata=0x8001BA80
+boot_code @eu libultra/audio/csplayer rodata=0x8001BA80
+boot_code @jp libultra/audio/csplayer rodata=0x8001BA60
+boot_code libultra/audio/drvrnew 0x190 0x20 0
+boot_code @us libultra/audio/drvrnew data=0x8001B250 rodata=0x8001BE70
+boot_code @eu libultra/audio/drvrnew data=0x8001B250 rodata=0x8001BE70
+boot_code @jp libultra/audio/drvrnew data=0x8001B230 rodata=0x8001BE50
+boot_code libultra/audio/resample 0 0x40 0
+boot_code @us libultra/audio/resample rodata=0x8001BE90
+boot_code @eu libultra/audio/resample rodata=0x8001BE90
+boot_code @jp libultra/audio/resample rodata=0x8001BE70
+boot_code libultra/audio/env 0x140 0x60 0
+boot_code @us libultra/audio/env data=0x8001B3E0 rodata=0x8001BED0
+boot_code @eu libultra/audio/env data=0x8001B3E0 rodata=0x8001BED0
+boot_code @jp libultra/audio/env data=0x8001B3C0 rodata=0x8001BEB0
+boot_code libultra/audio/reverb 0 0x30 0
+boot_code @us libultra/audio/reverb rodata=0x8001BF30
+boot_code @eu libultra/audio/reverb rodata=0x8001BF30
+boot_code @jp libultra/audio/reverb rodata=0x8001BF10
 
 # ovl_0B_01: all C (-O3); jp has its own strings
 ovl_0B_01 ovl_0B_01_entry 0 0 0
