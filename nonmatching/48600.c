@@ -7,7 +7,7 @@
  * "NON_MATCHING drafts"). src/48300.c, before it, is another object:
  * func_80232E60 calls its func_8022DB00 with a jal (text_objects.txt).
  * flags: -O3
- * differing words: us 11, eu 11, jp 11
+ * differing words: us 2, eu 2, jp 2
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does. An 8-byte stub (jr ra; nop) is an inlined
@@ -55,8 +55,6 @@
  *     func_8022E0A4 is defined above func_8022E170 so that its static's
  *     cfe symbol number comes before func_8022E3D4's statics (.bss
  *     order, below); moving the static helper moves no code.
- *   - func_802320A8's t is a volatile scalar: the original stores it in
- *     both arms and reloads it after the join (then b = t; x = b - n).
  * .bss: IDO lays it out in ugen's .lcomm order (a 256-bucket hash on
  * cfe's symbol number; within a bucket function-local statics come
  * first), and fcmp resolves a static by its name, so only sym+k
@@ -64,27 +62,31 @@
  * after func_8022E4DC (moved up above the stubs, which moves no code),
  * so it and the two balls follow its Vec3fs as in the original;
  * D_802A5708-D_802A5760 are extern (see there).
- * Left: func_802320A8 (11, the size right): what's left is obj+0x58's slot
- * (0x64, not 0x68), the default's delay slot, which holds the store to
- * t (the original has a nop), and colouring in the 0x20000 case. ugen
- * hands out f4..f18 least recently freed first (frees at a value's last
- * read, in operand order; the queue carries on through labels and calls,
- * and as1 -O3 deletes register computations that are dead). The no-gp
- * branch's and the join's allocations leave the queue at case 1 as
- * [16 18 4 6 8 10]; the original's registers from case 1 on need
- * [4 6 8 10 18 16]: two temporaries taken after the join's statement and
- * freed the other way round, with no code left. The draft gets that with
- * a dead c = spD4[2] - spB0[1] * h (spB0[1] * h into f16, spD4[2] into
- * f18, then sub.s c, f18, f16) kept alive to the colouring by the
- * switch's + (s32) c * 0, which uopt folds only afterwards; as1 then
- * deletes the computation. The original's source for this is not known
- * (scratch/48600/p9/NOTES.txt). What is understood:
- *   - the default case is an endless loop storing n to the volatile t:
- *     a read of n there keeps it live through the outer loop (the
- *     original loads it into fs3 before the loop and stores it after),
- *     and the volatile store stays in the loop, in the branch's delay
- *     slot. A plain store is hoisted out of the loop (one word more);
- *     with no read of n it is dead and the function is 6 words shorter.
+ * Left: func_802320A8 (2, the size right): obj+0x58's address (a CSE
+ * uopt hoists out of the loop and leaves uncoloured) is spilled to
+ * sp+0x64, the original's is sp+0x68. uopt gives coloured items temp
+ * slots in bit order, each the lowest index no lower item with an
+ * overlapping region holds (spilltemps): obj->unk3C (0) and its ->flags
+ * (1) both reach the loop head, so obj+0x58 gets 2. The original needs
+ * one of them later in bit order or outside its region; no form found
+ * (scratch/48600/p13/NOTES.txt). What is understood:
+ *   - t is a plain local that uopt leaves uncoloured: its arms store it
+ *     to its home, and x = t - n loads it where it is used; as1 -O3
+ *     hoists that load to the join, into the next ugen temporary (f16).
+ *     It is uncoloured because it is live round the whole outer loop:
+ *     the default case is an empty endless loop, and code motion inserts
+ *     there every assignment partially available from the previous pass
+ *     (the "anticipated" set of a block that never reaches the exit is
+ *     everything): n = (t - n) + 360.0f and n = t - n from the 0x20000
+ *     case, n = t from the 0x30000 one. as1 deletes them again (dead
+ *     register computations), but they make t and n live into the loop:
+ *     n is loaded into fs3 before it and stored after it, and t's range
+ *     is too long for a register. The 0x20000 case's angle is read from
+ *     memory each time (obj->unk44->unk40->rot[1], no local): a register
+ *     variable there would be inserted too (its t = ... arms), and the 0x20000
+ *     case's second wrap is written out (sp80[1] - 90.0f each time) so it
+ *     inserts nothing (with a variable, that variable is live into the
+ *     loop and loaded before it).
  *   - case 2 computes a, b and c before the three stores, and case 1's
  *     d, e and f put the call on the right: func_80234408(x) * (...)
  *     makes cfe spill the call's result to a stack temporary, which grows
@@ -97,20 +99,20 @@
  *     with obj->unk3C->unk4's load: uopt leaves blocks with an indirect
  *     access out of a memory variable's live range, so the store isn't
  *     in it. Pass 7's goto dl; dl: split them apart and lost it.
- *   - in the 0x20000 case, t's reload goes through b (b = t; then
- *     x = b - n), which the original keeps in f16 against our f22, and
- *     x = sp80[1]; x = x - 90.0f is two statements: both move the
- *     colouring. Pass 7's b = sp80[0] (n = b) was right only for the
- *     wrong temporary queue; with the queue right, n = sp80[0]. The
- *     0x30000 case's angle is c, not x (x there took f2 for sp80[1]'s f0).
+ *   - a and b have the same priority (40 over 3 units), and uopt colours
+ *     equal priorities in bit order (first appearance): the original
+ *     colours b (f22) before a (f24). b's initialiser (a dead store)
+ *     makes b appear first; no natural form found.
+ *   - the 0x30000 case's angle has a variable of its own (v; x there
+ *     took f2 for sp80[1]'s f0). Some local must sit at sp+0x78, between
+ *     n and t: one coloured everywhere leaves no trace, so which it is
+ *     can't be told.
  * uopt puts a commutative op's operands in its own order, not the
  * source's, but the form of an operand counts: func_8022E0AC's mul.s
  * takes the original's order with (*arg0).unk38 (not arg0->unk38) on the
  * right, and func_80230914's add.s with a store of y back to o->unk6C
  * before o->unk6C += o->unk70 (both permuter finds). In func_802320A8,
- * the 0x20000 case has a dead read of obj->unk3C->unkC (a permuter find:
- * it moves the colouring), and pos = sp110 + spC8 is written
- * spC8 + sp110.
+ * pos = sp110 + spC8 is written spC8 + sp110.
  */
 #include "common.h"
 
@@ -688,7 +690,8 @@ void func_802320A8() {
     f32 spBC[3];
     f32 spB0[3];
     f32 a;
-    f32 b;
+    /* fake: the dead initialiser makes b appear before a, so b (equal priority) is coloured first. */
+    f32 b = 0.0f;
     f32 e;
     f32 d;
     f32 c;
@@ -699,7 +702,7 @@ void func_802320A8() {
     f32 sp80[3];
     f32 n;
     f32 v;
-    volatile f32 t;
+    f32 t;
 
     obj = (UnkStructA80 *) func_802391F0();
     parent = obj->unk44;
@@ -743,10 +746,8 @@ void func_802320A8() {
             spBC[2] = sp110[2];
         }
         func_8022FF58(sp110, spBC, spB0);
-        /* fake: c is dead; its computation uses up two ugen FP temporaries (as1 deletes it) and the
-         * switch's + (s32) c * 0 keeps it alive through colouring (uopt folds it afterwards). */
-        spB0[1] = spD4[1] - spB0[1]; c = spD4[2] - spB0[1] * h;
-        switch ((obj->unk3C->flags & 0xFFFF) + (s32) c * 0) {
+        spB0[1] = spD4[1] - spB0[1];
+        switch (obj->unk3C->flags & 0xFFFF) {
         case 1:
             a = (spBC[0] - obj->unk40->pos[0]) * func_80234434(spB0[1]) * obj->unk3C->unkC;
             b = (spBC[1] - obj->unk40->pos[1]) * func_80234434(spB0[1]) * obj->unk3C->unkC;
@@ -768,9 +769,7 @@ void func_802320A8() {
             sp128[2] = obj->unk40->pos[2] + c;
             break;
         default:
-            /* fake: the volatile store keeps n live into the endless loop; the original has a nop in
-             * the loop's delay slot, where this store goes. */
-            for (;;) { t = n; }
+            for (;;) { }
         }
         func_8022F808((f32 *) obj, obj->unk58);
         func_8022FF58(sp110, sp128, spD4);
@@ -824,19 +823,17 @@ void func_802320A8() {
             sp80[1] = spD4[1];
             sp80[2] = spD4[2];
             obj->unk40->rot[1] = obj->unk44->unk40->rot[1];
-            v = obj->unk44->unk40->rot[1];
-            if (v >= 0.0f && v <= 180.0f) {
-                t = v;
+            if (obj->unk44->unk40->rot[1] >= 0.0f && obj->unk44->unk40->rot[1] <= 180.0f) {
+                t = obj->unk44->unk40->rot[1];
             } else {
-                t = (360.0f - v) * -1.0f;
+                t = (360.0f - obj->unk44->unk40->rot[1]) * -1.0f;
             }
-            b = t;
             if (sp80[0] >= 0.0f && sp80[0] <= 180.0f) {
                 n = sp80[0];
             } else {
                 n = (360.0f - sp80[0]) * -1.0f;
             }
-            x = b - n;
+            x = t - n;
             if (x >= 360.0f) {
                 sp80[0] = x - 360.0f;
             } else {
@@ -847,17 +844,13 @@ void func_802320A8() {
                 }
                 sp80[0] = n;
             }
-            x = sp80[1];
-            x = x - 90.0f;
-            if (x >= 360.0f) {
-                /* fake: dead load (permuter find), moves the colouring. */
-                y = obj->unk3C->unkC;
-                sp80[1] = x - 360.0f;
+            if ((sp80[1] - 90.0f) >= 360.0f) {
+                sp80[1] = (sp80[1] - 90.0f) - 360.0f;
             } else {
                 if (sp80[1] < 90.0f) {
-                    n = x + 360.0f;
+                    n = (sp80[1] - 90.0f) + 360.0f;
                 } else {
-                    n = x;
+                    n = (sp80[1] - 90.0f);
                 }
                 sp80[1] = n;
             }
@@ -876,14 +869,14 @@ void func_802320A8() {
             func_8022F808((f32 *) obj, sp134);
             func_8022FF58(sp134, sp110, sp80);
             obj->unk40->rot[1] = sp80[0];
-            c = sp80[1] - 180.0f;
-            if (c >= 360.0f) {
-                n = c - 360.0f;
+            v = sp80[1] - 180.0f;
+            if (v >= 360.0f) {
+                n = v - 360.0f;
             } else {
                 if (sp80[1] < 180.0f) {
-                    t = c + 360.0f;
+                    t = v + 360.0f;
                 } else {
-                    t = c;
+                    t = v;
                 }
                 n = t;
             }
