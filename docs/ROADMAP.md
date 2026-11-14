@@ -214,7 +214,7 @@ evidence for the flags):
   Then, data-free functions only: `404C0` (the ROM file system: 15 of
   18), `40FB0` (the overlay loader, all six, `-O3`), `5E090` (7 of 7),
   `87190` (the resource cache, 8 of 8), `87730` (9 of 10), `99F40`
-  (the tile maps, 12 of 14), `A4860` (game flags, 12 of 13) and `B11F0`
+  (the tile maps, 12 of 14), `A4860` (game flags, all 13) and `B11F0`
   (19 of 25). Complete `-O3` objects, owning their data where it's
   theirs (placed through data_split.txt): `412F0` (the graphics thread),
   `41FD0` (viewports), `530C0` (the thread scheduler), `53D70`

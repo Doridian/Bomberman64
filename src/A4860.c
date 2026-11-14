@@ -44,26 +44,36 @@ void func_8028A0E4(void) {
     }
 }
 
-#ifdef NON_MATCHING
-/* 14 differing words (us 14, eu 14, jp 14): the original keeps the
-   destination's base in a register (sb t6,0(v0), the next in a0 = v0+1),
-   where the constant &D_8008E570.unk18[12] is folded into each store;
-   only a base from a call gives that shape (it costs a jal) */
+/*
+ * The original keeps the destination's base in $v0 (`sb t6,0(v0)` for the
+ * peeled first byte, the induction variable a0 = v0 + 1), where a
+ * constant base is folded into each store.
+ * - dst starts at the struct and moves to 0x48 after the calls: uopt
+ *   doesn't fold the constant across the calls before copy propagation,
+ *   so dst stays a variable (a base written as &D_8008E570.unk18[12] is
+ *   propagated). The same happens with `i = 12; func_8028A08C();
+ *   dst = (u8 *)&D_8008E570.unk18[i];` (i is reassigned by the loop).
+ * - fake: the three dead `dst == NULL` tests (deleted later) give dst
+ *   three loop uses, so it is coloured before the loop's ranges and takes
+ *   $v0 (src v1, dst + i a0, end a1, as in the original). Fewer than three
+ *   leave dst in a0; one `||` test of three stops the unrolling.
+ */
 void func_8028A154(void) {
     s32 i;
     u8 *dst;
 
+    dst = (u8 *)&D_8008E570;
     func_8028A0E4();
     func_8028A0B4();
     func_8028A08C();
-    dst = (u8 *)&D_8008E570.unk18[12];
+    dst += 0x48;
     for (i = 0; i < 9; i++) {
-        *dst++ = D_802A1C2C[i];
+        dst[i] = D_802A1C2C[i];
+        if (dst == NULL) {}
+        if (dst == NULL) {}
+        if (dst == NULL) {}
     }
 }
-#else
-#pragma GLOBAL_ASM("asm/nonmatchings/A4860/func_8028A154.s")
-#endif
 
 s32 func_8028A1DC(s32 arg0) {
     if (arg0 < 0x400 || arg0 >= 0x440) {
