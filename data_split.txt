@@ -272,8 +272,9 @@ boot_code @jp 2350 sizes=0x390,0,0x8470
 # Library objects after the game's code, placed on their own (where the ROM
 # has their data; `tools/data_split.py <v> --place MODULE OBJECT` finds it).
 # Only those whose code needs its data defined in the same file (IDO shares
-# a %hi between fields of a variable it defines) or that own jump tables,
-# strings or constants; the rest refer to the asm data (docs/LIBULTRA.md).
+# a %hi between fields of a variable it defines; `static` variables) or that
+# own jump tables, strings or constants; the rest refer to the asm data
+# (docs/LIBULTRA.md).
 boot_code libultra/io/aisetnextbuf 0x10 0 0
 boot_code @us libultra/io/aisetnextbuf data=0x8001B0F0
 boot_code @eu libultra/io/aisetnextbuf data=0x8001B0F0
@@ -302,6 +303,34 @@ boot_code libultra/libc/xldtob 0 0x60 0
 boot_code @us libultra/libc/xldtob rodata=0x8001BF60
 boot_code @eu libultra/libc/xldtob rodata=0x8001BF60
 boot_code @jp libultra/libc/xldtob rodata=0x8001BF40
+boot_code libultra/io/pimgr 0x30 0 0x11D0
+boot_code @us libultra/io/pimgr data=0x8001A360 bss=0x80024920
+boot_code @eu libultra/io/pimgr data=0x8001A360 bss=0x80024920
+boot_code @jp libultra/io/pimgr data=0x8001A340 bss=0x80024900
+boot_code libultra/io/vimgr 0x20 0 0x1220
+boot_code @us libultra/io/vimgr data=0x8001A390 bss=0x80025AF0
+boot_code @eu libultra/io/vimgr data=0x8001A390 bss=0x80025AF0
+boot_code @jp libultra/io/vimgr data=0x8001A370 bss=0x80025AD0
+boot_code libultra/io/sptask 0 0 0x40
+boot_code @us libultra/io/sptask bss=0x80026D90
+boot_code @eu libultra/io/sptask bss=0x80026D90
+boot_code @jp libultra/io/sptask bss=0x80026D70
+boot_code libultra/io/piacs 0x10 0 0x20
+boot_code @us libultra/io/piacs data=0x8001B120 bss=0x80027230
+boot_code @eu libultra/io/piacs data=0x8001B120 bss=0x80027230
+boot_code @jp libultra/io/piacs data=0x8001B100 bss=0x80027210
+boot_code libultra/io/vi 0x70 0 0
+boot_code @us libultra/io/vi data=0x8001B180
+boot_code @eu libultra/io/vi data=0x8001B180
+boot_code @jp libultra/io/vi data=0x8001B160
+boot_code libultra/io/siacs 0x10 0 0x20
+boot_code @us libultra/io/siacs data=0x8001B240 bss=0x80027290
+boot_code @eu libultra/io/siacs data=0x8001B240 bss=0x80027290
+boot_code @jp libultra/io/siacs data=0x8001B220 bss=0x80027270
+boot_code libultra/io/devmgr 0 0x20 0
+boot_code @us libultra/io/devmgr rodata=0x8001BD00
+boot_code @eu libultra/io/devmgr rodata=0x8001BD00
+boot_code @jp libultra/io/devmgr rodata=0x8001BCE0
 
 # ovl_0B_01: all C (-O3); jp has its own strings
 ovl_0B_01 ovl_0B_01_entry 0 0 0
