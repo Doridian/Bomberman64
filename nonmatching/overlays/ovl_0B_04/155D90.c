@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 0, eu 0, jp 5
+ * differing words: us 0, eu 0, jp 0
  *
  * The pages are a table (D_ovl0B_04_800499B8: texts, handler, cursor
  * table, set-up) that func_ovl0B_04_80043ADC runs in turn; pages 1-4 are
@@ -134,21 +134,25 @@
  *   if/do shape puts p3's load at its own statement in the preheader, and
  *   writing that statement on the `if` line gives both preheader la's one
  *   .loc, so as1 orders them lui s7, lui fp, addiu fp, addiu s7 (fake).
- * - 80044BE8 0/5 (p2; was 8/16, the MakeEntries homes high): the K&R
+ * - 80044BE8 0/0 (p6; was 8/16, the MakeEntries homes high): the K&R
  *   stubs 800445BC, 80044624 and 8004461C were called from 80044BE8's dead
  *   list at its end, and any inlined call after the second MakeEntries
  *   costs its 4 bytes of alignment below it (the front end's frame then
  *   ends 4 below the original's). They are called from the statics they
  *   stand before instead: 800445C4 calls 800445BC, 8004462C calls 80044624
  *   then 8004461C (first statements; the emission order is unchanged), and
- *   80044BE8 has `s32 pad[3]` (jp [1]) after its locals (frame-tuned).
+ *   80044BE8 has `s32 pad[2]` (us/eu only) after its locals (frame-tuned).
  *   jp's `changed` (p4): uopt treats $v0 as a variable (R2) and the
  *   function's blocks as one loop, so any read of a call's result makes
  *   R2 live through the changed test and `changed` takes $v1. us/eu read
  *   80048668's results in case 1; jp has no such read, so the dead
- *   `i = func_ovl0B_04_800487D0(1)` (fake) stands for it. jp left (5): the
- *   inlined 800441C4's &D_ovl0B_04_8004A490 in a0 for a1 (a jp-only body
- *   rewrite, locals, a `Cursor *`, dead reads of arg0 in case 1: nothing).
+ *   `i = func_ovl0B_04_800487D0(1)` (fake) stands for it. jp's inlined
+ *   800441C4's &D_ovl0B_04_8004A490 in a1 (p6): the 80043050 loop has two
+ *   indexes, i for A060 and j for C38 (`j < 7` the test). Both are dead
+ *   once uopt strength-reduces the loop, but each still gets a register
+ *   in the preheader block: i $v0, j $a0, so the A490 piece, which
+ *   interferes with both, takes $a1 as in the original (one index: $v0
+ *   only, and the piece took $a0).
  *   80043F24 0/0 (matches; 80044394: `n - 1` in its own m with a dead read, fake,
  *   gives the original's addiu v0,v1,-1; its header line numbered after
  *   the body's (`#line`, fake) lets as1 put the `sw ra` in the first
@@ -1977,10 +1981,9 @@ u8 func_ovl0B_04_80044BE8(u8 arg0, u16 arg1) {
     Obj *a;
     Obj *b;
     s32 i;
-#if VERSION_JP
-    s32 pad[1]; /* frame-tuned (p2) */
-#else
-    s32 pad[3]; /* frame-tuned (p2) */
+    s32 j;
+#if !VERSION_JP
+    s32 pad[2]; /* frame-tuned (p2) */
 #endif
 
     if ((arg1 & 0x20) || (arg1 & 0x40)) {
@@ -2026,8 +2029,8 @@ u8 func_ovl0B_04_80044BE8(u8 arg0, u16 arg1) {
 #endif
                 func_ovl0B_04_80044154();
                 func_ovl0B_04_800441C4();
-                for (i = 0; i < 5; i++) {
-                    func_ovl0B_04_80043050(&D_ovl0B_04_8004A060[i], &D_ovl0B_04_80049C38[2 + i]);
+                for (i = 0, j = 2; j < 7; i++, j++) {
+                    func_ovl0B_04_80043050(&D_ovl0B_04_8004A060[i], &D_ovl0B_04_80049C38[j]);
                 }
 #if !VERSION_JP
                 D_ovl0B_04_8004A060[0].unk0->unkC |= 0x80;
@@ -2347,9 +2350,9 @@ static void func_ovl0B_04_8004447C(s32 id, s32 alpha) {
 }
 
 /* The name's two texts centred. */
-#line 2307
+#line 2310
 static void func_ovl0B_04_80044394(s32 a, s32 b) {
-#line 2284
+#line 2287
     s32 n;
 #if VERSION_JP
     u16 x;
@@ -2359,11 +2362,11 @@ static void func_ovl0B_04_80044394(s32 a, s32 b) {
     Obj *o;
     s32 m;
 
-#line 2293
+#line 2296
     D_ovl0B_04_80048A20[8] = 0;
-#line 2292
-    n = 0;
 #line 2295
+    n = 0;
+#line 2298
     while (D_ovl0B_04_80048A20[n] != 0) {
         n++;
     }
@@ -2673,9 +2676,9 @@ void func_ovl0B_04_800436C8(void) {
             if (++D_ovl0B_04_8004A1E4 >= 14) {
                 D_ovl0B_04_8004A1E4 = 0;
             }
-#line 2572
+#line 2575
             b = a = -1; /* fake: numbered above the loop head so as1 hoists li a1 into its load delay */
-#line 2592
+#line 2595
             switch (D_ovl0B_04_8004A1AC[D_ovl0B_04_8004A1E4]) {
                 case 0:
                     a = 0;
@@ -2757,10 +2760,10 @@ static void func_ovl0B_04_H5a() {
     func_ovl0B_04_80047E28(D_ovl0B_04_8004A164, -1);
     D_ovl0B_04_8004A164->unkC |= 0x20;
     /* fake: the store numbered below the line after it, for its place in the jal's delay slot */
-#line 2697
+#line 2700
     D_ovl0B_04_8004A170 = func_ovl0B_04_80047E68(D_ovl0B_04_8004A164, 0xF);
 }
-#line 2679
+#line 2682
 
 /* The tests reread each slot through its pointer, as the original does;
  * the first test's value is its own variable (a: $a3, the later ones x:
