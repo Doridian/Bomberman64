@@ -6,7 +6,7 @@
  * floats). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 5, eu 5, jp 2
+ * differing words: us 3, eu 3, jp 2
  * jp's code differences are drafted (`#if VERSION_JP`), its .data is not:
  * its five own strings are only declared, and its text tables and
  * positions are us's.
@@ -361,6 +361,16 @@
  *   float argument's swc1. uopt emits it once the three digit stores in
  *   80043480 go through `D_ovl0B_06_800499F0[i].unk0[k]` rather than
  *   the `label` local (which only jp's 80043404 call still uses).
+ * - us COPY_ASK (8004616C 5 -> 3): `slot = sub & 0xF` in the loop read sub
+ *   in a coloured CSE (v0; the store and the forwarded call argument are
+ *   two uses), where the original loads it into slot's own s7. Reading it
+ *   through a pointer, `s32 *p = &sub; ... slot = *p & 0xF;` (flagged, a
+ *   decomp-permuter find), gives the original's code, and the address
+ *   taken replaces the old `if (0) { D_ovl0B_06_8004A5B4 = (s32) &sub; }`.
+ *   Left (us 3): ERASE's tail address (s7 for the original's fp), jp 2:
+ *   LEVEL_FILE's label spill slot (with no label local, the front end's
+ *   frame is 44 as the original's must be, but the original then has a
+ *   second uopt spill slot below it whose owner wasn't found).
  */
 #include "common.h"
 
@@ -1725,6 +1735,7 @@ static s32 COPY_ASK(void) {
     s32 loop;
     s32 sub;
     s32 slot;
+    s32 *p = &sub; /* TRICK (p2): the in-loop read through it keeps sub's load out of a uopt register */
 
     loop = 1;
     sub = 0;
@@ -1743,13 +1754,10 @@ static s32 COPY_ASK(void) {
     func_ovl0B_06_800433B0(&D_ovl0B_06_80049B94[6]);
     do {
         sub = func_ovl0B_06_80045F20(&D_ovl0B_06_8004A244, &D_ovl0B_06_8004A264, 3, sub & 0xF);
-#if !VERSION_JP
-        if (0) { D_ovl0B_06_8004A5B4 = (s32) &sub; }
-#endif
         if ((sub & 0xF0) == 0x30) {
             loop = 0;
         } else {
-            slot = sub & 0xF;
+            slot = *p & 0xF;
             if (func_ovl0B_06_80049368((u32)slot, 0) == 10) {
                 D_ovl0B_06_8004992C = 0x1064;
                 /* TRICK: SE written out with slot as its wait (us: slot and the wait share $s7) */
