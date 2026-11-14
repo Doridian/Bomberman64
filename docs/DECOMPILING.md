@@ -232,7 +232,7 @@ matches, drop the `#ifdef` and the asm.
     home slot and reloads it (`sw $a2, 8($sp)` ... `lwc1`). A function
     taking three floats shows it at once (4DE50's func_80234500, 4ED50's
     func_802346C8).
-  Seen so far: boot_code's 10D0, 13F0 and 14B0 (the scheduler), 404C0, 40FB0, 412F0, 41FD0, 426E0, 46300, 48600, 4DE50, 4E030 (4DE50's second half:
+  Seen so far: boot_code's 10D0, 13F0 and 14B0 (the scheduler), 404C0, 40FB0, 412F0, 41FD0, 426E0, 46300, 47A80, 48600, 4DE50, 4E030 (4DE50's second half:
   its wrappers call 4DE50's compares with a `jal`, which -O3 would inline
   in one file), 4ED50, 52270 (jp's func_8023876C has no TV-type
   switch: `#if VERSION_JP`), 530C0, 53D70, 54E40, 5E3F0, 6BBE0, 78CA0, 78F60, 80580, 85A10, 86680,
@@ -1153,7 +1153,9 @@ interleaves, laid out by where the functions are defined: its header has
 how IDO orders a .bss; 6BBE0: all three, .data 0x2C0 of tables and
 .bss nine globals, the unreferenced word after D_802ACFC8 written as
 its second element, since at `-O3` an unreferenced .bss global goes to
-common); everything else they use stays `extern`.
+common; 47A80: all three, .data 0x480 the highlight texture, two flags
+and the display list that loads it, .rodata a `const Hilite`, .bss the
+matrix and two words); everything else they use stays `extern`.
 Build the object once (the link fails, the `.o` is there), run `--place`
 for each version with `--ref build/us/src/<object>.c.o`, add the lines,
 regenerate the configs and extract again. `--place` finds an object named

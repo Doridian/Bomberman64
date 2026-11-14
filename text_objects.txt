@@ -16,11 +16,13 @@ main_code 4E030
 # 47A80 (-O3) is five functions (func_8022D280 to func_8022DAB0, two of
 # them called from 426E0) that call nothing in 48300 nor are called by it,
 # and 48300 starts on the 16-byte boundary where they end.  Their data
-# ends where 48300's begins, on 16-byte boundaries each: .data with a
-# display list at 0x8029FCC8 whose end is followed by 8 zero bytes before
-# 48300's function table at 0x8029FD40, .rodata (four words at
-# 0x802A2D50) just before 48600's first float at 0x802A2D60, .bss up to
-# 0x802A5558 before 48600's at 0x802A5560 (48300 has neither).
+# (src/47A80.c defines it all) ends on 16-byte boundaries: .data
+# 0x8029F8C0-0x8029FD40, from 46300's end, the highlight texture, two
+# flags and the display list at 0x8029FCC8 whose end is followed by the
+# section's 8 bytes of padding before the function table at 0x8029FD40
+# that 48300 uses; .rodata the Hilite at 0x802A2D50 just before 48600's
+# first float at 0x802A2D60; .bss 0x802A5510-0x802A5558 before 48600's
+# at 0x802A5560 (48300 has no .rodata or .bss).
 main_code 48300
 
 # 48600 (-O3, the object lists and their collision shapes) calls

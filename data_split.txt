@@ -95,6 +95,14 @@ main_code 46300 0x30 0x20 0x40
 main_code @us 46300 data=0x8029F890 rodata=0x802A2D30 bss=0x802A54D0
 main_code @eu 46300 data=0x8029F890 rodata=0x802A2D30 bss=0x802A54C0
 main_code @jp 46300 data=0x8029EF70 rodata=0x802A1F70 bss=0x802A4700
+# 47A80 owns all three: .data the highlight texture, two flags and the
+# display list that loads it (its last 8 bytes the section's padding, up to
+# the function table 48300 uses), .rodata the Hilite, .bss its matrix and
+# list state up to 48600's.  48300, between them in .text, has none.
+main_code 47A80 0x480 0x10 0x50
+main_code @us 47A80 data=0x8029F8C0 rodata=0x802A2D50 bss=0x802A5510
+main_code @eu 47A80 data=0x8029F8C0 rodata=0x802A2D50 bss=0x802A5500
+main_code @jp 47A80 data=0x8029EFA0 rodata=0x802A1F90 bss=0x802A4740
 # 48600 owns its .rodata and all of its .bss (D_802A5560..D_802A5A24, the
 # list heads, its shapes and func_80230604's and the other functions'
 # statics): IDO lays the statics out among the globals, so all of it is C.
