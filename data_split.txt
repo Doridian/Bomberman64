@@ -343,6 +343,14 @@ boot_code libultra/os/setintmask 0 0x80 0
 boot_code @us libultra/os/setintmask rodata=0x8001B770
 boot_code @eu libultra/os/setintmask rodata=0x8001B770
 boot_code @jp libultra/os/setintmask rodata=0x8001B750
+boot_code libultra/libc/llcvt 0 0x10 0
+boot_code @us libultra/libc/llcvt rodata=0x8001B7F0
+boot_code @eu libultra/libc/llcvt rodata=0x8001B7F0
+boot_code @jp libultra/libc/llcvt rodata=0x8001B7D0
+boot_code libultra/libc/xlitob 0x30 0 0
+boot_code @us libultra/libc/xlitob data=0x8001B610
+boot_code @eu libultra/libc/xlitob data=0x8001B610
+boot_code @jp libultra/libc/xlitob data=0x8001B5F0
 
 # ovl_0B_01: all C (-O3); jp has its own strings
 ovl_0B_01 ovl_0B_01_entry 0 0 0

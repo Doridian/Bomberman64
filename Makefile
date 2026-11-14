@@ -226,6 +226,15 @@ $(BUILD_DIR)/src/libultra/%.o: MIPSISET := -mips2 -32
 $(BUILD_DIR)/src/libultra/%.o: OPT_FLAGS := -O1
 $(foreach d,$(LIB_O3_DIRS),$(BUILD_DIR)/src/libultra/$(d)/%.o): OPT_FLAGS := -O3
 
+# libc's long long helpers are built -O1 -mips3 -32, as in the SDK, and
+# relabelled mips2 for ld like exceptasm.s (below).
+LIB_MIPS3_C = libc/ll libc/llcvt
+$(foreach f,$(LIB_MIPS3_C),$(BUILD_DIR)/src/libultra/$(f).c.o): $(BUILD_DIR)/src/libultra/%.c.o: src/libultra/%.c
+	@mkdir -p $(dir $@)
+	$(IDO) -c $(LIB_CFLAGS) -O1 -mips3 -32 -o $@ $<
+	$(PYTHON) $(TOOLS_DIR)/elf_mips2.py $@
+	$(write_deps)
+
 # A library .s is a `hasm` subsegment (tools/layout.py), which the link
 # script names asm/libultra/...; it is built from src/libultra/ instead
 # of splat's disassembly.  IDO's assembler leaves local undefined symbols
@@ -248,7 +257,7 @@ LIB_REF  := $(patsubst src/libultra/%,build/libultra_bm64/src/%.o,$(basename $(L
 libultra-ref: $(LIB_REF)
 build/libultra_bm64/src/%.o: src/libultra/%.c
 	@mkdir -p $(dir $@)
-	$(IDO) -c $(LIB_CFLAGS) $(if $(filter $(addsuffix /%,$(LIB_O3_DIRS)),$*),-O3,-O1) -mips2 -32 -o $@ $<
+	$(IDO) -c $(LIB_CFLAGS) $(if $(filter $(LIB_MIPS3_C),$*),-O1 -mips3,$(if $(filter $(addsuffix /%,$(LIB_O3_DIRS)),$*),-O3,-O1) -mips2) -32 -o $@ $<
 build/libultra_bm64/src/%.o: src/libultra/%.s
 	@mkdir -p $(dir $@)
 	$(IDO) -c $(LIB_ASFLAGS) $(call lib_as_flags,$*) -o $@ $<
