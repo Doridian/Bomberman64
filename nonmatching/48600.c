@@ -7,7 +7,7 @@
  * "NON_MATCHING drafts"). src/48300.c, before it, is another object:
  * func_80232E60 calls its func_8022DB00 with a jal (text_objects.txt).
  * flags: -O3
- * differing words: us 49, eu 49, jp 49
+ * differing words: us 21, eu 21, jp 21
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does. An 8-byte stub (jr ra; nop) is an inlined
@@ -2055,10 +2055,11 @@ static s32 func_8022E264(f32 *p, f32 *r) {
     f32 step;
 
     r[0] = p[0];
-    r[1] = p[1] + p[3];
-    r[3] = p[3];
+    step = p[3];
+    r[1] = p[1] + step;
     r[2] = p[2];
-    step = p[3] * 2;
+    r[3] = step;
+    step = step * 2;
     for (t = 0.0f; t < p[4];) {
         if (func_8022E178((D_802A59D0 + 6), D_802A5760) != 0) {
             return 1;
@@ -2188,10 +2189,11 @@ static s32 func_8022E0A4(f32 *p, f32 *r) {
     f32 step;
 
     r[0] = p[0];
-    r[1] = p[1] + p[3];
-    r[3] = p[3];
+    step = p[3];
+    r[1] = p[1] + step;
     r[2] = p[2];
-    step = p[3] * 2;
+    r[3] = step;
+    step = step * 2;
     for (t = 0.0f; t < p[4];) {
         if (func_8022DFBC((D_802A59D0 + 12), D_802A5760) != 0) {
             return 1;
@@ -2244,7 +2246,7 @@ s32 func_8022E884(UnkStructA80 *arg0, UnkStructA80 *arg1) {
     s32 sa;
     s32 sb;
     s32 hit;
-    s32 ret;
+    f32 *out;
 
     sa = arg0->unk30 & ~0x20;
     sb = arg1->unk30 & ~0x20;
@@ -2324,9 +2326,10 @@ s32 func_8022E884(UnkStructA80 *arg0, UnkStructA80 *arg1) {
         hit = func_8022DFBC(D_802A5708, D_802A5738);
         break;
     case 12:
+        out = D_802A59E8;
         func_8022E0AC(arg0, D_802A5738);
         func_8022E0AC(arg1, D_802A5760);
-        hit = func_8022E264(D_802A5738, D_802A59E8);
+        hit = func_8022E264(D_802A5738, out);
         break;
     case 4:
         func_8022E0AC(arg0, D_802A5738);
@@ -2334,9 +2337,10 @@ s32 func_8022E884(UnkStructA80 *arg0, UnkStructA80 *arg1) {
         hit = func_8022E170(D_802A5738, D_802A5760);
         break;
     case 20:
+        out = D_802A5A00;
         func_8022E0AC(arg0, D_802A5738);
         func_8022E0AC(arg1, D_802A5760);
-        hit = func_8022E0A4(D_802A5738, D_802A5A00);
+        hit = func_8022E0A4(D_802A5738, out);
         break;
     default:
         for (;;) {
@@ -2361,8 +2365,7 @@ s32 func_8022E884(UnkStructA80 *arg0, UnkStructA80 *arg1) {
         }
         hit = arg1->unk8 & 0x3FFFF;
     }
-    ret = hit;
-    return ret;
+    return hit;
 }
 
 void func_8022DE6C() {
