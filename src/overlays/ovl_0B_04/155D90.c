@@ -1362,7 +1362,7 @@ static void func_ovl0B_04_SetText(s32 id, u8 *str, s32 col, f32 scale) {
  * open), in two halves of five. */
 u8 func_ovl0B_04_800471F4(u8 arg0, u16 arg1) {
     u8 ret = 1;
-    s32 pad[3]; /* frame-tuned (with FreeEntries' (n, e, x), p4) */
+    s32 pad[3]; /* fake: frame-tuned (with FreeEntries' (n, e, x), p4) */
 
     func_ovl0B_04_80046734(arg0, arg1);
     if (arg1 & 1) {
@@ -1394,7 +1394,7 @@ void func_ovl0B_04_8004716C(Obj *arg0) {
 
 u8 func_ovl0B_04_80046FA8(u8 arg0, u16 arg1) {
     u8 ret = 1;
-    s32 pad[3]; /* frame-tuned (with FreeEntries' (n, e, x), p4) */
+    s32 pad[3]; /* fake: frame-tuned (with FreeEntries' (n, e, x), p4) */
 
     func_ovl0B_04_80046734(arg0, arg1);
     if (arg1 & 1) {
@@ -1426,7 +1426,7 @@ void func_ovl0B_04_80046F20(Obj *arg0) {
 
 u8 func_ovl0B_04_80046D74(u8 arg0, u16 arg1) {
     u8 ret = 1;
-    s32 pad[3]; /* frame-tuned (with FreeEntries' (n, e, x), p4) */
+    s32 pad[3]; /* fake: frame-tuned (with FreeEntries' (n, e, x), p4) */
 
     func_ovl0B_04_80046734(arg0, arg1);
     if (arg1 & 1) {
@@ -1457,7 +1457,7 @@ void func_ovl0B_04_80046CEC(Obj *arg0) {
 
 u8 func_ovl0B_04_80046B28(u8 arg0, u16 arg1) {
     u8 ret = 1;
-    s32 pad[3]; /* frame-tuned (with FreeEntries' (n, e, x), p4) */
+    s32 pad[3]; /* fake: frame-tuned (with FreeEntries' (n, e, x), p4) */
 
     func_ovl0B_04_80046734(arg0, arg1);
     if (arg1 & 1) {
@@ -1987,7 +1987,7 @@ u8 func_ovl0B_04_80044BE8(u8 arg0, u16 arg1) {
     s32 i;
     s32 j;
 #if !VERSION_JP
-    s32 pad[2]; /* frame-tuned (p2) */
+    s32 pad[2]; /* fake: frame-tuned (p2) */
 #endif
 
     if ((arg1 & 0x20) || (arg1 & 0x40)) {
