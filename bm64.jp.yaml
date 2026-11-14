@@ -740,11 +740,12 @@ segments:
     symbol_name_format: ovl0B_04_$VRAM
     dir: overlays/ovl_0B_04
     subsegments:
-      - [0x155750, asm, ovl_0B_04_entry]
-      - [0x155760, asm, 155D90]
+      - [0x155750, c, ovl_0B_04_entry]
+      - [0x155760, c, 155D90]
       - [0x159770, hasm, ovl_0B_04_zerojmp]
-      - [0x15AD90, rodata]
-      - {type: bss, vram: 0x80049E40}
+      - [0x15AD90, .data, 155D90]
+      - [0x15C4F0, .rodata, 155D90]
+      - {type: .bss, vram: 0x80049E40, name: 155D90}
   - name: ovl_0B_05
     type: code
     start: 0x15C590

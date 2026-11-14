@@ -444,6 +444,11 @@ ovl_0B_03 ovl_0B_03_entry 0 0 0
 ovl_0B_03 14FAB0 0x770 0xC0 0x1140
 ovl_0B_03 @jp 14FAB0 sizes=0x710,0xC0,0x1140
 
+# ovl_0B_04: all C (-O3), the name entry; jp has its own strings
+ovl_0B_04 ovl_0B_04_entry 0 0 0
+ovl_0B_04 155D90 0x1800 0xA0 0x220
+ovl_0B_04 @jp 155D90 sizes=0x1760,0xA0,0x1E0
+
 # ovl_0B_05: all C (-O3); jp has its own strings
 ovl_0B_05 ovl_0B_05_entry 0 0 0
 ovl_0B_05 15D020 0x140 0xE0 0xA0
