@@ -389,6 +389,13 @@
  *   (keeping jp's do-while instead also matches, but needs `0xFU`).
  *   The other flagged levers in ERASE (the 80046858 stub call, SEF in
  *   the 0x1064 arm) are still needed: without them us is 32 / 282.
+ * - Data, checked word by word (scratch/ovl0B/p4-06/datachk.py): us and
+ *   eu .data, .rodata and the jump tables (relocations by target) match,
+ *   and .bss now does too (0xF0, every symbol at its address): the four
+ *   arrays nothing here uses (8004A590, 5CC, 63C, 648) were dropped by
+ *   -O3 (.bss was 0xC0, later symbols out of place) until a dead store in
+ *   80045F20's `if (0)` (fake) referenced them. jp's .bss symbols are in
+ *   place; jp's .data/.rodata are still us's (see the top).
  */
 #include "common.h"
 
@@ -2027,7 +2034,7 @@ static s32 func_ovl0B_06_80045794(s32 arg0, s32 mode, s32 arg2) {
     ret = 0;
     D_ovl0B_06_8004992C = 0;
     func_ovl0B_06_80045340(save, mode);
-    if (0) { func_ovl0B_06_80048E28(0, &arg0); }
+    if (0) { func_ovl0B_06_80048E28(0, &arg0); D_ovl0B_06_8004A590[0] = D_ovl0B_06_8004A5CC[0] = D_ovl0B_06_8004A63C[0] = D_ovl0B_06_8004A648[0] = 0; } /* fake: the four unreferenced .bss arrays, so -O3 keeps them in place */
     i = func_ovl0B_06_8004518C();
     if (D_ovl0B_06_8004A404 != 0 && ((u16)i & 0x8000)) { /* fake: the cast */
         SE(1, 15);
