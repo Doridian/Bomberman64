@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2, eu 2, jp 2
+ * differing words: us 1, eu 1, jp 1
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -184,6 +184,17 @@
  * parameter order: (pointer, kind, radius). IPA still gives the
  * parameters a0/a1 by the body's first use, but callers set up the
  * arguments in source order (4 to 2).
+ *
+ * Pass 16 (2 to 1): func_8025CEA0's `add.s $f10,$f0,$f8`. The front end
+ * always puts pos[4]'s load first in `off + pos[4]`, but uopt enters a
+ * commutative expression once per procedure and emits every later copy
+ * (either operand order) with the first one's order. A dead `x = off;
+ * x += pos[4];` (x is set again before its use) before the call enters
+ * it as (off, load): flagged as a fake. Left: func_80251EE0's `move
+ * v0,t6` in the first `beqz` delay slot, an R2 store that only an
+ * inlined static's return gives, with no slot for its stub. Other flag
+ * sets and file splits were tried for both (scratch/6BBE0/p16/NOTES.txt);
+ * the object is one -O3 file.
  *
  * jp lacks one height test in func_802553D4 (VERSION_JP); eu is us.
  */
@@ -970,6 +981,9 @@ void func_8025CEA0() {
         off = -400.0f;
     }
     pos = M2C_FIELD(M2C_FIELD(player, void **, 0x18), f32 **, 0x40);
+    /* fake: a dead `x += pos[4]` enters uopt's off + pos[4] first with off on the left */
+    x = off;
+    x += pos[4];
     func_8028A81C(8, off + pos[4], 150.0f, pos[6], 0);
     obj = func_80231274(-1, 0x03000040, 0x20, NULL);
     if (sign < 0.0f) {
