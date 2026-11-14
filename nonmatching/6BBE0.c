@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4, eu 4, jp 4
+ * differing words: us 2, eu 2, jp 2
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -180,6 +180,10 @@
  * visible statement after them needs more than the pools hold (one int,
  * one double, twelve floats; nothing after them needs an int or double
  * temporary at all), so whatever the original had there left no code.
+ * The `li a0,2` after `addiu a1,sp,268` at 0x6CE4 is func_80254DC8's
+ * parameter order: (pointer, kind, radius). IPA still gives the
+ * parameters a0/a1 by the body's first use, but callers set up the
+ * arguments in source order (4 to 2).
  *
  * jp lacks one height test in func_802553D4 (VERSION_JP); eu is us.
  */
@@ -481,7 +485,7 @@ static void func_80252D14(f32 *arg0);
 static s32 func_80252EA4(f32 *arg0);
 static void func_802530A8(f32 *arg0);
 static void func_80254C90(f32 *arg0);
-static s32 func_80254DC8(s32 arg0, void *arg1, f32 arg2);
+static s32 func_80254DC8(void *arg0, s32 arg1, f32 arg2);
 static void *func_80254E00(f32 *arg0, f32 *arg1);
 static s32 func_80254E20(f32 *arg0, s32 arg2, s32 arg1);
 static void func_80254EC4(f32 *arg0);
@@ -2278,7 +2282,7 @@ block_401:
                                         var_s3 = ((s16) M2C_FIELD(var_s0, s16 *, 0x66) >> 1) + 2;
                                     }
                                     if (sp12C <= ((f32) var_s3 * 100.0f)) {
-                                        if ((M2C_FIELD(var_s0, s16 *, 0x10) & 0x100) || (func_80254DC8(2, ((u8 *)var_fp + 0x20), 300.0f) >= 3) || (var_s0 == 0)) {
+                                        if ((M2C_FIELD(var_s0, s16 *, 0x10) & 0x100) || (func_80254DC8(((u8 *)var_fp + 0x20), 2, 300.0f) >= 3) || (var_s0 == 0)) {
                                             func_8024585C(1);
                                             func_802452E8(1);
                                             func_8024585C(0);
@@ -2393,7 +2397,7 @@ block_458:
                                         if (temp_v1 != 0) {
                                             M2C_FIELD(var_fp, s32 *, 0x90) = (s32) (temp_v1 - 1);
                                         }
-                                        if (func_80254DC8(2, ((u8 *)var_fp + 0x2C), 200.0f) > 0) {
+                                        if (func_80254DC8(((u8 *)var_fp + 0x2C), 2, 200.0f) > 0) {
                                             M2C_FIELD(var_fp, s32 *, 4) = 4;
                                         } else {
                                             var_s0 = M2C_FIELD(M2C_FIELD(var_fp, f32 **, 0x18), void **, 0x40);
@@ -3203,14 +3207,14 @@ block_788:
 block_872:
 block_873:
                                                 if (func_80254E20((f32 *) var_fp, 3, 1) == 0) {
-                                                    if ((M2C_FIELD(var_fp, s32 *, 4) == 1) && (func_80254DC8(2, ((u8 *)var_fp + 0x20), 300.0f) >= 3)) {
+                                                    if ((M2C_FIELD(var_fp, s32 *, 4) == 1) && (func_80254DC8(((u8 *)var_fp + 0x20), 2, 300.0f) >= 3)) {
                                                         var_s3 = 0xA;
                                                         var_s2 = 0;
                                                         do {
                                                             sp10C[1] = 0.0f;
                                                             sp10C[0] = ((f32 *)D_802A1008)[var_s2 * 3];
                                                             sp10C[2] = ((f32 *)D_802A1008)[var_s2 * 3 + 2];
-                                                            var_s4 = func_80254DC8(2, sp10C, 300.0f);
+                                                            var_s4 = func_80254DC8(sp10C, 2, 300.0f);
                                                             if (var_s4 < var_s3) {
                                                                 var_s3 = var_s4;
                                                                 sp150 = var_s2;
@@ -3499,14 +3503,14 @@ static void *func_80254E00(f32 *arg0, f32 *arg1) {
     return func_8022FA88(arg0, 2, arg1);
 }
 
-static s32 func_80254DC8(s32 arg0, void *arg1, f32 arg2) {
+static s32 func_80254DC8(void *arg0, s32 arg1, f32 arg2) {
     f32 size[3];
     u8 buf[0x28];
 
     size[2] = arg2;
     size[1] = arg2;
     size[0] = arg2;
-    return func_8022F698((void *) arg0, (s32) arg1, size, buf, 10);
+    return func_8022F698((void *) arg1, (s32) arg0, size, buf, 10);
 }
 
 static void func_80254C90(f32 *arg0) {
