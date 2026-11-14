@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 27, eu 27, jp 40
+ * differing words: us 25, eu 25, jp 38
  *
  * The pages are a table (D_ovl0B_04_800499B8: texts, handler, cursor
  * table, set-up) that func_ovl0B_04_80043ADC runs in turn; pages 1-4 are
@@ -14,8 +14,9 @@
  * 80044394, 8004447C, 800447DC, 80045540, 800458F4/80045958 (two text
  * ids), 80046294, 80046600/80046734 (item first), 800468F0) are statics
  * with ordinary parameters. Inlined statics stand where the original has
- * their stubs: the handler 80043110's cases (H1/H12/H4/H5 and H5's four
- * parts give the ten stubs before it), MakeEntries/FreeEntries (index
+ * their stubs: the handler 80043110's cases (H1/H4/H5, H5's four parts,
+ * H1's FreeEntry, with MakeEntries and FreeEntries the ten stubs around
+ * 80043050), MakeEntries/FreeEntries (index
  * loops: IDO never inlined them as pointer loops), the text-freeing
  * 80043AD4 (its own ids pointer), 80044BE0 (80044BE8's name copy,
  * unrolled), 80045530/80045538 (80045540's name check and frees),
@@ -51,28 +52,27 @@
  * What still differs (words us/jp; the comparison counts a global with
  * the statics after it, so a static of the wrong size costs the rest of
  * its run):
- * - 80043110 15/15: H5b's slot tests read *ptr as the original does, and
+ * - 80043110 13/13: H5b's slot tests read *ptr as the original does, and
  *   its accesses are spelled so &D_ovl0B_04_8004A17C sits in $s0 as in the
  *   original ((&A17C)[-1], (&A178)[1], (&A16C)[1]; found by trying every
  *   neighbour form of each access). H5a's i is at the original's 132 (p2:
- *   H5a K&R with a pad after i, frame-tuned), and so is the first
- *   FreeEntries n (p2: FreeEntries (n, e, x) with x unused, H12 and H1 K&R,
- *   all frame-tuned). Left: the second FreeEntries n
- *   (56 vs 64; before p2 76/60 vs 80/64: the original's FreeEntries homes sit 20 and 36 bytes
- *   above the end-pointer spill at 44, ours 16 and 32, so it has 8 more
- *   bytes of frame below the second FreeEntries, or two more uopt spill
- *   slots; nothing H1 can declare or call lands there, and any added call
- *   or block in 80043110/H1 stops H5 inlining); A178's value read as
- *   -4($s0) where the original has its own lui. 0x150A (80047E28) is
- *   `s32 (Obj *, s32)` as 0B_06's 80048888, which puts H5a's object in
- *   $v1 as in the original.
+ *   H5a K&R with a pad after i, frame-tuned). Both FreeEntries n homes
+ *   (80/64) and the end-pointer spill (44) are the original's (p4): the
+ *   frame's areas are FreeEntries (n, e, x) with x unused and no other local
+ *   (16 bytes each, as their homes' spacing shows) and, last, H1's final
+ *   free as an inlined FreeEntry(e, i) (two parameters: 8 more bytes below
+ *   the second FreeEntries, which the spill's place needs); case 12 calls
+ *   800487E8 directly (no H12), which keeps the stub count. Left: A178's
+ *   value read as -4($s0) where the original has its own lui. 0x150A
+ *   (80047E28) is `s32 (Obj *, s32)` as 0B_06's 80048888, which puts H5a's
+ *   object in $v1 as in the original.
  *   H5b's calls pass `(x += 1, x - 1)` for the original's `addiu a2,v1,0` copy. H5a's
  *   last store (A170) is numbered below the line after it (`#line`,
- *   TRICK) for its place in the jal's delay slot.
+ *   fake) for its place in the jal's delay slot.
  *   Pad locals in any inlined static (one or two, pairs of sites), stub
  *   calls and dead reads in H4..H5b don't move these without costing more.
  * - 800436C8 0/0 (matches): `b = a = -1` is numbered above the loop head (`#line`,
- *   TRICK), so as1 hoists its `li a1,-1` into the head's load delay, right
+ *   fake), so as1 hoists its `li a1,-1` into the head's load delay, right
  *   after the jal, as the original has it (any C with the -1 outside the
  *   if hoists it to an s-register instead). 800438FC's cases set d before col
  *   for the original's schedule.
@@ -83,9 +83,9 @@
  *   `move v1,s4`/`move v0,s5`); d1 keeps plain `if (d1)`. The frame (24)
  *   comes from `do {} while (0);` first in the `if (d1)` arm, with the dead
  *   reads `if (d1) {}` and one `if (!t) {}` after 80048A70[0]'s store
- *   (TRICK). The unk1 test is written `c != X` for the beq's operand order;
+ *   (fake). The unk1 test is written `c != X` for the beq's operand order;
  *   unk1 is stored through the neighbour, (&D_ovl0B_04_8004A480)[1][1]
- *   (TRICK), for the original's own lui. Left: d1 is $s2 throughout where
+ *   (fake), for the original's own lui. Left: d1 is $s2 throughout where
  *   the original has it in $t0 up to the first chain's test, then
  *   `move s2,t0` (a split; no form found that splits it), and the counter
  *   D_ovl0B_04_8004A1A0, a function-scope static, is promoted to $t0 where
@@ -103,7 +103,7 @@
  *   store's use gives the base 2.6, which is why it was right with it.
  *   p2: the flat test is back, with a dead `if (unk1) {}` first in its
  *   arm (one more use of the base, which then takes s0) and c read as
- *   `A290[unk0][0] ^ 0` (TRICK: the `^ 0` uses up the ugen temporary the
+ *   `A290[unk0][0] ^ 0` (fake: the `^ 0` uses up the ugen temporary the
  *   original's t-registers are one ahead by from there on, and puts the
  *   `li a2,7` after c's load). Left: c is that temporary (t6) where the
  *   original colours it a0 (1 word); dead reads of c don't move it.
@@ -123,7 +123,7 @@
  *   address wins its register) or extends the range before the loop. The
  *   if/do shape puts p3's load at its own statement in the preheader, and
  *   writing that statement on the `if` line gives both preheader la's one
- *   .loc, so as1 orders them lui s7, lui fp, addiu fp, addiu s7 (TRICK).
+ *   .loc, so as1 orders them lui s7, lui fp, addiu fp, addiu s7 (fake).
  * - 80044BE8 0/8 (p2; was 8/16, the MakeEntries homes high): the K&R
  *   stubs 800445BC, 80044624 and 8004461C were called from 80044BE8's dead
  *   list at its end, and any inlined call after the second MakeEntries
@@ -134,9 +134,9 @@
  *   80044BE8 has `s32 pad[3]` (jp [1]) after its locals (frame-tuned).
  *   jp left (8): `changed` in v0 for the original's v1, and the inlined
  *   800441C4's &D_ovl0B_04_8004A490 in a0 for a1.
- *   80043F24 0/0 (matches; 80044394: `n - 1` in its own m with a dead read, TRICK,
+ *   80043F24 0/0 (matches; 80044394: `n - 1` in its own m with a dead read, fake,
  *   gives the original's addiu v0,v1,-1; its header line numbered after
- *   the body's (`#line`, TRICK) lets as1 put the `sw ra` in the first
+ *   the body's (`#line`, fake) lets as1 put the `sw ra` in the first
  *   branch's delay slot, and `n = 0` numbered before the [8] store puts
  *   `move v1,zero` where the original has it), 80046180 0/5 (jp 80046734's `li a0,1` order;
  *   jp 800468F0's loop takes the paired dead reads `if (!o) {} if (!base) {}`).
@@ -1054,7 +1054,6 @@ static void func_ovl0B_04_MakeEntries(s32 n, Entry *e, Desc *d) {
  * FreeEntries n home at the original's 80. */
 static void func_ovl0B_04_80043010(s32 n, Entry *e, s32 x) {
     s32 i;
-    s32 pad0; /* frame-tuned: one slot in each inlined copy (80043110's FreeEntries homes) */
 
     for (i = 0; i < n; i++) {
         func_ovl0B_04_80047DE0(e[i].unk0);
@@ -1071,7 +1070,7 @@ static void func_ovl0B_04_SetText(s32 id, u8 *str, s32 col, f32 scale) {
  * open), in two halves of five. */
 u8 func_ovl0B_04_800471F4(u8 arg0, u16 arg1) {
     u8 ret = 1;
-    s32 pad[1]; /* frame-tuned (with FreeEntries' (n, e, x), p2) */
+    s32 pad[3]; /* frame-tuned (with FreeEntries' (n, e, x), p4) */
 
     func_ovl0B_04_80046734(arg0, arg1);
     if (arg1 & 1) {
@@ -1103,7 +1102,7 @@ void func_ovl0B_04_8004716C(Obj *arg0) {
 
 u8 func_ovl0B_04_80046FA8(u8 arg0, u16 arg1) {
     u8 ret = 1;
-    s32 pad[1]; /* frame-tuned (with FreeEntries' (n, e, x), p2) */
+    s32 pad[3]; /* frame-tuned (with FreeEntries' (n, e, x), p4) */
 
     func_ovl0B_04_80046734(arg0, arg1);
     if (arg1 & 1) {
@@ -1135,7 +1134,7 @@ void func_ovl0B_04_80046F20(Obj *arg0) {
 
 u8 func_ovl0B_04_80046D74(u8 arg0, u16 arg1) {
     u8 ret = 1;
-    s32 pad[1]; /* frame-tuned (with FreeEntries' (n, e, x), p2) */
+    s32 pad[3]; /* frame-tuned (with FreeEntries' (n, e, x), p4) */
 
     func_ovl0B_04_80046734(arg0, arg1);
     if (arg1 & 1) {
@@ -1166,7 +1165,7 @@ void func_ovl0B_04_80046CEC(Obj *arg0) {
 
 u8 func_ovl0B_04_80046B28(u8 arg0, u16 arg1) {
     u8 ret = 1;
-    s32 pad[1]; /* frame-tuned (with FreeEntries' (n, e, x), p2) */
+    s32 pad[3]; /* frame-tuned (with FreeEntries' (n, e, x), p4) */
 
     func_ovl0B_04_80046734(arg0, arg1);
     if (arg1 & 1) {
@@ -1523,7 +1522,7 @@ static void func_ovl0B_04_80045540(u8 item, u16 buttons, u8 *ret) {
     u8 c;
     u8 x;
 
-    /* TRICK (p2): `^ 0` uses up one ugen temporary (the original's
+    /* fake: (p2) `^ 0` uses up one ugen temporary (the original's
      * t-registers from here on), the dead read gives the base its s0; c's
      * read is on the if's line (.loc). */
     if (buttons & 2) { c = (D_ovl0B_04_8004A290[D_ovl0B_04_8004A490.unk0][0] ^ 0);
@@ -1813,9 +1812,9 @@ static void func_ovl0B_04_800447DC(u16 buttons, u8 *ret) {
         }
         if (n != 0) {
             D_ovl0B_04_80048A70[0] = c;
-            if (d1) {} /* TRICK: dead read, with the one below: frame 24 */
+            if (d1) {} /* fake: dead read, with the one below: frame 24 */
             if (d1) {
-                do {} while (0); /* TRICK: frame 24 and the original's registers */
+                do {} while (0); /* fake: frame 24 and the original's registers */
                 D_ovl0B_04_80048A70[2] = c + d1;
             } else if (d2 != 0) {
                 D_ovl0B_04_80048A70[2] = c + d2;
@@ -1866,7 +1865,7 @@ static void func_ovl0B_04_800447DC(u16 buttons, u8 *ret) {
                     }
                 }
                 if (c != D_ovl0B_04_8004A490.unk1) {
-                    (&D_ovl0B_04_8004A480)[1][1] = c; /* TRICK: through the neighbour, for its own lui */
+                    (&D_ovl0B_04_8004A480)[1][1] = c; /* fake: through the neighbour, for its own lui */
                     t = 0;
                     if ((D_ovl0B_04_8004A490.unk0 == 7 && D_ovl0B_04_8004A290[7][0] == 0) || D_ovl0B_04_8004A490.unk0 != 7) {
                         D_ovl0B_04_8004A490.unk0--;
@@ -2057,7 +2056,7 @@ static void func_ovl0B_04_80044394(s32 a, s32 b) {
         n++;
     }
     m = n - 1;
-    if (!m) {} /* TRICK: dead read; m = n - 1 its own variable (the original: addiu v0,v1,-1) */
+    if (!m) {} /* fake: dead read; m = n - 1 its own variable (the original: addiu v0,v1,-1) */
     if (m != -1) {
 #if VERSION_JP
         x = 56 - m * 8;
@@ -2233,7 +2232,7 @@ void func_ovl0B_04_80043ADC(void) {
 #if VERSION_JP
     while (D_ovl0B_04_8004A168 != 0xFF) {
 #else
-    /* p3's load and the table's on one line: as1 orders them as the original (TRICK) */
+    /* fake: p3's load and the table's on one line, so as1 orders them as the original */
     if (D_ovl0B_04_8004A168 != 0xFF) { p3 = &D_ovl0B_04_800499B8[3]; if (!p3) {} do {
 #endif
         p = &D_ovl0B_04_800499B8[D_ovl0B_04_8004A168];
@@ -2363,7 +2362,7 @@ void func_ovl0B_04_800436C8(void) {
                 D_ovl0B_04_8004A1E4 = 0;
             }
 #line 2270
-            b = a = -1; /* TRICK: numbered above the loop head so as1 hoists li a1 into its load delay */
+            b = a = -1; /* fake: numbered above the loop head so as1 hoists li a1 into its load delay */
 #line 2290
             switch (D_ovl0B_04_8004A1AC[D_ovl0B_04_8004A1E4]) {
                 case 0:
@@ -2412,10 +2411,11 @@ static void func_ovl0B_04_80043640(f32 d) {
     }
 }
 
-/* The handler's cases (inlined). The dead calls in H4 only add uopt basic
- * blocks: 80043110 needs 76-79 of them (zdbug count) for the original's
- * registers (uopt's first-use cost of a saved register is blocks/4). More
- * than six here, or any in 80043110/H1/H12, stop umerge inlining H5. */
+/* The handler's cases (inlined). */
+/* fake: the dead calls in H4 only add uopt basic blocks: 80043110 needs
+ * 76-79 of them (zdbug count) for the original's registers (uopt's
+ * first-use cost of a saved register is blocks/4). More than six here, or
+ * any in 80043110/H1, stop umerge inlining H5. */
 static void func_ovl0B_04_H4(void) {
     if (0) { func_ovl0B_04_80048290(); }
     if (0) { func_ovl0B_04_80048290(); }
@@ -2446,13 +2446,14 @@ static void func_ovl0B_04_H5a() {
     }
     func_ovl0B_04_80047E28(D_ovl0B_04_8004A164, -1);
     D_ovl0B_04_8004A164->unkC |= 0x20;
+    /* fake: the store numbered below the line after it, for its place in the jal's delay slot */
 #line 2395
     D_ovl0B_04_8004A170 = func_ovl0B_04_80047E68(D_ovl0B_04_8004A164, 0xF);
 }
 #line 2377
 
 /* The tests reread each slot through its pointer, as the original does.
- * Tuned, not the original: x takes the value in $v1, copied with `move`
+ * fake: x takes the value in $v1, copied with `move`
  * (the original copies with `addiu`). The neighbour spellings
  * ((&D_ovl0B_04_8004A17C)[-1] for A178, (&D_ovl0B_04_8004A178)[1] for A17C,
  * (&D_ovl0B_04_8004A16C)[1] for A170) were picked by trying every form of
@@ -2514,8 +2515,9 @@ static void func_ovl0B_04_H5(void) {
     func_ovl0B_04_H5d();
 }
 
-static void func_ovl0B_04_H12() {
-    func_ovl0B_04_800487E8();
+/* One entry's object freed (inlined). */
+static void func_ovl0B_04_FreeEntry(Entry *e, s32 i) {
+    func_ovl0B_04_80047DE0(e[i].unk0);
 }
 
 static void func_ovl0B_04_H1() {
@@ -2525,7 +2527,7 @@ static void func_ovl0B_04_H1() {
     func_ovl0B_04_80047DE0(D_ovl0B_04_8004A164);
     func_ovl0B_04_80043010(20, D_ovl0B_04_80049D40, 0);
     func_ovl0B_04_80043010(20, D_ovl0B_04_80049ED0, 0);
-    func_ovl0B_04_80047DE0(D_ovl0B_04_8004A060[12].unk0);
+    func_ovl0B_04_FreeEntry(D_ovl0B_04_8004A060, 12);
 }
 
 /* The handler the entry returns. */
@@ -2551,7 +2553,7 @@ void func_ovl0B_04_80043110(s32 arg0) {
             func_ovl0B_04_H5();
             break;
         case 12:
-            func_ovl0B_04_H12();
+            func_ovl0B_04_800487E8();
             break;
         case 1:
             func_ovl0B_04_H1();
