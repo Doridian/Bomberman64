@@ -743,6 +743,8 @@ void func_802320A8() {
             spBC[2] = sp110[2];
         }
         func_8022FF58(sp110, spBC, spB0);
+        /* fake: c is dead; its computation uses up two ugen FP temporaries (as1 deletes it) and the
+         * switch's + (s32) c * 0 keeps it alive through colouring (uopt folds it afterwards). */
         spB0[1] = spD4[1] - spB0[1]; c = spD4[2] - spB0[1] * h;
         switch ((obj->unk3C->flags & 0xFFFF) + (s32) c * 0) {
         case 1:
@@ -766,6 +768,8 @@ void func_802320A8() {
             sp128[2] = obj->unk40->pos[2] + c;
             break;
         default:
+            /* fake: the volatile store keeps n live into the endless loop; the original has a nop in
+             * the loop's delay slot, where this store goes. */
             for (;;) { t = n; }
         }
         func_8022F808((f32 *) obj, obj->unk58);
@@ -846,6 +850,7 @@ void func_802320A8() {
             x = sp80[1];
             x = x - 90.0f;
             if (x >= 360.0f) {
+                /* fake: dead load (permuter find), moves the colouring. */
                 y = obj->unk3C->unkC;
                 sp80[1] = x - 360.0f;
             } else {
@@ -2219,6 +2224,7 @@ static void func_8022E0AC(UnkStructA80 *arg0, f32 *arg1) {
     arg1[6] = arg0->unk40->rot[1];
     arg1[7] = arg0->unk40->rot[2];
     arg1[3] = arg0->unk34 * r;
+    /* fake: (*arg0).unk38 rather than arg0->unk38 only flips the mul.s operand order. */
     arg1[4] = arg0->unk40->scale[1] * (*arg0).unk38;
 }
 
