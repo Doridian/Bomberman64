@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 4, eu 4, jp 14
+ * differing words: us 2, eu 2, jp 12
  *
  * The pages are a table (D_ovl0B_04_800499B8: texts, handler, cursor
  * table, set-up) that func_ovl0B_04_80043ADC runs in turn; pages 1-4 are
@@ -20,7 +20,7 @@
  * loops: IDO never inlined them as pointer loops), the text-freeing
  * 80043AD4 (its own ids pointer), 80044BE0 (80044BE8's name copy,
  * unrolled), 80045530/80045538 (80045540's name check and frees),
- * 800450B8 (page 9's fade in), 80044714 (the marks, r an int), SetText.
+ * 800450B8 (page 9's save, p5), 80044714 (the marks, r an int), SetText.
  * Emission order: IDO -O3 takes the globals in reverse definition order
  * and puts each one's static callees just before it, in the reverse order
  * of its calls (each after its own callees); the `if (0)` call lists at
@@ -89,8 +89,12 @@
  *   unk1 test is written `c != X` for the beq's operand order; unk1 is
  *   stored through the neighbour, (&D_ovl0B_04_8004A480)[1][1] (fake), for
  *   the original's own lui.
- * - 80045214 4/4: 80045214's `ok` reloaded to $t8 (the original: $v0, 3),
- *   and 80045540's rub-out. Its unk3 store goes through a copy of item
+ * - 80045214 2/2: p5: the save is the inlined static 800450B8 returning
+ *   ok (its stub; 800450C0's fade is written out, and a dead call from
+ *   80045214 (fake) pulls 800450C0 out after the stub): the test reads the
+ *   inlined return value, `lw t8,ok; move v0,t8` in ugen, one load into
+ *   $v0 after as1, with the original's temps after it. Left: 80045540's
+ *   rub-out. Its unk3 store goes through a copy of item
  *   (`x = item; ... unk3 = x`): copy propagation makes uopt fold the store
  *   into a direct one with its own `lui at`, as in the original, where a
  *   plain `unk3 = item` goes through the $s0 base. The original's rub-out
@@ -972,19 +976,6 @@ static void func_ovl0B_04_80044624() {
 }
 
 /* Page 9's fade in, over the page (inlined). */
-static void func_ovl0B_04_800450B8(Fade *f) {
-    f32 step;
-
-    if (!D_ovl0B_04_8004A3E4) {}
-    step = (f->unk18 - f->unk14) / f->unk1C;
-    D_ovl0B_04_8004A3E4 = f;
-    f->unk0 = func_ovl0B_04_80047E58(func_ovl0B_04_80043CD0, 0);
-    f->unk0->unkC |= 0x80;
-    for (f->unk34 = f->unk14; f->unk34 < f->unk18; f->unk34 += step) {
-        func_ovl0B_04_80048290();
-    }
-    func_ovl0B_04_80048290();
-}
 
 /* The name kept (and whether it changed), and the screen's texts freed
  * (inlined in 80045540). */
@@ -1566,16 +1557,79 @@ static void func_ovl0B_04_80045540(u8 item, u16 buttons, u8 *ret) {
     func_ovl0B_04_8004456C();
 }
 
-/* Page 9: save the changes or not. */
-u8 func_ovl0B_04_80045214(u8 arg0, u16 arg1) {
-    u8 ret = 1;
+/* Page 9's set-up: the name over a fade (written out: the stub before it,
+ * 800450B8, is 80045214's save). Defined above 80045214, which pulls it
+ * out right after that stub. */
+void func_ovl0B_04_800450C0(Obj *arg0) {
+    Obj *o = func_ovl0B_04_80048668(D_ovl0B_04_8004A3B0[4]);
+    Fade *f;
+    f32 step;
+
+    func_ovl0B_04_80044394(D_ovl0B_04_8004A3B0[4], D_ovl0B_04_8004A3B0[5]);
+    func_ovl0B_04_8004447C(D_ovl0B_04_8004A3B0[4], 0x50);
+    func_ovl0B_04_8004447C(D_ovl0B_04_8004A3B0[5], 0x32);
+    o->unkC |= 0x400;
+    f = &D_ovl0B_04_80049B20[4];
+    if (!D_ovl0B_04_8004A3E4) {}
+    step = (f->unk18 - f->unk14) / f->unk1C;
+    D_ovl0B_04_8004A3E4 = f;
+    f->unk0 = func_ovl0B_04_80047E58(func_ovl0B_04_80043CD0, 0);
+    f->unk0->unkC |= 0x80;
+    for (f->unk34 = f->unk14; f->unk34 < f->unk18; f->unk34 += step) {
+        func_ovl0B_04_80048290();
+    }
+    func_ovl0B_04_80048290();
+}
+
+/* Page 9's save (inlined in 80045214; its stub is 800450B8): its result
+ * is the inlined return value, so the test reads it from $v0 after a load
+ * through a ugen temporary (`lw t8; move v0,t8`, merged by as1). */
+static s32 func_ovl0B_04_800450B8(void) {
     s32 i;
-    s32 pad;
     s32 ok;
     u8 *save;
     s32 id;
     s32 id2;
 
+    ok = 1;
+    save = D_ovl0B_04_8004A188;
+    func_ovl0B_04_8004447C(D_ovl0B_04_8004A3B0[4], 0);
+    func_ovl0B_04_8004447C(D_ovl0B_04_8004A3B0[5], 0);
+#if VERSION_JP
+    id = func_ovl0B_04_80048688(D_ovl0B_04_80048A54, 55, 175, 0.8f, 0.8f, 2);
+#else
+    id = func_ovl0B_04_80048688(D_ovl0B_04_80048A54, 100, 175, 0.8f, 0.8f, 2);
+#endif
+    func_ovl0B_04_80048268(3);
+    for (i = 0; i < 8; i++) {
+        save[i] = D_ovl0B_04_80048A20[i];
+    }
+    save[8] = 0;
+    if (func_ovl0B_04_80048910() != 0) {
+        func_ovl0B_04_800487D0(0x18);
+        func_ovl0B_04_8004447C(id, 0);
+#if VERSION_JP
+        id2 = func_ovl0B_04_80048688(D_ovl0B_04_80048A60, 50, 175, 0.8f, 0.8f, 0);
+#else
+        id2 = func_ovl0B_04_80048688(D_ovl0B_04_80048A60, 80, 175, 0.8f, 0.8f, 0);
+#endif
+        func_ovl0B_04_80048268(120);
+        func_ovl0B_04_80048638(id2);
+        ok = 0;
+    }
+    func_ovl0B_04_80048638(id);
+    return ok;
+}
+
+/* Page 9: save the changes or not. */
+u8 func_ovl0B_04_80045214(u8 arg0, u16 arg1) {
+    u8 ret = 1;
+
+    /* fake: a dead call pulls 800450C0 (defined above) out after 800450B8's
+     * stub, where the original has it */
+    if (0) {
+        func_ovl0B_04_800450C0(0);
+    }
     if ((arg1 & 0x80) || (arg1 & 0x100)) {
         func_ovl0B_04_800438FC(0, D_ovl0B_04_8004A3B0[D_ovl0B_04_8004A174], &D_ovl0B_04_80049930[D_ovl0B_04_8004A174]);
         func_ovl0B_04_800438FC(1, D_ovl0B_04_8004A3B0[arg0], &D_ovl0B_04_80049930[arg0]);
@@ -1583,34 +1637,7 @@ u8 func_ovl0B_04_80045214(u8 arg0, u16 arg1) {
     }
     if (arg1 & 1) {
         if (arg0 == 1) {
-            ok = 1;
-            save = D_ovl0B_04_8004A188;
-            func_ovl0B_04_8004447C(D_ovl0B_04_8004A3B0[4], 0);
-            func_ovl0B_04_8004447C(D_ovl0B_04_8004A3B0[5], 0);
-            #if VERSION_JP
-            id = func_ovl0B_04_80048688(D_ovl0B_04_80048A54, 55, 175, 0.8f, 0.8f, 2);
-#else
-            id = func_ovl0B_04_80048688(D_ovl0B_04_80048A54, 100, 175, 0.8f, 0.8f, 2);
-#endif
-            func_ovl0B_04_80048268(3);
-            for (i = 0; i < 8; i++) {
-                save[i] = D_ovl0B_04_80048A20[i];
-            }
-            save[8] = 0;
-            if (func_ovl0B_04_80048910() != 0) {
-                func_ovl0B_04_800487D0(0x18);
-                func_ovl0B_04_8004447C(id, 0);
-                #if VERSION_JP
-                id2 = func_ovl0B_04_80048688(D_ovl0B_04_80048A60, 50, 175, 0.8f, 0.8f, 0);
-#else
-                id2 = func_ovl0B_04_80048688(D_ovl0B_04_80048A60, 80, 175, 0.8f, 0.8f, 0);
-#endif
-                func_ovl0B_04_80048268(120);
-                func_ovl0B_04_80048638(id2);
-                ok = 0;
-            }
-            func_ovl0B_04_80048638(id);
-            if (ok) {
+            if (func_ovl0B_04_800450B8()) {
                 func_ovl0B_04_800487D0(0x25);
             } else {
                 func_ovl0B_04_800487D0(2);
@@ -1631,17 +1658,6 @@ u8 func_ovl0B_04_80045214(u8 arg0, u16 arg1) {
         func_ovl0B_04_8004447C(D_ovl0B_04_8004A3B0[4], 0xFF);
     }
     return ret;
-}
-
-/* Page 9's set-up: the name over a fade. */
-void func_ovl0B_04_800450C0(Obj *arg0) {
-    Obj *o = func_ovl0B_04_80048668(D_ovl0B_04_8004A3B0[4]);
-
-    func_ovl0B_04_80044394(D_ovl0B_04_8004A3B0[4], D_ovl0B_04_8004A3B0[5]);
-    func_ovl0B_04_8004447C(D_ovl0B_04_8004A3B0[4], 0x50);
-    func_ovl0B_04_8004447C(D_ovl0B_04_8004A3B0[5], 0x32);
-    o->unkC |= 0x400;
-    func_ovl0B_04_800450B8(&D_ovl0B_04_80049B20[4]);
 }
 
 /* The name copied into the one being entered (inlined). */
