@@ -208,7 +208,8 @@ $(foreach f,$(MIPS2_C_FILES),$(BUILD_DIR)/src/$(f).o): MIPSISET := -mips2 -32
 # libultra (src/libultra/, docs/LIBULTRA.md): ultralib's headers
 # (include/ultralib) and its flags for 2.0I's libultra_rom: -mips2, -O1,
 # and -O3 for libaudio, libc and gu.  Its handwritten .s files are
-# assembled by IDO too (it schedules them), -mips3 as in the SDK.
+# assembled by IDO too (it schedules them): -O1, -O2 in libc, and -mips3
+# for exceptasm.s, as ultralib does.
 LIB_CPPFLAGS = -D_MIPS_SZLONG=32 -DF3DEX_GBI -DBUILD_VERSION=VERSION_I \
                '-DBUILD_VERSION_STRING="2.0I"' -non_shared -DNDEBUG -D_FINALROM -D$(VERSION_DEFINE)
 LIB_INCLUDE  = -I include/ultralib -I include/ultralib/compiler/ido -I include/ultralib/PR -I src/libultra
@@ -216,6 +217,9 @@ LIB_CFLAGS   = -Wab,-r4300_mul -G 0 -nostdinc -Xcpluscomm -fullwarn -woff 516,64
                -D_LANGUAGE_C $(LIB_CPPFLAGS) $(LIB_INCLUDE)
 LIB_ASFLAGS  = -Wab,-r4300_mul -G 0 -nostdinc -woff 516,649,838,712 $(LIB_CPPFLAGS) $(LIB_INCLUDE)
 LIB_O3_DIRS  = audio libc gu
+LIB_AS_MIPS3 = os/exceptasm
+# a library .s's optimization and ISA, from its path without the extension
+lib_as_flags = $(if $(filter libc/%,$1),-O2,-O1) $(if $(filter $(LIB_AS_MIPS3),$1),-mips3,-mips2) -32
 $(BUILD_DIR)/src/libultra/%.o: CFLAGS = $(LIB_CFLAGS)
 $(BUILD_DIR)/src/libultra/%.o: INCLUDE_CFLAGS = $(LIB_INCLUDE)
 $(BUILD_DIR)/src/libultra/%.o: MIPSISET := -mips2 -32
@@ -231,7 +235,7 @@ $(foreach d,$(LIB_O3_DIRS),$(BUILD_DIR)/src/libultra/$(d)/%.o): OPT_FLAGS := -O3
 # mips2 (the code is what it is).
 $(BUILD_DIR)/asm/libultra/%.s.o: src/libultra/%.s
 	@mkdir -p $(dir $@)
-	$(IDO) -c $(LIB_ASFLAGS) -O1 -mips3 -32 -o $@ $<
+	$(IDO) -c $(LIB_ASFLAGS) $(call lib_as_flags,$*) -o $@ $<
 	$(CROSS)strip $@ -N __rewrite_the_symbol_table__
 	$(OBJCOPY) --remove-section .mdebug $@
 	$(PYTHON) $(TOOLS_DIR)/elf_mips2.py $@
@@ -247,7 +251,7 @@ build/libultra_bm64/src/%.o: src/libultra/%.c
 	$(IDO) -c $(LIB_CFLAGS) $(if $(filter $(addsuffix /%,$(LIB_O3_DIRS)),$*),-O3,-O1) -mips2 -32 -o $@ $<
 build/libultra_bm64/src/%.o: src/libultra/%.s
 	@mkdir -p $(dir $@)
-	$(IDO) -c $(LIB_ASFLAGS) -O1 -mips3 -32 -o $@ $<
+	$(IDO) -c $(LIB_ASFLAGS) $(call lib_as_flags,$*) -o $@ $<
 
 # IDO can't write dependency files: the headers come from the host's cpp
 # (.d), the .s files the GLOBAL_ASM lines pull in from asm-processor

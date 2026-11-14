@@ -331,6 +331,18 @@ boot_code libultra/io/devmgr 0 0x20 0
 boot_code @us libultra/io/devmgr rodata=0x8001BD00
 boot_code @eu libultra/io/devmgr rodata=0x8001BD00
 boot_code @jp libultra/io/devmgr rodata=0x8001BCE0
+boot_code libultra/os/initialize 0x20 0 0x10
+boot_code @us libultra/os/initialize data=0x8001B0D0 bss=0x80026DD0
+boot_code @eu libultra/os/initialize data=0x8001B0D0 bss=0x80026DD0
+boot_code @jp libultra/os/initialize data=0x8001B0B0 bss=0x80026DB0
+boot_code libultra/os/timerintr 0x10 0 0x40
+boot_code @us libultra/os/timerintr data=0x8001B170 bss=0x80027250
+boot_code @eu libultra/os/timerintr data=0x8001B170 bss=0x80027250
+boot_code @jp libultra/os/timerintr data=0x8001B150 bss=0x80027230
+boot_code libultra/os/setintmask 0 0x80 0
+boot_code @us libultra/os/setintmask rodata=0x8001B770
+boot_code @eu libultra/os/setintmask rodata=0x8001B770
+boot_code @jp libultra/os/setintmask rodata=0x8001B750
 
 # ovl_0B_01: all C (-O3); jp has its own strings
 ovl_0B_01 ovl_0B_01_entry 0 0 0

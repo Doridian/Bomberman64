@@ -380,9 +380,11 @@ def object_starts(b, start, end, known=()):
     """Where objects start in b[start:end] (text): IDO pads each object's
     .text to 16 bytes, so a function that ends (jr ra, delay slot) and is
     followed by nops up to a 16-byte boundary ends an object.  `known` adds
-    boundaries the padding doesn't show (library objects).  A boundary that
+    boundaries the padding doesn't show (library objects, and where one ends
+    before a gap of zeros: the gap is an object of its own, so that a C
+    object before it needn't carry it).  A boundary that
     a branch crosses is dropped (as BlastCorps' gen_code_yaml does)."""
-    cand = sorted(c for c in known if start < c < end and c % 16 == 0 and u32(b, c) != 0)
+    cand = sorted(c for c in known if start < c < end and c % 16 == 0)
     o = start
     while o < end - 8:
         if u32(b, o) == 0x03E00008:
