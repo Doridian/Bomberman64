@@ -6,7 +6,7 @@
  * floats). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 3, eu 3, jp 0
+ * differing words: us 0, eu 0, jp 0
  * jp's code differences are drafted (`#if VERSION_JP`), its .data is not:
  * its five own strings are only declared, and its text tables and
  * positions are us's.
@@ -374,6 +374,21 @@
  *   on an odd word) brings the front end's frame to the original's 48,
  *   so the label temporary's slot is 28.
  *   Left (us 3): ERASE's tail address (s7 for the original's fp).
+ *
+ * ovl0B p4 (us/eu 3 -> 0, jp 0; every function matches in all three):
+ * - ERASE_FILE's loop is `while (loop != 0) { ... }`, not a do-while.
+ *   IDO rotates it and puts a guard test before the first iteration; uopt
+ *   folds the guard (loop is 1) only after register allocation, so the
+ *   tail block still has the guard as a predecessor outside
+ *   &D_8004992C's live range: the range needs a reload there, which is
+ *   the original's `lui fp; addiu fp` at the tail, and the 0x400 store
+ *   is the plain `D_8004992C = 0x400` through fp. The neighbour
+ *   store/dead read and `sel & 0xFU` (both above) are gone. jp: the
+ *   guard reads loop first, which swaps loop/sel ($s6/$s7); a dead
+ *   `if (!sel) {}` after `sel = 0` (jp only, fake) gives them back
+ *   (keeping jp's do-while instead also matches, but needs `0xFU`).
+ *   The other flagged levers in ERASE (the 80046858 stub call, SEF in
+ *   the 0x1064 arm) are still needed: without them us is 32 / 282.
  */
 #include "common.h"
 
@@ -1183,6 +1198,9 @@ static s32 ERASE_FILE(void) {
 
     loop = 1;
     sel = 0;
+#if VERSION_JP
+    if (!sel) {} /* fake: the while's test reads loop first; this gives jp's loop $s7, sel $s6 back */
+#endif
     func_ovl0B_06_80048CA8(MSG_TASK, NULL, 0, 0, 0x130);
     func_ovl0B_06_800464C0(0);
 #if VERSION_JP
@@ -1194,8 +1212,8 @@ static s32 ERASE_FILE(void) {
     func_ovl0B_06_80045C24(&D_ovl0B_06_80049A44[0], D_ovl0B_06_800494C8, -0x26, 0, D_ovl0B_06_80049A44[0].unk14, &D_ovl0B_06_80049A44[5], D_ovl0B_06_80049A44[5].unk14);
 #endif
     func_ovl0B_06_800433B0(&D_ovl0B_06_80049A44[5]);
-    do {
-        sel = func_ovl0B_06_80045F20(&D_ovl0B_06_8004A244, &D_ovl0B_06_8004A264, 3, sel & 0xFU);
+    while (loop != 0) {
+        sel = func_ovl0B_06_80045F20(&D_ovl0B_06_8004A244, &D_ovl0B_06_8004A264, 3, sel & 0xF);
         if ((sel & 0xF0) == 0x30) {
             loop = 0;
         } else {
@@ -1209,17 +1227,14 @@ static s32 ERASE_FILE(void) {
             } else {
                 ERASE_ASK(sel & 0xF, &D_ovl0B_06_8004A244, &D_ovl0B_06_8004A264);
 #if !VERSION_JP
-func_ovl0B_06_80046858();
+                func_ovl0B_06_80046858(); /* fake: size-tuned: an empty stub's area, us's frame 200 */
 #endif
                 loop = 0;
             }
         }
         func_ovl0B_06_80048CF0();
-    } while (loop != 0);
+    }
     loop = sel & 0xF;
-#if !VERSION_JP
-    if (!(&D_ovl0B_06_80049928)[1]) {}
-#endif
 #if VERSION_JP
     SET_TEXT(D_ovl0B_06_80049A44[0].unk4, D_ovl0B_06_80049480, D_ovl0B_06_80049A44[0].unk14);
     func_ovl0B_06_800490B0(D_ovl0B_06_80049A44[0].unk4, -10, 0);
@@ -1229,7 +1244,7 @@ func_ovl0B_06_80046858();
     func_ovl0B_06_80045C24(&D_ovl0B_06_80049A44[0], D_ovl0B_06_80049480, 0, 0, D_ovl0B_06_80049A44[0].unk14, &D_ovl0B_06_80049A44[5], D_ovl0B_06_80049A44[5].unk14);
 #endif
     func_ovl0B_06_800433B0(&D_ovl0B_06_80049A44[5]);
-    (&D_ovl0B_06_80049928)[1] = 0x400; /* lever: D_8004992C through its neighbour */
+    D_ovl0B_06_8004992C = 0x400;
     func_ovl0B_06_800464C0(1);
     return loop;
 }
@@ -1243,7 +1258,7 @@ static s32 ERASE_ASK(s32 slot, Col_ovl0B_06 *off, Col_ovl0B_06 *on) {
     s32 held;
     s32 pressed;
     s32 i;
-    /* size-tuned (flagged): jp frame 112, us ERASE 200 as the originals */
+    /* fake: size-tuned: jp frame 112, us ERASE 200 as the originals */
 #if VERSION_JP
     s32 pad[2];
 #else
@@ -1423,7 +1438,7 @@ static s32 LEVEL_ASK(s32 slot, s32 arg1) {
         if ((held & 0x200) && side == 1) {
             t = 0.0f;
             side = 0;
-            if (side) {} /* lever: dead read */
+            if (side) {} /* fake: dead read */
             D_ovl0B_06_80049E44[5].unk0->unkC &= ~1;
             D_ovl0B_06_80049E44[6].unk0->unkC |= 1;
             SE(0, 5);
@@ -1498,7 +1513,7 @@ static s32 LEVEL_FILE(s32 slot) {
 #if VERSION_JP
         SET_TEXT(D_ovl0B_06_80049A44[0].unk4, D_ovl0B_06_80049480, D_ovl0B_06_80049A44[0].unk14);
         func_ovl0B_06_800490B0(D_ovl0B_06_80049A44[0].unk4, 40, 0);
-        if (result) {} /* lever: dead read (jp) */
+        if (result) {} /* fake: dead read (jp) */
         SET_TEXT(D_ovl0B_06_80049A44[5].unk4, D_ovl0B_06_80049480, D_ovl0B_06_80049A44[5].unk14);
         func_ovl0B_06_800490B0(D_ovl0B_06_80049A44[5].unk4, 40, 0);
 #else
@@ -1562,7 +1577,7 @@ static void func_ovl0B_06_80046634(s32 arg0) {
         for (j = 0; j < 6; j++) {
             if (D_ovl0B_06_8004A5E0[i].unk[j] == 1) {
                 func_ovl0B_06_800465E0(D_ovl0B_06_80049F20[i][j + 1].unk0, b);
-                if (i) {} /* TRICK: dead read; 140/alpha/i in t0/t1 */
+                if (i) {} /* fake: dead read; 140/alpha/i in t0/t1 */
             }
         }
     }
@@ -1696,7 +1711,7 @@ static s32 COPY_ASK(void) {
             slot = sub & 0xF;
             if (func_ovl0B_06_80049368(slot, 0) == 10) {
                 (&D_ovl0B_06_80049928)[1] = 0x1064;
-                /* TRICK: SE written out with slot as its wait (us: slot and the wait share $s7) */
+                /* fake: SE written out with slot as its wait (us: slot and the wait share $s7) */
                 slot = 50;
                 if (slot && slot == 1) slot = 0;
                 func_ovl0B_06_80049230(0x18);
@@ -1711,7 +1726,7 @@ static s32 COPY_ASK(void) {
         func_ovl0B_06_80048CF0();
     } while (loop != 0);
     func_ovl0B_06_80044908(1);
-    if (!loop) {} /* lever (wAG): loop $s4, sub $s6 */
+    if (!loop) {} /* fake: (wAG) loop $s4, sub $s6 */
     slot = sub & 0xF;
 #if VERSION_JP
     SET_TEXT(D_ovl0B_06_80049B94[0].unk4, D_ovl0B_06_80049508, D_ovl0B_06_80049B94[0].unk14);
@@ -1732,7 +1747,7 @@ static s32 COPY_ASK(void) {
     s32 loop;
     s32 sub;
     s32 slot;
-    s32 *p = &sub; /* TRICK (p2): the in-loop read through it keeps sub's load out of a uopt register */
+    s32 *p = &sub; /* fake: (p2) the in-loop read through it keeps sub's load out of a uopt register */
 
     loop = 1;
     sub = 0;
@@ -1757,7 +1772,7 @@ static s32 COPY_ASK(void) {
             slot = *p & 0xF;
             if (func_ovl0B_06_80049368((u32)slot, 0) == 10) {
                 D_ovl0B_06_8004992C = 0x1064;
-                /* TRICK: SE written out with slot as its wait (us: slot and the wait share $s7) */
+                /* fake: SE written out with slot as its wait (us: slot and the wait share $s7) */
                 slot = 50;
                 if (slot && slot == 1) slot = 0;
                 func_ovl0B_06_80049230(0x18);
@@ -1793,7 +1808,7 @@ static s32 COPY_ASK(void) {
 
 
 /* @80045F20 */
-/* TRICK: parameters reordered (off, on, n, sel). ugen sets up a static callee's
+/* fake: parameters reordered (off, on, n, sel). ugen sets up a static callee's
  * register parameters in argument order, and the original loads off, on,
  * n, then sel at every call. The registers follow the callee's colouring. */
 static s32 func_ovl0B_06_80045F20(Col_ovl0B_06 *off, Col_ovl0B_06 *on, s32 n, s32 arg0) {
@@ -2014,7 +2029,7 @@ static s32 func_ovl0B_06_80045794(s32 arg0, s32 mode, s32 arg2) {
     func_ovl0B_06_80045340(save, mode);
     if (0) { func_ovl0B_06_80048E28(0, &arg0); }
     i = func_ovl0B_06_8004518C();
-    if (D_ovl0B_06_8004A404 != 0 && ((u16)i & 0x8000)) { /* lever: the cast */
+    if (D_ovl0B_06_8004A404 != 0 && ((u16)i & 0x8000)) { /* fake: the cast */
         SE(1, 15);
         a = func_ovl0B_06_800490C8(D_ovl0B_06_8004A408);
         b = func_ovl0B_06_800490C8(D_ovl0B_06_8004A40C);
