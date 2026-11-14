@@ -3,7 +3,7 @@
  * 0x802513E0-0x8025E1D4), one object. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 1, eu 1, jp 1
+ * differing words: us 0, eu 0, jp 0
  *
  * A first draft: every function not called from outside is static, in
  * the reverse of the ROM's order, with a dead call list fixing IPA's
@@ -60,8 +60,8 @@
  * original), one float temp in f22 for f0 and a store scheduled
  * differently.
  *
- * The other procedures that differ: func_80251EE0 (one word, pass 13)
- * and func_8025CEA0 (one add.s operand order).
+ * The other procedures that differed last: func_80251EE0 (one word,
+ * passes 13-17) and func_8025CEA0 (one add.s operand order, pass 16).
  *
  * What moved the count: exact sizes first (one block per original
  * global, so a short static misaligns everything after it; for
@@ -195,6 +195,16 @@
  * inlined static's return gives, with no slot for its stub. Other flag
  * sets and file splits were tried for both (scratch/6BBE0/p16/NOTES.txt);
  * the object is one -O3 file.
+ *
+ * Pass 17 (1 to 0): func_80251EE0 is `return A && B;` returning int.
+ * In a return, the front end evaluates `&&` in $v0 itself (store A to
+ * R2, branch on it, store B to R2) only when the function returns int,
+ * the type of `&&` (s32 is long, and a long or short return goes
+ * through a temporary); that R2 store before the branch is the `move
+ * v0,t6` in the delay slot. No fake. .rodata (its 30 jump-table
+ * words too) is the original's word for word in us, eu and jp; the
+ * draft defines no .data or .bss (D_802A0EF0-D_802A11A0 and
+ * D_802ACFB0-D_802ACFD4 are externs here).
  *
  * jp lacks one height test in func_802553D4 (VERSION_JP); eu is us.
  */
@@ -473,7 +483,7 @@ static void *func_80251C88(s32 arg0);
 static void *func_80251D10(f32 *arg0, f32 *arg1);
 s32 func_80251D30(f32 *arg0, s32 arg1, s32 arg2, s32 arg3);
 static void func_80251E5C(f32 *arg0);
-static s32 func_80251EE0(f32 *arg0);
+static int func_80251EE0(f32 *arg0);
 static void func_80252048(f32 *arg0);
 static f32 func_8025216C(f32 d);
 void func_80254FA0(void);
@@ -4500,28 +4510,10 @@ static void func_80252048(f32 *arg0) {
     }
 }
 
-static s32 func_80251EE0(f32 *arg0) {
-    f32 x;
-    f32 r;
-    s32 ret;
+#define ROUND100(x) ((f32) (((s32) ((x) >= 0.0f ? (x) + 0.5f : (x) - 0.5f) / 100) * 100))
 
-    x = M2C_FIELD(arg0, f32 *, 0);
-    if (x >= 0.0f) {
-        r = x + 0.5f;
-    } else {
-        r = x - 0.5f;
-    }
-    ret = func_8023369C((f32) (((s32) r / 100) * 100), x, 31.0f) != 0;
-    if (ret == 0) {
-        return;
-    }
-    x = M2C_FIELD(arg0, f32 *, 8);
-    if (x >= 0.0f) {
-        r = x + 0.5f;
-    } else {
-        r = x - 0.5f;
-    }
-    return func_8023369C((f32) (((s32) r / 100) * 100), x, 31.0f) != 0;
+static int func_80251EE0(f32 *arg0) {
+    return func_8023369C(ROUND100(arg0[0]), arg0[0], 31.0f) && func_8023369C(ROUND100(arg0[2]), arg0[2], 31.0f);
 }
 
 static void func_80251E5C(f32 *arg0) {
