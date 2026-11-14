@@ -107,6 +107,12 @@
  *   `li a2,7` after c's load). Left: c is that temporary (t6) where the
  *   original colours it a0 (1 word); dead reads of c don't move it.
  *   c's read is on the `if (buttons & 2)` line (permuter find: its .loc).
+ *   p4, no gain: ok's stores and test in every order/form (switch, !=,
+ *   ==, code-free `(s32) (ok * 1.0f) * 0` uses), c's read as casts and
+ *   identity ops (any of them burns the temp but leaves c uncoloured;
+ *   without one c is $a0 and every later temp is one behind), dead loads
+ *   to burn a temp (removed before ugen), permuter runs on 80045214 (186k)
+ *   and 80045540 (118k).
  * - 80043ADC 0/0 (matches; w5): us's loop is `if (A168 != 0xFF) { p3 =
  *   &tbl[3]; if (!p3) {} do { ... } while (A168 != 0xFF); }` with p4 =
  *   &tbl[4] set at the top and one more dead read of p3 after the else
@@ -145,26 +151,15 @@
  *   `move v1,zero` where the original has it), 80046180 0/5 (jp 80046734's `li a0,1` order;
  *   jp 800468F0's loop takes the paired dead reads `if (!o) {} if (!base) {}`).
  * Everything else matches.
- * w5, tried without gain: every plain/neighbour spelling of H5b's three
- * A178 accesses (125 forms; plain A178 makes &A178 the $s0 base with A17C
- * at 4($s0)); jp 80046734's mode-1 argument as 1U/(u8)/TRUE/!0/a local and
- * the indices in locals (ugen emits the `li a0,1` first in the join block
- * and as1 takes it into the branch slot; the original's slot has the
- * ids index's sll); 80044BE8 with a/b/i block-scoped or #if'd out, no
- * `changed`, hand-written MakeEntries loops or an unrolled 80044BE0 (the
- * homes are counted from the bottom of the frame: dropping a/b in jp
- * shrinks the frame by 8 but leaves them at 84/96/112).
- *
- * ovlx: unchanged. 800444E8 (8): the original keeps d1 in t0 and splits it
- * to s2, with the counter A1A0 uncoloured; saved registers cost nothing
- * here (allcallersave), so the split needs best >= save*n or no registers
- * left, and dead reads, address-taking, volatile and neighbour addressing
- * didn't get it. 80044BE8 (us 8, jp 16): the frame homes can be matched
- * (frame 160, homes 104/88) by making 8004461C K&R in us too, adding
- * `if (0) { func_ovl0B_04_8004456C(); }` before case 1's first MakeEntries
- * and `s32 pad[4];` as the first local (scratch/ovlx/v/zp0.c), but the v1
- * spill then lands at 76, not 80 (the front end's temps take 80, not 76),
- * so the function is worse (22) and it was not kept.
+ * w5, tried without gain: jp 80046734's mode-1 argument as 1U/(u8)/TRUE/!0
+ * /a local and the indices in locals (ugen emits the `li a0,1` first in
+ * the join block and as1 takes it into the branch slot; the original's
+ * slot has the ids index's sll); p4 also: 800438FC's parameter orders
+ * (IPA then moves mode out of $a0) and the id/item arguments in locals.
+ * 80044BE8 with a/b/i block-scoped or #if'd out, no `changed`,
+ * hand-written MakeEntries loops or an unrolled 80044BE0 (the homes are
+ * counted from the bottom of the frame: dropping a/b in jp shrinks the
+ * frame by 8 but leaves them at 84/96/112).
  */
 #include "common.h"
 
@@ -1054,8 +1049,8 @@ static void func_ovl0B_04_MakeEntries(s32 n, Entry *e, Desc *d) {
     }
 }
 
-/* (n, e, x), x unused (p2, frame-tuned with H12/H1 K&R): 80043110's first
- * FreeEntries n home at the original's 80. */
+/* fake: (n, e, x) with x unused (frame-tuned): 80043110's FreeEntries n
+ * homes at the original's 80 and 64 (p4: no pad local; 16-byte areas). */
 static void func_ovl0B_04_80043010(s32 n, Entry *e, s32 x) {
     s32 i;
 
