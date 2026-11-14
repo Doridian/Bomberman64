@@ -111,10 +111,10 @@ line. The Bomberhackers/bm64 split has the same order.
 | --- | --- | --- | --- |
 | boot_code functions | 370 | 370 | 370 |
 | boot_code data | 54 | 54 | 54 |
-| main_code functions | 12 | 12 | 12 |
+| main_code functions | 13 | 13 | 13 |
 | main_code data | 1 (`__libm_qnan_f`) | 1 | 1 |
 
-In boot_code, 366 names are `lib=exact`, 56 `lib=ref` and 2 `lib=fuzzy`
+In boot_code, 367 names are `lib=exact`, 55 `lib=ref` and 2 `lib=fuzzy`
 (the counts include data). A function placed by a reference before its
 own body matched still gets its body match (and names what it
 references), so most of the library is `exact`.
@@ -139,8 +139,8 @@ No ultralib build matches these, because ultralib's D to H builds are
 2.0I's code: its sources only tell 2.0J and later apart, and its README
 supports 2.0I to 2.0L. They are an older revision's code (2.0I flags,
 older sources), one Hudson patch, and a few objects that are 2.0I's but
-couldn't be placed. All of them are now in `src/libultra` (see "Sources"),
-matching in us and eu.
+couldn't be placed. All of them are in `src/libultra` (see "Sources"),
+matching in us, eu and jp, with the rest of the library.
 
 **An older SI, PI and controller pak layer.** The evidence that it
 predates 2.0I:
@@ -185,6 +185,12 @@ predates 2.0I:
 - `__osException` (`os/exceptasm.s`) is 2.0I's but for one instruction:
   the SP interrupt is acknowledged with `SP_CLR_INTR` alone, where 2.0I
   also clears signal 3.
+- `osDestroyThread` (`os/destroythread.c`) walks the active queue to its
+  NULL end, the form ultralib keeps for libgultra before 2.0J, where
+  2.0I's IDO build stops at the idle thread's priority of -1.
+- main_code's `guMtxL2F` (`gu/mtxutil.c`, `0x8029BB38`; no ultralib build
+  matched it, so it was `func_8029BB38`) divides by 65536 where 2.0I
+  multiplies by 1/65536, as Blast Corps' copy does.
 
 Other objects of the same layer are 2.0I's exactly (`osContStartQuery`,
 `osContSetCh`, `osPfsChecker`, `contpfs.c`,
@@ -206,7 +212,8 @@ like libaudio.
 2.0I byte for byte; they are static, so no symbol named them, and
 `libmatch.py` now matches such objects whole.
 
-Still asm: `osUnmapTLBAll` (`0x80003190`, `unmaptlball.s`) is an older
+Still asm (the only library objects that are): `osUnmapTLBAll`
+(`0x80003190`, `unmaptlball.s`) is an older
 revision too (all 31 entries, `bnezl`), but EU's 0x60-byte link gap
 follows it, which a source object can't carry. `osPiGetDeviceType` and
 `alSndpGetSound` (`0x80005480`, `0x8000C8D0`) match 2.0I but are two
@@ -214,14 +221,32 @@ instructions long, too short to place by body.
 
 ## Sources
 
-`src/libultra/<dir>/<file>.c` (or `.s`) is ultralib's file of that name
-at the pinned commit, with this game's differences, each described at
-the top of the file (NOTICES.md has the attribution). They are built with
-ultralib's headers (`include/ultralib`, `BUILD_VERSION=VERSION_I`) and
-2.0I's `libultra_rom` flags: `-mips2`, `-O1`, `-O3` for `audio/`, `libc/`
-and `gu/`. `os/exceptasm.s` is assembled by IDO (`-mips3 -O1`, which
-schedules it), its symbol table rewritten by strip for GNU ld and the
-object relabelled mips2 (`tools/elf_mips2.py`).
+Every libultra object the game links is C (or libultra's own `.s`) in
+`src/libultra/<dir>/<file>.c` (or `.s`), but the three above (still
+asm): 239 objects in boot_code (`io/` 90, `os/` 40, `libc/` 10, `audio/`
+99, with ultralib's private headers beside them) and 7 in main_code
+(`gu/`: `lookat`, `mtxutil`, `perspective`, `mtxcatf` with `guMtxXFMF`,
+`sinf`, `cosf`, `sqrtf.s`).
+Each is ultralib's file of that name at the pinned commit. Most are
+unchanged: ultralib's 2.0I files compile to the ROM's bytes, so they
+needed no decompiling, only copying (and placing their data, below).
+Where the game differs, the differences are described at the top of the
+file (NOTICES.md has the attribution). They are built with ultralib's
+headers (`include/ultralib`, `BUILD_VERSION=VERSION_I`) and 2.0I's
+`libultra_rom` flags: `-mips2`, `-O1`, `-O3` for `audio/`, `libc/` and
+`gu/`, but `-O1 -mips3` for `libc/ll.c` and `libc/llcvt.c` (the long long
+helpers), as ultralib does. The `.s` files (16 in `os/`, `bcopy.s` and
+`bzero.s` in `libc/`, `gu/sqrtf.s`) are assembled by IDO too, which
+schedules them: `-O1 -mips2`, `-O2` in `libc/`, and `-mips3` for
+`os/exceptasm.s`. Each is a `hasm` subsegment, its symbol table rewritten
+by strip for GNU ld; the `-mips3` objects (`exceptasm.s`, `ll.c`,
+`llcvt.c`) are relabelled mips2 (`tools/elf_mips2.py`).
+
+Where a library object ends before a gap of zeros (us's 0x60 bytes after
+`osSetThreadPri`, jp's after `ll.o`), `lib_objects.<v>.txt` has an `end`
+line and `tools/layout.py` makes the gap an asm object of its own, so the
+C object before it doesn't have to carry it. EU's gap follows
+`osUnmapTLBAll`, which is asm.
 
 `-O1` code is sensitive to the source's line breaks: a loop body on the
 loop's line schedules differently (`contramwrite.c`), and statement order
@@ -231,25 +256,33 @@ picks the temporary registers (`osPfsReSizeFile`'s bookkeeping after
 ## Data
 
 boot_code's data can't be cut from the module's start (the game's code
-comes first), so library objects are placed on their own:
-`data_split.txt` gives an object's section sizes and, per version, where
-each of its sections is (`tools/data_split.py <v> --place boot_code
-libultra/<dir>/<file>` finds that from the object's `%hi`/`%lo`
+comes first), nor main_code's beyond its cut, so library objects are
+placed on their own: `data_split.txt` gives an object's section sizes
+and, per version, where each of its sections is (`tools/data_split.py
+<v> --place <module> libultra/<dir>/<file>` finds that from the object's `%hi`/`%lo`
 relocations and checks the bytes). `tools/layout.py` cuts them out of the
 asm blocks. Only objects that need it are placed:
 
 - those whose code depends on defining a variable in the same file: IDO
   shares one `lui` between fields of a variable it defines but not of an
-  extern (`CartRomHandle`, `LeoDiskHandle`), and function-level statics
-  (`osAiSetNextBuffer`'s `hdwrBugFlag`);
+  extern (`CartRomHandle`, `LeoDiskHandle`, `initialize.c`'s and
+  `timerintr.c`'s variables), and `static` variables, at file or function
+  level (`osAiSetNextBuffer`'s `hdwrBugFlag`, the PI and VI managers'
+  threads and stacks in `pimgr`/`vimgr`, `sptask`, `piacs`, `siacs`, `vi`,
+  `xlitob`'s digits, `drvrnew`'s effect parameters, `env`'s pan table);
 - those with jump tables, strings or constants in `.rodata` (`sndplayer`,
-  `xprintf`, `xldtob`, `exceptasm`).
+  `xprintf`, `xldtob`, `exceptasm`, `devmgr`, `setintmask.s`'s
+  `__osRcpImTable`, `llcvt`, `synthesizer`, `seq`, `cseq`, `cents2ratio`,
+  `seqplayer`, `csplayer`, `resample`, `reverb`, and main_code's
+  `perspective`, `sinf` and `cosf`).
 
-The others refer to their variables as externs, defined by the asm data
-(`__osContPifRam`, `__osEepPifRam`, `__osPfsPifRam`, the motor buffers,
-`__osContinitialized`, ...), with the names gen_symbols.py gives them.
-The addresses are the same in both versions (the 0x60 gap is in the
-text).
+That is 32 objects. The others refer to their variables as externs,
+defined by the asm data (`__osContPifRam`, `__osEepPifRam`,
+`__osPfsPifRam`, the motor buffers, `__osContinitialized`,
+`__osEventStateTab`, the thread queues, `alGlobals`, `leoDiskStack`, ...),
+with the names gen_symbols.py gives them; the file's comment says so.
+boot_code's addresses are the same in us and eu (the 0x60 gap is in the
+text) and 0x20 lower in jp.
 
 ## libaudio
 

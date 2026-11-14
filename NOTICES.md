@@ -18,12 +18,13 @@ says where they come from and on what terms they are here.
 `include/ultralib/` is a copy of the `include/` directory of
 [decompals/ultralib](https://github.com/decompals/ultralib) at commit
 `e24c836796df4bf520ff8b11a5c9d2cea3a66cbd` (the one
-`tools/build_ultralib.sh` builds). Most files under `src/libultra/` start
-from that commit's `src/` file of the same name and carry this game's
-differences, each described at the top of the file; a few
-(`io/pfsresizefile.c`, and the older revisions' code in `io/conteep*.c`,
-`io/contreaddata.c`, `io/motor.c`) are decompiled from the game in
-ultralib's style. Several of the older-revision forms were first matched
+`tools/build_ultralib.sh` builds). The files under `src/libultra/` are
+that commit's `src/` files of the same name (the `.c` and `.s` files and
+the private headers beside them): most are unchanged, and those that
+carry this game's differences describe them at the top of the file; a
+few (`io/pfsresizefile.c`, and the older revisions' code in
+`io/conteep*.c`, `io/contreaddata.c`, `io/motor.c`) are decompiled from
+the game in ultralib's style. Several of the older-revision forms were first matched
 in the Blast Corps decomp (`../BlastCorps/blastcorps/src/libultra`, the same
 author's project), which reconstructs them from ultralib too.
 

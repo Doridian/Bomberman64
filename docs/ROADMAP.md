@@ -155,7 +155,7 @@ docs/LIBULTRA.md has the details.
   `tools/build_ultralib.sh` builds every revision, and `tools/libmatch.py
   --scan` compares them.
 - `tools/libmatch.py` and `tools/gen_symbols.py` (Blast Corps') name 370
-  functions and 54 globals in boot_code and 12 functions and 1 global in
+  functions and 54 globals in boot_code and 13 functions and 1 global in
   main_code, in us, eu and jp alike (`symbol_addrs.<module>.<v>.txt`). EU's
   libultra (and jp's) is byte for byte US's. Only a 0x60-byte gap moves.
 - Library objects whose boundaries the padding didn't show are split
@@ -174,11 +174,18 @@ docs/LIBULTRA.md has the details.
   the differences, matching in us, eu and jp (docs/LIBULTRA.md, "What 2.0I
   doesn't reproduce"). `make libultra-ref` builds them as a reference
   library, so gen_symbols.py names them and their variables.
+- **All of the linked libultra is source** (`src/libultra`, 246 objects:
+  239 in boot_code, 7 gu/libm objects in main_code), but three: the rest
+  of the matched library is ultralib's 2.0I files as they are (they
+  compile to the ROM's bytes; `osDestroyThread` and main_code's
+  `guMtxL2F` are older forms too), 32 of them owning their data through
+  `data_split.txt`'s placements (docs/LIBULTRA.md, "Sources" and "Data").
+  boot_code went from 29% C to 95%.
 - **Not yet:** `osUnmapTLBAll` (older too, but EU's 0x60-byte gap follows
-  it) stays asm, and the rest of the matched libultra isn't C (it needs
-  no decompiling: ultralib's 2.0I files compile to it). Overlay copies of
-  `osSpTaskYield`/`__osSpSetStatus` aren't named yet (one image, shared
-  VRAM).
+  it) stays asm, and so do `osPiGetDeviceType` and `alSndpGetSound` (two
+  instructions each, too short for `libmatch.py` to place, so they have no
+  object of their own). Overlay copies of `osSpTaskYield`/`__osSpSetStatus`
+  aren't named yet (one image, shared VRAM).
 - **Hudson's allocator** is GNU malloc's `gmalloc.c` (1995), IDO 5.3
   `-g -mips1 -DPAGESIZE=0x1000`, a byte-exact match for ROM
   `0xB3B70-0xB5E50` in us and eu (`0xB3250` in jp), named in
@@ -224,9 +231,10 @@ evidence for the flags):
   4E030, 4ED50, 86680, ACA00, AFBF0, 9A5F0 and ovl_0A_01-05.
   docs/DECOMPILING.md has how `-O3` objects are told apart and what
   Hudson's C looks like.
-- libultra's unmatched objects (phase 3): 28 objects in `src/libultra`,
-  `-mips2` with 2.0I's flags, seven of them owning their data through
-  `data_split.txt`'s placements, and `os/exceptasm.s` assembled by IDO.
+- libultra (phase 3): 246 objects in `src/libultra`, ultralib's files
+  with the game's differences where it has them, built with 2.0I's flags,
+  32 of them owning their data through `data_split.txt`'s placements, and
+  libultra's `.s` files assembled by IDO.
 - eu from the same C: `tools/vermap.py` (docs/LAYOUT.md, "The US to EU
   map") aligns eu's functions to us's by masked bodies and maps the data
   through them (`vermap.eu.txt`). `make extract` for eu renames splat's

@@ -7,7 +7,8 @@ tools are the first place to look before writing a new one. docs/ROADMAP.md
 has the phases. Phases 0-2 are done: the ROM is built from its pieces
 (stage 1) and every code segment from splat's asm (stage 2), and a
 shifted build runs the same as the original. Phase 3 has libultra named
-(2.0I, docs/LIBULTRA.md) and Hudson's allocator identified (GNU
+(2.0I, docs/LIBULTRA.md) and all but three tiny objects of it as source
+in `src/libultra`, and Hudson's allocator identified (GNU
 gmalloc, docs/LIBMALLOC.md). Phase 4's C pipeline works
 (docs/DECOMPILING.md), with a few objects decompiled. Each module's
 `.data`/`.rodata`/`.bss` is cut per object as far as its C objects from
