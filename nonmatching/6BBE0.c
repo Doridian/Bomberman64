@@ -159,6 +159,19 @@
  * three `+ 0.3` doubles (m2c's 0.3000000117579475) are the literal 0.3:
  * the .rodata now matches in every version.
  *
+ * Pass 13, func_802553D4's W360 slots (36 of the 38 words): the
+ * original's front-end frame is 208 like ours, but it has 16 bytes less
+ * above the first func_80255064 W360 statement and 16 more after it.
+ * Merging temp_v0_2 into var_s4, temp_s2 into var_s2 and temp_v0_6 into
+ * temp_v0_41 (with the two fp->94 decrements written on the field, or
+ * var_s4 takes v0's place there) gives the first half; any 16 bytes of
+ * front-end temporaries created after that statement give the rest: a
+ * dead call with five nested calls as arguments (five int temporaries,
+ * the pool has one) leaves only `li a0,2` (us/eu/jp 40 to 4). No real
+ * statement after it needs more than one int, one double or twelve
+ * floats, so the source of those 16 bytes is still unknown (dead debug
+ * code would fit); scratch/6BBE0/p13/NOTES.txt has what was ruled out.
+ *
  * jp lacks one height test in func_802553D4 (VERSION_JP); eu is us.
  */
 #include "common.h"
