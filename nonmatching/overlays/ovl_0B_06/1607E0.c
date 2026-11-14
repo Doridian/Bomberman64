@@ -6,7 +6,7 @@
  * floats). Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING
  * drafts").
  * flags: -O3
- * differing words: us 3, eu 3, jp 2
+ * differing words: us 3, eu 3, jp 0
  * jp's code differences are drafted (`#if VERSION_JP`), its .data is not:
  * its five own strings are only declared, and its text tables and
  * positions are us's.
@@ -367,10 +367,13 @@
  *   through a pointer, `s32 *p = &sub; ... slot = *p & 0xF;` (flagged, a
  *   decomp-permuter find), gives the original's code, and the address
  *   taken replaces the old `if (0) { D_ovl0B_06_8004A5B4 = (s32) &sub; }`.
- *   Left (us 3): ERASE's tail address (s7 for the original's fp), jp 2:
- *   LEVEL_FILE's label spill slot (with no label local, the front end's
- *   frame is 44 as the original's must be, but the original then has a
- *   second uopt spill slot below it whose owner wasn't found).
+ * - jp LEVEL_FILE (80046170 2 -> 0): no `label` local (the address is
+ *   written `(&D_ovl0B_06_80049A44[slot])[1]`, a uopt temporary in both
+ *   versions) and no pad in jp; jp calls the empty stub 80046858 at the
+ *   end of the 0x30 arm as us does: its area (after 80043010's, which ends
+ *   on an odd word) brings the front end's frame to the original's 48,
+ *   so the label temporary's slot is 28.
+ *   Left (us 3): ERASE's tail address (s7 for the original's fp).
  */
 #include "common.h"
 
@@ -1462,17 +1465,13 @@ static s32 LEVEL_FILE(s32 slot) {
     volatile s32 X;
     s32 ret;
     s32 result;
-    Label_ovl0B_06 *label;
-#if VERSION_JP
-    s32 pad;
-#else
+#if !VERSION_JP
     s32 pad[9];
 #endif
 
     ret = 10;
     func_ovl0B_06_800464C0(0);
-    label = &D_ovl0B_06_80049A44[slot];
-    label[1].unk18->unkC |= 1;
+    (&D_ovl0B_06_80049A44[slot])[1].unk18->unkC |= 1;
     func_ovl0B_06_80043450(2, D_ovl0B_06_80049AEC);
 #if VERSION_JP
     SET_TEXT(D_ovl0B_06_80049A44[0].unk4, D_ovl0B_06_8004937C_jp, D_ovl0B_06_80049A44[0].unk14);
@@ -1507,11 +1506,9 @@ static s32 LEVEL_FILE(s32 slot) {
 #endif
         func_ovl0B_06_800433B0(&D_ovl0B_06_80049A44[5]);
         func_ovl0B_06_800464C0(1);
-        label[1].unk18->unkC &= ~1;
+        (&D_ovl0B_06_80049A44[slot])[1].unk18->unkC &= ~1;
         func_ovl0B_06_80043010(2, D_ovl0B_06_80049AEC);
-#if !VERSION_JP
-func_ovl0B_06_80046858();
-#endif
+        func_ovl0B_06_80046858();
     }
     return ret;
 }
