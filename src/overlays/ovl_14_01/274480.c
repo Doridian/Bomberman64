@@ -1281,7 +1281,7 @@ void func_ovl14_01_80049618(void) {
         l[0].unk4 += d;
         l[1].unk4 += d;
         l[2].unk4 += d;
-        if (done == 0 && func_ovl14_01_8004C860((s32) obj, func_ovl14_01_8004C0D8(func_ovl14_01_8004C078())) != 0) {
+        if (done == 0 && func_ovl14_01_8004C860((s32) obj, (s32)(func_ovl14_01_8004C0D8(func_ovl14_01_8004C078()))) != 0) {
             func_ovl14_01_8004C8A0(obj, 0x1E00);
             done = 1;
         }
@@ -1361,7 +1361,7 @@ void func_ovl14_01_80048DE8(s32 arg0) {
     }
     r = 0;
     for (i = 0; i < arg0 && r == 0 && func_ovl14_01_80044FDC() == 0; i++) {
-        id = func_ovl14_01_80048D48(id);
+        id = (s32)(func_ovl14_01_80048D48((void *) id));
         if (id == 0) {
             break;
         }
@@ -2524,7 +2524,7 @@ void func_ovl14_01_800457F0(void) {
     *p = func_ovl14_01_800431C4(0xF8, obj);
     func_ovl14_01_8004C898(obj, 0x01000000);
     func_ovl14_01_8004C8A0(obj, 0x400000);
-    func_ovl14_01_8004C968(obj, (Vec3f *) opos);
+    func_ovl14_01_8004C968(obj, (f32 *) opos);
     func_ovl14_01_8004C828((Vec3f *) opos, (Vec3f *) pos, (Vec3f *) ang);
     ang[1] = ((ang[1] - 180.0f >= 360.0f) ? ang[1] - 180.0f - 360.0f : (ang[1] < 180.0f) ? ang[1] - 180.0f + 360.0f : ang[1] - 180.0f) * -1.0f;
     n = 0;
@@ -2576,7 +2576,7 @@ void func_ovl14_01_800457F0(void) {
         pos[0] += step[0];
         pos[1] += step[1];
         pos[2] += step[2];
-        func_ovl14_01_8004C968(obj, (Vec3f *) opos);
+        func_ovl14_01_8004C968(obj, (f32 *) opos);
         func_ovl14_01_8004C828((Vec3f *) opos, (Vec3f *) pos, (Vec3f *) ang);
         ang[1] = ((ang[1] - 180.0f >= 360.0f) ? ang[1] - 180.0f - 360.0f : (ang[1] < 180.0f) ? ang[1] - 180.0f + 360.0f : ang[1] - 180.0f) * -1.0f;
         obj->unk40->unk20 = ang[0];

@@ -23,6 +23,14 @@ void *D_80019F80[] = { func_80001A30 };
 /* .bss: the ZeroJump module table */
 void **D_8001BFC0[256];
 
+#ifdef TARGET_PC
+/* boot_code 2630, handwritten (asm/2630.s, which IDO's code for this can't
+ * be): registers module `id`'s ZeroJump table */
+void func_80001A30(s32 id, void **table) {
+    D_8001BFC0[id] = table;
+}
+#endif
+
 /*
  * The page's address is one expression, (u32)func_80042000, coloured over
  * both calls. The original has it in $t0 (saved at sp+0x24 across the

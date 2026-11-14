@@ -1698,7 +1698,7 @@ static void func_ovl0B_03_800433BC(void) {
     UnkStructA_40 *temp_v0;
     s32 var_s0;
 
-    D_ovl0B_03_8004A3F8 = func_ovl0B_03_80047F18(func_ovl0B_03_80047064, -1);
+    D_ovl0B_03_8004A3F8 = (UnkStructA_40 *)(func_ovl0B_03_80047F18(func_ovl0B_03_80047064, -1));
     D_ovl0B_03_8004A3F8->unkC |= 0x480;
     for (var_s0 = 5; var_s0 != 0x73; var_s0 += 0xA) {
         D_ovl0B_03_8004A414 = var_s0;

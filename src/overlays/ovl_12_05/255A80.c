@@ -678,7 +678,7 @@ void func_ovl12_05_80047B64(void) {
     UnkStructA_40 *p;
     s32 i;
 
-    pos = func_ovl12_05_8004A220();
+    pos = (Vec3f *)(func_ovl12_05_8004A220());
     p = func_ovl12_05_80049D88(0x302, 0);
     p->unkC |= 0x80;
     p->unk36 = 0;
@@ -1628,7 +1628,7 @@ static f32 func_ovl12_05_800444D4(UnkStructA_40 *from, UnkStructA_40 *to) {
     b.x = to->unk10;
     b.y = to->unk14;
     b.z = to->unk18;
-    func_ovl12_05_8004A038(&a.x, &b.x, &angle);
+    func_ovl12_05_8004A038((Vec3f *) &a.x, (Vec3f *) &b.x, (Vec3f *) &angle);
     return angle;
 }
 

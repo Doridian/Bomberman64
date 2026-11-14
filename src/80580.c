@@ -311,7 +311,11 @@ void func_80297D80(void *, void *, s32);
 s32 func_80297D90(void *, void *, s32);
 void func_80298028(void *, s32, s32, s32, void *, s32, void *);
 void func_802983A8(u8);
+#ifdef TARGET_PC
+void func_802983D0(void *, u8 *, s32);
+#else
 void func_802983D0(void *, s32, s32);
+#endif
 void func_802983E8(void *, void *);
 void func_802983F0(void *, void *);
 void func_80298510(void *, void *);
@@ -356,7 +360,11 @@ f32 sinf(f32);
 extern u8 D_802AD120[];
 extern u8 D_802AD130[];
 extern u8 D_802AD1F8[];
+#ifdef TARGET_PC
+extern u8 *D_802AD210; /* the heap's base */
+#else
 extern s32 D_802AD210;
+#endif
 extern s32 D_802AD214;
 extern u8 D_802AD218;
 extern s32 D_802AD234;
@@ -471,20 +479,65 @@ static s16 func_80269AFC(void);
 static s32 func_8026A108(s32 arg0);
 static s16 func_8026A164(void);
 s16 func_8026A5BC(void);
+#ifdef TARGET_PC
+s16 func_8026A754(s32 arg0, s32 arg1, void *arg2, u8 *arg3, s32 arg4);
+#else
 s16 func_8026A754(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
+#endif
 s32 func_8026A8B4(void **oscState, f32 *initVal, u8 oscType, u8 oscRate, u8 oscDepth, u8 oscDelay);
 s32 func_8026ABF4(void *oscState, f32 *updateVal);
 void func_8026B1EC(void *oscState);
 
 s32 D_802A1250 = 0x7D00;
+#ifdef TARGET_PC
+/* The port: the configs as the structures they are, with native pointers
+ * (IDO's are words at the N64's offsets, read and written as such below):
+ * libaudio.h's ALSynConfig and ALSeqpConfig, audiomgr's amConfig
+ * (85A10.c), and a count with the heap. */
+typedef struct {
+    s32 maxVVoices, maxPVoices, maxUpdates, maxFXbusses;
+    void *dmaproc;
+    void *heap;
+    s32 outputRate;
+    u8 fxType;
+    s32 *params;
+} SynConfig80580;
+typedef struct {
+    u16 numDMABuffers;
+    s32 dmaBufferLength;
+    u32 framesPerField;
+    u32 maxACMDSize;
+    s32 outputRate;
+    void *sched;
+    s32 pri;
+    s32 id;
+} AmConfig80580;
+typedef struct {
+    s32 maxVoices, maxEvents;
+    u8 maxChannels, debugFlags;
+    void *heap;
+    void *initOsc, *updateOsc, *stopOsc;
+} SeqpConfig80580;
+SynConfig80580 D_802A1254 = { 0x10, 0x10, 0x15E, 0, NULL, D_802AD120, 0, 1, NULL };
+AmConfig80580 D_802A1278 = { 0x18, 0x800, 1, 0x800, 0, NULL, 0, 0 };
+SeqpConfig80580 D_802A1298 = { 0x10, 0x80, 0x10, 0, D_802AD120, func_8026A8B4, func_8026ABF4, func_8026B1EC };
+#else
 u32 D_802A1254[] = { 0x10, 0x10, 0x15E, 0, 0, (u32) D_802AD120, 0, 0x01000000, 0 };
 s32 D_802A1278[] = { 0x180000, 0x800, 1, 0x800, 0, 0, 0, 0 };
 u32 D_802A1298[] = { 0x10, 0x80, 0x10000000, (u32) D_802AD120,
                      (u32) func_8026A8B4, (u32) func_8026ABF4, (u32) func_8026B1EC };
+#endif
 s32 D_802A12B4 = 2;
 s32 D_802A12B8 = 6;
 s32 D_802A12BC = 8;
+#ifdef TARGET_PC
+struct {
+    s32 count;
+    u8 *heap;
+} D_802A12C0 = { 0x100, D_802AD120 };
+#else
 s32 D_802A12C0[] = { 0x100, (s32) D_802AD120 };
+#endif
 s32 D_802A12C8[] = {
     3,      0x1900, 0x380, 0xAC0, 0x2A3D, -0x2A3D, 0x30A3, 0, 0, 0x3FFF,
     0xD80,  0x1600, 0x2A3D, -0x2A3D, 0x30A3, 0, 0, 0x3FFF,
@@ -679,7 +732,11 @@ s32 func_8026A8B4(void **oscState, f32 *initVal, u8 oscType, u8 oscRate, u8 oscD
     return deltaTime;
 }
 
+#ifdef TARGET_PC
+s16 func_8026A754(s32 arg0, s32 arg1, void *arg2, u8 *arg3, s32 arg4) {
+#else
 s16 func_8026A754(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
+#endif
     s16 temp_v0;
     s16 temp_v0_2;
     s16 temp_v0_3;
@@ -688,6 +745,15 @@ s16 func_8026A754(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     D_802AD210 = arg3;
     D_802AD214 = arg4;
     func_802983D0(D_802AD120, D_802AD210, D_802AD214);
+#ifdef TARGET_PC
+    D_802A1278.sched = arg2;
+    D_802A1254.fxType = 6;
+    D_802A1254.params = D_802A12C8;
+    D_802A1278.pri = arg0;
+    D_802A1278.id = arg1;
+    D_802A1278.outputRate = D_802A1250;
+    temp_v0_3 = func_8026B9CC(&D_802A1254, &D_802A1278);
+#else
     M2C_FIELD(D_802A1278, s32 *, 0x14) = arg2;
     M2C_FIELD(D_802A1254, s8 *, 0x1C) = 6;
     M2C_FIELD(D_802A1254, M2C_UNK **, 0x20) = D_802A12C8;
@@ -695,6 +761,7 @@ s16 func_8026A754(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     M2C_FIELD(D_802A1278, s32 *, 0x1C) = arg1;
     M2C_FIELD(D_802A1278, s32 *, 0x10) = (s32) D_802A1250;
     temp_v0_3 = func_8026B9CC(D_802A1254, D_802A1278);
+#endif
     if (temp_v0_3 != 0) {
         return temp_v0_3;
     }
@@ -739,9 +806,15 @@ s16 func_8026A5BC() {
     func_8026B7A8(2);
     func_8026B7D4();
     func_802983D0(D_802AD120, D_802AD210, D_802AD214);
+#ifdef TARGET_PC
+    D_802A1278.sched = NULL;
+    D_802A1278.outputRate = D_802A1250;
+    temp_v0_3 = func_8026B9CC(&D_802A1254, &D_802A1278);
+#else
     M2C_FIELD(D_802A1278, s32 *, 0x14) = 0;
     M2C_FIELD(D_802A1278, s32 *, 0x10) = (s32) D_802A1250;
     temp_v0_3 = func_8026B9CC(D_802A1254, D_802A1278);
+#endif
     if (temp_v0_3 != 0) {
         return temp_v0_3;
     }
@@ -1106,6 +1179,46 @@ static s32 func_802699C8() {
     return 0;
 }
 
+#ifdef TARGET_PC
+/* func_80269908 and func_8026984C (nothing calls them) copy the configs
+ * from and to a block of the N64's layout: its words at their offsets, the
+ * reverb parameters' address at 0x14 (a 32-bit word there). */
+void func_80269908(u8 *arg0) {
+    D_802A1254.maxVVoices = M2C_FIELD(arg0, s32 *, 0);
+    D_802A1254.maxPVoices = M2C_FIELD(arg0, s32 *, 4);
+    D_802A1254.maxUpdates = M2C_FIELD(arg0, s32 *, 8);
+    D_802A1254.fxType = M2C_FIELD(arg0, u8 *, 0x10);
+    D_802A1254.params = (s32 *) (uintptr_t) M2C_FIELD(arg0, u32 *, 0x14);
+    D_802A1298.maxVoices = M2C_FIELD(arg0, s32 *, 0x18);
+    D_802A1298.maxEvents = M2C_FIELD(arg0, s32 *, 0x1C);
+    D_802A12B4 = M2C_FIELD(arg0, s32 *, 0x20);
+    D_802A12B8 = M2C_FIELD(arg0, s32 *, 0x24);
+    D_802A12C0.count = M2C_FIELD(arg0, s32 *, 0x28);
+    D_802A1278.numDMABuffers = M2C_FIELD(arg0, u16 *, 0x2C);
+    D_802A1278.dmaBufferLength = M2C_FIELD(arg0, s32 *, 0x30);
+    D_802A1278.framesPerField = M2C_FIELD(arg0, s32 *, 0x34);
+    D_802A1278.maxACMDSize = M2C_FIELD(arg0, s32 *, 0x38);
+    D_802A1250 = M2C_FIELD(arg0, s32 *, 0xC);
+}
+
+void func_8026984C(u8 *arg0) {
+    M2C_FIELD(arg0, s32 *, 0) = D_802A1254.maxVVoices;
+    M2C_FIELD(arg0, s32 *, 4) = D_802A1254.maxPVoices;
+    M2C_FIELD(arg0, s32 *, 8) = D_802A1254.maxUpdates;
+    M2C_FIELD(arg0, u8 *, 0x10) = D_802A1254.fxType;
+    M2C_FIELD(arg0, u32 *, 0x14) = (u32) (uintptr_t) D_802A1254.params;
+    M2C_FIELD(arg0, s32 *, 0x18) = D_802A1298.maxVoices;
+    M2C_FIELD(arg0, s32 *, 0x1C) = D_802A1298.maxEvents;
+    M2C_FIELD(arg0, s32 *, 0x20) = D_802A12B4;
+    M2C_FIELD(arg0, s32 *, 0x24) = D_802A12B8;
+    M2C_FIELD(arg0, s32 *, 0x28) = D_802A12C0.count;
+    M2C_FIELD(arg0, u16 *, 0x2C) = D_802A1278.numDMABuffers;
+    M2C_FIELD(arg0, s32 *, 0x30) = D_802A1278.dmaBufferLength;
+    M2C_FIELD(arg0, s32 *, 0x34) = D_802A1278.framesPerField;
+    M2C_FIELD(arg0, s32 *, 0x38) = D_802A1278.maxACMDSize;
+    M2C_FIELD(arg0, s32 *, 0xC) = D_802A1250;
+}
+#else
 void func_80269908(u8 *arg0) {
     M2C_FIELD(D_802A1254, s32 *, 0) = (s32) M2C_FIELD(arg0, s32 *, 0);
     M2C_FIELD(D_802A1254, s32 *, 4) = (s32) M2C_FIELD(arg0, s32 *, 4);
@@ -1141,6 +1254,7 @@ void func_8026984C(u8 *arg0) {
     M2C_FIELD(arg0, s32 *, 0x38) = (s32) M2C_FIELD(D_802A1278, s32 *, 0xC);
     M2C_FIELD(arg0, s32 *, 0xC) = (s32) D_802A1250;
 }
+#endif
 
 s32 func_80269840() {
     return 0x640013;
@@ -1200,13 +1314,13 @@ s16 *func_80269680(u32 arg0) {
         sp4 = D_802AD64C;
         break;
     case 2:
-        sp4 = D_802AD21C;
+        sp4 = (u8 *) D_802AD21C;
         break;
     case 3:
-        sp4 = D_802AD654;
+        sp4 = (u8 *) D_802AD654;
         break;
     case 4:
-        sp4 = D_802AD65C;
+        sp4 = (u8 *) D_802AD65C;
         break;
     }
     return (s16 *) sp4;
@@ -2093,7 +2207,11 @@ static void func_8026706C(s16 num, SndDef *def) {
     def->vol = 0x7FFF;
     def->pan = 0x40;
     def->prio = e->unk3;
+#ifdef TARGET_PC
+    def->pitch = (f32) e->unk6 / (f32) D_802A1278.outputRate;
+#else
     def->pitch = (f32) e->unk6 / (f32) D_802A1278[4];
+#endif
     def->script = -1;
     def->unkF = 0;
     switch (D_802AD650->magic) {

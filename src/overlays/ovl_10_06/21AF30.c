@@ -1937,7 +1937,7 @@ void func_ovl10_06_800445DC(void) {
     D_ovl10_06_8004B7F0 = func_ovl10_06_8004A0C0(4, &a, &b, D_ovl10_06_8004BAB0, 0x48);
     for (i = 0; i < D_ovl10_06_8004B7F0; i++) {
         func_ovl10_06_8004A068(D_ovl10_06_8004BAB0[i], &a);
-        func_ovl10_06_8004A668(&a);
+        func_ovl10_06_8004A668((f32 *) &a);
     }
 }
 

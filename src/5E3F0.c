@@ -18,7 +18,8 @@
  *   `v = 0; if ((x & f) == f) v = 1;` tests of unk10, unk68 and D_802AC9E8
  *   (80244E04 goes from 64 differing words to 10 with them).
  * func_8024A0DC is called without its argument (80250DC8 leaves a0 as
- * it is), so it has no prototype here.
+ * it is: its own caller's flag; the port passes it), so it has no
+ * prototype here.
  * The entry's unk58-unk64, unk6C, unk88, unk8C, unkC0 and unkC4 are
  * floats. An empty `if (!X && !X) {}` on a memory load at the top of a
  * function (X = D_800AEDF0[arg0].unk10, D_802AC9E8 or D_802AC8D0[arg0])
@@ -599,7 +600,11 @@ void func_80250338(s32 arg0, void *arg1);
 s32 func_80250398(s32 arg0);
 void func_8025068C(s32 arg0);
 void func_802506B8(u8 *str);
+#ifdef TARGET_PC
+void func_80250DC8(s32 arg0);
+#else
 void func_80250DC8(void);
+#endif
 void func_80250E2C(s32 arg0);
 void func_802510C8(void);
 void func_802510F0(void);
@@ -759,12 +764,22 @@ void func_80250E2C(s32 arg0) {
     }
 }
 
+/* ZeroJump 0x100F: its callers pass a flag, which it hands on to
+ * func_8024A0DC in $a0 */
+#ifdef TARGET_PC
+void func_80250DC8(s32 arg0) {
+#else
 void func_80250DC8() {
+#endif
     s32 var_v1;
 
     var_v1 = func_80243EB4(func_80243DDC(), 0x8000);
     if (var_v1 == 0) {
+#ifdef TARGET_PC
+        func_8024A0DC(arg0);
+#else
         func_8024A0DC();
+#endif
     }
 }
 
@@ -2327,7 +2342,7 @@ s32 func_8024C4EC(UnkObj *obj, s32 arg1) {
 void func_8024C334(s32 arg0, s32 arg1, u16 arg2, f32 *arg3) {
     s32 pad[6];
     UnkStruct_800AEDF0 *e = &D_800AEDF0[arg0];
-    s32 obj = e->unk28;
+    s32 obj = (s32) e->unk28;
 
     if (!func_80244BA4(arg0, 2)) {
         func_80243D54(arg0);
@@ -2425,7 +2440,7 @@ void func_8024BF04(s32 arg0) {
 
     if (p->unk2C != 0) {
         if (func_80274F8C(M2C_FIELD(p, s16 *, 0x1A), obj->unk40->unk10, obj->unk40->unk14, obj->unk40->unk18, arg0) == 0) {
-            if (func_802712A8(func_802703B4(p->unk2C) + 0x64, 0x80) != 0) {
+            if (func_802712A8((s32 *)(func_802703B4(p->unk2C) + 0x64), 0x80) != 0) {
                 func_80243D90(arg0, 0x400, 0);
                 func_80244354(arg0, 0x20, 0);
             }
@@ -3707,7 +3722,7 @@ void func_80247CD0(s32 arg0, s32 arg1) {
     D_802AC930[arg0] = arg1;
     func_80244354(arg0, 0x30020, 1);
     D_802AC918[arg0] = 0;
-    o = func_802443F4(arg0);
+    o = (UnkObj *)(func_802443F4(arg0));
     D_802ACA48[arg0] = o->unk40->unk20;
     D_802ACA60[arg0] = D_802ACA48[arg0];
     func_80231408(o, 0x40000);
@@ -4244,7 +4259,7 @@ void func_80246018() {
 }
 
 void func_80245FD4() {
-    if (func_802871D0(D_802ACF58) & 3) {
+    if (func_802871D0((s32) D_802ACF58) & 3) {
         D_802AC9EC = 0;
         func_80245FA0(5, 0);
     }
@@ -4908,7 +4923,7 @@ f32 func_8024441C(s32 arg0, s32 arg1) {
 s32 func_802443F4(s32 arg0) {
     s32 ret;
 
-    ret = D_800AEDF0[arg0].unk28;
+    ret = (s32) D_800AEDF0[arg0].unk28;
     return ret;
 }
 
@@ -4938,7 +4953,7 @@ void func_80244354(s32 arg0, s32 arg1, s32 arg2) {
 }
 
 void func_80244308(void *arg0) {
-    func_8022F4AC(arg0, 0x10, D_800AEDF0[func_802441AC(arg0)].unk4C);
+    func_8022F4AC((s32) arg0, 0x10, D_800AEDF0[func_802441AC(arg0)].unk4C);
 }
 
 s32 func_802442F8() {

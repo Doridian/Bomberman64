@@ -45,7 +45,7 @@ void func_8022DDB4(s32 arg0) {
 }
 
 static void func_8022DD6C() {
-    func_8022DBF4(D_800A7F08, 291.0f, 56.0f, func_802391F0(), 0);
+    func_8022DBF4(D_800A7F08, 291.0f, 56.0f, (s32 *)(func_802391F0()), 0);
     func_80239430();
 }
 

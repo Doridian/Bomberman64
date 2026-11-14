@@ -1764,7 +1764,7 @@ void func_ovl0C_01_80045194(void) {
         func_ovl0C_01_80044CC0(D_ovl0C_01_8004A104);
     }
     if (func_ovl0C_01_80049B90(0x40C) == 0) {
-        func_ovl0C_01_80044A68(&D_ovl0C_01_8004A3BC.unk0, D_ovl0C_01_8004A2A4, D_ovl0C_01_8004A22C, 0x40C);
+        func_ovl0C_01_80044A68((UnkStruct_ovl0C_01_8004A3BC *) &D_ovl0C_01_8004A3BC.unk0, D_ovl0C_01_8004A2A4, D_ovl0C_01_8004A22C, 0x40C);
     }
     if ((func_ovl0C_01_80049B90(0x40C) != 0) && (func_ovl0C_01_80049B90(0x414) == 0)) {
         func_ovl0C_01_80049B80(0x414);

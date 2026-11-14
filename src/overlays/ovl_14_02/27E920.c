@@ -949,8 +949,8 @@ void func_ovl14_02_8004D640(UnkStructA *obj) {
         if (dir.z > 1450.0f) {
             dir.z = 1449.0f;
             func_ovl14_02_8004F5A0(&dir, &pos2);
-            spark = func_ovl14_02_8004EDE8();
-            spark = func_ovl14_02_8004EE48(spark);
+            spark = (UnkStructA *)(func_ovl14_02_8004EDE8());
+            spark = func_ovl14_02_8004EE48((s32) spark);
             D_ovl14_02_80050270.x = spark->unk40->unk10 = D_ovl14_02_800502EC->x + pos2.x;
             D_ovl14_02_80050270.z = spark->unk40->unk18 = D_ovl14_02_800502EC->z + pos2.z;
         }
@@ -2793,7 +2793,7 @@ void func_ovl14_02_80048830(f32 *arg0, f32 *arg1, f32 arg2, f32 *arg3) {
     f32 dy;
     f32 pad[1];
 
-    func_ovl14_02_8004F598(arg0, arg3, ang);
+    func_ovl14_02_8004F598((Vec3f *) arg0, (Vec3f *) arg3, (Vec3f *) ang);
     ang[1] = ((ang[1] - 90.0f) >= 360.0f) ? (ang[1] - 90.0f) - 360.0f : (ang[1] < 90.0f) ? (ang[1] - 90.0f) + 360.0f : (ang[1] - 90.0f);
     dx = ((0 <= ang[0] && ang[0] <= 180.0f) ? ang[0] : (360.0f - ang[0]) * -1.0f)
        - ((0 <= arg1[0] && arg1[0] <= 180.0f) ? arg1[0] : (360.0f - arg1[0]) * -1.0f);
@@ -2892,7 +2892,7 @@ void func_ovl14_02_800482A0(void) {
     s32 id;
     f32 pos[3];
 
-    id = func_ovl14_02_8004F780();
+    id = (s32)(func_ovl14_02_8004F780());
     obj = D_ovl14_02_800502F0[id];
     D_ovl14_02_80050330[id] = 1;
     func_ovl14_02_8004F6D8(obj, pos);

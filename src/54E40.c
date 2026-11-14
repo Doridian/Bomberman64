@@ -1651,7 +1651,7 @@ void func_8023FAA0() {
     s32 sp44[3];
     u8 *temp_v1_3;
 
-    temp_v0 = func_802391F0();
+    temp_v0 = (u8 *)(func_802391F0());
     M2C_FIELD(temp_v0, f32 *, 0x70) = 1.6333334f;
     M2C_FIELD(temp_v0, f32 *, 0x6C) = 16.333334f;
 loop_1:
@@ -3009,9 +3009,9 @@ static void func_8023B8D0() {
     } else {
         func_8023B450(func_80287680(), buf, 2);
         D_802AC814 = func_802811F0(buf, 0xDC, 0x50, 0.6f, 0.6f, 2);
-        model = func_8026CE28(0x19);
+        model = (s32)(func_8026CE28(0x19));
         for (i = 0; i < 5; i++) {
-            o = D_802AC7F8[i] = func_8022A6C4(model, 0x40);
+            o = D_802AC7F8[i] = func_8022A6C4((void *) model, 0x40);
             if ((func_8028A36C(D_802AC5E8 * 20 + D_802AC5EC * 5 + i + 0x2C) != 0) || ((i == 3) && ((&D_800BE818)[i] != 0))) {
                 o->unkC |= 0x100;
             } else {
@@ -3328,7 +3328,7 @@ void func_8023A84C(s32 arg0) {
 }
 
 s32 *func_8023A840() {
-    return &D_802AC610;
+    return (s32 *) &D_802AC610;
 }
 
 s32 *func_8023A834() {

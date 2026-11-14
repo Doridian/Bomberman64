@@ -32,7 +32,11 @@ typedef struct {
 void func_80239094(void);
 s32 func_802399AC(s32);
 s32 func_80239EE8(s32);
+#ifdef TARGET_PC
+s8 func_80239F70(s32 arg0); /* 53D70.c */
+#else
 s32 func_80239F70(void);
+#endif
 s32 func_8023A038(s32);
 void func_8026C660(s32);
 s32 func_8027EDC8(s32 arg0);
@@ -256,7 +260,11 @@ s32 func_8027EDC8(s32 arg0) {
     s8 x;
     s8 y;
 
+#ifdef TARGET_PC
+    rawx = func_80239F70(arg0); /* IDO passes arg0, left in $a0 */
+#else
     rawx = func_80239F70();
+#endif
     x = rawx * 0.7;
     rawy = func_80239EE8(arg0);
     y = rawy * 0.7;

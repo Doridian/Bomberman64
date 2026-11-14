@@ -494,7 +494,7 @@ static f32 *func_802304C0(s32 arg0, f32 *arg1, s32 arg2) {
             break;
         }
         D_802A5A20 = func_8022F3F8(arg0, arg1, (f32 *) D_802A5A14, arg2);
-        if (D_802A5A20 != 0 && func_8022E884(arg1, (f32 *) D_802A5A14) != 0) {
+        if (D_802A5A20 != 0 && func_8022E884((UnkStructA80 *) arg1, (UnkStructA80 *) D_802A5A14) != 0) {
             func_8022F808((f32 *) D_802A5A14, D_802A5790);
             D_802A5A1C = func_8022DF68(D_802A5780, D_802A5790);
             if (D_802A5A1C < D_802A57BC) {
@@ -663,7 +663,7 @@ void func_80232DB4(f32 *arg0) {
             break;
         }
         if ((o->unkC ^ o->unk14) != 0 && ((o->unkC ^ o->unk14) & a->unk8) && a->unk4 < o->unk1C && a != o) {
-            func_8022E884(arg0, (f32 *) o);
+            func_8022E884((UnkStructA80 *) arg0, (UnkStructA80 *) o);
         }
     }
 }
@@ -675,7 +675,7 @@ s32 func_80232D18(f32 *arg0, s32 arg1) {
         if (o->unk4 >= 0xD0) {
             break;
         }
-        if (func_8022F3F8(arg1, arg0, (f32 *) o, 0) != 0 && func_8022E884(arg0, (f32 *) o) != 0) {
+        if (func_8022F3F8(arg1, arg0, (f32 *) o, 0) != 0 && func_8022E884((UnkStructA80 *) arg0, (UnkStructA80 *) o) != 0) {
             return o->unk8 | ((UnkStructA80 *) arg0)->unk14;
         }
     }
@@ -690,7 +690,7 @@ s32 func_80232C74(f32 *arg0, s32 arg1) {
         if (o->unk4 >= 0xD0) {
             break;
         }
-        if (func_8022F3F8(arg1, arg0, (f32 *) o, 1) != 0 && func_8022E884(arg0, (f32 *) o) != 0) {
+        if (func_8022F3F8(arg1, arg0, (f32 *) o, 1) != 0 && func_8022E884((UnkStructA80 *) arg0, (UnkStructA80 *) o) != 0) {
             return o->unk8 | ((UnkStructA80 *) arg0)->unk14;
         }
     }
@@ -705,7 +705,7 @@ s32 func_80232BD0(f32 *arg0, s32 arg1) {
         if (o->unk4 >= 0xD0) {
             break;
         }
-        if (func_8022F3F8(arg1, arg0, (f32 *) o, 2) != 0 && func_8022E884(arg0, (f32 *) o) != 0) {
+        if (func_8022F3F8(arg1, arg0, (f32 *) o, 2) != 0 && func_8022E884((UnkStructA80 *) arg0, (UnkStructA80 *) o) != 0) {
             return o->unk8 | ((UnkStructA80 *) arg0)->unk14;
         }
     }
@@ -775,7 +775,7 @@ void func_80232A34(u8 *arg0, s32 arg1) {
         }
         func_8022FC20(var_a1, sv_a2);
     } else {
-        func_8022FC20(&D_802A5678, sv_a2);
+        func_8022FC20((s32 *) &D_802A5678, sv_a2);
     }
     M2C_FIELD(sv_a2, s32 *, 4) = sv_a3;
 }
@@ -1794,12 +1794,12 @@ s32 func_8022F698(s32 arg0, f32 *arg1, f32 *arg2, f32 **arg3, s32 arg4) {
     s32 var_t1;
     s32 var_v0;
 
-    var_t0 = D_802A5578.unk7C;
+    var_t0 = (f32 *) D_802A5578.unk7C;
     arg0 &= 0x3FFFF;
     var_t1 = 0;
     if (var_t0 != NULL && arg4 > 0) {
         do {
-            if ((M2C_FIELD(var_t0, s32 *, 8) & arg0) && func_8022F5E4(var_t0, arg1, arg2) != 0) {
+            if ((M2C_FIELD(var_t0, s32 *, 8) & arg0) && func_8022F5E4(var_t0, (u8 *) arg1, (u8 *) arg2) != 0) {
                 *arg3++ = var_t0;
                 var_t1++;
             }

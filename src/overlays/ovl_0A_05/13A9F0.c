@@ -555,7 +555,7 @@ void func_ovl0A_05_80047608(void) {
     func_ovl0A_05_80048D48(obj, pos);
     func_ovl0A_05_80049240(obj);
     obj = func_ovl0A_05_80048CA0(0, 0x01000000, 0xD0, NULL);
-    func_ovl0A_05_80048D50(pos, obj);
+    func_ovl0A_05_80048D50((UnkStruct_ovl0A_05_80048CA0 *) pos, obj);
     func_ovl0A_05_80048E10();
     func_ovl0A_05_80048BC0(dst);
     dst[1] -= 60.0f;
@@ -702,7 +702,7 @@ void func_ovl0A_05_80046DFC(void) {
     D_ovl0A_05_80049950[2] = D_ovl0A_05_80049948;
     D_ovl0A_05_80049950[3] = D_ovl0A_05_8004994C;
     for (i = 0; i < 4; i++) {
-        func_ovl0A_05_80048D50(D_ovl0A_05_8004959C[i], D_ovl0A_05_80049950[i]);
+        func_ovl0A_05_80048D50((UnkStruct_ovl0A_05_80048CA0 *) D_ovl0A_05_8004959C[i], D_ovl0A_05_80049950[i]);
     }
     func_ovl0A_05_80048DC8(func_ovl0A_05_80046A1C, NULL, 0, 0, 0x150);
 }
@@ -913,7 +913,7 @@ void func_ovl0A_05_80046248(void) {
     f32 d;
     f32 a;
 
-    src = func_ovl0A_05_80048DF0();
+    src = (f32 *)(func_ovl0A_05_80048DF0());
     pos[0] = src[0];
     pos[1] = src[1];
     pos[2] = src[2];
@@ -927,7 +927,7 @@ void func_ovl0A_05_80046248(void) {
     pos[1] += d;
     func_ovl0A_05_80049220(7, pos, 0);
     pos[1] -= d;
-    func_ovl0A_05_80048D50(from, obj);
+    func_ovl0A_05_80048D50((UnkStruct_ovl0A_05_80048CA0 *) from, obj);
     for (i = 0; i < 30; i++) {
         t = (f32) i / 30.0f;
         a = (1.0f - t) * 191.25f;
@@ -1099,7 +1099,7 @@ void func_ovl0A_05_800459C8(void) {
             a[1] = b[1] += 60.0f;
             a[0] = b[0] += 150.0f * s;
             func_ovl0A_05_800458DC(objs[i], b, a);
-            func_ovl0A_05_80048D50(b, objs[i]);
+            func_ovl0A_05_80048D50((UnkStruct_ovl0A_05_80048CA0 *) b, objs[i]);
             s *= -1.0f;
             objs[i]->unk40->unk36--;
             if (objs[i]->unk40->unk36 < 0) {
@@ -1551,7 +1551,7 @@ void func_ovl0A_05_800438A0(void) {
     s32 *flag;
     f32 cx;
 
-    flag = func_ovl0A_05_80048DF0();
+    flag = (s32 *)(func_ovl0A_05_80048DF0());
     x = 200.0f;
     y = 55.0f;
     D_ovl0A_05_8004990C->unkC &= ~1;

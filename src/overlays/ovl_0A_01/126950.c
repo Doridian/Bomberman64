@@ -668,7 +668,7 @@ void func_ovl0A_01_80046A50(void) {
     f32 dy;
     f32 dz;
 
-    pos = func_ovl0A_01_80047FB0();
+    pos = (f32 *)(func_ovl0A_01_80047FB0());
     x = pos[0];
     y = pos[1];
     z = pos[2];
@@ -897,7 +897,7 @@ void func_ovl0A_01_80045C70(void) {
     f32 a;
     f32 s;
 
-    pos = func_ovl0A_01_80047FB0();
+    pos = (f32 *)(func_ovl0A_01_80047FB0());
     obj = func_ovl0A_01_80047E60(0x32B, 0x01080000, 0xD0, NULL);
     obj->unk40->unk10 = (pos[0] - 25.0f) + func_ovl0A_01_80048140() * 50.0;
     obj->unk40->unk14 = pos[1];
@@ -934,7 +934,7 @@ void func_ovl0A_01_80045908(void) {
 
     ring = func_ovl0A_01_80047E60(0x1CC, 0x01080000, 0xD0, NULL);
     flash = func_ovl0A_01_80047E60(0x2D5, 0x01080000, 0xD0, NULL);
-    pos = func_ovl0A_01_80047FB0();
+    pos = (f32 *)(func_ovl0A_01_80047FB0());
     a = 180.0f;
     ring->unk40->unk10 = flash->unk40->unk10 = pos[0];
     ring->unk40->unk14 = flash->unk40->unk14 = pos[1];
@@ -977,7 +977,7 @@ void func_ovl0A_01_800456C4(void) {
     f32 s;
 
     obj = func_ovl0A_01_80047E60(0x1C2, 0x01080000, 0xD0, NULL);
-    pos = func_ovl0A_01_80047FB0();
+    pos = (f32 *)(func_ovl0A_01_80047FB0());
     v = 0.0f;
     func_ovl0A_01_80047E70(obj);
     obj->unk40->unk10 = pos[0] + func_ovl0A_01_80048140() * 200.0;
@@ -1512,7 +1512,7 @@ void func_ovl0A_01_80043AA4(void) {
     pos[1] = 1000.0f;
     pos[0] = 600.0f;
     pos[2] = 2400.0f;
-    func_ovl0A_01_80047F10(pos, obj);
+    func_ovl0A_01_80047F10((Obj *) pos, obj);
     base[0] = pos[0] + 250.0f;
     tgt[0] = pos[0] + 250.0f;
     tgt[1] = pos[1] - 1000.0f;

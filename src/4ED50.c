@@ -38,6 +38,10 @@ typedef struct UnkStruct_802363BC {
 s32 func_80238A10(void *, s32, s32, s32, s32);
 void func_80234F6C(s32);
 void func_80235114(Vec3f_8008E648 *);
+#ifdef TARGET_PC
+/* IDO: implicitly `int` (func_80236658 has why); it is void (530C0.c) */
+void func_80239094(void);
+#endif
 void func_80235178(Vec3f_8008E648 *);
 void func_80236218(s32);
 void func_80236658(void);
@@ -461,7 +465,7 @@ void func_802358D0(void *arg0, s32 arg1, s16 arg2) {
     D_8008F424 = arg2;
     D_8008F426 = 0;
     if (arg0 != 0) {
-        func_80238A10(func_80236658, arg0, 0, 0, arg1);
+        func_80238A10(func_80236658, (s32) arg0, 0, 0, arg1);
     }
 }
 

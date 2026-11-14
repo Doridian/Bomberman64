@@ -454,7 +454,7 @@ void func_ovl10_13_80048850(void) {
     s32 who;
     s32 i;
 
-    who = func_ovl10_13_8004A150();
+    who = (s32)(func_ovl10_13_8004A150());
     obj = func_ovl10_13_80049818(who);
     p = func_ovl10_13_80049CB8(0x302, 0);
     p->unkC |= 0x80;

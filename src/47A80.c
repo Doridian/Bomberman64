@@ -24,9 +24,11 @@
 /* A model's display list, built from its joint tree: one matrix per joint
  * with a translation or rotation, a segment-6 display list per mesh. */
 
+/* a command's two words; in the port as wide as a pointer, as the port's
+ * gbi.h has them (an address is a word) */
 typedef struct {
-    u32 w0;
-    u32 w1;
+    uintptr_t w0;
+    uintptr_t w1;
 } Gfx;
 
 #define GFX2(pkt, a, b) { Gfx *_g = (Gfx *) (pkt); _g->w0 = (a); _g->w1 = (b); }
@@ -186,7 +188,7 @@ Gfx D_8029FCC8[] = {
     { 0xFA000000, 0xFFFFFFFF }, /* gDPSetPrimColor(0, 0, 255, 255, 255, 255) */
     { 0xFB000000, 0x404040FF }, /* gDPSetEnvColor(64, 64, 64, 255) */
     { 0xFC30B261, 0x44664924 }, /* gDPSetCombineLERP */
-    { 0xFD700000, (u32) D_8029F8C0 }, /* gDPSetTextureImage */
+    { 0xFD700000, (uintptr_t) D_8029F8C0 }, /* gDPSetTextureImage */
     { 0xF5700000, 0x07014050 }, /* gDPSetTile(G_TX_LOADTILE) */
     { 0xE6000000, 0x00000000 }, /* gDPLoadSync */
     { 0xF3000000, 0x071FF200 }, /* gDPLoadBlock */

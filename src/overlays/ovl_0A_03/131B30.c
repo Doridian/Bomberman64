@@ -1356,7 +1356,7 @@ void func_ovl0A_03_8004305C(void) {
         pos[0] += d[0];
         pos[1] += d[1];
         pos[2] += d[2];
-        func_ovl0A_03_80047ED0(pos, D_ovl0A_03_80048880);
+        func_ovl0A_03_80047ED0((Obj03 *) pos, D_ovl0A_03_80048880);
         func_ovl0A_03_80047D88(D_ovl0A_03_80048880->unk58, pos, ang);
         D_ovl0A_03_80048880->unk40->unk20 = ang[0];
         func_ovl0A_03_80047F90();
@@ -1374,7 +1374,7 @@ void func_ovl0A_03_8004305C(void) {
         pos[0] += d[0];
         pos[1] += d[1];
         pos[2] += d[2];
-        func_ovl0A_03_80047ED0(pos, D_ovl0A_03_80048880);
+        func_ovl0A_03_80047ED0((Obj03 *) pos, D_ovl0A_03_80048880);
         func_ovl0A_03_80047D88(D_ovl0A_03_80048880->unk58, pos, ang);
         D_ovl0A_03_80048880->unk40->unk20 = ang[0];
         func_ovl0A_03_80047F90();
@@ -1411,7 +1411,7 @@ void func_ovl0A_03_8004305C(void) {
         pos[0] += d[0];
         pos[1] += d[1];
         pos[2] += d[2];
-        func_ovl0A_03_80047ED0(pos, D_ovl0A_03_80048880);
+        func_ovl0A_03_80047ED0((Obj03 *) pos, D_ovl0A_03_80048880);
         func_ovl0A_03_80047D88(D_ovl0A_03_80048880->unk58, pos, ang);
         D_ovl0A_03_80048880->unk40->unk20 = ang[0];
         func_ovl0A_03_80047F90();

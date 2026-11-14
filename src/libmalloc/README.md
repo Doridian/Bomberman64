@@ -43,7 +43,8 @@ the choice.) That is the usual reading, not legal advice.
 ## Ours
 
 The stub headers in `include/` (`stddef.h`, `limits.h`, `string.h`,
-`sys/param.h`: without them IDO reads the host's `/usr/include`) and
-`pc_names.h` (the PC port's `#define`s renaming the allocator's symbols,
-under `TARGET_PC`) are this project's, under its AGPL-3.0, not GNU
+`sys/param.h`: without them IDO reads the host's `/usr/include`; and
+`unistd.h`, sbrk's prototype for the PC port, which compiles gmalloc.c
+with `-DHAVE_UNISTD_H`) and `pc_names.h` (the PC port's `#define`s renaming
+the allocator's symbols, under `TARGET_PC`) are this project's, under its AGPL-3.0, not GNU
 malloc's.

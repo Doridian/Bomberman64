@@ -76,7 +76,11 @@ UnkStruct_ovl10_05_80046520 *func_ovl10_05_80046520(UnkStructA *, s32);
 void func_ovl10_05_80046558(void (*)(void), s32, s32, s32, s32);
 void func_ovl10_05_80046578(s32);
 void func_ovl10_05_800465A0(void);
+#ifdef TARGET_PC
+UnkStruct_ovl10_05_80047130 *func_ovl10_05_800465E0(s32 arg0); /* ZeroJump 0x1A00, func_80287DC0 */
+#else
 UnkStruct_ovl10_05_80047130 *func_ovl10_05_800465E0(void);
+#endif
 void func_ovl10_05_800465F0(UnkStruct_ovl10_05_80047130 *, s32);
 f32 func_ovl10_05_80046700(f32);
 f32 func_ovl10_05_80046708(f32);
@@ -834,8 +838,14 @@ void func_ovl10_05_800438D0(void) {
     func_ovl10_05_80045AF0(func_ovl10_05_800452EC);
 }
 
+/* its caller passes an argument (0x1FD) it hands on in $a0 */
+#ifdef TARGET_PC
+void func_ovl10_05_80043688(s32 arg0) {
+    D_ovl10_05_80047130 = func_ovl10_05_800465E0(arg0);
+#else
 void func_ovl10_05_80043688() {
     D_ovl10_05_80047130 = func_ovl10_05_800465E0();
+#endif
     func_ovl10_05_800465F0(D_ovl10_05_80047130, 0x20000001);
     D_ovl10_05_80047130->unk40 = 0.5f;
     D_ovl10_05_80047130->unk44 = D_ovl10_05_80047130->unk40 * 0.75f;

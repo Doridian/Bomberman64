@@ -515,7 +515,7 @@ void func_ovl15_01_8004C1B8(void) {
     D_ovl15_01_8004DFC0.x = 0.0f;
     D_ovl15_01_8004DFC0.y = 70.0f;
     D_ovl15_01_8004DFC0.z = 200.0f;
-    func_ovl15_01_8004D2B8(&D_ovl15_01_8004DFC0);
+    func_ovl15_01_8004D2B8((f32 *) &D_ovl15_01_8004DFC0);
     func_ovl15_01_8004D208(0);
     func_ovl15_01_8004D2D8(D_ovl15_01_8004DFD0.x, D_ovl15_01_8004DFD0.z, D_ovl15_01_8004DFD0.x, D_ovl15_01_8004DFD0.z);
     func_ovl15_01_8004D2C8(D_ovl15_01_8004DFD0.x, D_ovl15_01_8004DFD0.z, 1160.0f, 1160.0f);
@@ -1041,7 +1041,7 @@ void func_ovl15_01_8004A7B4(void) {
     f32 w;
 
     if (func_ovl15_01_8004D7B0(0x41E) != 0) {
-        func_ovl15_01_8004D320(&pos);
+        func_ovl15_01_8004D320((f32 *) &pos);
         pos.y = D_ovl15_01_8004E050.y;
         tgt.x = D_ovl15_01_8004DF30.x;
         tgt.y = D_ovl15_01_8004E050.y;
@@ -1438,7 +1438,7 @@ void func_ovl15_01_80049358(f32 *arg0, f32 *arg1, f32 arg2, f32 *arg3) {
     f32 dy;
     f32 pad[1];
 
-    func_ovl15_01_8004D368(arg0, arg3, ang);
+    func_ovl15_01_8004D368((Vec3f *) arg0, (Vec3f *) arg3, (Vec3f *) ang);
     ang[1] = ((ang[1] - 90.0f) >= 360.0f) ? (ang[1] - 90.0f) - 360.0f : (ang[1] < 90.0f) ? (ang[1] - 90.0f) + 360.0f : (ang[1] - 90.0f);
     dx = ((0 <= ang[0] && ang[0] <= 180.0f) ? ang[0] : (360.0f - ang[0]) * -1.0f)
        - ((0 <= arg1[0] && arg1[0] <= 180.0f) ? arg1[0] : (360.0f - arg1[0]) * -1.0f);
@@ -2113,8 +2113,8 @@ void func_ovl15_01_80046D18(void) {
                 }
                 if (func_ovl15_01_8004D7B0(0x419) == 0 && *count == 0) {
                     func_ovl15_01_8004D7A0(0x419);
-                    func_ovl15_01_8004D4A8(D_ovl15_01_8004E0A0, &pos);
-                    func_ovl15_01_8004D758(&pos);
+                    func_ovl15_01_8004D4A8(D_ovl15_01_8004E0A0, (f32 *) &pos);
+                    func_ovl15_01_8004D758((f32 *) &pos);
                 }
             }
         } else {
@@ -2941,7 +2941,7 @@ void func_ovl15_01_80044468(void) {
 void func_ovl15_01_80044420(f32 *arg0) {
     f32 tmp[3];
 
-    func_ovl15_01_80044088(tmp, &D_ovl15_01_8004DFD0, &D_ovl15_01_8004DCD0);
+    func_ovl15_01_80044088(tmp, (f32 *) &D_ovl15_01_8004DFD0, &D_ovl15_01_8004DCD0);
     func_ovl15_01_80044088(arg0, tmp, &D_ovl15_01_8004DCDC);
 }
 

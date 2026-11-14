@@ -1522,7 +1522,7 @@ void func_ovl0F_04_800436B0(void) {
         func_ovl0F_04_80047D10();
     }
     func_ovl0F_04_80047CE8(20);
-    func_ovl0F_04_80047380(D_ovl0F_04_80048954);
+    func_ovl0F_04_80047380((char *) D_ovl0F_04_80048954);
     func_ovl0F_04_80047CD8();
 }
 
@@ -1619,7 +1619,7 @@ static void func_ovl0F_04_80043324(s32 n, char *msg) {
     func_ovl0F_04_80047CC8(func_ovl0F_04_80045E14, (void *) n, 0, 0, 0x130);
     func_ovl0F_04_80047380(msg);
     func_ovl0F_04_80047418(0);
-    func_ovl0F_04_80047380(D_ovl0F_04_80048950);
+    func_ovl0F_04_80047380((char *) D_ovl0F_04_80048950);
 }
 
 static void func_ovl0F_04_80043018(void) {
@@ -1709,7 +1709,7 @@ static void func_ovl0F_04_8004624C_inl1(void) {
         func_ovl0F_04_80047A18(0x10);
         func_ovl0F_04_800479A8(0);
         func_ovl0F_04_800479C8(581.4f, 1430.1f, 1133.3f);
-        func_ovl0F_04_80043324(60, D_ovl0F_04_80048958);
+        func_ovl0F_04_80043324(60, (char *) D_ovl0F_04_80048958);
     }
 }
 
@@ -1724,7 +1724,7 @@ static void func_ovl0F_04_8004624C_inl2(void) {
         func_ovl0F_04_800479A8(1);
         func_ovl0F_04_80047AE0();
         func_ovl0F_04_80047AA8(D_ovl0F_04_80048AA8);
-        func_ovl0F_04_80043324(60, D_ovl0F_04_80048978);
+        func_ovl0F_04_80043324(60, (char *) D_ovl0F_04_80048978);
     }
 }
 
