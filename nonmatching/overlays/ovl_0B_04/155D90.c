@@ -45,13 +45,18 @@
  * only open ones; one stub fewer at 80043F3C. jp's .bss differs: the fade
  * pointer is its last word (vermap name D_ovl0B_04_8004A4A4; us's name is
  * #defined to it) and 80043F24's two words are A3EC/A3F0 (us's A3F0/A3F4),
- * found by fcmp's relocation check. jp's .data and the rest of its .bss
- * are still us's (nonmatching.py doesn't compare them; jp's strings and
- * the rest of its .bss layout, e.g. no A40C, are to do). p5: us/eu .data
- * and .rodata match word for word (A1A4/A1A8/A1AC are defined after
- * 800447DC, so its static A1A0 comes first); their .bss is still short:
- * A3B0 is 13 words in the original (7 unused after page 9's 6) and A4A0
- * 4, so A3E4.. sit 0x1C low and the section is 0x200 of 0x220.
+ * found by fcmp's relocation check. jp's .data is still us's
+ * (nonmatching.py doesn't compare it; jp's strings are to do). p5: us/eu
+ * .data and .rodata match word for word (A1A4/A1A8/A1AC are defined after
+ * 800447DC, so its static A1A0 comes first). p6: .bss is the original's
+ * in all three (us/eu 0x220, jp 0x1E0, every symbol at its address).
+ * IDO puts any .bss object of 8 bytes or more 8-aligned, so the
+ * original's 4-aligned A40C is the second word of an array at A408: the
+ * pages 5-8 texts are D_ovl0B_04_8004A408[j] (j from 1, as the page's
+ * own unk4[j]), not a separate k from 0. A3B0 is 13 words (jp 15). us's
+ * 8 bytes at A3E8 are an unreferenced array, which -O3 would leave to
+ * common: UNUSED_BSS, a dead store in 80043CD0's `if (0)` (fake), keeps
+ * it. A4A0's last 12 bytes (us) and jp's A3F4 are alignment padding.
  *
  * What still differs (words us/jp; the comparison counts a global with
  * the statics after it, so a static of the wrong size costs the rest of
@@ -348,21 +353,28 @@ s32 D_ovl0B_04_8004A2D0[2];    /* pages 1-4's */
 s32 D_ovl0B_04_8004A2D8[2];
 s32 D_ovl0B_04_8004A2E0[2];
 s32 D_ovl0B_04_8004A2E8[50];   /* page 4's, then pages 5-8's (11 each) */
-s32 D_ovl0B_04_8004A3B0[6];    /* page 9's */
 #if VERSION_JP
 /* jp's .bss differs (vermap.jp.txt names): the fade pointer is the last
  * word (A4A4, below), the two words 80043F24 sets are A3EC/A3F0 */
+s32 D_ovl0B_04_8004A3B0[15];   /* page 9's */
 s32 D_ovl0B_04_8004A3EC;
 s32 D_ovl0B_04_8004A3F0;
 #define D_ovl0B_04_8004A3E4 D_ovl0B_04_8004A4A4
+#define UNUSED_BSS()
 #else
+s32 D_ovl0B_04_8004A3B0[13];   /* page 9's */
 Fade *D_ovl0B_04_8004A3E4;
+u8 D_ovl0B_04_8004A3E8[8];     /* not referenced (UNUSED_BSS: fake) */
 s32 D_ovl0B_04_8004A3F0;
 s32 D_ovl0B_04_8004A3F4;
+/* fake: a dead store in an `if (0)`, so -O3 keeps D_ovl0B_04_8004A3E8 in place */
+#define UNUSED_BSS() (D_ovl0B_04_8004A3E8[0] = 0)
 #endif
 Vec3f D_ovl0B_04_8004A3F8;
 Page *D_ovl0B_04_8004A404;
-s32 D_ovl0B_04_8004A40C[15];
+#if !VERSION_JP
+s32 D_ovl0B_04_8004A408[16];   /* pages 5-8's new texts, by item (1-5) */
+#endif
 s32 D_ovl0B_04_8004A448[8];    /* the name's characters */
 s32 D_ovl0B_04_8004A468[6];
 u8 D_ovl0B_04_8004A480[16];
@@ -1317,24 +1329,23 @@ static void func_ovl0B_04_80046294(u8 item) {
     s32 i;
     s32 j;
     s32 n;
-    s32 k;
 
     D_ovl0B_04_80048B98[5] = D_ovl0B_04_8004A1A8 + 0x11;
     func_ovl0B_04_80048690(D_ovl0B_04_8004A404->unk4[8], D_ovl0B_04_80048B98, 5);
     i = D_ovl0B_04_8004A1A8 * 5;
     n = i + 5;
-    for (j = 1, k = 0; i < n; i++, j++, k++) {
+    for (j = 1; i < n; i++, j++) {
         if (D_ovl0B_04_8004A480[i + 1] == 0) {
-            D_ovl0B_04_8004A40C[k] = DRAW_ITEM(D_ovl0B_04_80048B88, &D_ovl0B_04_8004A404->unk8[j]);
+            D_ovl0B_04_8004A408[j] = DRAW_ITEM(D_ovl0B_04_80048B88, &D_ovl0B_04_8004A404->unk8[j]);
             D_ovl0B_04_8004A404->unk8[j].unk0 = D_ovl0B_04_80048B88;
         } else {
-            D_ovl0B_04_8004A40C[k] = DRAW_ITEM(D_ovl0B_04_800494C0[D_ovl0B_04_8004A168 - 5][i], &D_ovl0B_04_8004A404->unk8[j]);
+            D_ovl0B_04_8004A408[j] = DRAW_ITEM(D_ovl0B_04_800494C0[D_ovl0B_04_8004A168 - 5][i], &D_ovl0B_04_8004A404->unk8[j]);
             D_ovl0B_04_8004A404->unk8[j].unk0 = D_ovl0B_04_800494C0[D_ovl0B_04_8004A168 - 5][i];
         }
     }
-    for (j = 1, k = 0, i = D_ovl0B_04_8004A1A8 * 5, n = i + 5; i < n; i++, j++, k++) {
+    for (j = 1, i = D_ovl0B_04_8004A1A8 * 5, n = i + 5; i < n; i++, j++) {
         func_ovl0B_04_80048638(D_ovl0B_04_8004A404->unk4[j]);
-        D_ovl0B_04_8004A404->unk4[j] = D_ovl0B_04_8004A40C[k];
+        D_ovl0B_04_8004A404->unk4[j] = D_ovl0B_04_8004A408[j];
     }
     func_ovl0B_04_800438FC(D_ovl0B_04_8004A404->unk4[PAGE_IDX(item)], 3,
                            &D_ovl0B_04_8004A404->unk8[PAGE_IDX(item)]);
@@ -1566,7 +1577,7 @@ void func_ovl0B_04_800450C0(Obj *arg0) {
     func_ovl0B_04_8004447C(D_ovl0B_04_8004A3B0[5], 0x32);
     o->unkC |= 0x400;
     f = &D_ovl0B_04_80049B20[4];
-    if (!D_ovl0B_04_8004A3E4) {}
+    if (!D_ovl0B_04_8004A3E4) {} /* fake: dead read of the fade pointer before f is set up (without it 57 words differ) */
     step = (f->unk18 - f->unk14) / f->unk1C;
     D_ovl0B_04_8004A3E4 = f;
     f->unk0 = func_ovl0B_04_80047E58(func_ovl0B_04_80043CD0, 0);
@@ -2045,9 +2056,9 @@ static void func_ovl0B_04_8004447C(s32 id, s32 alpha) {
 }
 
 /* The name's two texts centred. */
-#line 2005
+#line 2016
 static void func_ovl0B_04_80044394(s32 a, s32 b) {
-#line 1982
+#line 1993
     s32 n;
 #if VERSION_JP
     u16 x;
@@ -2057,11 +2068,11 @@ static void func_ovl0B_04_80044394(s32 a, s32 b) {
     Obj *o;
     s32 m;
 
-#line 1991
+#line 2002
     D_ovl0B_04_80048A20[8] = 0;
-#line 1990
+#line 2001
     n = 0;
-#line 1993
+#line 2004
     while (D_ovl0B_04_80048A20[n] != 0) {
         n++;
     }
@@ -2296,7 +2307,7 @@ void func_ovl0B_04_80043CD0(s32 arg0, Gfx0B04 **arg1) {
     { Gfx0B04 *g = gfx++; g->w0 = 0xF7000000; g->w1 = 0x10001; }
     { Gfx0B04 *g = gfx++; g->w0 = 0xF6000000 | (((D_ovl0B_04_8004A3E4->unk2C + (s32) D_ovl0B_04_8004A3E4->unk34) & 0x3FF) << 14) | (((D_ovl0B_04_8004A3E4->unk30 + (s32) (D_ovl0B_04_8004A3E4->unk34 * D_ovl0B_04_8004A3E4->unk20)) & 0x3FF) << 2); g->w1 = (((D_ovl0B_04_8004A3E4->unk2C - (s32) D_ovl0B_04_8004A3E4->unk34) & 0x3FF) << 14) | (((D_ovl0B_04_8004A3E4->unk30 - (s32) (D_ovl0B_04_8004A3E4->unk34 * D_ovl0B_04_8004A3E4->unk20)) & 0x3FF) << 2); }
     *arg1 = gfx;
-    if (0) { func_ovl0B_04_80043ADC(); }
+    if (0) { func_ovl0B_04_80043ADC(); UNUSED_BSS(); } /* fake: UNUSED_BSS */
 }
 
 #if !VERSION_JP
@@ -2371,9 +2382,9 @@ void func_ovl0B_04_800436C8(void) {
             if (++D_ovl0B_04_8004A1E4 >= 14) {
                 D_ovl0B_04_8004A1E4 = 0;
             }
-#line 2270
+#line 2281
             b = a = -1; /* fake: numbered above the loop head so as1 hoists li a1 into its load delay */
-#line 2290
+#line 2301
             switch (D_ovl0B_04_8004A1AC[D_ovl0B_04_8004A1E4]) {
                 case 0:
                     a = 0;
@@ -2455,10 +2466,10 @@ static void func_ovl0B_04_H5a() {
     func_ovl0B_04_80047E28(D_ovl0B_04_8004A164, -1);
     D_ovl0B_04_8004A164->unkC |= 0x20;
     /* fake: the store numbered below the line after it, for its place in the jal's delay slot */
-#line 2395
+#line 2406
     D_ovl0B_04_8004A170 = func_ovl0B_04_80047E68(D_ovl0B_04_8004A164, 0xF);
 }
-#line 2377
+#line 2388
 
 /* The tests reread each slot through its pointer, as the original does;
  * the first test's value is its own variable (a: $a3, the later ones x:
