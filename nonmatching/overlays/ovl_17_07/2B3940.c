@@ -2,16 +2,12 @@
  * NON_MATCHING: ovl_17_07's game object, complete: every function and its data.
  * Not built into the ROM (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 3, eu 3, jp 3
+ * differing words: us 0, eu 0, jp 0
  *
- * What still differs in us (words):
- * - func_ovl17_07_8004376C (3): the zero the arms of the `diff >= 360`
- *   test set is in $f2 (z, a uopt register), copied to t, where the
- *   original keeps it in $f26 (with z only dead-used in the loop it gets
- *   $f26 but the 1/6 then gets $f26 and z $f24, or the 10 and
- *   &D_ovl17_07_800457C0 swap s4/s5).
+ * Every function matches in all three versions; the draft is ready to
+ * move to src/.
  *
- * How the rest came to match:
+ * func_ovl17_07_8004376C needs fakes (each marked in the code):
  * - The arms' 360-wraps (2026-11-13): the original colours 360.0f in
  *   $f12 over the first arm's inner if, the arm's (empty) join block and
  *   the `diff >= 360` test, and loads arg1 into a temporary in each arm.
@@ -24,15 +20,16 @@
  *   constant of its own that stays a temporary ($f8). Re-reading cur in
  *   the first arm and a dead `x = obj->unk40->unk8;` in the second are
  *   indirect loads, which keep uopt from colouring arg1's loads there
- *   (each arm loads it into $f4/$f6). These replace the earlier
- *   `obj++; obj--;` fake, which left an `addiu s6,s6,0`.
- * - The original sets a zero in both arms of the `diff >= 360` test and
- *   copies it to t's f20 after: z is 0.0f in one arm and an int 0 in the
- *   other (identical constants fold, and the test with them), and a dead
- *   `if (z != 0.0f)` in the loop keeps a saved float register in use
- *   (frame 0x60). The `z = 0;` in the loop and the empty do-while after
- *   the abs (from the permuter) put the 10 in s5 and
- *   &D_ovl17_07_800457C0 in s4, and the 1/6 in $f24.
+ *   (each arm loads it into $f4/$f6).
+ * - The zero: the original sets it in both arms of the `diff >= 360`
+ *   test and copies it to t's $f20 after, from z in $f26. z is 0.0f in
+ *   one arm and an int 0 in the other (identical constants fold, and the
+ *   test with them), and a dead `if (z != 0.0f)` in the loop keeps it in
+ *   a saved register over the loop (frame 0x60). Two uses of the 1/6 in
+ *   a `* 0` after the loop (2026-11-13) raise its priority above z's, so
+ *   the 1/6 takes $f24 and z $f26.
+ * - The empty do-while after the abs (from the permuter) puts the 10 in
+ *   s5 and &D_ovl17_07_800457C0 in s4.
  * - y is set in each arm of the 0x401 test (the original's delay slot).
  * - The dead `if (!obj->unk40->unk20 && !obj->unk40->unk20) {}` in z's
  *   else arm survives uopt as two loads into temporaries, which as1
@@ -402,7 +399,6 @@ void func_ovl17_07_8004376C(s32 arg0, f32 arg1) {
             } while (0);
         }
         func_ovl17_07_80044AD8(D_ovl17_07_800456B0.unk4);
-        z = 0; /* fake */
         D_ovl17_07_800456B0.unk4 = func_ovl17_07_80044AD0(D_ovl17_07_800456B0.unk0->unk40, 0, x, y,
                                                           D_ovl17_07_800456B0.unk10, D_ovl17_07_800456B0.unk12);
         func_ovl17_07_80044F20();
@@ -411,7 +407,9 @@ void func_ovl17_07_8004376C(s32 arg0, f32 arg1) {
             u = 1.0f;
         }
     }
-    D_ovl17_07_800457C0 = 5;
+    /* fake: two uses of the 1/6 after the loop (folded only after colouring) lift its
+     * priority above z's, so the 1/6 gets $f24 and z $f26, as in the original */
+    D_ovl17_07_800457C0 = 5 + (s32) (t * 0.16666667f + 0.16666667f) * 0;
     obj->unk40->unk20 = arg1;
     if (0) { /* fake: arg1 stays in its home slot, as in the original */
         func_ovl17_07_80044BF0(&arg1, NULL, NULL);
