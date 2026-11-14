@@ -4,13 +4,13 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 0, eu 0, jp 10
+ * differing words: us 0, eu 0, jp 5
  *
  * The pages are a table (D_ovl0B_04_800499B8: texts, handler, cursor
  * table, set-up) that func_ovl0B_04_80043ADC runs in turn; pages 1-4 are
  * the character sets, 5-8 the slots, 9 the save question. The statics
  * the original passes arguments to in $s/$t registers (80043050, 800438FC
- * (mode, id, item), 80043A24/80043A7C (n, ids, items), 8004401C/800440C8,
+ * (id, mode, item), 80043A24/80043A7C (n, ids, items), 8004401C/800440C8,
  * 80044394, 8004447C, 800447DC, 80045540, 800458F4/80045958 (two text
  * ids), 80046294, 80046600/80046734 (item first), 800468F0) are statics
  * with ordinary parameters. Inlined statics stand where the original has
@@ -140,14 +140,13 @@
  *   gives the original's addiu v0,v1,-1; its header line numbered after
  *   the body's (`#line`, fake) lets as1 put the `sw ra` in the first
  *   branch's delay slot, and `n = 0` numbered before the [8] store puts
- *   `move v1,zero` where the original has it), 80046180 0/5 (jp 80046734's `li a0,1` order;
- *   jp 800468F0's loop takes the paired dead reads `if (!o) {} if (!base) {}`).
+ *   `move v1,zero` where the original has it), 80046180 0/0 (p5: 800438FC
+ *   takes (id, mode, item): IPA keeps mode in $a0, but every call now
+ *   sets $a0 after the id, so jp 80046734's `li a0,1` comes after the
+ *   ids index's sll as in the original; jp 80046294's mode, a ternary,
+ *   goes through a local m, which the original evaluates first; jp
+ *   800468F0's loop takes the paired dead reads `if (!o) {} if (!base) {}`).
  * Everything else matches.
- * w5, tried without gain: jp 80046734's mode-1 argument as 1U/(u8)/TRUE/!0
- * /a local and the indices in locals (ugen emits the `li a0,1` first in
- * the join block and as1 takes it into the branch slot; the original's
- * slot has the ids index's sll); p4 also: 800438FC's parameter orders
- * (IPA then moves mode out of $a0) and the id/item arguments in locals.
  * 80044BE8 with a/b/i block-scoped or #if'd out, no `changed`,
  * hand-written MakeEntries loops or an unrolled 80044BE0 (the homes are
  * counted from the bottom of the frame: dropping a/b in jp shrinks the
@@ -831,7 +830,7 @@ s32 D_ovl0B_04_8004A1AC[14] = { 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 1, 1 };
 
 static void func_ovl0B_04_80043050(Entry *e, Desc *d);
 static void func_ovl0B_04_80043010(s32 n, Entry *e, s32 x);
-static void func_ovl0B_04_800438FC(u32 mode, s32 id, Item *it);
+static void func_ovl0B_04_800438FC(s32 id, u32 mode, Item *it);
 static void func_ovl0B_04_80043A24(s32 n, s32 *ids, Item *items);
 #if !VERSION_JP
 static void func_ovl0B_04_80043A7C(s32 n, s32 *ids, Item *items);
@@ -1229,11 +1228,11 @@ static void func_ovl0B_04_800468F0(s32 base) {
 static void func_ovl0B_04_80046734(u8 item, u16 buttons) {
     if ((buttons & 0x20) || (buttons & 0x40)) {
         if (D_ovl0B_04_8004A480[D_ovl0B_04_8004A174]) {
-            func_ovl0B_04_800438FC(0, D_ovl0B_04_8004A404->unk4[HALF_IDX(D_ovl0B_04_8004A174, D_ovl0B_04_8004A1A4)],
+            func_ovl0B_04_800438FC(D_ovl0B_04_8004A404->unk4[HALF_IDX(D_ovl0B_04_8004A174, D_ovl0B_04_8004A1A4)], 0,
                                    &D_ovl0B_04_8004A404->unk8[HALF_IDX(D_ovl0B_04_8004A174, D_ovl0B_04_8004A1A4)]);
         }
         if (D_ovl0B_04_8004A480[item]) {
-            func_ovl0B_04_800438FC(1, D_ovl0B_04_8004A404->unk4[HALF_IDX(item, D_ovl0B_04_8004A1A8)],
+            func_ovl0B_04_800438FC(D_ovl0B_04_8004A404->unk4[HALF_IDX(item, D_ovl0B_04_8004A1A8)], 1,
                                    &D_ovl0B_04_8004A404->unk8[HALF_IDX(item, D_ovl0B_04_8004A1A8)]);
         }
         D_ovl0B_04_8004A174 = item;
@@ -1245,9 +1244,9 @@ static void func_ovl0B_04_80046734(u8 item, u16 buttons) {
 #else
 static void func_ovl0B_04_80046734(u8 item, u16 buttons) {
     if ((buttons & 0x20) || (buttons & 0x40)) {
-        func_ovl0B_04_800438FC(0, D_ovl0B_04_8004A404->unk4[HALF_IDX(D_ovl0B_04_8004A174, D_ovl0B_04_8004A1A4)],
+        func_ovl0B_04_800438FC(D_ovl0B_04_8004A404->unk4[HALF_IDX(D_ovl0B_04_8004A174, D_ovl0B_04_8004A1A4)], 0,
                                &D_ovl0B_04_8004A404->unk8[HALF_IDX(D_ovl0B_04_8004A174, D_ovl0B_04_8004A1A4)]);
-        func_ovl0B_04_800438FC(1, D_ovl0B_04_8004A404->unk4[HALF_IDX(item, D_ovl0B_04_8004A1A8)],
+        func_ovl0B_04_800438FC(D_ovl0B_04_8004A404->unk4[HALF_IDX(item, D_ovl0B_04_8004A1A8)], 1,
                                &D_ovl0B_04_8004A404->unk8[HALF_IDX(item, D_ovl0B_04_8004A1A8)]);
         D_ovl0B_04_8004A174 = item;
     } else if ((buttons & 0x80) || (buttons & 0x100)) {
@@ -1289,6 +1288,7 @@ static void func_ovl0B_04_80046294(u8 item) {
     s32 j;
     s32 n;
     s32 k;
+    s32 m;
 
     D_ovl0B_04_80048B98[3] = D_ovl0B_04_8004A1A8 + 0x11;
     func_ovl0B_04_80048690(D_ovl0B_04_8004A404->unk4[8], D_ovl0B_04_80048B98, 5);
@@ -1304,7 +1304,8 @@ static void func_ovl0B_04_80046294(u8 item) {
             D_ovl0B_04_8004A404->unk8[j].unk0 = D_ovl0B_04_800494C0[D_ovl0B_04_8004A168 - 5][i];
         }
     }
-    func_ovl0B_04_800438FC(D_ovl0B_04_8004A480[item] ? 3 : 4, D_ovl0B_04_8004A404->unk4[PAGE_IDX(item)],
+    m = D_ovl0B_04_8004A480[item] ? 3 : 4;
+    func_ovl0B_04_800438FC(D_ovl0B_04_8004A404->unk4[PAGE_IDX(item)], m,
                            &D_ovl0B_04_8004A404->unk8[PAGE_IDX(item)]);
 }
 #else
@@ -1331,7 +1332,8 @@ static void func_ovl0B_04_80046294(u8 item) {
         func_ovl0B_04_80048638(D_ovl0B_04_8004A404->unk4[j]);
         D_ovl0B_04_8004A404->unk4[j] = D_ovl0B_04_8004A40C[k];
     }
-    func_ovl0B_04_800438FC(3, D_ovl0B_04_8004A404->unk4[PAGE_IDX(item)], &D_ovl0B_04_8004A404->unk8[PAGE_IDX(item)]);
+    func_ovl0B_04_800438FC(D_ovl0B_04_8004A404->unk4[PAGE_IDX(item)], 3,
+                           &D_ovl0B_04_8004A404->unk8[PAGE_IDX(item)]);
 }
 #endif
 
@@ -1621,8 +1623,9 @@ u8 func_ovl0B_04_80045214(u8 arg0, u16 arg1) {
         func_ovl0B_04_800450C0(0);
     }
     if ((arg1 & 0x80) || (arg1 & 0x100)) {
-        func_ovl0B_04_800438FC(0, D_ovl0B_04_8004A3B0[D_ovl0B_04_8004A174], &D_ovl0B_04_80049930[D_ovl0B_04_8004A174]);
-        func_ovl0B_04_800438FC(1, D_ovl0B_04_8004A3B0[arg0], &D_ovl0B_04_80049930[arg0]);
+        func_ovl0B_04_800438FC(D_ovl0B_04_8004A3B0[D_ovl0B_04_8004A174], 0,
+                               &D_ovl0B_04_80049930[D_ovl0B_04_8004A174]);
+        func_ovl0B_04_800438FC(D_ovl0B_04_8004A3B0[arg0], 1, &D_ovl0B_04_80049930[arg0]);
         D_ovl0B_04_8004A174 = arg0;
     }
     if (arg1 & 1) {
@@ -1675,8 +1678,9 @@ u8 func_ovl0B_04_80044BE8(u8 arg0, u16 arg1) {
 #endif
 
     if ((arg1 & 0x20) || (arg1 & 0x40)) {
-        func_ovl0B_04_800438FC(0, D_ovl0B_04_8004A2A8[D_ovl0B_04_8004A174], &D_ovl0B_04_8004922C[D_ovl0B_04_8004A174]);
-        func_ovl0B_04_800438FC(1, D_ovl0B_04_8004A2A8[arg0], &D_ovl0B_04_8004922C[arg0]);
+        func_ovl0B_04_800438FC(D_ovl0B_04_8004A2A8[D_ovl0B_04_8004A174], 0,
+                               &D_ovl0B_04_8004922C[D_ovl0B_04_8004A174]);
+        func_ovl0B_04_800438FC(D_ovl0B_04_8004A2A8[arg0], 1, &D_ovl0B_04_8004922C[arg0]);
         D_ovl0B_04_8004A174 = arg0;
     }
     if (arg1 & 2) {
@@ -2250,7 +2254,7 @@ void func_ovl0B_04_80043ADC(void) {
 #endif
         menu = func_ovl0B_04_800485D0(p->unkC, p->unk10, p->unk16, p->unk18, p->unk1A);
         if (p->unk1C != 2) {
-            func_ovl0B_04_800438FC(1, p->unk4[D_ovl0B_04_8004A16C], &p->unk8[D_ovl0B_04_8004A16C]);
+            func_ovl0B_04_800438FC(p->unk4[D_ovl0B_04_8004A16C], 1, &p->unk8[D_ovl0B_04_8004A16C]);
         }
         func_ovl0B_04_800485F8(D_ovl0B_04_8004A16C);
         D_ovl0B_04_8004A174 = D_ovl0B_04_8004A16C;
@@ -2311,7 +2315,7 @@ static void func_ovl0B_04_80043A24(s32 n, s32 *ids, Item *items) {
 }
 
 /* An item lit (1), unlit (0), or set without growing (2-4). */
-static void func_ovl0B_04_800438FC(u32 mode, s32 id, Item *it) {
+static void func_ovl0B_04_800438FC(s32 id, u32 mode, Item *it) {
     f32 d;
     u8 col;
     s32 grow = 1;
