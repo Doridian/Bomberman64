@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 36, eu 36, jp 49
+ * differing words: us 35, eu 35, jp 48
  *
  * The pages are a table (D_ovl0B_04_800499B8: texts, handler, cursor
  * table, set-up) that func_ovl0B_04_80043ADC runs in turn; pages 1-4 are
@@ -90,7 +90,7 @@
  *   `move s2,t0` (a split; no form found that splits it), and the counter
  *   D_ovl0B_04_8004A1A0, a function-scope static, is promoted to $t0 where
  *   the original reloads it into $v1.
- * - 80045214 5/5: 80045214's `ok` reloaded to $t8 (the original: $v0, 3),
+ * - 80045214 4/4: 80045214's `ok` reloaded to $t8 (the original: $v0, 3),
  *   and 80045540's rub-out. Its unk3 store goes through a copy of item
  *   (`x = item; ... unk3 = x`): copy propagation makes uopt fold the store
  *   into a direct one with its own `lui at`, as in the original, where a
@@ -106,7 +106,8 @@
  *   `A290[unk0][0] ^ 0` (TRICK: the `^ 0` uses up the ugen temporary the
  *   original's t-registers are one ahead by from there on, and puts the
  *   `li a2,7` after c's load). Left: c is that temporary (t6) where the
- *   original colours it a0 (2 words); dead reads of c don't move it.
+ *   original colours it a0 (1 word); dead reads of c don't move it.
+ *   c's read is on the `if (buttons & 2)` line (permuter find: its .loc).
  * - 80043ADC 0/0 (matches; w5): us's loop is `if (A168 != 0xFF) { p3 =
  *   &tbl[3]; if (!p3) {} do { ... } while (A168 != 0xFF); }` with p4 =
  *   &tbl[4] set at the top and one more dead read of p3 after the else
@@ -1517,10 +1518,10 @@ static void func_ovl0B_04_80045540(u8 item, u16 buttons, u8 *ret) {
     u8 c;
     u8 x;
 
-    if (buttons & 2) {
-        /* TRICK (p2): `^ 0` uses up one ugen temporary (the original's
-         * t-registers from here on), the dead read gives the base its s0. */
-        c = (D_ovl0B_04_8004A290[D_ovl0B_04_8004A490.unk0][0] ^ 0);
+    /* TRICK (p2): `^ 0` uses up one ugen temporary (the original's
+     * t-registers from here on), the dead read gives the base its s0; c's
+     * read is on the if's line (.loc). */
+    if (buttons & 2) { c = (D_ovl0B_04_8004A290[D_ovl0B_04_8004A490.unk0][0] ^ 0);
         D_ovl0B_04_8004A490.unk1 = 0;
         D_ovl0B_04_8004A290[D_ovl0B_04_8004A490.unk0][0] = 0;
         if ((D_ovl0B_04_8004A490.unk0 == 7 && c == 0) || (D_ovl0B_04_8004A490.unk0 != 7 && D_ovl0B_04_8004A490.unk0 > 0)) {
