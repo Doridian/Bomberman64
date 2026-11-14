@@ -338,6 +338,20 @@ def lib_objects(version):
     return out
 
 
+def malloc_object(version):
+    """{module: {VRAM: `libmalloc/gmalloc`}}: where GNU malloc's gmalloc.o
+    starts (docs/LIBMALLOC.md), its first function in
+    symbol_addrs.libmalloc.<version>.txt (tools/libmalloc_check.py), once
+    src/libmalloc/gmalloc.c is there.  It ends where libultra's gu/lookat
+    starts."""
+    path = ROOT / f"symbol_addrs.libmalloc.{version}.txt"
+    if not path.exists() or not (ROOT / "src" / "libmalloc" / "gmalloc.c").exists():
+        return {}
+    funcs = [int(l.split("=")[1].split(";")[0], 16) for l in path.read_text().splitlines()
+             if not l.startswith("//") and "type:func" in l]
+    return {"main_code": {min(funcs): "libmalloc/gmalloc"}}
+
+
 def text_objects(version, module, vram, start, ref_start):
     """Where text_objects.txt says objects of `module` start in `version`:
     ({VRAM: the object's name, or None for the name its offset gives}, {VRAMs
@@ -621,9 +635,12 @@ def lib_source(obj):
     or .s for libultra's handwritten asm (docs/LIBULTRA.md).  `obj` is
     lib_objects()'s name for it (`io/controller`).  Returns the subsegment
     kind and name: (`c`, `libultra/io/controller`), (`hasm`,
-    `libultra/os/exceptasm`), or None."""
+    `libultra/os/exceptasm`), or None.  GNU malloc's object
+    (malloc_object()) is `libmalloc/gmalloc`, src/libmalloc/gmalloc.c."""
     if obj is None:
         return None
+    if obj.startswith("libmalloc/"):
+        return ("c", obj) if (ROOT / "src" / f"{obj}.c").exists() else None
     for ext, kind in (("c", "c"), ("s", "hasm")):
         if (ROOT / "src" / "libultra" / f"{obj}.{ext}").exists():
             return kind, f"libultra/{obj}"
@@ -817,6 +834,7 @@ def config(version, d):
     """The YAML text of bm64.<version>.yaml, and the image's size."""
     segs, boot_bss = fixed(d)
     lib = lib_objects(version)
+    malloc = malloc_object(version)
     us_starts = ref_starts(version)
     us_objs = ref_objects(version)
     def known(name, vram, start, ref_start):
@@ -824,7 +842,8 @@ def config(version, d):
         hand, drops = text_objects(version, name, vram, start, ref_start)
         ref = {a: None for a in us_objs.get(name, ()) if a not in drops}
         names = {a: n for a, n in hand.items() if n}
-        return {**ref, **dict.fromkeys(hand), **lib.get(name, {})}, names
+        return {**ref, **dict.fromkeys(hand), **lib.get(name, {}),
+                **malloc.get(name, {})}, names
     split = data_split(version)
     starts = [s for s, _, _ in segs] + [FIRST_BANK]
     out = [

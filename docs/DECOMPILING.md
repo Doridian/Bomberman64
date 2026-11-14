@@ -176,8 +176,9 @@ matches, drop the `#ifdef` and the asm.
   slot; the few hits a scan finds are loads in a branch's delay slot) and
   never use branch-likely. boot_code's libraries do both: they are
   `-mips2`, as libultra is. So are the objects after main_code's ZeroJump
-  block (`B3B70` on: `beql`), Hudson's allocator and other library code
-  (phase 3). Compiling 40300.c `-mips2` changes it. The game's own C there
+  block (`beql`), libultra's gu code and the game's own after it (phase
+  3), but not Hudson's allocator first there (`B3B70`, gmalloc.c: `-g
+  -mips1`, docs/LIBMALLOC.md). Compiling 40300.c `-mips2` changes it. The game's own C there
   (`B6680`, render-mode and combiner strings, matrix rotations) is listed
   in the Makefile's `MIPS2_C_FILES`.
 - **`-O2`**, not `-O3`, for 40300 and 80420: the same C at `-O3` gives the
@@ -477,7 +478,8 @@ matches, drop the `#ifdef` and the asm.
 - **`-g`** for main_code's entry (`main_code_entry.c`, func_80225800):
   every value goes through the stack and the return is branched to; `-O1`,
   `-O2` and `-O0` don't give it. bm64 builds its 40000.c `-g` too. Hudson's
-  `gmalloc` is `-g` in bm64 as well (another agent's area). All of
+  `gmalloc` is `-g` in bm64 as well, and here (`src/libmalloc/gmalloc.c`,
+  docs/LIBMALLOC.md). All of
   ovl_16_01 is `-g` (its entry too: the return's `jr ra` is followed by
   the two that end every `-g` function, which makes the entry's file 0x20
   bytes, `tools/layout.py`'s first_function_end()); a `return;` at the end
@@ -1132,7 +1134,8 @@ object's `%hi`/`%lo` relocations against the ROM and checking the bytes.
 `tools/layout.py` carves those subsegments out of the asm blocks (the asm
 before a placed `.data` becomes `data`, since the link puts every .data
 before every .rodata). libultra's objects use this where their code needs
-the data in the same file (docs/LIBULTRA.md, "Data"). So do the game's
+the data in the same file (docs/LIBULTRA.md, "Data"), and so does GNU
+malloc's `libmalloc/gmalloc` (.data and .bss; docs/LIBMALLOC.md). So do the game's
 objects after main_code's cut that have jump tables, strings or
 constants (995C0, 54BE0, 87D80, 8A7A0: `.rodata` only), or whose `.data`/`.bss` is all
 their own (53D70, 530C0, 412F0, AFBF0: all three sections, jp's .data

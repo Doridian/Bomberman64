@@ -226,6 +226,22 @@ $(BUILD_DIR)/src/libultra/%.o: MIPSISET := -mips2 -32
 $(BUILD_DIR)/src/libultra/%.o: OPT_FLAGS := -O1
 $(foreach d,$(LIB_O3_DIRS),$(BUILD_DIR)/src/libultra/$(d)/%.o): OPT_FLAGS := -O3
 
+# libmalloc (src/libmalloc/gmalloc.c, docs/LIBMALLOC.md): GNU malloc's
+# single-file build, as Hudson compiled it: -g -mips1, STDC_HEADERS and a
+# 4 KiB PAGESIZE, with our stub headers for the libc ones it includes.  It
+# calls the game's own sbrk, memmove, memcpy and memset (40300.c), which keep
+# their address names (memcpy is libultra's in boot_code), so the names are
+# mapped here rather than in the file.
+MALLOC_INCLUDE = -I src/libmalloc/include -I src/libmalloc
+MALLOC_CFLAGS  = -G 0 -Xfullwarn -Xcpluscomm -nostdinc -non_shared -Wab,-r4300_mul \
+                 -woff 649,838,712,807 -D_LANGUAGE_C -D$(VERSION_DEFINE) \
+                 -DSTDC_HEADERS -DPAGESIZE=0x1000 \
+                 -Dsbrk=func_80225B00 -Dmemmove=func_80225BB8 -Dmemcpy=func_80225C44 \
+                 -Dmemset=func_80225C7C $(MALLOC_INCLUDE)
+$(BUILD_DIR)/src/libmalloc/%.o: CFLAGS = $(MALLOC_CFLAGS)
+$(BUILD_DIR)/src/libmalloc/%.o: INCLUDE_CFLAGS = $(MALLOC_INCLUDE)
+$(BUILD_DIR)/src/libmalloc/%.o: OPT_FLAGS := -g
+
 # libc's long long helpers are built -O1 -mips3 -32, as in the SDK, and
 # relabelled mips2 for ld like exceptasm.s (below).
 LIB_MIPS3_C = libc/ll libc/llcvt

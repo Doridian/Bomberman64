@@ -417,7 +417,7 @@ segments:
       - [0xB2410, asm]
       - [0xB2500, asm]
       - [0xB2530, hasm, main_code_zerojmp]
-      - [0xB3B70, asm]
+      - [0xB3B70, c, libmalloc/gmalloc]
       - [0xB5E50, c, libultra/gu/lookat]
       - [0xB6180, c, libultra/gu/mtxutil]
       - [0xB63F0, c, libultra/gu/perspective]
@@ -465,7 +465,8 @@ segments:
       - [0xBC5A0, .data, AD5B0]
       - [0xBC600, .data, AFBF0]
       - [0xBD470, .data, B11F0]
-      - [0xBD4F0, rodata]
+      - [0xBD4F0, .data, libmalloc/gmalloc]
+      - [0xBD500, rodata]
       - [0xBD520, .rodata, 426E0]
       - [0xBD530, .rodata, 46300]
       - [0xBD550, rodata]
@@ -535,7 +536,7 @@ segments:
       - {type: .bss, vram: 0x802B0310, name: AD3D0}
       - {type: .bss, vram: 0x802B0320, name: AFBF0}
       - {type: .bss, vram: 0x802B03A0, name: B11F0}
-      - {type: bss, vram: 0x802B3620, name: bss_802B3620}
+      - {type: .bss, vram: 0x802B3620, name: libmalloc/gmalloc}
   - [0xBFB00, bin, pad_main_code]       # zeros
   - name: ovl_09_01
     type: code

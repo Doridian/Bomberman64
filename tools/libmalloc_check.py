@@ -3,20 +3,23 @@
 
     tools/libmalloc_check.py [--write] [us|eu|jp ...]
 
-Downloads GNU malloc 1995 (https://ftp.gnu.org/old-gnu/malloc.tar.gz, sha256
-pinned) into build/libmalloc/, compiles gmalloc.c with the repo's IDO 5.3 as
-`-g -mips1 -G 0 -non_shared -DPAGESIZE=0x1000` (no source goes in the repo),
-and compares the object's text with the ROM at 0xB3B70 (main_code, 0x22E0
-bytes; jp's at 0xB3250) word for word. Only the fields a relocation fills are ignored (jal
-targets, %hi/%lo halves). The relocations then give the address of every
-function and variable, which must be the same wherever one symbol is
-referenced twice. Exit status 1 on any mismatch.
+Checks that src/libmalloc's gmalloc.c, getpagesize.h and COPYING.LIB are
+GNU malloc 1995's (https://ftp.gnu.org/old-gnu/malloc.tar.gz, sha256
+pinned; downloaded into build/libmalloc/ once), compiles src/libmalloc/gmalloc.c
+with the repo's IDO 5.3 as `-g -mips1 -G 0 -non_shared -DPAGESIZE=0x1000`
+on its own (no extract or build needed), and compares the object's text
+with the ROM at 0xB3B70 (main_code, 0x22E0 bytes; jp's at 0xB3250) word for
+word. Only the fields a relocation fills are ignored (jal targets, %hi/%lo
+halves). The relocations then give the address of every function and
+variable, which must be the same wherever one symbol is referenced twice.
+Exit status 1 on any mismatch.
 
 --write writes symbol_addrs.libmalloc.<v>.txt (splat format). docs/LIBMALLOC.md
 has the findings.
 
-The stub headers written here are ours (stddef.h, limits.h, string.h,
-sys/param.h): the compiler would otherwise read the host's /usr/include.
+The stub headers in src/libmalloc/include are ours (stddef.h, limits.h,
+string.h, sys/param.h): the compiler would otherwise read the host's
+/usr/include.
 """
 import hashlib
 import os
@@ -41,17 +44,9 @@ OBJDUMP = "mips-linux-gnu-objdump"
 READELF = "mips-linux-gnu-readelf"
 OBJCOPY = "mips-linux-gnu-objcopy"
 
-# gmalloc.c's static functions are not in the object's symbol table as such:
-# the ROM's function boundaries (and the undefined align/initialize/morecore
-# entries' sizes) give them.
-STUBS = {
-    "stddef.h": "#ifndef _STUB_STDDEF\n#define _STUB_STDDEF\ntypedef unsigned int size_t;\n"
-                "typedef int ptrdiff_t;\n#ifndef NULL\n#define NULL 0\n#endif\n#endif\n",
-    "limits.h": "#define CHAR_BIT 8\n",
-    "string.h": "#include <stddef.h>\nextern void *memcpy(void *, const void *, size_t);\n"
-                "extern void *memset(void *, int, size_t);\nextern void *memmove(void *, const void *, size_t);\n",
-    "sys/param.h": "/* stub: PAGESIZE comes from -DPAGESIZE */\n",
-}
+SRC = os.path.join(ROOT, "src", "libmalloc")
+# the files that must be the tarball's as they are
+VERBATIM = ("gmalloc.c", "getpagesize.h", "COPYING.LIB")
 
 
 def build():
@@ -66,15 +61,16 @@ def build():
     elif hashlib.sha256(open(tar, "rb").read()).hexdigest() != SHA256:
         sys.exit("malloc.tar.gz: sha256 mismatch")
     subprocess.check_call(["tar", "xzf", tar, "-C", WORK])
-    inc = os.path.join(WORK, "inc")
-    for name, text in STUBS.items():
-        p = os.path.join(inc, name)
-        os.makedirs(os.path.dirname(p), exist_ok=True)
-        open(p, "w").write(text)
+    for name in VERBATIM:
+        if open(os.path.join(WORK, "malloc", name), "rb").read() != \
+                open(os.path.join(SRC, name), "rb").read():
+            sys.exit(f"src/libmalloc/{name} differs from the tarball's")
+    print("src/libmalloc: " + ", ".join(VERBATIM) + " are the tarball's")
+    inc = os.path.join(SRC, "include")
     ido = os.path.join(ROOT, "tools", "ido", "5.3")
     env = dict(os.environ, USR_LIB=ido)
     obj = os.path.join(WORK, "gmalloc.o")
-    src = os.path.join(WORK, "malloc")
+    src = SRC
     subprocess.check_call(
         [os.path.join(ido, "cc"), "-c", "-g", "-mips1", "-G", "0", "-non_shared",
          "-Xfullwarn", "-Xcpluscomm", "-D_LANGUAGE_C", "-DSTDC_HEADERS", "-DPAGESIZE=0x1000",

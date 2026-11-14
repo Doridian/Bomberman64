@@ -96,6 +96,8 @@ run with it pinned (`tools/shift_check.py` explains).
 - Haruhiko Okumura's LZSS.C (1989), whose encoder Hudson's matches.
 - [decompals/ultralib](https://github.com/decompals/ultralib): its headers
   (`include/ultralib`) and the libultra sources `src/libultra` starts from.
+- GNU malloc (Mike Haertel, FSF, 1995): `src/libmalloc/gmalloc.c`, Hudson's
+  allocator, used under the GPL v2 or later (NOTICES.md).
 
 Licensed AGPL-3.0 (LICENSE), except the third-party material NOTICES.md
 lists.

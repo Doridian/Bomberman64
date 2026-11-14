@@ -9,6 +9,9 @@ earlier decomp (Bomberhackers/bm64) already had it as
 `src/libmalloc/gmalloc.c`, `-g -DPAGESIZE=0x1000`; this was verified
 independently.
 
+It is in the ROM build as source: `src/libmalloc/gmalloc.c` is the
+tarball's file, unchanged, built in us, eu and jp (see "Source").
+
 **Certainty: exact.** Compiled with the repo's IDO 5.3 as
 
 ```
@@ -23,11 +26,14 @@ relocation fills (jal targets, `%hi`/`%lo`): 0 mismatches of 2232 words,
 (and `.data` and `.bss` are contiguous with the right sizes: 0x10 and 0xB0,
 ending at main_code's bss end). `-mips2` does not match (2011 words differ).
 
-`tools/libmalloc_check.py` repeats all of this (downloads the tarball into
-`build/libmalloc/`, compiles, compares every ROM, `--write` generates
-`symbol_addrs.libmalloc.<v>.txt`). It needs a built `tools/ido`.
-Only stub headers (`stddef.h`, `limits.h`, `string.h`, `sys/param.h`) are
-ours; without them IDO reads the host's `/usr/include`.
+`tools/libmalloc_check.py` repeats all of this on its own, without an
+extract: it downloads the tarball into `build/libmalloc/` and checks that
+`src/libmalloc`'s `gmalloc.c`, `getpagesize.h` and `COPYING.LIB` are its
+files byte for byte, compiles `src/libmalloc/gmalloc.c`, compares every ROM,
+and `--write` generates `symbol_addrs.libmalloc.<v>.txt`. It needs a built
+`tools/ido`. Only the stub headers (`src/libmalloc/include/`: `stddef.h`,
+`limits.h`, `string.h`, `sys/param.h`) are ours; without them IDO reads the
+host's `/usr/include`.
 
 ## Where it is
 
@@ -58,11 +64,39 @@ Data (US; EU's bss is 0x10 lower, from `_heapbase` at `802B3610`):
   `__malloc_hook`, `__realloc_hook`, `__memalign_hook`) and the statics
   `pagesize` (`802B36BC`) and `heapsize` (`802B36C0`).
 
-Not part of it, and not named yet: Hudson's libc helpers it calls, at the
-start of main_code (`sbrk` `80225B00`, `memmove` `80225BB8`, `memcpy`
-`80225C44`, `memset` `80225C7C`). They are found by their callers here, not
-matched. At `0xBD500`, right after the allocator's `.data`, is a build-date
-string (`SAT SEP  6 14:57...`), another object's.
+Not part of it: Hudson's libc helpers it calls, at the start of
+main_code (`sbrk` `80225B00`, `memmove` `80225BB8`, `memcpy` `80225C44`,
+`memset` `80225C7C`), which are the game's C in `src/40300.c` and keep
+their address names (they are found by their callers here, not matched,
+and libultra's `memcpy` in boot_code is another function). At `0xBD500`,
+right after the allocator's `.data`, is a build-date string
+(`SAT SEP  6 14:57...`), another object's.
+
+## Source
+
+`src/libmalloc/gmalloc.c` is a `c` text object of main_code
+(`libmalloc/gmalloc`): `tools/layout.py` (`malloc_object()`) starts it at
+the first function of `symbol_addrs.libmalloc.<v>.txt` once the file is
+there, and it ends where libultra's `gu/lookat` starts. The Makefile builds
+it as the check does, `-g -mips1` with `-DSTDC_HEADERS -DPAGESIZE=0x1000`
+and the stub headers (`src/libmalloc/include`), and maps the four helpers'
+names to the game's with `-D` (`-Dmemcpy=func_80225C44` and so on), so the
+file needs no change. Its `.data` (0x10) and `.bss` (0xB0) are placed on
+their own in `data_split.txt` (docs/DECOMPILING.md, "Objects placed on
+their own"): `.data` at `802A2CF0` (jp `802A1F30`), right after `B11F0`'s,
+and `.bss` from `802B3620` (eu `802B3610`, jp `802B2840`) to main_code's
+bss end, right after `B11F0`'s.
+
+IDO's `-g` leaves the three static functions (`align`, `initialize`,
+`morecore`) as undefined, sized symbols in the object, with the calls
+relocated against `.text`; nothing references the undefined entries, so
+the link ignores them.
+
+The PC port keeps the allocator (a deterministic heap suits
+docs/NETPLAY.md), but its global names would clash with the host libc's:
+`src/libmalloc/pc_names.h` renames them under `TARGET_PC` (`malloc` to
+`bm64_malloc`, ...), for the port to force-include (`-include`) when it
+compiles gmalloc.c and the game's C; gmalloc.c stays as it is.
 
 ## Names
 
@@ -77,20 +111,18 @@ postsplit keeps what an earlier run moved.
 
 The sources are LGPL: every file says "GNU Library General Public License
 ... version 2, or (at your option) any later version", and the tarball has
-`COPYING.LIB`. This repo is AGPL-3.0, and there is no source of the
-library in it today (the tool fetches it). For `src/` later:
+`COPYING.LIB`. This repo is AGPL-3.0. How `src/libmalloc/` is in it
+(`src/libmalloc/README.md` and NOTICES.md say the same):
 
 - LGPLv2 section 3 lets a copy be used under the ordinary GNU GPL (v2 or
   later, here) instead, and GPLv3 combines with AGPLv3 (section 13), so the
-  files can go in as GPL-or-later, keeping their copyright notices
-  (FSF 1990-1995, Mike Haertel) and a note that the licence was chosen.
+  files are used as GPL-or-later, keeping their copyright notices
+  (FSF 1990-1995, Mike Haertel), with a note that the licence was chosen.
   That is the usual reading, not legal advice.
 - Matching the ROM needs the 1995 code as is, so it can't be rewritten
-  clean-room. Keep it in its own directory (`src/libmalloc/`) with the
-  `COPYING.LIB` text and the origin URL and checksum above. Don't take the
-  copy in Bomberhackers/bm64: it has no licence of its own (only a notice
-  file), take the tarball.
-- The PC port: Hudson's allocator links the game's heap layout. If the port
-  keeps `gmalloc.c` (a deterministic allocator suits docs/NETPLAY.md), its
-  symbols (`malloc`, `free`, `memalign`, ...) clash with the host libc's and
-  need renaming (a header of `#define`s under `TARGET_PC`).
+  clean-room. It is in its own directory (`src/libmalloc/`) with the
+  `COPYING.LIB` text and the origin URL and checksum above, taken from the
+  tarball, not from the copy in Bomberhackers/bm64 (it has no licence of
+  its own, only a notice file).
+- The files are unchanged (`tools/libmalloc_check.py` checks them against
+  the tarball); the stub headers and `pc_names.h` are the project's own.

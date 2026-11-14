@@ -252,6 +252,12 @@ main_code B11F0 0x80 0x10 0x3280
 main_code @us B11F0 data=0x802A2C70 rodata=0x802A4740 bss=0x802B03A0
 main_code @eu B11F0 data=0x802A2C70 rodata=0x802A4730 bss=0x802B0390
 main_code @jp B11F0 data=0x802A1EB0 rodata=0x802A3970 bss=0x802AF5C0
+# GNU malloc (src/libmalloc/gmalloc.c, docs/LIBMALLOC.md): __morecore and
+# _aligned_blocks, then its .bss up to main_code's bss end
+main_code libmalloc/gmalloc 0x10 0 0xB0
+main_code @us libmalloc/gmalloc data=0x802A2CF0 bss=0x802B3620
+main_code @eu libmalloc/gmalloc data=0x802A2CF0 bss=0x802B3610
+main_code @jp libmalloc/gmalloc data=0x802A1F30 bss=0x802B2840
 main_code B6680 0 0x30 0
 main_code @us B6680 rodata=0x802A4760
 main_code @eu B6680 rodata=0x802A4750

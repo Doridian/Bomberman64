@@ -189,8 +189,12 @@ docs/LIBULTRA.md has the details.
 - **Hudson's allocator** is GNU malloc's `gmalloc.c` (1995), IDO 5.3
   `-g -mips1 -DPAGESIZE=0x1000`, a byte-exact match for ROM
   `0xB3B70-0xB5E50` in us and eu (`0xB3250` in jp), named in
-  `symbol_addrs.libmalloc.<v>.txt`. docs/LIBMALLOC.md has the details, the
-  checking tool and the licence (LGPLv2+).
+  `symbol_addrs.libmalloc.<v>.txt`. It is built from source in every
+  version: `src/libmalloc/gmalloc.c`, the 1995 tarball's file unchanged,
+  owning its `.data` and `.bss` through `data_split.txt`'s placements
+  (main_code 81.9% to 83.8% C in us). docs/LIBMALLOC.md has the details,
+  the checking tool and the licence (LGPLv2+, used as GPLv2+ beside the
+  project's AGPL-3.0; NOTICES.md).
 - Only library code gets real names until the game's code is understood.
   Don't guess names.
 

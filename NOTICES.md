@@ -9,6 +9,7 @@ says where they come from and on what terms they are here.
 | Component | Where it is | Terms |
 | --- | --- | --- |
 | decompals/ultralib (libultra reconstruction) | `include/ultralib/`, `src/libultra/` | no licence file; see below |
+| GNU malloc (`gmalloc.c`, 1995) | `src/libmalloc/` | GNU GPL v2 or later (from the LGPL v2 or later); see below |
 | Blast Corps decomp tools | `tools/elf_mips2.py` and others adapted from `../BlastCorps` | AGPL-3.0, same author |
 
 ---
@@ -42,6 +43,25 @@ The PC port must not depend on it: the N64 build keeps `src/libultra` and
 `include/ultralib` because it has to match the ROM, and the port replaces
 the library over the same interface (as Blast Corps' docs/DISTRIBUTION.md,
 "Replacing the SDK parts", does).
+
+## GNU malloc
+
+`src/libmalloc/gmalloc.c`, `getpagesize.h` and `COPYING.LIB` are the files
+of those names in GNU malloc's standalone distribution,
+<https://ftp.gnu.org/old-gnu/malloc.tar.gz> (sha256
+`fa7353ea297e1e8e2a1a046583786c4adfbb581f5ec1c8980406b242a5da6ef1`),
+unchanged: Hudson's allocator is that file's `gmalloc.o`
+(docs/LIBMALLOC.md). gmalloc.c is Copyright 1990-1995 Free Software
+Foundation, Inc., written by Mike Haertel, and its notices are kept as they
+are.
+
+It is licensed under the GNU Library General Public License, version 2 or
+(at your option) any later version (`src/libmalloc/COPYING.LIB`). This
+project uses it under the **GNU General Public License, version 2 or later**
+instead, as section 3 of the LGPL v2 allows, and GPL v3 or later combines
+with the project's AGPL-3.0 (section 13 of each). `src/libmalloc/README.md`
+records the origin, the checksum and this choice. The directory's stub
+headers (`include/`) and `pc_names.h` are the project's own (AGPL-3.0).
 
 ## Blast Corps decomp
 
