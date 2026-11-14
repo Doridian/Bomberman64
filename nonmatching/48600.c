@@ -7,14 +7,14 @@
  * "NON_MATCHING drafts"). src/48300.c, before it, is another object:
  * func_80232E60 calls its func_8022DB00 with a jal (text_objects.txt).
  * flags: -O3
- * differing words: us 2, eu 2, jp 2
+ * differing words: us 0, eu 0, jp 0
  *
  * Functions in the reverse of the ROM's order, which IDO emits exactly
  * as the original does. An 8-byte stub (jr ra; nop) is an inlined
  * static, at its place in the source: the stubs at 0x8022E0A4-0x8022E87C
  * are func_8022E884's cases, func_8022FC18 is func_8022FC90's child
  * search and func_80232FF0 is func_80232FF8's D_802A5804 switch.
- * 67 of 68 global blocks match. What is understood:
+ * Every function matches. What is understood:
  *   - the function-local statics (D_802A5708-D_802A5770 and
  *     D_802A59D0-D_802A5A0C in func_8022E884, D_802A593C-48 in
  *     func_8022F844, D_802A5960-C8 in func_8022E4DC, D_802A5A14-20 in
@@ -62,31 +62,38 @@
  * after func_8022E4DC (moved up above the stubs, which moves no code),
  * so it and the two balls follow its Vec3fs as in the original;
  * D_802A5708-D_802A5760 are extern (see there).
- * Left: func_802320A8 (2, the size right): obj+0x58's address (a CSE
- * uopt hoists out of the loop and leaves uncoloured) is spilled to
- * sp+0x64, the original's is sp+0x68. uopt gives coloured items temp
- * slots in bit order, each the lowest index no lower item with an
- * overlapping region holds (spilltemps): obj->unk3C (0) and its ->flags
- * (1) both reach the loop head, so obj+0x58 gets 2. The original needs
- * one of them later in bit order or outside its region; no form found
- * (scratch/48600/p13/NOTES.txt). What is understood:
- *   - t is a plain local that uopt leaves uncoloured: its arms store it
- *     to its home, and x = t - n loads it where it is used; as1 -O3
- *     hoists that load to the join, into the next ugen temporary (f16).
- *     It is uncoloured because it is live round the whole outer loop:
- *     the default case is an empty endless loop, and code motion inserts
- *     there every assignment partially available from the previous pass
- *     (the "anticipated" set of a block that never reaches the exit is
- *     everything): n = (t - n) + 360.0f and n = t - n from the 0x20000
- *     case, n = t from the 0x30000 one. as1 deletes them again (dead
- *     register computations), but they make t and n live into the loop:
- *     n is loaded into fs3 before it and stored after it, and t's range
- *     is too long for a register. The 0x20000 case's angle is read from
- *     memory each time (obj->unk44->unk40->rot[1], no local): a register
- *     variable there would be inserted too (its t = ... arms), and the 0x20000
- *     case's second wrap is written out (sp80[1] - 90.0f each time) so it
- *     inserts nothing (with a variable, that variable is live into the
- *     loop and loaded before it).
+ * The .text matches in all three versions, and so does the .rodata
+ * (floats and jtbl_802A2D64, word by word); there is no .data. The .bss
+ * is the open part: the statics above are laid out in hash order and
+ * the rest are extern, so the object's .bss isn't the original's yet.
+ * func_802320A8 (2026-11-13, pass 13), what is understood:
+ *   - the angle conversion to -180..180 is a ternary, and in the 0x20000
+ *     case it is evaluated as the left operand of the subtraction:
+ *     x = CONV(rot) - (n = CONV(sp80[0]), n). Its value goes to cfe's
+ *     float temporary (sp+0x74), which uopt leaves uncoloured: the arms
+ *     store it there, and the load at the subtraction is hoisted by as1
+ *     -O3 to the join, into the next ugen temporary (f16). The comma
+ *     form gives n the second conversion with no second temporary (an
+ *     assignment's value used in an expression takes one). The 0x30000
+ *     case's inner wrap is the same temporary (n = c >= 360 ? c - 360 :
+ *     (sp80[1] < 180 ? c + 360 : c)). Below n (sp+0x7C) the frame is
+ *     cfe's int temporary for the switches (sp+0x78) and that float one;
+ *     uopt's own slots start at sp+0x70, so obj+0x58's address (a CSE
+ *     hoisted out of the loop, uncoloured) lands at sp+0x68 as the third.
+ *     A declared local in the temporary's place puts the cfe int
+ *     temporary below it and every uopt slot 4 lower.
+ *   - the temporary is uncoloured because it is live round the whole
+ *     outer loop: the default case is an empty endless loop, and code
+ *     motion inserts there every assignment partially available from
+ *     the previous pass (the "anticipated" set of a block that never
+ *     reaches the exit is everything): n = (T - n) + 360.0f and
+ *     n = T - n from the 0x20000 case, n = T from the 0x30000 one. as1
+ *     deletes them again (dead register computations), but they make T
+ *     and n live into the loop: n is loaded into fs3 before it and stored
+ *     after it. The rotation in the 0x20000 case is read from memory each
+ *     time (obj->unk44->unk40->rot[1]), and its second wrap is written
+ *     out (sp80[1] - 90.0f each time), so neither inserts a variable
+ *     (one would be live into the loop and loaded before it).
  *   - case 2 computes a, b and c before the three stores, and case 1's
  *     d, e and f put the call on the right: func_80234408(x) * (...)
  *     makes cfe spill the call's result to a stack temporary, which grows
@@ -103,10 +110,8 @@
  *     equal priorities in bit order (first appearance): the original
  *     colours b (f22) before a (f24). b's initialiser (a dead store)
  *     makes b appear first; no natural form found.
- *   - the 0x30000 case's angle has a variable of its own (v; x there
- *     took f2 for sp80[1]'s f0). Some local must sit at sp+0x78, between
- *     n and t: one coloured everywhere leaves no trace, so which it is
- *     can't be told.
+ *   - the 0x30000 case's angle is c, not x (x there took f2 for
+ *     sp80[1]'s f0).
  * uopt puts a commutative op's operands in its own order, not the
  * source's, but the form of an operand counts: func_8022E0AC's mul.s
  * takes the original's order with (*arg0).unk38 (not arg0->unk38) on the
@@ -701,8 +706,6 @@ void func_802320A8() {
     f32 y;
     f32 sp80[3];
     f32 n;
-    f32 v;
-    f32 t;
 
     obj = (UnkStructA80 *) func_802391F0();
     parent = obj->unk44;
@@ -823,17 +826,7 @@ void func_802320A8() {
             sp80[1] = spD4[1];
             sp80[2] = spD4[2];
             obj->unk40->rot[1] = obj->unk44->unk40->rot[1];
-            if (obj->unk44->unk40->rot[1] >= 0.0f && obj->unk44->unk40->rot[1] <= 180.0f) {
-                t = obj->unk44->unk40->rot[1];
-            } else {
-                t = (360.0f - obj->unk44->unk40->rot[1]) * -1.0f;
-            }
-            if (sp80[0] >= 0.0f && sp80[0] <= 180.0f) {
-                n = sp80[0];
-            } else {
-                n = (360.0f - sp80[0]) * -1.0f;
-            }
-            x = t - n;
+            x = ((obj->unk44->unk40->rot[1] >= 0.0f && obj->unk44->unk40->rot[1] <= 180.0f) ? obj->unk44->unk40->rot[1] : (360.0f - obj->unk44->unk40->rot[1]) * -1.0f) - (n = ((sp80[0] >= 0.0f && sp80[0] <= 180.0f) ? sp80[0] : (360.0f - sp80[0]) * -1.0f), n);
             if (x >= 360.0f) {
                 sp80[0] = x - 360.0f;
             } else {
@@ -869,17 +862,8 @@ void func_802320A8() {
             func_8022F808((f32 *) obj, sp134);
             func_8022FF58(sp134, sp110, sp80);
             obj->unk40->rot[1] = sp80[0];
-            v = sp80[1] - 180.0f;
-            if (v >= 360.0f) {
-                n = v - 360.0f;
-            } else {
-                if (sp80[1] < 180.0f) {
-                    t = v + 360.0f;
-                } else {
-                    t = v;
-                }
-                n = t;
-            }
+            c = sp80[1] - 180.0f;
+            n = (c >= 360.0f) ? c - 360.0f : ((sp80[1] < 180.0f) ? c + 360.0f : c);
             obj->unk40->rot[0] = n * -1.0f;
             break;
         }
