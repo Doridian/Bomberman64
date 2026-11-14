@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 56, eu 56, jp 69
+ * differing words: us 54, eu 54, jp 67
  *
  * The pages are a table (D_ovl0B_04_800499B8: texts, handler, cursor
  * table, set-up) that func_ovl0B_04_80043ADC runs in turn; pages 1-4 are
@@ -51,11 +51,16 @@
  * What still differs (words us/jp; the comparison counts a global with
  * the statics after it, so a static of the wrong size costs the rest of
  * its run):
- * - 80043110 19/19: H5b's slot tests read *ptr as the original does, and
+ * - 80043110 17/17: H5b's slot tests read *ptr as the original does, and
  *   its accesses are spelled so &D_ovl0B_04_8004A17C sits in $s0 as in the
  *   original ((&A17C)[-1], (&A178)[1], (&A16C)[1]; found by trying every
- *   neighbour form of each access). Left: the frame homes of H5a's i (124
- *   vs 132) and the FreeEntries n's (76/60 vs 80/64); A178's value read as
+ *   neighbour form of each access). H5a's i is at the original's 132 (p2:
+ *   H5a K&R with a pad after i, frame-tuned). Left: the FreeEntries n's
+ *   (76/60 vs 80/64: the original's FreeEntries homes sit 20 and 36 bytes
+ *   above the end-pointer spill at 44, ours 16 and 32, so it has 8 more
+ *   bytes of frame below the second FreeEntries, or two more uopt spill
+ *   slots; nothing H1 can declare or call lands there, and any added call
+ *   or block in 80043110/H1 stops H5 inlining); A178's value read as
  *   -4($s0) where the original has its own lui. 0x150A (80047E28) is
  *   `s32 (Obj *, s32)` as 0B_06's 80048888, which puts H5a's object in
  *   $v1 as in the original.
@@ -2408,8 +2413,11 @@ static void func_ovl0B_04_H4(void) {
     D_ovl0B_04_8004A060[12].unk0->unk36 = 90;
 }
 
-static void func_ovl0B_04_H5a(void) {
+/* K&R with a pad after i (p2, frame-tuned): i's home 8 higher, at the
+ * original's 132 (a (void) static's area puts 8 bytes before i). */
+static void func_ovl0B_04_H5a() {
     s32 i;
+    s32 pad;
 
     D_ovl0B_04_8004A164 = func_ovl0B_04_80047DD8(0x49, 0);
     D_ovl0B_04_8004A164->unk10 = -110.0f;
