@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 2, eu 2, jp 12
+ * differing words: us 0, eu 0, jp 10
  *
  * The pages are a table (D_ovl0B_04_800499B8: texts, handler, cursor
  * table, set-up) that func_ovl0B_04_80043ADC runs in turn; pages 1-4 are
@@ -89,34 +89,22 @@
  *   unk1 test is written `c != X` for the beq's operand order; unk1 is
  *   stored through the neighbour, (&D_ovl0B_04_8004A480)[1][1] (fake), for
  *   the original's own lui.
- * - 80045214 2/2: p5: the save is the inlined static 800450B8 returning
- *   ok (its stub; 800450C0's fade is written out, and a dead call from
- *   80045214 (fake) pulls 800450C0 out after the stub): the test reads the
- *   inlined return value, `lw t8,ok; move v0,t8` in ugen, one load into
- *   $v0 after as1, with the original's temps after it. Left: 80045540's
- *   rub-out. Its unk3 store goes through a copy of item
- *   (`x = item; ... unk3 = x`): copy propagation makes uopt fold the store
- *   into a direct one with its own `lui at`, as in the original, where a
- *   plain `unk3 = item` goes through the $s0 base. The original's rub-out
- *   is the flat test `(unk0 == 7 && c == 0) || (unk0 != 7 && unk0 > 0)`
- *   on the global with one `unk0--` (scratch/0B_04/wW/rubout_DD.c): with
- *   the x store that is exact but for the cursor and the base swapping
- *   $s0/$s1. The cursor's load is one uopt range over the rub-out and the
- *   else arm (priority 2.5, -zdbug:5) and the base's is 2.4; the plain
- *   store's use gives the base 2.6, which is why it was right with it.
- *   p2: the flat test is back, with a dead `if (unk1) {}` first in its
- *   arm (one more use of the base, which then takes s0) and c read as
- *   `A290[unk0][0] ^ 0` (fake: the `^ 0` uses up the ugen temporary the
- *   original's t-registers are one ahead by from there on, and puts the
- *   `li a2,7` after c's load). Left: c is that temporary (t6) where the
- *   original colours it a0 (1 word); dead reads of c don't move it.
- *   c's read is on the `if (buttons & 2)` line (permuter find: its .loc).
- *   p4, no gain: ok's stores and test in every order/form (switch, !=,
- *   ==, code-free `(s32) (ok * 1.0f) * 0` uses), c's read as casts and
- *   identity ops (any of them burns the temp but leaves c uncoloured;
- *   without one c is $a0 and every later temp is one behind), dead loads
- *   to burn a temp (removed before ugen), permuter runs on 80045214 (186k)
- *   and 80045540 (118k).
+ * - 80045214 0/0 (matches; p5). The save is the inlined static 800450B8
+ *   returning ok (its stub; 800450C0's fade is written out, and a dead call
+ *   from 80045214 (fake) pulls 800450C0 out after the stub): the test reads
+ *   the inlined return value, `lw t8,ok; move v0,t8` in ugen, one load into
+ *   $v0 after as1, with the original's temps after it. 80045540: its unk3
+ *   store goes through a copy of item (`x = item; ... unk3 = x`): copy
+ *   propagation makes uopt fold the store into a direct one with its own
+ *   `lui at`, as in the original. The rub-out is the flat test
+ *   `(unk0 == 7 && c == 0) || (unk0 != 7 && unk0 > 0)` on the global, a
+ *   dead `if (unk1) {}` first in its arm (fake: one more use of the base,
+ *   which then takes s0) and c's read on the `if (buttons & 2)` line (its
+ *   .loc). The decrement is `unk0 = ((u32) unk0 - 1) & 0xFF` (p5): the
+ *   unsigned arithmetic keeps unk0's own value (s1; any int arithmetic
+ *   reads the promoted copy in v1), and ugen's `and 255` before the sb,
+ *   which as1 drops, uses up the temporary the original's t-registers are
+ *   one ahead by (p2-p4's `c = A290[..] ^ 0` did that but left c in t6).
  * - 80043ADC 0/0 (matches; w5): us's loop is `if (A168 != 0xFF) { p3 =
  *   &tbl[3]; if (!p3) {} do { ... } while (A168 != 0xFF); }` with p4 =
  *   &tbl[4] set at the top and one more dead read of p3 after the else
@@ -1512,15 +1500,17 @@ static void func_ovl0B_04_80045540(u8 item, u16 buttons, u8 *ret) {
     u8 c;
     u8 x;
 
-    /* fake: (p2) `^ 0` uses up one ugen temporary (the original's
-     * t-registers from here on), the dead read gives the base its s0; c's
-     * read is on the if's line (.loc). */
-    if (buttons & 2) { c = (D_ovl0B_04_8004A290[D_ovl0B_04_8004A490.unk0][0] ^ 0);
+    /* fake: (p2) the dead read gives the base its s0; c's read is on the
+     * if's line (.loc). The decrement is unsigned arithmetic masked to a
+     * byte (p5): ugen's `and 255` before the sb, which as1 drops, uses up
+     * the temporary the original's t-registers are one ahead by, and it
+     * keeps unk0's own (u8) value, so c stays in $a0. */
+    if (buttons & 2) { c = D_ovl0B_04_8004A290[D_ovl0B_04_8004A490.unk0][0];
         D_ovl0B_04_8004A490.unk1 = 0;
         D_ovl0B_04_8004A290[D_ovl0B_04_8004A490.unk0][0] = 0;
         if ((D_ovl0B_04_8004A490.unk0 == 7 && c == 0) || (D_ovl0B_04_8004A490.unk0 != 7 && D_ovl0B_04_8004A490.unk0 > 0)) {
             if (D_ovl0B_04_8004A490.unk1) {}
-            D_ovl0B_04_8004A490.unk0--;
+            D_ovl0B_04_8004A490.unk0 = ((u32) D_ovl0B_04_8004A490.unk0 - 1) & 0xFF;
         }
         func_ovl0B_04_80044210();
         func_ovl0B_04_80044154();
