@@ -4,7 +4,7 @@
  * each), complete: every function and its data. Not built into the ROM
  * (docs/DECOMPILING.md, "NON_MATCHING drafts").
  * flags: -O3
- * differing words: us 25, eu 25, jp 38
+ * differing words: us 12, eu 12, jp 25
  *
  * The pages are a table (D_ovl0B_04_800499B8: texts, handler, cursor
  * table, set-up) that func_ovl0B_04_80043ADC runs in turn; pages 1-4 are
@@ -52,25 +52,25 @@
  * What still differs (words us/jp; the comparison counts a global with
  * the statics after it, so a static of the wrong size costs the rest of
  * its run):
- * - 80043110 13/13: H5b's slot tests read *ptr as the original does, and
- *   its accesses are spelled so &D_ovl0B_04_8004A17C sits in $s0 as in the
- *   original ((&A17C)[-1], (&A178)[1], (&A16C)[1]; found by trying every
- *   neighbour form of each access). H5a's i is at the original's 132 (p2:
- *   H5a K&R with a pad after i, frame-tuned). Both FreeEntries n homes
- *   (80/64) and the end-pointer spill (44) are the original's (p4): the
- *   frame's areas are FreeEntries (n, e, x) with x unused and no other local
- *   (16 bytes each, as their homes' spacing shows) and, last, H1's final
- *   free as an inlined FreeEntry(e, i) (two parameters: 8 more bytes below
- *   the second FreeEntries, which the spill's place needs); case 12 calls
- *   800487E8 directly (no H12), which keeps the stub count. Left: A178's
- *   value read as -4($s0) where the original has its own lui. 0x150A
+ * - 80043110 0/0 (matches; p4). The frame: FreeEntries (n, e, x) with x
+ *   unused and no other local (16-byte areas, as the original's homes'
+ *   spacing shows); H1's final free is an inlined FreeEntry(e, i) (the 8
+ *   bytes below the second FreeEntries that the end-pointer spill's place
+ *   needs); case 12 calls 800487E8 directly (no H12), which keeps the stub
+ *   count; H5a's i is at the original's 132 (p2: H5a K&R with a pad after
+ *   i, frame-tuned). H5b: the slots are plain names except
+ *   &D_ovl0B_04_8004A17C's copy load (a volatile cast, fake: plain, uopt's
+ *   PRE keeps the pointer from the copy to the second test along its skip
+ *   edge, which lowers &A17C's uses until &A180 takes $s0); the first test
+ *   has its own variable and x is read once before its first assignment
+ *   (fake: live from the start, so the later tests' x avoids $v0 and the
+ *   first test's value goes to $a3 after A178's pointer takes $v1). 0x150A
  *   (80047E28) is `s32 (Obj *, s32)` as 0B_06's 80048888, which puts H5a's
  *   object in $v1 as in the original.
- *   H5b's calls pass `(x += 1, x - 1)` for the original's `addiu a2,v1,0` copy. H5a's
+ *   H5b's calls pass `(x += 1, x - 1)` for the original's `addiu a2,v1,0`
+ *   copy (fake), the first with (&A16C)[1] for A170 (fake). H5a's
  *   last store (A170) is numbered below the line after it (`#line`,
  *   fake) for its place in the jal's delay slot.
- *   Pad locals in any inlined static (one or two, pairs of sites), stub
- *   calls and dead reads in H4..H5b don't move these without costing more.
  * - 800436C8 0/0 (matches): `b = a = -1` is numbered above the loop head (`#line`,
  *   fake), so as1 hoists its `li a1,-1` into the head's load delay, right
  *   after the jal, as the original has it (any C with the -1 outside the
@@ -2452,27 +2452,32 @@ static void func_ovl0B_04_H5a() {
 }
 #line 2377
 
-/* The tests reread each slot through its pointer, as the original does.
- * fake: x takes the value in $v1, copied with `move`
- * (the original copies with `addiu`). The neighbour spellings
- * ((&D_ovl0B_04_8004A17C)[-1] for A178, (&D_ovl0B_04_8004A178)[1] for A17C,
- * (&D_ovl0B_04_8004A16C)[1] for A170) were picked by trying every form of
- * each access: they leave &D_ovl0B_04_8004A17C in $s0 as in the original. */
+/* The tests reread each slot through its pointer, as the original does;
+ * the first test's value is its own variable (a: $a3, the later ones x:
+ * $v1), and A178's pointer is loaded once for the copy and the first test
+ * ($v1).
+ * fake: the calls pass `(x += 1, x - 1)` for the original's `addiu a2,v1,0`
+ * copy, and the first one (&D_ovl0B_04_8004A16C)[1] for A170 (the plain
+ * name makes &A170 the $s0 base). */
 static void func_ovl0B_04_H5b(void) {
+    s32 a;
     s32 x;
 
+    if (x) {} /* fake: x live from the start: its later tests then avoid $v0 */
     D_ovl0B_04_8004A178 = func_ovl0B_04_800484E0(8);
     D_ovl0B_04_8004A17C = func_ovl0B_04_800484E0(9);
     D_ovl0B_04_8004A180 = func_ovl0B_04_800484E0(10);
     D_ovl0B_04_8004A184 = func_ovl0B_04_800484E0(11);
     D_ovl0B_04_8004A188 = func_ovl0B_04_800484E0(12);
-    D_ovl0B_04_8004A190 = *(&D_ovl0B_04_8004A17C)[-1];
-    D_ovl0B_04_8004A194 = *(&D_ovl0B_04_8004A178)[1];
+    D_ovl0B_04_8004A190 = *D_ovl0B_04_8004A178;
+    /* fake: a volatile read of the slot pointer, so uopt's PRE doesn't carry it to
+     * the second test (the original reloads it through $s0 there) */
+    D_ovl0B_04_8004A194 = **(s32 * volatile *) &D_ovl0B_04_8004A17C;
     D_ovl0B_04_8004A198 = *D_ovl0B_04_8004A180;
     D_ovl0B_04_8004A19C = *D_ovl0B_04_8004A184;
-    x = *(&D_ovl0B_04_8004A17C)[-1];
-    if (x != 0) {
-        func_ovl0B_04_800478A0((&D_ovl0B_04_8004A16C)[1], 0, (x += 1, x - 1));
+    a = *D_ovl0B_04_8004A178;
+    if (a != 0) {
+        func_ovl0B_04_800478A0((&D_ovl0B_04_8004A16C)[1], 0, (a += 1, a - 1));
     }
     x = *D_ovl0B_04_8004A17C;
     if (x != 0) {
